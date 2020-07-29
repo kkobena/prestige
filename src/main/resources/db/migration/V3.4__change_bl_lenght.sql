@@ -1,0 +1,1 @@
+ALTER TABLE t_bon_livraison MODIFY  lg_BON_LIVRAISON_ID VARCHAR(40);

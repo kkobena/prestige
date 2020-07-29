@@ -1,0 +1,1 @@
+UPDATE  t_grossiste SET groupeId =5 WHERE groupeId IS NULL;

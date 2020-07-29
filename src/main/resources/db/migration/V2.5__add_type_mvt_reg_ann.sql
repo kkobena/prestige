@@ -1,0 +1,2 @@
+-- ALTER TABLE annulation_snapshot  ADD COLUMN reglement VARCHAR(40) NOT NULL;
+-- ALTER TABLE annulation_snapshot  ADD COLUMN emplacement VARCHAR(40) NOT NULL;

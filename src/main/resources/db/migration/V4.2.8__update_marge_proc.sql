@@ -1,0 +1,37 @@
+DELIMITER @@
+DROP PROCEDURE IF EXISTS proc_updatemvtrans_marge @@
+CREATE PROCEDURE proc_updatemvtrans_marge
+()
+BEGIN 
+DECLARE lgPREENREGISTREMENTID VARCHAR(40);
+DECLARE PKEY VARCHAR(40);
+DECLARE MONTANTMARGE NUMERIC(10);
+DECLARE MONTANTTVA NUMERIC(10);
+DECLARE done INT DEFAULT 0;
+DECLARE curbl CURSOR FOR 
+
+SELECT m.uuid,m.pkey FROM mvttransaction m WHERE m.`typeTransaction`=0 OR m.`typeTransaction`=1 ;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done=1;
+OPEN curbl;
+bl_loop:LOOP
+FETCH curbl INTO lgPREENREGISTREMENTID,PKEY;
+IF done=1 THEN 
+ LEAVE bl_loop;
+ END IF;
+
+SELECT 
+ROUND ( SUM((d.`int_PRICE`-
+ d.`int_PRICE_REMISE`)/(1+(v.`int_VALUE`/100))))-SUM(d.int_QUANTITY * f.int_PAF),
+SUM( d.`int_PRICE`- d.`int_PRICE_REMISE`)- ROUND ( SUM((d.`int_PRICE`- d.`int_PRICE_REMISE`)/(1+(v.`int_VALUE`/100))))
+ INTO MONTANTMARGE,MONTANTTVA
+FROM t_preenregistrement_detail d,
+t_famille f,t_code_tva v
+WHERE d.`lg_PREENREGISTREMENT_ID`=PKEY AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND f.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID GROUP BY d.`lg_PREENREGISTREMENT_ID`;
+
+UPDATE mvttransaction SET marge=MONTANTMARGE,montantTva=MONTANTTVA WHERE uuid=lgPREENREGISTREMENTID;
+
+END LOOP bl_loop;
+ CLOSE curbl;
+
+END @@ 
+DELIMITER ; 

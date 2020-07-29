@@ -1,0 +1,1 @@
+UPDATE t_preenregistrement_detail SET int_PRICE_REMISE=0 WHERE int_PRICE_REMISE IS NULL;

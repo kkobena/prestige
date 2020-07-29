@@ -1,0 +1,479 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package util;
+
+import com.ibm.icu.text.RuleBasedNumberFormat;
+import com.itextpdf.text.pdf.Barcode128;
+import dal.TFamille;
+import dal.TPreenregistrementDetail;
+import dal.TPrivilege;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
+import org.krysalis.barcode4j.HumanReadablePlacement;
+import org.krysalis.barcode4j.impl.AbstractBarcodeBean;
+import org.krysalis.barcode4j.impl.code128.Code128Bean;
+import org.krysalis.barcode4j.output.bitmap.BitmapCanvasProvider;
+import toolkits.utils.jdom;
+
+/**
+ *
+ * @author Kobena
+ */
+public final class DateConverter {
+
+    private static final Logger LOG = Logger.getLogger(DateConverter.class.getName());
+    public static final String ACTIONDELETEINVOICE = "03092017";
+    public static final String ACTIONDELETERETOUR = "030920171";
+    public static final String ACTION_DELETE_RETOUR = "ACTION_DELETE_RETOUR";
+    public static final String ACTIONDELETEAJUSTEMENT = "030920172";
+    public static final String ACTIONDELETE = "06042016";
+    public static final String DEPOT_EXTENSION = "5";
+    public static final String DEPOT_AGREE = "4";
+    public static final String ENTREE_EN_STOCK = "01";
+    public static final String VENTE = "02";
+    public static final String ANNULATION_DE_VENTE = "03";
+    public static final String INVENTAIRE = "04";
+    public static final String DECONDTIONNEMENT_POSITIF = "05";
+    public static final String DECONDTIONNEMENT_NEGATIF = "06";
+    public static final String AJUSTEMENT_NEGATIF = "07";
+    public static final String AJUSTEMENT_POSITIF = "08";
+    public static final String RETOUR_FOURNISSEUR = "09";
+    public static final String NOUVEAU_PRODUIT = "10";
+    public static final String TMVTP_VENTE_DEPOT_EXTENSION = "12";
+    public static final String TMVTP_ANNUL_VENTE_DEPOT_EXTENSION = "14";
+    public static final String TMVTP_RETOUR_DEPOT = "13";
+    public static final String PERIME = "11";
+    public static final String MODE_ESP = "1";
+    public static final String OFFICINE = "1";
+    public static final String VENTE_COMPTANT = "VNO";
+    public static final String VENTE_ASSURANCE = "VO";
+    public static final String STATUT_IS_CLOSED = "is_Closed";
+    public static final String STATUT_FACTURE_UNPAID = "unpaid";
+    public static final String STATUT_ENABLE = "enable";
+    public static final String STATUT_DELETE = "delete";
+    public static final String OTHER = "OTHER";
+    public static final String STATUT_IS_IN_USE = "is_Using";
+    public static final String STATUT_IS_ASSIGN = "is_assign";
+    public static final String STATUT_IS_WAITING_VALIDATION = "is_Waiting_validation";
+    public static final String LABOREXCI = "LABOREX-CI";
+    public static final String COPHARMED = "COPHARMED";
+    public static final String TEDIS = "TEDIS PHAR.";
+    public static final String AUTRES = "AUTRES";
+    public static final String DPCI = "DPCI";
+    public static final String MODE_CHEQUE = "2";
+    public static final String MODE_VIREMENT = "6";
+    public static final String MODE_CB = "3";
+    public static final String MODE_DEVISE = "5";
+    public static final String MODE_DIFF = "5";
+    public static final String CODE_TVA = "2";
+    public static final String CODE_TVA0 = "1";
+    public static final String MVT_ENTREE_CAISSE = "5";
+    public static final String MVT_SORTIE_CAISSE = "4";
+    public static final String MVT_FOND_CAISSE = "1";
+    public static final String MVT_REGLE_TP = "3";
+    public static final String MVT_REGLE_DIFF = "2";
+    public static final String MVT_REGLE_VO = "8";
+    public static final String MVT_REGLE_VNO = "9";
+    public static final String KEY_ACTIVATE_PEREMPTION_DATE = "KEY_ACTIVATE_PEREMPTION_DATE";
+    public static final String DEFAUL_TYPEETIQUETTE = "2";
+    public static final String ACTION_ENTREE_STOCK = "ENTREESTOCK";
+    public static final String TYPE_ACTION_ADD = "ADD";
+    public static final String TYPE_ACTION_VENTE = "VENTE";
+    public static final String TYPE_ACTION_REMOVE = "REMOVE";
+    public static final String TRANSACTION_DEBIT = "D";
+    public static final String TRANSACTION_CREDIT = "C";
+    public static final String CA_TTC = "CA TTC";
+    public static final String CA_HT = "CA HT";
+    public static final String DEPENSES = "DEPENCES";
+    public static final String ENTREE_CAISSE = "ENTREES DE CAISSE";
+    public static final String CA = "CHIFFRE D'AFFAIRES";
+    public static final String ACHATS = "ACHATS";
+    public static final String MARGE = "MARGE";
+    public static final String TICKET_Z = "TICKET_Z";
+    public static final String TICKET_VENTE = "VENTE";
+    public static final String TICKET_VENTE_DOUBLE = "TICKET_DOUBLE";
+    public static final String ACTION_ANNULATION_VENTE = "ANNULE_VENTE";
+    public static final String PASSE = "passed";
+    public static final String MOTIF_ENTREE_CAISSE = "2";
+    public static final String MOTIF_VENTE = "1";
+    public static final String MOTIF_SORTIE_CAISSE = "3";
+    public static final String ACTION_INVENTAIRE = "INVENTAIRE";
+    public static final String STATUT_CHARGED = "charged";
+    public static final String KEY_CODE_FACTURE = "KEY_CODE_FACTURE";
+    public static final String VENTE_COMPTANT_ID = "1";
+    public static final String VENTE_CARNET_ID = "3";
+    public static final String VENTE_ASSURANCE_ID = "2";
+    public static final String P_BT_MODIFICATION_DE_VENTE = "P_BT_MODIFICATION_DE_VENTE";
+    public static final String STATUT_PROCESS = "is_Process";
+    public static final String REMISE_CLIENT_ID = "54291527499392054530";
+    public static final int TIERS_PAYANT_PRINCIPAL = 1;
+    public static final String STATUT_AUTO = "auto";
+    public static final String STATUT_PENDING = "pending";
+    public static final String STATUT_PASSED = "passed";
+    public static final String STATUT_PHARMA = "pharma";
+    public static final String REGL_DIFF = "4";
+    public static final int TYPE_FACTURE_GROUPE = 1;
+    public static final int TYPE_FACTURE_UNIQUE = 0;
+    public static final String TOUT = "TOUT";
+    public static final String ALL = "ALL";
+    public static String ACTION_RETOURFOURNISSEUR = "RETOURFOURNISSEUR";
+    public static String ACTION_ENTREE_RETOUR_DEPOT = "ENTREESTOCK";
+    /*
+    parametre nombre de mois à considerer
+     */
+    public static final String Q3 = "Q3";
+    /*
+   QTE DE REAPPRO  (EN NOMBRE DE SEMAINES) A DEFINIR
+     */
+    public static final String Q2 = "Q2";
+    /*
+   SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
+     */
+    public static final String Q1 = "Q1";
+
+//    Runtime.getRuntime().totalMemory() -
+//Runtime.getRuntime().freeMemory()
+//String path = System.getProperty("user.home") 
+    public DateConverter() {
+    }
+
+    public static String getNumberRandom() {
+        return String.valueOf((int) (Math.random() * 10000 + 1));
+    }
+
+    public static String phoneNumberFormat(String Str_country_indicatif, String str_phone_number) {
+        try {
+            long lg_phone_number = Long.parseLong(str_phone_number);
+
+            DecimalFormatSymbols phoneNumberSymbols = new DecimalFormatSymbols();
+            // Use space not comma to thousands: 10 000 not 10,000.
+            phoneNumberSymbols.setGroupingSeparator('-');
+            DecimalFormat phoneNumberFormat = new DecimalFormat("##,##,##,##", phoneNumberSymbols);
+            String result_phone = phoneNumberFormat.format(lg_phone_number);
+
+            if (result_phone.length() < 11) {
+                result_phone = "0" + result_phone;
+            }
+
+            return "(" + Str_country_indicatif + ") " + result_phone;
+        } catch (Exception e) {
+        }
+        return Str_country_indicatif;
+    }
+
+    public static String phoneNumberFormat(String str_phone_number) {
+        String result_phone = "";
+        try {
+            long lg_phone_number = Long.parseLong(str_phone_number);
+
+            DecimalFormatSymbols phoneNumberSymbols = new DecimalFormatSymbols();
+            // Use space not comma to thousands: 10 000 not 10,000.
+            phoneNumberSymbols.setGroupingSeparator('-');
+            DecimalFormat phoneNumberFormat = new DecimalFormat("##,##,##,##", phoneNumberSymbols);
+            result_phone = phoneNumberFormat.format(lg_phone_number);
+
+            if (result_phone.length() < 11) {
+                result_phone = "0" + result_phone;
+            }
+
+        } catch (Exception e) {
+        }
+        return result_phone;
+    }
+
+    public static String amountFormat(Integer Amount, char separator) {
+        String result = "0";
+        try {
+            long lg_Amount = Long.parseLong(Amount.toString());
+
+            DecimalFormatSymbols amountSymbols = new DecimalFormatSymbols();
+            // Use space not comma to thousands: 10 000 not 10,000.
+            amountSymbols.setGroupingSeparator(separator);
+            DecimalFormat amountFormat = new DecimalFormat("###,###", amountSymbols);
+            result = amountFormat.format(lg_Amount);
+        } catch (NumberFormatException ex) {
+
+        }
+        return result;
+    }
+
+    public static Integer arrondiModuloOfNumber(Integer nbre, Integer modulo) {
+        int result = 0, temp_modulo;
+        float part;
+        String temp_v;
+        try {
+
+            temp_v = String.valueOf(nbre).substring(String.valueOf(nbre).length() - 1, String.valueOf(nbre).length());
+
+            temp_modulo = Integer.parseInt(temp_v) % modulo;
+
+            part = (modulo - 1) / 2;
+
+            result = (int) ((part >= temp_modulo) ? (nbre - temp_modulo) : ((nbre - temp_modulo) + modulo));
+
+        } catch (NumberFormatException e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return result;
+    }
+
+    public static String getShortId(int int_size) {
+        Calendar now = Calendar.getInstance();
+        int mm = now.get(Calendar.MINUTE);
+        int ss = now.get(Calendar.SECOND);
+        int mls = now.get(Calendar.MILLISECOND);
+        String catime = (String.valueOf(mm) + "" + String.valueOf(ss) + "" + String.valueOf(mls));
+        int int_lenght = catime.length();
+        while (int_lenght < int_size) {
+            catime = catime + getNumberRandom();
+            int_lenght = catime.length();
+        }
+        return catime.substring(0, int_size);
+    }
+
+    public static LocalDate convertDateToLocalDate(Date dateToConvert) {
+        if (dateToConvert == null) {
+            return LocalDate.now();
+        }
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
+    public static Date convertLocalDateToDate(LocalDate dateToConvert) {
+        return java.util.Date.from(dateToConvert.atStartOfDay()
+                .atZone(ZoneId.systemDefault())
+                .toInstant());
+    }
+
+    public static LocalDateTime convertDateToLocalDateTime(Date dateToConvert) {
+        if (dateToConvert == null) {
+            return new Date().toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime();
+        }
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
+
+    public static Date convertLocalDateTimeToDate(LocalDateTime dateToConvert) {
+        return java.util.Date.from(dateToConvert
+                .atZone(ZoneId.systemDefault())
+                .toInstant());
+    }
+
+    public static String amountFormat(Integer Amount) {
+        String result = "0";
+        try {
+            long lg_Amount = Long.parseLong(Amount.toString());
+
+            DecimalFormatSymbols amountSymbols = new DecimalFormatSymbols();
+
+            amountSymbols.setGroupingSeparator(' ');
+            DecimalFormat amountFormat = new DecimalFormat("###,###", amountSymbols);
+            result = amountFormat.format(lg_Amount);
+        } catch (Exception ex) {
+
+        }
+        return result;
+    }
+
+    public static String getComplexId() {
+        Calendar now = Calendar.getInstance();
+        int mm = now.get(Calendar.MINUTE);
+        int ss = now.get(Calendar.SECOND);
+        int mls = now.get(Calendar.MILLISECOND);
+        String catime = (String.valueOf(mm) + "" + String.valueOf(ss) + "" + String.valueOf(mls));
+        int int_lenght = catime.length();
+        if (int_lenght < 20) {
+            catime = catime + getNumberRandom();
+        }
+        if (int_lenght == 20) {
+            return catime;
+        }
+        if (int_lenght > 20) {
+            return catime.substring(0, 20);
+        }
+        return catime;
+    }
+
+    public static boolean hasAuthorityByName(List<TPrivilege> LstTPrivilege, String authorityName) {
+        java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(authorityName);
+        return LstTPrivilege.stream().anyMatch(p);
+    }
+
+    public static boolean hasAuthorityById(List<TPrivilege> LstTPrivilege, String id) {
+        java.util.function.Predicate<TPrivilege> p = e -> e.getLgPRIVELEGEID().equals(id);
+        return LstTPrivilege.stream().anyMatch(p);
+    }
+
+    public static String convertionChiffeLettres(Integer num) {
+        RuleBasedNumberFormat formatter = new RuleBasedNumberFormat(Locale.FRANCE, RuleBasedNumberFormat.SPELLOUT);
+        String result = formatter.format(num);
+        return result;
+
+    }
+
+    public static String buildLineBarecode(String data) {
+        String file = null;
+        try {
+            Barcode128 barcode128 = new Barcode128();
+            barcode128.setCode(data);
+            barcode128.setBaseline(10);
+            barcode128.setBarHeight(50);
+            barcode128.setCodeType(Barcode128.CODE128);
+            java.awt.Image img = barcode128.createAwtImage(Color.BLACK, Color.WHITE);
+            BufferedImage bi = new BufferedImage(100, 70, BufferedImage.BITMASK);
+            Graphics2D gd = bi.createGraphics();
+            gd.drawImage(img, 4, 2, null);
+            gd.setColor(Color.BLACK);
+            gd.drawString(data, 10, 65);
+            gd.dispose();
+            file = jdom.barecode_file + data + ".png";
+            File f = new File(file);
+            ImageIO.write(bi, "png", f);
+        } catch (IOException ex) {
+//            LOG.log(Level.SEVERE, null, ex);
+        }
+        return file;
+
+    }
+
+    public static String getNumberTowords(Number num) {
+        RuleBasedNumberFormat formatter = new RuleBasedNumberFormat(Locale.FRANCE, RuleBasedNumberFormat.SPELLOUT);
+        String result = formatter.format(num);
+        return result;
+
+    }
+
+    public static Integer getRemise(double tauxRemise, int taux, List<TPreenregistrementDetail> lstTPreenregistrementDetail) {
+        if (taux < 100 || tauxRemise <= 0.0) {
+            return 0;
+        }
+        double sumRemise = 0;
+        for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
+            TFamille famille = x.getLgFAMILLEID();
+            if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2") && !famille.getStrCODEREMISE().equals("3")) {
+                sumRemise += (Double.valueOf(x.getIntPRICE()) * tauxRemise);
+
+            }
+        }
+        return (int) Math.round(sumRemise);
+
+    }
+
+    public static String buildbarcodeOther(String data, String str_file_name) {
+        FileOutputStream out = null;
+        try {
+
+            out = new FileOutputStream(new File(str_file_name));
+            AbstractBarcodeBean barcode = new Code128Bean();
+            //     barcode.setBarHeight(50.0);
+            barcode.setFontName("Calibri (Corps)");
+            barcode.setFontSize(15.0);
+            barcode.setMsgPosition(HumanReadablePlacement.HRP_NONE);
+            barcode.setModuleWidth(0.8);
+            BitmapCanvasProvider canvas
+                    = new BitmapCanvasProvider(out, "image/x-png", 160, BufferedImage.TYPE_BYTE_BINARY, false, 0);
+            barcode.generateBarcode(canvas, data);
+            try {
+                canvas.finish();
+            } catch (IOException ex) {
+                ex.printStackTrace(System.err);
+            }
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace(System.err);
+        } finally {
+            try {
+                out.close();
+            } catch (IOException ex) {
+                ex.printStackTrace(System.err);
+            }
+        }
+        return str_file_name;
+    }
+
+    /**
+     *
+     * @param Q1 SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
+     * @param Q2 QTE DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFINIR
+     * @param Q3 SOMME DE LA CONSOMMATION SUR LA VALEUR DU PARAMETRE GENERAL Q3
+     * @param Q3_parametre VALEUR DU PARAMETRE GENERAL
+     * @return ON RETOURNE UNE PAIR DE VALEUR
+     * <b>seuilReappo</b>,<b>qteReappro</b>
+     */
+    public static JSONObject calculSeuiQteReappro(int Q1, int Q2, double Q3, int Q3_parametre) {
+        /*
+      valeur calculee de la consommation du produit sur une semaine
+         */
+        double divente = (Double.valueOf(Q3_parametre) * 4);
+        double Q4 = 0.5;
+        if (divente > 0) {
+            Q4 = (Q3 / divente);
+        }
+        Integer seuilReappro = (int) Math.ceil(Q4 * Q1);
+        Integer qteReappro = (int) Math.ceil(Q4 * Q2);
+        return new JSONObject().put("seuilReappro", seuilReappro).put("qteReappro", qteReappro);
+    }
+
+    public static LocalDate convertLongToLacalDate(long value) {
+        return Instant.ofEpochMilli(value).atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    public static LocalDateTime convertLongToLacalDateTime(long value) {
+        return Instant.ofEpochMilli(value).atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    public static String convertDateToDD_MM_YYYY(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        if (date != null) {
+            return dateFormat.format(date);
+        } else {
+            return dateFormat.format(new Date());
+        }
+    }
+
+    public static String convertLocalDateToDD_MM_YYYY(LocalDate localDate) {
+        if (localDate != null) {
+            return localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } else {
+            return LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+    }
+
+    public static String convertDateToYYYY_MM_DD(Date date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        if (date != null) {
+            return dateFormat.format(date);
+        } else {
+            return dateFormat.format(new Date());
+        }
+    }
+}

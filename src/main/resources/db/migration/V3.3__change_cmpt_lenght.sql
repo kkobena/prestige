@@ -1,0 +1,3 @@
+ALTER TABLE t_preenregistrement_compte_client
+DROP CONSTRAINT t_preenregistrement_compte_client_fk2;
+ALTER TABLE t_preenregistrement_compte_client MODIFY  lg_COMPTE_CLIENT_ID VARCHAR(40);

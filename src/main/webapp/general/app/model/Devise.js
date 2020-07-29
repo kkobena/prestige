@@ -1,0 +1,33 @@
+Ext.define('testextjs.model.Devise', {
+    extend: 'Ext.data.Model',
+    fields: [
+        {
+            name: 'lg_DEVISE_ID',
+            type: 'string'
+        },
+        {
+            name: 'str_NAME',
+            type: 'string'
+        },
+        {
+            name: 'str_DESCRIPTION',
+            type: 'string'
+        },
+        {
+            name: 'dt_CREATED',
+            type: 'string'
+        },
+        {
+            name: 'str_STATUT',
+            type: 'string'
+        },
+        {
+            name: 'dt_UPDATED',
+            type: 'string'
+        },
+        {
+            name: 'int_TAUX',
+            type: 'double'
+        }
+    ]
+});

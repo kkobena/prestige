@@ -1,0 +1,33 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package rest.repo;
+
+import java.util.Optional;
+
+/**
+ *
+ * @author koben
+ */
+public interface AbstractRepo<T> {
+
+    void save(T entity);
+
+    void delete(T entity);
+
+    T update(T entity);
+
+    int deleteById(String entityId);
+
+    Optional<T> findById(String entityId);
+
+    int deleteById(Long entityId);
+
+    Optional<T> findById(Long entityId);
+
+    int deleteById(Integer entityId);
+
+    Optional<T> findById(Integer entityId);
+}

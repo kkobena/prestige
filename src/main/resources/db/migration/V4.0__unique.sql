@@ -1,0 +1,1 @@
+ALTER TABLE mvttransaction ADD  CONSTRAINT pkey_unq UNIQUE (pkey);  

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../resources/boostrap/bb/js/jquery.min.js"></script>
+        <script type="text/javascript" src="../resources/boostrap/bb/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="../resources/Jqplot/jquery.jqplot.min.js "></script>
+        <script type="text/javascript" src="../resources/Jqplot/jqplot.canvasAxisTickRenderer.min.js"></script>
+        <script type="text/javascript" src="../resources/Jqplot/jqplot.dateAxisRenderer.min.js"></script>
+        <script type="text/javascript" src="../resources/Jqplot/jqplot.pointLabels.min.js"></script>
+        <script type="text/javascript" src="../resources/Jqplot/jqplot.categoryAxisRenderer.min.js"></script>
+        <script type="text/javascript" src="../resources/Jqplot/jqplot.barRenderer.min.js"></script>
+        <script type="text/javascript" src="../resources/Jqplot/jqplot.pieRenderer.min.js"></script>
+        <script type="text/javascript" src="../resources/Jqplot/jqplot.donutRenderer.min.js"></script>
+        <script type="text/javascript" src="../resources/Jqplot/jqplot.canvasTextRenderer.min.js"></script>
+        <script type="text/javascript" src="../resources/boostrap/bb/js/datatable/jquery.dataTables.min.js"></script>
+        <script type="text/javascript" src="../resources/boostrap/bb/js/datatable/dataTables.bootstrap.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="../resources/boostrap/bb/css/bootstrap.css"/>
+        <link rel="stylesheet" type="text/css" href="../resources/boostrap/bb/js/datatable/datatable.min.css"/>
+        <link rel="stylesheet" type="text/css" href="../resources/Jqplot/jquery.jqplot.min.css "/>
+        <link href="../resources/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <style type="text/css">
+            body   {
+                background-color:#E5E9EC; 
+                background-image:url(../resources/images/background.png);
+                /* overflow: hidden;*/
+                margin-left: auto;
+                margin-right: auto;
+                height: auto;
+                width: 97%;
+            }
+            .dataTable > tbody > tr > td, .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > td, .table-bordered > tfoot > tr > th, .table-bordered > thead > tr > td, .table-bordered > thead > tr > th {
+                border: 1px solid #ddd;
+            }
+            .dataTable td,.dataTable th{
+                padding: 8px;
+                line-height: 1.42857143;
+                vertical-align: top;
+                border-top: 1px solid #ddd;
+            }
+
+            .dataTable td, .dataTable th {
+                -webkit-box-sizing: content-box;
+                -moz-box-sizing: content-box;
+                box-sizing: content-box;
+            }
+
+            .dataTable tbody tr:nth-of-type(odd){
+                background: #F9F9F9;
+            }
+            .table > caption + thead > tr:first-child > td, .table > caption + thead > tr:first-child > th, .table > colgroup + thead > tr:first-child > td, .table > colgroup + thead > tr:first-child > th, .table > thead:first-child > tr:first-child > td, .table > thead:first-child > tr:first-child > th {
+                border-top: 0;
+            }
+            #top5allqty div.dataTables_wrapper.dt-bootstrap th {
+                background: none !important;
+            }
+            table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+                padding-right: 30px;
+            }
+            table.table-bordered.dataTable th, table.table-bordered.dataTable td {
+                border-left-width: 0;
+            }
+            table.dataTable thead .sorting, table.dataTable thead .sorting_asc, table.dataTable thead .sorting_desc, table.dataTable thead .sorting_asc_disabled, table.dataTable thead .sorting_desc_disabled {
+                cursor: pointer;
+                position: relative;
+            }
+            .table-bordered > thead > tr > td, .table-bordered > thead > tr > th {
+                border-bottom-width: 2px;
+            }
+            .table-bordered > tbody > tr > td, .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > td, .table-bordered > tfoot > tr > th, .table-bordered > thead > tr > td, .table-bordered > thead > tr > th {
+                border: 1px solid #ddd;
+            }
+            .table > thead > tr > th {
+                vertical-align: bottom;
+                border-bottom: 2px solid #ddd;
+            }
+
+            table.dataTable td, table.dataTable th {
+                -webkit-box-sizing: content-box;
+                -moz-box-sizing: content-box;
+                box-sizing: content-box;
+            }   
+
+
+
+
+        </style>
+        <script type="text/javascript">
+
+            $(document).ready(function () {
+
+                getDailyCA_And_SalesNumber();
+                drawCALineChart();
+                drawTOP5Chart();
+                drawAChatGrossisteChart();
+                drawTOP5CAChart();
+                drawTop5ClientsChart();
+                getListMVT();
+                $('#top5allqty').DataTable({
+                    "language": {
+                        "url": "../resources/boostrap/bb/js/datatable/french.json"
+                    },
+                    "ajax": '../webservices/dashboard/ws_data_top5.jsp',
+                    "columns": [
+                        {"data": "ID"},
+                        {"data": "CIP"},
+                        {"data": "str_NAME"},
+                        {"data": "int_QUANTITY_SERVED"}
+
+                    ],
+                    "order": [[3, "desc"]]
+
+
+
+                });
+
+                $('#top5allCA').DataTable({
+                    "language": {
+                        "url": "../resources/boostrap/bb/js/datatable/french.json"
+                    },
+                    "ajax": '../webservices/dashboard/ws_data_top5CA.jsp',
+                    "columns": [
+                        {"data": "ID"},
+                        {"data": "CIP"},
+                        {"data": "str_NAME"},
+                        {"data": "int_PRICE"}
+
+                    ],
+                    "order": [[3, "desc"]]
+                });
+                $('#topallClient').DataTable({
+                    "language": {
+                        "url": "../resources/boostrap/bb/js/datatable/french.json"
+                    },
+                    "ajax": '../webservices/dashboard/ws_best_clients.jsp',
+                    "columns": [
+                        {"data": "ID"},
+                        {"data": "str_FULLNAME"},
+                        {"data": "AMOUNT"}
+
+                    ],
+                    "order": [[2, "desc"]]
+                });
+                $('#allGrossiste').DataTable({
+                    "language": {
+                        "url": "../resources/boostrap/bb/js/datatable/french.json"
+                    },
+                    "ajax": '../webservices/dashboard/ws_AchatByGrossistes.jsp',
+                    "columns": [
+                        {"data": "ID"},
+                        {"data": "LIBELLE"},
+                        {"data": "MONTANT"}
+
+                    ],
+                    "order": [[2, "desc"]]
+                });
+
+
+                $("#moretop5").on('click', function (e) {
+                    e.preventDefault();
+                    $("#static").modal({show: true});
+
+                });
+
+                $("#moretop5CA").on('click', function (e) {
+                    e.preventDefault();
+                    $("#staticCA").modal({show: true});
+
+                });
+                $("#moretopClient").on('click', function (e) {
+                    e.preventDefault();
+                    $("#staticTopClient").modal({show: true});
+
+                });
+                $("#moreAchat").on('click', function (e) {
+                    e.preventDefault();
+                    $("#staticAllGrossistes").modal({show: true});
+
+                });
+
+
+
+            });
+            function getDailyCA_And_SalesNumber() {
+                $.ajax({
+                    url: '../webservices/dashboard/DailyCA.jsp',
+                    type: 'GET',
+                    cache: false,
+                    dataType: 'json',
+                    success: function (data, statut) {
+                        $("#idCA").html(data.DailyCA);
+                        $("#NBCLTS").html(data.DailyCount);
+                        $("#idAchat").html(data.DailyAchatAmount);
+                        $("#NBBL").html(data.DailyAchatCount);
+                        $("#PANVNO").html(data.panierMYVNO);
+                        $("#PANVO").html(data.PanierMYVO);
+                        $("#idPANIERMOY").html(data.PanierMY);
+                        $("#MAGERNET").html(data.MARGENET);
+                        drawPieTypeVenteChart(Number(data.MONTANTVO), Number(data.MONTANTVNO), Number(data.MONTANTDEPO));
+
+                    }});
+
+            }
+            function drawCALineChart() {
+                $.ajax({
+                    url: '../webservices/dashboard/ws_graphe_data.jsp',
+                    type: 'GET',
+                    cache: false,
+                    dataType: 'json',
+                    success: function (data, statut) {
+
+                        var donne = [["Jan", data.jan], ["Fév", data.fev], ["Mars", data.mars], ["Avr", data.avril],
+                            ["Mai", data.mai], ["Juin", data.juin], ["Jul", data.juillet], ["Août", data.aout],
+                            ["Sept", data.sept], ["Oct", data.oct], ["Nov", data.nov], ["Dec", data.dec]];
+                        var plot2 = $.jqplot('idcachart', [donne], {
+                            grid: {
+                                drawBorder: false,
+                                drawGridlines: true,
+                                background: '#ffffff',
+                                shadow: false
+                            },
+                            rendererOptions: {
+                                smooth: true
+                            },
+                            axes: {
+                                xaxis: {
+                                    renderer: $.jqplot.CategoryAxisRenderer,
+                                },
+                                yaxis: {
+                                    pad: 0
+                                }
+
+                            }
+                        });
+
+                    }});
+            }
+            function drawPieTypeVenteChart(montantvo, montantvno, montantdepos) {
+                var s1 = [['Comptant', montantvno], ['Crédit', montantvo], ['Dépôt', montantdepos]];
+
+                var plot8 = $.jqplot('idtypevente', [s1], {
+                    grid: {
+                        drawBorder: false,
+                        drawGridlines: false,
+                        background: '#ffffff',
+                        shadow: false
+                    },
+                    axesDefaults: {
+                    },
+                    seriesDefaults: {
+                        renderer: $.jqplot.DonutRenderer,
+                        rendererOptions: {
+                            showDataLabels: true,
+                            sliceMargin: 4,
+                            startAngle: -90,
+                            dataLabels: 'value'
+                        }
+                    },
+                    legend: {
+                        show: true,
+                        location: 'e'
+                    }
+                });
+            }
+            function drawTOP5Chart() {
+                $.ajax({
+                    url: '../webservices/dashboard/ws_data_top5.jsp',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    success: function (data, statut) {
+                        var s1 = [];//
+                        if (data.data.length > 0) {
+                            $("#moretop5label").show();
+
+                        }
+                        $.each(data.data, function (index, val) {
+                            if (index <= 4) {
+                                s1.push([val.str_NAME, Number(val.int_QUANTITY_SERVED)]);
+                            } else {
+                                return false;
+                            }
+
+                        });
+
+                        var plot8 = $.jqplot('idtopCount', [s1], {
+                            grid: {
+                                drawBorder: false,
+                                drawGridlines: false,
+                                background: '#ffffff',
+                                shadow: false
+                            },
+                            seriesDefaults: {
+                                renderer: $.jqplot.PieRenderer,
+                                rendererOptions: {
+                                    showDataLabels: true,
+                                    dataLabels: 'value'
+                                }
+                            },
+                            legend: {
+                                show: true,
+                                location: 'e'
+                            }
+                        });
+
+
+                    }});
+            }
+
+            function drawAChatGrossisteChart() {
+                $.ajax({
+                    url: '../webservices/dashboard/ws_achat_by_grossiste.jsp',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    success: function (data, statut) {
+                        if (data.length > 0) {
+
+                            $("#moretAchatlabel").show();
+                        }
+                        var s1 = [['LABOREX', data.data[0].LABOREX], ['DPCI', data.data[1].DPCI], ['COPHARMED', data.data[2].COPHARMED], ['TEDIS PHARMA', data.data[3].TEDISPHARMA], ['AUTRES', data.data[4].AUTRES]];
+                        var plot = $.jqplot('idachatgrossiste', [s1], {
+                            grid: {
+                                drawBorder: false,
+                                drawGridlines: true,
+                                background: '#ffffff',
+                                shadow: false
+                            },
+                            seriesDefaults: {
+                                renderer: $.jqplot.BarRenderer,
+                                pointLabels: {show: true},
+                                rendererOptions: {
+                                    varyBarColor: true
+                                }
+                            },
+                            axes: {
+                                xaxis: {
+                                    renderer: $.jqplot.CategoryAxisRenderer
+                                }
+                            }
+                        });
+
+
+                    }});
+            }
+
+
+            function drawTOP5CAChart() {
+                $.ajax({
+                    url: '../webservices/dashboard/ws_data_top5CA.jsp',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    success: function (data, statut) {
+                        var s1 = [];
+                        if (data.data.length > 0) {
+                            $("#moretop5CAlabel").show();
+                        }
+                        $.each(data.data, function (index, val) {
+                            if (index <= 4) {
+                                s1.push([val.str_NAME, Number(val.int_PRICE)]);
+                            } else {
+                                return false;
+                            }
+
+                        });
+
+                        var plot = $.jqplot('idtopCA', [s1], {
+                            grid: {
+                                drawBorder: false,
+                                drawGridlines: false,
+                                background: '#ffffff',
+                                shadow: false
+                            },
+                            seriesDefaults: {
+                                renderer: $.jqplot.PieRenderer,
+                                rendererOptions: {
+                                    showDataLabels: true,
+                                    dataLabels: 'value'
+                                }
+                            },
+                            legend: {
+                                show: true,
+                                location: 'e'
+                            }
+                        });
+
+
+                    }});
+            }
+
+
+            function drawTop5ClientsChart() {
+                $.ajax({
+                    url: '../webservices/dashboard/ws_best_clients.jsp',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    success: function (data, statut) {
+
+                        var s1 = [];
+                        if (data.data.length > 0) {
+                            $("#moretopClientCAlabel").show();
+
+                        }
+                        $.each(data.data, function (index, val) {
+                            if (index <= 10) {
+                                s1.push([val.str_FULLNAME, Number(val.AMOUNT)]);
+                            } else {
+                                return false;
+                            }
+
+                        });
+                        var plot = $.jqplot('toclients', [s1], {
+                            animate: true,
+                            animateReplot: true,
+                            grid: {
+                                drawBorder: false,
+                                drawGridlines: true,
+                                background: '#ffffff',
+                                shadow: false
+                            },
+                            seriesDefaults: {
+                                renderer: $.jqplot.BarRenderer,
+                                pointLabels: {show: true},
+                                rendererOptions: {
+                                    varyBarColor: true
+                                }
+                            },
+                            axes: {
+                                xaxis: {
+                                    renderer: $.jqplot.CategoryAxisRenderer
+                                    ,
+                                    tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+                                    tickOptions: {
+                                        angle: -10,
+                                        fontSize: '7pt'
+                                    }
+                                }
+                            }
+                        });
+
+
+                    }});
+            }
+            function getListMVT() {
+
+                $.ajax({
+                    url: '../webservices/dashboard/ws_data_mvt.jsp',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    success: function (data, statut) {
+                        $.each(data.data, function (index, val) {
+                            var li = $('<li  class="list-group-item"><span class="badge" style="background-color:#F89406;">' + val.AMOUNT + ' F</span>' + val.str_NAME + '</li>');
+
+                            $("#listemvt").append(li);
+                        });
+                    }});
+            }
+            function getAllItemsByCount() {
+                $.ajax({
+                    url: '../webservices/dashboard/ws_data_top5.jsp',
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    success: function (data, statut) {
+
+                        $.each(data.data, function (index, val) {
+
+                        });
+
+
+
+
+                    }});
+            }
+        </script>
+
+    </head>
+    <body>
+        <!-- <div class="container"> -->
+        <div class="row">
+            <div class="col-md-3" >
+                <div class="panel " style="background-color: #23B7E5;color: #ffffff;">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <i class="fa fa-shopping-cart fa-5x "></i>
+                            </div>
+                            <div class="col-xs-9 text-right">
+                                <div><label>CA</label> </div>
+                                <span ><label id="idCA"></label></span>
+                                <div><label>Nombre de clients</label></div>
+                                <div ><label id="NBCLTS"></label></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>  
+            <div class="col-md-3" >
+
+                <div class="panel" style="background-color:#7266BA; color: #ffffff;">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <i class="fa fa-truck fa-5x "></i>
+                            </div>
+                            <div class="col-xs-9 text-right">
+                                <div><label>Valeur Achat</label>  </div>
+                                <span ><label id="idAchat"></label></span>
+                                <div><label>Nombre de BL</label></div>
+                                <div ><label id="NBBL"></label></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>  
+            <div class="col-md-3" >
+
+
+                <div class="panel " style="background-color:#2BAAB1;color: #ffffff;">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <i class="fa fa-shopping-basket fa-5x "></i>
+                            </div>
+                            <div class="col-xs-9 text-right">
+                                <div><label>Pan.Moy</label>  </div>
+                                <span ><label id="idPANIERMOY"></label></span>
+
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>  
+            <div class="col-md-3" >
+
+
+                <div class="panel " style="background-color: #E36159;color: #ffffff;">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <i class="fa fa-money fa-5x "></i>
+                            </div>
+                            <div class="col-xs-9 text-right">
+                                <div class="huge" ><label>Marge Net</label></div>
+                                <div ><label id="MAGERNET"></label></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>  
+
+
+
+        </div>
+        <!-- second niveau fa-bar-chart-o --->
+        <div class='row'>
+            <div class="col-sm-12 col-md-6" >
+                <div class="panel " >
+                    <div class="panel-heading" style="background-color:#5E3DA6;border-color:#5E3DA6;color: white;">
+                        <h3 class="panel-title"><i class="fa fa-pie-chart fa-fw"></i>Top 5 des quantités d'Articles <label id="moretop5label"  class="pull-right label label-danger" style="display: none;"><a href="#" id="moretop5"  style="color: white;">Voir plus</a> </label></h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="idtopCount"></div>
+                    </div>
+                </div>
+            </div> 
+
+            <div class="col-sm-12 col-md-6" >
+                <div class="panel " >
+                    <div class="panel-heading" style="background-color:#73C774;border-color:#73C774;color: white;">
+                        <h3 class="panel-title"><i class="fa fa-pie-chart fa-fw"></i>Top 5 du Chiffre d'Affaire<label id="moretop5CAlabel"  class="pull-right label label-warning" style="display: none;"><a href="#" id="moretop5CA"  style="color: white;">Voir plus</a> </label></h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="idtopCA"></div>
+                    </div>
+                </div>
+            </div> 
+        </div> 
+        <!-- find second niveau -->
+
+        <div class='row'>
+            <div class='col-sm-12 col-md-6'>
+                <div class="panel " >
+                    <div class="panel-heading" style="background-color:#F39C12;border-color:#F39C12;color: white;">
+                        <h3 class="panel-title"><i class="fa fa-pie-chart fa-fw"></i>Type de Vente</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="idtypevente"></div>
+                    </div>
+                </div>
+            </div>   
+            <div class='col-sm-12 col-md-6'>
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background-color:#1EC1ED;border-color:#337AB7;color: white;">
+                        <h3 class="panel-title"><i class="fa fa-line-chart fa-fw"></i> Evolution du Net TTC </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="idcachart"></div>
+                    </div>
+                </div> 
+            </div>  
+
+        </div> 
+        <!-- 3eme niveau debut -->
+        <div class='row'>
+            <div class='col-sm-12 col-md-6'>
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background-color:#2BAAB1;border-color:#2BAAB1;color: white;">
+                        <h3 class="panel-title"><i class="fa fa-bar-chart-o fa-fw"></i> Evolution des Achats <label id="moretAchatlabel"  class="pull-right label label-warning" ><a href="#" id="moreAchat"  style="color: white;">Voir plus</a> </label></h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="idachatgrossiste"></div>
+                    </div>
+                </div> 
+            </div>   
+            <!--div class='col-sm-3 col-md-6'-->
+            <div class='col-sm-12 col-md-6'>
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background-color:#E36159;border-color:#E36159;color: white;">
+                        <h3 class="panel-title"><i class="fa fa-list fa-fw"></i> Mouvements de Caisse</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div >
+                            <ul class="list-group" id="listemvt">
+
+                            </ul>  
+
+                        </div>
+                    </div>
+                </div> 
+            </div> 
+        </div> 
+        <!-- find 3eme niveau -->
+
+        <div class='row'>
+
+            <div class="panel " >
+                <div class="panel-heading" style="background-color:#3C3C3C;border-color:#3C3C3C;color: white;">
+                    <h3 class="panel-title"><i class="fa fa-bar-chart fa-fw"></i>Top 10 Tiers payants<label id="moretopClientCAlabel"  class="pull-right label label-danger" style="display: none;"><a href="#" id="moretopClient"  style="color: white;">Voir plus</a> </label></h3>
+                </div>
+                <div class="panel-body">
+                    <div id="toclients"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- compartiment des modals  debut -->
+
+        <div id="staticCA" class="modal  fade"   role="dialog" style="background: #ffffff;top: 10px; right: 10px;left:20px;">
+            <div class='row' style="margin-left: -10px;margin-right: -10px;">
+                <div class="modal-header bg-warning" >
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h4 class="modal-title " style="text-align: center;">Meilleurs ventes de la journée</h4>
+
+                </div>
+                <div class="modal-body" style="padding-left: 25px;">
+                    <table id="top5allCA" class="display" cellspacing="0" width="100%"><thead><tr><th>N °</th><th>Code Cip</th><th>Désignation</th><th>Montant Vente</th></tr></thead></table>
+
+                </div>
+
+            </div>
+        </div>
+
+
+
+
+        <div id="static" class="modal  fade"   role="dialog" style="background: #ffffff;top: 10px; right: 10px;left:20px;">
+            <div class='row' style="margin-left: -10px;margin-right: -10px;">
+                <div class="modal-header bg-warning" >
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h4 class="modal-title " style="text-align: center;">Meilleurs ventes de la journée</h4>
+
+                </div>
+                <div class="modal-body" style="padding-left: 25px;">
+                    <table id="top5allqty" class="display" cellspacing="0" width="100%"><thead><tr><th>N °</th><th>Code Cip</th><th>Désignation</th><th>Quantité</th></tr></thead></table>
+
+                </div>
+
+            </div>
+        </div>
+
+
+        <div id="staticTopClient" class="modal  fade"   role="dialog" style="background: #ffffff;top: 10px; right: 10px;left:20px;">
+            <div class='row' style="margin-left: -10px;margin-right: -10px;">
+                <div class="modal-header bg-warning" >
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <!--<h4 class="modal-title " style="text-align: center;">Meilleurs ventes de la journée</h4>-->
+
+                </div>
+                <div class="modal-body" style="padding-left: 25px;">
+                    <table id="topallClient" class="display" cellspacing="0" width="100%"><thead><tr><th>N °</th><th>Libellé</th><th>Montant</th></tr></thead></table>
+
+                </div>
+
+            </div>
+        </div>    
+
+        <div id="staticAllGrossistes" class="modal  fade"   role="dialog" style="background: #ffffff;top: 10px; right: 10px;left:20px;">
+            <div class='row' style="margin-left: -10px;margin-right: -10px;">
+                <div class="modal-header bg-warning" >
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <!--<h4 class="modal-title " style="text-align: center;">Meilleurs ventes de la journée</h4>-->
+
+                </div>
+                <div class="modal-body" style="padding-left: 25px;">
+                    <table id="allGrossiste" class="display" cellspacing="0" width="100%"><thead><tr><th>N °</th><th>Libellé</th><th>Montant</th></tr></thead></table>
+
+                </div>
+
+            </div>
+        </div> 
+
+
+
+
+
+        <!-- find -->
+
+    </body>
+</html>

@@ -1,0 +1,1 @@
+ALTER TABLE  t_preenregistrement_detail ADD COLUMN prixAchat int(8) NOT NULL ;

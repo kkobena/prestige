@@ -1,0 +1,181 @@
+@charset "utf-8";
+/* CSS Document */
+
+select {
+    width:100%;
+    margin-top:30px;
+    padding:3px 3px;
+    margin: 0;
+    -webkit-border-radius:4px;
+    -moz-border-radius:4px;
+    border-radius:4px;
+    -webkit-box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+    -moz-box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+    box-shadow: 0 3px 0 #ccc, 0 -1px #fff inset;
+    background: #f8f8f8;
+    color:#888;
+    border:none;
+    outline:none;
+    display: inline-block;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
+    cursor:pointer;
+}
+
+/* Targetting Webkit browsers only. FF will show the dropdown arrow with so much padding. */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    select {padding-right:18px}
+}
+label {position:relative; }
+label:after {
+    content:'<>';
+    font:11px "Consolas", monospace;
+    color:#aaa;
+    -webkit-transform:rotate(90deg);
+    -moz-transform:rotate(90deg);
+    -ms-transform:rotate(90deg);
+    transform:rotate(90deg);
+    right:8px; top:2px;
+    padding:0 0 2px;
+    border-bottom:1px solid #ddd; 
+    position:absolute;
+    pointer-events:none;
+}
+label:before {
+    content:'';
+    right:6px; top:0px;
+    width:20px; height:20px;
+    background:#f8f8f8;
+    position:absolute;
+    pointer-events:none;
+    display:block;
+}
+#bttPrec {
+    background-color:transparent;
+    background-image: url(../images/aa.png);
+    background-repeat: no-repeat;
+    height: 35px;
+    width: 37px;
+}
+#bttPrec:hover {
+    background-color:transparent;
+    background-image: url(../images/bb.png);
+    background-repeat: no-repeat;
+    height: 35px;
+    width: 37px;
+}
+#bttPrec:active {
+    background-color:transparent;
+    background-image: url(../images/cc.png);
+    background-repeat: no-repeat;
+    height: 35px;
+    width: 37px;
+}
+legend {
+    color:#DF3F3F;
+    font-weight:bold
+}
+fieldset {
+    padding:0 20px 20px 20px;
+    margin-bottom:10px;
+    border:1px solid #DF3F3F;
+}
+
+
+
+
+
+
+
+#bttHome{
+    background-color:transparent;
+    background-image:url(../images/aaa.png);
+    background-repeat:no-repeat;
+    height: 35px;
+    width: 37px;
+}
+#bttHome:hover{
+    background-color:transparent;
+    background-image:url(../images/bbb.png);
+    background-repeat:no-repeat;
+    height: 35px;
+    width: 37px;
+}
+#bttHome:active{
+    background-color:transparent;
+    background-image:url(../images/ccc.png);
+    background-repeat:no-repeat;
+    height: 35px;
+    width: 37px;
+}
+
+
+
+
+
+#bttSuiv{
+    background-color:transparent;
+    background-image:url(../images/a.png);
+    background-repeat:no-repeat;
+    height: 35px;
+    width: 37px;
+}
+#bttSuiv:hover{
+    background-color:transparent;
+    background-image:url(../images/b.png);
+    background-repeat:no-repeat;
+    height: 35px;
+    width: 37px;
+}
+#bttSuiv:active{
+    background-color:transparent;
+    background-image:url(../images/c.png);
+    background-repeat:no-repeat;
+    height: 35px;
+    width: 37px;
+}
+.barNav {
+    font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    font-size: 12px;
+    font-weight:bold;
+    position: relative;
+    bottom: 35px;
+    color: #FFF;
+}
+#labellegend {
+ margin-top:10px;
+ display:block;
+     
+    text-decoration: underline;
+    font-family: 'Times New Roman',Times,serif;
+    font-style: inherit;
+    font-weight: bold;
+}
+#Color {
+    padding: 0 0 0 30px;
+    width: auto;
+    border-right-style: ridge;
+    border-left-style: ridge;
+    border-bottom-style: ridge;
+    border-top-style: ridge;
+    position: relative;
+    margin-right: 3px;
+    margin-left: 1px;
+    margin-bottom: 1px;
+    margin-top: 1px;
+    text-align: left;
+    vertical-align: middle;
+    padding-right: 2px;
+    padding-left: 2px;
+    padding-bottom: 2px;
+    padding-top: 2px;
+    direction: inherit;
+}
+#toolboxloaderContentItem{
+    position: absolute;
+    left: 0%;
+    margin-left: 100px;
+    top: 250px;
+
+}

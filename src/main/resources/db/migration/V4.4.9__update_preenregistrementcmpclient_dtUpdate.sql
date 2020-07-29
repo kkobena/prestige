@@ -1,0 +1,1 @@
+UPDATE t_preenregistrement_compte_client d SET d.dt_UPDATED=d.dt_CREATED WHERE d.dt_UPDATED IS NULL;

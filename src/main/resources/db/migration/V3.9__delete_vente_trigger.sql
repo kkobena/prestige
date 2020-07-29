@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS t_preenregistrement_before_insert;

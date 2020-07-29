@@ -1,0 +1,36 @@
+DELIMITER @@
+DROP PROCEDURE IF EXISTS proc_updatemvtrans_fatures @@
+CREATE PROCEDURE proc_updatemvtrans_fatures
+()
+BEGIN 
+
+DECLARE dtUPDATED DATETIME;
+DECLARE lgUSERID VARCHAR(40);
+DECLARE strREF VARCHAR(40);
+DECLARE CODEORGANISME VARCHAR(40);
+DECLARE lgTYPEREGLEMENTID VARCHAR(40);
+DECLARE typeMvt VARCHAR(10);
+DECLARE lgPREENREGISTREMENTID VARCHAR(40);
+DECLARE intPRICE NUMERIC(10);
+DECLARE done INT DEFAULT 0;
+DECLARE curbl CURSOR FOR 
+
+SELECT d.lg_DOSSIER_REGLEMENT_ID, d.dbl_AMOUNT, d.str_ORGANISME_ID,d.lg_USER_ID,d.dt_CREATED, m.str_REF_TICKET,
+m.lg_TYPE_MVT_CAISSE_ID,t.lg_TYPE_REGLEMENT_ID FROM t_dossier_reglement d,t_mvt_caisse m,t_mode_reglement r,t_type_reglement t WHERE 
+  d.lg_DOSSIER_REGLEMENT_ID=m.str_NUM_PIECE_COMPTABLE AND m.lg_MODE_REGLEMENT_ID=r.lg_MODE_REGLEMENT_ID AND r.lg_TYPE_REGLEMENT_ID=t.lg_TYPE_REGLEMENT_ID AND d.str_STATUT='is_Closed';
+
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done=1;
+OPEN curbl;
+bl_loop:LOOP
+FETCH curbl INTO lgPREENREGISTREMENTID,intPRICE,CODEORGANISME,lgUSERID,dtUPDATED,strREF,typeMvt,lgTYPEREGLEMENTID;
+IF done=1 THEN 
+ LEAVE bl_loop;
+ END IF;
+INSERT IGNORE INTO mvttransaction (uuid, `createdAt`, `MONTANT`, `MONTANTCREDIT`, `MONTANTREGLE`, `MONTANTRESTANT`, mvtdate, caisse, `typeTransaction`, `grossisteId`, `lg_EMPLACEMENT_ID`, `typeReglementId`, `typeMvtCaisseId`, `lg_USER_ID`, `montantRemise`, `montantNet`, `MONTANTVERSE`, pkey, categorie, `avoidAmount`, `checked`, `montantPaye`, `montantTva`, marge, reference, organisme) 
+	VALUES (UUID(), dtUPDATED, intPRICE, 0, intPRICE, 0, dtUPDATED, lgUSERID, 3, NULL, '1', lgTYPEREGLEMENTID, typeMvt, lgUSERID, 0, intPRICE, 0, lgPREENREGISTREMENTID, 1, 0, true, intPRICE, 0, 0, strREF, CODEORGANISME);
+
+END LOOP bl_loop;
+ CLOSE curbl;
+
+END @@ 
+DELIMITER ; 

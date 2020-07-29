@@ -1,0 +1,1 @@
+ALTER TABLE annulation_snapshot  ADD COLUMN montantRestant int(8) NULL DEFAULT 0;

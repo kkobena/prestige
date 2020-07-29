@@ -1,0 +1,1 @@
+INSERT IGNORE INTO groupefournisseur VALUES (1,'LABOREX-CI'),(2,'DPCI'),(3,'COPHARMED'),(4,'TEDIS PHAR.'),(5,'AUTRES');

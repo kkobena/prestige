@@ -1,0 +1,585 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package rest.service.impl;
+
+import dal.TEmplacement;
+import dal.TImprimante;
+import dal.TOfficine;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.print.PageFormat;
+import java.awt.print.Paper;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Logger;
+import javax.print.PrintService;
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.PrintRequestAttributeSet;
+import javax.print.attribute.standard.Chromaticity;
+import javax.print.attribute.standard.Copies;
+import javax.swing.ImageIcon;
+import toolkits.parameters.commonparameter;
+import toolkits.utils.jdom;
+import util.DateConverter;
+
+/**
+ *
+ * @author Kobena
+ */
+public class ImpressionServiceImpl implements Printable {
+
+    private static final Logger LOG = Logger.getLogger(ImpressionServiceImpl.class.getName());
+    final public static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    private PrintService service;
+    private int limit = 0, intBegin = 0, nombreCopie = 1, fontSize = 0;
+    private boolean showCodeBar;
+    private TImprimante OTImprimante;
+    private Date operation;
+    private Date operationSectionDeux;
+    private LocalDateTime operationLocalTime;
+    private String typeTicket;
+    private String title;
+    private String titleSectionDeux;
+    private List<String> datas;
+    private List<String> datasSectionDeux = new ArrayList<>();
+    private List<String> infoSellers;
+    private List<String> infoSellersSectionDeux = new ArrayList<>();
+    private List<String> infoTiersPayants;
+    private List<String> subtotal;
+    private List<String> subtotalSectionDeux = new ArrayList<>();
+    private List<String> commentairesSectionDeux = new ArrayList<>();
+    private List<String> commentaires;
+    private String codeBar;
+    private TEmplacement emplacement;
+    private TOfficine officine;
+    private int columnOne = 0, columnTwo = 0, columnThree = 0, columnFour = 0;
+    private PrinterJob printerJob;
+    private List<String> tierspayantSectionDeux = new ArrayList<>();
+
+    public List<String> getDatas() {
+        return datas;
+    }
+
+    public String getTitleSectionDeux() {
+        return titleSectionDeux;
+    }
+
+    public void setTitleSectionDeux(String titleSectionDeux) {
+        this.titleSectionDeux = titleSectionDeux;
+    }
+
+    public List<String> getCommentairesSectionDeux() {
+        return commentairesSectionDeux;
+    }
+
+    public void setCommentairesSectionDeux(List<String> commentairesSectionDeux) {
+        this.commentairesSectionDeux = commentairesSectionDeux;
+    }
+
+    public Date getOperationSectionDeux() {
+        return operationSectionDeux;
+    }
+
+    public void setOperationSectionDeux(Date operationSectionDeux) {
+        this.operationSectionDeux = operationSectionDeux;
+    }
+
+    public List<String> getDatasSectionDeux() {
+        return datasSectionDeux;
+    }
+
+    public void setDatasSectionDeux(List<String> datasSectionDeux) {
+        this.datasSectionDeux = datasSectionDeux;
+    }
+
+    public List<String> getInfoSellersSectionDeux() {
+        return infoSellersSectionDeux;
+    }
+
+    public void setInfoSellersSectionDeux(List<String> infoSellersSectionDeux) {
+        this.infoSellersSectionDeux = infoSellersSectionDeux;
+    }
+
+    public List<String> getSubtotalSectionDeux() {
+        return subtotalSectionDeux;
+    }
+
+    public void setSubtotalSectionDeux(List<String> subtotalSectionDeux) {
+        this.subtotalSectionDeux = subtotalSectionDeux;
+    }
+
+    public List<String> getTierspayantSectionDeux() {
+        return tierspayantSectionDeux;
+    }
+
+    public void setTierspayantSectionDeux(List<String> tierspayantSectionDeux) {
+        this.tierspayantSectionDeux = tierspayantSectionDeux;
+    }
+
+    public int getColumnOne() {
+        return columnOne;
+    }
+
+    public void setColumnOne(int columnOne) {
+        this.columnOne = columnOne;
+    }
+
+    public int getColumnTwo() {
+        return columnTwo;
+    }
+
+    public void setColumnTwo(int columnTwo) {
+        this.columnTwo = columnTwo;
+    }
+
+    public int getColumnThree() {
+        return columnThree;
+    }
+
+    public void setColumnThree(int columnThree) {
+        this.columnThree = columnThree;
+    }
+
+    public int getColumnFour() {
+        return columnFour;
+    }
+
+    public void setColumnFour(int columnFour) {
+        this.columnFour = columnFour;
+    }
+
+    public void setDatas(List<String> datas) {
+        this.datas = datas;
+    }
+
+    public TOfficine getOfficine() {
+        return officine;
+    }
+
+    public void setOfficine(TOfficine officine) {
+        this.officine = officine;
+    }
+
+    public TEmplacement getEmplacement() {
+        return emplacement;
+    }
+
+    public void setEmplacement(TEmplacement emplacement) {
+        this.emplacement = emplacement;
+    }
+
+    public List<String> getInfoSellers() {
+        return infoSellers;
+    }
+
+    public void setInfoSellers(List<String> infoSellers) {
+        this.infoSellers = infoSellers;
+    }
+
+    public List<String> getInfoTiersPayants() {
+        return infoTiersPayants;
+    }
+
+    public void setInfoTiersPayants(List<String> infoTiersPayants) {
+        this.infoTiersPayants = infoTiersPayants;
+    }
+
+    public List<String> getSubtotal() {
+        return subtotal;
+    }
+
+    public void setSubtotal(List<String> subtotal) {
+        this.subtotal = subtotal;
+    }
+
+    public List<String> getCommentaires() {
+        return commentaires;
+    }
+
+    public void setCommentaires(List<String> commentaires) {
+        this.commentaires = commentaires;
+    }
+
+    public String getCodeBar() {
+        return codeBar;
+    }
+
+    public void setCodeBar(String codeBar) {
+        this.codeBar = codeBar;
+    }
+
+    public String getTypeTicket() {
+        return typeTicket;
+    }
+
+    public int getFontSize() {
+        return fontSize;
+    }
+
+    public void setFontSize(int fontSize) {
+        this.fontSize = fontSize;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setTypeTicket(String typeTicket) {
+        this.typeTicket = typeTicket;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+
+    public Date getOperation() {
+        return operation;
+    }
+
+    public void setOperation(Date operation) {
+        this.operation = operation;
+    }
+
+    public LocalDateTime getOperationLocalTime() {
+        return operationLocalTime;
+    }
+
+    public void setOperationLocalTime(LocalDateTime operationLocalTime) {
+        this.operationLocalTime = operationLocalTime;
+    }
+
+    public TImprimante getOTImprimante() {
+        return OTImprimante;
+    }
+
+    public void setOTImprimante(TImprimante OTImprimante) {
+        this.OTImprimante = OTImprimante;
+    }
+
+    public boolean isShowCodeBar() {
+        return showCodeBar;
+    }
+
+    public void setShowCodeBar(boolean showCodeBar) {
+        this.showCodeBar = showCodeBar;
+    }
+
+    public int getNombreCopie() {
+        return nombreCopie;
+    }
+
+    public void setNombreCopie(int nombreCopie) {
+        this.nombreCopie = nombreCopie;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+
+    public int getIntBegin() {
+        return intBegin;
+    }
+
+    public void setIntBegin(int intBegin) {
+        this.intBegin = intBegin;
+    }
+
+    public PrintService getService() {
+        return service;
+    }
+
+    public void setService(PrintService service) {
+        this.service = service;
+    }
+
+    public void printTicketVente(int copies) throws PrinterException {
+        PrinterJob printerjob = findPrinterJob();
+        TImprimante OImprimante = this.getOTImprimante();
+        if (OImprimante != null) {
+            intBegin = OImprimante.getIntBEGIN();
+            columnOne = OImprimante.getIntCOLUMN1();
+            columnTwo = OImprimante.getIntCOLUMN2();
+            columnThree = OImprimante.getIntCOLUMN3();
+            columnFour = OImprimante.getIntCOLUMN4();
+        }
+        PrintRequestAttributeSet OPrintRequestAttributeSet = new HashPrintRequestAttributeSet();
+        if (printerjob != null) {
+            PageFormat pageFormat = printerjob.defaultPage();
+            Paper paper = new Paper();
+
+            paper.setImageableArea(9 + intBegin, -70, paper.getWidth(), paper.getHeight()); //definition des marges de la feuille
+            // paper.setImageableArea(20, -70, paper.getWidth(), paper.getHeight()); //definition des marges de la feuille
+            pageFormat.setPaper(paper);
+            pageFormat.setOrientation(PageFormat.PORTRAIT); //orientation de la page
+
+            OPrintRequestAttributeSet.add(new Copies(copies)); //nombre de copie a imprimer
+            OPrintRequestAttributeSet.add(Chromaticity.COLOR); //insiste sur la netteté de la couleur du texte
+
+            printerjob.setPrintable(this, pageFormat);
+
+            printerjob.print(OPrintRequestAttributeSet);
+
+        }
+
+    }
+
+    public PrinterJob findPrinterJob() throws PrinterException {
+        if (printerJob == null) {
+            PrintService printService = this.getService();
+            if (printService == null) {
+
+                throw new IllegalStateException("Imprimante inconnue");
+            }
+            printerJob = PrinterJob.getPrinterJob();
+            printerJob.setPrintService(printService);
+
+            return printerJob;
+        }
+        return printerJob;
+
+    }
+
+    @Override
+    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+        if (pageIndex == 0) {
+            Graphics2D g2d = (Graphics2D) graphics;
+            g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+            int scale_image = 2; // coefficient de proportion des images
+            int scale_texte = 12; //hauteur d'une ligne de texte
+            Font font = new Font("Calibri (Corps)", Font.PLAIN, 9 + fontSize);
+            g2d.setFont(font);
+            limit = 85;
+
+            this.buildHeader(g2d, scale_image, scale_texte, limit); //definition de l'entete
+            if (!this.getInfoTiersPayants().isEmpty()) {
+                buildInfoTiersPayant(g2d, scale_texte, limit, this.getInfoTiersPayants());
+            }
+            if (!this.getInfoSellers().isEmpty()) {
+                this.buildInfoSeller(g2d, scale_texte, limit, this.getInfoSellers());
+            }
+
+            this.buildContent(g2d, scale_texte, limit, this.getDatas()); //definition du corps du ticket
+
+            if (!this.getSubtotal().isEmpty()) {
+                this.buildSubTotal(g2d, scale_texte, limit, this.getSubtotal());
+            }
+
+            if (!this.getCommentaires().isEmpty()) {
+                this.buildSubCommentaire(g2d, scale_texte, limit);
+            }
+
+            this.buildFooter(g2d, scale_image, scale_texte, limit); //definition du pied de page
+
+            return Printable.PAGE_EXISTS;
+        }
+        return Printable.NO_SUCH_PAGE;
+
+    }
+
+    public void buildTicket(List<String> datas, List<String> infoSellers, List<String> infoTiersPayants, List<String> subtotal, List<String> commentaires, String codeBar) {
+        this.codeBar = codeBar;
+        this.infoSellers = infoSellers;
+        this.datas = datas;
+        this.infoTiersPayants = infoTiersPayants;
+        this.subtotal = subtotal;
+        this.commentaires = commentaires;
+    }
+
+    public void buildHeader(Graphics2D graphics, int scale_image, int scale_texte, int start) {
+        int logoWidth = 20, logoHeight = 20, i = 1;
+        int Lw = scale_image * logoWidth, Lh = scale_image * logoHeight;
+        boolean result = this.getEmplacement().getLgEMPLACEMENTID().equals(DateConverter.OFFICINE);
+        Image logo = new ImageIcon(jdom.scr_report_file_logo).getImage();
+        Font font = new Font("Calibri (Corps)", Font.PLAIN, 15 + fontSize);
+        graphics.setFont(font);
+        graphics.drawString(this.getOfficine().getStrNOMCOMPLET(), 0, start);
+        font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
+        graphics.setFont(font);
+        if (!result) {
+            graphics.drawString(this.getEmplacement().getLgTYPEDEPOTID().getStrDESCRIPTION() + ": " + this.getEmplacement().getStrDESCRIPTION(), 0, start + (scale_texte * i));
+            i++;
+        }
+        graphics.drawString(this.getOfficine().getStrFIRSTNAME() + " " + this.getOfficine().getStrLASTNAME(), 0, start + (scale_texte * i));
+        graphics.drawString(this.getOfficine().getStrPHONE() + "   |    " + this.getOfficine().getStrADRESSSEPOSTALE(), 0, start + (scale_texte * ++i));
+        if (!this.getOfficine().getStrENTETE().equals("") && this.getOfficine().getStrENTETE() != null) {
+            if (result) {
+                i++;
+            }
+            graphics.drawString(this.getOfficine().getStrENTETE(), 0, start + (scale_texte * ++i));
+        }
+        graphics.drawString(this.getTitle(), 0, start + (scale_texte * ++i));
+        limit = start + (scale_texte * ++i);
+
+        if (intBegin == 0) {
+            graphics.drawImage(logo, 155, 85, (int) Lw, (int) Lh, null); // A decommenter pour les imprimantes thermique
+        }
+    }
+
+    public void buildContent(Graphics2D graphics, int scale_texte, int start, List<String> datas) {
+
+        switch (this.getTypeTicket()) {
+            case DateConverter.TICKET_VENTE: {
+                Font font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
+                graphics.drawString("QTE", 0 + columnOne, start);
+                graphics.drawString("ARTICLES", 25 + columnTwo, start);
+                graphics.drawString("P.U", 125 + columnThree, start);
+                graphics.drawString("MONTANT", 158 + columnFour, start);
+                graphics.setFont(font);
+                for (int i = 0; i < datas.size(); i++) {
+                    String[] parts = datas.get(i).split(";");
+                    graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                    graphics.drawString(parts[1], 10 + columnOne, start + (scale_texte * (i + 1)));
+                    graphics.drawString(parts[2], 25 + columnTwo, start + (scale_texte * (i + 1)));
+                    graphics.drawString(parts[3], 125 + columnThree, start + (scale_texte * (i + 1)));
+                    graphics.drawString(parts[4], 158 + columnFour, start + (scale_texte * (i + 1)));
+                }
+                break;
+            }
+           
+           
+            case DateConverter.TICKET_Z: {
+                Font font;
+                for (int i = 0; i < datas.size(); i++) {
+                    String[] parts = datas.get(i).split(";");
+                    if (parts[4].equals(commonparameter.PROCESS_SUCCESS)) {
+                        font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
+                    } else {
+                        font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
+                    }
+
+                    graphics.setFont(font);
+                    if (parts[5].equalsIgnoreCase(commonparameter.PROCESS_FAILED)) {
+                        graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                    } else {
+
+                        if (parts.length > 6) {
+                            graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[1], 85 + columnTwo, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[2], 130 + columnThree, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[3], 140 + columnFour, start + (scale_texte * (i + 1)));
+                        } else {
+                            graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[1], 65 + columnTwo, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[2], 130 + columnThree, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[3], 140 + columnFour, start + (scale_texte * (i + 1)));
+                        }
+
+                    }
+
+                }
+                break;
+            }
+            default:
+                for (int i = 0; i < datas.size(); i++) {
+                    String[] parts = datas.get(i).split(";");
+                    graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                    graphics.drawString(parts[1], 100 + columnThree, start + (scale_texte * (i + 1)));
+                    graphics.drawString(parts[2], 150 + columnFour, start + (scale_texte * (i + 1)));
+                }
+                break;
+        }
+
+        limit = start + (scale_texte * datas.size());
+    }
+
+    public ImpressionServiceImpl() {
+    }
+
+    public void buildSubCommentaire(Graphics2D graphics, int scale_texte, int start) {
+        List<String> _commentaires = this.getCommentaires();
+
+        Font font;
+
+        for (int i = 0; i < _commentaires.size(); i++) {
+            String[] parts = _commentaires.get(i).split(";");
+            if (parts[1].equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
+                font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
+            } else {
+                font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
+            }
+            graphics.setFont(font);
+            graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+
+        }
+
+        limit = start + (scale_texte * (_commentaires.size()));
+    }
+
+    public void buildFooter(Graphics2D graphics, int scale_image, int scale_texte, int start) {
+        int codeBarWidth = 50;
+        int codeBarHeight = 15;
+        int Cw = scale_image * codeBarWidth;
+        int Ch = scale_image * codeBarHeight;
+
+        /* if (this.getType_ticket().equalsIgnoreCase(commonparameter.str_ACTION_VENTE)) {
+         graphics.drawString("***** Merci de votre confiance.*****", 15, start);
+         }*/
+        graphics.drawString("Logiciel DICI", 125, start + (scale_texte * 2)); //a decommenter apres 11/06/2016
+//        graphics.drawString("Logiciel DICI", 0, start + (scale_texte * 2));
+
+        graphics.drawString(SIMPLE_DATE_FORMAT.format(this.getOperation()), 125, start + (scale_texte * 1)); // imprimante matricielle
+
+        if (this.isShowCodeBar()) {
+            Image _codeBar = new ImageIcon(this.getCodeBar()).getImage();
+            if (intBegin == 0) {
+                graphics.drawImage(_codeBar, -5, start + 5, (int) Cw, (int) Ch, null);
+            }
+
+        }
+
+    }
+
+    public void buildInfoSeller(Graphics2D graphics, int scale_texte, int start, List<String> datas) {
+        for (int i = 0; i < datas.size(); i++) {
+            graphics.drawString(datas.get(i), 0, start + (scale_texte * i));
+        }
+
+        limit = start + (scale_texte * (datas.size() + 1));
+    }
+
+    public void buildSubTotal(Graphics2D graphics, int scale_texte, int start, List<String> datas) {
+        graphics.drawString("", 0, start);
+        Font font;
+        for (int i = 0; i < datas.size(); i++) {
+            String[] parts = datas.get(i).split(";");
+            if (parts[3].equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
+                font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
+            } else {
+                font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
+            }
+
+            graphics.setFont(font);
+            graphics.drawString(parts[0], 35, start + (scale_texte * (i + 1)));
+            graphics.drawString(parts[1], 110, start + (scale_texte * (i + 1)));
+            //  graphics.drawString(parts[2], 160, start + (scale_texte * (i + 1))); //imprimante termique
+            graphics.drawString(parts[2], 150, start + (scale_texte * (i + 1))); //imprimante matricielle
+        }
+        limit = start + (scale_texte * (datas.size()));
+    }
+
+    public void buildInfoTiersPayant(Graphics2D graphics, int scale_texte, int start, List<String> datas) {
+        for (int i = 0; i < datas.size(); i++) {
+            graphics.drawString(datas.get(i), 0, start + (scale_texte * i));
+        }
+
+        limit = start + (scale_texte * (datas.size() + 1));
+
+    }
+
+ 
+}

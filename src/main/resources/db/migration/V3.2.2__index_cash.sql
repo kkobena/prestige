@@ -1,0 +1,1 @@
+CREATE INDEX transac_tash_vent  ON t_cash_transaction (str_TASK);

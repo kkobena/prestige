@@ -1,0 +1,1 @@
+ALTER TABLE MvtTransaction ADD COLUMN organisme VARCHAR(100); 
