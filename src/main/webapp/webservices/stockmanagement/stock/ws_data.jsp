@@ -29,10 +29,10 @@
    
     String str_TYPE_TRANSACTION = "%%", lg_ZONE_GEO_ID = "", lg_FAMILLEARTICLE_ID = "", search_value = "", lg_GROSSISTE_ID = "";
     int int_NUMBER = 0;
-    boolean undefined = true;
+    
     if (request.getParameter("int_NUMBER") != null && !"".equals(request.getParameter("int_NUMBER"))) {
-        int_NUMBER = new Integer(request.getParameter("int_NUMBER"));
-        undefined = false;
+        int_NUMBER =  Integer.valueOf(request.getParameter("int_NUMBER"));
+      
     }
     if (request.getParameter("search_value") != null) {
         search_value = request.getParameter("search_value");

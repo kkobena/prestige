@@ -26,7 +26,7 @@
     date key = new date();
    
     List<TBonLivraisonDetail> lstTBonLivraisonDetail = new ArrayList<TBonLivraisonDetail>();
-    TUser OTUser;
+
 
 %>
 
@@ -127,7 +127,7 @@
     OdataManager.initEntityManager();
     StockManager OStockManager = new StockManager(OdataManager);
     
-    OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+    
    lstTBonLivraisonDetail = OStockManager.getListeLivraisonByProductAndGrossiste(search_value, dtDEBUT, dtFin, lg_FAMILLE_ID, lg_GROSSISTE_ID);
     
 
@@ -180,7 +180,7 @@
         json.put("int_STOCK_REAPROVISONEMENT", lstTBonLivraisonDetail.get(i).getIntQTERECUE());
         json.put("int_VALUE1", lstTBonLivraisonDetail.get(i).getIntQTEUG());
         json.put("int_VALUE2", conversion.AmountFormat(lstTBonLivraisonDetail.get(i).getIntPAF(), '.'));
-        
+          json.put("dt_ENTREE", date.DateToString(lstTBonLivraisonDetail.get(i).getLgBONLIVRAISONID().getDtUPDATED(), date.formatterShort));
         arrayObj.put(json);
 
     }

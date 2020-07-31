@@ -134,7 +134,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.EtatStockManager', {
         var store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
             data: [{str_TYPE_TRANSACTION: 'LESS', str_desc: 'Inferieur a'}, {str_TYPE_TRANSACTION: 'MORE', str_desc: 'Superieur a'}, {str_TYPE_TRANSACTION: 'EQUAL', str_desc: 'Egal a'},
-                {str_TYPE_TRANSACTION: 'LESSOREQUAL', str_desc: 'Inferieur ou egal a'}, 
+                {str_TYPE_TRANSACTION: 'LESSOREQUAL', str_desc: 'Inferieur ou egal a'},
                 {str_TYPE_TRANSACTION: 'MOREOREQUAL', str_desc: 'Superieur ou egal a'}/*,{str_TYPE_TRANSACTION: 'SEUIL', str_desc: 'Seuil atteint'}*/]
         });
 
@@ -197,7 +197,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.EtatStockManager', {
                 }, {
                     header: 'Code Emplacement',
                     dataIndex: 'CODEEMPLACEMENT',
-                    flex: 2,
+                    flex: 1.5,
                     editor: {
                         xtype: 'combobox',
                         allowBlank: true,
@@ -210,44 +210,42 @@ Ext.define('testextjs.view.stockmanagement.etatstock.EtatStockManager', {
                         minChars: 2,
 
                         queryMode: 'remote',
-                       
+
                         enableKeyEvents: true,
                         listeners: {
                             select: function (field) {
-                               /* if (e.getKey() === e.ENTER) {*/
-                              
-                                    var grid = Ext.getCmp('GridEtatStockID');
-                                    var record = grid.getSelectionModel().getSelection();
+                                /* if (e.getKey() === e.ENTER) {*/
 
-                                    Ext.Ajax.request({
-                                        url: '../webservices/stockmanagement/stock/ws_transaction.jsp',
-                                        params: {
-                                            lg_FAMILLE_ID: record[0].get("lg_FAMILLE_ID"),
-                                            CODEEMPLACEMENT: field.getValue()
+                                var grid = Ext.getCmp('GridEtatStockID');
+                                var record = grid.getSelectionModel().getSelection();
 
-                                        },
-                                        success: function (response)
-                                        {
-                                            var obj = Ext.decode(response.responseText);
+                                Ext.Ajax.request({
+                                    url: '../webservices/stockmanagement/stock/ws_transaction.jsp',
+                                    params: {
+                                        lg_FAMILLE_ID: record[0].get("lg_FAMILLE_ID"),
+                                        CODEEMPLACEMENT: field.getValue()
 
-                                            if (obj.status === 1) {
-                                                Ext.MessageBox.alert('Modification de la ligne ' + '[' + record[0].get("int_CIP") + ']', 'Modification effectu&eacute;e avec succ&egrave;s');
-//                                record.commit();
-                                            } else {
+                                    },
+                                    success: function (response)
+                                    {
+                                        var obj = Ext.decode(response.responseText);
 
-                                                Ext.MessageBox.alert('Modification de la ligne ' + '[' + record[0].get("int_CIP") + ']', "Erreur de modification");
-                                            }
+                                        if (obj.status === 1) {
+                                            Ext.MessageBox.alert('Modification de la ligne ' + '[' + record[0].get("int_CIP") + ']', 'Modification effectu&eacute;e avec succ&egrave;s');
+//                            
+                                        } else {
 
-
-                                        },
-                                        failure: function (response)
-                                        {
-
+                                            Ext.MessageBox.alert('Modification de la ligne ' + '[' + record[0].get("int_CIP") + ']', "Erreur de modification");
                                         }
-                                    });
 
 
-                                /*}*/
+                                    },
+                                    failure: function (response)
+                                    {
+
+                                    }
+                                });
+
                             }
                         }
 
@@ -256,9 +254,19 @@ Ext.define('testextjs.view.stockmanagement.etatstock.EtatStockManager', {
                 }, {
                     header: 'Stock',
                     dataIndex: 'int_NUMBER',
-                    renderer: amountformat,
+//                    renderer: amountformat,
                     align: 'right',
-                    flex: 0.5
+                    flex: 0.5,
+                    renderer: function (v, m, r) {
+                        var afficherStock = r.data.afficherStock;
+                        if (afficherStock) {
+                            return v;
+
+                        } else {
+                            return '';
+                        }
+
+                    }
                 }],
             selModel: {
                 selType: 'cellmodel'
@@ -377,7 +385,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.EtatStockManager', {
                             Me.onRechClick();
                         }
                     }
-                } , {
+                }, {
                     xtype: 'textfield',
                     id: 'rechecher',
                     name: 'facture',

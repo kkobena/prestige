@@ -67,7 +67,7 @@
 
         String pdf_file_name = "rp_commandesarticle";
 
-        TParameters OTParameters;
+      
         jdom Ojdom = new jdom();
         Ojdom.InitRessource();
         Ojdom.LoadRessource();

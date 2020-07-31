@@ -41,6 +41,12 @@ Ext.define('testextjs.model.FamilleStock', {
             name: 'dt_PEREMPTION',
             type: 'string'
         }, {
+            name: 'dt_ENTREE',
+            type: 'string'
+        },
+        
+        
+        {
             name: 'str_TYPE_TRANSACTION',
             type: 'string'
         },
@@ -199,6 +205,10 @@ Ext.define('testextjs.model.FamilleStock', {
         {
             name: 'int_STOCK',
             type: 'int'
+        },
+        {
+            name: 'afficherStock',
+            type: 'boolean'
         }
         
     ]

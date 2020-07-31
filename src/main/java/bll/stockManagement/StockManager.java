@@ -560,7 +560,7 @@ public class StockManager extends bllBase {
             if (search_value.equalsIgnoreCase("") || search_value == null) {
                 search_value = "%%";
             }
-            lsBonLivraisonDetails = this.getOdataManager().getEm().createQuery("SELECT t FROM TBonLivraisonDetail t WHERE t.lgGROSSISTEID.lgGROSSISTEID LIKE ?1 AND t.lgFAMILLEID.lgFAMILLEID LIKE ?2 AND (t.lgFAMILLEID.intCIP LIKE ?3 OR t.lgFAMILLEID.intEAN13 LIKE ?3 AND t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgBONLIVRAISONID.strREFLIVRAISON LIKE ?3) AND (t.lgBONLIVRAISONID.dtUPDATED >= ?4 AND t.lgBONLIVRAISONID.dtUPDATED <= ?5) AND t.lgBONLIVRAISONID.strSTATUT = ?6")
+            lsBonLivraisonDetails = this.getOdataManager().getEm().createQuery("SELECT t FROM TBonLivraisonDetail t WHERE t.lgGROSSISTEID.lgGROSSISTEID LIKE ?1 AND t.lgFAMILLEID.lgFAMILLEID LIKE ?2 AND (t.lgFAMILLEID.intCIP LIKE ?3 OR t.lgFAMILLEID.intEAN13 LIKE ?3 AND t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgBONLIVRAISONID.strREFLIVRAISON LIKE ?3) AND (t.lgBONLIVRAISONID.dtUPDATED >= ?4 AND t.lgBONLIVRAISONID.dtUPDATED <= ?5) AND t.lgBONLIVRAISONID.strSTATUT = ?6 ORDER BY t.lgBONLIVRAISONID.dtUPDATED")
                     .setParameter(1, lg_GROSSISTE_ID).setParameter(2, lg_FAMILLE_ID).setParameter(3, search_value + "%").setParameter(4, dtDEBUT).setParameter(5, dtFin).setParameter(6, commonparameter.statut_is_Closed).getResultList();
         } catch (Exception e) {
             e.printStackTrace();
@@ -1847,9 +1847,9 @@ public class StockManager extends bllBase {
             cb.endText();
             cb.restoreState();
         } catch (DocumentException ex) {
-            
+
         } catch (IOException ex) {
-          
+
         }
     }
 
@@ -2094,26 +2094,21 @@ public class StockManager extends bllBase {
 
     public JSONArray etatStock(boolean all, String str_TYPE_TRANSACTION, String criteria, String lg_FAMILLEARTICLE_ID, String lg_ZONE_GEO_ID, String lg_GROSSISTE_ID, int int_NUMBER, int start, int limit) {
         String lg_EMPLACEMENT_ID = this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
-        //boolean undefined,
         JSONArray aray = new JSONArray();
-        String lg_TYPE_STOCK_ID = "1";
-        if (!lg_EMPLACEMENT_ID.equals("1")) {
-            lg_TYPE_STOCK_ID = "3";
-        }
         try {
             EntityManager em = this.getOdataManager().getEm();
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TFamille> root = cq.from(TFamille.class);
             Join<TFamille, TFamilleStock> st = root.join("tFamilleStockCollection", JoinType.INNER);
-            Join<TFamille, TTypeStockFamille> sp = root.join("tTypeStockFamilleCollection", JoinType.INNER);
+
             Predicate predicate = cb.conjunction();
             if (!"".equals(criteria)) {
                 predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
 
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
-            predicate = cb.and(predicate, cb.equal(sp.get("lgTYPESTOCKID").get("lgTYPESTOCKID"), lg_TYPE_STOCK_ID));
+
             predicate = cb.and(predicate, cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
             if (!"".equals(lg_FAMILLEARTICLE_ID)) {
                 Join<TFamille, TFamillearticle> famillearticle = root.join("lgFAMILLEARTICLEID", JoinType.INNER);
@@ -2173,7 +2168,7 @@ public class StockManager extends bllBase {
 
             }
             List<Object[]> list = q.getResultList();
-
+            boolean afficherStock = findParametre("AFFICHER_STOCK");
             list.forEach((t) -> {
 
                 try {
@@ -2184,11 +2179,15 @@ public class StockManager extends bllBase {
                     ob.put("str_NAME", t[1]);
                     ob.put("int_NUMBER_ENTREE", t[5]);
                     ob.put("int_PRICE", t[3]);
-                    ob.put("int_NUMBER", t[4]);
+                    if (afficherStock) {
+                        ob.put("int_NUMBER", t[4]);
+                    }
                     ob.put("int_STOCK_REAPROVISONEMENT", t[7]);
                     ob.put("CODEEMPLACEMENT", t[8]);
                     ob.put("str_CODE_TVA", t[6]);
                     ob.put("lg_GROSSISTE_ID", t[9]);
+                    ob.put("afficherStock", afficherStock);
+
                     aray.put(ob);
                 } catch (JSONException ex) {
                     Logger.getLogger(Preenregistrement.class.getName()).log(Level.SEVERE, null, ex);
@@ -2202,6 +2201,15 @@ public class StockManager extends bllBase {
 
         return aray;
 
+    }
+
+    private boolean findParametre(String id) {
+        try {
+            TParameters o = this.getOdataManager().getEm().find(TParameters.class, id);
+            return Integer.valueOf(o.getStrVALUE()).compareTo(1) == 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public int etatStock(String str_TYPE_TRANSACTION, String criteria, String lg_FAMILLEARTICLE_ID, String lg_ZONE_GEO_ID, String lg_GROSSISTE_ID, int int_NUMBER) {
@@ -2563,26 +2571,20 @@ public class StockManager extends bllBase {
 
     public JSONArray etatStockRepport(String str_TYPE_TRANSACTION, String criteria, String lg_FAMILLEARTICLE_ID, String lg_ZONE_GEO_ID, String lg_GROSSISTE_ID, int int_NUMBER) {
         String lg_EMPLACEMENT_ID = this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
-        //boolean undefined,
         JSONArray aray = new JSONArray();
-        String lg_TYPE_STOCK_ID = "1";
-        if (!lg_EMPLACEMENT_ID.equals("1")) {
-            lg_TYPE_STOCK_ID = "3";
-        }
         try {
             EntityManager em = this.getOdataManager().getEm();
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TFamille> root = cq.from(TFamille.class);
             Join<TFamille, TFamilleStock> st = root.join("tFamilleStockCollection", JoinType.INNER);
-            Join<TFamille, TTypeStockFamille> sp = root.join("tTypeStockFamilleCollection", JoinType.INNER);
+
             Predicate predicate = cb.conjunction();
             if (!"".equals(criteria)) {
                 predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
 
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
-            predicate = cb.and(predicate, cb.equal(sp.get("lgTYPESTOCKID").get("lgTYPESTOCKID"), lg_TYPE_STOCK_ID));
             predicate = cb.and(predicate, cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
             if (!"".equals(lg_FAMILLEARTICLE_ID)) {
                 Join<TFamille, TFamillearticle> famillearticle = root.join("lgFAMILLEARTICLEID", JoinType.INNER);
@@ -2633,23 +2635,12 @@ public class StockManager extends bllBase {
                     root.get("lgZONEGEOID").get("strCODE"),
                     root.get("lgGROSSISTEID").get("strLIBELLE"), root.get("lgZONEGEOID").get("strLIBELLEE")
             ).orderBy(cb.asc(root.get(TFamille_.strDESCRIPTION))).distinct(true);
-            /*
-              `t_famille`.`str_NAME`,
-  `t_famille`.`int_PRICE`,
-  `t_famille`.`int_CIP`,
-  `t_grossiste`.`str_LIBELLE`,
-  `t_zone_geographique`.`str_CODE`,
-  `t_famille`.`int_SEUIL_MIN`,
-  `t_famille`.`int_PAF`,
-`t_zone_geographique`.`str_LIBELLEE`,
-`t_type_stock_famille`.`int_NUMBER`,
-  `t_code_tva`.`int_VALUE`
-             */
+
             cq.where(predicate);
             Query q = em.createQuery(cq);
 
             List<Object[]> list = q.getResultList();
-
+            boolean afficherStock = findParametre("AFFICHER_STOCK");
             list.forEach((t) -> {
 
                 try {
@@ -2666,6 +2657,7 @@ public class StockManager extends bllBase {
                     ob.put("int_VALUE", t[6]);
                     ob.put("str_LIBELLE", t[9]);
                     ob.put("str_LIBELLEE", t[10]);
+                    ob.put("afficherStock", afficherStock);
                     aray.put(ob);
                 } catch (JSONException ex) {
                     Logger.getLogger(Preenregistrement.class.getName()).log(Level.SEVERE, null, ex);

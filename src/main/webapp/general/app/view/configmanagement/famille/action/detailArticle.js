@@ -166,7 +166,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                     defaultType: 'textfield',
                     defaults: {
                         anchor: '100%'
-                      
+
                     },
                     items: [
                         {
@@ -403,8 +403,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                                     width: 400,
                                     emptyText: 'Code.Gestion',
                                     id: 'lg_CODE_GESTION_ID'
-                                }, 
-                                
+                                },
+
                                 {
                                     fieldLabel: 'Date dernier.BL',
                                     width: 400,
@@ -412,28 +412,28 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                                     name: 'dt_DATE_LIVRAISON',
                                     id: 'dt_DATE_LIVRAISON'
                                 },
-                                 {
-                            xtype: 'container',
-                            layout: 'hbox',
-                            defaultType: 'dis',
-                            items: [ {
-                                    fieldLabel: 'Seuil.Reappro',
-                                      xtype: 'displayfield',
-                                     flex: 1,
-                                      fieldStyle: "color:blue;font-weight:bold;font-size:1.3em",
-                                    emptyText: 'Seuil.Reappro',
-                                    name: 'int_STOCK_REAPROVISONEMENT',
-                                    id: 'int_STOCK_REAPROVISONEMENT'
-                                }, {
-                                    fieldLabel: 'Qte.Reappro',
-                                      xtype: 'displayfield',
-                                    flex: 1,
-                                     fieldStyle: "color:blue;font-weight:bold;font-size:1.3em",
-                                    emptyText: 'Qte.Reappro',
-                                    name: 'int_QTE_REAPPROVISIONNEMENT',
-                                    id: 'int_QTE_REAPPROVISIONNEMENT'
-                                }]}
-                               
+                                {
+                                    xtype: 'container',
+                                    layout: 'hbox',
+                                    defaultType: 'dis',
+                                    items: [{
+                                            fieldLabel: 'Seuil.Reappro',
+                                            xtype: 'displayfield',
+                                            flex: 1,
+                                            fieldStyle: "color:blue;font-weight:bold;font-size:1.3em",
+                                            emptyText: 'Seuil.Reappro',
+                                            name: 'int_STOCK_REAPROVISONEMENT',
+                                            id: 'int_STOCK_REAPROVISONEMENT'
+                                        }, {
+                                            fieldLabel: 'Qte.Reappro',
+                                            xtype: 'displayfield',
+                                            flex: 1,
+                                            fieldStyle: "color:blue;font-weight:bold;font-size:1.3em",
+                                            emptyText: 'Qte.Reappro',
+                                            name: 'int_QTE_REAPPROVISIONNEMENT',
+                                            id: 'int_QTE_REAPPROVISIONNEMENT'
+                                        }]}
+
                             ]
                         },
                         {
@@ -614,11 +614,19 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                             margin: '0 0 5 0',
                             store: store_order,
                             height: 200,
-                            columns: [{
-                                    header: 'Date entree',
+                            columns: [
+                                {
+                                    header: 'Date entrée',
+                                    dataIndex: 'dt_ENTREE',
+                                    flex: 1
+                                },
+                                {
+                                    header: 'Date BL',
                                     dataIndex: 'dt_PEREMPTION',
                                     flex: 1
-                                }, {
+                                },
+
+                                {
                                     header: 'Reference',
                                     dataIndex: 'int_NUM_LOT',
                                     flex: 1
@@ -652,7 +660,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                                     format: 'd/m/Y',
                                     listeners: {
                                         'change': function (me) {
-                                            // alert(me.getSubmitValue());
+
                                             valdatedebutDetailOrder = me.getSubmitValue();
                                             Ext.getCmp('datefinDetailOrder').setMinValue(me.getValue());
                                             Ext.getCmp('gridpanelOrderID').getStore().getProxy().url = url_services_data_perime_famille + "?lg_FAMILLE_ID=" + ref + "&datedebut=" + valdatedebutDetailOrder;
@@ -777,73 +785,73 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                                 }, {
                                     header: 'Janvier',
                                     dataIndex: 'January',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 }, {
                                     header: 'Février',
                                     dataIndex: 'February',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 }, {
                                     header: 'Mars',
                                     dataIndex: 'March',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 }, {
                                     header: 'Avril',
                                     dataIndex: 'April',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 }, {
                                     header: 'Mai',
                                     dataIndex: 'May',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 },
                                 {
                                     header: 'Juin',
                                     dataIndex: 'June',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 },
                                 {
                                     header: 'Juillet',
                                     dataIndex: 'July',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 },
                                 {
                                     header: 'Ao&ucirc;t',
                                     dataIndex: 'August',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 },
                                 {
                                     header: 'Septembre',
                                     dataIndex: 'September',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 },
                                 {
                                     header: 'Octobre',
                                     dataIndex: 'October',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 },
                                 {
                                     header: 'Novembre',
                                     dataIndex: 'November',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 },
                                 {
                                     header: 'Décembre',
                                     dataIndex: 'December',
-                                    align:'right',
+                                    align: 'right',
                                     flex: 1
                                 }
                             ],
-                            
+
                             bbar: {
                                 xtype: 'pagingtoolbar',
                                 pageSize: itemsPerPage,
@@ -864,7 +872,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
 
         OgridpanelDetailID = Ext.getCmp('gridpanelDetailID');
         OgridpanelOrder = Ext.getCmp('gridpanelOrder');
-  
+
         if (Omode == "decondition" || (this.getOdatasource().bool_DECONDITIONNE == 0 && this.getOdatasource().bool_DECONDITIONNE_EXIST == 1)) {
             Ext.getCmp('int_QTEDETAIL').show();
         }
@@ -882,7 +890,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
             Ext.getCmp('lg_TYPEETIQUETTE_ID').setValue(this.getOdatasource().lg_TYPEETIQUETTE_ID);
             Ext.getCmp('dt_LAST_INVENTAIRE').setValue(this.getOdatasource().dt_LAST_INVENTAIRE);
             Ext.getCmp('dt_LAST_ENTREE').setValue(this.getOdatasource().dt_LAST_ENTREE);
-             Ext.getCmp('dt_DATE_LIVRAISON').setValue(this.getOdatasource().dt_DATE_LIVRAISON);
+            Ext.getCmp('dt_DATE_LIVRAISON').setValue(this.getOdatasource().dt_DATE_LIVRAISON);
             Ext.getCmp('dt_LAST_VENTE').setValue(this.getOdatasource().dt_LAST_VENTE);
             Ext.getCmp('str_CODE_TVA').setValue(this.getOdatasource().lg_CODE_TVA_ID);
             Ext.getCmp('int_T').setValue(this.getOdatasource().int_T);

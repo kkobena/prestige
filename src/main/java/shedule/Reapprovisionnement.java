@@ -236,7 +236,7 @@ public class Reapprovisionnement {
     }
 
     
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         try {
             TParameters semois = em.find(TParameters.class, "SEMOIS");

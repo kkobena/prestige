@@ -81,37 +81,35 @@
             lg_GROSSISTE_ID = request.getParameter("lg_GROSSISTE_ID");
         }
 
-        TParameters OTParameters;
-
-        date key = new date();
+       
 
         OdataManager.initEntityManager();
 
         TOfficine oTOfficine = OdataManager.getEm().find(dal.TOfficine.class, "1");
         Map parameters = new HashMap();
-        String scr_report_file = "rp_etatdestock";
+      //  String scr_report_file = "rp_etatdestock";
         String periode = date.formatterShort.format(new Date());
         String P_PERIODE = " AU " + periode;
         String title = "";
-        System.out.println("str_TYPE_TRANSACTION  " + str_TYPE_TRANSACTION + " numm " + int_NUMBER);
+        
         if (!undefined) {
-            System.out.println("undefined " + undefined);
+          
             if (str_TYPE_TRANSACTION.equals(Parameter.LESS)) {
 
-                scr_report_file = "rp_etatdestockless";
+               
                 title = "Stock  INFERIEUR  A " + int_NUMBER + " " + P_PERIODE;
             } else if (str_TYPE_TRANSACTION.equals(Parameter.MORE)) {
 
-                scr_report_file = "rp_etatdestockmore";
+              
                 title = "Stock  SUPERIEUR A " + int_NUMBER + " " + P_PERIODE;
             } else if (str_TYPE_TRANSACTION.equals(Parameter.MOREOREQUAL)) {
-                scr_report_file = "rp_etatdestockmoreequals";
+               
                 title = "Stock  SUPERIEUR OU EQUAL A " + int_NUMBER + " " + P_PERIODE;
             } else if (str_TYPE_TRANSACTION.equals(Parameter.EQUAL)) {
-                scr_report_file = "rp_etatdestockequal";
+               
                 title = "Stock   EQUAL A " + int_NUMBER + " " + P_PERIODE;
             } else if (str_TYPE_TRANSACTION.equals(Parameter.LESSOREQUAL)) {
-                scr_report_file = "rp_etatdestocklessequals";
+               
                 title = "Stock  INFERIEUR OU EQUAL A " + int_NUMBER + " " + P_PERIODE;
 
             }

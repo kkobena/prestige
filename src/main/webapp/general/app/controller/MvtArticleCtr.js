@@ -575,7 +575,7 @@ Ext.define('testextjs.controller.MvtArticleCtr', {
                                     format: '0,000.'
                                 },
                                 {
-                                    text: '2cart.Inv',
+                                    text: 'Ecart.Inv',
                                     xtype: 'numbercolumn',
                                     dataIndex: 'ecartInventaire',
                                     flex: 0.7,
