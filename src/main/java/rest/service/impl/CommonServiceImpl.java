@@ -90,6 +90,8 @@ public class CommonServiceImpl implements Serializable, CommonService {
     private TImprimante OTImprimante;
     private Boolean afficheeurActif;
     private LocalDate dateUpdat;
+    private Integer maximunproduit;
+    private Boolean voirNumeroTicket;
 
     public LocalDate getDateUpdat() {
         return dateUpdat;
@@ -112,6 +114,38 @@ public class CommonServiceImpl implements Serializable, CommonService {
     }
 
     public CommonServiceImpl() {
+    }
+
+    public TImprimante getOTImprimante() {
+        return OTImprimante;
+    }
+
+    public void setOTImprimante(TImprimante OTImprimante) {
+        this.OTImprimante = OTImprimante;
+    }
+
+    public Boolean getAfficheeurActif() {
+        return afficheeurActif;
+    }
+
+    public void setAfficheeurActif(Boolean afficheeurActif) {
+        this.afficheeurActif = afficheeurActif;
+    }
+
+    public Integer getMaximunproduit() {
+        return maximunproduit;
+    }
+
+    public void setMaximunproduit(Integer maximunproduit) {
+        this.maximunproduit = maximunproduit;
+    }
+
+    public Boolean getVoirNumeroTicket() {
+        return voirNumeroTicket;
+    }
+
+    public void setVoirNumeroTicket(Boolean voirNumeroTicket) {
+        this.voirNumeroTicket = voirNumeroTicket;
     }
 
     @Override
@@ -254,14 +288,19 @@ public class CommonServiceImpl implements Serializable, CommonService {
         java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(Parameter.P_SHOW_ALL_ACTIVITY);
         return LstTPrivilege.stream().anyMatch(p);
     }
+    private Integer nombreTickets;
 
     @Override
     public int nombreTickets(String param) {
         try {
-            TParameters tp = getEntityManager().find(TParameters.class, param);
-            return Integer.valueOf(tp.getStrVALUE());
+            if (nombreTickets == null) {
+                TParameters tp = getEntityManager().find(TParameters.class, param);
+                nombreTickets = Integer.valueOf(tp.getStrVALUE());
+            }
+            return nombreTickets;
         } catch (Exception e) {
-            return 1;
+            nombreTickets = 1;
+            return nombreTickets;
         }
 
     }
@@ -269,20 +308,28 @@ public class CommonServiceImpl implements Serializable, CommonService {
     @Override
     public boolean voirNumeroTicket() {
         try {
-            TParameters tp = getEntityManager().find(TParameters.class, Parameter.KEY_SHOW_NUMERO_TICKET);
-            return (Integer.valueOf(tp.getStrVALUE()) == 1);
+            if (voirNumeroTicket == null) {
+                TParameters tp = getEntityManager().find(TParameters.class, Parameter.KEY_SHOW_NUMERO_TICKET);
+                voirNumeroTicket = (Integer.valueOf(tp.getStrVALUE()) == 1);
+            }
+            return voirNumeroTicket;
         } catch (Exception e) {
-            return false;
+            voirNumeroTicket = false;
+            return voirNumeroTicket;
         }
     }
 
     @Override
     public Integer maximunproduit() {
         try {
-            TParameters tp = getEntityManager().find(TParameters.class, "KEY_MAX_VALUE_VENTE");
-            return Integer.valueOf(tp.getStrVALUE());
+            if (maximunproduit == null) {
+                TParameters tp = getEntityManager().find(TParameters.class, "KEY_MAX_VALUE_VENTE");
+                maximunproduit = Integer.valueOf(tp.getStrVALUE());
+            }
+            return maximunproduit;
         } catch (Exception e) {
-            return 1000;
+            maximunproduit = 1000;
+            return maximunproduit;
         }
     }
 
@@ -593,7 +640,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             try {
                 TParameters tp = getEntityManager().find(TParameters.class, "DATE_MIS_A_JOUR_NLLE_VERSION");
                 if (tp != null) {
-                    dateUpdat = LocalDate.parse(tp.getStrVALUE().trim(),DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                    dateUpdat = LocalDate.parse(tp.getStrVALUE().trim(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
                 }
                 return new JSONObject().put("success", true).put("datemisajour", dateUpdat.toString());
             } catch (Exception e) {

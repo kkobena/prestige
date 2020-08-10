@@ -300,17 +300,22 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             Expression quantiteVente = cb.quot(cb.sumAsDouble(item.get(TPreenregistrementDetail_.INT_QU_AN_TI_TY)), nbreMois);
 
             if (!StringUtils.isEmpty(codeFamile) || codeFamile.equals(DateConverter.ALL)) {
-                cq.multiselect(root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.intCIP), root.get(TFamille_.strNAME),
-                        root.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE), root.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
+                cq.multiselect(root.get(TFamille_.lgFAMILLEID), 
+                        root.get(TFamille_.intCIP), 
+                        root.get(TFamille_.strNAME),
+                        root.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE),
+                        root.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
                         root.get(TFamille_.intPAF), root.get(TFamille_.intPRICE), root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE),
-                        stock.get(TFamilleStock_.intNUMBERAVAILABLE), sumConsom, quantiteVente
+                        stock.get(TFamilleStock_.intNUMBERAVAILABLE), sumConsom, quantiteVente,
+                         root.get(TFamille_.dtPEREMPTION)
                 ).having(cb.greaterThan(stock.get(TFamilleStock_.INT_NU_MB_ER_AV_AI_LA_BL_E), sumConsom));
                 cq.distinct(true).groupBy(root.get(TFamille_.lgFAMILLEID)).orderBy(cb.asc(root.get(TFamille_.strNAME)));
             } else if (!StringUtils.isEmpty(codeGrossiste) || codeGrossiste.equals(DateConverter.ALL)) {
                 cq.multiselect(root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.intCIP), root.get(TFamille_.strNAME),
                         root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE), root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE),
                         root.get(TFamille_.intPAF), root.get(TFamille_.intPRICE), root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE),
-                        stock.get(TFamilleStock_.intNUMBERAVAILABLE), sumConsom, quantiteVente
+                        stock.get(TFamilleStock_.intNUMBERAVAILABLE), sumConsom, quantiteVente,
+                        root.get(TFamille_.dtPEREMPTION)
                 ).having(cb.greaterThan(stock.get(TFamilleStock_.INT_NU_MB_ER_AV_AI_LA_BL_E), sumConsom));
                 cq.distinct(true).groupBy(root.get(TFamille_.lgFAMILLEID)).orderBy(cb.asc(root.get(TFamille_.strNAME)));
             } else if (!StringUtils.isEmpty(codeRayon) || codeRayon.equals(DateConverter.ALL)) {

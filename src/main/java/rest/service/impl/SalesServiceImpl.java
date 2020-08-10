@@ -321,7 +321,7 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public JSONObject annulerVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID) {
-        TPreenregistrement OTPreenregistrement =  this.getEm().find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
+        TPreenregistrement OTPreenregistrement = this.getEm().find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
         JSONObject json;
         if (OTPreenregistrement == null) {
             try {
@@ -491,7 +491,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private JSONObject annulerVNO(TUser ooTUser, TPreenregistrement tp) throws JSONException {
-    EntityManager emg=   this.getEm();
+        EntityManager emg = this.getEm();
         JSONObject json = new JSONObject();
         final boolean checked = tp.getChecked();
         final boolean sameDate = DateConverter.convertDateToLocalDate(tp.getDtUPDATED()).isEqual(LocalDate.now());
@@ -557,15 +557,13 @@ public class SalesServiceImpl implements SalesService {
             }
 
             transaction(idVente, emg).ifPresent(tr -> {
-             
+
                 copyTransaction(ooTUser, tr, _new, tp, emg);
-                 if(!checkResumeCaisse(tp.getLgUSERCAISSIERID(), emg).isPresent()){
-                     createAnnulationRecette(tp, tr, ooTUser);
-             }
+                if (!checkResumeCaisse(tp.getLgUSERCAISSIERID(), emg).isPresent()) {
+                    createAnnulationRecette(tp, tr, ooTUser);
+                }
             });
-            
-                 
-             
+
             oprectte.ifPresent(re -> {
                 copyRecette(_new, re, ooTUser, emg);
             });
@@ -611,8 +609,8 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    private void createAnnulationRecette(TPreenregistrement tp,MvtTransaction mvtTransaction,TUser user){
-        AnnulationRecette  annulationRecette=new AnnulationRecette();
+    private void createAnnulationRecette(TPreenregistrement tp, MvtTransaction mvtTransaction, TUser user) {
+        AnnulationRecette annulationRecette = new AnnulationRecette();
         annulationRecette.setCaissier(tp.getLgUSERCAISSIERID());
         annulationRecette.setUser(user);
         annulationRecette.setMontantPaye(mvtTransaction.getMontantPaye());
@@ -623,7 +621,7 @@ public class SalesServiceImpl implements SalesService {
         annulationRecette.setMvtDate(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()));
         this.getEm().persist(annulationRecette);
     }
-    
+
     public TPreenregistrementDetail createItemCopy(TUser ooTUser, TPreenregistrementDetail tp, TPreenregistrement p, EntityManager emg) {
         TPreenregistrementDetail _new = new TPreenregistrementDetail();
         _new.setLgPREENREGISTREMENTDETAILID(UUID.randomUUID().toString());
@@ -2691,18 +2689,21 @@ public class SalesServiceImpl implements SalesService {
                 for (TiersPayantParams tierspayant : tierspayants) {
                     TiersPayantParams tp = new TiersPayantParams();
                     Integer taux = tierspayant.getTaux();
-                    totalTaux += taux;
+//                    totalTaux += taux;
                     Double montantTp = montantvente * (Double.valueOf(taux) / 100);
                     Integer tpnet = (int) Math.ceil(montantTp);
-                   
+
                     int _taux = 0;
                     if (montantVariable > tpnet) {
                         montantVariable -= tpnet;
                         _taux = taux;
+                        totalTaux += _taux;
                     } else if (montantVariable <= tpnet) {
                         tpnet = montantVariable;
-                        _taux = (int) Math.ceil((tpnet * 100) / montantvente);
-                        
+//                        _taux = (int) Math.ceil((tpnet * 100) / montantvente);
+                        _taux = 100 - totalTaux;
+                        totalTaux += _taux;
+
                     }
                     totalTp += tpnet;
                     tp.setTaux(_taux);
