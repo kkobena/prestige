@@ -7,6 +7,7 @@ package rest.service.impl;
 
 import dal.MvtTransaction;
 import dal.MvtTransaction_;
+import dal.TBonLivraison;
 import dal.TGrossiste;
 import dal.TPreenregistrement;
 import dal.TTypeMvtCaisse;
@@ -28,6 +29,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import rest.service.TransactionService;
+import util.DateConverter;
 
 /**
  *
@@ -35,7 +37,7 @@ import rest.service.TransactionService;
  */
 @Stateless
 public class TransactionServiceImpl implements TransactionService {
-
+    
     @Override
     public void copyTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement _newP, TPreenregistrement old, EntityManager emg) {
         MvtTransaction _new = cashTransaction;
@@ -77,9 +79,9 @@ public class TransactionServiceImpl implements TransactionService {
 //            emg.merge(cashTransaction);
 
         }
-
+        
     }
-
+    
     @Override
     public void addTransaction(TUser ooTUser, String pkey, Integer montant, Integer montantNet, Integer montantVerse, TGrossiste grossiste, EntityManager emg, Integer montantTva, String reference) {
         MvtTransaction _new = new MvtTransaction();
@@ -107,7 +109,7 @@ public class TransactionServiceImpl implements TransactionService {
         _new.setChecked(Boolean.TRUE);
         emg.persist(_new);
     }
-
+    
     @Override
     public void addTransaction(TUser ooTUser, TUser caisse, String pkey,
             Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked,
@@ -123,7 +125,7 @@ public class TransactionServiceImpl implements TransactionService {
             montantPaid = montantVerse;
             montantRestant = montantNet - montantVerse;
         }
-
+        
         _new.setUuid(UUID.randomUUID().toString());
         _new.setUser(ooTUser);
         _new.setCreatedAt(LocalDateTime.now());
@@ -141,7 +143,7 @@ public class TransactionServiceImpl implements TransactionService {
         _new.settTypeMvtCaisse(tTypeMvtCaisse);
         _new.setReglement(reglement);
 //        _new.setMontantRestant(montantRestant);
-         _new.setMontantRestant(montantRestant>4?montantRestant:0);
+        _new.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
         _new.setMarge(marge);
         _new.setMontantPaye(montantPaye);
         _new.setMontantRemise(montant - montantNet);
@@ -150,9 +152,9 @@ public class TransactionServiceImpl implements TransactionService {
         _new.setChecked(checked);
         _new.setMontantTva(montantTva);
         emg.persist(_new);
-
+        
     }
-
+    
     @Override
     public void addTransaction(TUser ooTUser, TUser caisse,
             String pkey, Integer montant, Integer voidAmount, Integer montantNet, Integer discount,
@@ -170,7 +172,7 @@ public class TransactionServiceImpl implements TransactionService {
             montantPaid = montantVerse;
             montantRestant = montantNet - montantVerse;
         }
-
+        
         _new.setUuid(UUID.randomUUID().toString());
         _new.setUser(ooTUser);
         _new.setCreatedAt(LocalDateTime.now());
@@ -188,7 +190,7 @@ public class TransactionServiceImpl implements TransactionService {
         _new.settTypeMvtCaisse(tTypeMvtCaisse);
         _new.setReglement(reglement);
 //        _new.setMontantRestant(montantRestant);
-         _new.setMontantRestant(montantRestant>4?montantRestant:0);
+        _new.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
         _new.setMontantRemise(discount);
         _new.setMontantTva(montantTva);
         _new.setMarge(marge);
@@ -198,7 +200,7 @@ public class TransactionServiceImpl implements TransactionService {
         _new.setReference(reference);
         emg.persist(_new);
     }
-
+    
     @Override
     public void addTransaction(TUser ooTUser, TUser caisse, String pkey, Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked, CategoryTransaction categoryTransaction, TypeTransaction typeTransaction, TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg, Integer montantPaye, Integer montantTva, Integer marge, String reference, String organisme) {
         MvtTransaction _new = new MvtTransaction();
@@ -226,7 +228,7 @@ public class TransactionServiceImpl implements TransactionService {
         _new.setMontantNet(montantNet);
         _new.settTypeMvtCaisse(tTypeMvtCaisse);
         _new.setReglement(reglement);
-         _new.setMontantRestant(montantRestant>4?montantRestant:0);
+        _new.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
         _new.setMontantRemise(0);
         _new.setMontantTva(montantTva);
         _new.setMarge(marge);
@@ -237,9 +239,9 @@ public class TransactionServiceImpl implements TransactionService {
         _new.setOrganisme(organisme);
         emg.persist(_new);
     }
-
+    
     @Override
-    public Integer avoidAmount(String userId, LocalDate dtStart,  EntityManager emg) {
+    public Integer avoidAmount(String userId, LocalDate dtStart, EntityManager emg) {
         List<Predicate> predicates = new ArrayList<>();
         try {
             CriteriaBuilder cb = emg.getCriteriaBuilder();
@@ -248,32 +250,32 @@ public class TransactionServiceImpl implements TransactionService {
             cq.select(root);
 //            Predicate btw = cb.between(root.get(MvtTransaction_.mvtDate), dtStart, dtEnd);
             predicates.add(cb.equal(root.get(MvtTransaction_.mvtDate), dtStart));
-               predicates.add(cb.equal(root.get(MvtTransaction_.caisse).get(TUser_.lgUSERID), userId));  
+            predicates.add(cb.equal(root.get(MvtTransaction_.caisse).get(TUser_.lgUSERID), userId));
             predicates.add(cb.equal(root.get(MvtTransaction_.categoryTransaction), CategoryTransaction.DEBIT));
-              predicates.add(root.get(MvtTransaction_.typeTransaction).in( TypeTransaction.VENTE_CREDIT, TypeTransaction.VENTE_COMPTANT));
+            predicates.add(root.get(MvtTransaction_.typeTransaction).in(TypeTransaction.VENTE_CREDIT, TypeTransaction.VENTE_COMPTANT));
 //            predicates.add(cb.or(cb.equal(root.get(MvtTransaction_.typeTransaction), TypeTransaction.VENTE_COMPTANT), cb.equal(root.get(MvtTransaction_.typeTransaction), TypeTransaction.VENTE_CREDIT)));
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<MvtTransaction> q = emg.createQuery(cq);
-            List<MvtTransaction> list=q.getResultList();
-           
+            List<MvtTransaction> list = q.getResultList();
+            
             return list.stream().map(x -> Math.abs(x.getMontantRegle())).reduce(0, Integer::sum);
-
+            
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return 0;
         }
     }
-
+    
     @Override
     public void addTransaction(TUser ooTUser, TUser caisse, String pkey, Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked, CategoryTransaction categoryTransaction, TypeTransaction typeTransaction, TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg, Integer montantPaye, Integer montantTva, Integer marge, String reference, String organisme, Integer montantRestant) {
-       MvtTransaction _new = new MvtTransaction();
+        MvtTransaction _new = new MvtTransaction();
         int compare = montantNet.compareTo(montantVerse);
         Integer montantPaid;
         if (compare <= 0) {
             montantPaid = montantNet;
         } else {
             montantPaid = montantVerse;
-           
+            
         }
         _new.setUuid(UUID.randomUUID().toString());
         _new.setUser(ooTUser);
@@ -291,7 +293,7 @@ public class TransactionServiceImpl implements TransactionService {
         _new.setMontantNet(montantNet);
         _new.settTypeMvtCaisse(tTypeMvtCaisse);
         _new.setReglement(reglement);
-         _new.setMontantRestant(montantRestant>4?montantRestant:0);
+        _new.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
         _new.setMontantRemise(0);
         _new.setMontantTva(montantTva);
         _new.setMarge(marge);
@@ -302,7 +304,34 @@ public class TransactionServiceImpl implements TransactionService {
         _new.setOrganisme(organisme);
         emg.persist(_new);
     }
-
-  
+    
+    public void addTransactionBL(TUser ooTUser, TBonLivraison bl, EntityManager emg) {
+        
+        MvtTransaction _new = new MvtTransaction();
+        _new.setUuid(UUID.randomUUID().toString());
+        _new.setUser(ooTUser);
+        _new.setCreatedAt(DateConverter.convertDateToLocalDateTime(bl.getDtDATELIVRAISON()));
+        _new.setPkey(bl.getLgBONLIVRAISONID());
+        _new.setMvtDate(DateConverter.convertDateToLocalDate(bl.getDtDATELIVRAISON()));
+        _new.setAvoidAmount(0);
+        _new.setMontant(bl.getIntHTTC());
+        _new.setMontantTva(bl.getIntTVA());
+        _new.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        _new.setCaisse(ooTUser);
+        _new.setMontantCredit(0);
+        _new.setGrossiste(bl.getLgORDERID().getLgGROSSISTEID());
+        _new.setMontantRegle(0);
+        _new.setMontantVerse(0);
+        _new.setMontantRestant(bl.getIntHTTC());
+        _new.setMontantNet(bl.getIntMHT());
+        _new.setMontantRemise(0);
+        _new.setMarge(0);
+        _new.setMontantAcc(bl.getIntMHT());
+        _new.setReference(bl.getStrREFLIVRAISON());
+        _new.setCategoryTransaction(CategoryTransaction.DEBIT);
+        _new.setTypeTransaction(TypeTransaction.ACHAT);
+        _new.setChecked(Boolean.TRUE);
+        emg.persist(_new);
+    }
     
 }

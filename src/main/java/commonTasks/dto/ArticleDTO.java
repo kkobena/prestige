@@ -403,14 +403,22 @@ public class ArticleDTO implements Serializable {
         this.stockMoyen = stockMoyen;
     }
 
-    public ArticleDTO stockMoyen(int stockMoyen) {
-        this.stockMoyen = stockMoyen;
+    public ArticleDTO stockMoyen(int nbreConsommation) {
+        try {
+            float d = (consommationsOne + consommationsTwo + consommationsThree);
+            this.stockMoyen = Math.round(d / nbreConsommation);
+        } catch (Exception e) {
+        }
+
         return this;
     }
 
     public ArticleDTO coefficient(double nbreMois) {
         try {
-            double _stockMoyen = (consommation / nbreMois);
+            float d = (consommationsOne + consommationsTwo + consommationsThree);
+            double _stockMoyen = (d / nbreMois);
+            long a = Math.round(_stockMoyen);
+            _stockMoyen = a;
             coefficient = new BigDecimal(this.stock / _stockMoyen).setScale(2, RoundingMode.UP).doubleValue();
         } catch (Exception e) {
         }

@@ -34,12 +34,12 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
                     })
         }],
     initComponent: function () {
-            myAppController = Ext.create('testextjs.controller.App', {});
+        myAppController = Ext.create('testextjs.controller.App', {});
         url_services_data_bl_list = '../webservices/commandemanagement/bonlivraison/ws_data.jsp';
         //  alert("url_services_data_bl_list "+url_services_data_bl_list);
 
         Me = this;
-
+      
         var itemsPerPage = 20;
         store_bl = new Ext.data.Store({
             model: 'testextjs.model.BonLivraison',
@@ -104,13 +104,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
                     align: 'right',
                     flex: 0.5
                 },
-                // int_NBRE_PRODUIT
-//                {
-//                    header: 'Produits',
-//                    dataIndex: 'int_NBRE_PRODUIT',
-//                    flex: 1
-//                }, 
-//                // dt_DATE_LIVRAISON
+       
                 {
                     header: 'Date',
                     dataIndex: 'dt_DATE_LIVRAISON',
@@ -195,6 +189,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
                     xtype: 'textfield',
                     id: 'rechecher',
                     name: 'suggestion',
+                    flex: 1,
                     emptyText: 'Recherche',
                     listeners: {
                         'render': function (cmp) {
@@ -206,7 +201,8 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
                             });
                         }
                     }
-                },
+                },'-',
+              
                 {
                     text: 'rechercher',
                     tooltip: 'rechercher',
@@ -304,16 +300,16 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
                             },
                             success: function (response)
                             {
-                                 myAppController.StopWaitingProcess();
-                                  var object = Ext.JSON.decode(response.responseText, false);
-                                
-                                 if (object.success === 0) {
-                                 Ext.MessageBox.alert('Error Message', "Suppression a &eacute;Chou&eacute;e");
-                                 return;
-                                 }else {
-                                     Ext.MessageBox.alert('Succes', "Suppression &eacute;ffectu&eacute;e avec succ&egrave;s"); 
-                                     
-                                 }
+                                myAppController.StopWaitingProcess();
+                                var object = Ext.JSON.decode(response.responseText, false);
+
+                                if (object.success === 0) {
+                                    Ext.MessageBox.alert('Error Message', "Suppression a &eacute;Chou&eacute;e");
+                                    return;
+                                } else {
+                                    Ext.MessageBox.alert('Succes', "Suppression &eacute;ffectu&eacute;e avec succ&egrave;s");
+
+                                }
                                 grid.getStore().reload();
                             },
                             failure: function (response)

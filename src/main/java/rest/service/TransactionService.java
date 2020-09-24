@@ -6,6 +6,7 @@
 package rest.service;
 
 import dal.MvtTransaction;
+import dal.TBonLivraison;
 import dal.TGrossiste;
 import dal.TPreenregistrement;
 import dal.TTypeMvtCaisse;
@@ -37,6 +38,8 @@ public interface TransactionService {
 
     Integer avoidAmount(String userId, LocalDate dtStart, EntityManager emg);
 
-  void addTransaction(TUser ooTUser, TUser caisse, String pkey, Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked, CategoryTransaction categoryTransaction, TypeTransaction typeTransaction, TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg, Integer montantPaye, Integer montantTva, Integer marge, String reference, String organisme,Integer montantRestant);
+    void addTransaction(TUser ooTUser, TUser caisse, String pkey, Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked, CategoryTransaction categoryTransaction, TypeTransaction typeTransaction, TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg, Integer montantPaye, Integer montantTva, Integer marge, String reference, String organisme, Integer montantRestant);
+
+    void addTransactionBL(TUser ooTUser, TBonLivraison bl, EntityManager emg);
 
 }

@@ -87,6 +87,10 @@ Ext.define('testextjs.view.pharmaml.Rupturepharma', {
                         {name: 'grossisteId',
                             type: 'string'
 
+                        },
+                        {name: 'commandeDate',
+                            type: 'string'
+
                         }
 
                     ],

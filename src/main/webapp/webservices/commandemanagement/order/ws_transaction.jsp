@@ -283,17 +283,12 @@
         } else if (request.getParameter("mode").equals("updateBL")) {
 
         } else if (request.getParameter("mode").equals("createBL")) {
-
             bonLivraisonManagement ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, OTUser);
-
-            //  new logger().OCategory.info(" lg_ORDER_ID " +  lg_ORDER_ID + " str_REF_LIVRAISON " + str_REF_LIVRAISON + " dt_DATE_LIVRAISON "+dt_DATE_LIVRAISON + " int_MHT " + int_MHT + " int_TVA "+int_TVA);
             ObonLivraisonManagement.MakeOrderToBonLivraison(lg_ORDER_ID, str_REF_LIVRAISON, dt_DATE_LIVRAISON, int_MHT, int_TVA);
             ObllBase.setMessage(ObonLivraisonManagement.getMessage());
             ObllBase.setDetailmessage(ObonLivraisonManagement.getDetailmessage());
         } else if (request.getParameter("mode").equals("changeGrossiste")) {
-
             ID_SUGG_ORDER = lg_ORDER_ID;
-           
             OorderManagement.ChangeGrossisteOrder(SUGG_ORDER, ID_SUGG_ORDER, lg_GROSSISTE_ID);
             ObllBase.setMessage(OorderManagement.getMessage());
             OorderManagement.setDetailmessage(OorderManagement.getDetailmessage());
@@ -306,23 +301,19 @@
 
             }
             ID_SUGG_ORDER = lg_ORDER_ID;
-
             OorderManagement.mergeOrder(checkedList);
             ObllBase.setMessage(OorderManagement.getMessage());
             OorderManagement.setDetailmessage(OorderManagement.getDetailmessage());
             new logger().OCategory.info("Grossiste change ");
 
         } else if (request.getParameter("mode").equals("rupture")) {
-
             OTOrderDetail = OdataManager.getEm().find(dal.TOrderDetail.class, lg_ORDERDETAIL_ID);
             OorderManagement.addToruptureProduct(OTOrderDetail);
             ObllBase.setMessage(OorderManagement.getMessage());
             ObllBase.setDetailmessage(OorderManagement.getDetailmessage());
-
             //OfamilleGrossisteManagement.soldOutMakingON(lg_ORDERDETAIL_ID); ancien code
             //familleGrossisteManagement OfamilleGrossisteManagement = new familleGrossisteManagement(OdataManager);
         } else if (request.getParameter("mode").equals("importfile")) {
-
             try {
 
                 //code gestion uoload

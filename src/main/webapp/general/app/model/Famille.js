@@ -452,17 +452,17 @@ Ext.define('testextjs.model.Famille', {
             type: 'string'
 
         },
-         {
+        {
             name: 'dtPEREMPTION',
             type: 'string'
 
         },
-         {
+        {
             name: 'laboratoireId',
             type: 'string'
 
         },
-         {
+        {
             name: 'gammeId',
             type: 'string'
 
@@ -472,12 +472,19 @@ Ext.define('testextjs.model.Famille', {
             type: 'string'
 
         },
-        
-        
-        {name: 'intPRICE', type: 'int'},
-        {name: 'PAF', type: 'int'},
-        {name: 'intNUMBERAVAILABLE', type: 'int'},
-        {name: 'bool_ACCOUNT', type: 'boolean'}
+
+        {name: 'intPRICE',
+            type: 'int'},
+
+        {name: 'PAF',
+            type: 'int'},
+        {name: 'intNUMBERAVAILABLE',
+            type: 'int'},
+        {name: 'bool_ACCOUNT',
+
+            type: 'boolean'
+        }
+       
 
     ]
 });

@@ -2513,7 +2513,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                     if (successful) {
 //                        if (records.length > 0) {
-                            ayantDroitWin.show();
+                        ayantDroitWin.show();
 //                        }
                     }
                 }
@@ -2639,9 +2639,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                         var recordR = new testextjs.model.caisse.ClientAssurance(result.data);
                         me.client = recordR;
                         if (me.getCurrent()) {
-                            if (me.getAncienTierspayant() && me.getAncienTierspayant() !== record.get('lgTIERSPAYANTID')) {
-                                me.removetierspayanttp(me.getAncienTierspayant(), record.get('lgTIERSPAYANTID'));
-                            }
+//                            if (me.getAncienTierspayant() && me.getAncienTierspayant() !== record.get('lgTIERSPAYANTID')) {
+                            me.removetierspayanttp(me.getAncienTierspayant(), record.get('lgTIERSPAYANTID'));
+//                            }
 
                         } else {
                             me.onNewClientAssurance();
@@ -3659,12 +3659,13 @@ Ext.define('testextjs.controller.VenteCtr', {
     checkEmptyBonRef: function () {
         var me = this, tpContainerForm = me.getTpContainerForm();
         var items = tpContainerForm.items;
-        var result;
+        var result = null;
         var emptyRef = false;
         var numBonField;
         Ext.each(items.items, function (item) {
             if (item.items) {
                 numBonField = item.items.items[1].items.items[0];
+
                 if (numBonField.getValue().trim() === '') {
                     emptyRef = true;
                     return;
@@ -3676,6 +3677,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             result = numBonField;
 
         }
+
         return result;
     },
     buildAssuranceData: function () {
@@ -3808,91 +3810,101 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     showNetPaidAssurance: function () {
-        var me = this, sansBon = me.getSansBon();
+        var me = this, sansBon = me.getVenteSansBon();
         var result = me.checkEmptyBonRef();
-        if (result) {
-            if (!me.getVenteSansBon()) {
+        if (result && !sansBon) {
+
+            Ext.MessageBox.show({
+                title: 'Message',
+                width: 320,
+                msg: "Veuillez renseigner le numéro de bon",
+                buttons: Ext.MessageBox.OK,
+               icon: Ext.MessageBox.WARNING,
+                fn: function (buttonId) {
+                    if (buttonId === "ok") {
+                        result.focus(true, 50);
+                    }
+                }
+            });
+
+
+
+
+        } else {
+            console.log(me.getSansBon().getValue(), '!me.getVenteSansBon()');
+            if (result && sansBon && !me.getSansBon().getValue()) {
+
                 Ext.MessageBox.show({
-                    title: 'Message',
+                    title: 'Message d\'erreur',
                     width: 320,
-                    msg: "Veuillez renseigner le numéro de bon",
+                    msg: "Veuillez cocher la vente sans bon ou renseigner le numéro de bon",
                     buttons: Ext.MessageBox.OK,
-                    icon: Ext.MessageBox.INFO,
+                    icon: Ext.MessageBox.WARNING,
                     fn: function (buttonId) {
                         if (buttonId === "ok") {
                             result.focus(true, 50);
                         }
                     }
                 });
-
+                return;
             } else {
-                if (!sansBon) {
-                    Ext.MessageBox.show({
-                        title: 'Message d\'erreur',
-                        width: 320,
-                        msg: "Veuillez cocher la vente sans bon ou renseigner le numéro de bon",
-                        buttons: Ext.MessageBox.OK,
-                        icon: Ext.MessageBox.WARNING,
-                        fn: function (buttonId) {
-                            if (buttonId === "ok") {
-                                result.focus(true, 50);
-                            }
-                        }
-                    });
-                    return;
-                }
-            }
-        } else {
-            var vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
-            if (vente) {
-                var venteId = vente.lgPREENREGISTREMENTID;
-                var tierspayants = me.buildAssuranceData();
-                if (tierspayants.length === 0) {
-                    Ext.Msg.alert("Message", 'Veuillez ajouter un tiers-payant à la vente');
-                    return false;
-                }
-                var data = {
-                    "remiseId": remiseId,
-                    "venteId": venteId,
-                    "tierspayants": tierspayants
-                };
-                var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-                Ext.Ajax.request({
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    url: '../api/v1/vente/net/assurance',
-                    params: Ext.JSON.encode(data),
-                    success: function (response, options) {
-                        progress.hide();
-                        var result = Ext.JSON.decode(response.responseText, true);
-                        if (result.success) {
-                            me.netAmountToPay = result.data;
-                            me.toRecalculate = false;
-                            var montantNet = me.getNetAmountToPay().montantNet;
-                            me.getMontantNet().setValue(me.getNetAmountToPay().montantNet);
-                            me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
-                            me.getMontantTp().setValue(me.getNetAmountToPay().montantTp);
-                            if (montantNet === 0) {
-                                me.getMontantRecu().disable();
-                                me.getVnobtnCloture().enable();
-                                me.getVnobtnCloture().focus();
-                            } else {
-                                me.getMontantRecu().setReadOnly(false);
-                                me.getMontantRecu().focus(true, 50);
-                            }
-                        } else {
-                            me.getMontantRecu().focus(true, 50);
-
-                        }
-
-                    },
-                    failure: function (response, options) {
-                        progress.hide();
-                        Ext.Msg.alert("Message", 'Un problème s\'est produit avec le server ' + response.status);
+                var vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
+                if (vente) {
+                    var venteId = vente.lgPREENREGISTREMENTID;
+                    var tierspayants = me.buildAssuranceData();
+                    if (tierspayants.length === 0) {
+                        Ext.Msg.alert("Message", 'Veuillez ajouter un tiers-payant à la vente');
+                        return false;
                     }
+                    var data = {
+                        "remiseId": remiseId,
+                        "venteId": venteId,
+                        "tierspayants": tierspayants
+                    };
+                    var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                    Ext.Ajax.request({
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        url: '../api/v1/vente/net/assurance',
+                        params: Ext.JSON.encode(data),
+                        success: function (response, options) {
+                            progress.hide();
+                            var result = Ext.JSON.decode(response.responseText, true);
+                            if (result.success) {
+                                me.netAmountToPay = result.data;
+                                me.toRecalculate = false;
+                                var montantNet = me.getNetAmountToPay().montantNet;
+                                me.getMontantNet().setValue(me.getNetAmountToPay().montantNet);
+                                me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
+                                me.getMontantTp().setValue(me.getNetAmountToPay().montantTp);
+                                if (montantNet === 0) {
+                                    me.getMontantRecu().disable();
+                                    me.getVnobtnCloture().enable();
+                                    me.getVnobtnCloture().focus();
+                                } else {
+                                    me.getMontantRecu().enable();
+                                    me.getMontantRecu().setReadOnly(false);
+                                    me.getMontantRecu().focus(true, 50);
+                                }
+                            } else {
+                                me.getMontantRecu().focus(true, 50);
 
-                });
+                            }
+
+                        },
+                        failure: function (response, options) {
+                            progress.hide();
+                            Ext.Msg.alert("Message", 'Un problème s\'est produit avec le server ' + response.status);
+                        }
+
+                    });
+                }
             }
+
+
+
+
+
         }
     },
     buildSaleParams: function (record, qte, typeVente) {

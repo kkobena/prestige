@@ -19,7 +19,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -28,8 +27,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author MKABOU
  */
 @Entity
-@Table(name = "t_module", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"lg_MODULE_ID"})})
+@Table(name = "t_module")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "TModule.findAll", query = "SELECT t FROM TModule t"),

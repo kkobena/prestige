@@ -58,7 +58,7 @@ import util.DateConverter;
 @TransactionManagement(value = TransactionManagementType.BEAN)
 public class Reapprovisionnement {
 
-    private static final Logger LOG = Logger.getLogger(Reapprovisionnement.class.getName());
+//    private static final Logger LOG = Logger.getLogger(Reapprovisionnement.class.getName());
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -236,7 +236,7 @@ public class Reapprovisionnement {
     }
 
     
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         try {
             TParameters semois = em.find(TParameters.class, "SEMOIS");

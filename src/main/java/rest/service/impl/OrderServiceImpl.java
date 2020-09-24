@@ -49,7 +49,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
@@ -122,9 +121,12 @@ public class OrderServiceImpl implements OrderService {
                 TFamille famille = d.getLgFAMILLEID();
                 TFamilleStock stock = getTProductItemStock(famille.getLgFAMILLEID(), emp);
                 if (stock != null) {
-                    createBLDetail(OTBonLivraison, grossiste, famille,
+                    /*   createBLDetail(OTBonLivraison, grossiste, famille,
                             d.getIntQTEREPGROSSISTE(), (d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT()),
                             d.getIntPRICEDETAIL(), "", "", "", d.getIntPRICEDETAIL(), d.getIntPAFDETAIL(), d.getIntPRICEDETAIL(), famille.getLgZONEGEOID(), stock.getIntNUMBERAVAILABLE());
+
+                     */
+                    createBLDetail(OTBonLivraison, grossiste, famille, d, famille.getLgZONEGEOID(), stock.getIntNUMBERAVAILABLE());
                     d.setStrSTATUT(Parameter.STATUT_ENTREE_STOCK);
                     d.setDtUPDATED(new Date());
                     d.setIntORERSTATUS((short) 4);
@@ -161,13 +163,57 @@ public class OrderServiceImpl implements OrderService {
         OTBonLivraisonDetail.setIntQTECMDE(int_QTE_CMDE);
         OTBonLivraisonDetail.setIntQTERECUE(int_QTE_RECUE);
         OTBonLivraisonDetail.setIntPAF(int_PAF);
-        OTBonLivraisonDetail.setIntPAREEL(int_PA_REEL);
+        OTBonLivraisonDetail.setIntPAREEL(int_PAF);
         OTBonLivraisonDetail.setIntINITSTOCK(int_INITSTOCK);
         OTBonLivraisonDetail.setIntPRIXREFERENCE(int_PRIX_REFERENCE);
         OTBonLivraisonDetail.setIntPRIXVENTE(int_PRIX_VENTE);
         OTBonLivraisonDetail.setStrETATARTICLE(str_ETAT_ARTICLE);
         OTBonLivraisonDetail.setStrLIVRAISONADP(str_LIVRAISON_ADP);
         OTBonLivraisonDetail.setStrMANQUEFORCES(str_MANQUE_FORCES);
+        OTBonLivraisonDetail.setIntQTEMANQUANT(OTBonLivraisonDetail.getIntQTECMDE());
+        OTBonLivraisonDetail.setDtCREATED(new Date());
+        OTBonLivraisonDetail.setDtUPDATED(new Date());
+        OTBonLivraisonDetail.setStrSTATUT(DateConverter.STATUT_ENABLE);
+        getEmg().persist(OTBonLivraisonDetail);
+        return OTBonLivraisonDetail;
+
+    }
+
+    private TBonLivraisonDetail createBLDetail(TBonLivraison OTBonLivraison, TGrossiste OTGrossiste,
+            TFamille OTFamille, TOrderDetail d, TZoneGeographique OTZoneGeographique, int int_INITSTOCK) {
+        TBonLivraisonDetail OTBonLivraisonDetail = new TBonLivraisonDetail();
+        OTBonLivraisonDetail.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
+        OTBonLivraisonDetail.setLgBONLIVRAISONID(OTBonLivraison);
+        OTBonLivraisonDetail.setLgGROSSISTEID(OTGrossiste);
+        OTBonLivraisonDetail.setLgFAMILLEID(OTFamille);
+        OTBonLivraisonDetail.setLgZONEGEOID(OTZoneGeographique);
+        OTBonLivraisonDetail.setIntQTECMDE(d.getIntQTEREPGROSSISTE());
+        OTBonLivraisonDetail.setIntQTERECUE(d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT());
+        /*
+        if (d.getPrixUnitaire() != null && (d.getPrixUnitaire().compareTo(d.getIntPRICEDETAIL()) != 0)) {
+            OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getPrixUnitaire());
+            OTBonLivraisonDetail.setIntPRIXVENTE(d.getPrixUnitaire());
+        } else {
+            OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
+            OTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
+        }
+        if (d.getPrixAchat() != null && (d.getPrixAchat().compareTo(d.getIntPAFDETAIL()) != 0)) {
+            OTBonLivraisonDetail.setIntPAF(d.getPrixAchat());
+            OTBonLivraisonDetail.setIntPAREEL(d.getPrixAchat());
+        } else {
+            OTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
+            OTBonLivraisonDetail.setIntPAREEL(d.getIntPAFDETAIL());
+        }*/
+        OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
+        OTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
+        OTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
+        OTBonLivraisonDetail.setIntPAREEL(d.getIntPAFDETAIL());
+        OTBonLivraisonDetail.setPrixUni(d.getPrixUnitaire());
+        OTBonLivraisonDetail.setPrixTarif(d.getPrixAchat());
+        OTBonLivraisonDetail.setStrETATARTICLE("");
+        OTBonLivraisonDetail.setStrLIVRAISONADP("");
+        OTBonLivraisonDetail.setStrMANQUEFORCES("");
+        OTBonLivraisonDetail.setIntINITSTOCK(int_INITSTOCK);
         OTBonLivraisonDetail.setIntQTEMANQUANT(OTBonLivraisonDetail.getIntQTECMDE());
         OTBonLivraisonDetail.setDtCREATED(new Date());
         OTBonLivraisonDetail.setDtUPDATED(new Date());
@@ -327,7 +373,7 @@ public class OrderServiceImpl implements OrderService {
         if (StringUtils.isEmpty(query)) {
             return listeRuptures(dtStart, dtEnd, grossisteId, start, limit, all);
         }
-        return listeRuptures(dtStart, dtEnd, query, grossisteId, start, limit, all);
+        return listeRupturesByRuptureDetails(dtStart, dtEnd, query, grossisteId, start, limit, all);
 
     }
 
@@ -406,7 +452,9 @@ public class OrderServiceImpl implements OrderService {
                 q.setFirstResult(start);
                 q.setMaxResults(limit);
             }
-            return q.getResultList().stream().map(x -> new RuptureDTO(x, ruptureDetaisDtoByRupture(x.getId()).stream().map(RuptureDetailDTO::new).collect(Collectors.toList()))).collect(Collectors.toList());
+            return q.getResultList().stream().map(x -> new RuptureDTO(x, ruptureDetaisDtoByRupture(x.getId()).stream().map(RuptureDetailDTO::new).collect(Collectors.toList())))
+                    .filter(e -> e.getNbreProduit() > 0)
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
@@ -432,8 +480,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public JSONObject listeRuptures(LocalDate dtStart, LocalDate dtEnd, String query, String grossisteId, int start, int limit) throws JSONException {
         if (StringUtils.isEmpty(query)) {
-            return new JSONObject().put("total", listeRuptures(dtStart, dtEnd, grossisteId))
-                    .put("data", new JSONArray(listeRuptures(dtStart, dtEnd, grossisteId, start, limit, false)));
+            List<RuptureDTO> data = listeRuptures(dtStart, dtEnd, grossisteId, start, limit, true);
+            return new JSONObject().put("total", data.size())
+                    .put("data", new JSONArray(data));
         }
         return new JSONObject().put("total", listeRupturesByRuptureDetails(dtStart, dtEnd, grossisteId, query))
                 .put("data", new JSONArray(listeRupturesByRuptureDetails(dtStart, dtEnd, grossisteId, query, start, limit, false)));
@@ -637,8 +686,7 @@ public class OrderServiceImpl implements OrderService {
         TOrderDetail detail = this.getEmg().find(TOrderDetail.class, dto.getId());
         TFamille f = detail.getLgFAMILLEID();
         TOrder order = detail.getLgORDERID();
-        TFamilleGrossiste grossiste =findOrCreateFamilleGrossiste(f, order.getLgGROSSISTEID());// this.finFamilleGrossisteByIdFamilleAndIdGrossiste(f.getLgFAMILLEID(), order.getLgGROSSISTEID().getLgGROSSISTEID());
-       
+        TFamilleGrossiste grossiste = findOrCreateFamilleGrossiste(f, order.getLgGROSSISTEID());
         if (dto.getPrixAchat() != grossiste.getIntPAF()) {
             String desc = "Modification du prix d'achat du produit :" + f.getStrNAME() + " ancien prix: " + grossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
             logService.updateItem(user, grossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
@@ -693,6 +741,16 @@ public class OrderServiceImpl implements OrderService {
 
         }
 
+    }
+
+    @Override
+    public JSONObject findAllRupturesFournisseur(String query, String grossisteId, int start, int limit) throws JSONException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public List<RuptureDTO> findAllRupturesFournisseur(String query, String grossisteId, int start, int limit, boolean all) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

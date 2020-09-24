@@ -2307,7 +2307,7 @@ private final static Logger LOGGER = Logger.getLogger(MyBean.class.getName());
 
             Root<TPreenregistrement> root = cq.from(TPreenregistrement.class);
             Join<TPreenregistrement, TUser> pu = root.join("lgUSERID", JoinType.INNER);
-            Join<TPreenregistrement, TReglement> pr = root.join("lgREGLEMENTID", JoinType.INNER);
+//            Join<TPreenregistrement, TReglement> pr = root.join("lgREGLEMENTID", JoinType.INNER);
 
             Predicate predicate = cb.conjunction();
 
@@ -2530,7 +2530,6 @@ private final static Logger LOGGER = Logger.getLogger(MyBean.class.getName());
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TPreenregistrement> root = cq.from(TPreenregistrement.class);
             Join<TPreenregistrement, TUser> pu = root.join("lgUSERID", JoinType.INNER);
-//            Join<TPreenregistrement, TReglement> r = root.join("lgREGLEMENTID", JoinType.INNER);
             Predicate predicate = cb.conjunction();
             predicate = cb.and(predicate, cb.equal(pu.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmp));
             predicate = cb.and(predicate, cb.equal(root.get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));

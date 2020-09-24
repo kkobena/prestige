@@ -34,6 +34,7 @@ import dal.TPreenregistrementDetail_;
 import dal.TPreenregistrement_;
 import dal.TTypeReglement_;
 import dal.TUser_;
+import dal.enumeration.TypeTransaction;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,12 +45,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -68,6 +71,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.CaisseService;
 import rest.service.SalesStatsService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -83,6 +87,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    CaisseService caisseService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -530,7 +536,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         return json;
     }
-   private  List<VenteDTO> listVentes(SalesStatsParams params) {
+
+    private List<VenteDTO> listVentes(SalesStatsParams params) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddHH:mm");
             List<Predicate> predicates = new ArrayList<>();
@@ -580,7 +587,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             return Collections.emptyList();
         }
     }
-     public List<VenteDTO> listeVentesReport(SalesStatsParams params) {
+
+    public List<VenteDTO> listeVentesReport(SalesStatsParams params) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddHH:mm");
             List<Predicate> predicates = new ArrayList<>();
@@ -706,7 +714,13 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasRapport(Params params) {
+
+        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+            return tvasRapport0(params);
+        }
+
         List<TvaDTO> datas = new ArrayList<>();
+
         try {
             List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
@@ -834,5 +848,58 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         });
         return datas;
 
+    }
+
+    @Override
+    public List<TvaDTO> tvasRapport0(Params params) {
+        List<TvaDTO> datas = new ArrayList<>();
+        try {
+            int montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP);
+            List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
+            LongAdder adder = new LongAdder();
+            tvamap.forEach((k, v) -> {
+                TvaDTO otva = new TvaDTO();
+                otva.setTaux(k);
+                LongAdder ht = new LongAdder();
+                LongAdder ttc = new LongAdder();
+                LongAdder tva = new LongAdder();
+                v.stream().forEach(l -> {
+                    Integer mttc = l.getPrixUn() * l.getQteMvt();
+                    Double valeurTva = 1 + (Double.valueOf(k) / 100);
+                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
+                    Integer montantTva = mttc - htAmont;
+                    ht.add(htAmont);
+                    ttc.add(mttc);
+                    adder.add(mttc);
+                    tva.add(montantTva);
+
+                });
+
+                otva.setMontantHt(ht.intValue());
+                otva.setMontantTtc(ttc.intValue());
+                otva.setMontantTva(tva.intValue());
+
+                datas.add(otva);
+            });
+            int mtn = adder.intValue() * montant;
+            ListIterator listIterator = datas.listIterator();
+            while (listIterator.hasNext()) {
+                TvaDTO next = (TvaDTO) listIterator.next();
+                if (next.getTaux() == 0) {
+                    TvaDTO e = new TvaDTO();
+                    e.setTaux(next.getTaux());
+                    e.setMontantHt(next.getMontantHt() - mtn);
+                    e.setMontantTtc(next.getMontantTtc() - mtn);
+                    e.setMontantTva(next.getMontantTva());
+                    listIterator.set(e);
+                }
+
+            }
+            return datas;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
     }
 }

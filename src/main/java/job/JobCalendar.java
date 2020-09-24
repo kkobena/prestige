@@ -44,17 +44,19 @@ public class JobCalendar {
         return em;
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         exec();
         removeFacture();
         removeSuggestionO();
+        updateOrderDetailPrices();
     }
 
-//    @Schedule(dayOfMonth = "*", persistent = false)
+    @Schedule(dayOfMonth = "*", persistent = false)
     public void execute() throws InterruptedException {
         exec();
         removeFacture();
+       
 
     }
 
@@ -184,18 +186,11 @@ public class JobCalendar {
         }
     }
 
-    public void removeSuggestion() {
-        findSuggestionOrders().forEach(d -> {
-            deleteSuggestionDetails(d);
-            getEm().remove(d);
-        });
-    }
-
     public List<TSuggestionOrder> findSuggestionOrdersO() {
         try {
             TypedQuery<TSuggestionOrder> tq = getEm().
                     createQuery("SELECT o FROM TSuggestionOrder o WHERE  FUNCTION('DATE',o.dtCREATED) < ?1 ", TSuggestionOrder.class);
-            tq.setParameter(1, java.sql.Date.valueOf(LocalDate.now().minusMonths(2)));
+            tq.setParameter(1, java.sql.Date.valueOf(LocalDate.now().minusMonths(1)));
             return tq.getResultList();
         } catch (Exception e) {
             return Collections.emptyList();
@@ -208,4 +203,25 @@ public class JobCalendar {
             getEm().remove(d);
         });
     }
+
+    private List<TFamilleGrossiste> listDonPriceIsZero() {
+        try {
+            TypedQuery<TFamilleGrossiste> q = this.getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE  o.strSTATUT='enable' AND (o.intPAF=0 OR o.intPRICE=0)", TFamilleGrossiste.class);
+            return q.getResultList();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public void updateOrderDetailPrices() {
+        listDonPriceIsZero().forEach(e -> {
+            TFamille famille = e.getLgFAMILLEID();
+            e.setIntPAF(e.getIntPAF().compareTo(0) == 0 ? famille.getIntPAF() : e.getIntPAF());
+             e.setIntPRICE(e.getIntPRICE().compareTo(0) == 0 ? famille.getIntPRICE() : e.getIntPRICE());
+             e.setDtUPDATED(new Date());
+             getEm().merge(e);
+        });
+        
+    }
+    
 }

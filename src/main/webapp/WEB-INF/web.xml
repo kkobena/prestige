@@ -62,6 +62,10 @@
         <servlet-name>DataReportingServlet</servlet-name>
         <servlet-class>rest.report.pdf.DataReportingServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>VericationServlet</servlet-name>
+        <servlet-class>controller.VericationServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>DownloadFileServlet</servlet-name>
         <url-pattern>/DownloadFileServlet</url-pattern>
@@ -121,6 +125,10 @@
     <servlet-mapping>
         <servlet-name>DataReportingServlet</servlet-name>
         <url-pattern>/DataReportingServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VericationServlet</servlet-name>
+        <url-pattern>/VericationServlet</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>-1</session-timeout>

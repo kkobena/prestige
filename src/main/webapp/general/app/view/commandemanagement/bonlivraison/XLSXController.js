@@ -25,7 +25,6 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.XLSXController', {
     doImport: function () {
         var me = this,
                 form = me.lookupReference('formImport');
-
         form.submit({
             clientValidation: true,
             url: '../commande?action=import',

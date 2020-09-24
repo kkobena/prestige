@@ -17,8 +17,10 @@ import commonTasks.dto.TableauBaordSummary;
 import commonTasks.dto.VisualisationCaisseDTO;
 import dal.MvtTransaction;
 import dal.TCashTransaction;
+import dal.TPreenregistrement;
 import dal.TUser;
 import dal.Typemvtproduit;
+import dal.enumeration.TypeTransaction;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -136,4 +138,19 @@ Author author = entityManager.find(Author.class, id, properties);
     List<VisualisationCaisseDTO> mouvementCaisses(CaisseParamsDTO caisseParams, boolean all);
 
     JSONObject mouvementCaisses(CaisseParamsDTO caisseParams) throws JSONException;
+
+    List<TPreenregistrement> getTtVente(String dt_start, String dt_end, String lgEmp);
+
+    Integer montantCa(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
+
+    public JSONObject save(String dt_start, String dt_end, String lgEmp, int virtualAmount);
+
+    MvtTransaction findByVenteId(String venteId);
+
+    public boolean key_Params();
+
+    public boolean key_Take_Into_Account();
+
+    Integer montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
+
 }

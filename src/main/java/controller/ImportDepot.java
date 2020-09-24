@@ -13,7 +13,6 @@ import dal.TTypeStockFamille;
 import dal.TUser;
 import dal.dataManager;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.UUID;
@@ -32,9 +31,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -64,7 +60,6 @@ public class ImportDepot extends HttpServlet {
         OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
         dataManager OdataManager = new dataManager();
         OdataManager.initEntityManager();
-        String format = request.getParameter("format");
         Part part = request.getPart("fichier");
         String fileName = part.getSubmittedFileName();
         String extension = fileName.substring(fileName.indexOf(".") + 1, fileName.length());

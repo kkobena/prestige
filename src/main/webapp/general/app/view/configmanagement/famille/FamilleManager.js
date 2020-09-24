@@ -172,10 +172,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     }
                 },
                 {
-                    header: 'Prix Vente',
+                    header: 'P.Vente',
                     dataIndex: 'int_PRICE',
                     align: 'right',
-                    flex: 0.7,
+                    flex: 0.5,
                     renderer: function (v, m, r) {
 
                         var Stock = r.data.int_NUMBER_AVAILABLE;
@@ -190,10 +190,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     }
                 },
                 {
-                    header: 'Prix Achat F',
+                    header: 'P.A F',
                     dataIndex: 'int_PAF',
                     align: 'right',
-                    flex: 0.7,
+                    flex: 0.5,
                     renderer: function (v, m, r) {
 
                         var Stock = r.data.int_NUMBER_AVAILABLE;
@@ -211,7 +211,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     header: 'Stock',
                     dataIndex: 'int_NUMBER_AVAILABLE',
                     align: 'center',
-                    flex: 0.7,
+                    flex: 0.5,
                     renderer: function (v, m, r) {
 
                         var Stock = r.data.int_NUMBER_AVAILABLE;
@@ -225,10 +225,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         return v;
                     }
                 }, {
-                    header: 'Seuil.Reappro',
+                    header: 'Seuil.Reap',
                     dataIndex: 'int_STOCK_REAPROVISONEMENT',
                     align: 'center',
-                    flex: 0.7
+                    flex: 0.5
                     ,
                     renderer: function (v, m, r) {
 
@@ -243,10 +243,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         return v;
                     }
                 }, {
-                    header: 'Qte.Reappro',
+                    header: 'Qte.Reap',
                     dataIndex: 'int_QTE_REAPPROVISIONNEMENT',
                     align: 'center',
-                    flex: 0.7
+                    flex: 0.5
                     ,
                     renderer: function (v, m, r) {
 
@@ -261,10 +261,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         return v;
                     }
                 }, {
-                    header: 'Tableau',
-                    dataIndex: 'int_T',
+                    header: 'Emplacement',
+                    dataIndex: 'lg_ZONE_GEO_ID',
                     align: 'center',
-                    flex: 0.7
+                    flex: 1
                     ,
                     renderer: function (v, m, r) {
 
@@ -280,7 +280,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     }
                 },
                 {
-                    text: 'Contrôler date.Perem',
+                    text: 'P',
                     dataIndex: 'checkExpirationdate',
                     xtype: 'checkcolumn',
                     listeners: {

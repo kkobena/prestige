@@ -214,7 +214,16 @@ Ext.define('testextjs.model.OrderDetail', {
         {
             name: 'int_EAN13',
             type: 'string'
+        },
+         {
+            name: 'prixDiff',
+            type: 'boolean'
+        },
+         {
+            name: 'int_PRICE_MACHINE',
+            type: 'int'
         }
+        
         //fin code ajouté
     ]
 });

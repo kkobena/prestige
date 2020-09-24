@@ -61,6 +61,9 @@ public class MvtTransaction implements Serializable {
     private Integer montantPaye = 0;//arrondi de la caisse
     @Column(name = "avoidAmount")
     private Integer avoidAmount = 0;
+    @Column(name = "montantAcc")
+    private Integer montantAcc = 0;
+
     @Column(name = "checked")
     private Boolean checked = true;
     @Column(name = "mvtdate", nullable = false, updatable = false)
@@ -298,6 +301,14 @@ public class MvtTransaction implements Serializable {
         return tTypeMvtCaisse;
     }
 
+    public Integer getMontantAcc() {
+        return montantAcc;
+    }
+
+    public void setMontantAcc(Integer montantAcc) {
+        this.montantAcc = montantAcc;
+    }
+
     public void settTypeMvtCaisse(TTypeMvtCaisse tTypeMvtCaisse) {
         this.tTypeMvtCaisse = tTypeMvtCaisse;
     }
@@ -340,5 +351,4 @@ public class MvtTransaction implements Serializable {
         return "MvtTransaction{" + "uuid=" + uuid + ", montant=" + montant + ", montantRestant=" + montantRestant + ", montantRegle=" + montantRegle + ", montantCredit=" + montantCredit + ", montantVerse=" + montantVerse + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", montantPaye=" + montantPaye + ", avoidAmount=" + avoidAmount + ", checked=" + checked + ", mvtDate=" + mvtDate + ", createdAt=" + createdAt + ", user=" + user + ", magasin=" + magasin + ", reglement=" + reglement + ", grossiste=" + grossiste + ", tTypeMvtCaisse=" + tTypeMvtCaisse + ", typeTransaction=" + typeTransaction + ", categoryTransaction=" + categoryTransaction + ", pkey=" + pkey + ", reference=" + reference + ", caisse=" + caisse + ", montantTva=" + montantTva + ", marge=" + marge + ", organisme=" + organisme + '}';
     }
 
-  
 }

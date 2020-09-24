@@ -14,11 +14,12 @@ import java.util.List;
  * @author Kobena
  */
 public class MontantAPaye implements Serializable {
+
     private static final long serialVersionUID = 1L;
-    private Integer remise = 0,marge=0,montantTva=0;
-    private Integer montantNet = 0, montant = 0, montantTp = 0;
+    private Integer remise = 0, marge = 0, montantTva = 0;
+    private Integer montantNet = 0, montant = 0, montantTp = 0, montantAccount = 0;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
-    private boolean  restructuring;
+    private boolean restructuring;
     private String message;
 
     public boolean isRestructuring() {
@@ -52,22 +53,35 @@ public class MontantAPaye implements Serializable {
     public MontantAPaye() {
     }
 
+    public MontantAPaye montantAccount(Integer montantAccount) {
+        this.montantAccount = montantAccount;
+        return this;
+    }
+
     public String getMessage() {
         return message;
+    }
+
+    public Integer getMontantAccount() {
+        return montantAccount;
+    }
+
+    public void setMontantAccount(Integer montantAccount) {
+        this.montantAccount = montantAccount;
     }
 
     public void setMessage(String message) {
         this.message = message;
     }
 
-    public MontantAPaye(Integer montantNet, Integer montant, Integer montantTp, 
-            Integer remise,Integer marge,Integer montantTva) {
+    public MontantAPaye(Integer montantNet, Integer montant, Integer montantTp,
+            Integer remise, Integer marge, Integer montantTva) {
         this.montant = montant;
         this.montantNet = montantNet;
         this.montantTp = montantTp;
         this.remise = remise;
-        this.marge=marge;
-        this.montantTva=montantTva;
+        this.marge = marge;
+        this.montantTva = montantTva;
     }
 
     public List<TiersPayantParams> getTierspayants() {

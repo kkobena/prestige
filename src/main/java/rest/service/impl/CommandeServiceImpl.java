@@ -7,6 +7,7 @@ package rest.service.impl;
 
 import commonTasks.dto.Params;
 import dal.HMvtProduit;
+import dal.Rupture;
 import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
 import dal.TEmplacement;
@@ -23,21 +24,29 @@ import dal.TMouvementSnapshot;
 import dal.TOrder;
 import dal.TOrderDetail;
 import dal.TParameters;
+import dal.TRuptureHistory;
 import dal.TTypeetiquette;
 import dal.TUser;
 import dal.TWarehouse;
 import dal.Typemvtproduit;
 import dal.enumeration.TypeLog;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
@@ -51,6 +60,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
+import javax.servlet.http.Part;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
@@ -58,7 +68,17 @@ import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,6 +86,7 @@ import rest.service.CommandeService;
 import rest.service.LogService;
 import rest.service.MouvementProduitService;
 import rest.service.MvtProduitService;
+import rest.service.OrderService;
 import rest.service.TransactionService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -88,6 +109,8 @@ public class CommandeServiceImpl implements CommandeService {
     TransactionService transactionService;
     @EJB
     LogService logService;
+    @EJB
+    OrderService orderService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -187,18 +210,33 @@ public class CommandeServiceImpl implements CommandeService {
                 OFamille.setDtDATELASTENTREE(new Date());
                 OFamille.setDtUPDATED(new Date());
                 OFamille.setIntPAF(bn.getIntPAF());
-                if (StringUtils.isEmpty(OFamille.getIntT()) &&(bn.getIntPRIXVENTE().compareTo(OFamille.getIntPRICE())>0) ) {
-                    OFamille.setIntPRICE(bn.getIntPRIXVENTE());
-                }
-                emg.merge(OFamille);
-
                 TFamilleGrossiste familleGrossiste = this.findFamilleGrossiste(OFamille.getLgFAMILLEID(), grossiste.getLgGROSSISTEID(), this.getEm());
                 if (familleGrossiste != null) {
                     familleGrossiste.setIntPAF(bn.getIntPAF());
-                    if (StringUtils.isEmpty(OFamille.getIntT()) &&(bn.getIntPRIXVENTE().compareTo(OFamille.getIntPRICE())>0)) {
+                }
+                if (bn.getPrixUni() != null && bn.getPrixUni().compareTo(bn.getIntPRIXVENTE()) != 0) {
+                    OFamille.setIntPRICE(bn.getIntPRIXVENTE());
+                    if (familleGrossiste != null) {
+                        familleGrossiste.setIntPRICE(bn.getIntPRIXVENTE());
+                    }
+                } else if (StringUtils.isEmpty(OFamille.getIntT()) && (bn.getIntPRIXVENTE().compareTo(OFamille.getIntPRICE()) > 0)) {
+                    OFamille.setIntPRICE(bn.getIntPRIXVENTE());
+                    if (familleGrossiste != null) {
+
                         familleGrossiste.setIntPRICE(bn.getIntPRIXVENTE());
                     }
 
+                }
+                emg.merge(OFamille);
+
+                if (familleGrossiste != null) {
+
+//                    if (bn.getPrixUni() != null && bn.getPrixUni().compareTo(0) > 0) {
+//                        
+//                    }
+//                    if (StringUtils.isEmpty(OFamille.getIntT()) && (bn.getIntPRIXVENTE().compareTo(OFamille.getIntPRICE()) > 0)) {
+//                        familleGrossiste.setIntPRICE(bn.getIntPRIXVENTE());
+//                    }
                     this.getEm().merge(familleGrossiste);
                 }
             }
@@ -208,9 +246,7 @@ public class CommandeServiceImpl implements CommandeService {
             OTBonLivraison.setDtUPDATED(new Date());
             OTBonLivraison.setLgUSERID(user);
             emg.merge(OTBonLivraison);
-            transactionService.addTransaction(user, OTBonLivraison.getLgBONLIVRAISONID(),
-                    OTBonLivraison.getIntHTTC(), OTBonLivraison.getIntMHT(), 0,
-                    order.getLgGROSSISTEID(), emg, OTBonLivraison.getIntTVA(), OTBonLivraison.getStrREFLIVRAISON());
+            transactionService.addTransactionBL(user, OTBonLivraison, emg);
             String comm = "ENTREE EN STOCK DU BL " + OTBonLivraison.getStrREFLIVRAISON() + " PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
             logService.updateItem(user, OTBonLivraison.getStrREFLIVRAISON(), comm, TypeLog.ENTREE_EN_STOCK, OTBonLivraison, emg);
             userTransaction.commit();
@@ -630,7 +666,7 @@ public class CommandeServiceImpl implements CommandeService {
         LocalDate date = LocalDate.parse(jsonObject.getString("str_last_date"), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         int lastCode = 0;
         if (date.equals(LocalDate.now())) {
-            lastCode = new Integer(jsonObject.getString("str_last_date"));
+            lastCode = Integer.valueOf(jsonObject.getString("str_last_date"));
         } else {
             date = LocalDate.now();
         }
@@ -646,4 +682,245 @@ public class CommandeServiceImpl implements CommandeService {
         return LocalDate.now().format(DateTimeFormatter.ofPattern("ddMMyyyy")).concat("_") + left;
     }
 
+    private TFamille findByCipOrEa0(String searchValue, TGrossiste grossiste) {
+        try {
+            TypedQuery<TFamille> q = getEm().createQuery("SELECT o FROM TFamille o WHERE o.lgGROSSISTEID =?1 AND (o.intCIP LIKE ?2 OR o.intEAN13 LIKE ?2) AND o.strSTATUT='enable' ", TFamille.class);
+            q.setParameter(1, grossiste);
+            q.setParameter(2, searchValue);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return null;
+        }
+    }
+
+    @Override
+    public TFamille findByCipOrEan(String searchValue, TGrossiste grossiste) {
+        TFamille famille = findByCipOrEa0(searchValue, grossiste);
+        if (famille != null) {
+            return famille;
+        }
+        famille = findByCipOrEan1(searchValue, grossiste);
+        return famille;
+    }
+
+    private TFamille findByCipOrEan1(String searchValue, TGrossiste grossiste) {
+        try {
+            TypedQuery<TFamilleGrossiste> q = getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE o.lgGROSSISTEID =?1 AND o.strCODEARTICLE=?2 AND o.strSTATUT='enable' ", TFamilleGrossiste.class);
+            q.setParameter(1, grossiste);
+            q.setParameter(2, searchValue);
+            q.setMaxResults(1);
+            return q.getSingleResult().getLgFAMILLEID();
+
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return null;
+        }
+    }
+
+    @Override
+    public TOrderDetail findByProductAndOrder(TOrder order, TFamille famille) {
+        try {
+            TypedQuery<TOrderDetail> q = getEm().createNamedQuery("TOrderDetail.findByLgORDERIDAndLgFAMILLEID", TOrderDetail.class);
+            q.setParameter("lgORDERID", order);
+            q.setParameter("lgFAMILLEID", famille);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return null;
+        }
+    }
+
+    @Override
+    public void updateOrderItemQtyFromResponse(TOrderDetail item, int qty, TGrossiste grossiste) {
+
+        item.setIntPRICE(qty * item.getIntPAFDETAIL());
+        item.setIntQTEREPGROSSISTE(qty);
+        item.setDtUPDATED(new Date());
+        getEm().merge(item);
+
+    }
+
+    @Override
+    public void addRuptureHistory(TOrderDetail item, TGrossiste grossiste) {
+        TRuptureHistory OTRuptureHistory = new TRuptureHistory();
+        OTRuptureHistory.setLgRUPTUREHISTORYID(RandomStringUtils.randomAlphanumeric(20));
+        OTRuptureHistory.setLgFAMILLEID(item.getLgFAMILLEID());
+        OTRuptureHistory.setIntNUMBER(item.getIntNUMBER());
+        OTRuptureHistory.setDtCREATED(new Date());
+        OTRuptureHistory.setGrossisteId(grossiste);
+        getEm().persist(OTRuptureHistory);
+        getEm().remove(item);
+    }
+
+    @Override
+    public JSONObject verificationCommande(Part part, String orderId, TUser OTUser) {
+        String fileName = part.getSubmittedFileName();
+        String extension = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
+        try {
+            if (extension.equalsIgnoreCase("csv")) {
+
+                return verificationCommandeCsv(part, orderId, OTUser);
+
+            } else {
+                return verificationCommandeXlsx(part, orderId, OTUser);
+            }
+
+//            json.put("success", true);
+//            json.put("nbrePrisEnCompte", "Nombre de produits pris en compte :: " + _json.getInt("nbrePrisEnCompte") + "<br>" + (_json.getInt("nbreNonPrisEnCompte") > 0 ? _json.getInt("nbreNonPrisEnCompte") + " produit(s) en rupture" : ""));
+////            json.put("nbreNonPrisEnCompte", _json.getInt("nbreNonPrisEnCompte"));
+////            json.put("rupture", _json.getInt("nbreNonPrisEnCompte") + " produit(s) en rupture");
+        } catch (IOException ex) {
+            Logger.getLogger(CommandeServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            return new JSONObject().put("success", false);
+        }
+
+    }
+
+    JSONObject verificationCommandeCsv(Part part, String orderId, TUser OTUser) throws IOException {
+        try {
+            CSVParser parser = new CSVParser(new InputStreamReader(part.getInputStream()), CSVFormat.EXCEL.withDelimiter(';'));
+            int nbrePrisEnCompte = 0, nbreNonPrisEnCompte = 0, totalItemsCount = 0;
+            TOrder order = getEm().find(TOrder.class, orderId);
+            List<TOrderDetail> l = orderService.findByOrderId(order.getLgORDERID());
+            TGrossiste grossiste = order.getLgGROSSISTEID();
+            Set<TFamille> s = new HashSet<>();
+            userTransaction.begin();
+            Rupture rupture = orderService.creerRupture(order);
+            for (CSVRecord cSVRecord : parser) {
+                totalItemsCount++;
+                TFamille famille = findByCipOrEan(cSVRecord.get(0), grossiste);
+                s.add(famille);
+                TOrderDetail item = findByProductAndOrder(order, famille);
+                int qtyResponse = Integer.valueOf(cSVRecord.get(3));
+                if (qtyResponse > 0) {
+                    updateOrderItemQtyFromResponse(item, qtyResponse, grossiste);
+                    nbrePrisEnCompte++;
+                } else {
+                    orderService.creerRuptureItem(rupture, famille, item.getIntNUMBER());
+//                addRuptureHistory(item, grossiste);
+                    getEm().remove(item);
+                    nbreNonPrisEnCompte++;
+                }
+            }
+            Set<TOrderDetail> orderDetails = productNotInOrderResponse(s, order, l.size(), totalItemsCount);
+            for (TOrderDetail orderDetail : orderDetails) {
+                orderService.creerRuptureItem(rupture, orderDetail.getLgFAMILLEID(), orderDetail.getIntNUMBER());
+                getEm().remove(orderDetail);
+                nbreNonPrisEnCompte++;
+            }
+            if (nbrePrisEnCompte == 0) {
+                getEm().remove(order);
+            }
+            userTransaction.commit();
+//            return new JSONObject().put("nbrePrisEnCompte", nbrePrisEnCompte)
+//                    .put("nbreNonPrisEnCompte", nbreNonPrisEnCompte);
+            return new JSONObject().put("success", true)
+                    .put("nbrePrisEnCompte", "Nombre de produits pris en compte :: " + nbrePrisEnCompte + "<br>" + (nbreNonPrisEnCompte > 0 ? nbreNonPrisEnCompte + " produit(s) en rupture" : ""));
+        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+            try {
+                Logger.getLogger(CommandeServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                userTransaction.rollback();
+            } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                Logger.getLogger(CommandeServiceImpl.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            return new JSONObject().put("success", false);
+
+        }
+
+    }
+
+    public Rupture creerRupture(TOrder order) {
+        Rupture rupture = new Rupture();
+        TGrossiste grossiste = order.getLgGROSSISTEID();
+        rupture.setGrossiste(grossiste);
+        rupture.setReference(order.getStrREFORDER());
+        rupture.setStatut(DateConverter.STATUT_RUPTURE);
+        getEm().persist(rupture);
+        return rupture;
+
+    }
+
+    private Set<TOrderDetail> productNotInOrderResponse(Set<TFamille> familles, TOrder order, int originalSize, int totalItemsCount) {
+        System.out.println("-------->>>>  totalItemsCount " + totalItemsCount);
+        System.out.println("-------->>>>  originalSize " + originalSize);
+        if (originalSize == totalItemsCount) {
+            return Collections.emptySet();
+        }
+        List<TOrderDetail> l = orderService.findByOrderId(order.getLgORDERID());
+        Set<TOrderDetail> s = new HashSet<>();
+
+        Set<TFamille> set = l.stream().map(x -> x.getLgFAMILLEID()).collect(Collectors.toSet());
+        System.out.println("-------->>>>  " + set.size());
+
+        ListUtils.removeAll(set, familles).forEach(e -> {
+            System.out.println("-------->>>>  " + e.getIntCIP());
+            TOrderDetail detail = findByProductAndOrder(order, e);
+            s.add(detail);
+        });
+        return s;
+
+    }
+
+    JSONObject verificationCommandeXlsx(Part part, String orderId, TUser OTUse) throws IOException {
+        try {
+            int nbrePrisEnCompte = 0, nbreNonPrisEnCompte = 0, totalItemsCount = 0;
+            TOrder order = getEm().find(TOrder.class, orderId);
+            TGrossiste grossiste = order.getLgGROSSISTEID();
+            List<TOrderDetail> l = orderService.findByOrderId(order.getLgORDERID());
+            Workbook workbook = new HSSFWorkbook(part.getInputStream());
+            int num = workbook.getNumberOfSheets();
+            userTransaction.begin();
+            //        Rupture rupture = creerRupture(order);
+            Rupture rupture = orderService.creerRupture(order);
+            Set<TFamille> s = new HashSet<>();
+            for (int j = 0; j < num; j++) {
+                Sheet sheet = workbook.getSheetAt(j);
+                Iterator rows = sheet.rowIterator();
+                while (rows.hasNext()) {
+                    Row nextrow = (Row) rows.next();
+                    totalItemsCount++;
+                    Cell cipCell = nextrow.getCell(0);
+                    Cell qtyCell = nextrow.getCell(3);
+                    TFamille famille = findByCipOrEan(cipCell.getStringCellValue(), grossiste);
+                    s.add(famille);
+                    TOrderDetail item = findByProductAndOrder(order, famille);
+                    int qtyResponse = (int) qtyCell.getNumericCellValue();
+                    if (qtyResponse > 0) {
+                        updateOrderItemQtyFromResponse(item, qtyResponse, grossiste);
+                        nbrePrisEnCompte++;
+                    } else {
+//                    addRuptureHistory(item, grossiste);
+                        orderService.creerRuptureItem(rupture, famille, item.getIntNUMBER());
+                        getEm().remove(item);
+                        nbreNonPrisEnCompte++;
+                    }
+                }
+            }
+            Set<TOrderDetail> orderDetails = productNotInOrderResponse(s, order, l.size(), totalItemsCount);
+            for (TOrderDetail orderDetail : orderDetails) {
+                orderService.creerRuptureItem(rupture, orderDetail.getLgFAMILLEID(), orderDetail.getIntNUMBER());
+                getEm().remove(orderDetail);
+                nbreNonPrisEnCompte++;
+            }
+            if (nbrePrisEnCompte == 0) {
+                getEm().remove(order);
+            }
+            userTransaction.commit();
+            return new JSONObject().put("success", true)
+                    .put("nbrePrisEnCompte", "Nombre de produits pris en compte :: " + nbrePrisEnCompte + "<br>" + (nbreNonPrisEnCompte > 0 ? nbreNonPrisEnCompte + " produit(s) en rupture" : ""));
+        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+            try {
+                Logger.getLogger(CommandeServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                userTransaction.rollback();
+            } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                Logger.getLogger(CommandeServiceImpl.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            return new JSONObject().put("success", false);
+
+        }
+    }
 }

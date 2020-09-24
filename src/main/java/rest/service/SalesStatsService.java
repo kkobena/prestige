@@ -26,50 +26,52 @@ import org.json.JSONObject;
 @Local
 //@Remote
 public interface SalesStatsService {
-    
+
     JSONObject getListeTPreenregistrement(SalesStatsParams params) throws JSONException;
-    
+
     long countListeTPreenregistrement(SalesStatsParams params);
-    
+
     JSONObject delete(String venteId) throws JSONException;
-    
+
     JSONObject trash(String venteId, String statut) throws JSONException;
-    
+
     JSONObject findVenteById(String venteId) throws JSONException;
-    
+
     JSONObject reloadVenteById(String venteId) throws JSONException;
-    
+
     JSONObject annulations(SalesStatsParams params) throws JSONException;
-    
+
     long countListeAnnulations(SalesStatsParams params);
-    
+
     JSONObject listeVentes(SalesStatsParams params) throws JSONException;
 
     List<VenteDTO> listeVentesReport(SalesStatsParams params);
-    
+
     long countListeVentes(SalesStatsParams params);
-    
+
     JSONObject tvasViewData(Params params) throws JSONException;
-    
+
     TPreenregistrement findOneById(String venteId);
-    
+
     List<TvaDTO> tvasRapport(Params params);
-    
+
     List<TvaDTO> tvasRapportJournalier(Params params);
-    
+
     List<VenteDetailsDTO> venteDetailsByVenteId(String venteId);
-    
+
     List<VenteDTO> annulationVente(SalesStatsParams params);
-    
+
     JSONObject modifiertypevente(String venteId, ClotureVenteParams params) throws JSONException;
-    
+
     List<TiersPayantParams> venteTierspayantData(String venteId);
-    
+
     JSONObject chargerClientLorsModificationVnete(String venteId) throws JSONException;
-    
+
     TicketDTO getVenteById(String venteId);
-    
+
     TicketDTO getVenteById(TPreenregistrement p);
-    
+
     public long montantVenteAnnulees(SalesStatsParams params);
+
+    public List<TvaDTO> tvasRapport0(Params params);
 }

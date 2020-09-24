@@ -91,7 +91,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
     private Boolean afficheeurActif;
     private LocalDate dateUpdat;
     private Integer maximunproduit;
-    private Boolean voirNumeroTicket;
+    private Boolean voirNumeroTicket, sansBon, plafondVenteIsActive;
 
     public LocalDate getDateUpdat() {
         return dateUpdat;
@@ -99,6 +99,22 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     public void setDateUpdat(LocalDate dateUpdat) {
         this.dateUpdat = dateUpdat;
+    }
+
+    public Boolean getSansBon() {
+        return sansBon;
+    }
+
+    public void setSansBon(Boolean sansBon) {
+        this.sansBon = sansBon;
+    }
+
+    public Integer getNombreTickets() {
+        return nombreTickets;
+    }
+
+    public void setNombreTickets(Integer nombreTickets) {
+        this.nombreTickets = nombreTickets;
     }
 
     public boolean isAfficheeurActif() {
@@ -146,6 +162,14 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     public void setVoirNumeroTicket(Boolean voirNumeroTicket) {
         this.voirNumeroTicket = voirNumeroTicket;
+    }
+
+    public Boolean getPlafondVenteIsActive() {
+        return plafondVenteIsActive;
+    }
+
+    public void setPlafondVenteIsActive(Boolean plafondVenteIsActive) {
+        this.plafondVenteIsActive = plafondVenteIsActive;
     }
 
     @Override
@@ -462,22 +486,29 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     @Override
     public boolean sansBon() {
-        try {
-            TParameters tp = getEntityManager().find(TParameters.class, "KEY_ACTIVATE_VENTE_WITHOUT_BON");
-            return tp != null && tp.getStrVALUE().trim().equals("1");
-        } catch (Exception e) {
-            return false;
+        if (sansBon == null) {
+            try {
+                TParameters tp = getEntityManager().find(TParameters.class, "KEY_ACTIVATE_VENTE_WITHOUT_BON");
+                sansBon = (tp != null && tp.getStrVALUE().trim().equals("1"));
+            } catch (Exception e) {
+                sansBon = false;
+            }
+
         }
+        return sansBon;
     }
 
     @Override
     public boolean plafondVenteIsActive() {
-        try {
-            TParameters tp = getEntityManager().find(TParameters.class, "KEY_ACTIVATION_PLAFOND_VENTE");
-            return tp != null && tp.getStrVALUE().trim().equals("1");
-        } catch (Exception e) {
-            return false;
+        if (plafondVenteIsActive == null) {
+            try {
+                TParameters tp = getEntityManager().find(TParameters.class, "KEY_ACTIVATION_PLAFOND_VENTE");
+                plafondVenteIsActive = (tp != null && tp.getStrVALUE().trim().equals("1"));
+            } catch (Exception e) {
+                plafondVenteIsActive = plafondVenteIsActive;
+            }
         }
+        return plafondVenteIsActive;
 
     }
 

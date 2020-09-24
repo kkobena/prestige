@@ -49,7 +49,7 @@ public class ImportInventaire extends HttpServlet {
        response.setContentType("application/json;charset=UTF-8");
           dataManager OdataManager = new dataManager();
         OdataManager.initEntityManager();
-        String format = request.getParameter("format");
+       
         String lg_INVENTAIRE_ID = request.getParameter("lg_INVENTAIRE_ID");
           Part part = request.getPart("fichier");
         String fileName = part.getSubmittedFileName();

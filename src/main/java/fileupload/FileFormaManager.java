@@ -20,10 +20,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -91,9 +88,8 @@ public class FileFormaManager extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
-        String success = "";
-        String faillure = "";
-        String action = "", lg_GROSSISTE_ID = "";
+        
+        String  lg_GROSSISTE_ID = "";
         int modeBL = -1;
         if (request.getParameter("lg_GROSSISTE_ID") != null) {
             lg_GROSSISTE_ID = request.getParameter("lg_GROSSISTE_ID");
@@ -101,12 +97,9 @@ public class FileFormaManager extends HttpServlet {
         if (request.getParameter("modeBL") != null) {
             modeBL = Integer.valueOf(request.getParameter("modeBL"));
         }
-        if (request.getParameter("action") != null) {
-            action = request.getParameter("action");
-        }
+       
         items = new ArrayList<>();
-        int count = 0;
-        int statut = 0;
+       
         factory = Json.createBuilderFactory(null);
         JsonObjectBuilder json = factory.createObjectBuilder();
         Part part = request.getPart("fichier");
@@ -267,42 +260,7 @@ public class FileFormaManager extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private void articleCSV(HttpServletResponse response) {
-        OutputStream out = null;
-        try {
-
-            String filename = "stock_" + df.format(new Date()) + ".csv";
-            out = response.getOutputStream();
-            response.setContentType("text/csv");
-
-            response.setHeader("Content-disposition", "inline; filename=" + filename);
-
-            Writer writer = new OutputStreamWriter(out, "UTF-8");
-            try (CSVPrinter printer = CSVFormat.DEFAULT
-                    .withHeader(ArticleHeader.class).print(writer)) {
-                List<Object[]> list = null;
-
-                for (Object[] objects : list) {
-
-                    printer.printRecord(objects[0], objects[1], objects[2], objects[3], objects[4], objects[5], objects[6], objects[7]);
-
-                }
-                printer.flush();
-            }
-            out.flush();
-        } catch (IOException ex) {
-            Logger.getLogger(FileFormaManager.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-
-    }
+  
 
     enum ArticleHeader {
         LOCATION, GROSSISTE, DESCRIPTION, CIP, AEN, QTE, PU, PA
@@ -317,7 +275,7 @@ public class FileFormaManager extends HttpServlet {
         em.getTransaction().begin();
 
         TOrder order = createOrder(grossiste, commonparameter.statut_is_Process, em, OTUser);
-        CSVParser parser;
+       
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {

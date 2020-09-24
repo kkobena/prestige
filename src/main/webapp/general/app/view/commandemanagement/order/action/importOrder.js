@@ -31,7 +31,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.importOrder', {
         Type = this.getType();
         var filetype = (Type === 'format1' ? 'CSV' : 'Excel');
         Omode = this.getMode();
-
+        var orderId = this.getOdatasource().lg_ORDER_ID;
         var storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
             pageSize: itemsPerPage,
@@ -71,16 +71,24 @@ Ext.define('testextjs.view.commandemanagement.order.action.importOrder', {
                     defaults: {
                         anchor: '100%'
                     },
-                    items: [{
+                    items: [
+                        {
                             xtype: 'filefield',
-                            fieldLabel: 'Fichier '+filetype,
-                            emptyText: 'Fichier '+filetype,
+                            fieldLabel: 'Fichier ' + filetype,
+                            emptyText: 'Fichier ' + filetype,
                             name: 'str_FILE',
                             allowBlank: false,
-                            buttonText: 'Choisir un fichier '+filetype,
+                            buttonText: 'Choisir un fichier ' + filetype,
                             width: 400,
                             id: 'str_FILE'
                         },
+                        {
+                            xtype: 'hiddenfield',
+                            name: 'orderId',
+                            allowBlank: false,
+                            value: orderId
+                        },
+
                         {
                             xtype: 'combobox',
                             fieldLabel: 'Repartiteur',
@@ -150,7 +158,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.importOrder', {
                 formulaire.submit({
                     url: '../CheckMigrationServlet?table_name=TABLE_ORDER&format=' + Type
                 });
-            } else {
+            } else if (Omode === "importfileCreate") {
                 formulaire.submit({
                     url: internal_url,
                     waitMsg: 'Veuillez patienter le temps du telechargemetnt du fichier...',
@@ -162,6 +170,43 @@ Ext.define('testextjs.view.commandemanagement.order.action.importOrder', {
                             Oview.getStore().reload();
                         } else {
                             Ext.MessageBox.alert('Erreur', action.result.errors);
+                        }
+
+                        var bouton = button.up('window');
+                        bouton.close();
+                    },
+                    failure: function (formulaire, action) {
+                        Ext.MessageBox.alert('Erreur', 'Erreur  ' + action.result.errors);
+                    }
+                });
+            } else {
+                formulaire.submit({
+                    url: '../VericationServlet',
+                    waitMsg: 'Traitement.....',
+                    timeout: 2400000,
+                    success: function (formulaire, action) {
+                        var result = Ext.JSON.decode(action.response.responseText, false);
+                        if (result.success) {
+                            var nbrePrisEnCompte = result.nbrePrisEnCompte;
+//                            var nbreNonPrisEnCompte = result.nbreNonPrisEnCompte;
+//                            var rupture = result.rupture;
+//                            if (nbreNonPrisEnCompte > 0) {
+//                                nbrePrisEnCompte += "<br>" + rupture;
+//                            }
+//                            Ext.MessageBox.alert('Confirmation', nbrePrisEnCompte);
+                            Ext.MessageBox.show({
+                                title: 'Message',
+                                width: 400,
+                                msg: nbrePrisEnCompte,
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.INFO
+
+                            });
+
+
+                            Oview.getStore().reload();
+                        } else {
+                            Ext.MessageBox.alert('Erreur', "Erreur ");
                         }
 
                         var bouton = button.up('window');

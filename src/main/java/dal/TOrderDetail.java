@@ -27,11 +27,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @Table(name = "t_order_detail", indexes = {
-            @Index(name = "t_order_detailIdex", columnList = "str_STATUT")
-           
-        })
+    @Index(name = "t_order_detailIdex", columnList = "str_STATUT")
+
+})
 @XmlRootElement
-@NamedQueries({ @NamedQuery(name = "TOrderDetail.findByLgORDERID", query = "SELECT t FROM TOrderDetail t WHERE t.lgORDERID = :lgORDERID")})
+@NamedQueries({
+    @NamedQuery(name = "TOrderDetail.findByLgORDERID", query = "SELECT t FROM TOrderDetail t WHERE t.lgORDERID = :lgORDERID"),
+    @NamedQuery(name = "TOrderDetail.findByLgORDERIDAndLgFAMILLEID", query = "SELECT t FROM TOrderDetail t WHERE t.lgORDERID = :lgORDERID AND t.lgFAMILLEID =:lgFAMILLEID")}
+)
 public class TOrderDetail implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -71,12 +74,11 @@ public class TOrderDetail implements Serializable {
     @ManyToOne(optional = false)
     private TFamille lgFAMILLEID;
     @Column(name = "prixUnitaire")
-    private Integer prixUnitaire=0;
+    private Integer prixUnitaire = 0;
     @Column(name = "prixAchat")
-    private Integer prixAchat=0;
+    private Integer prixAchat = 0;
     @Column(name = "int_ORERSTATUS")
     private Short intORERSTATUS;
-   
 
     public TOrderDetail() {
     }
@@ -245,7 +247,5 @@ public class TOrderDetail implements Serializable {
     public void setPrixAchat(Integer prixAchat) {
         this.prixAchat = prixAchat;
     }
-
-  
 
 }

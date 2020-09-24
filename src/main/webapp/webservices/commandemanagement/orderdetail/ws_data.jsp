@@ -1,3 +1,4 @@
+<%@page import="util.DateConverter"%>
 <%@page import="dal.TMouvement"%>
 <%@page import="bll.teller.SnapshotManager"%>
 <%@page import="bll.configManagement.familleGrossisteManagement"%>
@@ -22,16 +23,14 @@
 <%@page import="toolkits.utils.logger"  %>
 <%@page import="java.text.SimpleDateFormat"  %>
 
-<jsp:useBean id="Os_Search_poste" class="services.Search"  scope="session"/>
-<jsp:useBean id="Os_Search_poste_data" class="services.ShowDataBean" scope="session" />
 
 
-<% Translate oTranslate = new Translate();
+<%
     dataManager OdataManager = new dataManager();
     TFamilleStock OTFamillestock = null;
     TFamilleGrossiste OTFamilleGrossiste = null;
     date key = new date();
-    TMouvement OTMouvement = null;
+
     Date dt_CREATED, dt_UPDATED;
 %>
 
@@ -84,10 +83,18 @@
 <!-- fin logic de gestion des page -->
 
 <%    List<TOrderDetail> lstTOrderDetail = new ArrayList<dal.TOrderDetail>();
-    String lg_ORDER_ID = "%%", search_value = "", str_STATUT = commonparameter.statut_is_Process;
+    String lg_ORDER_ID = "%%", search_value = "", str_STATUT = commonparameter.statut_is_Process, filtre = DateConverter.ALL;
+    int start = 0, limit = 0;
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
+    if (request.getParameter("start") != null) {
+        start = Integer.valueOf(request.getParameter("start"));
+    }
+    if (request.getParameter("limit") != null) {
+        limit = Integer.valueOf(request.getParameter("limit"));
+
+    }
 
     if (request.getParameter("lg_ORDER_ID") != null) {
         lg_ORDER_ID = request.getParameter("lg_ORDER_ID").toString();
@@ -100,84 +107,68 @@
     }
 
     if (request.getParameter("str_STATUT") != null) {
-        str_STATUT = request.getParameter("str_STATUT").toString();
+        str_STATUT = request.getParameter("str_STATUT");
         new logger().OCategory.info("str_STATUT " + str_STATUT);
+    }
+    if (request.getParameter("filtre") != null) {
+        filtre = request.getParameter("filtre");
+
     }
     OdataManager.initEntityManager();
     tellerManagement OtellerManagement = new tellerManagement(OdataManager, OTUser);
     orderManagement OorderManagement = new orderManagement(OdataManager, OTUser);
     familleGrossisteManagement OfamilleGrossisteManagement = new familleGrossisteManagement(OdataManager);
-   
-    lstTOrderDetail = OorderManagement.getTOrderDetail(search_value, lg_ORDER_ID, str_STATUT);
+    long total = OorderManagement.getOrderDetailCount(search_value, lg_ORDER_ID, filtre);
+    lstTOrderDetail = OorderManagement.getOrderDetail(search_value, lg_ORDER_ID, filtre, start, limit);
 
 %>
 
-<%//Filtre de pagination
-    try {
-        if (DATA_PER_PAGE > lstTOrderDetail.size()) {
-            DATA_PER_PAGE = lstTOrderDetail.size();
-        }
-    } catch (Exception E) {
-    }
-
-    int pgInt = pageAsInt - 1;
-    int pgInt_Last = pageAsInt - 1;
-
-    if (pgInt == 0) {
-        pgInt_Last = DATA_PER_PAGE;
-    } else {
-
-        pgInt_Last = (lstTOrderDetail.size() - (DATA_PER_PAGE * (pgInt)));
-        pgInt_Last = (DATA_PER_PAGE * (pgInt) + pgInt_Last);
-        if (pgInt_Last > (DATA_PER_PAGE * (pgInt + 1))) {
-            pgInt_Last = DATA_PER_PAGE * (pgInt + 1);
-        }
-        pgInt = ((DATA_PER_PAGE) * (pgInt));
-    }
-
-%>
 
 
 <%    JSONArray arrayObj = new JSONArray();
-    for (int i = pgInt; i < pgInt_Last; i++) {
+    for (TOrderDetail o:lstTOrderDetail) {
         try {
-            OdataManager.getEm().refresh(lstTOrderDetail.get(i));
+            OdataManager.getEm().refresh(o);
 
         } catch (Exception er) {
         }
 
         JSONObject json = new JSONObject();
 
-        OTFamillestock = OtellerManagement.geProductItemStock(lstTOrderDetail.get(i).getLgFAMILLEID().getLgFAMILLEID());
-        OTFamilleGrossiste = OfamilleGrossisteManagement.findGrossiste(lstTOrderDetail.get(i).getLgFAMILLEID(), lstTOrderDetail.get(i).getLgORDERID().getLgGROSSISTEID());
-        json.put("lg_ORDERDETAIL_ID", lstTOrderDetail.get(i).getLgORDERDETAILID());
-        json.put("lg_ORDER_ID", lstTOrderDetail.get(i).getLgORDERID().getLgORDERID());
-        json.put("int_NUMBER", lstTOrderDetail.get(i).getIntNUMBER());
-        json.put("int_PRICE", lstTOrderDetail.get(i).getIntPRICE());
-        json.put("int_QTE_MANQUANT", lstTOrderDetail.get(i).getIntQTEMANQUANT());
-        json.put("lg_GROSSISTE_ID", lstTOrderDetail.get(i).getLgORDERID().getLgGROSSISTEID().getLgGROSSISTEID());
-        json.put("lg_GROSSISTE_LIBELLE", lstTOrderDetail.get(i).getLgORDERID().getLgGROSSISTEID().getStrLIBELLE());
-        //json.put("lg_GROSSISTE_ID", lstTOrderDetail.get(i).getLgGROSSISTEID().getLgGROSSISTEID());
+        OTFamillestock = OtellerManagement.geProductItemStock(o.getLgFAMILLEID().getLgFAMILLEID());
+        OTFamilleGrossiste = OfamilleGrossisteManagement.findGrossiste(o.getLgFAMILLEID(), o.getLgORDERID().getLgGROSSISTEID());
+        json.put("lg_ORDERDETAIL_ID", o.getLgORDERDETAILID());
+        json.put("lg_ORDER_ID", o.getLgORDERID().getLgORDERID());
+        json.put("int_NUMBER", o.getIntNUMBER());
+        json.put("int_PRICE", o.getIntPRICE());
+        json.put("int_QTE_MANQUANT", o.getIntQTEMANQUANT());
+        json.put("lg_GROSSISTE_ID", o.getLgORDERID().getLgGROSSISTEID().getLgGROSSISTEID());
+        json.put("lg_GROSSISTE_LIBELLE", o.getLgORDERID().getLgGROSSISTEID().getStrLIBELLE());
+        //json.put("lg_GROSSISTE_ID", o.getLgGROSSISTEID().getLgGROSSISTEID());
 
         // bool_BL
-        json.put("bool_BL", lstTOrderDetail.get(i).getBoolBL());
+        json.put("bool_BL", o.getBoolBL());
 
-        json.put("lg_FAMILLE_ID", lstTOrderDetail.get(i).getLgFAMILLEID().getLgFAMILLEID());
-        json.put("lg_FAMILLE_NAME", lstTOrderDetail.get(i).getLgFAMILLEID().getStrNAME());
-        json.put("lg_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE() : lstTOrderDetail.get(i).getLgFAMILLEID().getIntCIP()));
-        json.put("lg_FAMILLE_PRIX_VENTE", lstTOrderDetail.get(i).getIntPRICEDETAIL());
-        json.put("lg_FAMILLE_PRIX_ACHAT", lstTOrderDetail.get(i).getLgFAMILLEID().getIntPAT());
-        json.put("int_PAF", lstTOrderDetail.get(i).getIntPAFDETAIL());
-        json.put("int_PRIX_REFERENCE", lstTOrderDetail.get(i).getLgFAMILLEID().getIntPRICETIPS());
-        json.put("int_QTE_LIVRE", lstTOrderDetail.get(i).getIntNUMBER() - lstTOrderDetail.get(i).getIntQTEMANQUANT());
-        json.put("int_QTE_REP_GROSSISTE", lstTOrderDetail.get(i).getIntQTEREPGROSSISTE());
+        json.put("lg_FAMILLE_ID", o.getLgFAMILLEID().getLgFAMILLEID());
+        json.put("lg_FAMILLE_NAME", o.getLgFAMILLEID().getStrNAME());
+        json.put("lg_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE() : o.getLgFAMILLEID().getIntCIP()));
+        json.put("lg_FAMILLE_PRIX_VENTE", o.getIntPRICEDETAIL());
+         
+        json.put("lg_FAMILLE_PRIX_ACHAT", o.getLgFAMILLEID().getIntPAT());
+        json.put("int_PAF", o.getIntPAFDETAIL());
+         json.put("int_PRICE_MACHINE", o.getLgFAMILLEID().getIntPRICE());
+        
+        json.put("int_PRIX_REFERENCE", o.getLgFAMILLEID().getIntPRICETIPS());
+        json.put("int_QTE_LIVRE", o.getIntNUMBER() - o.getIntQTEMANQUANT());
+        json.put("int_QTE_REP_GROSSISTE", o.getIntQTEREPGROSSISTE());
+          json.put("prixDiff", o.getIntPRICEDETAIL().compareTo(o.getLgFAMILLEID().getIntPRICE())!=0);
 
-        json.put("int_SEUIL", lstTOrderDetail.get(i).getLgFAMILLEID().getIntSEUILMIN());
+        json.put("int_SEUIL", o.getLgFAMILLEID().getIntSEUILMIN());
 
         int int_QTE_REASSORT = 0;
         try {
-            int_QTE_REASSORT = OTFamillestock.getIntNUMBERAVAILABLE() - lstTOrderDetail.get(i).getLgFAMILLEID().getIntSEUILMIN();
-            new logger().OCategory.info("int_QTE_REASSORT " + int_QTE_REASSORT);
+            int_QTE_REASSORT = OTFamillestock.getIntNUMBERAVAILABLE() - o.getLgFAMILLEID().getIntSEUILMIN();
+          
             if (int_QTE_REASSORT < 0) {
                 int_QTE_REASSORT = -1 * int_QTE_REASSORT;
             } else {
@@ -200,21 +191,21 @@
             json.put("str_CODE_ARTICLE", "");
         }
 
-        json.put("str_STATUT", lstTOrderDetail.get(i).getStrSTATUT());
+        json.put("str_STATUT", o.getStrSTATUT());
 
-        dt_CREATED = lstTOrderDetail.get(i).getDtCREATED();
+        dt_CREATED = o.getDtCREATED();
         if (dt_CREATED != null) {
             json.put("dt_CREATED", key.DateToString(dt_CREATED, key.formatterOrange));
         }
 
-        dt_UPDATED = lstTOrderDetail.get(i).getDtUPDATED();
+        dt_UPDATED = o.getDtUPDATED();
         if (dt_UPDATED != null) {
             json.put("dt_UPDATED", key.DateToString(dt_UPDATED, key.formatterOrange));
         }
 
         arrayObj.put(json);
     }
-    String result = "({\"total\":\"" + lstTOrderDetail.size() + " \" ,\"results\":" + arrayObj.toString() + "})";
+    String result = "({\"total\":\"" + total + " \" ,\"results\":" + arrayObj.toString() + "})";
 
 %>
 

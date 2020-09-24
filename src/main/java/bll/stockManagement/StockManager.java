@@ -2156,7 +2156,7 @@ public class StockManager extends bllBase {
                     st.get(TFamilleStock_.intNUMBERAVAILABLE),
                     root.get(TFamille_.intPAF),
                     root.get("lgCODETVAID").get("intVALUE"), root.get(TFamille_.intSEUILMIN),
-                    root.get("lgZONEGEOID").get("strCODE"),
+                    root.get("lgZONEGEOID").get("strLIBELLEE"),
                     root.get("lgGROSSISTEID").get("strLIBELLE")
             ).orderBy(cb.asc(root.get(TFamille_.strDESCRIPTION))).distinct(true);
 

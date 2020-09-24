@@ -76,6 +76,7 @@ public final class DateConverter {
     public static final String STATUT_IS_CLOSED = "is_Closed";
     public static final String STATUT_FACTURE_UNPAID = "unpaid";
     public static final String STATUT_ENABLE = "enable";
+    public static final String STATUT_RUPTURE = "RUPTURE";
     public static final String STATUT_DELETE = "delete";
     public static final String OTHER = "OTHER";
     public static final String STATUT_IS_IN_USE = "is_Using";
@@ -144,6 +145,9 @@ public final class DateConverter {
     public static final String ALL = "ALL";
     public static String ACTION_RETOURFOURNISSEUR = "RETOURFOURNISSEUR";
     public static String ACTION_ENTREE_RETOUR_DEPOT = "ENTREESTOCK";
+    public static final String KEY_PARAMS = "KEY_PARAMS";
+    public static final String KEY_TAKE_INTO_ACCOUNT = "KEY_TAKE_INTO_ACCOUNT";
+    public static final String KEY_NOMBRE_TICKETS_VNO = "KEY_NOMBRE_TICKETS_VNO";
     /*
     parametre nombre de mois à considerer
      */

@@ -30,7 +30,7 @@ public class TRuptureHistory implements Serializable {
     @Id
     @Basic(optional = false)
     @Column(name = "lg_RUPTURE_HISTORY_ID", nullable = false, length = 40)
-    private String lgRUPTUREHISTORYID=UUID.randomUUID().toString();
+    private String lgRUPTUREHISTORYID;
     @Column(name = "dt_UPDATED")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtUPDATED;

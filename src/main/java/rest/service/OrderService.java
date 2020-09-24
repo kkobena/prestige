@@ -72,8 +72,11 @@ public interface OrderService {
 
     RuptureDetail ruptureDetaisByRuptureAndProduitId(String idRupture, String produitCip);
 
-    TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto,TUser user) throws Exception;
+    TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto, TUser user) throws Exception;
 
     JSONObject supprimerProduitCommandeEncours(String idCommande) throws JSONException;
 
+    JSONObject findAllRupturesFournisseur(String query, String grossisteId, int start, int limit) throws JSONException;
+
+    List<RuptureDTO> findAllRupturesFournisseur(String query, String grossisteId, int start, int limit, boolean all);
 }

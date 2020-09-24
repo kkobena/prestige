@@ -90,9 +90,9 @@ public class TBonLivraison implements Serializable {
     @Column(name = "STATUS")
     private String strSTATUS;
     @Column(name = "int_MONTANT_REGLE")
-    private int intMONTANTREGLE;
+    private Integer intMONTANTREGLE;
      @Column(name = "int_MONTANT_RESTANT")
-    private int intMONTANTRESTANT;
+    private Integer intMONTANTRESTANT;
 
     public TBonLivraison() {
     }
@@ -101,19 +101,19 @@ public class TBonLivraison implements Serializable {
         this.lgBONLIVRAISONID = lgBONLIVRAISONID;
     }
     
-    public int getIntMONTANTREGLE(){
+    public Integer getIntMONTANTREGLE(){
         return this.intMONTANTREGLE;
     }
     
-    public void setIntMONTANTREGLE(int montant){
+    public void setIntMONTANTREGLE(Integer montant){
        this.intMONTANTREGLE  = montant;
     }
     
-    public int getIntMONTANTRESTANT(){
+    public Integer getIntMONTANTRESTANT(){
         return this.intMONTANTRESTANT;
     }
     
-    public void setIntMONTANTRESTANT(int montant){
+    public void setIntMONTANTRESTANT(Integer montant){
        this.intMONTANTRESTANT  = montant;
     }
     

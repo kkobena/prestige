@@ -608,7 +608,7 @@ Ext.application({
 
         'testextjs.model.Statistiquevente',
         'testextjs.model.Statistiqueunitevendue',
-       
+
         'testextjs.view.stockmanagement.suivistockvente.action.detailArticle',
         'testextjs.view.sm_user.caisse.action.DoBilletage',
         'testextjs.view.stockmanagement.suivistockvente.action.detailArticle',
@@ -690,7 +690,7 @@ Ext.application({
         'testextjs.view.configmanagement.famille.action.add2',
         'testextjs.view.stockmanagement.suivistockvente.action.detailAjustement',
         'testextjs.view.stockmanagement.suivistockvente.action.detailInventaire',
-      
+
         'testextjs.view.configmanagement.famille.action.export',
         'testextjs.model.ModelFacture',
         'testextjs.view.stockmanagement.retourdepot.retourdepotManager',
@@ -773,7 +773,7 @@ Ext.application({
         'testextjs.view.sm_user.vente.VenteHistoriqueDepotManager',
 //        'testextjs.view.Report.TableauBordPharmacien.tableauBordPharmacienManager',
         'testextjs.view.produits.mvtproduit.*',
-//        'testextjs.view.actions.action',
+
 //        'testextjs.view.actions.Balance',
 //        'testextjs.view.actions.TvaManager',
 //        'testextjs.view.sm_user.listecaisse.ListeCaisseManager'
@@ -782,11 +782,12 @@ Ext.application({
         // Devis
 //        'testextjs.view.sm_user.devis.DevisManager',
         // Entré en stock
-        , 'testextjs.view.sm_user.balancevente.Balanceventemanager', 
+        , 'testextjs.view.sm_user.balancevente.Balanceventemanager',
         'testextjs.view.Report.BalanceVenteCaisse.BalanceVenteCaisseManager',
         'testextjs.view.facturation.ModelFacture',
         'testextjs.view.facturation.FactureProvisoire',
-        'testextjs.view.caisseManager.Importation'
+        'testextjs.view.caisseManager.Importation',
+//        'testextjs.view.actions.action'
 
 // 'testextjs.view.sm_user.gestcaisse.GestCaisseManager',
 

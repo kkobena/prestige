@@ -41,7 +41,6 @@ public class SalesRessource {
 
     @Inject
     private HttpServletRequest servletRequest;
-//    @EJB
     @Inject
     @SalesPrimary
     SalesService salesService;

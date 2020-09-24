@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
@@ -49,6 +48,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TBonLivraisonDetail.findByIntINITSTOCK", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intINITSTOCK = :intINITSTOCK")})
 
 public class TBonLivraisonDetail implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -100,6 +100,11 @@ public class TBonLivraisonDetail implements Serializable {
     @JoinColumn(name = "lg_GROSSISTE_ID", referencedColumnName = "lg_GROSSISTE_ID")
     @ManyToOne
     private TGrossiste lgGROSSISTEID;
+
+    @Column(name = "prixTarif")
+    private Integer prixTarif = 0;
+    @Column(name = "prixUni")
+    private Integer prixUni = 0;
 
     public TBonLivraisonDetail() {
     }
@@ -300,5 +305,23 @@ public class TBonLivraisonDetail implements Serializable {
     public String toString() {
         return "dal.TBonLivraisonDetail[ lgBONLIVRAISONDETAIL=" + lgBONLIVRAISONDETAIL + " ]";
     }
+
+    public Integer getPrixTarif() {
+        return prixTarif;
+    }
+
+    public void setPrixTarif(Integer prixTarif) {
+        this.prixTarif = prixTarif;
+    }
+
+    public Integer getPrixUni() {
+        return prixUni;
+    }
+
+    public void setPrixUni(Integer prixUni) {
+        this.prixUni = prixUni;
+    }
+
+    
     
 }

@@ -36,7 +36,7 @@ public class Afficheur {
     public Boolean isOpen;
     public CommPort cp;
 
-    public synchronized static Afficheur getInstance() {
+    public  static Afficheur getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new Afficheur();
         }

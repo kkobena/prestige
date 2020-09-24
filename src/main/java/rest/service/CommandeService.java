@@ -6,10 +6,14 @@
 package rest.service;
 
 import commonTasks.dto.Params;
+import dal.TFamille;
+import dal.TGrossiste;
 import dal.TOrder;
+import dal.TOrderDetail;
 import dal.TUser;
 import javax.ejb.Local;
 import javax.persistence.EntityManager;
+import javax.servlet.http.Part;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,9 +34,23 @@ public interface CommandeService {
     String generateCIP(String int_CIP);
 
     JSONObject createProduct(Params params) throws JSONException;
-    
+
     default int calculPrixMoyenPondereReception(int ancienStock, int ancienPrixAchat, int nouveauStock, int nouveauPrixAchat) {
-        return (ancienStock * ancienPrixAchat) + (nouveauStock * nouveauPrixAchat) / (ancienStock + nouveauStock);
+        return ((ancienStock * ancienPrixAchat) + (nouveauStock * nouveauPrixAchat)) / (ancienStock + nouveauStock);
     }
+
     String genererReferenceCommande();
+
+    TFamille findByCipOrEan(String searchValue, TGrossiste grossiste);
+
+    TOrderDetail findByProductAndOrder(TOrder order, TFamille famille);
+
+    void updateOrderItemQtyFromResponse(TOrderDetail item, int qty, TGrossiste grossiste);
+
+    void addRuptureHistory(TOrderDetail item, TGrossiste grossiste);
+
+    JSONObject verificationCommande(Part part, String orderId, TUser OTUser);
+
+    
+
 }

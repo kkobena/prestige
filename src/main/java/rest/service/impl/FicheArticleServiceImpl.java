@@ -300,14 +300,14 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             Expression quantiteVente = cb.quot(cb.sumAsDouble(item.get(TPreenregistrementDetail_.INT_QU_AN_TI_TY)), nbreMois);
 
             if (!StringUtils.isEmpty(codeFamile) || codeFamile.equals(DateConverter.ALL)) {
-                cq.multiselect(root.get(TFamille_.lgFAMILLEID), 
-                        root.get(TFamille_.intCIP), 
+                cq.multiselect(root.get(TFamille_.lgFAMILLEID),
+                        root.get(TFamille_.intCIP),
                         root.get(TFamille_.strNAME),
                         root.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE),
                         root.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
                         root.get(TFamille_.intPAF), root.get(TFamille_.intPRICE), root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE),
                         stock.get(TFamilleStock_.intNUMBERAVAILABLE), sumConsom, quantiteVente,
-                         root.get(TFamille_.dtPEREMPTION)
+                        root.get(TFamille_.dtPEREMPTION)
                 ).having(cb.greaterThan(stock.get(TFamilleStock_.INT_NU_MB_ER_AV_AI_LA_BL_E), sumConsom));
                 cq.distinct(true).groupBy(root.get(TFamille_.lgFAMILLEID)).orderBy(cb.asc(root.get(TFamille_.strNAME)));
             } else if (!StringUtils.isEmpty(codeGrossiste) || codeGrossiste.equals(DateConverter.ALL)) {
@@ -357,54 +357,62 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             TypedQuery<Object[]> typedQuery = getEntityManager().createQuery(cq);
 
             List<Object[]> resultList = typedQuery.getResultList();
-            if (all) {
-                return resultList.stream()
-                        .map(x
-                                -> {
-                            Map<String, Integer> conso = consomationArticle(x[0] + "", emId, 3);
-                            return new ArticleDTO()
-                                    .id(x[0] + "")
-                                    .code(x[1] + "")
-                                    .libelle(x[2] + "")
-                                    .filterId(x[3] + "")
-                                    .filterLibelle(x[4] + "")
-                                    .prixAchat(Integer.valueOf(x[5] + ""))
-                                    .prixVente(Integer.valueOf(x[6] + ""))
-                                    .codeGrossiste(x[7] + "")
-                                    .stock(Integer.valueOf(x[8] + ""))
-                                    .consommation(Integer.valueOf(x[9] + ""))
-                                    .stockMoyen(Integer.valueOf(x[9] + "") / nbreConsommation)
-                                    .qteSurplus(nbreConsommation)
-                                    .datePeremption(x[11] + "")
-                                    .coefficient(Double.valueOf(nbreConsommation))
-                                    .consommationUn(conso.getOrDefault(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")), 0))
-                                    .consommationsOne(conso.getOrDefault(LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM")), 0))
-                                    .consommationsTwo(conso.getOrDefault(LocalDate.now().minusMonths(2).format(DateTimeFormatter.ofPattern("yyyy-MM")), 0))
-                                    .consommationsThree(conso.getOrDefault(LocalDate.now().minusMonths(3).format(DateTimeFormatter.ofPattern("yyyy-MM")), 0));
-                        }
-                        ).
-                        collect(Collectors.toList());
-            }
+
             return resultList.stream()
                     .map(x
-                            -> new ArticleDTO()
-                            .id(x[0] + "")
-                            .code(x[1] + "")
-                            .libelle(x[2] + "")
-                            .filterId(x[3] + "")
-                            .filterLibelle(x[4] + "")
-                            .prixAchat(Integer.valueOf(x[5] + ""))
-                            .prixVente(Integer.valueOf(x[6] + ""))
-                            .codeGrossiste(x[7] + "")
-                            .stock(Integer.valueOf(x[8] + ""))
-                            .consommation(Integer.valueOf(x[9] + ""))
-                            .stockMoyen(Integer.valueOf(x[9] + "") / nbreConsommation)
-                            .qteSurplus(nbreConsommation)
-                            .datePeremption(x[11] + "")
-                            .coefficient(Double.valueOf(nbreConsommation))
-                    ).
+                            -> {
+                        Map<String, Integer> conso = consomationArticle(x[0] + "", emId, nbreConsommation);
+//                            int cons = conso.values().stream().reduce(0, Integer::sum);
+                        return new ArticleDTO()
+                                .id(x[0] + "")
+                                .code(x[1] + "")
+                                .libelle(x[2] + "")
+                                .filterId(x[3] + "")
+                                .filterLibelle(x[4] + "")
+                                .prixAchat(Integer.valueOf(x[5] + ""))
+                                .prixVente(Integer.valueOf(x[6] + ""))
+                                .codeGrossiste(x[7] + "")
+                                .stock(Integer.valueOf(x[8] + ""))
+                                .consommation(Integer.valueOf(x[9] + ""))
+                                .datePeremption(x[11] + "")
+                                .consommationUn(conso.getOrDefault(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")), 0))
+                                .consommationsOne(conso.getOrDefault(LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM")), 0))
+                                .consommationsTwo(conso.getOrDefault(LocalDate.now().minusMonths(2).format(DateTimeFormatter.ofPattern("yyyy-MM")), 0))
+                                .consommationsThree(conso.getOrDefault(LocalDate.now().minusMonths(3).format(DateTimeFormatter.ofPattern("yyyy-MM")), 0))
+                                .stockMoyen(nbreConsommation)
+                                //                                    .stockMoyen(Integer.valueOf(x[9] + "") / nbreConsommation)
+                                .qteSurplus(nbreMois)
+                                .coefficient(Double.valueOf(nbreConsommation));
+                    }
+                    ).filter(x -> x.getQteSurplus() >= 0).
                     collect(Collectors.toList());
 
+            /* return resultList.stream()
+                    .map(x
+                            -> {
+                        Map<String, Integer> conso = consomationArticle(x[0] + "", emId, nbreConsommation);
+                            int cons = conso.values().stream().reduce(0, Integer::sum);
+                        return new ArticleDTO()
+                                .id(x[0] + "")
+                                .code(x[1] + "")
+                                .libelle(x[2] + "")
+                                .filterId(x[3] + "")
+                                .filterLibelle(x[4] + "")
+                                .prixAchat(Integer.valueOf(x[5] + ""))
+                                .prixVente(Integer.valueOf(x[6] + ""))
+                                .codeGrossiste(x[7] + "")
+                                .stock(Integer.valueOf(x[8] + ""))
+                                .consommation(Integer.valueOf(x[9] + ""))
+                                .stockMoyen(cons / nbreConsommation)
+//                                .stockMoyen(Integer.valueOf(x[9] + "") / nbreConsommation)
+                                .qteSurplus(nbreConsommation)
+                                .datePeremption(x[11] + "")
+                                .coefficient(Double.valueOf(nbreConsommation));
+
+                    }
+                    ).
+                    collect(Collectors.toList());
+             */
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
@@ -510,21 +518,27 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
             if (!StringUtils.isEmpty(codeFamile) || codeFamile.equals(DateConverter.ALL)) {
                 cq.select(cb.construct(ArticleDTO.class,
-                        root, stock.get(TFamilleStock_.intNUMBERAVAILABLE),
+                        root,
+                        stock.get(TFamilleStock_.intNUMBERAVAILABLE),
                         root.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE),
                         root.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE)
                 ))
                         .groupBy(root.get(TFamille_.lgFAMILLEID)).orderBy(cb.asc(root.get(TFamille_.strNAME)));
             } else if (!StringUtils.isEmpty(codeGrossiste) || codeGrossiste.equals(DateConverter.ALL)) {
                 cq.select(cb.construct(ArticleDTO.class,
-                        root, stock.get(TFamilleStock_.intNUMBERAVAILABLE),
-                        root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE), root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE),
-                        root.get(TFamille_.intPAF), root.get(TFamille_.intPRICE), root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE)
+                        root,
+                        stock.get(TFamilleStock_.intNUMBERAVAILABLE),
+                        root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE),
+                        root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE)
+                /* root.get(TFamille_.intPAF),
+                        root.get(TFamille_.intPRICE),
+                        root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE)*/
                 ))
                         .groupBy(root.get(TFamille_.lgFAMILLEID)).orderBy(cb.asc(root.get(TFamille_.strNAME)));
             } else if (!StringUtils.isEmpty(codeRayon) || codeRayon.equals(DateConverter.ALL)) {
                 cq.select(cb.construct(ArticleDTO.class,
-                        root, stock.get(TFamilleStock_.intNUMBERAVAILABLE),
+                        root,
+                        stock.get(TFamilleStock_.intNUMBERAVAILABLE),
                         root.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strCODE),
                         root.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE)
                 ))

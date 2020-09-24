@@ -69,7 +69,13 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         this.title = titre;
         var store = Ext.create('testextjs.store.Search');
         comboDefaultvalue = this.getOdatasource().lg_GROSSISTE_ID;
-
+        var store_type = new Ext.data.Store({
+            fields: ['str_TYPE_TRANSACTION', 'str_desc'],
+            data: [
+                {str_TYPE_TRANSACTION: 'PRIX', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE'},
+                {str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous'}
+            ]
+        });
 
         storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
@@ -352,7 +358,20 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                             plugins: [this.cellEditing],
                             store: store_details_order,
                             height: 370,
-                            columns: [{
+                            columns: [
+                                {
+                                    dataIndex: 'prixDiff',
+                                    text: '#',
+                                    width: 40,
+                                    renderer: function (v, m, r) {
+                                        if (v) {
+                                            m.style = 'background-color:#d9534f;';
+                                        }
+                                        return '';
+                                    }
+                                },
+
+                                {
                                     text: 'Details Suggestion Id',
                                     flex: 1,
                                     sortable: true,
@@ -366,13 +385,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     hidden: true,
                                     dataIndex: 'lg_FAMILLE_ID'
                                 },
-                                {
-                                    xtype: 'rownumberer',
-                                    text: 'LG',
-                                    width: 45,
-                                    sortable: true
-                                
-                                },
+
                                 {
                                     text: 'CIP',
                                     flex: 1,
@@ -398,7 +411,20 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     sortable: true,
                                     dataIndex: 'lg_FAMILLE_QTE_STOCK',
                                     align: 'right'
-                                }, {
+                                },
+
+                                {
+                                    text: 'PU.MACHINE',
+                                    flex: 1,
+//                                    hidden: true,
+                                    align: 'right',
+                                    sortable: true,
+                                    dataIndex: 'int_PRICE_MACHINE',
+                                    renderer: amountformat
+
+                                },
+
+                                {
                                     text: 'PRIX.VENTE',
                                     flex: 1,
                                     sortable: true,
@@ -418,22 +444,16 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
                                 },
                                 {
-                                    text: 'PRIX A. TARIF',
+                                    text: 'PA.MACHINE',
                                     flex: 1,
-                                    hidden: true,
                                     align: 'right',
                                     sortable: true,
                                     dataIndex: 'lg_FAMILLE_PRIX_ACHAT',
-                                    renderer: amountformat,
-                                    editor: {
-                                        xtype: 'numberfield',
-                                        minValue: 1,
-                                        allowBlank: false,
-                                        regex: /[0-9.]/
-                                    }
+                                    renderer: amountformat
+
                                 },
                                 {
-                                    text: 'PRIX A. FACT',
+                                    text: 'PA.FACT',
                                     flex: 1,
                                     sortable: true,
                                     align: 'right',
@@ -539,7 +559,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     id: 'rechercherDetail',
                                     name: 'rechercherDetail',
                                     emptyText: 'Recherche',
-                                    width: 300,
+                                    flex: 1,
                                     listeners: {
                                         'render': function (cmp) {
                                             cmp.getEl().on('keypress', function (e) {
@@ -549,7 +569,36 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             });
                                         }
                                     }
+                                },
+                                '-', {
+                                    xtype: 'combobox',
+                                    name: 'str_TYPE_TRANSACTION',
+                                    margins: '0 0 0 10',
+                                    id: 'str_TYPE_TRANSACTION',
+                                    store: store_type,
+                                    valueField: 'str_TYPE_TRANSACTION',
+                                    displayField: 'str_desc',
+                                    typeAhead: true,
+                                    queryMode: 'local',
+                                    emptyText: 'Filtre article...',
+                                    flex: 1,
+                                    listeners: {
+                                        select: function (cmp) {
+                                            var value = cmp.getValue();
+                                            str_TYPE_TRANSACTION = value;
+//                                            ../webservices/commandemanagement/orderdetail/ws_data.jsp
+                                            var val = Ext.getCmp('rechercherDetail');
+                                            Ext.getCmp('gridpanelID').getStore().load({
+                                                params: {
+                                                    search_value: val.getValue(),
+                                                    filtre: value
+                                                }
+                                            });
+                                        }
+                                    }
                                 }
+
+
                             ],
                             bbar: {
                                 xtype: 'pagingtoolbar',
@@ -649,7 +698,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                     var object = Ext.JSON.decode(response.responseText, true);
                     if (!object.success) {
                         Ext.MessageBox.alert('Error Message', "L'opération a échoué");
-                           OGrid.getStore().reload();
+                        OGrid.getStore().reload();
                         return;
                     }
 

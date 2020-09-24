@@ -21,6 +21,7 @@ import dal.TFamille;
 import dal.TOrder;
 import dal.TOrderDetail;
 import dal.TFamilleGrossiste;
+import dal.TFamille_;
 import dal.TGrossiste;
 import dal.TLot;
 import dal.TOrderDetail_;
@@ -44,6 +45,7 @@ import toolkits.utils.jdom;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
@@ -55,7 +57,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import toolkits.filesmanagers.FilesType.CsvFiles_with_Opencvs;
@@ -654,7 +658,6 @@ public class orderManagement extends bllBase {
 
         try {
             OTOrder = this.FindOrder(lg_ORDER_ID);
-//            lstTOrderDetail = this.getTOrderDetail("", lg_ORDER_ID, OTOrder.getStrSTATUT());
             if (!this.getOdataManager().getEm().getTransaction().isActive()) {
                 this.getOdataManager().getEm().getTransaction().begin();
             }
@@ -1954,7 +1957,7 @@ public class orderManagement extends bllBase {
                 if (format.equalsIgnoreCase(Parameter.format_commande_1)) {
                     totalLineImport = this.importUpdateOrderFormat1(OTOrder, lstString);
                 } else if (format.equalsIgnoreCase(Parameter.format_commande_2)) {
-                    this.importUpdateOrderFormat2(OTOrder, lstString);
+                  totalLineImport=  this.importUpdateOrderFormat2(OTOrder, lstString);
                 }
             }
             if (totalLineImport > 0) {
@@ -2197,6 +2200,7 @@ public class orderManagement extends bllBase {
                 if (OTRuptureHistory != null) {
                     OTRuptureHistory.setIntNUMBER(OTRuptureHistory.getIntNUMBER() + OTOrderDetail.getIntNUMBER());
                     OTRuptureHistory.setDtUPDATED(new Date());
+                    OTRuptureHistory.setGrossisteId(OTOrderDetail.getLgGROSSISTEID());
                     if (this.persiste(OTRuptureHistory) && this.delete(OTOrderDetail) && this.createOrUpdateTSnapShopRuptureStock(OTOrderDetail.getLgFAMILLEID(), OTRuptureHistory.getIntNUMBER(), OTOrderDetail.getLgFAMILLEID().getIntQTEREAPPROVISIONNEMENT(), OTOrderDetail.getLgFAMILLEID().getIntSEUILMIN()) != null) {
                         this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
                         result = true;
@@ -3119,4 +3123,54 @@ public class orderManagement extends bllBase {
         return json;
     }
 
+    private List<Predicate> predicats(CriteriaBuilder cb, Root<TOrderDetail> root, String lg_ORDER_ID, String filtre, String searchValue) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.equal(root.get(TOrderDetail_.lgORDERID).get(TOrder_.lgORDERID), lg_ORDER_ID));
+        if (!StringUtils.isEmpty(searchValue)) {
+            predicates.add(cb.or(cb.like(root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.intCIP), searchValue + "%"),
+                    cb.like(root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.strNAME), searchValue + "%")));
+        }
+        if (!StringUtils.isEmpty(filtre) && !DateConverter.ALL.equals(filtre)) {
+            predicates.add(cb.notEqual(root.get(TOrderDetail_.intPRICEDETAIL), root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.intPRICE)));
+        }
+
+        return predicates;
+    }
+
+    public List<TOrderDetail> getOrderDetail(String searchValue, String lg_ORDER_ID, String filtre, int start, int limit) {
+        try {
+            EntityManager em = this.getOdataManager().getEm();
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<TOrderDetail> cq = cb.createQuery(TOrderDetail.class);
+            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
+            cq.select(root).orderBy(cb.desc(root.get(TOrderDetail_.dtUPDATED)), cb.asc(root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
+            List<Predicate> predicates = predicats(cb, root, lg_ORDER_ID, filtre, searchValue);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<TOrderDetail> q = em.createQuery(cq);
+            q.setFirstResult(start);
+            q.setMaxResults(limit);
+            return q.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return Collections.emptyList();
+        }
+    }
+
+    public long getOrderDetailCount(String searchValue, String lg_ORDER_ID, String filtre) {
+        try {
+            EntityManager em = this.getOdataManager().getEm();
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
+            cq.select(cb.count(root));
+            List<Predicate> predicates = predicats(cb, root, lg_ORDER_ID, filtre, searchValue);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<Long> q = em.createQuery(cq);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return 0;
+        }
+    }
 }

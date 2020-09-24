@@ -18,7 +18,7 @@ import javax.persistence.Table;
 
 /**
  *
- * @author MKABOU
+ * 
  */
 @Entity
 @Table(name = "rupture_detail")
@@ -93,10 +93,7 @@ public class RuptureDetail implements Serializable {
             return false;
         }
         final RuptureDetail other = (RuptureDetail) obj;
-        if (!Objects.equals(this.id, other.id)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.id, other.id);
     }
 
     public Rupture getRupture() {

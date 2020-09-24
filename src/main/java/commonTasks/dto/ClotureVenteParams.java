@@ -26,7 +26,6 @@ public class ClotureVenteParams implements Serializable {
     private String typeVenteId, natureVenteId;
     private TiersPayantParams compteTp,compteTpNouveau;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
-//    private List<TiersPayantParams> oldtierspayants = new ArrayList<>();
 
     public TUser getUserId() {
         return userId;
