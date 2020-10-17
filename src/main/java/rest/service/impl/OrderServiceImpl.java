@@ -744,13 +744,70 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public JSONObject findAllRupturesFournisseur(String query, String grossisteId, int start, int limit) throws JSONException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public TFamilleGrossiste findOrCreateFamilleGrossisteByFamilleAndGrossiste(TFamille famille, TGrossiste grossiste) {
+        try {
+            TFamilleGrossiste familleGrossiste = finFamilleGrossisteByByFamilleAndIdGrossiste(famille.getLgFAMILLEID(), grossiste.getLgGROSSISTEID());
+            if (familleGrossiste != null) {
+                return familleGrossiste;
+            }
+
+            familleGrossiste = new TFamilleGrossiste();
+            familleGrossiste.setLgFAMILLEID(famille);
+            familleGrossiste.setLgGROSSISTEID(grossiste);
+            familleGrossiste.setIntPAF(famille.getIntPAF());
+            familleGrossiste.setIntPRICE(famille.getIntPRICE());
+            familleGrossiste.setStrCODEARTICLE(famille.getIntCIP());
+            this.getEmg().persist(familleGrossiste);
+            return familleGrossiste;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "findOrCreateFamilleGrossisteByFamilleAndGrossiste ---->>> {0}", e);
+            return null;
+        }
     }
 
     @Override
-    public List<RuptureDTO> findAllRupturesFournisseur(String query, String grossisteId, int start, int limit, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public TFamilleGrossiste finFamilleGrossisteByByFamilleAndIdGrossiste(String idFamille, String grossisteId) {
+        try {
+            TypedQuery<TFamilleGrossiste> q = this.getEmg().createQuery("SELECT OBJECT(o) FROM TFamilleGrossiste o WHERE o.lgFAMILLEID.lgFAMILLEID =?1 AND o.lgGROSSISTEID.lgGROSSISTEID=?2 AND o.strSTATUT='enable' ", TFamilleGrossiste.class);
+            q.setParameter(1, idFamille);
+            q.setParameter(2, grossisteId);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "finFamilleGrossisteByByFamilleAndIdGrossiste ---->>> {0}", e);
+            return null;
+        }
+    }
+
+    @Override
+    public TFamille findFamilleByCipOrEan(String cipOrEan) {
+        try {
+            TypedQuery<TFamille> q = this.getEmg().createQuery("SELECT o FROM TFamille o WHERE (o.intCIP =?1 OR o.intEAN13=?1 ) AND o.strSTATUT='enable' ", TFamille.class);
+            q.setParameter(1, cipOrEan);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "findFamilleByCipOrEan ---->>> {0}", e);
+            return null;
+        }
+    }
+
+    @Override
+    public TGrossiste findGrossiste(String id) {
+        return getEmg().find(TGrossiste.class, id);
+    }
+
+    @Override
+    public JSONObject updateScheduled(String idProduit, boolean scheduled) throws JSONException {
+        try {
+            TFamille famille = getEmg().find(TFamille.class, idProduit);
+            famille.setScheduled(scheduled);
+            getEmg().merge(famille);
+            return new JSONObject().put("success", true);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "updateScheduled ---->>> {0}", e);
+            return new JSONObject().put("success", false);
+        }
     }
 
 }

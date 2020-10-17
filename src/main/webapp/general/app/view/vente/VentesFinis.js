@@ -164,7 +164,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             menuDisabled: true,
                             header: 'Type.Vente',
                             dataIndex: 'strTYPEVENTE',
-                              align: 'center',
+                            align: 'center',
                             flex: 0.4
                         }
 
@@ -179,7 +179,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             format: '0,000.'
 
                         },
-                         {
+                        {
                             sortable: false,
                             menuDisabled: true,
                             header: 'Montant différé',
@@ -191,8 +191,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             format: '0,000.'
 
                         },
-                        
-                        
+
                         {
                             sortable: false,
                             menuDisabled: true,
@@ -232,8 +231,28 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             items: [{
                                     icon: 'resources/images/icons/fam/printer.png',
                                     tooltip: 'Réimprimer le ticket',
-                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('printTicket', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+                                }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/printergreen.png',
+                                    tooltip: 'ticket vente modifiée',
+                                    getClass: function (value, metadata, record) {
+                                        if (record.get('copy')) {
+                                            return 'x-display-hide';
+                                        }
+
+                                        return 'x-hide-display';
+                                    },
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('ticketModifie', view, rowIndex, colIndex, item, e, record, row);
                                     }
                                 }]
                         },
@@ -248,13 +267,13 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                     tooltip: 'Annuler.Vente',
 //                                    scope: me,
                                     getClass: function (value, metadata, record) {
-                                       
+
                                         if (!record.get('beCancel')) {
-                                           
+
                                             return 'x-hide-display';
                                         } else {
                                             if (record.get('cancel')) {
-                                               
+
                                                 return 'x-hide-display';
                                             } else {
                                                 if (record.get('intPRICE') <= 0) {
@@ -264,10 +283,8 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                                 }
                                             }
                                         }
-
-
                                     },
-                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('remove', view, rowIndex, colIndex, item, e, record, row);
                                     }
                                 }]
@@ -320,7 +337,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                         }
 
                                     },
-                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('onSuggestion', view, rowIndex, colIndex, item, e, record, row);
                                     }
                                 }]
@@ -346,7 +363,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                     }
                                 }]
                         },
-                          {
+                        {
                             xtype: 'actioncolumn',
                             width: 30,
                             sortable: false,
@@ -355,19 +372,44 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                     icon: 'resources/images/icons/fam/page_white_edit.png',
                                     tooltip: 'Modifier',
                                     menuDisabled: true,
-                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('toEdit', view, rowIndex, colIndex, item, e, record, row);
                                     },
                                     getClass: function (value, metadata, record) {
                                         if (record.get('intPRICE') > 0 && !record.get('cancel') && record.get('modification')) {
-                                           return 'x-display-hide';
+                                            return 'x-display-hide';
                                         }
-                                        
+
+                                        return 'x-hide-display';
+                                    }
+
+                                }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/editer.png',
+                                    tooltip: 'Modifier info client',
+                                    menuDisabled: true,
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toClientOrTp', view, rowIndex, colIndex, item, e, record, row);
+                                    },
+                                    getClass: function (value, metadata, record) {
+                                        if (record.get('intPRICE') > 0 && !record.get('cancel') && record.get('modificationClientTp') && (record.get('strTYPEVENTE') !== "VNO")) {
+                                            return 'x-display-hide';
+                                        }
+
                                         return 'x-hide-display';
                                     }
 
                                 }]
                         }
+
+
+
 
                     ],
 

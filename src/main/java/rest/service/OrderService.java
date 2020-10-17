@@ -76,7 +76,13 @@ public interface OrderService {
 
     JSONObject supprimerProduitCommandeEncours(String idCommande) throws JSONException;
 
-    JSONObject findAllRupturesFournisseur(String query, String grossisteId, int start, int limit) throws JSONException;
+    TFamilleGrossiste finFamilleGrossisteByByFamilleAndIdGrossiste(String idFamille, String grossisteId);
 
-    List<RuptureDTO> findAllRupturesFournisseur(String query, String grossisteId, int start, int limit, boolean all);
+    TFamilleGrossiste findOrCreateFamilleGrossisteByFamilleAndGrossiste(TFamille famille, TGrossiste grossiste);
+
+    TFamille findFamilleByCipOrEan(String cipOrEan);
+
+    TGrossiste findGrossiste(String id);
+
+    JSONObject updateScheduled(String idProduit, boolean scheduled) throws JSONException;
 }

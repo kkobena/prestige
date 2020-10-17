@@ -13,30 +13,11 @@ Ext.define('testextjs.view.vente.user.ClientGrid', {
     closable: false,
     layout: {
         type: 'fit'
-//        align: 'stretch'
     },
     config: {
         data: null
     },
     initComponent: function () {
-
-      /*  var clientStore = Ext.create('Ext.data.Store', {
-            model: 'testextjs.model.caisse.ClientAssurance',
-            autoLoad: false,
-            pageSize: null,
-            proxy: {
-                type: 'ajax',
-                url: '../api/v1/client',
-                reader: {
-                    type: 'json',
-                    root: 'data',
-                    totalProperty: 'total'
-                }
-
-            }
-        });
-*/
-
 
         var me = this;
         var clientStore=me.getData();

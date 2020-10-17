@@ -31,6 +31,7 @@ public class SalesParams implements Serializable {
     private Integer montantTp,totalRecap;
     private String statut=commonparameter.statut_is_Process;
     private String emplacementId;
+    private String medecinId;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
 
     public String getEmplacementId() {
@@ -259,6 +260,14 @@ public class SalesParams implements Serializable {
     @Override
     public String toString() {
         return "SalesParams{" + "typeVenteId=" + typeVenteId + ", natureVenteId=" + natureVenteId + ", remiseId=" + remiseId + ", userVendeurId=" + userVendeurId + ", stockId=" + stockId + ", produitId=" + produitId + ", qte=" + qte + ", qteServie=" + qteServie + ", qteUg=" + qteUg + ", tierspayants=" + tierspayants + '}';
+    }
+
+    public String getMedecinId() {
+        return medecinId;
+    }
+
+    public void setMedecinId(String medecinId) {
+        this.medecinId = medecinId;
     }
 
 }

@@ -87,10 +87,10 @@ public class SalesStatsRessource {
     @Path("annulations")
     public Response annulations(
             @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, 
+            @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String query,
             @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd, 
+            @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "statut") String statut
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
@@ -262,6 +262,7 @@ public class SalesStatsRessource {
         boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
         boolean canCancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
         boolean modification = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.P_BT_MODIFICATION_DE_VENTE);
+        boolean modificationClientTp = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.P_BTN_UPDATE_VENTE_CLIENT_TP);
         SalesStatsParams body = new SalesStatsParams();
         body.setCanCancel(canCancel);
         body.setLimit(limit);
@@ -276,6 +277,7 @@ public class SalesStatsRessource {
         body.setShowAllActivities(allActivitis);
         body.setUserId(tu);
         body.setModification(modification);
+        body.setModificationClientTp(modificationClientTp);
         try {
             body.sethEnd(LocalTime.parse(hEnd));
         } catch (Exception e) {
@@ -400,4 +402,17 @@ public class SalesStatsRessource {
         json.put("data", data);
         return Response.ok().entity(json.toString()).build();
     }
+
+    @GET
+    @Path("ventesordonnanciers")
+    public Response findAllVenteOrdonnancier(@QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "medecinId") String medecinId
+    ) throws JSONException {
+
+        JSONObject jsono = salesService.findAllVenteOrdonnancier(medecinId, dtStart, dtEnd, query, start, limit);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
 }

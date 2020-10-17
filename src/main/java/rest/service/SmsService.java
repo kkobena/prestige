@@ -3,12 +3,24 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package util;
+package rest.service;
+
+import javax.ejb.Local;
+import org.json.JSONObject;
+import util.AccessTokenDTO;
 
 /**
  *
  * @author koben
  */
-public class SmsUtils {
-  
+@Local
+public interface SmsService {
+
+   
+
+    JSONObject findAccessToken();
+
+    String getAccessToken();
+
+ 
 }

@@ -175,7 +175,7 @@ public class CaisseRessource {
         } catch (Exception e) {
         }
         List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean cancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
+        boolean cancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_CLOTURE_CAISSE);
         boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
         JSONObject json = caisseService.resumeCaisse(dtSt, dtEn, tu, cancel, allActivitis, start, limit, false, userId);
         return Response.ok().entity(json.toString()).build();

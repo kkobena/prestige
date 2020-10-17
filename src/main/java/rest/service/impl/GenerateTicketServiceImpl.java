@@ -34,9 +34,16 @@ import dal.enumeration.TypeTransaction;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.print.PageFormat;
+import java.awt.print.Paper;
 import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -73,6 +80,7 @@ import toolkits.utils.jdom;
 import util.Afficheur;
 
 import util.DateConverter;
+import util.TicketTemplate;
 
 /**
  *
@@ -1357,8 +1365,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         datas.add("Règlement: ;     " + mvtTransaction.getReglement().getStrNAME() + "; ;0");
         datas.add("Montant Versé: ;     " + DateConverter.amountFormat(DateConverter.arrondiModuloOfNumber(mvtTransaction.getMontantVerse(), 5)) + "; F CFA;0");
         final Integer change = Math.abs(mvtTransaction.getMontantVerse()) - Math.abs(mvtTransaction.getMontantPaye());
-        System.out.println("mvtTransaction.getMontantVerse()  " + mvtTransaction.getMontantVerse());
-        System.out.println("change  " + change + " getMontantPaye  " + mvtTransaction.getMontantPaye());
+
         datas.add("Monnaie: ;     " + DateConverter.amountFormat((change >= 0 ? change : 0)) + "; F CFA;0");
         return datas;
     }
@@ -1780,10 +1787,209 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             return (TImprimante) qry.getSingleResult();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+//            LOG.log(Level.SEVERE, null, e);
             return null;
         }
 
+    }
+
+    @Override
+    public JSONObject generateTicketOnFly(String venteId) throws JSONException {
+        JSONObject json = new JSONObject();
+        int counter = 40;
+
+        try {
+
+//            TImprimante imprimante = findImprimanteByName();
+            TPreenregistrement op = getEntityManager().find(TPreenregistrement.class, venteId);
+            MvtTransaction mt = findByPkey(op.getLgPREENREGISTREMENTID());
+            List<TPreenregistrementDetail> items = listeVenteByIdVente(op.getLgPREENREGISTREMENTID());
+            List<TPreenregistrementCompteClientTiersPayent> listeVenteTiersPayants = new ArrayList<>();
+//            String imgSrc = buildLineBarecode(op.getStrREFTICKET());
+            boolean voirNumTicket = voirNumeroTicket();
+            File barcode = copyBarcodeToFile(op.getStrREFTICKET());
+            TUser caisse = op.getLgUSERCAISSIERID();
+            TUser vendeur = op.getLgUSERVENDEURID();
+            TUser operateur = op.getLgUSERID();
+            TEmplacement e = caisse.getLgEMPLACEMENTID();
+            TOfficine officine = findOfficine();
+            boolean canceled = (op.getIntPRICE() < 0);
+            boolean isDiffere = (op.getStrSTATUTVENTE().equalsIgnoreCase(commonparameter.statut_differe) && op.getIntPRICE() > 0);
+            boolean isVo = (op.getStrTYPEVENTE().equalsIgnoreCase(DateConverter.VENTE_ASSURANCE));
+            boolean printUniqueTicket = true;
+            int avoir = 0, acompte = 0, montantRestant = 0, total = mt.getMontantNet();
+            int montantNet = 0, montantClient = op.getIntCUSTPART();
+            if (isVo) {
+                listeVenteTiersPayants = listeVenteTiersPayantsByIdVente(op.getLgPREENREGISTREMENTID());
+                total = mt.getMontantCredit();
+                montantNet = getMontantNet(isVo, op, mt.getMontantNet());
+                if (montantClient < 0) {
+                    montantClient = (-1) * DateConverter.arrondiModuloOfNumber(Math.abs(montantClient), 5);
+                } else {
+                    montantClient = DateConverter.arrondiModuloOfNumber(montantClient, 5);
+                }
+                printUniqueTicket = printUniqueTicket();
+            }
+
+            if (isDiffere) {
+                montantRestant = mt.getMontantRestant();
+            }
+            String ticketNum;
+            if (voirNumTicket) {
+                ticketNum = op.getStrREF();
+            } else {
+                ticketNum = op.getStrREFTICKET();
+            }
+            if (!canceled && op.getBISAVOIR()) {
+                for (TPreenregistrementDetail item : items) {
+                    avoir += item.getIntAVOIR();
+                    acompte += (item.getIntAVOIR() * item.getIntPRICEUNITAIR());
+                }
+            }
+            StringBuilder sb = TicketTemplate.buildStyle();
+            sb.append(TicketTemplate.buildInfosOficine(officine, ticketNum, false, e, op.getStrREFBON(), op.getClient()));
+            sb.append(TicketTemplate.buildInfoCaisse(caisse, vendeur, canceled, operateur, false, e));
+            if (isVo) {
+                sb.append(TicketTemplate.buildInfoClientVo(op.getAyantDroit(), op.getClient(), montantClient, listeVenteTiersPayants));
+            }
+            int k = items.size();
+            System.out.println(k);
+            if (k <= counter) {
+                sb.append(TicketTemplate.buildItemsContent(op, items, (int) items.size()));
+                int monnaie = (Math.abs(mt.getMontantVerse()) - montantNet > 0 ? Math.abs(mt.getMontantVerse()) - Math.abs(mt.getMontantPaye()) : 0);
+                sb.append(TicketTemplate.buildContentReglement(isVo, op, mt, avoir, acompte, montantRestant, total, montantNet, mt.getMontantRemise(), mt.getMontantVerse(), monnaie));
+                sb.append(TicketTemplate.buildBottomContent(barcode.getPath(), op));
+                System.out.println(sb.toString());
+//                print(receipTmpFile(sb), listeVenteTiersPayants.size(), printUniqueTicket);
+            } else {
+
+                int page = (int) Math.ceil(Double.valueOf(k)) / counter;
+                for (int i = 0, j = counter; i < page; i++, j += counter) {
+                    List<TPreenregistrementDetail> details = items.subList(i, (j > k) ? k : j);
+                    if (j < k) {
+                        sb.append(TicketTemplate.buildItemsContentPortion(op, details));
+//                        print(receipTmpFile(sb), listeVenteTiersPayants.size(), printUniqueTicket);
+                    } else {
+                        int monnaie = (Math.abs(mt.getMontantVerse()) - montantNet > 0 ? Math.abs(mt.getMontantVerse()) - Math.abs(mt.getMontantPaye()) : 0);
+                        sb.append(TicketTemplate.buildContentReglement(isVo, op, mt, avoir, acompte, montantRestant, total, montantNet, mt.getMontantRemise(), mt.getMontantVerse(), monnaie));
+                        sb.append(TicketTemplate.buildBottomContent(barcode.getPath(), op));
+//                        print(receipTmpFile(sb), listeVenteTiersPayants.size(), printUniqueTicket);
+                    }
+
+                }
+
+            }
+            json.put("success", true);
+            try {
+                barcode.deleteOnExit();
+            } catch (Exception xe) {
+            }
+            afficheurWellComeMessage();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            json.put("success", false);
+        }
+        return json;
+    }
+
+    @Override
+    public JSONObject generateVoTicketOnFly(ClotureVenteParams clotureVenteParams) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public JSONObject generateVoTicketOnFly(String venteId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public JSONObject generateDepotTicketOnFly(String venteId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private int getMontantNetVo(TPreenregistrement OTPreenregistrement) {
+        Integer vente_net = OTPreenregistrement.getIntCUSTPART();
+        if (vente_net > 0) {
+            vente_net = DateConverter.arrondiModuloOfNumber(OTPreenregistrement.getIntCUSTPART(), 5);
+        } else {
+            vente_net = (-1) * DateConverter.arrondiModuloOfNumber(Math.abs(OTPreenregistrement.getIntCUSTPART()), 5);
+        }
+        return Maths.arrondiModuloOfNumber((vente_net - OTPreenregistrement.getIntPRICEREMISE()), 5);
+
+    }
+
+    private int getMontantNetVno(Integer montantNet) {
+        if (montantNet > 0) {
+            montantNet = DateConverter.arrondiModuloOfNumber(montantNet, 5);
+        } else {
+            montantNet = (-1) * DateConverter.arrondiModuloOfNumber(((-1) * montantNet), 5);
+        }
+        return montantNet;
+    }
+
+    private int getMontantNet(boolean isVo, TPreenregistrement OTPreenregistrement, Integer montantNet) {
+        if (isVo) {
+            return getMontantNetVo(OTPreenregistrement);
+        }
+        return getMontantNetVno(montantNet);
+
+    }
+
+
+    private File receipTmpFile(StringBuilder sb) {
+        DataOutputStream dataOutputStream = null;
+        File tmpFile = null;
+        try {
+            tmpFile = new File("receipt.xhtml");
+            if (!tmpFile.exists()) {
+                tmpFile.createNewFile();
+            }
+            dataOutputStream = new DataOutputStream(new FileOutputStream(tmpFile));
+            dataOutputStream.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+            dataOutputStream.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GenerateTicketServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GenerateTicketServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                dataOutputStream.close();
+            } catch (IOException ex) {
+                Logger.getLogger(GenerateTicketServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return tmpFile;
+    }
+
+    private File copyBarcodeToFile(String data) {
+        File f = null;
+        try {
+
+            Barcode128 barcode128 = new Barcode128();
+            barcode128.setCode(data);
+            barcode128.setBaseline(10);
+            barcode128.setBarHeight(50);
+            barcode128.setCodeType(Barcode128.CODE128);
+            java.awt.Image img = barcode128.createAwtImage(Color.BLACK, Color.WHITE);
+            BufferedImage bi = new BufferedImage(100, 70, BufferedImage.BITMASK);
+            Graphics2D gd = bi.createGraphics();
+            gd.drawImage(img, 4, 2, null);
+            gd.setColor(Color.BLACK);
+            gd.drawString(data, 10, 65);
+            gd.dispose();
+            f = new File(data + ".png");
+            ImageIO.write(bi, "png", f);
+//            file = f.getAbsolutePath();
+        } catch (IOException ex) {
+//            LOG.log(Level.SEVERE, null, ex);
+        }
+        return f;
+
+    }
+
+    @Override
+    public JSONObject generateTicketOnFly(ClotureVenteParams clotureVenteParams) throws JSONException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

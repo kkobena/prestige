@@ -75,7 +75,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
 //                }
 //            }
 //        });
-         var remise = new Ext.data.Store({
+        var remise = new Ext.data.Store({
             model: 'testextjs.model.caisse.Remise',
             pageSize: null,
             autoLoad: true,
@@ -90,9 +90,9 @@ Ext.define('testextjs.view.vente.VenteVNO', {
             }
         });
 
-        
-        
-        
+
+
+
         var venteDetails = new Ext.data.Store({
             model: 'testextjs.model.caisse.VenteItem',
             pageSize: 10,
@@ -134,8 +134,14 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                             itemId: 'btnCloture',
                             iconCls: 'icon-clear-group',
                             scope: this
-//                            disabled: true
+                        }
+                        , {
+                            text: 'Mettre en attente',
+                            itemId: 'btnStandBy',
+                            iconCls: 'icon-clear-group',
+                            scope: this
                         },
+
                         {
                             text: 'Retour',
                             itemId: 'btnGoBack',
@@ -188,7 +194,9 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                             enableKeyEvents: true
                                         }
                                     ]
-                                }, {
+                                },
+
+                                {
                                     xtype: 'fieldset',
                                     style: 'background-color:#F0F8FF !important;',
                                     title: '<span style="color:blue;">INFOS ASSURE</span>',
@@ -459,7 +467,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     store: typeremise,
                                     editable: false,
                                     margin: '0 10 0 0',
-                                    hidden:true,
+                                    hidden: true,
                                     pageSize: null,
                                     valueField: 'lgTYPEREMISEID',
                                     displayField: 'strDESCRIPTION',

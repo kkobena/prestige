@@ -5143,6 +5143,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                     json.put("P_UPDATE_CIP", Boolean.valueOf(Obj[7].toString()));
                     json.put("P_UPDATE_DESIGNATION", Boolean.valueOf(Obj[8].toString()));
                     json.put("lg_FAMILLE_ID", t.getLgFAMILLEID());
+                    json.put("scheduled", t.isScheduled());
                     try {
                         json.put("gammeId", t.getGamme().getId());
                     } catch (Exception e) {
@@ -5269,19 +5270,19 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             }
                         }
                         json.put("dt_LAST_ENTREE", dateEntree);
-                        
+
                     } catch (Exception e) {
                     }
                 } catch (Exception e) {
 
                 }
-                
-               TBonLivraison bonLivraison= findByFamille(t);
-               
-               if(bonLivraison!=null){
-                    json.put("dt_DATE_LIVRAISON", DateConverter.convertDateToDD_MM_YYYY(bonLivraison.getDtDATELIVRAISON())); 
-               }
-                
+
+                TBonLivraison bonLivraison = findByFamille(t);
+
+                if (bonLivraison != null) {
+                    json.put("dt_DATE_LIVRAISON", DateConverter.convertDateToDD_MM_YYYY(bonLivraison.getDtDATELIVRAISON()));
+                }
+
                 jsonarray.put(json);
             });
 
@@ -5291,18 +5292,19 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         return jsonarray;
     }
 
-    TBonLivraison findByFamille(TFamille famille){
+    TBonLivraison findByFamille(TFamille famille) {
         try {
-            TypedQuery<TBonLivraison> q=this.getOdataManager().getEm().createQuery("SELECT o.lgBONLIVRAISONID FROM TBonLivraisonDetail o where o.lgFAMILLEID=?1 AND o.lgBONLIVRAISONID.strSTATUT='is_Closed' ORDER BY o.lgBONLIVRAISONID.dtDATELIVRAISON DESC  ", TBonLivraison.class);
+            TypedQuery<TBonLivraison> q = this.getOdataManager().getEm().createQuery("SELECT o.lgBONLIVRAISONID FROM TBonLivraisonDetail o where o.lgFAMILLEID=?1 AND o.lgBONLIVRAISONID.strSTATUT='is_Closed' ORDER BY o.lgBONLIVRAISONID.dtDATELIVRAISON DESC  ", TBonLivraison.class);
             q.setMaxResults(1);
             q.setParameter(1, famille);
             return q.getSingleResult();
-            
+
         } catch (Exception e) {
-           
+
             return null;
         }
     }
+
     public Object[] getPrivilegeProductByUser(String lg_USER_ID) {
         try {
             Object[] O = (Object[]) this.getOdataManager().getEm().createNativeQuery("call proc_getprivilege_user_for_product(?)")
@@ -5882,6 +5884,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             OTFamille.setIntPAT(int_PAT);
             OTFamille.setIntT(int_T);
             OTFamille.setIntS(int_S);
+            OTFamille.setScheduled(false);
             OTFamille.setIntPRICE((!int_T.equalsIgnoreCase("") && lg_FAMILLE_PARENT_ID.equalsIgnoreCase("") ? int_PRICE + int_TAUX : int_PRICE));
             OTFamille.setIntPRICETIPS(OTFamille.getIntPRICETIPS());
             OTFamille.setIntTAUXMARQUE(int_TAUX_MARQUE);

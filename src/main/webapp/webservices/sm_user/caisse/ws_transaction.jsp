@@ -29,9 +29,7 @@
 
 
 
-<%  
-    
-    String lg_RESUME_CAISSE_ID_REF = "", lg_USER_ID = "", str_STATUT = "", lg_Participant_ID = "", ld_CREATED_BY = "", ld_UPDATED_BY = "";
+<%    String lg_RESUME_CAISSE_ID_REF = "", lg_USER_ID = "", str_STATUT = "", lg_Participant_ID = "", ld_CREATED_BY = "", ld_UPDATED_BY = "";
     Integer int_AMOUNT;
     int int_NB_DIX = 0, int_NB_CINQ = 0, int_NB_DEUX = 0, int_NB_MIL = 0, int_NB_CINQ_CENT = 0, int_NB_AUTRE = 0;
 
@@ -89,7 +87,7 @@
 
     if (request.getParameter("mode") != null) {
 
-         if (request.getParameter("mode").equals("close")) {
+        if (request.getParameter("mode").equals("close")) {
             new logger().oCategory.info("close");
 
             OcaisseManagement.CloseCaisse(request.getParameter("lg_RESUME_CAISSE_ID"));
@@ -97,8 +95,9 @@
             ObllBase.setDetailmessage(OcaisseManagement.getDetailmessage());
             //code ajouté 04/09/2016
             if (OcaisseManagement.getMessage().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
-                OcaisseManagement.sendSmsChiffreAffaireByCaisse(new Date(), new Date(), "%%"); //a decommenter apres et supprimer le code ci-dessous
-               
+                OcaisseManagement.sendNotification("%%");
+              //  OcaisseManagement.sendSmsChiffreAffaireByCaisse(new Date(), new Date(), "%%"); //a decommenter apres et supprimer le code ci-dessous
+
                 //code a retirer apres decommentaire le code ci-dessus
                 /*List<TResumeCaisse> lstTResumeCaisse = new ArrayList<TResumeCaisse>();
                 List<TAlertEventUserFone> lstTAlertEventUserFone = new ArrayList<TAlertEventUserFone>();

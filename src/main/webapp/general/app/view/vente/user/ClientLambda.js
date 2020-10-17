@@ -8,7 +8,7 @@ Ext.define('testextjs.view.vente.user.ClientLambda', {
     height:340,
     width: '60%',
     modal: true,
-    title:'Ajout de client à la vente différée',
+    title:'AJOUTER UN CLIENT A LA VENTE ',
     closeAction: 'hide',
     closable: false,
     layout: {

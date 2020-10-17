@@ -45,6 +45,7 @@ import javax.xml.bind.annotation.XmlTransient;
 })
 //@Cacheable(false)
 public class TFamille implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Column(name = "int_ORERSTATUS")
     private Short intORERSTATUS = 0;
@@ -291,6 +292,8 @@ public class TFamille implements Serializable {
     private Laboratoire laboratoire;
     @ManyToOne
     private GammeProduit gamme;
+    @Column(name = "is_scheduled")
+    private boolean scheduled = false;
 
     public int getVersion() {
         return version;
@@ -298,6 +301,14 @@ public class TFamille implements Serializable {
 
     public GammeProduit getGamme() {
         return gamme;
+    }
+
+    public boolean isScheduled() {
+        return scheduled;
+    }
+
+    public void setScheduled(boolean scheduled) {
+        this.scheduled = scheduled;
     }
 
     public void setGamme(GammeProduit gamme) {

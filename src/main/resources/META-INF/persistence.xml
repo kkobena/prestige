@@ -199,12 +199,12 @@
     <class>dal.RuptureDetail</class>
     <class>dal.Rupture</class>
     <class>dal.TRuptureHistory</class>
-     <class>dal.AnnulationRecette</class>
-    
+    <class>dal.AnnulationRecette</class>
+    <class>dal.Medecin</class>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
-<!--      <property name="hibernate.hbm2ddl.auto" value="update"/>
-      <property name="hibernate.show_sql" value="true"/>-->
+      <!--      <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>-->
     </properties>
   </persistence-unit>
   <persistence-unit name="JTA_UNIT" transaction-type="JTA">
@@ -213,7 +213,7 @@
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
-    <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
+      <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
       <!--<property name="hibernate.show_sql" value="true"/>-->
       <property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"/>
     </properties>

@@ -283,7 +283,7 @@ Ext.define('testextjs.view.pharmaml.Rupturepharma', {
                             menuDisabled: true,
                             items: [{
                                     icon: 'resources/images/icons/fam/excel_csv.png',
-                                    tooltip: 'Generer le fichier CSV',
+                                    tooltip: 'Exporter CSV',
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('exportCsv', view, rowIndex, colIndex, item, e, record, row);
                                     }

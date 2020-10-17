@@ -466,13 +466,139 @@ Ext.define('testextjs.controller.RupturepharmaCtr', {
     },
     exportCsv: function (view, rowIndex, colIndex, item, e, record, row) {
         var me = this;
-        Ext.MessageBox.confirm('Message',
-                'Voulez-vous generer le fichier CSV ?',
-                function (btn) {
-                    if (btn === 'yes') {
-                        window.location = '../api/v1/rupture/csv?id=' + record.get('id');
-                    }
+
+        var storeMODEL = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
+            fields:
+                    [
+                        {name: 'id',
+                            type: 'string'
+
+                        },
+                        {name: 'libelle',
+                            type: 'string'
+
+                        }
+
+                    ],
+            autoLoad: true,
+            pageSize: 999,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/common/grossiste',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+
+        });
+        var form = Ext.create('Ext.window.Window',
+                {
+                    autoShow: true,
+                    height: 150,
+                    width: 450,
+                    modal: true,
+                    title: 'SELECTIONNEZ UN GROSSISTE POUR EXPORTER',
+                    closeAction: 'hide',
+                    closable: true,
+                    maximizable: false,
+                    layout: {
+                        type: 'fit'
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    text: 'Exporter',
+                                    handler: function (btn) {
+                                        var _this = btn.up('window'), _form = _this.down('form');
+                                        if (_form.isValid()) {
+                                            var values = _form.getValues();
+
+
+                                            window.location = '../api/v1/rupture/csv?id=' + record.get('id') + '&organismeId=' + values.modelId;
+                                            form.destroy();
+
+
+                                        }
+//                                         
+                                    }
+                                },
+                                {
+                                    xtype: 'button',
+                                    iconCls: 'cancelicon',
+                                    handler: function (btn) {
+                                        form.destroy();
+                                    },
+                                    text: 'Annuler'
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [
+
+                        {
+                            xtype: 'form',
+                            layout: 'fit',
+                            items: [
+                                {
+                                    xtype: 'fieldset',
+                                    layout: 'anchor',
+                                    collapsible: false,
+                                    title: 'SELECTIONNER UN GROSSISTE',
+                                    items: [
+                                        {
+                                            xtype: 'combobox',
+                                            name: 'modelId',
+                                            anchor: '100%',
+                                            store: storeMODEL,
+                                            pageSize: 999,
+                                            valueField: 'id',
+                                            displayField: 'libelle',
+                                            minChars: 2,
+                                            queryMode: 'remote',
+                                            enableKeyEvents: true,
+                                            emptyText: 'Selectionner le grossiste'
+
+
+                                        }
+
+
+                                    ]
+                                }
+                            ]
+                        }
+
+                    ]
                 });
+
+
+
+
+
+
+
+
+        /*
+         Ext.MessageBox.confirm('Message',
+         'Voulez-vous generer le fichier CSV ?',
+         function (btn) {
+         if (btn === 'yes') {
+         window.location = '../api/v1/rupture/csv?id=' + record.get('id');
+         }
+         });*/
     },
     onPdfClick: function () {
         var me = this;

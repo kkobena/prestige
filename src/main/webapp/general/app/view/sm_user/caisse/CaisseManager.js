@@ -69,6 +69,7 @@ Ext.define('testextjs.view.sm_user.caisse.CaisseManager', {
                     },
                     {
                         fieldLabel: 'CODE',
+                        xtype: 'hiddenfield',
                         name: 'lg_CAISSE_ID',
                         id: 'lg_CAISSE_ID'
                     }

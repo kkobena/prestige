@@ -96,7 +96,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
     }
 
     @Override
-    public void saveMvtProduit(String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva,boolean checked) {
+    public void saveMvtProduit(String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked) {
         HMvtProduit h = new HMvtProduit();
         h.setUuid(UUID.randomUUID().toString());
         h.setCreatedAt(LocalDateTime.now());
@@ -117,7 +117,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
     }
 
     @Override
-    public void saveMvtProduit(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva,boolean checked) {
+    public void saveMvtProduit(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked) {
         HMvtProduit h = new HMvtProduit();
         h.setUuid(UUID.randomUUID().toString());
         h.setCreatedAt(LocalDateTime.now());
@@ -130,7 +130,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
         h.setValeurTva(valeurTva);
         h.setQteDebut(qteDebut);
         h.setPrixUn(prixUn);
-           h.setChecked(checked);
+        h.setChecked(checked);
         h.setPrixAchat(famille.getIntPAF());
         h.setPkey(pkey);
         h.setQteFinale(qteFinale);
@@ -153,7 +153,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
         h.setPrixUn(famille.getIntPRICE());
         h.setPrixAchat(famille.getIntPAF());
         h.setPkey(pkey);
-           h.setChecked(true);
+        h.setChecked(true);
         h.setQteFinale(qteFinale);
         emg.persist(h);
     }
@@ -174,7 +174,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
         h.setPrixUn(prixUn);
         h.setPrixAchat(prixAchat);
         h.setPkey(pkey);
-           h.setChecked(true);
+        h.setChecked(true);
         h.setQteFinale(qteFinale);
         emg.persist(h);
     }
@@ -196,7 +196,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
         h.setTypemvtproduit(typemvtproduit);
         h.setQteMvt(qteMvt);
         h.setQteDebut(qteDebut);
-           h.setChecked(true);
+        h.setChecked(true);
         h.setQteFinale(familleStock.getIntNUMBERAVAILABLE());
         emg.persist(h);
 
@@ -664,7 +664,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
         final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
         final String emplacementId = emplacement.getLgEMPLACEMENTID();
         final boolean isDepot = !("1".equals(emplacementId));
-        final Typemvtproduit typemvtproduit=getTypemvtproduitByID(DateConverter.VENTE, emg);
+        final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.VENTE, emg);
         list.stream().forEach(it -> {
             it.setStrSTATUT(commonparameter.statut_is_Closed);
             TFamille tFamille = it.getLgFAMILLEID();
@@ -686,13 +686,13 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 } else {
                     familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
                     emg.merge(familleStock);
-                    saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva,true);
+                    saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva, true);
 
                 }
             } else {
                 familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
                 emg.merge(familleStock);
-                saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva,true);
+                saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva, true);
             }
 
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
@@ -728,7 +728,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
             final String emplacementId = emplacement.getLgEMPLACEMENTID();
             final boolean isDepot = !("1".equals(emplacementId));
-final Typemvtproduit typemvtproduit=getTypemvtproduitByID(DateConverter.VENTE, emg);
+            final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.VENTE, emg);
             list.stream().forEach(it -> {
                 TFamille tFamille = it.getLgFAMILLEID();
                 TCodeTva codeTva = tFamille.getLgCODETVAID();
@@ -749,13 +749,13 @@ final Typemvtproduit typemvtproduit=getTypemvtproduitByID(DateConverter.VENTE, e
                     } else {
                         familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
                         emg.merge(familleStock);
-                        saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva,true);
+                        saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva, true);
 
                     }
                 } else {
                     familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
                     emg.merge(familleStock);
-                    saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva,true);
+                    saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva, true);
 
                 }
 
@@ -836,7 +836,7 @@ final Typemvtproduit typemvtproduit=getTypemvtproduitByID(DateConverter.VENTE, e
             }
 
         }
-        saveMvtProduit(familleStock.getLgFAMILLESTOCKID(), getTypemvtproduitByID(DateConverter.ENTREE_EN_STOCK, emg), OTFamille, ooTUser, OTEmplacement, qty, initStock, qteFinale, emg, 0,true);
+        saveMvtProduit(familleStock.getLgFAMILLESTOCKID(), getTypemvtproduitByID(DateConverter.ENTREE_EN_STOCK, emg), OTFamille, ooTUser, OTEmplacement, qty, initStock, qteFinale, emg, 0, true);
     }
 
     @Override
@@ -845,7 +845,7 @@ final Typemvtproduit typemvtproduit=getTypemvtproduitByID(DateConverter.VENTE, e
         final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
         final String emplacementId = emplacement.getLgEMPLACEMENTID();
         final boolean isDepot = !("1".equals(emplacementId));
-        final Typemvtproduit typemvtproduit=getTypemvtproduitByID(DateConverter.TMVTP_VENTE_DEPOT_EXTENSION, emg);
+        final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.TMVTP_VENTE_DEPOT_EXTENSION, emg);
         list.stream().forEach(it -> {
             it.setStrSTATUT(commonparameter.statut_is_Closed);
             TFamille tFamille = it.getLgFAMILLEID();
@@ -863,17 +863,17 @@ final Typemvtproduit typemvtproduit=getTypemvtproduitByID(DateConverter.VENTE, e
                     TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
                     //  LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité parent  {1}", new Object[]{OTFamilleParent.getIntCIP(), stockParent.getIntNUMBERAVAILABLE()});
                     familleStock = deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
-                    saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY()), emg, valeurTva,false);
+                    saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY()), emg, valeurTva, false);
                 } else {
                     familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
                     emg.merge(familleStock);
-                    saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva,false);
+                    saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva, false);
 
                 }
             } else {
                 familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
                 emg.merge(familleStock);
-                saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva,false);
+                saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva, false);
             }
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
             emg.merge(it);
@@ -908,4 +908,39 @@ final Typemvtproduit typemvtproduit=getTypemvtproduitByID(DateConverter.VENTE, e
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    private HMvtProduit findByItemVenteId(String idVenteItem) {
+        TypedQuery<HMvtProduit> tq = getEmg().createQuery("SELECT o FROM HMvtProduit o WHERE o.pkey=?1 ", HMvtProduit.class);
+        tq.setParameter(1, idVenteItem);
+        tq.setMaxResults(1);
+        return tq.getSingleResult();
+    }
+
+    @Override
+    public void updateVenteStock(TUser tu, List<TPreenregistrementDetail> list) throws Exception {
+        list.stream().forEach(it -> {
+            HMvtProduit old = findByItemVenteId(it.getLgPREENREGISTREMENTDETAILID());
+            saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), old, tu);
+            updatefamillenbvente(old.getFamille(), old.getQteMvt(), true, getEmg());
+        });
+    }
+
+    public void saveMvtProduit(String pkey, HMvtProduit old, TUser lgUSERID) {
+        HMvtProduit h = new HMvtProduit();
+        h.setUuid(UUID.randomUUID().toString());
+        h.setCreatedAt(old.getCreatedAt());
+        h.setEmplacement(old.getEmplacement());
+        h.setLgUSERID(lgUSERID);
+        h.setFamille(old.getFamille());
+        h.setMvtDate(old.getMvtDate());
+        h.setValeurTva(old.getValeurTva());
+        h.setTypemvtproduit(old.getTypemvtproduit());
+        h.setPrixUn(old.getPrixUn());
+        h.setPrixAchat(old.getPrixAchat());
+        h.setQteMvt(old.getQteMvt());
+        h.setQteDebut(old.getQteDebut());
+        h.setChecked(old.getChecked());
+        h.setPkey(pkey);
+        h.setQteFinale(old.getQteFinale());
+        getEmg().persist(h);
+    }
 }

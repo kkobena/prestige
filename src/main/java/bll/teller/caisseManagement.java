@@ -43,34 +43,37 @@ import java.util.List;
 import java.util.UUID;
 import javax.persistence.ParameterMode;
 import javax.persistence.StoredProcedureQuery;
+import rest.service.impl.Mail;
+import rest.service.impl.Sms;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.conversion;
 import toolkits.utils.date;
 import toolkits.utils.logger;
+import util.DateConverter;
 
 /**
  *
  * @author thierry
  */
 public class caisseManagement extends bll.bllBase {
-
+    
     public TCaisse OTCaisse;
-
+    
     public caisseManagement(dataManager odataManager, TUser oTUser) {
         super.setOTUser(oTUser);
         super.setOdataManager(odataManager);
         super.checkDatamanager();
-
+        
         OTCaisse = new TCaisse();
     }
-
+    
     public TCaisse findById(String lg) {
         return this.getOdataManager().getEm().find(TCaisse.class, lg);
     }
-
+    
     public TCaisse findByUserId(TUser oTUser) {
         TCaisse oOTCaisse = new TCaisse();
-
+        
         try {
             oOTCaisse = (TCaisse) this.getOdataManager().getEm().createQuery("SELECT t FROM TCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1 ").
                     setParameter(1, oTUser.getLgUSERID()).
@@ -81,7 +84,7 @@ public class caisseManagement extends bll.bllBase {
         }
         return oOTCaisse;
     }
-
+    
     public TMvtCaisse OpenCaisse(String ID_COFFRE_CAISSE) {
         List<TResumeCaisse> lstTResumeCaisse = new ArrayList<>();
         try {
@@ -90,14 +93,14 @@ public class caisseManagement extends bll.bllBase {
                 this.buildErrorTraceMessage("Aucune attribution de fond de caisse en cours pour cet utilisateur");
                 return null;
             }
-
+            
             this.setOTUser(OTCoffreCaisse.getLgUSERID());
-
+            
             if (OTCoffreCaisse.getStrSTATUT().equals(commonparameter.statut_is_assign)) {
                 this.buildErrorTraceMessage("Impossible de reouvrir cette caisse", "la caisse specifier est deja  " + this.getOTranslate().getValue(OTCoffreCaisse.getStrSTATUT()));
                 return null;
             }
-
+            
             lstTResumeCaisse = this.getListeResumeCaissesByUser(this.getOTUser().getLgUSERID());
             new logger().OCategory.info("lstTResumeCaisse size " + lstTResumeCaisse.size());
             if (lstTResumeCaisse.size() > 0) {
@@ -112,7 +115,7 @@ public class caisseManagement extends bll.bllBase {
                 oOTCaisse = (TCaisse) this.getOdataManager().getEm().createQuery("SELECT t FROM TCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1 ").
                         setParameter(1, this.getOTUser().getLgUSERID()).
                         getSingleResult();
-
+                
                 oOTCaisse.setDtUPDATED(new Date());
                 oOTCaisse.setLgUPDATEDBY(this.getOTUser().getStrLOGIN());
             } catch (Exception e) {
@@ -139,16 +142,16 @@ public class caisseManagement extends bll.bllBase {
             oOTCaisse.setIntSOLDE(0.0);
             oOTCaisse.setLgUSERID(this.getOTUser());
             oOTCaisse.setLgCREATEDBY(this.getOTUser().getStrLOGIN());
-
+            
             this.getOdataManager().BeginTransaction();
             this.getOdataManager().getEm().persist(OTCoffreCaisse);
             this.getOdataManager().getEm().persist(OTResumeCaisse);
             this.getOdataManager().getEm().persist(oOTCaisse);
             this.getOdataManager().CloseTransaction();
-
+            
             TTypeMvtCaisse OTTypeMvtCaisse = caisseManagement.getTTypeMvtCaisse(Parameter.KEY_PARAM_MVT_FOND_DE_CAISSE, this.getOdataManager());
             TMvtCaisse OTMvtCaisse = new TellerMovement(this.getOdataManager(), this.getOTUser()).AddTMvtCaisse(OTTypeMvtCaisse, OTTypeMvtCaisse.getStrCODECOMPTABLE(), OTTypeMvtCaisse.getStrNAME(), "1", new Double(OTResumeCaisse.getIntSOLDEMATIN()), "", "", "", "", 0, new Date(), true, "", OTCoffreCaisse.getLdCREATEDBY(), "", 0, OTResumeCaisse.getIntSOLDEMATIN(), true, new Date());
-
+            
             jconnexion Ojconnexion = new jconnexion();
             Ojconnexion.initConnexion();
             Ojconnexion.OpenConnexion();
@@ -184,7 +187,7 @@ public class caisseManagement extends bll.bllBase {
             e.printStackTrace();
         }
         return OTCoffreCaisse;
-
+        
     }
     // fin recuperation de coffre caisse par date
 
@@ -202,7 +205,7 @@ public class caisseManagement extends bll.bllBase {
                 this.buildErrorTraceMessage("Utilisateur inconnu");
                 return false;
             }
-
+            
             if (!Oauthentification.GetUserConnexionState(ooTuser)) {
                 this.buildErrorTraceMessage(Oauthentification.getDetailmessage());
                 // new logger().OCategory.info(this.getDetailmessage());
@@ -220,9 +223,9 @@ public class caisseManagement extends bll.bllBase {
                     OdateDebut = this.getKey().DateToString(dt_Date_debut, this.getKey().formatterMysqlShort2);;
             dt_Date_Fin = this.getKey().getDate(OdateFin, "23:59");
             dt_Date_debut = this.getKey().getDate(OdateDebut, "00:00");
-
+            
             new logger().OCategory.info(" dt_Date_debut " + dt_Date_debut + " dt_Date_Fin " + dt_Date_Fin);
-
+            
             lstTResumeCaisse = this.getListeResumeCaissesByUser(ooTuser.getLgUSERID());
             new logger().OCategory.info("lstTResumeCaisse size " + lstTResumeCaisse.size());
             if (lstTResumeCaisse.size() > 0) {
@@ -237,7 +240,7 @@ public class caisseManagement extends bll.bllBase {
              setParameter(4, dt_Date_Fin).
              getSingleResult();*/
             OTCoffreCaisse = this.getTCoffreCaisseOfSomeDay(ooTuser.getLgUSERID(), commonparameter.statut_is_Waiting_validation, dt_Date_debut, dt_Date_Fin);
-
+            
             if (OTCoffreCaisse != null) {
                 this.buildErrorTraceMessage("La caisse specifié est  " + this.getOTranslate().getValue(commonparameter.statut_is_Waiting_validation));
                 new logger().OCategory.info(this.getDetailmessage());
@@ -287,14 +290,14 @@ public class caisseManagement extends bll.bllBase {
                     getSingleResult();
             this.getOdataManager().getEm().refresh(OTCaisse);
             this.buildSuccesTraceMessage("Solde : " + OTCaisse.getIntSOLDE() + "  de " + OTCaisse.getLgUSERID().getStrLOGIN());
-
+            
             return OTCaisse.getIntSOLDE().intValue();
         } catch (Exception e) {
             new logger().OCategory.error(e.getMessage());
             return 0;
         }
     }
-
+    
     public Double GetSoldeCaisse(TUser OTUser, Date dt_BEGIN, Date dt_END) {
         Double result = 0.0;
         List<Object[]> lstCaisse = new ArrayList<>();
@@ -317,7 +320,7 @@ public class caisseManagement extends bll.bllBase {
         new logger().OCategory.info("result:" + result);
         return result;
     }
-
+    
     public Integer GetSoldeAllCaisse() {
         try {
             List<TCaisse> Lst = this.getOdataManager().getEm().createQuery("SELECT t FROM TCaisse t ").
@@ -327,7 +330,7 @@ public class caisseManagement extends bll.bllBase {
             for (int i = 0; i < Lst.size(); i++) {
                 solde = solde + Lst.get(i).getIntSOLDE().intValue();
             }
-
+            
             this.buildSuccesTraceMessage("Solde : " + solde + "  de  Toute les caisse");
             return solde;
         } catch (Exception e) {
@@ -335,7 +338,7 @@ public class caisseManagement extends bll.bllBase {
             return 0;
         }
     }
-
+    
     public List<TCaisse> getAllCaisse() {
         List<TCaisse> Lst = this.getOdataManager().getEm().createQuery("SELECT t FROM TCaisse t  ORDER BY t.lgUSERID.strFIRSTNAME  ").getResultList();
         int solde = 0;
@@ -344,45 +347,45 @@ public class caisseManagement extends bll.bllBase {
             if (!this.CheckResumeCaisse(Lst.get(i).getLgUSERID())) {
                 Lst.get(i).setIntSOLDE(0.0);
             }
-
+            
             String str_statut_activite = this.getDetailmessage();
             Lst.get(i).setLgUPDATEDBY(str_statut_activite);
-
+            
             new logger().OCategory.info(Lst.get(i).getLgUSERID().getStrLOGIN() + " " + Lst.get(i).getLgUPDATEDBY());
-
+            
         }
         return Lst;
     }
-
+    
     public int getSoldeBy(Date oDate) {
-
+        
         return 0;
     }
-
+    
     public List<TSnapShopDalyVente> getLstTSnapShopDalyVente() {
         return this.getLstTSnapShopDalyVente(new Date());
     }
-
+    
     public List<TSnapShopDalyVente> getLstTSnapShopDalyVente(Date ODate) {
         List<TSnapShopDalyVente> LstTSnapShopDalyVente = new ArrayList<>();
         Date dt_Date_debut, dt_Date_Fin;
         dt_Date_debut = this.getKey().GetNewDate(ODate, 0);
         dt_Date_Fin = this.getKey().GetNewDate(ODate, 1);
         try {
-
+            
             LstTSnapShopDalyVente = this.getOdataManager().getEm().createQuery("SELECT t FROM TSnapShopDalyVente t WHERE  t.dtCREATED >= ?3  AND t.dtCREATED < ?4 AND t.strSTATUT LIKE ?5 AND t.lgTYPEVENTEID.lgTYPEVENTEID LIKE ?6").
                     setParameter(3, dt_Date_debut).
                     setParameter(4, dt_Date_Fin).
                     setParameter(5, commonparameter.statut_enable).
                     setParameter(6, "%%").
                     getResultList();
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage(e.getMessage());
         }
         return LstTSnapShopDalyVente;
     }
-
+    
     public TCaisse GetTCaisse() {
         TCaisse OTCaisse = null;
         try {
@@ -394,7 +397,7 @@ public class caisseManagement extends bll.bllBase {
         }
         return OTCaisse;
     }
-
+    
     public TCaisse GetTCaisse(String lg_USER_ID) {
         try {
             OTCaisse = (TCaisse) this.getOdataManager().getEm().createQuery("SELECT t FROM TCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1 ").
@@ -402,7 +405,7 @@ public class caisseManagement extends bll.bllBase {
                     getSingleResult();
             this.getOdataManager().getEm().refresh(OTCaisse);
             this.buildSuccesTraceMessage("Solde : " + OTCaisse.getIntSOLDE() + "  de " + OTCaisse.getLgUSERID().getStrLOGIN());
-
+            
             return OTCaisse;
         } catch (Exception e) {
             new logger().OCategory.error(e.getMessage());
@@ -411,12 +414,12 @@ public class caisseManagement extends bll.bllBase {
             OTCaisse.setIntSOLDE(0.0);
             OTCaisse.setDtCREATED(new Date());
             OTCaisse.setLgCREATEDBY(this.getOTUser().getStrLOGIN());
-
+            
             OTCaisse.setLgCAISSEID(this.getKey().getComplexId());
             return null;
         }
     }
-
+    
     public void CloseCaisse(String ld_CAISSE_ID) {
         try {
             TResumeCaisse OTResumeCaisse = this.getOdataManager().getEm().find(TResumeCaisse.class, ld_CAISSE_ID);
@@ -426,23 +429,23 @@ public class caisseManagement extends bll.bllBase {
                 this.buildErrorTraceMessage("Impossible de cloturer la caisse. Ref Inconnu de la caisse inconnu");
                 return;
             }
-
+            
             if (OTResumeCaisse.getStrSTATUT().equals(commonparameter.statut_is_Process)) {
                 this.buildErrorTraceMessage("Impossible de cloturer cette caisse", "la fermeture de la caisse specifier est deja  " + this.getOTranslate().getValue(OTResumeCaisse.getStrSTATUT()));
                 return;
             }
-
+            
             this.setOTUser(OTResumeCaisse.getLgUSERID());
             this.OTCaisse = new TCaisse();
 //            this.OTCaisse.setIntSOLDE(new Double(this.GetSoldeCaisse(this.getOTUser().getLgUSERID()))); // a decommenter en cas de probleme 26/03/2017
             this.OTCaisse.setIntSOLDE(this.GetSoldeCaisse(this.getOTUser(), OTResumeCaisse.getDtCREATED(), new Date()));
-
+            
             OTResumeCaisse.setLgUPDATEDBY(this.getOTUser().getStrLOGIN());
             OTResumeCaisse.setIntSOLDESOIR(this.OTCaisse.getIntSOLDE().intValue());
             OTResumeCaisse.setStrSTATUT(commonparameter.statut_is_Process);
             OTResumeCaisse.setDtUPDATED(new Date());
             this.persiste(OTResumeCaisse);
-
+            
             jconnexion Ojconnexion = new jconnexion();
             Ojconnexion.initConnexion();
             Ojconnexion.OpenConnexion();
@@ -452,15 +455,23 @@ public class caisseManagement extends bll.bllBase {
             this.is_activity(Ojconnexion);
             Ojconnexion.CloseConnexion();
             this.setMessage(commonparameter.PROCESS_SUCCESS);
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible de cloturer la caisse", e.getMessage());
-
+            
         }
     }
-
-    //recuperer un billetage en fonction du resumé
+    
+    public boolean checkParameterByKey(String key) {
+        try {
+            TParameters parameters = this.getOdataManager().getEm().find(TParameters.class, key);
+            return (Integer.valueOf(parameters.getStrVALUE().trim()) == 1);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
     public TBilletage getBilletageByResumeCaisse(String ld_CAISSE_ID) {
         TBilletage OTBilletage = null;
         try {
@@ -476,7 +487,7 @@ public class caisseManagement extends bll.bllBase {
     public void ValideCloseCaisse(String ld_CAISSE_ID) {
         TBilletage OTBilletage = null;
         try {
-
+            
             TResumeCaisse OTResumeCaisse = (TResumeCaisse) this.getOdataManager().getEm().find(TResumeCaisse.class, ld_CAISSE_ID);
             this.getOdataManager().getEm().refresh(OTResumeCaisse);
             new logger().OCategory.info(OTResumeCaisse.getStrSTATUT());
@@ -485,7 +496,7 @@ public class caisseManagement extends bll.bllBase {
             } else if (OTResumeCaisse.getStrSTATUT().equals(commonparameter.statut_is_Closed)) {
                 this.buildErrorTraceMessage(" La caisse a deja ete ferme ");
             } else {
-
+                
                 this.setOTUser(OTResumeCaisse.getLgUSERID());
                 OTResumeCaisse.setStrSTATUT(commonparameter.statut_is_Closed);
                 //  this.GetSoldeCaisse(OTResumeCaisse.getLgUSERID().getLgUSERID()); //
@@ -494,7 +505,7 @@ public class caisseManagement extends bll.bllBase {
 
 //                String Description = "Validation de la Cloture de la caisse de  " + this.getOTUser().getStrLOGIN() + " avec un montant de " + Math.abs(OTCaisse.getIntSOLDE() - OTResumeCaisse.getIntSOLDEMATIN());
                 String Description = "Validation de la Cloture de la caisse de  " + this.getOTUser().getStrLOGIN() + " avec un montant de " + (OTBilletage != null ? conversion.AmountFormat(OTBilletage.getIntAMOUNT().intValue(), '.') : 0);
-
+                
                 OTCaisse.setIntSOLDE(0.0);
                 OTCaisse.setLgUPDATEDBY(this.getOTUser().getStrLOGIN());
                 OTCaisse.setDtUPDATED(new Date());
@@ -516,16 +527,16 @@ public class caisseManagement extends bll.bllBase {
 
                 // this.setMessage(commonparameter.PROCESS_SUCCESS);
             }
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("Impossible de valider la cloture de la caisse", e.getMessage());
         }
     }
-
+    
     public boolean CheckResumeCaisse() {
         return CheckResumeCaisse(this.getOTUser());
     }
-
+    
     public boolean CheckResumeCaisse(TUser ooTUser) {
         TResumeCaisse OTResumeCaisse = null, OTResumeCaisseOld = null;
         try {
@@ -541,7 +552,7 @@ public class caisseManagement extends bll.bllBase {
             if (OTParameters == null) { //replace true apres par la valeur boolean qui reprensente de la fermeture automatique. False = fermeture automatique desactivée
                 this.buildErrorTraceMessage("Paramètre de gestion de clôture automatique de la caisse inexistant");
                 return false;
-
+                
             }
 
 //            OTResumeCaisseOld = this.getTResumeCaisseClosed(this.getOTUser().getLgUSERID());// a decommenter en cas de probleme. 19/05/2016
@@ -550,11 +561,11 @@ public class caisseManagement extends bll.bllBase {
                 this.buildErrorTraceMessage("Désolé. La caisse de " + this.getOTUser().getStrFIRSTNAME() + " " + this.getOTUser().getStrLASTNAME() + " est fermée");
                 return false;
             }
-
+            
             if (Integer.valueOf(OTParameters.getStrVALUE()) == 0 && OTCaisse != null) { //si valeur 0, on passe en cloture manuelle
                 return true;
             }
-
+            
             OTResumeCaisse = (TResumeCaisse) this.getOdataManager().getEm().createQuery("SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1  AND t.dtCREATED >= ?3  AND t.dtCREATED < ?4 AND t.strSTATUT LIKE ?5 ").
                     setParameter(1, ooTUser.getLgUSERID()) //.setParameter(2, this.getOTAnneeScolaires().getIdAnneeScolaire())
                     .setParameter(3, dt_Date_debut)
@@ -574,7 +585,7 @@ public class caisseManagement extends bll.bllBase {
             return false;
         }
     }
-
+    
     public int GetResumeCaisse(TUser ooTUser) {
         int soldfinal = 0;
         try {
@@ -593,10 +604,10 @@ public class caisseManagement extends bll.bllBase {
             return soldfinal;
         }
     }
-
+    
     public boolean checksolde(int MONTANT) {
         OTCaisse = GetTCaisse(this.getOTUser().getLgUSERID());
-
+        
         if (OTCaisse.getIntSOLDE() < MONTANT) {
             this.buildErrorTraceMessage(this.getOTranslate().getValue("SOLDE_INSUFFISANT"));
             return false;
@@ -610,7 +621,7 @@ public class caisseManagement extends bll.bllBase {
         Double int_amount_hors_tva;
         Double int_amount_tva = 0.0;
         TRecettes OTRecettes = null;
-
+        
         try {
             TTypeRecette OTTypeRecette = this.getOdataManager().getEm().getReference(TTypeRecette.class, lg_TYPE_RECETTE_ID);
             // Verrifier si la tva es applicape
@@ -619,13 +630,13 @@ public class caisseManagement extends bll.bllBase {
                 //  TTypeRecette OTTypeRecetteTVA = (TTypeRecette) this.find(Parameter.KEY_TYPE_RECETTE_TVA, new TTypeRecette());//  this.find(TTypeRecette.class, Parameter.KEY_TYPE_RECETTE_TVA);
                 TTypeRecette OTTypeRecetteTVA = this.getOdataManager().getEm().getReference(TTypeRecette.class, Parameter.KEY_TYPE_RECETTE_TVA);
                 int_amount_tva = new tellerManagement(this.getOdataManager(), this.getOTUser()).getInAmountTva(MONTANT.intValue());
-
+                
                 String str_task_temp = "TVA" + str_task;
                 this.AddRecette(int_amount_tva, OTTypeRecetteTVA, str_DESCRIPTIONTemp, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, "TVAVENTE", lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_MVT_CAISSE_ID, transaction, str_TYPE); //
 
             }
             int_amount_hors_tva = MONTANT - int_amount_tva;
-
+            
             OTRecettes = this.AddRecette(int_amount_hors_tva, OTTypeRecette, str_DESCRIPTION, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, str_task, lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_MVT_CAISSE_ID, transaction, str_TYPE);
             //ensuite inserer pour la tva cest a dire appeler la methode ki calcule le montant de la tva et inserer ce montant ds  OTRecettes.setIntAMOUNT(MONTANT)
             //  new SnapshotManager(this.getOdataManager(), this.getOTUser()).BuildTSnapShopDalyRecetteCaisse(OTRecettes);
@@ -636,36 +647,36 @@ public class caisseManagement extends bll.bllBase {
             new logger().oCategory.error(this.getMessage());
             return OTRecettes;
         }
-
+        
     }
-
+    
     public TRecettes AddRecetteAnnulerVente(Double MONTANT, String lg_TYPE_RECETTE_ID, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID, String transaction, boolean str_TYPE) {
         Double int_amount_hors_tva = 0.0;
         Double int_amount_tva = 0.0;
-
+        
         new logger().OCategory.info(" *** Add recette   dbMONTANT *** " + MONTANT);
-
+        
         try {
             /* if (!this.CheckResumeCaisse()) {
              this.buildErrorTraceMessage("ERROR", "DESOLE LA CAISSE EST FERMEE");
              return null;
              }*/
-
+            
             TTypeRecette OTTypeRecette = (TTypeRecette) this.find(lg_TYPE_RECETTE_ID, new TTypeRecette());
             // Verrifier si la tva es applicape
             if (OTTypeRecette.getIsUSETVA()) {
                 String str_DESCRIPTIONTemp = "TVA  " + str_DESCRIPTION;
                 TTypeRecette OTTypeRecetteTVA = (TTypeRecette) this.find(Parameter.KEY_TYPE_RECETTE_TVA, new TTypeRecette());//  this.find(TTypeRecette.class, Parameter.KEY_TYPE_RECETTE_TVA);
                 int_amount_tva = new tellerManagement(this.getOdataManager(), this.getOTUser()).getInAmountTva(MONTANT.intValue());
-
+                
                 String str_task_temp = "TVA" + str_task;
                 // this.AddRecette(int_amount_tva, OTTypeRecetteTVA, str_DESCRIPTIONTemp, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, str_task_temp);
 
                 this.AddRecette(int_amount_tva, OTTypeRecetteTVA, str_DESCRIPTIONTemp, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, "TVAVENTE", lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_MVT_CAISSE_ID, transaction, str_TYPE);
-
+                
             }
             int_amount_hors_tva = MONTANT - int_amount_tva;
-
+            
             new logger().OCategory.info(" *** Add recette   int_amount_hors_tva  *** " + int_amount_hors_tva);
             // OTTypeRecette.setIsUSETVA(Boolean.FALSE);
             new logger().OCategory.info("  555  OTTypeRecette 555 " + OTTypeRecette.getIsUSETVA());
@@ -679,37 +690,37 @@ public class caisseManagement extends bll.bllBase {
             new logger().oCategory.error(this.getMessage());
             return null;
         }
-
+        
     }
 
 //    private TRecettes AddRecette(Double MONTANT, TTypeRecette OTTypeRecette, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID) {//a decommenter en cas de probleme
     private TRecettes AddRecette(Double MONTANT, TTypeRecette OTTypeRecette, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID, String transaction, boolean str_TYPE) {
         try {
-
+            
             return this.AddRecette(null, MONTANT, OTTypeRecette.getLgTYPERECETTEID(), str_DESCRIPTION, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, str_task, lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_MVT_CAISSE_ID, transaction, str_TYPE);
-
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             this.setMessage(ex.getMessage());
             new logger().oCategory.error(this.getMessage());
             return null;
         }
-
+        
     }
-
+    
     public TRecettes AddRecette(jconnexion Ojconnexion, double MONTANT, String lg_TYPE_RECETTE_ID, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID, String transaction, boolean str_TYPE) {
 //    public TRecettes AddRecette(boolean action,jconnexion Ojconnexion, double MONTANT, String lg_TYPE_RECETTE_ID, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID) {
         String str_transaction_code = "";
         TRecettes OTRecettes = null;
-
+        
         try {
             if (this.CheckResumeCaisse()) {
                 TTypeRecette OTTypeRecette = this.getOdataManager().getEm().getReference(TTypeRecette.class, lg_TYPE_RECETTE_ID);
 //                TTypeMvtCaisse OTTypeMvtCaisse = caisseManagement.getTTypeMvtCaisse(Parameter.KEY_PARAM_MVT_VENTE_ORDONNANCE, this.getOdataManager());
                 TTypeMvtCaisse OTTypeMvtCaisse = caisseManagement.getTTypeMvtCaisse(lg_TYPE_MVT_CAISSE_ID, this.getOdataManager());
-
+                
                 String Libelle = "ENCAISSEMENT POUR : " + OTTypeRecette.getStrTYPERECETTE();
-
+                
                 if (!str_DESCRIPTION.equals("")) {
                     Libelle = str_DESCRIPTION;
                 }
@@ -724,7 +735,7 @@ public class caisseManagement extends bll.bllBase {
                 OTRecettes.setLgUSERID(this.getOTUser());
                 // OTRecettes.setIdAnneeScolaire(this.getKey().getOTAnneeScolaires());
                 OTRecettes.setStrCREATEDBY(this.getOTUser().getStrLOGIN());
-
+                
                 this.getOdataManager().getEm().persist(OTRecettes);
                 this.setMessage(commonparameter.PROCESS_SUCCESS);
 
@@ -760,36 +771,36 @@ public class caisseManagement extends bll.bllBase {
                 this.is_activity();///29/09/2017
                 return OTRecettes;
             } else {
-
+                
                 new logger().OCategory.info(" *** probleme avec la caisse +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *** ");
-
+                
             }
-
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             this.buildErrorTraceMessage(this.getMessage());
             new logger().OCategory.info(" error AddRecette   " + ex.toString());
-
+            
         }
         return OTRecettes;
     }
-
+    
     public void is_activity() {
         try {
             StoredProcedureQuery q = this.getOdataManager().getEm().createStoredProcedureQuery("proc_do_activity");
             q.registerStoredProcedureParameter("lg_USER_ID", String.class, ParameterMode.IN);
             q.setParameter("lg_USER_ID", this.getOTUser().getLgUSERID());
-
+            
             q.execute();
-
+            
         } catch (Exception e) {
             new logger().OCategory.error(e.getMessage());
         }
     }
-
+    
     public TDepenses AddDepense(Double MONTANT, String lg_TYPE_DEPENSE_ID, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_TYPE_MVT_CAISSE_ID, boolean str_TYPE) {
         try {
-
+            
             if (!this.CheckResumeCaisse()) {
                 this.buildErrorTraceMessage("ERROR", "DESOLE LA CAISSE EST FERMEE");
                 return null;
@@ -800,7 +811,7 @@ public class caisseManagement extends bll.bllBase {
             }
             TTypeDepense OTTypeDepense = this.getOdataManager().getEm().find(TTypeDepense.class, lg_TYPE_DEPENSE_ID);
             TDepenses OTDepenses = new TDepenses();
-
+            
             OTDepenses.setIdDepense(this.getKey().gettimeid());
             OTDepenses.setLgTYPEDEPENSEID(OTTypeDepense);
             OTDepenses.setIntAMOUNT(MONTANT);
@@ -809,7 +820,7 @@ public class caisseManagement extends bll.bllBase {
             OTDepenses.setStrREFFACTURE(str_REF_FACTURE);
             //OTDepenses.setIdAnneeScolaire(this.getOTAnneeScolaires());
             OTDepenses.setStrCREATEDBY(this.getOTUser().getStrLOGIN());
-
+            
             this.persiste(OTDepenses);
             this.setMessage(commonparameter.PROCESS_SUCCESS);
             jconnexion Ojconnexion = new jconnexion();
@@ -817,38 +828,38 @@ public class caisseManagement extends bll.bllBase {
             Ojconnexion.OpenConnexion();
             String Description = "depense d une somme de  " + OTDepenses.getIntAMOUNT() + " pour type de depense : " + OTTypeDepense.getStrTYPEDEPENSE();
             String Libelle = "DEC. " + str_DESCRIPTION;
-
+            
             this.add_to_cash_transaction(Ojconnexion, commonparameter.TRANSACTION_DEBIT, MONTANT, Libelle, OTTypeDepense.getStrNUMEROCOMPTE(), int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, OTDepenses.getStrREFFACTURE(), str_type, str_task, "", "", "", lg_TYPE_REGLEMENT_ID, str_TYPE, true, new Date());
             this.do_event_log(Ojconnexion, commonparameter.ALL, Description, this.getOTUser().getStrLOGIN(), commonparameter.statut_enable, "t_depenses", "caisse", "Mouvement de Caisse", this.getOTUser().getLgUSERID());
             this.is_activity(Ojconnexion);
             Ojconnexion.CloseConnexion();
-
+            
             this.setDetailmessage(Libelle);
-
+            
             return OTDepenses;
-
+            
         } catch (Exception ex) {
             this.setMessage(ex.getMessage());
             new logger().oCategory.error(this.getMessage());
             return null;
         }
-
+        
     }
-
+    
     public void add_to_cash_transaction(jconnexion Ojconnexion, String str_TRANSACTION_REF, double int_AMOUNT, String str_DESCRIPTION, String str_NUMERO_COMPTE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String str_REF_FACTURE, String str_TYPE_VENTE, String str_TASK, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_REGLEMENT_ID, boolean str_TYPE, boolean bool_CHECKED, Date dt_CREATED) {
-
+        
         try {
             new logger().OCategory.info(" *******  str_TRANSACTION_REF ****** " + str_TRANSACTION_REF);
-
+            
             new logger().OCategory.info(" *******  Recherche de  OTReglement ****** " + lg_REGLEMENT_ID);
-
+            
             TReglement OTReglement = (TReglement) this.find(lg_REGLEMENT_ID, new TReglement());
-
+            
             if (OTReglement == null) {
                 new logger().OCategory.info(" *******  OTReglement is null ****** ");
                 return;
             }
-
+            
             new logger().OCategory.info(" *** OTReglement recu dans la bll est   *** " + lg_REGLEMENT_ID + " *** Celui trouve est   ***  " + OTReglement.getLgREGLEMENTID());
 
             /*if (OTReglement.getLgMODEREGLEMENTID().getLgMODEREGLEMENTID().equals("6") || commonparameter.TRANSACTION_DEBIT.equals(str_TRANSACTION_REF)) { // a decommenter en cas de probleme
@@ -861,7 +872,7 @@ public class caisseManagement extends bll.bllBase {
              str_TRANSACTION_REF = "C";
              }*/
             new logger().OCategory.info(" *** LgMODEREGLEMENTID is  ***  " + OTReglement.getLgMODEREGLEMENTID().getLgMODEREGLEMENTID());
-
+            
             new logger().OCategory.info(" *******  str_TRANSACTION_REF ****** " + str_TRANSACTION_REF);
             String sProc = "{ CALL proc_add_to_cash_transaction(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) }";
             CallableStatement cs = Ojconnexion.get_StringConnexion().prepareCall(sProc);
@@ -886,9 +897,9 @@ public class caisseManagement extends bll.bllBase {
             cs.setString(17, lg_MOTIF_REGLEMENT_ID);
             cs.setString(18, lg_TYPE_REGLEMENT_ID);
             cs.execute();
-
+            
             new logger().OCategory.info(" *** add to cash effectuee avec succes *** ");
-
+            
             OTCashTransaction = this.getOdataManager().getEm().find(TCashTransaction.class, id);
             if (OTCashTransaction != null) {
 //                OTCashTransaction.setDtCREATED(new Date()); // a decommenter en cas de probleme
@@ -897,26 +908,26 @@ public class caisseManagement extends bll.bllBase {
                 OTCashTransaction.setBoolCHECKED(bool_CHECKED);
                 this.persiste(OTCashTransaction);
             }
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage(e.getMessage());
-
+            
         }
     }
-
+    
     public TBilletage DoBilletage(TResumeCaisse OTResumeCaisse, int nb_dix, int nb_cinq, int nb_deux, int nb_mil, int nb_cinq_cent, int int_nb_autre) {
         TCaisse OTCaisse = null;
 
         //OTResumeCaisse = this.GetTResumeCaisse(this.getOTUser().getLgUSERID());
         int int_billetage_amount = this.GetBilletageAmount(nb_dix, nb_cinq, nb_deux, nb_mil, nb_cinq_cent, int_nb_autre);
-
+        
         new logger().OCategory.info(" *** int_billetage_amount *** " + int_billetage_amount);
-
+        
         if (OTResumeCaisse == null) {
             this.buildErrorTraceMessage("ERROR", "Desole cette caisse n'existe pas");
             return null;
         }
-
+        
         TBilletage OTBilletage = null;
         try {
             OTBilletage = new TBilletage();
@@ -927,7 +938,7 @@ public class caisseManagement extends bll.bllBase {
             OTBilletage.setLgCREATEDBY(this.getOTUser().getStrLOGIN());
             OTBilletage.setDtCREATED(new Date());
             this.persiste(OTBilletage);
-
+            
             TBilletageDetails OTBilletageDetails = new TBilletageDetails();
             OTBilletageDetails.setLgBILLETAGEDETAILSID(this.getKey().getComplexId());
             OTBilletageDetails.setLgBILLETAGEID(OTBilletage);
@@ -944,44 +955,44 @@ public class caisseManagement extends bll.bllBase {
         } catch (Exception e) {
             this.buildErrorTraceMessage("ERROR", "DESOLE LE BILLETAGE A ECHOUE " + e.toString());
         }
-
+        
         return OTBilletage;
-
+        
     }
-
+    
     public TResumeCaisse GetTResumeCaisse(String lg_USER_ID) {
         TResumeCaisse OTResumeCaisse;
-
+        
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat dateOnly = new SimpleDateFormat("MM/dd/yyyy");
         Date currentdate = this.getKey().stringToDate(dateOnly.format(cal.getTime()));
         new logger().OCategory.info(" ** caisse currentdate   ** " + currentdate);
         try {
-
+            
             OTResumeCaisse = (TResumeCaisse) this.getOdataManager().getEm().createQuery("SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1  AND  t.strSTATUT LIKE ?2 AND t.dtCREATED >= ?3  AND t.dtCREATED < ?4 ").
                     setParameter(1, lg_USER_ID).
                     setParameter(2, commonparameter.statut_is_Closed).
                     setParameter(3, currentdate).
                     setParameter(4, currentdate).getSingleResult();
             this.getOdataManager().getEm().refresh(OTResumeCaisse);
-
+            
             return OTResumeCaisse;
         } catch (Exception e) {
             return null;
         }
     }
-
+    
     public int GetBilletageAmount(int nb_dix, int nb_cinq, int nb_deux, int nb_mil, int nb_cinq_cent, int int_nb_autre) {
         int int_amount_result = 0;
-
+        
         int_amount_result = (nb_dix * 10000) + (nb_cinq * 5000) + (nb_deux * 2000) + (nb_mil * 1000) + (nb_cinq_cent * 500) + (int_nb_autre);
-
+        
         return int_amount_result;
-
+        
     }
-
+    
     public static TTypeMvtCaisse getTTypeMvtCaisse(String Ovalue, dataManager odataManager) {
-
+        
         return odataManager.getEm().getReference(TTypeMvtCaisse.class, Ovalue);
     }
 
@@ -994,13 +1005,13 @@ public class caisseManagement extends bll.bllBase {
             if (search_value.equalsIgnoreCase("") || search_value == null) {
                 search_value = "%%";
             }
-
+            
             if (Oprivilege.isColonneStockMachineIsAuthorize(Parameter.P_SHOW_ALL_ACTIVITY_ADMIN)) {
                 lg_EMPLACEMENT_ID = "%%";
             } else {
                 lg_EMPLACEMENT_ID = this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
             }
-
+            
             lstTCoffreCaisse = this.getOdataManager().getEm().createQuery("SELECT t FROM TCoffreCaisse t WHERE t.idCoffreCaisse LIKE ?1 AND (t.lgUSERID.strFIRSTNAME LIKE ?2 OR t.lgUSERID.strLASTNAME LIKE ?2 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?2) AND (t.dtCREATED >= ?3 AND t.dtCREATED <=?4) AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?5 ORDER BY t.dtCREATED DESC, t.lgUSERID.lgEMPLACEMENTID.strDESCRIPTION").
                     setParameter(1, ID_COFFRE_CAISSE).setParameter(2, search_value + "%").setParameter(3, dtDEBUT).setParameter(4, dtFin).setParameter(5, lg_EMPLACEMENT_ID).getResultList();
         } catch (Exception e) {
@@ -1019,9 +1030,9 @@ public class caisseManagement extends bll.bllBase {
             if (OTParameters == null) { //replace true apres par la valeur boolean qui reprensente de la fermeture automatique. False = fermeture automatique desactivée
                 this.buildErrorTraceMessage("Paramètre de gestion de clôture automatique de la caisse inexistant");
                 return null;
-
+                
             }
-
+            
             if (Integer.valueOf(OTParameters.getStrVALUE()) == 0) { //si valeur 0, on passe en cloture manuelle
                 lstTResumeCaisse = this.getListeResumeCaissesByUser(this.getOTUser().getLgUSERID());
                 new logger().OCategory.info("lstTResumeCaisse size " + lstTResumeCaisse.size());
@@ -1070,7 +1081,7 @@ public class caisseManagement extends bll.bllBase {
         }
         return OTResumeCaisse;
     }
-
+    
     public TResumeCaisse getTResumeCaisseClosed(String lg_USER_ID) {
         TResumeCaisse OTResumeCaisse = null;
         try {
@@ -1094,7 +1105,7 @@ public class caisseManagement extends bll.bllBase {
             }
             lstTTypeReglement = this.getOdataManager().getEm().createQuery("SELECT t FROM TTypeReglement t WHERE t.lgTYPEREGLEMENTID LIKE ?1 AND t.strNAME LIKE ?2 AND t.strFLAG LIKE ?3 ").
                     setParameter(1, lg_TYPE_REGLEMENT_ID).setParameter(2, search_value + "%").setParameter(3, str_FLAG).getResultList();
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1110,7 +1121,7 @@ public class caisseManagement extends bll.bllBase {
         TBilletageDetails OTBilletageDetails = null;
         TBilletage OTBilletage = null;
         try {
-
+            
             TResumeCaisse OTResumeCaisse = this.getOdataManager().getEm().find(TResumeCaisse.class, ld_CAISSE_ID);
 
             // if(OTResumeCaisse == null)
@@ -1118,13 +1129,13 @@ public class caisseManagement extends bll.bllBase {
                 this.buildErrorTraceMessage("Impossible de cloturer la caisse. Ref Inconnu de la caisse inconnu");
                 return;
             }
-
+            
             OTResumeCaisseCurrent = this.getTResumeCaisse(OTResumeCaisse.getLgUSERID().getLgUSERID(), commonparameter.statut_is_Using);
             if (OTResumeCaisseCurrent != null) {
                 this.buildErrorTraceMessage("Impossible d'annuler la clôture cette caisse", "Cet utilisateur a deja une caisse " + this.getOTranslate().getValue(OTResumeCaisseCurrent.getStrSTATUT()));
                 return;
             }
-
+            
             if (OTResumeCaisse.getStrSTATUT().equals(commonparameter.statut_is_Using)) {
                 this.buildErrorTraceMessage("Impossible de cloturer cette caisse", "La caisse specifiée est deja  " + this.getOTranslate().getValue(OTResumeCaisse.getStrSTATUT()));
                 return;
@@ -1137,7 +1148,7 @@ public class caisseManagement extends bll.bllBase {
             OTResumeCaisse.setIntSOLDESOIR(0);
             OTResumeCaisse.setStrSTATUT(commonparameter.statut_is_Using);
             OTResumeCaisse.setDtUPDATED(new Date());
-
+            
             OTBilletageDetails = new JournalVente(this.getOdataManager(), this.getOTUser()).getTBilletageDetails(ld_CAISSE_ID);
             if (OTBilletageDetails != null) {
                 OTBilletage = OTBilletageDetails.getLgBILLETAGEID();
@@ -1145,7 +1156,7 @@ public class caisseManagement extends bll.bllBase {
                 this.delete(OTBilletage);
             }
             this.persiste(OTResumeCaisse);
-
+            
             jconnexion Ojconnexion = new jconnexion();
             Ojconnexion.initConnexion();
             Ojconnexion.OpenConnexion();
@@ -1155,17 +1166,55 @@ public class caisseManagement extends bll.bllBase {
             this.is_activity(Ojconnexion);
             Ojconnexion.CloseConnexion();
             this.setMessage(commonparameter.PROCESS_SUCCESS);
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             new logger().OCategory.info(e.getMessage());
             this.buildErrorTraceMessage("Impossible d'annuler la cloture de cette caisse");
-
+            
         }
     }
 
     //fin annuler une cloture de caisse
     //code ajouté 04/09/2016
+    public void sendNotification(String lg_USER_ID) {
+        String message = "Récapitulatif de caisse " + date.DateToString(new Date(), date.formatterShort) + "\n";
+        Double totalAmount = 0.0;
+        privilege Oprivilege = new privilege(this.getOdataManager(), this.getOTUser());
+        String lg_EMPLACEMENT_ID = "";
+        try {
+            if (Oprivilege.isColonneStockMachineIsAuthorize(Parameter.P_SHOW_ALL_ACTIVITY)) {
+                lg_EMPLACEMENT_ID = "%%";
+            } else {
+                lg_EMPLACEMENT_ID = this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+            }
+            Date dt_Date_Debut = date.getDate(date.DateToString(new Date(), date.formatterMysqlShort2), "00:00");
+            Date dt_Date_Fin = date.getDate(date.DateToString(new Date(), date.formatterMysqlShort2), "23:59");
+            List<TResumeCaisse> lstTResumeCaisse = this.getOdataManager().getEm().createQuery("SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1 AND (t.dtUPDATED >= ?3 AND t.dtUPDATED <= ?4) AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?5 ORDER BY t.dtCREATED DESC")
+                    .setParameter(1, lg_USER_ID).setParameter(3, dt_Date_Debut).setParameter(4, dt_Date_Fin).setParameter(5, lg_EMPLACEMENT_ID).getResultList();
+            for (TResumeCaisse OTResumeCaisse : lstTResumeCaisse) {
+                totalAmount += OTResumeCaisse.getIntSOLDESOIR();
+                message += "- " + OTResumeCaisse.getLgUSERID().getStrFIRSTNAME() + " " + OTResumeCaisse.getLgUSERID().getStrLASTNAME() + ": " + conversion.AmountFormat(OTResumeCaisse.getIntSOLDESOIR(), '.') + "\n";
+            }
+            message += "Total Caisse: " + conversion.AmountFormat(totalAmount.intValue(), '.');
+            if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
+                Sms s = new Sms();
+                s.setMessage(message);
+                Thread thread = new Thread(s);
+                thread.start();
+            }
+            if (checkParameterByKey(DateConverter.KEY_MAIL_CLOTURE_CAISSE)) {
+                Mail mail = new Mail();
+                mail.setMessage(message);
+                mail.setSubject("Récapitulatif de caisse " + date.DateToString(new Date(), date.formatterShort));
+                Thread thread = new Thread(mail);
+                thread.start();
+            }
+        } catch (Exception e) {
+            
+        }
+    }
+    
     public void sendSmsChiffreAffaireByCaisse(Date dt_Date_Debut, Date dt_Date_Fin, String lg_USER_ID) {
         List<TResumeCaisse> lstTResumeCaisse = new ArrayList<>();
         List<TAlertEventUserFone> lstTAlertEventUserFone = new ArrayList<>();
@@ -1208,15 +1257,15 @@ public class caisseManagement extends bll.bllBase {
         TparameterManager OTparameterManager = new TparameterManager(this.getOdataManager());
         ServicesNotifCustomer OServicesNotifCustomer = new ServicesNotifCustomer(this.getOdataManager(), this.getOTUser());
         List<EntityData> listTMvtCaissesFalse = new ArrayList<>();
-        List<Object[]> listPreenregistrement ;
-        TParameters OTParameters ;
+        List<Object[]> listPreenregistrement;
+        TParameters OTParameters;
         Double P_SORTIECAISSE_ESPECE_FALSE = 0.0;
         int int_PRICE_TOTAL = 0;
         List<TAlertEventUserFone> lstTAlertEventUserFone = new ArrayList<>();
         String message = "Récapitulatif de caisse de mi-journée " + date.formatterShort.format(java.sql.Date.valueOf(dt_date_debut)) + "\n";
-
+        
         try {
-
+            
             OTParameters = OTparameterManager.getParameter(Parameter.KEY_MOVEMENT_FALSE);
             if (OTParameters != null && Integer.parseInt(OTParameters.getStrVALUE()) == 1 && !dt_date_debut.equalsIgnoreCase(dt_date_fin)) {
                 listTMvtCaissesFalse = OJournalVente.getAllMouvmentsCaisse(dt_date_debut, dt_date_fin, false);
@@ -1238,13 +1287,13 @@ public class caisseManagement extends bll.bllBase {
                     } else {
                         this.buildErrorTraceMessage("SMS non envoyé");
                     }
-
+                    
                 }
-
+                
             } else {
                 this.buildErrorTraceMessage("Aucun SMS envoyé");
             }
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("Echec d'envoi du SMS");
         }
@@ -1254,22 +1303,22 @@ public class caisseManagement extends bll.bllBase {
     public TRecettes AddRecetteBACK(Double MONTANT, String lg_TYPE_RECETTE_ID, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID, String transaction, boolean str_TYPE) {
         Double int_amount_hors_tva = 0.0;
         Double int_amount_tva = 0.0;
-
+        
         try {
-
+            
             TTypeRecette OTTypeRecette = (TTypeRecette) this.find(lg_TYPE_RECETTE_ID, new TTypeRecette());
             // Verrifier si la tva es applicape
             if (OTTypeRecette.getIsUSETVA()) {
                 String str_DESCRIPTIONTemp = "TVA  " + str_DESCRIPTION;
                 TTypeRecette OTTypeRecetteTVA = (TTypeRecette) this.find(Parameter.KEY_TYPE_RECETTE_TVA, new TTypeRecette());//  this.find(TTypeRecette.class, Parameter.KEY_TYPE_RECETTE_TVA);
                 int_amount_tva = new tellerManagement(this.getOdataManager(), this.getOTUser()).getInAmountTva(MONTANT.intValue());
-
+                
                 String str_task_temp = "TVA" + str_task;
                 this.AddRecette(int_amount_tva, OTTypeRecetteTVA, str_DESCRIPTIONTemp, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, "TVAVENTE", lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_MVT_CAISSE_ID, transaction, str_TYPE); //
 
             }
             int_amount_hors_tva = MONTANT - int_amount_tva;
-
+            
             TRecettes OTRecettes = this.AddRecette(int_amount_hors_tva, OTTypeRecette, str_DESCRIPTION, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, str_task, lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_MVT_CAISSE_ID, transaction, str_TYPE);
             //ensuite inserer pour la tva cest a dire appeler la methode ki calcule le montant de la tva et inserer ce montant ds  OTRecettes.setIntAMOUNT(MONTANT)
             //  new SnapshotManager(this.getOdataManager(), this.getOTUser()).BuildTSnapShopDalyRecetteCaisse(OTRecettes);
@@ -1280,21 +1329,21 @@ public class caisseManagement extends bll.bllBase {
             new logger().oCategory.error(this.getMessage());
             return null;
         }
-
+        
     }
-
+    
     public TRecettes AddRecetteBACK(jconnexion Ojconnexion, double MONTANT, String lg_TYPE_RECETTE_ID, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID, String transaction, boolean str_TYPE) {
 //    public TRecettes AddRecette(boolean action,jconnexion Ojconnexion, double MONTANT, String lg_TYPE_RECETTE_ID, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID) {
         String str_transaction_code = "";
-
+        
         try {
             if (this.CheckResumeCaisse()) {
                 TTypeRecette OTTypeRecette = this.getOdataManager().getEm().find(TTypeRecette.class, lg_TYPE_RECETTE_ID);
 //                TTypeMvtCaisse OTTypeMvtCaisse = caisseManagement.getTTypeMvtCaisse(Parameter.KEY_PARAM_MVT_VENTE_ORDONNANCE, this.getOdataManager());
                 TTypeMvtCaisse OTTypeMvtCaisse = caisseManagement.getTTypeMvtCaisse(lg_TYPE_MVT_CAISSE_ID, this.getOdataManager());
-
+                
                 String Libelle = "ENCAISSEMENT POUR : " + OTTypeRecette.getStrTYPERECETTE();
-
+                
                 if (!str_DESCRIPTION.equals("")) {
                     Libelle = str_DESCRIPTION;
                 }
@@ -1309,9 +1358,9 @@ public class caisseManagement extends bll.bllBase {
                 // OTRecettes.setIdAnneeScolaire(this.getKey().getOTAnneeScolaires());
                 OTRecettes.setStrCREATEDBY(this.getOTUser().getStrLOGIN());
                 this.getOdataManager().getEm().persist(OTRecettes);
-
+                
                 this.setMessage(commonparameter.PROCESS_SUCCESS);
-
+                
                 String Description = "Enregistrement d une somme de  " + OTRecettes.getIntAMOUNT() + " pour type de recette : " + OTTypeRecette.getStrTYPERECETTE();
 
                 /*  if (!OTTypeRecette.getIsUSETVA()) {
@@ -1324,13 +1373,13 @@ public class caisseManagement extends bll.bllBase {
 
 //                this.add_to_cash_transaction(Ojconnexion, commonparameter.TRANSACTION_CREDIT, MONTANT, Libelle, OTTypeMvtCaisse.getStrCODECOMPTABLE(), int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, OTRecettes.getStrREFFACTURE(), str_type, str_task, lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_REGLEMENT_ID); // a decommenter en cas de probleme
                 this.add_to_cash_transaction(Ojconnexion, transaction, MONTANT, Libelle, OTTypeMvtCaisse.getStrCODECOMPTABLE(), int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, OTRecettes.getStrREFFACTURE(), str_type, str_task, lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_REGLEMENT_ID, str_TYPE, true, new Date());
-
+                
                 new SnapshotManager(this.getOdataManager(), this.getOTUser()).BuildTSnapShopDalyRecette(OTRecettes);
                 new logger().OCategory.info(" *** after SnapshotManager 2 in caisseManagement AddRecette 571 ***");
                 try {
                     // OTPreenregistrement = (TPreenregistrement) this.find(str_REF_FACTURE, new TPreenregistrement());
                     new SnapshotManager(this.getOdataManager(), this.getOTUser()).BuildTSnapShopDalyVente(OTRecettes, (TPreenregistrement) this.find(str_REF_FACTURE, new TPreenregistrement()));
-
+                    
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -1346,35 +1395,35 @@ public class caisseManagement extends bll.bllBase {
                 this.is_activity(Ojconnexion);
                 return OTRecettes;
             } else {
-
+                
                 new logger().OCategory.info(" *** probleme avec la caisse +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *** ");
-
+                
             }
-
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             this.buildErrorTraceMessage(this.getMessage());
             new logger().OCategory.info(" error AddRecette   " + ex.toString());
-
+            
         }
         return null;
     }
-
+    
     public TRecettes AddRecetteBACK2(jconnexion Ojconnexion, double MONTANT, TTypeRecette OTTypeRecette, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID, String transaction, boolean str_TYPE) {
 //    public TRecettes AddRecette(boolean action,jconnexion Ojconnexion, double MONTANT, String lg_TYPE_RECETTE_ID, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID) {
         String str_transaction_code = "";
-
+        
         try {
 
 //                TTypeMvtCaisse OTTypeMvtCaisse = caisseManagement.getTTypeMvtCaisse(Parameter.KEY_PARAM_MVT_VENTE_ORDONNANCE, this.getOdataManager());
             TTypeMvtCaisse OTTypeMvtCaisse = caisseManagement.getTTypeMvtCaisse(lg_TYPE_MVT_CAISSE_ID, this.getOdataManager());
-
+            
             String Libelle = "ENCAISSEMENT POUR : " + OTTypeRecette.getStrTYPERECETTE();
-
+            
             if (!str_DESCRIPTION.equals("")) {
                 Libelle = str_DESCRIPTION;
             }
-
+            
             TRecettes OTRecettes = new TRecettes();
             OTRecettes.setIdRecette(this.getKey().gettimeid());
             OTRecettes.setLgTYPERECETTEID(OTTypeRecette);
@@ -1385,9 +1434,9 @@ public class caisseManagement extends bll.bllBase {
             // OTRecettes.setIdAnneeScolaire(this.getKey().getOTAnneeScolaires());
             OTRecettes.setStrCREATEDBY(this.getOTUser().getStrLOGIN());
             this.getOdataManager().getEm().persist(OTRecettes);
-
+            
             this.setMessage(commonparameter.PROCESS_SUCCESS);
-
+            
             String Description = "Enregistrement d une somme de  " + OTRecettes.getIntAMOUNT() + " pour type de recette : " + OTTypeRecette.getStrTYPERECETTE();
 
             /*  if (!OTTypeRecette.getIsUSETVA()) {
@@ -1400,13 +1449,13 @@ public class caisseManagement extends bll.bllBase {
 
 //                this.add_to_cash_transaction(Ojconnexion, commonparameter.TRANSACTION_CREDIT, MONTANT, Libelle, OTTypeMvtCaisse.getStrCODECOMPTABLE(), int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, OTRecettes.getStrREFFACTURE(), str_type, str_task, lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_REGLEMENT_ID); // a decommenter en cas de probleme
             this.add_to_cash_transaction(Ojconnexion, transaction, MONTANT, Libelle, OTTypeMvtCaisse.getStrCODECOMPTABLE(), int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, OTRecettes.getStrREFFACTURE(), str_type, str_task, lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_REGLEMENT_ID, str_TYPE, true, new Date());
-
+            
             new SnapshotManager(this.getOdataManager(), this.getOTUser()).BuildTSnapShopDalyRecette(OTRecettes);
             new logger().OCategory.info(" *** after SnapshotManager 2 in caisseManagement AddRecette 571 ***");
             try {
                 // OTPreenregistrement = (TPreenregistrement) this.find(str_REF_FACTURE, new TPreenregistrement());
                 new SnapshotManager(this.getOdataManager(), this.getOTUser()).BuildTSnapShopDalyVente(OTRecettes, (TPreenregistrement) this.find(str_REF_FACTURE, new TPreenregistrement()));
-
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -1421,40 +1470,40 @@ public class caisseManagement extends bll.bllBase {
             new logger().OCategory.info(" *** after all in caisseManagement AddRecette 570 *** ");
             this.is_activity(Ojconnexion);
             return OTRecettes;
-
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             this.buildErrorTraceMessage(this.getMessage());
             new logger().OCategory.info(" error AddRecette   " + ex.toString());
-
+            
         }
         return null;
     }
-
+    
     public boolean add_to_cash_transaction(String str_TRANSACTION_REF, Double int_AMOUNT, String str_DESCRIPTION, String str_NUMERO_COMPTE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String str_REF_FACTURE, String str_TYPE_VENTE, String str_TASK, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_REGLEMENT_ID, boolean str_TYPE, boolean bool_CHECKED, Date dt_CREATED) {
-
+        
         try {
-
+            
             Integer para = 0, intAMOUNT = int_AMOUNT.intValue();
             new logger().OCategory.info(" *******  str_TRANSACTION_REF ****** " + str_TRANSACTION_REF + " ************** int_AMOUNT " + int_AMOUNT + " str_TASK " + str_TASK);
-
+            
             new logger().OCategory.info(" *******  Recherche de  OTReglement ****** " + lg_REGLEMENT_ID);
-
+            
             TReglement OTReglement = (TReglement) this.find(lg_REGLEMENT_ID, new TReglement());
-
+            
             if (OTReglement == null) {
                 new logger().OCategory.info(" *******  OTReglement is null ****** ");
                 return false;
             }
             try {
                 TPreenregistrement op = this.getOdataManager().getEm().find(TPreenregistrement.class, str_RESSOURCE_REF);
-
+                
                 if (op != null) {
 //                    str_TRANSACTION_REF = ((intAMOUNT >= 0) ? "C" : "D");
 
                     para = op.getIntACCOUNT();
                     para = (int_AMOUNT > 0 ? para : (-1 * para));
-
+                    
                     TParameters KEY_TAKE_INTO_ACCOUNT = this.getOdataManager().getEm().getReference(TParameters.class, "KEY_TAKE_INTO_ACCOUNT");
                     if (KEY_TAKE_INTO_ACCOUNT != null && (Integer.valueOf(KEY_TAKE_INTO_ACCOUNT.getStrVALUE().trim()) == 1)) {
                         Integer y = op.getIntPRICE() - op.getIntACCOUNT();
@@ -1475,9 +1524,9 @@ public class caisseManagement extends bll.bllBase {
                 e.printStackTrace();
             }
             new logger().OCategory.info(" *** OTReglement recu dans la bll est   *** " + lg_REGLEMENT_ID + " *** Celui trouve est   ***  " + OTReglement.getLgREGLEMENTID());
-
+            
             StoredProcedureQuery q = this.getOdataManager().getEm().createStoredProcedureQuery("proc_add_to_cash_transaction2");
-           // q.setHint(QueryHints.PESSIMISTIC_LOCK, PessimisticLock.NoLock);
+            // q.setHint(QueryHints.PESSIMISTIC_LOCK, PessimisticLock.NoLock);
             q.setHint("javax.persistence.query.timeout", 10000);
             q.registerStoredProcedureParameter("ID", String.class, ParameterMode.IN);
             q.registerStoredProcedureParameter("str_TRANSACTION_REF", String.class, ParameterMode.IN);
@@ -1499,7 +1548,7 @@ public class caisseManagement extends bll.bllBase {
             q.registerStoredProcedureParameter("dtCREATED", Timestamp.class, ParameterMode.IN);
             q.registerStoredProcedureParameter("int_ACCOUNT", Integer.class, ParameterMode.IN);
             q.registerStoredProcedureParameter("intAMOUNT", Integer.class, ParameterMode.IN);
-
+            
             q.setParameter("ID", this.getKey().gettimeid());
             q.setParameter("str_TRANSACTION_REF", str_TRANSACTION_REF);
             q.setParameter("int_AMOUNT", Double.valueOf(int_AMOUNT).intValue());
@@ -1520,23 +1569,23 @@ public class caisseManagement extends bll.bllBase {
             q.setParameter("dtCREATED", new Date());
             q.setParameter("int_ACCOUNT", para);
             q.setParameter("intAMOUNT", intAMOUNT);
-
+            
             return q.execute();
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage(e.getMessage());
             return false;
-
+            
         }
     }
-
+    
     public TRecettes addRecette(Double MONTANT, TTypeRecette OTTypeRecette, String str_DESCRIPTION, String str_REF_FACTURE, double int_AMOUNT_REMIS, double int_AMOUNT_RECU, String str_RESSOURCE_REF, String lg_TYPE_REGLEMENT_ID, String str_type, String str_task, String lg_REGLEMENT_ID, String str_REF_COMPTE_CLIENT, String lg_MOTIF_REGLEMENT_ID, String lg_TYPE_MVT_CAISSE_ID, String transaction, boolean str_TYPE) {
         Double int_amount_hors_tva = 0.0;
         Double int_amount_tva = 0.0;
         TRecettes OTRecettes = null;
         new logger().OCategory.info(" *** Add recette   dbMONTANT *** ++++++++++++++++++++++++++++  " + MONTANT);
-
+        
         try {
             // Verrifier si la tva es applicape
             if (OTTypeRecette.getIsUSETVA()) {
@@ -1544,22 +1593,22 @@ public class caisseManagement extends bll.bllBase {
                 //  TTypeRecette OTTypeRecetteTVA = (TTypeRecette) this.find(Parameter.KEY_TYPE_RECETTE_TVA, new TTypeRecette());//  this.find(TTypeRecette.class, Parameter.KEY_TYPE_RECETTE_TVA);
                 TTypeRecette OTTypeRecetteTVA = this.getOdataManager().getEm().getReference(TTypeRecette.class, Parameter.KEY_TYPE_RECETTE_TVA);
                 int_amount_tva = new tellerManagement(this.getOdataManager(), this.getOTUser()).getInAmountTva(MONTANT.intValue());
-
+                
                 String str_task_temp = "TVA" + str_task;
                 this.AddRecette(int_amount_tva, OTTypeRecetteTVA, str_DESCRIPTIONTemp, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, "TVAVENTE", lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_MVT_CAISSE_ID, transaction, str_TYPE); //
 
             }
             int_amount_hors_tva = MONTANT - int_amount_tva;
-
+            
             OTRecettes = this.AddRecette(int_amount_hors_tva, OTTypeRecette, str_DESCRIPTION, str_REF_FACTURE, int_AMOUNT_REMIS, int_AMOUNT_RECU, str_RESSOURCE_REF, lg_TYPE_REGLEMENT_ID, str_type, str_task, lg_REGLEMENT_ID, str_REF_COMPTE_CLIENT, lg_MOTIF_REGLEMENT_ID, lg_TYPE_MVT_CAISSE_ID, transaction, str_TYPE);
-
+            
             return OTRecettes;
         } catch (Exception ex) {
             this.setMessage(ex.getMessage());
             new logger().oCategory.error(this.getMessage());
             return OTRecettes;
         }
-
+        
     }
-
+    
 }

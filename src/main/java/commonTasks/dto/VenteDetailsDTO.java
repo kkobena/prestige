@@ -5,6 +5,7 @@
  */
 package commonTasks.dto;
 
+import dal.Medecin;
 import dal.TFamille;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
@@ -32,8 +33,40 @@ public class VenteDetailsDTO implements Serializable {
     private Integer intPRICEUNITAIR = 0, intQUANTITY = 0, intQUANTITYSERVED = 0, intPRICE = 0, intPRICEREMISE = 0;
     private String operateur, strRefBon, dateHeure;
     private Date dateOperation;
-    private String typeVente;
+    private String typeVente,numOrder, medecinId,commentaire,nom;
     private int intAVOIR, currentStock = 0;
+   
+    public String getNumOrder() {
+        return numOrder;
+    }
+
+    public void setNumOrder(String numOrder) {
+        this.numOrder = numOrder;
+    }
+
+    public String getMedecinId() {
+        return medecinId;
+    }
+
+    public void setMedecinId(String medecinId) {
+        this.medecinId = medecinId;
+    }
+
+    public String getCommentaire() {
+        return commentaire;
+    }
+
+    public void setCommentaire(String commentaire) {
+        this.commentaire = commentaire;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
 
     public VenteDetailsDTO operateur(TUser operateur) {
         this.operateur = operateur.getStrFIRSTNAME() + " " + operateur.getStrLASTNAME();
@@ -192,6 +225,15 @@ public class VenteDetailsDTO implements Serializable {
         this.dateOp = DateConverter.convertDateToLocalDateTime(p.getDtUPDATED());
         this.dtCREATED = dateFormat.format(p.getDtUPDATED());
         this.ticketName = f.getStrNAME();
+//        try {
+//             Medecin m=d.getLgPREENREGISTREMENTID().getMedecin();
+//             this.nom=m.getNom();
+//             this.medecinId=m.getId();
+//             this.numOrder=m.getNumOrdre();
+//             this.commentaire=m.getCommentaire();
+//        } catch (Exception e) {
+//        }
+       
 
     }
 

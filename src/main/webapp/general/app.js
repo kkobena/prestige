@@ -838,7 +838,8 @@ Ext.application({
         'StatistiqRayonsCtr',
         'ArticleInvendusCtr',
         'SurStockCtr',
-        'ComparaisonCtr'
+        'ComparaisonCtr',
+        'OrdonnancierCtrl'
     ],
     stores: [
         'Menu'

@@ -18,6 +18,7 @@ import commonTasks.dto.TvaDTO;
 import commonTasks.dto.VenteDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.HMvtProduit;
+import dal.Medecin_;
 import dal.MvtTransaction;
 import dal.MvtTransaction_;
 import dal.TAyantDroit;
@@ -580,7 +581,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 q.setMaxResults(params.getLimit());
             }
             List<TPreenregistrement> list = q.getResultList();
-            return list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(), params.isModification(), findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
+            return list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(),params, findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -902,4 +903,49 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             return Collections.emptyList();
         }
     }
+
+    @Override
+    public JSONObject findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd, String query, int start, int limit) throws JSONException {
+        try {
+            List<VenteDTO> l = findAllVenteOrdonnancier(medecinId, dtStart, dtEnd);
+            return new JSONObject().put("total", l.size()).put("data", new JSONArray(l));
+        } catch (Exception e) {
+            return new JSONObject().put("total", 0).put("data", new JSONArray());
+        }
+    }
+
+    @Override
+    public List<VenteDTO> findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd) {
+        try {
+
+            List<Predicate> predicates = new ArrayList<>();
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<TPreenregistrement> cq = cb.createQuery(TPreenregistrement.class);
+            Root<TPreenregistrement> root = cq.from(TPreenregistrement.class);
+            cq.select(root).orderBy(cb.asc(root.get(TPreenregistrement_.dtUPDATED)));
+            predicates.add(cb.isNotNull(root.get(TPreenregistrement_.medecin).get(Medecin_.id)));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrement_.dtUPDATED)),
+                    java.sql.Date.valueOf(dtStart),
+                    java.sql.Date.valueOf(dtEnd));
+            predicates.add(btw);
+            predicates.add(cb.equal(root.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed));
+
+            if (!StringUtils.isEmpty(medecinId)) {
+                predicates.add(cb.equal(root.get(TPreenregistrement_.medecin).get(Medecin_.id), medecinId));
+            }
+
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            Query q = getEntityManager().createQuery(cq);
+
+            List<TPreenregistrement> list = q.getResultList();
+            return list.stream().map(v -> new VenteDTO().buildOrdonnanciers(v, findByParent(v.getLgPREENREGISTREMENTID()).stream().filter(el -> {
+                return (el.getLgFAMILLEID().isScheduled() && !el.getLgFAMILLEID().getIntT().trim().isEmpty());
+            }).map(VenteDetailsDTO::new).collect(Collectors.toList()))).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
 }

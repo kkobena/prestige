@@ -6,11 +6,12 @@
 package rest.service;
 
 import commonTasks.dto.ClotureVenteParams;
+import commonTasks.dto.MedecinDTO;
 import commonTasks.dto.QueryDTO;
 import commonTasks.dto.SalesParams;
+import dal.MvtTransaction;
 import dal.TPreenregistrement;
 import dal.TUser;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,6 +22,8 @@ import org.json.JSONObject;
 //@Local
 //@Remote
 public interface SalesService {
+
+    void cloneTransaction(MvtTransaction old, TPreenregistrement p);
 
     JSONObject annulerVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID);
 
@@ -107,4 +110,15 @@ public interface SalesService {
     JSONObject modificationVentetierpayantprincipal(String venteId, ClotureVenteParams params) throws JSONException;
 
     JSONObject shownetpayVoWithEncour(SalesParams params) throws JSONException;
+
+    JSONObject updateMedecin(String idVente, MedecinDTO medecinDTO) throws JSONException;
+
+    JSONObject updateMedecin(String idVente, String medecinId) throws JSONException;
+
+    boolean checkParameterByKey(String key);
+
+    JSONObject updateClientOrTierpayant(SalesParams salesParams) throws JSONException;
+
+    JSONObject findVenteForUpdationg(String venteId) throws JSONException;
+
 }

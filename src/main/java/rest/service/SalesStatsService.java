@@ -71,7 +71,11 @@ public interface SalesStatsService {
 
     TicketDTO getVenteById(TPreenregistrement p);
 
-    public long montantVenteAnnulees(SalesStatsParams params);
+    long montantVenteAnnulees(SalesStatsParams params);
 
-    public List<TvaDTO> tvasRapport0(Params params);
+    List<TvaDTO> tvasRapport0(Params params);
+
+    List<VenteDTO> findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd);
+
+    JSONObject findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd, String query, int start, int limit) throws JSONException;
 }

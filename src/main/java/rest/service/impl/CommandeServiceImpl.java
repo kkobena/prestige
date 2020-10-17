@@ -35,7 +35,6 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -78,7 +77,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -791,19 +789,33 @@ public class CommandeServiceImpl implements CommandeService {
             userTransaction.begin();
             Rupture rupture = orderService.creerRupture(order);
             for (CSVRecord cSVRecord : parser) {
-                totalItemsCount++;
                 TFamille famille = findByCipOrEan(cSVRecord.get(0), grossiste);
-                s.add(famille);
-                TOrderDetail item = findByProductAndOrder(order, famille);
-                int qtyResponse = Integer.valueOf(cSVRecord.get(3));
-                if (qtyResponse > 0) {
-                    updateOrderItemQtyFromResponse(item, qtyResponse, grossiste);
-                    nbrePrisEnCompte++;
-                } else {
-                    orderService.creerRuptureItem(rupture, famille, item.getIntNUMBER());
-//                addRuptureHistory(item, grossiste);
-                    getEm().remove(item);
-                    nbreNonPrisEnCompte++;
+                if (famille != null) {
+                    totalItemsCount++;
+                    s.add(famille);
+                    System.out.println(" ***  ooo   " + famille.getIntCIP() + " " + cSVRecord.get(0) + " " + famille.getIntEAN13());
+                    TOrderDetail item = findByProductAndOrder(order, famille);
+                    if (item == null) {
+                        continue;
+                    }
+//                    System.out.println("item ******* "+item);
+                    int qtyCommande = Integer.valueOf(cSVRecord.get(1));
+                    int qtyResponse = Integer.valueOf(cSVRecord.get(3));
+                    int qty = qtyCommande - qtyResponse;
+                    if (qtyResponse > 0) {
+                        updateOrderItemQtyFromResponse(item, qtyResponse, grossiste);
+                        nbrePrisEnCompte++;
+                        if (qtyCommande > qtyResponse) {
+                            orderService.creerRuptureItem(rupture, famille, qty);
+                            nbreNonPrisEnCompte++;
+                        }
+                    } else {
+
+                        orderService.creerRuptureItem(rupture, famille, qty);
+                        getEm().remove(item);
+                        nbreNonPrisEnCompte++;
+                    }
+
                 }
             }
             Set<TOrderDetail> orderDetails = productNotInOrderResponse(s, order, l.size(), totalItemsCount);
@@ -813,7 +825,8 @@ public class CommandeServiceImpl implements CommandeService {
                 nbreNonPrisEnCompte++;
             }
             if (nbrePrisEnCompte == 0) {
-                getEm().remove(order);
+                order.setStrSTATUT(DateConverter.STATUT_DELETE);
+                getEm().merge(order);
             }
             userTransaction.commit();
 //            return new JSONObject().put("nbrePrisEnCompte", nbrePrisEnCompte)
@@ -845,8 +858,7 @@ public class CommandeServiceImpl implements CommandeService {
     }
 
     private Set<TOrderDetail> productNotInOrderResponse(Set<TFamille> familles, TOrder order, int originalSize, int totalItemsCount) {
-        System.out.println("-------->>>>  totalItemsCount " + totalItemsCount);
-        System.out.println("-------->>>>  originalSize " + originalSize);
+
         if (originalSize == totalItemsCount) {
             return Collections.emptySet();
         }
@@ -854,10 +866,9 @@ public class CommandeServiceImpl implements CommandeService {
         Set<TOrderDetail> s = new HashSet<>();
 
         Set<TFamille> set = l.stream().map(x -> x.getLgFAMILLEID()).collect(Collectors.toSet());
-        System.out.println("-------->>>>  " + set.size());
 
         ListUtils.removeAll(set, familles).forEach(e -> {
-            System.out.println("-------->>>>  " + e.getIntCIP());
+
             TOrderDetail detail = findByProductAndOrder(order, e);
             s.add(detail);
         });
@@ -867,14 +878,15 @@ public class CommandeServiceImpl implements CommandeService {
 
     JSONObject verificationCommandeXlsx(Part part, String orderId, TUser OTUse) throws IOException {
         try {
+
             int nbrePrisEnCompte = 0, nbreNonPrisEnCompte = 0, totalItemsCount = 0;
             TOrder order = getEm().find(TOrder.class, orderId);
             TGrossiste grossiste = order.getLgGROSSISTEID();
             List<TOrderDetail> l = orderService.findByOrderId(order.getLgORDERID());
-            Workbook workbook = new HSSFWorkbook(part.getInputStream());
+//        new HSSFWorkbook(part.getInputStream());
+            HSSFWorkbook workbook = new HSSFWorkbook(part.getInputStream());
             int num = workbook.getNumberOfSheets();
             userTransaction.begin();
-            //        Rupture rupture = creerRupture(order);
             Rupture rupture = orderService.creerRupture(order);
             Set<TFamille> s = new HashSet<>();
             for (int j = 0; j < num; j++) {
@@ -882,22 +894,33 @@ public class CommandeServiceImpl implements CommandeService {
                 Iterator rows = sheet.rowIterator();
                 while (rows.hasNext()) {
                     Row nextrow = (Row) rows.next();
-                    totalItemsCount++;
+
                     Cell cipCell = nextrow.getCell(0);
                     Cell qtyCell = nextrow.getCell(3);
-                    TFamille famille = findByCipOrEan(cipCell.getStringCellValue(), grossiste);
-                    s.add(famille);
-                    TOrderDetail item = findByProductAndOrder(order, famille);
-                    int qtyResponse = (int) qtyCell.getNumericCellValue();
-                    if (qtyResponse > 0) {
-                        updateOrderItemQtyFromResponse(item, qtyResponse, grossiste);
-                        nbrePrisEnCompte++;
-                    } else {
+                    Cell qtyCmd = nextrow.getCell(1);
+                    TFamille famille = findByCipOrEan(((cipCell.getCellType() == 1) ? cipCell.getStringCellValue() : cipCell.getNumericCellValue() + ""), grossiste);
+                    if (famille != null) {
+                        totalItemsCount++;
+                        s.add(famille);
+                        TOrderDetail item = findByProductAndOrder(order, famille);
+                        int qtyResponse = (int) qtyCell.getNumericCellValue();
+                        int qtyCommande = (int) qtyCmd.getNumericCellValue();
+                        int qty = qtyCommande - qtyResponse;
+                        if (qtyResponse > 0) {
+                            updateOrderItemQtyFromResponse(item, qtyResponse, grossiste);
+                            nbrePrisEnCompte++;
+                            if (qtyCommande > qtyResponse) {
+                                orderService.creerRuptureItem(rupture, famille, qty);
+                                nbreNonPrisEnCompte++;
+                            }
+                        } else {
 //                    addRuptureHistory(item, grossiste);
-                        orderService.creerRuptureItem(rupture, famille, item.getIntNUMBER());
-                        getEm().remove(item);
-                        nbreNonPrisEnCompte++;
+                            orderService.creerRuptureItem(rupture, famille, item.getIntNUMBER());
+                            getEm().remove(item);
+                            nbreNonPrisEnCompte++;
+                        }
                     }
+
                 }
             }
             Set<TOrderDetail> orderDetails = productNotInOrderResponse(s, order, l.size(), totalItemsCount);
@@ -907,7 +930,8 @@ public class CommandeServiceImpl implements CommandeService {
                 nbreNonPrisEnCompte++;
             }
             if (nbrePrisEnCompte == 0) {
-                getEm().remove(order);
+                order.setStrSTATUT(DateConverter.STATUT_DELETE);
+                getEm().merge(order);
             }
             userTransaction.commit();
             return new JSONObject().put("success", true)

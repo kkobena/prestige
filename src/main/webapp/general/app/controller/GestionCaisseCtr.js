@@ -70,7 +70,7 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
             "gestcaissemanager gridpanel actioncolumn": {
                 toprint: this.toprint,
                 valider: this.valider,
-                annuler:this.annuler
+                annuler: this.annuler
 
             },
             'gestcaissemanager #dtStart': {
@@ -126,6 +126,8 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
                                 if (!object.success) {
                                     Ext.MessageBox.alert('Error Message', object.msg);
                                     return;
+                                } else {
+                                    Ext.MessageBox.alert(' Message', "Opération effectuée");
                                 }
                                 me.doSearch();
                             },
@@ -159,9 +161,11 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
                             success: function (response)
                             {
                                 var object = Ext.JSON.decode(response.responseText, false);
-                                if (!success) {
+                                if (!object.success) {
                                     Ext.MessageBox.alert('Error Message', object.msg);
                                     return;
+                                } else {
+                                    Ext.MessageBox.alert(' Message', "Opération effectuée");
                                 }
 
                                 me.doSearch();

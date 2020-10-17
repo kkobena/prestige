@@ -480,11 +480,15 @@ Ext.define('testextjs.model.Famille', {
             type: 'int'},
         {name: 'intNUMBERAVAILABLE',
             type: 'int'},
+
         {name: 'bool_ACCOUNT',
 
             type: 'boolean'
-        }
-       
+        },
 
+        {name: 'scheduled',
+
+            type: 'boolean'
+        }
     ]
 });

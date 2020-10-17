@@ -35,13 +35,13 @@ public interface MouvementProduitService {
     void saveMvtProduit(String pkey, Typemvtproduit typemvtproduit,
             TFamille famille, TUser lgUSERID, TEmplacement emplacement,
             Integer qteMvt, Integer qteDebut, Integer qteFinale,
-            EntityManager emg, Integer valeurTva,boolean checked);
+            EntityManager emg, Integer valeurTva, boolean checked);
 
     void saveMvtProduit(Integer prixUn, String pkey,
             Typemvtproduit typemvtproduit, TFamille famille,
             TUser lgUSERID, TEmplacement emplacement,
             Integer qteMvt, Integer qteDebut, Integer qteFinale,
-            EntityManager emg, Integer valeurTva,boolean checked);
+            EntityManager emg, Integer valeurTva, boolean checked);
 
     void saveMvtProduit(String pkey, String typemvtproduit,
             TFamille famille, TUser lgUSERID, TEmplacement emplacement,
@@ -57,7 +57,6 @@ public interface MouvementProduitService {
     JSONObject deconditionner(Params params) throws JSONException;
 
 //    void deconditionner(String produitId, String produitParentId, Integer qty,String emplacementId);
-
     JSONObject ajusterProduitAjustement(Params params) throws JSONException;
 
     JSONObject modifierProduitAjustement(Params params) throws JSONException;
@@ -80,11 +79,14 @@ public interface MouvementProduitService {
 
     void updateVenteStock(String idVente);
 
-    public void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg);
+    void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg);
 
-    public void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg, TEmplacement depot) throws Exception;
+    void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg, TEmplacement depot) throws Exception;
 
     void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement, EntityManager emg) throws Exception;
 
     Typemvtproduit getTypemvtproduitByID(String id, EntityManager emg);
+
+    void updateVenteStock(TUser user, List<TPreenregistrementDetail> list) throws Exception;
+
 }

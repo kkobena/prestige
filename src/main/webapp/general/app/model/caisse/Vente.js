@@ -152,7 +152,7 @@ Ext.define('testextjs.model.caisse.Vente', {
         {
             name: 'cancel',
             type: 'boolean'
-        },{
+        }, {
             name: 'beCancel',
             type: 'boolean'
         },
@@ -176,11 +176,14 @@ Ext.define('testextjs.model.caisse.Vente', {
             name: 'heureAnnulation',
             type: 'string'
         },
-         {
+        {
             name: 'modification',
             type: 'boolean'
+        }, {
+            name: 'modificationClientTp',
+            type: 'boolean'
         },
-         {
+        {
             name: 'copy',
             type: 'boolean'
         },
@@ -191,7 +194,23 @@ Ext.define('testextjs.model.caisse.Vente', {
         {
             name: 'mvdate',
             type: 'string'
+        },
+
+        {
+            name: 'numOrder',
+            type: 'string'
+        },
+        {
+            name: 'medecinId',
+            type: 'string'
+        },
+        {
+            name: 'nom',
+            type: 'string'
+        },
+        {
+            name: 'commentaire',
+            type: 'string'
         }
-        
     ]
 });

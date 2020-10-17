@@ -282,6 +282,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 {
                     text: 'P',
                     dataIndex: 'checkExpirationdate',
+                     flex: 0.4,
                     xtype: 'checkcolumn',
                     listeners: {
                         checkChange: function (column, rowIndex, checked, eOpts) {
@@ -312,6 +313,44 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         }
                     }
                 },
+
+                {
+                    text: 'O',
+                    dataIndex: 'scheduled',
+                      flex: 0.4,
+                    xtype: 'checkcolumn',
+                    listeners: {
+                        checkChange: function (column, rowIndex, checked, eOpts) {
+                            var record = store.getAt(rowIndex);
+                            Ext.Ajax.request({
+                                url: '../api/v1/commande/update/scheduled',
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                params: Ext.JSON.encode({
+                                    ref: record.get('lg_FAMILLE_ID'),
+                                    scheduled: checked
+                                }),
+                                success: function (response)
+                                {
+                                    var result = Ext.JSON.decode(response.responseText, true);
+                                    if (result.success) {
+                                        record.commit();
+                                    }
+
+                                },
+                                failure: function (response)
+                                {
+
+                                    var object = Ext.JSON.decode(response.responseText, false);
+
+                                    Ext.MessageBox.alert('Error Message', response.responseText);
+
+                                }
+                            });
+                        }
+                    }
+                },
+
                 {
                     xtype: 'actioncolumn',
                     width: 30,

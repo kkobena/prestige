@@ -3,7 +3,8 @@
 Ext.define('testextjs.controller.VenteFinisCtr', {
     extend: 'Ext.app.Controller',
     requires: [
-        'testextjs.model.caisse.Vente'
+        'testextjs.model.caisse.Vente',
+        'testextjs.view.vente.user.UpdateVenteClientTpForm'
     ],
     views: ['testextjs.view.vente.VentesFinis'],
     refs: [{
@@ -70,12 +71,23 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 facture: this.onFacture,
                 toEdit: this.onEdite,
                 toExport: this.onbtnexportCsv,
-                onSuggestion: this.onSuggestion
+                onSuggestion: this.onSuggestion,
+                ticketModifie: this.printTicketR,
+                toClientOrTp: this.onUpdateClientOrTp
             },
             'ventemanager #query': {
                 specialkey: this.onSpecialKey
             }
         });
+    },
+
+    onUpdateClientOrTp: function (view, rowIndex, colIndex, item, e, rec, row) {
+        if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modificationClientTp')) {
+//            var data = {'isEdit': true, 'record': rec.data, 'isDevis': false, 'categorie': 'COPY'};
+            Ext.create('testextjs.view.vente.user.UpdateVenteClientTpForm', {venteId: rec.get('lgPREENREGISTREMENTID')}).show();
+
+        }
+
     },
     /*
      * methode qui permet de rediriger l'impression du tiket selon que ça soit une ancienne version
@@ -390,6 +402,10 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                     });
         }
 
+    },
+    printTicketR: function (view, rowIndex, colIndex, item, e, rec, row) {
+        var me = this;
+        me.onPrintTicket(rec.get('lgPREENREGISTREMENTID'), rec.get('lgTYPEVENTEID'), false);
     },
     printTicket: function (view, rowIndex, colIndex, item, e, rec, row) {
         var me = this;

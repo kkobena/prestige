@@ -24,9 +24,18 @@ public class Params implements Serializable {
     private String dtStart = LocalDate.now().toString();
     private String dtEnd = dtStart;
     private TUser operateur;
+    boolean scheduled;
 
     public String getRefParent() {
         return refParent;
+    }
+
+    public boolean isScheduled() {
+        return scheduled;
+    }
+
+    public void setScheduled(boolean scheduled) {
+        this.scheduled = scheduled;
     }
 
     public String getDtStart() {

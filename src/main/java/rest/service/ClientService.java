@@ -11,6 +11,7 @@ import commonTasks.dto.ClientLambdaDTO;
 import commonTasks.dto.TiersPayantDTO;
 import commonTasks.dto.TiersPayantParams;
 import dal.TClient;
+import dal.TCompteClientTiersPayant;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
@@ -57,6 +58,8 @@ public interface ClientService {
     JSONObject createClient(ClientLambdaDTO clientLambda, String venteId) throws JSONException;
 
     JSONObject updateOrCreateClientAssurance(ClientDTO client) throws JSONException;
+
+    TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, String tpId,int taux) throws Exception;
 
     void updateCompteClientTiersPayantEncourAndPlafond(String venteId);
 }

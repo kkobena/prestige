@@ -16,6 +16,11 @@ Ext.define('testextjs.model.caisse.ClientAssurance', {
             type: 'string'
         },
         {
+            name: 'fullName',
+            type: 'string'
+        },
+        
+        {
             name: 'strFIRSTNAME',
             type: 'string'
         },

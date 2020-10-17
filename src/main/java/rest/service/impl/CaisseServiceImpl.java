@@ -83,8 +83,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -119,6 +121,36 @@ public class CaisseServiceImpl implements CaisseService {
     LogService logService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @Resource(name = "concurrent/__defaultManagedExecutorService")
+    ManagedExecutorService mes;
+
+    public boolean checkParameterByKey(String key) {
+        try {
+            TParameters parameters = getEntityManager().find(TParameters.class, key);
+            return (Integer.valueOf(parameters.getStrVALUE().trim()) == 1);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void sendSms(String msg) {
+        if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
+            Sms sms = new Sms();
+            sms.setMessage(msg);
+            mes.submit(sms);
+        }
+
+    }
+
+    public void sendMail(String msg, String subject) {
+        if (checkParameterByKey(DateConverter.KEY_MAIL_CLOTURE_CAISSE)) {
+            Mail mail = new Mail();
+            mail.setMessage(msg);
+            mail.setSubject(subject);
+            mes.submit(mail);
+        }
+
+    }
 
     public CaisseServiceImpl() {
     }
@@ -1005,7 +1037,8 @@ public class CaisseServiceImpl implements CaisseService {
                     + o.getStrLASTNAME() + " effectuée avec succès";
             logService.updateItem(o, idCaisse, Description, TypeLog.ANNULATION_DE_CAISSE, OTResumeCaisse,
                     getEntityManager());
-//            getEntityManager().getTransaction().commit();
+            sendSms(Description);
+            sendMail(Description, "Annulation de la clôture de la caisse ");
             json.put("success", true).put("msg", "Opération effectuée avec succes ");
         } catch (Exception e) {
 //            if (getEntityManager().getTransaction().isActive()) {
@@ -1043,6 +1076,8 @@ public class CaisseServiceImpl implements CaisseService {
             logService.updateItem(o, idCaisse, Description, TypeLog.VALIDATION_DE_CAISSE, OTResumeCaisse,
                     getEntityManager());
             json.put("success", true).put("msg", " Validation de cloture de caisse effectuée avec succes ");
+            sendSms(Description);
+            sendMail(Description, "Validation de la Cloture de la caisse de");
         } catch (Exception e) {
             e.printStackTrace(System.err);
             json.put("success", false).put("msg", " Echec de validation de cloture de caisse");
@@ -3072,9 +3107,7 @@ public class CaisseServiceImpl implements CaisseService {
                             montantNet.add(op.getMontantNet());
                             montantEsp.add(op.getMontantRegle());
                         }
-
                         montantRemise.add(op.getMontantRemise());
-
                         montantCredit.add(op.getMontantCredit());
                         montantCredit.add(op.getMontantRestant());
                         if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
@@ -3196,7 +3229,6 @@ public class CaisseServiceImpl implements CaisseService {
         summary.setMontantCredit(_summontantCredit.intValue());
         summary.setMontantAvoir(_summontantAvoir.intValue());
         summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
-
         return summ;
     }
 

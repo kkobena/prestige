@@ -75,4 +75,14 @@ public interface GenerateTicketService {
     JSONObject generateticket10(String venteId);
 
     void printReceintWithJasper(String venteId);
+
+    JSONObject generateTicketOnFly(ClotureVenteParams clotureVenteParams) throws  JSONException;
+
+    JSONObject generateTicketOnFly(String venteId) throws  JSONException;
+
+    JSONObject generateVoTicketOnFly(ClotureVenteParams clotureVenteParams);
+
+    JSONObject generateVoTicketOnFly(String venteId);
+    
+    JSONObject generateDepotTicketOnFly(String venteId);
 }

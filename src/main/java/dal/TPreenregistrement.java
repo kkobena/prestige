@@ -173,12 +173,23 @@ public class TPreenregistrement implements Serializable {
     @JoinColumn(name = "lg_AYANTS_DROITS_ID", referencedColumnName = "lg_AYANTS_DROITS_ID")
     @ManyToOne
     private TAyantDroit ayantDroit;
+    @JoinColumn(name = "medecin_id", referencedColumnName = "id")
+    @ManyToOne
+    private Medecin medecin;
     @Column(name = "montantTva")
     private Integer montantTva = 0;
     @Column(name = "checked")
     private Boolean checked = true;
     @Column(name = "copy")
     private Boolean copy = false;
+
+    public Medecin getMedecin() {
+        return medecin;
+    }
+
+    public void setMedecin(Medecin medecin) {
+        this.medecin = medecin;
+    }
 
     public Boolean getChecked() {
         return checked;
@@ -596,4 +607,6 @@ public class TPreenregistrement implements Serializable {
     public void setIntACCOUNT(Integer intACCOUNT) {
         this.intACCOUNT = intACCOUNT;
     }
+    
+    
 }

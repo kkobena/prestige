@@ -120,6 +120,14 @@ public class ClientRessource {
     }
 
     @GET
+    @Path("bytype/{type}")
+    public Response findAllClients(
+            @QueryParam(value = "query") String query, @PathParam("type") String id, String typeClientId) {
+        List<ClientDTO> data = clientService.findClientAssurance(query, typeClientId);
+        return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
+    }
+
+    @GET
     @Path("tiers-payants")
     public Response findAllTiersPayants(@QueryParam(value = "typetierspayant") String typeTierpayant,
             @QueryParam(value = "query") String query) {
@@ -214,6 +222,14 @@ public class ClientRessource {
     public Response findTiersPayants(@PathParam("id") String typeTierpayant,
             @QueryParam(value = "query") String query) {
         List<TiersPayantDTO> data = clientService.findTiersPayants(query, typeTierpayant);
+        return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
+    }
+    
+      @GET
+    @Path("tierspayantsbytype/{type}")
+    public Response findByType(@PathParam("type") String type,
+            @QueryParam(value = "query") String query) {
+        List<TiersPayantDTO> data = clientService.findTiersPayants(query, type);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 }

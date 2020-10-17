@@ -111,7 +111,7 @@ public class CommandeRessource {
             return Response.ok().entity(new JSONObject().put("success", true)
                     .put("prixAchat", PRIX_ACHAT_TOTAL)
                     .put("prixVente", PRIX_VENTE_TOTAL)
-//                    .put("ref", detail.getLgORDERID().getStrREFORDER())
+                    //                    .put("ref", detail.getLgORDERID().getStrREFORDER())
                     .toString()).build();
 
         } catch (Exception e) {
@@ -120,5 +120,17 @@ public class CommandeRessource {
             return Response.ok().entity(new JSONObject().put("success", false).toString()).build();
         }
 
+    }
+
+    @POST
+    @Path("update/scheduled")
+    public Response updateScheduled(Params params) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject json = orderService.updateScheduled(params.getRef(), params.isScheduled());
+        return Response.ok().entity(json.toString()).build();
     }
 }

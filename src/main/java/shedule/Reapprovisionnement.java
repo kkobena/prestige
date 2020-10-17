@@ -236,7 +236,7 @@ public class Reapprovisionnement {
     }
 
     
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         try {
             TParameters semois = em.find(TParameters.class, "SEMOIS");
@@ -262,7 +262,6 @@ public class Reapprovisionnement {
                 p.setDtUPDATED(new Date());
                 em.merge(p);
                 userTransaction.commit();
-
             }
         } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
             e.printStackTrace(System.err);

@@ -21,20 +21,28 @@ public class SalesStatsParams implements Serializable {
     private TUser userId;
     private String query, statut;
     private LocalDate dtStart = LocalDate.now(), dtEnd = dtStart;
-     private LocalTime hStart = LocalTime.parse("00:00"), hEnd = LocalTime.parse("23:59");
-    private boolean showAll,showAllActivities,all,canCancel;
-    private boolean depotOnly=false,sansBon=false,onlyAvoir=false,modification; 
+    private LocalTime hStart = LocalTime.parse("00:00"), hEnd = LocalTime.parse("23:59");
+    private boolean showAll, showAllActivities, all, canCancel;
+    private boolean depotOnly = false, sansBon = false, onlyAvoir = false, modification, modificationClientTp;
 
-    public SalesStatsParams(boolean showAll,String typeVenteId, TUser userId, String query, String statut, LocalDate dtStart, LocalDate dtEnd, int start, int limit) {
+    public boolean isModificationClientTp() {
+        return modificationClientTp;
+    }
+
+    public void setModificationClientTp(boolean modificationClientTp) {
+        this.modificationClientTp = modificationClientTp;
+    }
+
+    public SalesStatsParams(boolean showAll, String typeVenteId, TUser userId, String query, String statut, LocalDate dtStart, LocalDate dtEnd, int start, int limit) {
         this.typeVenteId = typeVenteId;
         this.userId = userId;
         this.query = query;
         this.statut = statut;
-        this.dtEnd=dtEnd;
-        this.dtStart=dtStart;
-        this.start=start;
-        this.limit=limit;
-        this.showAll=showAll;
+        this.dtEnd = dtEnd;
+        this.dtStart = dtStart;
+        this.start = start;
+        this.limit = limit;
+        this.showAll = showAll;
     }
 
     public boolean isModification() {

@@ -6,11 +6,14 @@
 package rest;
 
 import commonTasks.dto.ClotureVenteParams;
+import commonTasks.dto.MedecinDTO;
 import commonTasks.dto.QueryDTO;
 import commonTasks.dto.SalesParams;
 import dal.TPreenregistrement;
 import dal.TUser;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -28,6 +31,9 @@ import org.json.JSONObject;
 import rest.qualifier.SalesPrimary;
 import rest.service.GenerateTicketService;
 import rest.service.SalesService;
+import rest.service.SmsService;
+import rest.service.impl.Mail;
+import rest.service.impl.Sms;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -46,6 +52,8 @@ public class SalesRessource {
     SalesService salesService;
     @EJB
     GenerateTicketService generateTicketService;
+    @EJB
+    SmsService smsService;
 
     @POST
     @Path("ticket/vno")
@@ -587,13 +595,6 @@ public class SalesRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-    @GET
-    @Path("testticket")
-    public Response testticket(@QueryParam("id") String id) throws JSONException {
-        generateTicketService.printReceintWithJasper(id);
-        return Response.ok().entity(new JSONObject().put("success", true)).build();
-    }
-
     @POST
     @Path("ticket/depot/{id}")
     public Response getTicketDepot(@PathParam("id") String id) throws JSONException {
@@ -625,12 +626,108 @@ public class SalesRessource {
     @POST
     @Path("net/outstanding")
     public Response shownetpayVoWithEncour(SalesParams params) throws JSONException {
-        /* HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
-        }*/
         JSONObject json = salesService.shownetpayVoWithEncour(params);
         return Response.ok().entity(json.toString()).build();
     }
+
+    @GET
+    @Path("testticket")
+    public Response testticket(@QueryParam("id") String id) throws JSONException {
+        generateTicketService.generateTicketOnFly(id);
+        return Response.ok().entity(new JSONObject().put("success", true)).build();
+    }
+
+    @POST
+    @Path("update/medecin")
+    public Response updateMedecin(SalesParams params) {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        params.setUserId(tu);
+        JSONObject json = salesService.updateMedecin(params.getVenteId(), params.getMedecinId());
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @PUT
+    @Path("add/medecin/{id}")
+    public Response addMedecin(@PathParam("id") String id, MedecinDTO params) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject json = salesService.updateMedecin(id, params);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @PUT
+    @Path("update/infosclienttp/{id}")
+    public Response updateClientOrTierpayant(@PathParam("id") String id, SalesParams salesParams) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        salesParams.setVenteId(id);
+        JSONObject json = salesService.updateClientOrTierpayant(salesParams);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("find/infosclienttpforupdating")
+    public Response findVenteForUpdationg(@QueryParam("id") String id) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject json = salesService.findVenteForUpdationg(id);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @POST
+    @Path("updateclientortierpayant")
+    public Response updateClientOrTierpayant(SalesParams salesParams) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        salesParams.setUserId(tu);
+        JSONObject json = salesService.updateClientOrTierpayant(salesParams);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("gettoken")
+    public Response testtoken() throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject jsono = smsService.findAccessToken();
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    @GET
+    @Path("sendsms")
+    public Response sendSms() throws JSONException {
+
+        Sms sms = new Sms();
+        sms.setMessage("kobena testt");
+//        sms.setReceiverAddres("57591746");
+        mes.submit(sms);
+        Mail mail = new Mail();
+        mail.setMessage("Test laborex ");
+//        mail.setReceiverAddres("badoukobena@gmail.com");
+        mail.setSubject("cloture de caisse ");
+        mes.submit(mail);
+        return Response.ok().build();
+    }
+    @Resource(name = "concurrent/__defaultManagedExecutorService")
+    ManagedExecutorService mes;
 }

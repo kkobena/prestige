@@ -85,7 +85,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         'testextjs.model.caisse.ClientAssurance',
         'testextjs.model.caisse.AyantDroit',
         'testextjs.model.caisse.ClientTiersPayant',
-        'testextjs.store.caisse.RechercheClientAss'
+        'testextjs.store.caisse.RechercheClientAss',
+        'testextjs.model.caisse.MedecinModel'
     ],
     views: [
         'testextjs.view.vente.VenteView',
@@ -93,7 +94,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         'testextjs.view.vente.user.ClientGrid',
         'testextjs.view.vente.user.addClientAssurance',
         'testextjs.view.vente.user.AyantDroitGrid',
-        'testextjs.view.vente.user.AddCarnet'
+        'testextjs.view.vente.user.AddCarnet',
+        'testextjs.view.vente.user.Medecin'
     ],
     config: {
         current: null,
@@ -106,7 +108,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         caisse: false,
         ancienTierspayant: null,
         toRecalculate: true,
-        plafondVente: false
+        plafondVente: false,
+        medecinId: null
 
     },
     refs: [
@@ -118,7 +121,13 @@ Ext.define('testextjs.controller.VenteCtr', {
         {
             ref: 'clientLambda',
             selector: 'clientLambda'
-        }, {
+        },
+        {
+            ref: 'medecin',
+            selector: 'medecin'
+        },
+
+        {
             ref: 'addaddclientwindow',
             selector: 'addaddclientwindow'
         }, {
@@ -340,6 +349,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             ref: 'vnobtnGoBack',
             selector: 'doventemanager #contenu [xtype=toolbar] #btnGoBack'
         },
+
         {
             ref: 'vnogrid',
             selector: 'doventemanager #contenu #gridContainer #venteGrid'
@@ -453,8 +463,39 @@ Ext.define('testextjs.controller.VenteCtr', {
         {
             ref: 'carnetVo',
             selector: 'addCarnetwindow #carnetVo'
+        },
+        {
+            ref: 'medecinGrid',
+            selector: 'medecin #medecinGrid'
+        },
+        {
+            ref: 'nomMedecin',
+            selector: 'medecin form textfield[name=nom]'
+        },
+        {
+            ref: 'medecinform',
+            selector: 'medecin form#medecinform'
+        },
+        {
+            ref: 'btnAddNewMedecin',
+            selector: 'medecin #btnAddNewMedecin'
+        },
+        {
+            ref: 'btnRechercheMedecin',
+            selector: 'medecin [xtype=grid] #btnRechercheMedecin'
+        },
+        {
+            ref: 'queryMedecin',
+            selector: 'medecin [xtype=grid] #queryMedecin'
+        },
+        {
+            ref: 'btnNewMedecin',
+            selector: 'medecin #btnNewMedecin'
+        },
+        {
+            ref: 'btnCancelMedecin',
+            selector: 'medecin #btnCancelMedecin'
         }
-
     ],
     init: function () {
         this.control(
@@ -527,6 +568,10 @@ Ext.define('testextjs.controller.VenteCtr', {
                     'doventemanager #contenu [xtype=toolbar] #btnGoBack': {
                         click: this.goBack
                     },
+                    'doventemanager #contenu [xtype=toolbar] #btnStandBy': {
+                        click: this.putToStandBy
+                    },
+
                     'doventemanager #contenu [xtype=toolbar] #btnCloture': {
                         click: this.doCloture
                     },
@@ -581,7 +626,30 @@ Ext.define('testextjs.controller.VenteCtr', {
                         click: this.onBtnAddClientCarnteClick
                     }, 'doventemanager #contenu [xtype=toolbar] #netBtn': {
                         click: this.onNetBtnClick
-                    }
+                    },
+
+                    'medecin #btnCancelMedecin': {
+                        click: this.closeMedecinWindow
+                    },
+                    'medecin #btnAddNewMedecin': {
+                        click: this.addMedecinForm
+                    },
+                    'medecin #medecinGrid actioncolumn': {
+                        click: this.btnAjouterMedecin
+                    },
+                    "medecin form textfield": {
+                        specialkey: this.onMedecinSpecialKey
+                    },
+                    'medecin #btnNewMedecin': {
+                        click: this.registerNewMedecin
+                    },
+                    'medecin #btnRechercheMedecin': {
+                        click: this.queryMedecin
+                    },
+                    'medecin #queryMedecin': {
+                        specialkey: this.onMedecinKey
+
+                    },
                 });
     },
 
@@ -1037,18 +1105,20 @@ Ext.define('testextjs.controller.VenteCtr', {
         var query = me.getQueryField().getValue();
         var grid = me.getVnogrid();
         grid.getStore()
-                .load({
-                    params: {
-                        venteId: venteId,
-                        query: query,
-                        statut: null
-                    }
-                    ,
-                    callback: function (records, operation, successful) {
-                        me.getVnoproduitCombo()
-                                .focus(true, 100);
-                    }
-                });
+                .load(
+                        {
+                            params: {
+                                venteId: venteId,
+                                query: query,
+                                statut: null
+                            }
+                            ,
+                            callback: function (records, operation, successful) {
+                                me.getVnoproduitCombo()
+                                        .focus(true, 100);
+                            }
+                        }
+                );
     },
     addVenteVno: function (data, url, field, comboxProduit) {
         var me = this;
@@ -1165,6 +1235,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         var client = me.getClient();
         var clientId = null;
         var commentaire = '';
+        var medecinId = me.getMedecinId();
         if (client) {
             clientId = client.get('lgCLIENTID');
             commentaire = me.getCommentaire().getValue();
@@ -1206,6 +1277,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                 });
                 return false;
             }
+            if (typeRegleId === '6' || typeRegleId === '3' || typeRegleId === '2') {
+                montantRecu = netTopay;
+            }
 
 
             var montantRemis = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
@@ -1228,7 +1302,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                 "commentaire": commentaire,
                 "banque": banque,
                 "lieux": lieux,
-                "marge": data.marge
+                "marge": data.marge,
+                "medecinId": medecinId
             };
             var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
@@ -1260,18 +1335,37 @@ Ext.define('testextjs.controller.VenteCtr', {
                             icon: Ext.MessageBox.QUESTION
                         });
                     } else {
-                        Ext.MessageBox.show({
-                            title: 'Message d\'erreur',
-                            width: 320,
-                            msg: result.msg,
-                            buttons: Ext.MessageBox.OK,
-                            icon: Ext.MessageBox.ERROR,
-                            fn: function (buttonId) {
-                                if (buttonId === "ok") {
-                                    me.getMontantRecu().focus(true, 100);
+                        var codeError = result.codeError;
+                        //il faut ajouter un medecin à la vente 
+                        if (codeError === 1) {
+                            me.showMedicinWindow();
+                        } else if (codeError === 2) {
+                            // il faut ajouter un client
+//ajoute le 26 09 2020 pour gestion des ordonnancies
+                            me.getInfosClientStandard().show();
+                            var win = Ext.create('testextjs.view.vente.user.ClientLambda');
+                            win.add(me.buildLambdaClientGrid());
+                            win.show();
+
+
+                        } else {
+                            Ext.MessageBox.show({
+                                title: 'Message d\'erreur',
+                                width: 320,
+                                msg: result.msg,
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.ERROR,
+                                fn: function (buttonId) {
+                                    if (buttonId === "ok") {
+                                        me.getMontantRecu().focus(true, 100);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
+
+
+
+
                     }
 
                 },
@@ -1953,6 +2047,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.getVnomontantRemise().setValue(remise);
         me.getTotalField().setValue(total);
     },
+
     goBack: function () {
         var me = this, xtype = 'cloturerventemanager';
         if (me.getCategorie() === 'PREVENTE') {
@@ -2201,7 +2296,10 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.getMontantRecu().enable();
         me.getMontantRecu().setReadOnly(false);
         me.getVnogrid().getStore().load();
-        me.getDernierMonnaie().setValue(montantRemis);
+        if (montantRemis) {
+            me.getDernierMonnaie().setValue(montantRemis);
+        }
+
         me.netAmountToPay = null;
         me.current = null;
         me.client = null;
@@ -3557,6 +3655,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     natureCombo = me.getNatureCombo().getValue(),
                     userCombo = me.getUserCombo().getValue(),
                     montantRecu = me.getMontantRecu().getValue();
+            var medecinId = me.getMedecinId();
             if (typeRegleId === '1' && parseInt(montantRecu) < parseInt(netTopay)) {
                 Ext.MessageBox.show({
                     title: 'Avertissement',
@@ -3600,7 +3699,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                 "lieux": lieux,
                 "tierspayants": data.tierspayants,
                 "partTP": montantTp,
-                "marge": data.marge
+                "marge": data.marge,
+                "medecinId": medecinId
             };
             var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
@@ -3632,19 +3732,27 @@ Ext.define('testextjs.controller.VenteCtr', {
                             icon: Ext.MessageBox.QUESTION
                         });
                     } else {
-                        Ext.MessageBox.show({
-                            title: 'Message d\'erreur',
-                            width: 320,
-                            msg: result.msg,
-                            buttons: Ext.MessageBox.OK,
-                            icon: Ext.MessageBox.ERROR,
-                            fn: function (buttonId) {
-                                if (buttonId === "ok") {
-                                    me.getMontantRecu().focus(true, 100, function () {
-                                    });
+                        var codeError = result.codeError;
+                        //il faut ajouter un medecin à la vente 
+                        if (codeError === 1) {
+                            me.showMedicinWindow();
+                        } else {
+                            Ext.MessageBox.show({
+                                title: 'Message d\'erreur',
+                                width: 320,
+                                msg: result.msg,
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.ERROR,
+                                fn: function (buttonId) {
+                                    if (buttonId === "ok") {
+                                        me.getMontantRecu().focus(true, 100, function () {
+                                        });
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
+
+
                     }
 
                 },
@@ -3819,7 +3927,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 width: 320,
                 msg: "Veuillez renseigner le numéro de bon",
                 buttons: Ext.MessageBox.OK,
-               icon: Ext.MessageBox.WARNING,
+                icon: Ext.MessageBox.WARNING,
                 fn: function (buttonId) {
                     if (buttonId === "ok") {
                         result.focus(true, 50);
@@ -3831,7 +3939,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
 
         } else {
-            console.log(me.getSansBon().getValue(), '!me.getVenteSansBon()');
+
             if (result && sansBon && !me.getSansBon().getValue()) {
 
                 Ext.MessageBox.show({
@@ -4083,7 +4191,292 @@ Ext.define('testextjs.controller.VenteCtr', {
                 me.showNetPaidAssurance();
             }
         }
-    }
+    },
 
-}
-);
+    buildMedecinGrid: function () {
+        var me = this;
+        me.getMedecinform().setVisible(false);
+        var grid = {
+
+            xtype: 'grid',
+            itemId: 'medecinGrid',
+            selModel: {
+                selType: 'rowmodel',
+                mode: 'SINGLE'
+            },
+            store: Ext.create('Ext.data.Store', {
+                autoLoad: false,
+                pageSize: null,
+                model: 'testextjs.model.caisse.MedecinModel',
+                proxy: {
+                    type: 'ajax',
+                    url: '../api/v1/medecin/medecins',
+                    reader: {
+                        type: 'json',
+                        root: 'data',
+                        totalProperty: 'total'
+                    }
+                }
+
+            }),
+            height: 'auto',
+            minHeight: 250,
+            columns: [
+                {
+                    text: '#',
+                    width: 45,
+                    dataIndex: 'id',
+                    hidden: true
+
+                },
+                {
+                    xtype: 'rownumberer',
+                    text: 'LG',
+                    width: 45,
+                    sortable: true
+                }, {
+                    text: 'Nom',
+                    flex: 1,
+                    sortable: true,
+                    dataIndex: 'nom'
+                }, {
+                    header: 'Numéro ordre',
+                    dataIndex: 'numOrdre',
+                    flex: 1
+
+                },
+                {
+                    header: 'Commentaire',
+                    dataIndex: 'commentaire',
+                    flex: 1
+
+                },
+                {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [
+                        {
+                            icon: 'resources/images/icons/add16.gif',
+                            tooltip: 'Ajouter',
+                            scope: this
+
+                        }]
+                }],
+            dockedItems: [
+
+                {
+                    xtype: 'toolbar',
+                    dock: 'top',
+                    ui: 'footer',
+                    items: [
+                        {
+                            xtype: 'textfield',
+                            itemId: 'queryMedecin',
+                            emptyText: 'Taper ici pour rechercher',
+                            width: '70%',
+                            height: 45,
+                            enableKeyEvents: true
+                        }, '-', {
+                            text: 'rechercher',
+                            tooltip: 'rechercher',
+                            scope: this,
+                            itemId: 'btnRechercheMedecin',
+                            iconCls: 'searchicon'
+
+                        },
+                        '-', {
+                            text: 'Nouveau',
+                            scope: this,
+                            itemId: 'btnAddNewMedecin',
+                            icon: 'resources/images/icons/add16.gif'
+
+                        }
+                    ]
+                }
+            ]
+
+
+        };
+        return grid;
+    },
+    closeMedecinWindow: function () {
+        var me = this;
+        me.getMedecin().destroy();
+
+    },
+    addMedecinForm: function () {
+        var me = this;
+        me.getMedecinGrid().setVisible(false);
+        me.getMedecinform().setVisible(true);
+        me.getNomMedecin().focus(true, 100);
+        me.getBtnNewMedecin().enable();
+    },
+    btnAjouterMedecin: function (grid, rowIndex, colIndex) {
+        var me = this;
+        var record = grid.getStore().getAt(colIndex);
+        me.closeMedecinWindow();
+        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        me.updateVenteMedecin(record.get('id'), progress);
+    },
+    updateVenteMedecin: function (medecinId, progress) {
+        var me = this;
+        var venteId = me.getCurrent().lgPREENREGISTREMENTID;
+        Ext.Ajax.request({
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/vente/update/medecin',
+            params: Ext.JSON.encode({
+                "medecinId": medecinId, "venteId": venteId
+            }),
+            success: function (response, options) {
+                progress.hide();
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.medecinId = medecinId;
+
+                    if (!result.clientExist) {
+                        Ext.MessageBox.show({
+                            title: 'Message ',
+                            width: 320,
+                            msg: 'Opération effectuée avec succes. Veuillez ajouter le client',
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBox.INFO,
+                            fn: function (buttonId) {
+                                if (buttonId === "ok") {
+                                    var win = Ext.create('testextjs.view.vente.user.ClientLambda');
+                                    win.add(me.buildLambdaClientGrid());
+                                    win.show();
+                                }
+                            }
+                        });
+                    } else {
+                        me.getMontantRecu().focus(true, 50);
+                    }
+//                    me.getVnoproduitCombo().focus(true, 100);
+
+
+                } else {
+
+                    Ext.MessageBox.show({
+                        title: 'Message d\'erreur',
+                        width: 320,
+                        msg: result.msg,
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR
+
+                    });
+                }
+
+            },
+            failure: function (response, options) {
+                progress.hide();
+                Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
+            }
+
+        });
+    },
+    onMedecinSpecialKey: function (field, e, options) {
+        if (e.getKey() === e.ENTER) {
+            var me = this;
+            me.registerNewMedecin();
+        }
+
+    },
+
+    registerNewMedecin: function () {
+        var me = this, form = me.getMedecinform();
+        if (form.isValid()) {
+            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            Ext.Ajax.request({
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                url: '../api/v1/vente/add/medecin/' + me.getCurrent().lgPREENREGISTREMENTID,
+                params: Ext.JSON.encode(form.getValues()),
+                success: function (response, options) {
+                    progress.hide();
+                    var result = Ext.JSON.decode(response.responseText, true);
+                    if (result.success) {
+                        me.medecinId = result.medecinId;
+                        me.closeMedecinWindow();
+                        if (!result.clientExist) {
+                            Ext.MessageBox.show({
+                                title: 'Message ',
+                                width: 320,
+                                msg: 'Opération effectuée avec succes. Veuillez ajouter le client',
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.INFO,
+                                fn: function (buttonId) {
+                                    if (buttonId === "ok") {
+                                        var win = Ext.create('testextjs.view.vente.user.ClientLambda');
+                                        win.add(me.buildLambdaClientGrid());
+                                        win.show();
+                                    }
+                                }
+                            });
+
+
+
+                        } else {
+                            me.getMontantRecu().focus(true, 50);
+//                              me.getVnoproduitCombo().focus(true, 100);
+                        }
+
+
+                    } else {
+
+                        Ext.MessageBox.show({
+                            title: 'Message d\'erreur',
+                            width: 320,
+                            msg: result.msg,
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBox.ERROR
+
+                        });
+                    }
+
+                },
+                failure: function (response, options) {
+                    progress.hide();
+                    Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
+                }
+
+            });
+        }
+
+    },
+    showMedicinWindow: function () {
+        var me = this;
+
+        var win = Ext.create('testextjs.view.vente.user.Medecin');
+        win.add(me.buildMedecinGrid());
+        win.show();
+    },
+
+    queryMedecin: function () {
+        var me = this, query = me.getQueryMedecin().getValue();
+        if (query && query.trim() !== "") {
+            me.getMedecinGrid().getStore().load({
+                params: {
+                    query: query
+                }
+            });
+        }
+    },
+    onMedecinKey: function (field, e, options) {
+        if (e.getKey() === e.ENTER) {
+            if (field.getValue() && field.getValue().trim() !== "") {
+                var me = this;
+                me.queryMedecin();
+            }
+        }
+    },
+    putToStandBy: function () {
+        var me = this
+        me.resetAll();
+        me.getVnoproduitCombo().focus(false, 100, function () {
+        });
+    }
+},
+        );

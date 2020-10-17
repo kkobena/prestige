@@ -148,6 +148,14 @@ public final class DateConverter {
     public static final String KEY_PARAMS = "KEY_PARAMS";
     public static final String KEY_TAKE_INTO_ACCOUNT = "KEY_TAKE_INTO_ACCOUNT";
     public static final String KEY_NOMBRE_TICKETS_VNO = "KEY_NOMBRE_TICKETS_VNO";
+    public static final String P_BTN_UPDATE_VENTE_CLIENT_TP = "P_BTN_UPDATE_VENTE_CLIENT_TP";
+    public static final String SMS_TOKEN_TYPE = "Bearer";
+    public static final String GRANT_TYPE = "client_credentials";
+    public static final String KEY_SMS_CLOTURE_CAISSE = "KEY_SMS_CLOTURE_CAISSE";
+    public static final String KEY_SMS_MODIF_PRIX_VENTE = "KEY_SMS_MODIF_PRIX_VENTE";
+    public static final String KEY_MAIL_CLOTURE_CAISSE = "KEY_MAIL_CLOTURE_CAISSE";
+
+
     /*
     parametre nombre de mois à considerer
      */
@@ -301,6 +309,7 @@ public final class DateConverter {
             DecimalFormatSymbols amountSymbols = new DecimalFormatSymbols();
 
             amountSymbols.setGroupingSeparator(' ');
+
             DecimalFormat amountFormat = new DecimalFormat("###,###", amountSymbols);
             result = amountFormat.format(lg_Amount);
         } catch (Exception ex) {
@@ -479,5 +488,17 @@ public final class DateConverter {
         } else {
             return dateFormat.format(new Date());
         }
+    }
+
+    public static String formatDateToEEEE_dd_MM_yyyy_HH_mm(Date date) {
+        if (date != null) {
+            return new SimpleDateFormat("EEEE dd MM yyyy HH:mm").format(date);
+        } else {
+            return new SimpleDateFormat("EEEE dd MM yyyy HH:mm").format(new Date());
+        }
+    }
+
+    public static int convertSectoDay(int n) {
+        return n / (24 * 3600);
     }
 }

@@ -6,11 +6,10 @@
 package rest;
 
 import commonTasks.dto.ArticleHeader;
-import commonTasks.dto.CodeFactureDTO;
 import commonTasks.dto.GenererFactureDTO;
 import dal.RuptureDetail;
 import dal.TFamille;
-import dal.TOrderDetail;
+import dal.TFamilleGrossiste;
 import dal.TUser;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,6 +37,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.OrderService;
@@ -51,6 +51,7 @@ import toolkits.parameters.commonparameter;
 @Produces("application/json")
 @Consumes("application/json")
 public class RuptureRessource {
+
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
@@ -68,18 +69,20 @@ public class RuptureRessource {
         JSONObject json = orderService.listeRuptures(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, grossisteId, start, limit);
         return Response.ok().entity(json.toString()).build();
     }
-     @DELETE
-     @Path("{id}")
+
+    @DELETE
+    @Path("{id}")
     public Response removeRupture(
             @PathParam("id") String id
     ) throws JSONException {
         JSONObject json = orderService.removeRupture(id);
         return Response.ok().entity(json.toString()).build();
     }
-     @GET
+
+    @GET
     @Path("csv")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response exportToCsv(@QueryParam("id") String orderId) {
+    public Response exportToCsv(@QueryParam("id") String orderId, @QueryParam("organismeId") String organismeId) {
         StreamingOutput output = (OutputStream out) -> {
             try {
                 List<RuptureDetail> detailses = orderService.ruptureDetaisDtoByRupture(orderId);
@@ -90,8 +93,14 @@ public class RuptureRessource {
 
                     detailses.forEach(f -> {
                         try {
-                            TFamille OFamille = f.getProduit();
-                            printer.printRecord(OFamille.getIntCIP(), f.getQty());
+                            TFamille famille = f.getProduit();
+                            TFamilleGrossiste tfg = orderService.findOrCreateFamilleGrossisteByFamilleAndGrossiste(famille, orderService.findGrossiste(organismeId));
+                            if (!StringUtils.isEmpty(famille.getIntEAN13()) && famille.getIntEAN13().length()==13) {
+                                printer.printRecord(famille.getIntEAN13(), f.getQty());
+                            } else {
+                                printer.printRecord(tfg.getStrCODEARTICLE(), f.getQty());
+                            }
+
                         } catch (IOException ex) {
 
                         }
@@ -109,13 +118,14 @@ public class RuptureRessource {
                 .build();
 
     }
-      @POST
+
+    @POST
     @Path("fusionner")
     public Response genererFactureTemporaire(GenererFactureDTO datas) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         datas.setOperateur(tu);
-          if (tu == null) {
+        if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
         JSONObject jsono = orderService.creerRupture(datas);

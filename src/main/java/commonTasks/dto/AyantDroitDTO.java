@@ -103,19 +103,21 @@ public class AyantDroitDTO implements Serializable {
     }
 
     public AyantDroitDTO(TAyantDroit ayantDroit) {
-        this.lgAYANTSDROITSID = ayantDroit.getLgAYANTSDROITSID();
-        this.strCODEINTERNE = ayantDroit.getStrCODEINTERNE();
-        this.strFIRSTNAME = ayantDroit.getStrFIRSTNAME();
-        this.strLASTNAME = ayantDroit.getStrLASTNAME();
-        this.lgCLIENTID = ayantDroit.getLgCLIENTID().getLgCLIENTID();
-        this.strNUMEROSECURITESOCIAL = ayantDroit.getStrNUMEROSECURITESOCIAL();
-        this.fullName = ayantDroit.getStrFIRSTNAME().concat(" ").concat(ayantDroit.getStrLASTNAME());
-        this.strSEXE = ayantDroit.getStrSEXE();
-        try {
-            this.dtNAISSANCE = dateFormat.format(ayantDroit.getDtNAISSANCE());
-        } catch (Exception e) {
-        }
+        if (ayantDroit != null) {
+            this.lgAYANTSDROITSID = ayantDroit.getLgAYANTSDROITSID();
 
+            this.strCODEINTERNE = ayantDroit.getStrCODEINTERNE();
+            this.strFIRSTNAME = ayantDroit.getStrFIRSTNAME();
+            this.strLASTNAME = ayantDroit.getStrLASTNAME();
+            this.lgCLIENTID = ayantDroit.getLgCLIENTID().getLgCLIENTID();
+            this.strNUMEROSECURITESOCIAL = ayantDroit.getStrNUMEROSECURITESOCIAL();
+            this.fullName = ayantDroit.getStrFIRSTNAME().concat(" ").concat(ayantDroit.getStrLASTNAME());
+            this.strSEXE = ayantDroit.getStrSEXE();
+            try {
+                this.dtNAISSANCE = dateFormat.format(ayantDroit.getDtNAISSANCE());
+            } catch (Exception e) {
+            }
+        }
     }
 
     public String getStrSEXE() {
