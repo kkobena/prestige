@@ -82,7 +82,7 @@
     if (request.getParameter("mode") != null) {
 
         if (request.getParameter("mode").equals("create")) {
-            new logger().oCategory.info("Creation");
+        
             TBonLivraisonDetail OTBonLivraisonDetail = OdataManager.getEm().find(TBonLivraisonDetail.class, lg_BON_LIVRAISON_DETAIL);
 
             //OWarehouseManager.AddLot(OTBonLivraisonDetail.getLgFAMILLEID().getLgFAMILLEID(), int_NUMBER, OTBonLivraisonDetail.getLgGROSSISTEID().getLgGROSSISTEID(), str_REF_LIVRAISON, str_SORTIE_USINE, str_PEREMPTION, int_QUANTITE_FREE, lg_TYPEETIQUETTE_ID, OTBonLivraisonDetail.getLgBONLIVRAISONID().getLgORDERID().getStrREFORDER(), OTBonLivraisonDetail.getLgBONLIVRAISONDETAIL(), int_NUM_LOT);

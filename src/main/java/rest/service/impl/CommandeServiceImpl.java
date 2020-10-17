@@ -199,6 +199,12 @@ public class CommandeServiceImpl implements CommandeService {
                         }
                         cmde = (cmde > (bn.getIntQTECMDE() + bn.getIntQTEUG()) ? (bn.getIntQTECMDE() + bn.getIntQTEUG()) : cmde);
                         addToStock(bn.getIntPRIXVENTE(), bn.getIntPAF(), bn.getLgBONLIVRAISONDETAIL(), user, cmde, qu, emg, OFamille);
+                   
+                    if(qu>0){
+                           String comm = "ENTREE UG Num BL :  " + OTBonLivraison.getStrREFLIVRAISON() +" PRODUIT : "+bn.getLgFAMILLEID().getIntCIP() + " "+bn.getLgFAMILLEID().getStrNAME()+" QUANTITE "+qu+"  PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+                         logService.updateItem(user, OTBonLivraison.getStrREFLIVRAISON(), comm, TypeLog.QUANTITE_UG, bn, emg);
+                    }
+                    
                     }
 
                 }
@@ -227,14 +233,7 @@ public class CommandeServiceImpl implements CommandeService {
                 }
                 emg.merge(OFamille);
 
-                if (familleGrossiste != null) {
-
-//                    if (bn.getPrixUni() != null && bn.getPrixUni().compareTo(0) > 0) {
-//                        
-//                    }
-//                    if (StringUtils.isEmpty(OFamille.getIntT()) && (bn.getIntPRIXVENTE().compareTo(OFamille.getIntPRICE()) > 0)) {
-//                        familleGrossiste.setIntPRICE(bn.getIntPRIXVENTE());
-//                    }
+                if (familleGrossiste != null) { 
                     this.getEm().merge(familleGrossiste);
                 }
             }

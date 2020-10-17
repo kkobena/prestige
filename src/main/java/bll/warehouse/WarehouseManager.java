@@ -3568,9 +3568,7 @@ EntityManager em = this.getOdataManager().getEm();
             OTLot.setLgUSERID(this.getOTUser());
             OTLot.setStrSTATUT(commonparameter.statut_enable);
             OTLot.setLgFAMILLEID(OTProductItem);
-            new logger().oCategory.info("Ajout de lot : produit--> " + OTProductItem.getIntCIP() + " ");
             OTLot.setIntNUMBER(int_NUMBER + int_NUMBER_GRATUIT); //quantite commandé + quantité livré
-            new logger().oCategory.info("Ajout de lot : produit--> " + OTProductItem.getIntCIP() + " Quantité ---> " + OTLot.getIntNUMBER() + " str_REF_LIVRAISON ------> " + bonLivraison.getStrREFLIVRAISON());
             if (!"".equals(str_PEREMPTION)) {
                 Date dt_PEREMPTION = java.sql.Date.valueOf(str_PEREMPTION);
                 OTLot.setDtPEREMPTION(dt_PEREMPTION);

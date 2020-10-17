@@ -106,7 +106,7 @@
          
             for (TGroupeFactures obj : factureses) {
                
-                if (!OfactureManagement.deleteInvoice(obj.getLgFACTURESID().getLgFACTUREID())) {
+                if (!OfactureManagement.deleteInvoice(obj.getLgFACTURESID().getLgFACTUREID(),OTUser)) {
                     okDeleted = false;
                 }
             }

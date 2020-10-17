@@ -26,7 +26,8 @@ public enum TypeLog {
     MODIFICATION_DATE_SYSTEME("Modification de la date système"),
     IVENTAIRE("Inventaire du stock"),
     GENERATION_DE_FACTURE("Génération de facture"),
-    MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande");
+    MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande"),
+    QUANTITE_UG("Entrée quantité UG");
     private final String value;
 
     public String getValue() {

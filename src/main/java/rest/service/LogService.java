@@ -11,7 +11,6 @@ import dal.enumeration.TypeLog;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
-import javax.ejb.Remote;
 import javax.persistence.EntityManager;
 import org.json.JSONException;
 import org.json.JSONObject;
