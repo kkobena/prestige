@@ -437,7 +437,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             emg.merge(familleStock);
 
         } else if (familleStock == null) {
-           
+
             if (isDetail) {
                 familleStock = findByParent(OTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID(), emg);
                 if (familleStock == null) {
@@ -952,7 +952,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 saveMvtArticle(commonparameter.str_ACTION_AJUSTEMENT, action, famille, tUser, familleStock, it.getIntNUMBER(), initStock, emplacement, emg);
                 mouvementProduitService.saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), _action, famille, tUser, emplacement, it.getIntNUMBER(), initStock, initStock + it.getIntNUMBER(), emg, 0);
                 suggestionService.makeSuggestionAuto(familleStock, famille, emg);
-                logService.updateItem(tUser, famille.getIntCIP(), "Ajustement du produit :[  " + famille.getIntCIP() + "  "+famille.getStrNAME()+" ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]", TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
+                logService.updateItem(tUser, famille.getIntCIP(), "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]", TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
                 it.setStrSTATUT(commonparameter.statut_enable);
                 it.setDtUPDATED(new Date());
                 emg.merge(it);
@@ -1267,11 +1267,14 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 stock.setDtUPDATED(new Date());
                 emg.merge(stock);
                 emg.merge(d);
+
                 mouvementProduitService.saveMvtProduit(0, d.getIntPAF(), d.getLgRETOURFRSDETAIL(),
                         DateConverter.RETOUR_FOURNISSEUR, tf, params.getOperateur(), empl, d.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
                 saveMvtArticle(commonparameter.str_ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, tf,
                         params.getOperateur(), stock, d.getIntNUMBERRETURN(), sockInit, empl, emg);
                 suggestionService.makeSuggestionAuto(stock, tf, emg);
+                String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + fournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + params.getOperateur().getStrFIRSTNAME() + " " + params.getOperateur().getStrLASTNAME();
+                logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
             });
             fournisseur.setStrSTATUT(DateConverter.STATUT_ENABLE);
             fournisseur.setDtUPDATED(new Date());
@@ -1280,7 +1283,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             fournisseur.setLgUSERID(params.getOperateur());
             fournisseur.setStrREPONSEFRS(params.getRefTwo());
             emg.merge(fournisseur);
-//            emg.getTransaction().commit();
 
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
@@ -1466,10 +1468,9 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         retourdepot.setDtUPDATED(new Date());
         retourdepot.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
         officine.setTRetourdepotdetailCollection(collection);
-       getEmg().persist(officine);
+        getEmg().persist(officine);
         getEmg().merge(retourdepot);
 
     }
 
-   
 }

@@ -28,7 +28,10 @@ public enum TypeLog {
     GENERATION_DE_FACTURE("Génération de facture"),
     MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande"),
     QUANTITE_UG("Entrée quantité UG"),
-    MODIFICATION_INFO_VENTE("Modification de vente");
+    MODIFICATION_INFO_VENTE("Modification de vente"),
+    RETOUR_FOURNISSEUR("Retour fournisseur"),
+    SAISIS_PERIMES("Saisis de périmés"),
+    DECONDITIONNEMENT("Deconditionnement de produit");
     private final String value;
 
     public String getValue() {

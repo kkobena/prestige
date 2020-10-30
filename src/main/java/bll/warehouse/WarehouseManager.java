@@ -24,6 +24,7 @@ import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
 import dal.TEmplacement;
 import dal.TEtiquette;
+import dal.TEventLog;
 import dal.TFamille;
 import dal.TFamilleStock;
 import dal.TFamille_;
@@ -48,6 +49,7 @@ import dal.TWarehouse_;
 import dal.TWarehousedetail;
 import dal.TZoneGeographique;
 import dal.dataManager;
+import dal.enumeration.TypeLog;
 import dal.jconnexion;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -2319,7 +2321,7 @@ public class WarehouseManager extends bll.bllBase {
             TOfficine oTOfficine = this.getOdataManager().getEm().find(dal.TOfficine.class, "1");
             lstTWarehouse = this.getWarehouseByFamilleAndBonL(lg_FAMILLE_ID, str_REF_LIVRAISON);
             for (TWarehouse OTWarehouse : lstTWarehouse) {
-                 this.getOdataManager().getEm().refresh(OTWarehouse.getLgFAMILLEID());
+                this.getOdataManager().getEm().refresh(OTWarehouse.getLgFAMILLEID());
                 if (data.isEmpty()) {
                     for (int i = 0; i < OTWarehouse.getIntNUMBER(); i++) {
                         OEntityData = new EntityData();
@@ -2362,9 +2364,7 @@ public class WarehouseManager extends bll.bllBase {
     }
     //fin generer les donnees pour la gestion des etiquettes
 
-  
 // fonction pour verifier si le produit est dans le processus de commande cad suggession ou commande en cour,passes
-
     public boolean isCommandProcess11(String lgFamilleID) {
         boolean isExist = false;
         try {
@@ -2432,7 +2432,7 @@ public class WarehouseManager extends bll.bllBase {
             Date dt_Date_debut, dt_Date_Fin;
             String Date_debut = this.getKey().GetDateNowForSearch(0);
             String Date_Fin = this.getKey().GetDateNowForSearch(1);
-          
+
             dt_Date_Fin = this.getKey().stringToDate(Date_Fin, this.getKey().formatterShort);
             dt_Date_debut = this.getKey().stringToDate(Date_debut, this.getKey().formatterShort);
             Query qry = this.getOdataManager().getEm().createQuery("SELECT t FROM TSnapShopDalySortieFamille t WHERE  t.dtCREATED >= ?3  AND t.dtCREATED < ?4 AND t.strSTATUT LIKE ?5 AND t.lgFAMILLEID.lgFAMILLEID LIKE ?6").
@@ -2876,10 +2876,24 @@ public class WarehouseManager extends bll.bllBase {
         }
     }
 
+    public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, EntityManager em) {
+        TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
+        eventLog.setLgUSERID(user);
+        eventLog.setDtCREATED(new Date());
+        eventLog.setDtUPDATED(new Date());
+        eventLog.setStrCREATEDBY(user.getStrLOGIN());
+        eventLog.setStrSTATUT(commonparameter.statut_enable);
+        eventLog.setStrTABLECONCERN(T.getClass().getName());
+        eventLog.setTypeLog(typeLog);
+        eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
+        eventLog.setStrTYPELOG(ref);
+        em.persist(eventLog);
+    }
+
     public JSONObject AddProduitPerimes(String ID) {
 
         JSONObject json = new JSONObject();
-EntityManager em = this.getOdataManager().getEm();
+        EntityManager em = this.getOdataManager().getEm();
         try {
             List<TWarehouse> list;
             TWarehouse OTWarehouse = em.find(TWarehouse.class, ID);
@@ -2899,22 +2913,20 @@ EntityManager em = this.getOdataManager().getEm();
                     OTFamilleStock.setIntNUMBERAVAILABLE(OTFamilleStock.getIntNUMBERAVAILABLE() - tWarehouse.getIntNUMBER());
                     OTFamilleStock.setIntNUMBER(OTFamilleStock.getIntNUMBERAVAILABLE());
                     OTFamilleStock.setDtUPDATED(new Date());
-
-//                    TTypeStockFamille OTTypeStockFamille = OStockManager.getTTypeStockFamilleByTypestock("1", tWarehouse.getLgFAMILLEID().getLgFAMILLEID());
-//                    OTTypeStockFamille.setIntNUMBER(OTFamilleStock.getIntNUMBERAVAILABLE());
-//                    OTTypeStockFamille.setDtUPDATED(new Date());
                     tWarehouse.setIntNUMBERDELETE(tWarehouse.getIntNUMBER());
                     tWarehouse.setDtUPDATED(new Date());
                     tWarehouse.setStrSTATUT(commonparameter.statut_delete);
                     em.merge(OTFamilleStock);
-//                    this.getOdataManager().getEm().merge(OTTypeStockFamille);
                     em.merge(tWarehouse);
                     mvtProduit.saveMvtProduit(famille.getIntPRICE(), tWarehouse.getLgWAREHOUSEID(), DateConverter.PERIME, famille, this.getOTUser(),
                             this.getOTUser().getLgEMPLACEMENTID(), tWarehouse.getIntNUMBER(), stockInit, stockInit - tWarehouse.getIntNUMBER(), 0, em);
                     this.BuildTSnapShopDalySortieFamille(em, tWarehouse.getLgFAMILLEID(), tWarehouse.getIntNUMBER(), 0, tWarehouse.getIntNUMBER());
-//                     OSnapshotManager.SaveMouvementFamilleBis(tWarehouse.getLgFAMILLEID(), "", commonparameter.REMOVE, commonparameter.str_ACTION_PERIME, tWarehouse.getIntNUMBER(), this.getOTUser().getLgEMPLACEMENTID()); //a decommenter en cas de probleme 27/02/2017
-//                    OSnapshotManager.createSnapshotMouvementArticle(tWarehouse.getLgFAMILLEID(), tWarehouse.getIntNUMBER(), commonparameter.REMOVE, commonparameter.str_ACTION_PERIME);
                     saveMvtArticle(famille, this.getOTUser(), stockInit, stockInit - tWarehouse.getIntNUMBER(), tWarehouse.getIntNUMBER(), emplacement, em);
+                    String desc = "Saisis de périmé du  produit " + famille.getIntCIP() + " " + famille.getStrNAME()
+                            + " stock initial= "
+                            + stockInit + " qté saisie= " + tWarehouse.getIntNUMBER() + " qté après saisie = " + OTFamilleStock.getIntNUMBERAVAILABLE()
+                            + " . Saisie effectuée par " + this.getOTUser().getStrFIRSTNAME() + " " + this.getOTUser().getStrLASTNAME();
+                    updateItem(this.getOTUser(), famille.getIntCIP(), desc, TypeLog.SAISIS_PERIMES, famille, em);
                     i++;
                 }
             }
@@ -3603,7 +3615,7 @@ EntityManager em = this.getOdataManager().getEm();
             OTLot.setIntNUMBERGRATUIT(int_NUMBER_GRATUIT);
             OTLot.setIntQTYVENDUE(0);
             this.getOdataManager().getEm().persist(OTLot);
-            lm.addWarehouse(lg_BON_LIVRAISON_DETAIL,OTProductItem, OTLot.getIntNUMBER(), OTGrossiste, bonLivraison.getStrREFLIVRAISON(), OTLot.getDtSORTIEUSINE(), OTLot.getDtPEREMPTION(), int_NUMBER_GRATUIT, OTLot.getLgTYPEETIQUETTEID(), OTLot.getStrREFORDER(), OTLot.getIntNUMLOT(), this.getOdataManager().getEm());
+            lm.addWarehouse(lg_BON_LIVRAISON_DETAIL, OTProductItem, OTLot.getIntNUMBER(), OTGrossiste, bonLivraison.getStrREFLIVRAISON(), OTLot.getDtSORTIEUSINE(), OTLot.getDtPEREMPTION(), int_NUMBER_GRATUIT, OTLot.getLgTYPEETIQUETTEID(), OTLot.getStrREFORDER(), OTLot.getIntNUMLOT(), this.getOdataManager().getEm());
             new orderManagement(this.getOdataManager(), this.getOTUser()).UpdateTBonLivraisonDetailFromBonLivraison(lg_BON_LIVRAISON_DETAIL.getLgBONLIVRAISONDETAIL(), (int_NUMBER + int_NUMBER_GRATUIT), int_NUMBER_GRATUIT);
             if (this.getOdataManager().getEm().getTransaction().isActive()) {
                 this.getOdataManager().getEm().getTransaction().commit();

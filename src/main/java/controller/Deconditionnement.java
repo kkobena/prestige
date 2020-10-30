@@ -14,6 +14,7 @@ import dal.TMouvement;
 import dal.TMouvementSnapshot;
 import dal.TUser;
 import dal.dataManager;
+import dal.enumeration.TypeLog;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
@@ -31,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.LogService;
 import rest.service.MouvementProduitService;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.date;
@@ -41,7 +43,9 @@ public class Deconditionnement extends HttpServlet {
 
     private final static Logger LOGGER = Logger.getLogger(Deconditionnement.class.getName());
     @EJB
-    MouvementProduitService mouvementProduitService;
+    private MouvementProduitService mouvementProduitService;
+    @EJB
+    private LogService logService;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -146,7 +150,7 @@ public class Deconditionnement extends HttpServlet {
             while (int_NUMBER > x) {
                 numberToDecondition++;
                 x += qtyDetail;
-                LOGGER.log(Level.INFO, "numberToDecondition --------------------------------------- {0}  {1}", new Object[]{numberToDecondition, x});
+//                LOGGER.log(Level.INFO, "numberToDecondition --------------------------------------- {0}  {1}", new Object[]{numberToDecondition, x});
             }
 
             OTFamilleStockParent.setIntNUMBERAVAILABLE(OTFamilleStockParent.getIntNUMBERAVAILABLE() - numberToDecondition);
@@ -161,7 +165,8 @@ public class Deconditionnement extends HttpServlet {
             em.merge(OTFamilleStockChild);
             createDecondtionne(OTFamilleParent, numberToDecondition, em, user);
             createDecondtionne(OTFamilleChild, (numberToDecondition * qtyDetail), em, user);
-
+            String desc = "Déconditionnement du produit " + OTFamilleParent.getIntCIP() + " " + OTFamilleParent.getStrNAME() + " nombre de boîtes = " + numberToDecondition + " nombre de détails =" + (numberToDecondition * qtyDetail) + " opérateur " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+            logService.updateItem(user, OTFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, OTFamilleParent, new Date());
             try {
                 TMouvement mouvement = findByDay(OTFamilleChild, OTEmplacement.getLgEMPLACEMENTID(), em);
                 updateTMouvement(mouvement, (numberToDecondition * qtyDetail), em);
@@ -177,7 +182,6 @@ public class Deconditionnement extends HttpServlet {
                 updateSnapshotMouvementArticle(mouvementSnapshot, (numberToDecondition * qtyDetail), em);
             } catch (Exception e) {
                 createSnapshotMouvementArticle(OTFamilleChild, OTFamilleStockChild.getIntNUMBERAVAILABLE(), stockInitDetail, OTEmplacement, em);
-//                LOGGER.log(Level.ALL, "---------------------- mouvementSnapshot -------------->>>", e);
             }
             try {
                 TMouvementSnapshot mouvementSnapshot = findMouvementSnapshotByDay(OTFamilleParent, OTEmplacement.getLgEMPLACEMENTID(), em);
@@ -330,6 +334,8 @@ public class Deconditionnement extends HttpServlet {
             mouvementProduitService.saveMvtProduit(child.getLgDECONDITIONNEMENTID(),
                     DateConverter.DECONDTIONNEMENT_POSITIF, OTFamilleChild, user,
                     OTEmplacement, int_NUMBER, stockInitDetail, stockInitDetail + (int_NUMBER * qtyDetail), em, 0);
+            String desc = "Déconditionnement du produit " + OTFamilleParent.getIntCIP() + " " + OTFamilleParent.getStrNAME() + " nombre de boîtes = " + int_NUMBER + " nombre de détails =" + (int_NUMBER * qtyDetail) + " opérateur " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+            logService.updateItem(user, OTFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, OTFamilleParent, new Date());
             try {
                 TMouvement mouvement = findByDay(OTFamilleChild, OTEmplacement.getLgEMPLACEMENTID(), em);
                 updateTMouvement(mouvement, (int_NUMBER * qtyDetail), em);

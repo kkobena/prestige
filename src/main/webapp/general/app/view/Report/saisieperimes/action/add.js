@@ -48,10 +48,8 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
     bodyPadding: 5,
     layout: 'column',
     initComponent: function () {
-
         Me = this;
         var itemsPerPage = 20;
-
         ref = this.getNameintern();
         titre = this.getTitre();
         ref = this.getNameintern();
