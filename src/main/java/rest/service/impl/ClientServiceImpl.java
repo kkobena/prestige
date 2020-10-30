@@ -19,6 +19,8 @@ import dal.TCompteClient;
 import dal.TCompteClientTiersPayant;
 import dal.TCompteClient_;
 import dal.TEmplacement_;
+import dal.TGroupeTierspayant;
+import dal.TModelFacture;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClientTiersPayent;
@@ -28,6 +30,7 @@ import dal.TRisque;
 import dal.TTiersPayant;
 import dal.TTiersPayant_;
 import dal.TTypeClient;
+import dal.TTypeTiersPayant;
 import dal.TTypeTiersPayant_;
 import dal.TUser_;
 import dal.TVille;
@@ -1177,11 +1180,87 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, String tpId, int taux) throws Exception {
-        TTiersPayant p = findTiersPayantById(tpId, this.getEmg());
+    public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant p, int taux) throws Exception {
         TCompteClient compteClient = findByClientId(client.getLgCLIENTID(), this.getEmg());
         updateComptClientTierspayantPriority(compteClient.getLgCOMPTECLIENTID());
         return createComptClientTierspayant(client, compteClient, taux, p);
+
+    }
+
+    @Override
+    public JSONObject addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, String clientId, String typeTiersPayantId, int taux) throws JSONException {
+        try {
+            TTiersPayant payant = createTiersPayant(tiersPayantDTO, typeTiersPayantId);
+            updateOrCreateClientAssurance(getEmg().find(TClient.class, clientId), payant, taux);
+            TiersPayantDTO o = new TiersPayantDTO();
+            o.setStrFULLNAME(payant.getStrFULLNAME());
+            o.setStrNAME(payant.getStrNAME());
+            o.setLgTIERSPAYANTID(payant.getLgTIERSPAYANTID());
+            return new JSONObject().put("data", new JSONObject(o)).put("success", true);
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return new JSONObject().put("success", false).put("msg", "Error ");
+        }
+    }
+
+    private TTiersPayant createTiersPayant(TiersPayantDTO tiersPayantDTO, String typeTiersPayantId) {
+        try {
+            TTiersPayant payant = new TTiersPayant(UUID.randomUUID().toString());
+            payant.setBCANBEUSE(Boolean.TRUE);
+            payant.setStrFULLNAME(tiersPayantDTO.getStrFULLNAME());
+            payant.setStrNAME(tiersPayantDTO.getStrNAME());
+            payant.setStrTELEPHONE(tiersPayantDTO.getStrTELEPHONE());
+            payant.setStrMAIL("");
+            payant.setStrADRESSE(tiersPayantDTO.getStrADRESSE());
+            payant.setStrMOBILE("");
+            payant.setStrCODEORGANISME(tiersPayantDTO.getStrCODEORGANISME());
+            payant.setBIsAbsolute(Boolean.FALSE);
+            payant.setStrCODECOMPTABLE("46700000000");
+            payant.setIntMONTANTFAC(-1);
+            payant.setIntNBREBONS(-1);
+            payant.setStrCOMPTECONTRIBUABLE("");
+            payant.setDblPLAFONDCREDIT(0.0);
+            payant.setBoolIsACCOUNT(false);
+            payant.setDblTAUXREMBOURSEMENT(0.0);
+            payant.setStrNUMEROCAISSEOFFICIEL("");
+            payant.setStrCENTREPAYEUR("");
+            payant.setStrCODEREGROUPEMENT("");
+            payant.setDblSEUILMINIMUM(0.0);
+            payant.setBoolINTERDICTION(false);
+            payant.setBoolPRENUMFACTSUBROGATOIRE(false);
+            payant.setIntNUMERODECOMPTE(0);
+            payant.setStrCODEPAIEMENT("");
+            payant.setDblPOURCENTAGEREMISE(0.0);
+            payant.setDblREMISEFORFETAIRE(0.0);
+            payant.setStrCODEEDITBORDEREAU("");
+            payant.setIntNBREEXEMPLAIREBORD(1);
+            payant.setIntPERIODICITEEDITBORD(0);
+            payant.setIntDATEDERNIEREEDITION(0);
+            payant.setStrNUMEROIDFORGANISME("reterte");
+            payant.setDblMONTANTFCLIENT(0.0);
+            payant.setDblBASEREMISE(0.0);
+            payant.setStrCODEDOCCOMPTOIRE("");
+            payant.setBoolENABLED(false);
+            payant.setStrPHOTO("");
+            payant.setStrCODEOFFICINE("");
+            payant.setStrREGISTRECOMMERCE("");
+            payant.setStrSTATUT(commonparameter.statut_enable);
+            payant.setDtCREATED(new Date());
+            payant.setDtUPDATED(new Date());
+            payant.setLgMODELFACTUREID(getEmg().find(TModelFacture.class, "1"));
+            payant.setLgTYPETIERSPAYANTID(getEmg().find(TTypeTiersPayant.class, typeTiersPayantId));
+            payant.setLgRISQUEID(getEmg().find(TRisque.class, "55181642844215217016"));
+            try {
+                payant.setLgGROUPEID(getEmg().find(TGroupeTierspayant.class, Integer.valueOf(tiersPayantDTO.getGroupeId())));
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
+            }
+            getEmg().persist(payant);
+            return payant;
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return null;
+        }
 
     }
 

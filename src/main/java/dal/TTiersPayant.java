@@ -103,7 +103,7 @@ public class TTiersPayant implements Serializable {
     private String strNAME;
     @Column(name = "str_FULLNAME", length = 100)
     private String strFULLNAME;
-    @Lob
+  
     @Column(name = "str_ADRESSE", length = 100)
     private String strADRESSE;
     @Column(name = "str_MOBILE", length = 50)

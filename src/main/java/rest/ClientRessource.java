@@ -224,12 +224,26 @@ public class ClientRessource {
         List<TiersPayantDTO> data = clientService.findTiersPayants(query, typeTierpayant);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
-    
-      @GET
+
+    @GET
     @Path("tierspayantsbytype/{type}")
     public Response findByType(@PathParam("type") String type,
             @QueryParam(value = "query") String query) {
         List<TiersPayantDTO> data = clientService.findTiersPayants(query, type);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
+
+    @POST
+    @Path("add-tierspayant/{clientId}/{typetierspayantId}/{taux}")
+    public Response addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, @PathParam("clientId") String clientId, @PathParam("typetierspayantId") String typeTiersPayantId, @PathParam("taux") int taux) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+
+        JSONObject json = clientService.addNewTiersPayantToClient(tiersPayantDTO, clientId, typeTiersPayantId, taux);
+        return Response.ok().entity(json.toString()).build();
+    }
+
 }

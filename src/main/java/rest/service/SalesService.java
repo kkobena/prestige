@@ -121,4 +121,5 @@ public interface SalesService {
 
     JSONObject findVenteForUpdationg(String venteId) throws JSONException;
 
+    void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp) throws Exception;
 }

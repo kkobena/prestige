@@ -182,5 +182,17 @@ public class LogServiceImpl implements LogService {
         return new JSONObject().put("total", count).put("data", new JSONArray(l));
 
     }
-
+ public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, Date date) {
+        TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
+        eventLog.setLgUSERID(user);
+        eventLog.setDtCREATED(date);
+        eventLog.setDtUPDATED(date);
+        eventLog.setStrCREATEDBY(user.getStrLOGIN());
+        eventLog.setStrSTATUT(commonparameter.statut_enable);
+        eventLog.setStrTABLECONCERN(T.getClass().getName());
+        eventLog.setTypeLog(typeLog);
+        eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
+        eventLog.setStrTYPELOG(ref);
+        getEntityManager().persist(eventLog);
+    }
 }

@@ -117,7 +117,9 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                             labelWidth: 80,
                                             itemId: 'montantTotal',
                                             name: 'intPRICE',
-                                            format: '0,000.',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
                                             fieldStyle: "color:blue;font-weight: bold;",
                                             margin: '0 10 0 0'
                                         },
@@ -129,7 +131,9 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                             labelWidth: 70,
                                             itemId: 'montantClient',
                                             name: 'intCUSTPART',
-                                            format: '0,000.',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
                                             fieldStyle: "color:blue;font-weight: bold;",
                                             margin: '0 10 0 0'
                                         },
@@ -139,7 +143,9 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                             flex: 1,
                                             itemId: 'montantCredit',
                                             name: 'montantCredit',
-                                            format: '0,000.',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
                                             fieldStyle: "color:blue;font-weight: bold;",
                                             margin: '0 10 0 0'
                                         },
@@ -150,7 +156,9 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                             labelWidth: 90,
                                             itemId: 'montantPaye',
                                             name: 'montantPaye',
-                                            format: '0,000.',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
                                             fieldStyle: "color:blue;font-weight: bold;",
                                             margin: '0 10 0 0'
                                         },
@@ -161,20 +169,15 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                             labelWidth: 100,
                                             itemId: 'montantRestant',
                                             name: 'montantRestant',
-                                            format: '0,000.',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
                                             fieldStyle: "color:blue;font-weight: bold;",
                                             margin: '0 10 0 0'
                                         }
 
-
-
-
                                     ]
                                 }
-
-
-
-
                             ]
                         },
 
@@ -346,7 +349,6 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
     buildtierspayant: function () {
         var me = this, tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
         var tierspayants = me.getTiersparent();
-//        var typeVente = me.getTypeVente();
         Ext.each(tierspayants, function (item) {
             var cmp = me.buildCmp(item);
             me.taux = item.taux;
@@ -494,11 +496,18 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                     totalProperty: 'total'
                 }
 
-            }
+            }/*,
+             listeners: {
+             load: function () {
+             this.add({lgAYANTSDROITSID: '0', fullName: 'AJOUTER UN NOUVEL AYANT  DROIT'});
+             }
+             }*/
         });
         ayantStore.load({
+            scope: this,
             params: {"clientId": me.getClient().lgCLIENTID},
             callback: function (records, operation, successful) {
+                ayantStore.add({lgAYANTSDROITSID: '0', fullName: 'AJOUTER UN NOUVEL AYANT  DROIT'});
                 if (successful) {
                     var form = Ext.create('Ext.window.Window',
                             {
@@ -581,7 +590,15 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                                 displayField: 'fullName',
                                                 queryMode: 'local',
                                                 allowBlank: false,
-                                                emptyText: 'Choisir un ayant droit...'
+                                                emptyText: 'Choisir un ayant droit...',
+                                                listeners: {
+                                                    select: function (field) {
+                                                        if (field.getValue() == '0') {
+
+                                                            me.createNewAyantDroit(me, field);
+                                                        }
+                                                    }
+                                                }
 
                                             }
 
@@ -591,12 +608,6 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
 
                                 ]
                             });
-
-
-
-
-
-
                 }
             }
 
@@ -609,7 +620,6 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
     changeClient: function (btn) {
         let me = btn.up('window');
         let url = '../api/v1/client/bytype/' + me.getTypeVente();
-//        var clientStore = Ext.create('testextjs.store.caisse.RechercheClientAss');
         var clientStore = Ext.create('Ext.data.Store', {
             autoLoad: false,
             pageSize: null,
@@ -629,12 +639,12 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                 {
 
                     autoShow: true,
-                    height: 300,
-                    width: 550,
+                    height: 180,
+                    width: 600,
                     modal: true,
                     title: "CHOISIR UN ASSURE",
                     closeAction: 'hide',
-                    closable: true,
+                    closable: false,
                     maximizable: false,
                     bodyPadding: 10,
                     layout: {
@@ -657,18 +667,22 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                         let parentForm = btn.up('window');
                                         let clientRecord = parentForm.down('#lgCLIENTID').findRecord("lgCLIENTID", parentForm.down('#lgCLIENTID').getValue());
                                         if (clientRecord) {
-                                            let tpRecord = parentForm.down('#compteTp').findRecord("compteTp", parentForm.down('#compteTp').getValue());
-                                            let taux = parentForm.down('#taux').getValue();
-                                            let ayantDroitRecord = parentForm.down('#lgAYANTSDROITSID').findRecord("lgAYANTSDROITSID", parentForm.down('#lgAYANTSDROITSID').getValue());
+                                            let ayantDroits = clientRecord.get('ayantDroits');
+                                            let  tiersPayants = clientRecord.get('tiersPayants');
+                                            let taux = me.getTaux();
+                                            let ayantDroitRecord = {};
+                                            let tiersPayant = {};
                                             me.down('form').down('#prenomAssure').setValue(clientRecord.get('strLASTNAME'));
                                             me.down('form').down('#nomAssure').setValue(clientRecord.get('strFIRSTNAME'));
                                             me.down('form').down('#numAssure').setValue(clientRecord.get('strNUMEROSECURITESOCIAL'));
-                                            if (ayantDroitRecord) {
-                                                me.down('form').down('#nomAyantDroit').setValue(ayantDroitRecord.get('strFIRSTNAME'));
-                                                me.down('form').down('#numAyantDroit').setValue(ayantDroitRecord.get('strNUMEROSECURITESOCIAL'));
-                                                me.down('form').down('#prenomAyantDroit').setValue(ayantDroitRecord.get('strLASTNAME'));
-                                                me.ayantDroitId = ayantDroitRecord.get('lgAYANTSDROITSID');
-                                                me.ayantDroit = ayantDroitRecord.data;
+                                            if (ayantDroits.length > 0) {
+                                                if (ayantDroits.length == 0) {
+                                                    ayantDroitRecord = ayantDroits[0];
+                                                } else {
+                                                    ayantDroitRecord = ayantDroits.filter(e => e.strNUMEROSECURITESOCIAL == clientRecord.get('strNUMEROSECURITESOCIAL'))[0];
+                                                }
+                                                me.updateAyantDroitInfosContainer(me, ayantDroitRecord);
+                                                me.ayantDroit = ayantDroitRecord;
                                             } else {
                                                 me.down('form').down('#nomAyantDroit').setValue('');
                                                 me.down('form').down('#numAyantDroit').setValue('');
@@ -676,12 +690,17 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                                 me.ayantDroitId = null;
                                                 me.ayantDroit = null;
                                             }
-                                            me.tiersparent = tpRecord.data;
+                                            if (tiersPayants.length == 0) {
+                                                tiersPayant = tiersPayants[0];
+                                            } else {
+                                                tiersPayant = tiersPayants.filter(e => e.order === 1)[0];
+                                            }
+                                            me.tiersparent = tiersPayant;
                                             var tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
                                             tpContainerForm.removeAll();
                                             me.client = clientRecord.data;
                                             me.clientId = clientRecord.get('lgCLIENTID');
-                                            var cmp = me.buildCmp(me.getTiersparent(), taux, me.getData().strREFBON);
+                                            var cmp = me.buildCmp(tiersPayant, taux, me.getData().strREFBON);
                                             tpContainerForm.add(cmp);
 
                                             form.destroy();
@@ -724,123 +743,28 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                     queryMode: 'remote',
                                     allowBlank: false,
                                     emptyText: 'Choisir le client...',
-                                    listeners: {
-                                        select: function (field) {
-                                            let parent = field.up('fieldset');
-                                            let record = field.findRecord("lgCLIENTID", field.getValue());
-                                            let   ayantDroits = record.get('ayantDroits');
-                                            let  tiersPayants = record.get('tiersPayants');
-                                            let ayantdroitCmp = parent.down("#lgAYANTSDROITSID");
-                                            let tpCmp = parent.down("#compteTp");
-                                            tpCmp.clearValue();
-                                            ayantdroitCmp.clearValue();
-                                            let newStore = Array.from(tiersPayants);
-                                            let tpclientStore = new Ext.data.Store({
-                                                model: 'testextjs.model.caisse.ClientTiersPayant',
-                                                data: newStore,
-                                                pageSize: null,
-                                                autoLoad: false,
-                                                proxy: {
-                                                    type: 'memory',
-                                                    reader: {
-                                                        model: 'testextjs.model.caisse.ClientTiersPayant',
-                                                        type: 'json'
-                                                    }
-                                                }
-                                            });
-                                            tpCmp.bindStore(tpclientStore);
-                                            tpCmp.show();
-                                            if (ayantDroits.length > 0) {
-                                                let ayantDroisStore = Array.from(ayantDroits);
-                                                var ayantStore = Ext.create('Ext.data.Store', {
-                                                    model: 'testextjs.model.caisse.AyantDroit',
-                                                    autoLoad: false,
-                                                    pageSize: null,
-                                                    data: ayantDroisStore,
-                                                    proxy: {
-                                                        type: 'memory',
-                                                        reader: {
-                                                            model: 'testextjs.model.caisse.AyantDroit',
-                                                            type: 'json'
-                                                        }
-
-                                                    }
-                                                });
-                                                ayantdroitCmp.bindStore(ayantStore);
-                                                ayantdroitCmp.show();
-                                            }
-
-                                        }
-                                    }
-                                },
-                                {
-                                    xtype: 'combobox',
-                                    fieldLabel: 'Ayant droits',
-                                    flex: 1,
-                                    height: 30,
-                                    minChars: 2,
-                                    itemId: 'lgAYANTSDROITSID',
-                                    hidden: true,
-                                    forceSelection: true,
-                                    store: null,
-                                    valueField: 'lgAYANTSDROITSID',
-                                    displayField: 'fullName',
-                                    queryMode: 'local',
-                                    allowBlank: false,
-                                    emptyText: 'Choisir un ayant droit...'
-
-                                },
-                                {
-                                    xtype: 'combobox',
-                                    fieldLabel: 'Tiers-payants',
-                                    flex: 1,
-                                    height: 30,
-                                    hidden: true,
-                                    minChars: 2,
-                                    forceSelection: true,
-                                    store: null,
-                                    itemId: 'compteTp',
-                                    valueField: 'compteTp',
-                                    displayField: 'tpFullName',
-                                    queryMode: 'local',
-                                    allowBlank: false,
-                                    emptyText: 'Choisir un tiers-payant...',
-                                    listeners: {
-                                        select: function (field) {
-                                            var parent = field.up('fieldset');
-                                            var numberField = parent.down('numberfield');
-                                            var record = field.findRecord("compteTp", field.getValue());
-                                            slectedRecord = record;
-                                            numberField.setValue(record.get('taux'));
-                                            numberField.show();
-                                            numberField.focus(false, 50);
-
-                                        }
-                                    }
-                                },
-                                {
-                                    xtype: 'numberfield',
-                                    fieldLabel: 'Pourcentage',
-                                    itemId: 'taux',
-                                    hidden: true,
-                                    height: 30, flex: 1,
-                                    allowDecimals: false,
-                                    hideTrigger: true,
-                                    allowBlank: false,
-                                    minValue: 1,
-                                    maxValue: 100,
-                                    maskRe: /[1-100.]/,
-                                    enableKeyEvents: true,
-                                    listeners: {
-                                        specialKey: function (field, e, options) {
-                                            if (e.getKey() === e.ENTER) {
-
-                                                form.destroy();
-
-                                            }
-                                        }
-                                    }
-
+                                    /* listeners: {
+                                     select: function (field) {
+                                     let record = field.findRecord("lgCLIENTID", field.getValue());
+                                     let ayantDroits = record.get('ayantDroits');
+                                     let  tiersPayants = record.get('tiersPayants');
+                                     let   ayantDroit = {};
+                                     let   tiersPayant = {};
+                                     if (ayantDroits.length == 0) {
+                                     ayantDroit = ayantDroits[0];
+                                     } else {
+                                     ayantDroit = record.get('ayantDroits').filter(e => e.strNUMEROSECURITESOCIAL == record.get('strNUMEROSECURITESOCIAL'))[0];
+                                     }
+                                     if (tiersPayants.length == 0) {
+                                     tiersPayant = tiersPayants[0];
+                                     } else {
+                                     tiersPayant = record.get('tiersPayants').filter(e => e.order === 1)[0];
+                                     }
+                                     me.updateAyantDroitInfosContainer(me, ayantDroit);
+                                     me.upadeTiersPayantContainer(me, tierspayant.strFULLNAME, tierspayant.lgTIERSPAYANTID, me.getMessage());
+                                     
+                                     }
+                                     }*/
                                 }
 
                             ]
@@ -857,177 +781,169 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
         if (me.getTypeVente() === '2') {
             url = '../api/v1/client/tierspayantsbytype/1';
         }
-        Ext.Ajax.request({
-            method: 'GET',
-            url: url,
-//            params: {"clientId": me.getClient().lgCLIENTID},
-            success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
-                if (result.success) {
-                    me.tiersparent = result.data;
-                    let tierspayants = result.data;
-                    var newStore = Array.from(tierspayants);
-                    var tpclientStore = new Ext.data.Store({
-                        idProperty: 'lgTIERSPAYANTID',
-                        fields: [
-                            {name: 'lgTIERSPAYANTID', type: 'string'},
-                            {name: 'strFULLNAME', type: 'string'}
-                        ],
-//                        model: 'testextjs.model.caisse.ClientTiersPayant',
-                        data: newStore,
-                        pageSize: null,
-                        autoLoad: false,
-                        proxy: {
-                            type: 'memory',
-                            reader: {
-//                                model: 'testextjs.model.caisse.ClientTiersPayant',
-                                type: 'json'
-                            }
-                        }
-                    });
+        var tpclientStore = new Ext.data.Store({
+            idProperty: 'lgTIERSPAYANTID',
+            fields: [
+                {name: 'lgTIERSPAYANTID', type: 'string'},
+                {name: 'strFULLNAME', type: 'string'}
+            ],
+            pageSize: null,
+            autoLoad: false,
 
-                    var form = Ext.create('Ext.window.Window',
-                            {
-
-                                autoShow: true,
-                                height: 230,
-                                width: 500,
-                                modal: true,
-                                bodyPadding: 10,
-                                title: "TIERS-PAYANTS ASSOCIES",
-                                closeAction: 'hide',
-                                closable: true,
-                                maximizable: false,
-                                layout: {
-                                    type: 'fit'
-
-                                },
-                                dockedItems: [
-                                    {
-                                        xtype: 'toolbar',
-                                        dock: 'bottom',
-                                        ui: 'footer',
-                                        layout: {
-                                            pack: 'end',
-                                            type: 'hbox'
-                                        },
-                                        items: [
-                                            {
-                                                xtype: 'button',
-                                                text: 'Valider',
-                                                handler: function (_this) {
-                                                    let parentForm = _this.up('window').down('form');
-                                                    let tpRecord = parentForm.down('#compteTp').findRecord("lgTIERSPAYANTID", parentForm.down('#compteTp').getValue());
-
-                                                    let numBon = parentForm.down('#numBon').getValue();
-//                                                    me.tiersparent = tpRecord.data; 
-                                                    var tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
-                                                    tpContainerForm.removeAll();
-                                                    let obj = {"numBon": numBon, "tpFullName": tpRecord.data.strFULLNAME, "compteTp": tpRecord.data.lgTIERSPAYANTID, "taux": me.getTaux()};
-                                                    let cmp = me.buildCmp(obj);
-                                                    tpContainerForm.add(cmp);
-                                                    form.destroy();
-                                                }
-
-
-                                            },
-                                            {
-                                                xtype: 'button',
-                                                handler: function (btn) {
-                                                    form.destroy();
-                                                },
-                                                text: 'Annuler'
-
-                                            }
-                                        ]
-                                    }
-                                ],
-                                items: [{
-                                        xtype: 'form',
-                                        bodyPadding: 5,
-                                        layout: {
-                                            type: 'fit'
-
-                                        },
-                                        items: [
-                                            {
-                                                xtype: 'fieldset',
-                                                title: 'Tiers-payans',
-                                                bodyPadding: 5,
-                                                defaultType: 'textfield',
-                                                defaults: {
-                                                    anchor: '100%'
-                                                },
-                                                items: [
-                                                    {
-                                                        xtype: 'combobox',
-                                                        fieldLabel: 'Tiers-payant',
-                                                        flex: 1,
-                                                        height: 30,
-                                                        minChars: 2,
-                                                        forceSelection: true,
-                                                        store: tpclientStore,
-                                                        name: 'compteTp',
-                                                        itemId: 'compteTp',
-                                                        valueField: 'lgTIERSPAYANTID',
-                                                        displayField: 'strFULLNAME',
-                                                        queryMode: 'remote',
-                                                        allowBlank: false,
-                                                        emptyText: 'Choisir un tiers-payant...',
-                                                        listeners: {
-                                                            select: function (field) {
-                                                                var parent = field.up('fieldset');
-                                                                var numberField = parent.down('#numBon');
-//                                                                var record = field.findRecord("lgTIERSPAYANTID", field.getValue());
-                                                                numberField.setValue(me.getData().strREFBON);
-                                                                numberField.focus(false, 50);
-                                                            }
-                                                        }
-                                                    },
-
-                                                    {
-                                                        xtype: 'textfield',
-                                                        fieldLabel: 'Num bon',
-                                                        name: 'numBon',
-                                                        itemId: 'numBon',
-                                                        height: 30, flex: 1,
-                                                        allowBlank: false,
-                                                        minValue: 1,
-                                                        enableKeyEvents: true,
-                                                        listeners: {
-                                                            specialKey: function (field, e, options) {
-                                                                if (e.getKey() === e.ENTER) {
-                                                                    let parentForm = field.up('window').down('form');
-                                                                    let tpRecord = parentForm.down('#compteTp').findRecord("lgTIERSPAYANTID", parentForm.down('#compteTp').getValue());
-
-                                                                    let numBon = parentForm.down('#numBon').getValue();
-//                                                    me.tiersparent = tpRecord.data; 
-                                                                    var tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
-                                                                    tpContainerForm.removeAll();
-                                                                    let obj = {"numBon": numBon, "tpFullName": tpRecord.data.strFULLNAME, "compteTp": tpRecord.data.lgTIERSPAYANTID, "taux": me.getTaux()};
-                                                                    let cmp = me.buildCmp(obj);
-                                                                    tpContainerForm.add(cmp);
-                                                                    form.destroy();
-
-
-                                                                }
-                                                            }
-                                                        }
-
-                                                    }
-
-                                                ]
-                                            }
-                                        ]
-                                    }
-
-                                ]
-                            });
+            proxy: {
+                type: 'ajax',
+                url: url,
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
                 }
-
+            },
+            listeners: {
+                load: function () {
+                    this.add({lgTIERSPAYANTID: '0', strFULLNAME: 'AJOUTER UN NOUVEAU TIERS-PAYANT'});
+                }
             }
 
         });
+        var form = Ext.create('Ext.window.Window',
+                {
+
+                    autoShow: true,
+                    height: 230,
+                    width: 500,
+                    modal: true,
+                    bodyPadding: 10,
+                    title: "TIERS-PAYANTS ASSOCIES",
+                    closeAction: 'hide',
+                    closable: true,
+                    maximizable: false,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    text: 'Valider',
+                                    handler: function (_this) {
+                                        let parentForm = _this.up('window').down('form');
+                                        let tpRecord = parentForm.down('#compteTp').findRecord("lgTIERSPAYANTID", parentForm.down('#compteTp').getValue());
+                                        let numBon = parentForm.down('#numBon').getValue();
+                                        me.upadeTiersPayantContainer(me, tpRecord.data.strFULLNAME, tpRecord.data.lgTIERSPAYANTID, numBon);
+                                        form.destroy();
+                                    }
+
+
+                                },
+                                {
+                                    xtype: 'button',
+                                    handler: function (btn) {
+                                        form.destroy();
+                                    },
+                                    text: 'Annuler'
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [{
+                            xtype: 'form',
+                            bodyPadding: 5,
+                            layout: {
+                                type: 'fit'
+
+                            },
+                            items: [
+                                {
+                                    xtype: 'fieldset',
+                                    title: 'Tiers-payans',
+                                    bodyPadding: 5,
+                                    defaultType: 'textfield',
+                                    defaults: {
+                                        anchor: '100%'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'combobox',
+                                            fieldLabel: 'Tiers-payant',
+                                            flex: 1,
+                                            height: 30,
+                                            minChars: 3,
+                                            forceSelection: true,
+                                            store: tpclientStore,
+                                            name: 'compteTp',
+                                            itemId: 'compteTp',
+                                            valueField: 'lgTIERSPAYANTID',
+                                            displayField: 'strFULLNAME',
+                                            queryMode: 'remote',
+                                            allowBlank: false,
+                                            emptyText: 'Choisir un tiers-payant...',
+                                            listeners: {
+                                                select: function (field) {
+                                                    if (field.getValue() !== '0') {
+                                                        var parent = field.up('fieldset');
+                                                        var numberField = parent.down('#numBon');
+                                                        numberField.setValue(me.getData().strREFBON);
+                                                        numberField.focus(false, 50);
+                                                    } else {
+                                                        /*******************************************************************/
+                                                        field.up('fieldset').down('#numBon').setValue(me.getData().strREFBON);
+                                                        me.buildNewTierspayantForm(me, field.up('fieldset').down('#numBon'));
+
+
+                                                        /*********************************** FIND *******************************************/
+
+                                                    }
+                                                }
+                                            }
+                                        },
+
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Num bon',
+                                            name: 'numBon',
+                                            itemId: 'numBon',
+                                            height: 30, flex: 1,
+                                            allowBlank: false,
+                                            minValue: 1,
+                                            enableKeyEvents: true,
+                                            listeners: {
+                                                specialKey: function (field, e, options) {
+                                                    if (e.getKey() === e.ENTER) {
+                                                        let parentForm = field.up('window').down('form');
+                                                        let tpRecord = parentForm.down('#compteTp').findRecord("lgTIERSPAYANTID", parentForm.down('#compteTp').getValue());
+                                                        let numBon = parentForm.down('#numBon').getValue();
+                                                        var tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
+                                                        tpContainerForm.removeAll();
+                                                        let obj = {"numBon": numBon, "tpFullName": tpRecord.data.strFULLNAME, "compteTp": tpRecord.data.lgTIERSPAYANTID, "taux": me.getTaux()};
+                                                        let cmp = me.buildCmp(obj);
+                                                        tpContainerForm.add(cmp);
+                                                        form.destroy();
+
+
+                                                    }
+                                                }
+                                            }
+
+                                        }
+
+                                    ]
+                                }
+                            ]
+                        }
+
+                    ]
+                });
     },
     closeWindow: function () {
         let me = this;
@@ -1095,12 +1011,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
     },
     onSave: function (btn) {
         let wind = btn.up('window');
-//        let tauxValue=
         let tierspayantArray = wind.buildTpData(wind);
-
-
-
-
         let data = {
             'clientId': wind.getClientId(),
             'ayantDroitId': wind.getAyantDroitId(),
@@ -1169,7 +1080,394 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
             }
 
         });
-    }
+    },
+    buildNewTierspayantForm: function (me, field) {
+        var groupesStore = new Ext.data.Store({
+            model: 'testextjs.model.GroupeModel',
+            pageSize: 20,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../webservices/configmanagement/groupe/ws_data.jsp',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+            }
 
+        });
+        let formTp = Ext.create('Ext.window.Window',
+                {
+
+                    autoShow: true,
+                    height: 340,
+                    width: 600,
+                    modal: true,
+                    title: "Ajout un tiers-payant",
+                    closeAction: 'hide',
+                    closable: false,
+                    maximizable: false,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    text: 'Enregistrer',
+                                    handler: function (btn) {
+                                        me.addNewTiersPayant(btn, me, field, formTp);
+
+                                    }
+                                },
+                                {
+                                    xtype: 'button',
+                                    iconCls: 'cancelicon',
+                                    handler: function (btn) {
+                                        formTp.destroy();
+                                    },
+                                    text: 'Annuler'
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [{
+                            xtype: 'form',
+                            bodyPadding: 5,
+                            layout: {
+                                type: 'fit'
+
+                            },
+                            items: [
+                                {
+                                    xtype: 'fieldset',
+                                    title: '',
+                                    defaultType: 'textfield',
+                                    defaults: {
+                                        anchor: '100%'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Nom abrégé',
+                                            emptyText: 'Nom abrégé',
+                                            name: 'strNAME',
+                                            itemId: 'strNAME',
+                                            height: 30, flex: 1,
+                                            allowBlank: false,
+                                            enableKeyEvents: true,
+                                            listeners: {
+                                                afterrender: function (field) {
+                                                    field.focus(false, 100);
+                                                }
+                                            }
+
+                                        },
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Nom complet',
+                                            emptyText: 'Nom complet',
+                                            itemId: 'strFULLNAME',
+                                            name: 'strFULLNAME',
+                                            height: 30, flex: 1,
+                                            allowBlank: false,
+                                            enableKeyEvents: true
+
+                                        },
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Téléphone',
+                                            emptyText: 'Téléphone',
+                                            itemId: 'strTELEPHONE',
+                                            name: 'strTELEPHONE',
+                                            allowBlank: false,
+                                            maskRe: /[0-9.]/,
+                                            height: 30, flex: 1,
+                                            enableKeyEvents: true
+
+                                        },
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Adresse',
+                                            emptyText: 'Adresse',
+                                            itemId: 'strADRESSE',
+                                            name: 'strADRESSE',
+                                            allowBlank: false,
+                                            height: 30, flex: 1,
+                                            enableKeyEvents: true
+
+                                        },
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Code organisme',
+                                            emptyText: 'Code organisme',
+                                            itemId: 'strCODEORGANISME',
+                                            name: 'strCODEORGANISME',
+                                            allowBlank: false,
+                                            height: 30, flex: 1,
+                                            enableKeyEvents: true
+
+                                        },
+                                        {
+
+                                            xtype: 'combobox',
+                                            fieldLabel: 'Groupe',
+                                            name: 'groupeId',
+                                            itemId: 'groupeId',
+                                            store: groupesStore,
+                                            valueField: 'lg_GROUPE_ID',
+                                            displayField: 'str_LIBELLE',
+                                            typeAhead: true,
+                                            height: 30, flex: 1,
+                                            queryMode: 'remote',
+                                            emptyText: 'Choisir un groupe...'
+
+                                        }
+
+
+                                    ]
+                                }
+                            ]
+                        }
+
+                    ]
+                });
+
+    },
+    addNewTiersPayant: function (btn, me, field, formTp) {
+        let typeTiersPayant = '2';
+        if (me.getTypeVente() === '2') {
+            typeTiersPayant = '1';
+        }
+        var _this = btn.up('window'), _form = _this.down('form');
+        if (_form.isValid()) {
+            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            Ext.Ajax.request({
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                url: '../api/v1/client/add-tierspayant/' + me.getClientId() + '/' + typeTiersPayant + '/' + me.getTaux(),
+                params: Ext.JSON.encode(_form.getValues()),
+                success: function (response, options) {
+                    progress.hide();
+                    var result = Ext.JSON.decode(response.responseText, true);
+                    if (result.success) {
+                        formTp.destroy();
+                        var tierspayant = result.data;
+                        me.upadeTiersPayantContainer(me, tierspayant.strFULLNAME, tierspayant.lgTIERSPAYANTID, field.getValue());
+                        _this.destroy();
+                        field.up('window').destroy();
+
+                    } else {
+                        Ext.MessageBox.show({
+                            title: 'Message d\'erreur',
+                            width: 320,
+                            msg: result.msg,
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBox.ERROR
+
+                        });
+                    }
+
+                },
+                failure: function (response, options) {
+                    progress.hide();
+                    Ext.Msg.alert("Message", 'server-side failure with status code ' + response.status);
+                }
+
+            });
+        }
+    },
+    upadeTiersPayantContainer: function (me, fullName, lgTiersPayantId, numBon) {
+        //let parentForm = _win.down('form');
+        /* let tpRecord = parentForm.down('#compteTp').findRecord("lgTIERSPAYANTID", parentForm.down('#compteTp').getValue());
+         let numBon = parentForm.down('#numBon').getValue();*/
+        var tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
+        tpContainerForm.removeAll();
+//        let obj = {"numBon": numBon, "tpFullName": tpRecord.data.strFULLNAME, "compteTp": tpRecord.data.lgTIERSPAYANTID, "taux": me.getTaux()};
+        let obj = {"numBon": numBon ? numBon : null, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": me.getTaux()};
+        let cmp = me.buildCmp(obj);
+        tpContainerForm.add(cmp);
+    },
+    createNewAyantDroit: function (me, field) {
+        var form = Ext.create('Ext.window.Window',
+                {
+                    autoShow: true,
+                    height: 320,
+                    width: 600,
+                    modal: true,
+                    title: "Ajout d'ayant droit",
+                    closeAction: 'hide',
+                    closable: false,
+                    maximizable: false,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    text: 'Enregistrer',
+                                    handler: function (btn) {
+                                        var _this = btn.up('window'), _form = _this.down('form');
+                                        if (_form.isValid()) {
+                                            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                                            Ext.Ajax.request({
+                                                method: 'POST',
+                                                headers: {'Content-Type': 'application/json'},
+                                                url: '../api/v1/client/ayant-droits/' + me.getClientId(),
+                                                params: Ext.JSON.encode(_form.getValues()),
+                                                success: function (response, options) {
+                                                    progress.hide();
+                                                    var result = Ext.JSON.decode(response.responseText, true);
+                                                    if (result.success) {
+                                                        form.destroy();
+                                                        var ayant = result.data;
+                                                        me.ayantDroit = ayant;
+                                                        me.updateAyantDroitInfosContainer(me, {"strFIRSTNAME": ayant.strFIRSTNAME, "strLASTNAME": ayant.strLASTNAME, "strNUMEROSECURITESOCIAL": ayant.strNUMEROSECURITESOCIAL, "lgAYANTSDROITSID": ayant.lgAYANTSDROITSID});
+                                                        field.up("window").destroy();
+                                                    } else {
+                                                        Ext.MessageBox.show({
+                                                            title: 'Message d\'erreur',
+                                                            width: 320,
+                                                            msg: result.msg,
+                                                            buttons: Ext.MessageBox.OK,
+                                                            icon: Ext.MessageBox.ERROR
+
+                                                        });
+                                                    }
+
+                                                },
+                                                failure: function (response, options) {
+                                                    progress.hide();
+                                                    Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
+                                                }
+
+                                            });
+                                        }
+
+
+                                    }
+                                },
+                                {
+                                    xtype: 'button',
+                                    iconCls: 'cancelicon',
+                                    handler: function (btn) {
+                                        form.destroy();
+                                    },
+                                    text: 'Annuler'
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [{
+                            xtype: 'form',
+                            bodyPadding: 5,
+                            layout: {
+                                type: 'fit'
+
+                            },
+                            items: [
+                                {
+                                    xtype: 'fieldset',
+                                    title: 'Ayant.Droits',
+                                    defaultType: 'textfield',
+                                    defaults: {
+                                        anchor: '100%'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Nom',
+                                            emptyText: 'Nom',
+                                            name: 'strFIRSTNAME',
+                                            itemId: 'strFIRSTNAME',
+                                            height: 30, flex: 1,
+                                            allowBlank: false,
+                                            enableKeyEvents: true,
+                                            listeners: {
+                                                afterrender: function (field) {
+                                                    field.focus(false, 100);
+                                                }
+                                            }
+
+                                        },
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Prénom',
+                                            emptyText: 'Prénom',
+                                            name: 'strLASTNAME',
+                                            height: 30, flex: 1,
+                                            allowBlank: false,
+                                            enableKeyEvents: true
+
+                                        },
+                                        {
+                                            xtype: 'textfield',
+                                            fieldLabel: 'Matricule/SS',
+                                            emptyText: 'Numéro de matricule ',
+                                            name: 'strNUMEROSECURITESOCIAL',
+                                            height: 30, flex: 1,
+                                            enableKeyEvents: true
+
+                                        },
+                                        {
+                                            xtype: "radiogroup",
+                                            fieldLabel: "Genre",
+                                            allowBlank: true,
+                                            vertical: true,
+                                            flex: 1,
+                                            items: [
+                                                {boxLabel: 'Féminin', name: 'strSEXE', inputValue: 'F'},
+                                                {boxLabel: 'Masculin', name: 'strSEXE', inputValue: 'M'}
+                                            ]
+                                        },
+                                        {
+                                            xtype: 'datefield',
+                                            fieldLabel: 'Date.Naiss',
+                                            emptyText: 'Date de naissance',
+                                            name: 'dtNAISSANCE',
+                                            height: 30, flex: 1,
+                                            submitFormat: 'Y-m-d',
+                                            format: 'd/m/Y',
+                                            maxValue: new Date(),
+                                            enableKeyEvents: true
+                                        }
+
+                                    ]
+                                }
+                            ]
+                        }
+
+                    ]
+                });
+    },
+    updateAyantDroitInfosContainer: function (me, data) {
+        me.down('form').down('#nomAyantDroit').setValue(data.strFIRSTNAME);
+        me.down('form').down('#numAyantDroit').setValue(data.strNUMEROSECURITESOCIAL);
+        me.down('form').down('#prenomAyantDroit').setValue(data.strLASTNAME);
+        me.ayantDroitId = data.lgAYANTSDROITSID;
+
+    }
 });
 

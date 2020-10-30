@@ -107,8 +107,175 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                             tooltip: 'Modifier',
                             scope: this,
                             handler: function (grid, rowIndex) {
-                                var rec = grid.getStore().getAt(rowIndex);
-                                Me.editForm(rec);
+                                var record = grid.getStore().getAt(rowIndex);
+//                                Me.editForm(rec);
+
+                                var win = Ext.create("Ext.window.Window", {
+                                    title: "Modification du groupe",
+
+                                    width: 520,
+                                    layout: {
+                                        type: 'fit'
+                                    },
+                                    height: 200,
+                                    items: [{
+                                            xtype: 'form',
+                                            id: 'editform',
+                                            type: 'fit',
+                                            bodyPadding: 5,
+                                            modelValidation: true,
+                                            items: [
+                                                {
+                                                    xtype: 'fieldset',
+
+                                                    height: 160,
+                                                    title: 'Modification du groupe',
+                                                    layout: 'vbox',
+                                                    defaults: {
+                                                        anchor: '100%',
+
+                                                        labelAlign: 'left'
+
+                                                    },
+                                                    items: [
+                                                        {
+                                                            xtype: 'textfield',
+                                                            fieldLabel: 'Libellé',
+                                                            name: 'str_LIBELLE',
+                                                            id: 'str_LIBELLE_GR_edit',
+                                                            width: '100%',
+                                                            value: record.get('str_LIBELLE'),
+                                                            allowBlank: false,
+                                                            enableKeyEvents: true,
+                                                            listeners: {
+
+                                                                specialKey: function (field, e, options) {
+                                                                    if (e.getKey() === e.ENTER)
+                                                                    {
+                                                                        var grid = Ext.getCmp('groupetierspayantGrid');
+                                                                        if (field.getValue() === '') {
+                                                                            return;
+                                                                        }
+
+                                                                        Me.editGroup(win, record);
+                                                                    }
+
+
+                                                                }
+
+
+                                                            }
+
+
+
+                                                        },
+                                                        {
+                                                            xtype: 'textfield',
+                                                            fieldLabel: 'Téléphone',
+                                                            name: 'str_TELEPHONE',
+                                                            id: 'str_TELEPHONE_GR_edit',
+                                                            width: '100%',
+//                                    allowBlank: false,
+                                                            maskRe: /[0-9.]/,
+                                                            enableKeyEvents: true,
+                                                            value: record.get('str_TELEPHONE'),
+                                                            listeners: {
+
+                                                                specialKey: function (field, e, options) {
+                                                                    if (e.getKey() === e.ENTER)
+                                                                    {
+                                                                        var grid = Ext.getCmp('groupetierspayantGrid');
+                                                                        if (field.getValue() === '') {
+                                                                            return;
+                                                                        }
+
+                                                                        Me.editGroup(win, record);
+                                                                    }
+
+
+                                                                }
+
+
+                                                            }
+
+
+
+                                                        },
+                                                        {
+                                                            xtype: 'textfield',
+                                                            fieldLabel: 'Adresse',
+                                                            name: 'str_ADRESSE',
+                                                            id: 'str_ADRESSE_GR_edit',
+                                                            width: '100%',
+//                                    allowBlank: false,
+                                                            enableKeyEvents: true,
+                                                            value: record.get('str_ADRESSE'),
+                                                            listeners: {
+
+                                                                specialKey: function (field, e, options) {
+                                                                    if (e.getKey() === e.ENTER)
+                                                                    {
+                                                                        var grid = Ext.getCmp('groupetierspayantGrid');
+                                                                        if (field.getValue() === '') {
+                                                                            return;
+                                                                        }
+
+                                                                        Me.editGroup(win, record);
+                                                                    }
+
+
+                                                                }
+
+
+                                                            }
+
+
+
+                                                        }
+
+
+                                                    ]}]
+
+                                        }]
+                                    ,
+                                    dockedItems: [
+                                        {
+                                            xtype: 'toolbar',
+                                            dock: 'bottom',
+                                            ui: 'footer',
+                                            layout: {
+                                                pack: 'end', //#22
+                                                type: 'hbox'
+                                            },
+                                            items: [
+                                                {
+                                                    xtype: 'button',
+                                                    text: 'Valider',
+                                                    listeners: {
+                                                        click: function () {
+
+                                                            Me.editGroup(win, record);
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    xtype: 'button',
+                                                    text: 'Annuler',
+//                   
+                                                    listeners: {
+                                                        click: function () {
+                                                            win.hide();
+                                                        }
+
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+
+                                });
+
+                                win.show();
 
                             }
                         }]
@@ -470,7 +637,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
 //                   
                             listeners: {
                                 click: function () {
-                                    win.close();
+                                    win.hide();
                                 }
 
                             }
@@ -642,7 +809,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
 //                   
                             listeners: {
                                 click: function () {
-                                    win.close();
+                                    win.hide();
                                 }
 
                             }
@@ -684,7 +851,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                     if (object.status === 1) {
                         grid.getStore().load();
                         Ext.MessageBox.alert('INFO', 'Groupe ajouté');
-                        win.close();
+                        win.hide();
                     } else {
                         Ext.MessageBox.alert('ERROR', 'Erreur d \'ajout');
 
@@ -699,7 +866,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                 failure: function (response)
                 {
 
-                    win.close();
+                    win.hide();
                 }
             });
 
@@ -736,7 +903,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                     if (object.status === 1) {
                         grid.getStore().load();
                         Ext.MessageBox.alert('INFO', 'Groupe modifié');
-                        win.close();
+                        win.hide();
                     } else {
                         Ext.MessageBox.alert('ERROR', 'Erreur de modification');
 
@@ -751,12 +918,10 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupe', {
                 failure: function (response)
                 {
 
-                    win.close();
+                    win.hide();
                 }
             });
 
         }
     }
-
-
 });

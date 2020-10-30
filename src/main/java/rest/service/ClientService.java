@@ -12,6 +12,7 @@ import commonTasks.dto.TiersPayantDTO;
 import commonTasks.dto.TiersPayantParams;
 import dal.TClient;
 import dal.TCompteClientTiersPayant;
+import dal.TTiersPayant;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
@@ -59,7 +60,9 @@ public interface ClientService {
 
     JSONObject updateOrCreateClientAssurance(ClientDTO client) throws JSONException;
 
-    TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, String tpId,int taux) throws Exception;
+    TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant tpId, int taux) throws Exception;
 
     void updateCompteClientTiersPayantEncourAndPlafond(String venteId);
+
+    JSONObject addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, String clientId, String typeTiersPayantId, int taux) throws JSONException;
 }

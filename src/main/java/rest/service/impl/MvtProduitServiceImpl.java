@@ -952,7 +952,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 saveMvtArticle(commonparameter.str_ACTION_AJUSTEMENT, action, famille, tUser, familleStock, it.getIntNUMBER(), initStock, emplacement, emg);
                 mouvementProduitService.saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), _action, famille, tUser, emplacement, it.getIntNUMBER(), initStock, initStock + it.getIntNUMBER(), emg, 0);
                 suggestionService.makeSuggestionAuto(familleStock, famille, emg);
-                logService.updateItem(tUser, famille.getIntCIP(), "Ajustement du produit :[  " + famille.getIntCIP() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]", TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
+                logService.updateItem(tUser, famille.getIntCIP(), "Ajustement du produit :[  " + famille.getIntCIP() + "  "+famille.getStrNAME()+" ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]", TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
                 it.setStrSTATUT(commonparameter.statut_enable);
                 it.setDtUPDATED(new Date());
                 emg.merge(it);

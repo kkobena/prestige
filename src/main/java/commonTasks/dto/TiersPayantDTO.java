@@ -12,9 +12,12 @@ import java.util.Objects;
  *
  * @author Kobena
  */
-public class TiersPayantDTO  implements Serializable {
+public class TiersPayantDTO implements Serializable {
+
     private static final long serialVersionUID = 1L;
-      private String lgTIERSPAYANTID,strNAME,strFULLNAME;
+    private String lgTIERSPAYANTID, strNAME, strADRESSE, strFULLNAME, strCODEORGANISME, strMOBILE, strTELEPHONE;
+    private boolean enable = true, bIsAbsolute = false;
+    private String groupeId;
 
     public String getLgTIERSPAYANTID() {
         return lgTIERSPAYANTID;
@@ -36,6 +39,14 @@ public class TiersPayantDTO  implements Serializable {
         this.lgTIERSPAYANTID = lgTIERSPAYANTID;
         this.strNAME = strNAME;
         this.strFULLNAME = strFULLNAME;
+    }
+
+    public String getStrADRESSE() {
+        return strADRESSE;
+    }
+
+    public void setStrADRESSE(String strADRESSE) {
+        this.strADRESSE = strADRESSE;
     }
 
     @Override
@@ -78,7 +89,53 @@ public class TiersPayantDTO  implements Serializable {
     public String toString() {
         return "TiersPayantDTO{" + "lgTIERSPAYANTID=" + lgTIERSPAYANTID + ", strNAME=" + strNAME + ", strFULLNAME=" + strFULLNAME + '}';
     }
-      
-      
-    
+
+    public String getStrCODEORGANISME() {
+        return strCODEORGANISME;
+    }
+
+    public void setStrCODEORGANISME(String strCODEORGANISME) {
+        this.strCODEORGANISME = strCODEORGANISME;
+    }
+
+    public String getStrMOBILE() {
+        return strMOBILE;
+    }
+
+    public void setStrMOBILE(String strMOBILE) {
+        this.strMOBILE = strMOBILE;
+    }
+
+    public String getStrTELEPHONE() {
+        return strTELEPHONE;
+    }
+
+    public void setStrTELEPHONE(String strTELEPHONE) {
+        this.strTELEPHONE = strTELEPHONE;
+    }
+
+    public boolean isEnable() {
+        return enable;
+    }
+
+    public void setEnable(boolean enable) {
+        this.enable = enable;
+    }
+
+    public boolean isbIsAbsolute() {
+        return bIsAbsolute;
+    }
+
+    public void setbIsAbsolute(boolean bIsAbsolute) {
+        this.bIsAbsolute = bIsAbsolute;
+    }
+
+    public String getGroupeId() {
+        return groupeId;
+    }
+
+    public void setGroupeId(String groupeId) {
+        this.groupeId = groupeId;
+    }
+
 }

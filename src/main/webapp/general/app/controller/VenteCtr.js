@@ -1321,12 +1321,12 @@ Ext.define('testextjs.controller.VenteCtr', {
                             buttons: Ext.MessageBox.YESNO,
                             fn: function (button) {
                                 if ('yes' == button) {
-                                    if (result.copy) {
-                                        me.onPrintTicketCopy(result.ref);
-                                    } else {
-                                        me.onPrintTicket(param, typeVenteCombo);
-                                    }
-
+                                    /*  if (result.copy) {
+                                     me.onPrintTicketCopy(result.ref);
+                                     } else {
+                                     me.onPrintTicket(param, typeVenteCombo);
+                                     }*/
+                                    me.onPrintTicket(param, typeVenteCombo);
                                 }
                                 me.resetAll(montantRemis);
                                 me.getVnoproduitCombo().focus(false, 100, function () {
@@ -3718,12 +3718,12 @@ Ext.define('testextjs.controller.VenteCtr', {
                             buttons: Ext.MessageBox.YESNO,
                             fn: function (button) {
                                 if ('yes' == button) {
-                                    if (result.copy) {
-                                        me.onPrintTicketCopy(result.ref);
-                                    } else {
-                                        me.onPrintTicket(param, typeVenteCombo);
-                                    }
-
+                                    /*  if (result.copy) {
+                                     me.onPrintTicketCopy(result.ref);
+                                     } else {
+                                     me.onPrintTicket(param, typeVenteCombo);
+                                     }*/
+                                    me.onPrintTicket(param, typeVenteCombo);
                                 }
                                 me.resetAll(montantRemis);
                                 me.getVnoproduitCombo().focus(false, 100, function () {
