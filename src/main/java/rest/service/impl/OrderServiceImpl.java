@@ -688,7 +688,7 @@ public class OrderServiceImpl implements OrderService {
         TOrder order = detail.getLgORDERID();
         TFamilleGrossiste grossiste = findOrCreateFamilleGrossiste(f, order.getLgGROSSISTEID());
         if (dto.getPrixAchat() != grossiste.getIntPAF()) {
-            String desc = "Modification du prix d'achat du produit :" + f.getStrNAME() + " ancien prix: " + grossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
+            String desc = "Modification du prix d'achat du produit : "+f.getIntCIP()+" " + f.getStrNAME() + " ancien prix: " + grossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
             logService.updateItem(user, grossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
             SaveMouvementPrice(f, dto.getPrixAchat(), grossiste.getIntPAF(), f.getIntCIP(), user);
 

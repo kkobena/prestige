@@ -106,17 +106,16 @@ public class CommandeRessource {
             LongAdder PRIX_VENTE_TOTAL = new LongAdder();
             orderService.findByOrderId(detail.getLgORDERID().getLgORDERID()).forEach(p -> {
                 PRIX_ACHAT_TOTAL.add(p.getIntPRICE());
-                PRIX_VENTE_TOTAL.add(p.getIntNUMBER() * p.getIntPAFDETAIL());
+                PRIX_VENTE_TOTAL.add(p.getIntNUMBER() * p.getIntPRICEDETAIL());
             });
             return Response.ok().entity(new JSONObject().put("success", true)
-                    .put("prixAchat", PRIX_ACHAT_TOTAL)
-                    .put("prixVente", PRIX_VENTE_TOTAL)
+                    .put("prixAchat", PRIX_ACHAT_TOTAL.intValue())
+                    .put("prixVente", PRIX_VENTE_TOTAL.intValue())
                     //                    .put("ref", detail.getLgORDERID().getStrREFORDER())
                     .toString()).build();
 
         } catch (Exception e) {
             e.printStackTrace(System.err);
-
             return Response.ok().entity(new JSONObject().put("success", false).toString()).build();
         }
 

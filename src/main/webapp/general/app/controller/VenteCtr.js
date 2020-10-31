@@ -1282,7 +1282,8 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
 
 
-            var montantRemis = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
+            let montantRemis = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
+            console.log(montantRemis, '---------- ');
             var totalRecap = data.montant, montantPaye = montantRecu - montantRemis;
             var param = {
                 "typeVenteId": typeVenteCombo,
@@ -1328,6 +1329,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                      }*/
                                     me.onPrintTicket(param, typeVenteCombo);
                                 }
+                                console.log(montantRemis, '---------- 2');
                                 me.resetAll(montantRemis);
                                 me.getVnoproduitCombo().focus(false, 100, function () {
                                 });
@@ -2293,13 +2295,12 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
     resetAll: function (montantRemis) {
         var me = this;
+        if (montantRemis != undefined) {
+            me.getDernierMonnaie().setValue(montantRemis);
+        }
         me.getMontantRecu().enable();
         me.getMontantRecu().setReadOnly(false);
         me.getVnogrid().getStore().load();
-        if (montantRemis) {
-            me.getDernierMonnaie().setValue(montantRemis);
-        }
-
         me.netAmountToPay = null;
         me.current = null;
         me.client = null;
@@ -4335,7 +4336,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.medecinId = medecinId;
-
                     if (!result.clientExist) {
                         Ext.MessageBox.show({
                             title: 'Message ',
@@ -4354,8 +4354,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                     } else {
                         me.getMontantRecu().focus(true, 50);
                     }
-//                    me.getVnoproduitCombo().focus(true, 100);
-
 
                 } else {
 

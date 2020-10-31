@@ -44,7 +44,7 @@ public class JobCalendar {
         return em;
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         exec();
         removeFacture();
@@ -52,7 +52,7 @@ public class JobCalendar {
         updateOrderDetailPrices();
     }
 
-//    @Schedule(dayOfMonth = "*", persistent = false)
+    @Schedule(dayOfMonth = "*", persistent = false)
     public void execute() throws InterruptedException {
         exec();
         removeFacture();

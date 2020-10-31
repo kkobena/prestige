@@ -66,7 +66,7 @@ import toolkits.utils.jdom;
  * @author KKOFFI
  */
 public class InvoiceServlet extends HttpServlet {
-//invoiceServlet
+
 
     static final DateFormat DATEFORMAT = new SimpleDateFormat("dd/MM/yyyy");
     static final DateFormat DATEFORMATYYYY = new SimpleDateFormat("yyyy-MM-dd");

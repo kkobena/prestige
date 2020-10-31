@@ -59,7 +59,6 @@ import util.DateConverter;
 public class Reapprovisionnement {
 
 //    private static final Logger LOG = Logger.getLogger(Reapprovisionnement.class.getName());
-
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @Inject
@@ -161,7 +160,7 @@ public class Reapprovisionnement {
             predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
             predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL)));
             predicates.add(cb.greaterThan(st.get(TPreenregistrement_.intPRICE), 0));
-             predicates.add(cb.notEqual(st.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
+            predicates.add(cb.notEqual(st.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
             predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), DateConverter.OFFICINE));
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = em.createQuery(cq);
@@ -190,7 +189,7 @@ public class Reapprovisionnement {
         }
 
         List<LocalDate> nombreMois = nombreMoisPleinsConsommation(Q3).stream().sorted().collect(Collectors.toList());
-       
+
         if (!nombreMois.isEmpty()) {
             JSONObject json;
             for (int i = start; i <= total; i += limit) {
@@ -235,15 +234,13 @@ public class Reapprovisionnement {
         }
     }
 
-    
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         try {
             TParameters semois = em.find(TParameters.class, "SEMOIS");
             if (semois != null && Integer.valueOf(semois.getStrVALUE()) == 1) {
                 exec();
             }
-
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }

@@ -126,7 +126,7 @@
 
 
 <%    JSONArray arrayObj = new JSONArray();
-    for (TOrderDetail o:lstTOrderDetail) {
+    for (TOrderDetail o : lstTOrderDetail) {
         try {
             OdataManager.getEm().refresh(o);
 
@@ -153,22 +153,20 @@
         json.put("lg_FAMILLE_NAME", o.getLgFAMILLEID().getStrNAME());
         json.put("lg_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE() : o.getLgFAMILLEID().getIntCIP()));
         json.put("lg_FAMILLE_PRIX_VENTE", o.getIntPRICEDETAIL());
-         
-        json.put("lg_FAMILLE_PRIX_ACHAT", o.getLgFAMILLEID().getIntPAT());
+        json.put("lg_FAMILLE_PRIX_ACHAT", o.getLgFAMILLEID().getIntPAF());
         json.put("int_PAF", o.getIntPAFDETAIL());
-         json.put("int_PRICE_MACHINE", o.getLgFAMILLEID().getIntPRICE());
-        
+        json.put("int_PRICE_MACHINE", o.getLgFAMILLEID().getIntPRICE());
         json.put("int_PRIX_REFERENCE", o.getLgFAMILLEID().getIntPRICETIPS());
         json.put("int_QTE_LIVRE", o.getIntNUMBER() - o.getIntQTEMANQUANT());
         json.put("int_QTE_REP_GROSSISTE", o.getIntQTEREPGROSSISTE());
-          json.put("prixDiff", o.getIntPRICEDETAIL().compareTo(o.getLgFAMILLEID().getIntPRICE())!=0);
+        json.put("prixDiff", o.getIntPRICEDETAIL().compareTo(o.getLgFAMILLEID().getIntPRICE()) != 0);
 
         json.put("int_SEUIL", o.getLgFAMILLEID().getIntSEUILMIN());
 
         int int_QTE_REASSORT = 0;
         try {
             int_QTE_REASSORT = OTFamillestock.getIntNUMBERAVAILABLE() - o.getLgFAMILLEID().getIntSEUILMIN();
-          
+
             if (int_QTE_REASSORT < 0) {
                 int_QTE_REASSORT = -1 * int_QTE_REASSORT;
             } else {

@@ -150,7 +150,6 @@ public class Deconditionnement extends HttpServlet {
             while (int_NUMBER > x) {
                 numberToDecondition++;
                 x += qtyDetail;
-//                LOGGER.log(Level.INFO, "numberToDecondition --------------------------------------- {0}  {1}", new Object[]{numberToDecondition, x});
             }
 
             OTFamilleStockParent.setIntNUMBERAVAILABLE(OTFamilleStockParent.getIntNUMBERAVAILABLE() - numberToDecondition);
@@ -175,7 +174,7 @@ public class Deconditionnement extends HttpServlet {
             } catch (Exception e) {
                 createTMouvement(OTFamilleChild, OTEmplacement, commonparameter.ADD, commonparameter.str_ACTION_DECONDITIONNEMENT, (numberToDecondition * qtyDetail), user, em);
                 createTMouvement(OTFamilleParent, OTEmplacement, commonparameter.REMOVE, commonparameter.str_ACTION_DECONDITIONNEMENT, numberToDecondition, user, em);
-//                LOGGER.log(Level.ALL, "---------------------- mouvement stock -------------->>>", e);
+
             }
             try {
                 TMouvementSnapshot mouvementSnapshot = findMouvementSnapshotByDay(OTFamilleChild, OTEmplacement.getLgEMPLACEMENTID(), em);
@@ -188,7 +187,6 @@ public class Deconditionnement extends HttpServlet {
                 updateSnapshotMouvementArticle(mouvementSnapshot, numberToDecondition, em);
             } catch (Exception e) {
                 createSnapshotMouvementArticle(OTFamilleParent, OTFamilleStockParent.getIntNUMBERAVAILABLE(), stockInit, OTEmplacement, em);
-//                LOGGER.log(Level.ALL, "---------------------- mouvementSnapshot -------------->>>", e);
             }
             if (em.getTransaction().isActive()) {
                 em.getTransaction().commit();
