@@ -34,6 +34,7 @@ import dal.TCoefficientPonderation;
 import dal.TDci_;
 import dal.TDeconditionnement;
 import dal.TEmplacement;
+import dal.TEventLog;
 import dal.TFamille;
 import dal.TFormeArticle;
 import dal.TFabriquant;
@@ -63,6 +64,7 @@ import dal.TTypeetiquette;
 import dal.TUser;
 import dal.TZoneGeographique;
 import dal.dataManager;
+import dal.enumeration.TypeLog;
 import dal.jconnexion;
 import java.sql.ResultSetMetaData;
 import java.time.LocalDate;
@@ -484,11 +486,10 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                     Description = this.getDetailmessage();
                 }
             }
-            /////suppression de type stock famille; famille stock; famille
-            //fin
+            String desc = "Supression de l'article  " + OTFamille.getIntCIP() + " " + OTFamille.getStrNAME() + " par " + this.getOTUser().getStrFIRSTNAME() + " " + this.getOTUser().getStrLASTNAME();
+//            this.do_event_log(this.getOdataManager(), commonparameter.ALL, "Supression de l'article " + OTFamille.getStrDESCRIPTION(), this.getOTUser().getStrLOGIN(), commonparameter.statut_enable, "TFamille", "Donnee de ref", "Desactivation de produit", this.getOTUser().getLgUSERID());
+            this.getOdataManager().getEm().persist(new TEventLog().build(this.getOTUser(), OTFamille.getIntCIP(), desc, TypeLog.SUPPRESSION_DE_PRODUIT, Otable));
 
-            //  this.do_event_log(Ojconnexion, commonparameter.ALL, Description, this.getOTUser().getStrLOGIN(), commonparameter.statut_enable, "TFamille", "Donnee de ref", ""); // a decommenter en cas de probleme 25/05/2016
-            this.do_event_log(this.getOdataManager(), commonparameter.ALL, "Supression de l'article " + OTFamille.getStrDESCRIPTION(), this.getOTUser().getStrLOGIN(), commonparameter.statut_enable, "TFamille", "Donnee de ref", "Desactivation de produit", this.getOTUser().getLgUSERID());
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible de supprimer un article qui a déjà été utilisé dans le système");
@@ -1925,10 +1926,14 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
 
             OTFamille.setStrSTATUT(commonparameter.statut_enable);
             this.merge(OTFamille);
-            String Description = "Activation du produit " + OTFamille.getStrDESCRIPTION() + " par l'utilisateur " + this.getOTUser().getStrFIRSTNAME() + " " + this.getOTUser().getStrLASTNAME();
+//            String Description = "Activation du produit " + OTFamille.getStrDESCRIPTION() + " par l'utilisateur " + this.getOTUser().getStrFIRSTNAME() + " " + this.getOTUser().getStrLASTNAME();
             // this.do_event_log(Ojconnexion, commonparameter.ALL, Description, this.getOTUser().getStrLOGIN(), commonparameter.statut_enable, "TFamille", "Donnee de ref", "");
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-            this.sendSMS(Description, "TFamille", "Fiche article", "N_UPDATE_FAMILLE_PRICE", "Activation de produit");
+            String desc = "Activation de l'article  " + OTFamille.getIntCIP() + " " + OTFamille.getStrNAME() + " par " + this.getOTUser().getStrFIRSTNAME() + " " + this.getOTUser().getStrLASTNAME();
+//            this.do_event_log(this.getOdataManager(), commonparameter.ALL, "Supression de l'article " + OTFamille.getStrDESCRIPTION(), this.getOTUser().getStrLOGIN(), commonparameter.statut_enable, "TFamille", "Donnee de ref", "Desactivation de produit", this.getOTUser().getLgUSERID());
+            this.getOdataManager().getEm().persist(new TEventLog().build(this.getOTUser(), OTFamille.getIntCIP(), desc, TypeLog.ACTIVATION_DE_PRODUIT, Otable));
+
+//            this.sendSMS(Description, "TFamille", "Fiche article", "N_UPDATE_FAMILLE_PRICE", "Activation de produit");
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible d'activer l'article");

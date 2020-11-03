@@ -92,6 +92,7 @@ public class ClientServiceImpl implements ClientService {
             tc.setStrSTATUT("enable");
             tc.setDtUPDATED(new Date());
             tc.setDtCREATED(new Date());
+            tc.setEmail(clientLambda.getEmail());
             tc.setStrCODEINTERNE(DateConverter.getShortId(6));
             getEmg().persist(tc);
             createCompteClient(tc, getEmg());
@@ -122,6 +123,7 @@ public class ClientServiceImpl implements ClientService {
             tc.setDtUPDATED(new Date());
             tc.setDtCREATED(new Date());
             tc.setStrCODEINTERNE(DateConverter.getShortId(6));
+           tc.setEmail(clientLambda.getEmail());
             emg.persist(tc);
             createCompteClient(tc, emg);
             return tc;
@@ -166,7 +168,8 @@ public class ClientServiceImpl implements ClientService {
                     root.get(TClient_.strLASTNAME),
                     root.get(TClient_.strADRESSE),
                     root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"),
-                    root.get(TClient_.strSEXE)
+                    root.get(TClient_.strSEXE),
+                    root.get(TClient_.email)
             )
             ).orderBy(cb.asc(root.get(TClient_.strFIRSTNAME)));
             predicates.add(cb.and(cb.equal(root.get(TClient_.strSTATUT), "enable")));
@@ -406,7 +409,7 @@ public class ClientServiceImpl implements ClientService {
                 return json;
             }
             if (tc == null) {
-                if (client.getStrNUMEROSECURITESOCIAL() != null && !"".equals(client.getStrNUMEROSECURITESOCIAL())) {
+                if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
                     if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
                         json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                         return json;

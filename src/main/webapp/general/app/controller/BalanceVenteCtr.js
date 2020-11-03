@@ -46,6 +46,10 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
             selector: 'balancesalecahs #fondCaisse'
         },
         {
+            ref: 'montantMobilePayment',
+            selector: 'balancesalecahs #montantMobilePayment'
+        },
+        {
             ref: 'montantRegDiff',
             selector: 'balancesalecahs #montantRegDiff'
         },
@@ -162,5 +166,7 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
         me.getMontantCheque().setValue(rec.montantCheque);
         me.getMontantVirement().setValue(rec.montantVirement);
         me.getMarge().setValue(rec.marge);
+        me.getMontantMobilePayment().setValue(rec.montantMobilePayment);
+
     }
 });

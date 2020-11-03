@@ -165,11 +165,11 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void addTransaction(TUser ooTUser, TUser caisse, String pkey,
+    public void addTransaction(Optional<TClient> client, TUser ooTUser, TUser caisse, String pkey,
             Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked,
             CategoryTransaction categoryTransaction, TypeTransaction typeTransaction,
             TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg,
-            Integer montantPaye, Integer montantTva, Integer marge, String reference, int montantAcc, LocalDateTime dateTime, LocalDate localDate) {
+            Integer montantPaye, Integer montantTva, Integer marge, String reference, int montantAcc, LocalDateTime dateTime, LocalDate localDate) throws Exception{
         MvtTransaction _new = new MvtTransaction();
         int compare = montantNet.compareTo(montantVerse);
         Integer montantPaid, montantRestant = 0;
@@ -204,6 +204,9 @@ public class SalesServiceImpl implements SalesService {
         _new.setChecked(checked);
         _new.setMontantTva(montantTva);
         _new.setMontantAcc(montantAcc);
+        client.ifPresent(c -> {
+            _new.setOrganisme(c.getLgCLIENTID());
+        });
         emg.persist(_new);
 
     }
@@ -214,7 +217,7 @@ public class SalesServiceImpl implements SalesService {
             CategoryTransaction categoryTransaction,
             TypeTransaction typeTransaction, TTypeReglement reglement,
             TTypeMvtCaisse tTypeMvtCaisse, Integer montantCredit,
-            EntityManager emg, Integer montantPaye, Integer montantTva, Integer marge, String reference, TClient client, boolean diff, Integer montantClient, String typeReglement, LocalDateTime dateTime, LocalDate localDate) {
+            EntityManager emg, Integer montantPaye, Integer montantTva, Integer marge, String reference, TClient client, boolean diff, Integer montantClient, String typeReglement, LocalDateTime dateTime, LocalDate localDate) throws Exception{
         MvtTransaction _new = new MvtTransaction();
         Integer montantPaid = 0, montantRestant = montantClient;
         if (typeReglement.equals(DateConverter.MODE_ESP) || typeReglement.equals(DateConverter.REGL_DIFF)) {
@@ -1757,8 +1760,11 @@ public class SalesServiceImpl implements SalesService {
             case "5":
                 modeReglement = findByIdMod("6", emg);
                 break;
+            case "7":
+                modeReglement = findByIdMod(DateConverter.MODE_ORANGE, emg);
+                break;
             default:
-                modeReglement = findByIdMod("1", emg);
+                modeReglement = findByIdMod(idTypeRegl, emg);
                 break;
 
         }
@@ -2094,12 +2100,19 @@ public class SalesServiceImpl implements SalesService {
             Integer amount = montant - tp.getIntPRICEREMISE();
             TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
             Optional<TParameters> KEY_TAKE_INTO_ACCOUNT = findParamettre("KEY_TAKE_INTO_ACCOUNT", emg);
-            if (clotureVenteParams.getTypeRegleId().equals(DateConverter.REGL_DIFF)) {
-                findClientById(clotureVenteParams.getClientId(), emg).ifPresent(c -> {
+            Optional<TClient> client = findClientById(clotureVenteParams.getClientId(), emg);
+            if (!StringUtils.isEmpty(clotureVenteParams.getClientId())) {
+                client.ifPresent(c -> {
                     tp.setStrFIRSTNAMECUSTOMER(c.getStrFIRSTNAME());
                     tp.setStrLASTNAMECUSTOMER(c.getStrLASTNAME());
                     tp.setStrPHONECUSTOME(c.getStrADRESSE());
                     tp.setClient(c);
+
+                });
+            }
+            if (clotureVenteParams.getTypeRegleId().equals(DateConverter.REGL_DIFF)) {
+                client.ifPresent(c -> {
+
                     addDiffere(compteClient, c, tp, amount, amount - clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId(), emg);
                 });
             }
@@ -2134,7 +2147,7 @@ public class SalesServiceImpl implements SalesService {
             cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
             addtransactionComptant(typeMvtCaisse, tp, key_account, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), tReglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId(), emg);
             addRecette(clotureVenteParams.getMontantPaye(), "Vente VNO", tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
-            addTransaction(tUser, tUser,
+            addTransaction(client, tUser, tUser,
                     tp.getLgPREENREGISTREMENTID(), montant,
                     tp.getIntACCOUNT(), amount, clotureVenteParams.getMontantRecu(),
                     true, CategoryTransaction.CREDIT, TypeTransaction.VENTE_COMPTANT,
@@ -3248,7 +3261,7 @@ public class SalesServiceImpl implements SalesService {
             cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
             addtransactionComptant(typeMvtCaisse, tp, false, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), tReglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId(), emg);
             addRecette(clotureVenteParams.getMontantPaye(), "Vente VNO", tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
-            addTransaction(tUser, tUser,
+            addTransaction(Optional.empty(), tUser, tUser,
                     tp.getLgPREENREGISTREMENTID(), montant,
                     tp.getIntACCOUNT(), amount, clotureVenteParams.getMontantRecu(),
                     true, CategoryTransaction.CREDIT, TypeTransaction.VENTE_COMPTANT,

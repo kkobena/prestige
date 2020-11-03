@@ -20,7 +20,7 @@ import java.util.Objects;
  */
 public class ClientDTO implements Serializable {
     private static final long serialVersionUID = 1L;
-    private String lgCLIENTID, strCODEINTERNE, lgTIERSPAYANTID, lgVILLEID, dtNAISSANCE, strCODEPOSTAL, strFIRSTNAME, strLASTNAME, strNUMEROSECURITESOCIAL = "", strSEXE, strADRESSE, fullName, lgTYPECLIENTID;
+    private String lgCLIENTID, strCODEINTERNE, lgTIERSPAYANTID,email, lgVILLEID, dtNAISSANCE, strCODEPOSTAL, strFIRSTNAME, strLASTNAME, strNUMEROSECURITESOCIAL = "", strSEXE, strADRESSE, fullName, lgTYPECLIENTID;
     private List<TiersPayantParams> tiersPayants = new ArrayList<>();
     private List<AyantDroitDTO> ayantDroits = new ArrayList<>();
     private Integer intPOURCENTAGE, intPRIORITY, dbPLAFONDENCOURS = 0, dblQUOTACONSOMENSUELLE = 0,dblPLAFOND=0;
@@ -191,6 +191,7 @@ public class ClientDTO implements Serializable {
         this.strSEXE = client.getStrSEXE();
         this.strADRESSE = client.getStrADRESSE();
         this.fullName = client.getStrFIRSTNAME() + " " + client.getStrLASTNAME();
+        this.email=client.getEmail();
     }
 
     public ClientDTO(TClient client, List<TiersPayantParams> tiersPayants, List<AyantDroitDTO> ayantDroits) {
@@ -199,6 +200,7 @@ public class ClientDTO implements Serializable {
         if(remise!=null){
             this.remiseId=remise.getLgREMISEID();
         }
+        this.email=client.getEmail();
         this.tiersPayants = tiersPayants;
         this.strCODEINTERNE = client.getStrCODEINTERNE();
         this.strFIRSTNAME = client.getStrFIRSTNAME();
@@ -238,6 +240,7 @@ public class ClientDTO implements Serializable {
         if(remise!=null){
             this.remiseId=remise.getLgREMISEID();
         }
+        this.email=client.getEmail();
         this.tiersPayants = tiersPayants;
         this.strCODEINTERNE = client.getStrCODEINTERNE();
         this.strFIRSTNAME = client.getStrFIRSTNAME();
@@ -350,9 +353,18 @@ public class ClientDTO implements Serializable {
         this.bIsAbsolute = bIsAbsolute;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public ClientDTO(TClient client, List<TiersPayantParams> tiersPayants, List<TiersPayantParams> preenregistrementstp, List<AyantDroitDTO> ayantDroits) {
         this.lgCLIENTID = client.getLgCLIENTID();
         TRemise remise=client.getRemise();
+        this.email=client.getEmail();
         if(remise!=null){
             this.remiseId=remise.getLgREMISEID();
         }

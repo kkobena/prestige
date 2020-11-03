@@ -1189,6 +1189,12 @@ Ext.define('testextjs.controller.VenteCtr', {
         var me = this;
         me.refresh();
     },
+    handleMontantField: function (montantNet) {
+        var me = this, typeRegle = me.getVnotypeReglement().getValue();
+        if (montantNet > 0 && (typeRegle === '1' || typeRegle === '4')) {
+            me.getMontantRecu().setReadOnly(false);
+        }
+    },
     showNetPaidVno: function () {
         var me = this;
         var vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
@@ -1210,9 +1216,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                         var montantNet = me.getNetAmountToPay().montantNet;
                         me.getMontantNet().setValue(me.getNetAmountToPay().montantNet);
                         me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
-                        if (montantNet > 0) {
-                            me.getMontantRecu().setReadOnly(false);
-                        }
+                        me.handleMontantField(montantNet);
                         me.getMontantRecu().focus(true, 50);
 
                     } else {
@@ -1379,10 +1383,17 @@ Ext.define('testextjs.controller.VenteCtr', {
             });
         }
     },
-    textFieldSpecialKeyNav: function (field, e) {
-        if (e.getKey() === e.ENTER || e.getKey() === 13) {
-        }
 
+    handleMobileMoney: function () {
+        var me = this;
+        me.getCbContainer().hide();
+        if (Ext.isEmpty(me.getClient())) {
+            me.showAndHideInfosStandardClient(true);
+        }
+        if (me.getNetAmountToPay()) {
+            me.getMontantRecu().setValue(me.getNetAmountToPay().montantNet);
+        }
+        me.getMontantRecu().setReadOnly(true);
     },
     showAndHideCbInfos: function (v) {
         var me = this;
@@ -1451,8 +1462,6 @@ Ext.define('testextjs.controller.VenteCtr', {
     typeReglementSelectEvent: function (field) {
         var me = this;
         var value = field.getValue().trim();
-//        if (me.getCurrent()) {
-//            var typeVente = me.getTypeVenteCombo().getValue();
         if (value === '1') {
             me.getMontantRecu().enable();
             me.getMontantRecu().setReadOnly(false);
@@ -1462,6 +1471,9 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.getMontantRecu().enable();
             me.showAndHideInfosStandardClient(true);
             me.getMontantRecu().setReadOnly(false);
+            me.getCbContainer().hide();
+        } else if (value == '7' || value === '8' || value === '9') {
+            me.handleMobileMoney();
         } else {
             if (value === '2' || value === '3' || value === '6') {
                 me.showAndHideCbInfos(value);
@@ -1470,7 +1482,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 }
 
                 me.getMontantRecu().disable();
-                // me.getMontantRecu().setReadOnly(true);
+
             } else {
                 me.getMontantRecu().setValue(0);
                 me.getMontantRecu().setReadOnly(false);
@@ -1605,6 +1617,12 @@ Ext.define('testextjs.controller.VenteCtr', {
                 {
                     header: 'Téléphone',
                     dataIndex: 'strADRESSE',
+                    flex: 1
+
+                },
+                {
+                    header: 'E-mail',
+                    dataIndex: 'email',
                     flex: 1
 
                 },
@@ -3992,6 +4010,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                     me.getVnobtnCloture().focus();
                                 } else {
                                     me.getMontantRecu().enable();
+                                   me.handleMontantField(montantNet);
                                     me.getMontantRecu().setReadOnly(false);
                                     me.getMontantRecu().focus(true, 50);
                                 }

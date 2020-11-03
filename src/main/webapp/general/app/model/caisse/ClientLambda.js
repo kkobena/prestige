@@ -36,6 +36,9 @@ Ext.define('testextjs.model.caisse.ClientLambda', {
         , {
             name: 'fullName',
             type: 'string'
+        }, {
+            name: 'email',
+            type: 'string'
         }
 
 

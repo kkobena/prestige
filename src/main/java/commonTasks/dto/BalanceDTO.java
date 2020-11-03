@@ -18,7 +18,7 @@ public class BalanceDTO implements Serializable {
     private String balanceId = UUID.randomUUID().toString();
     private String typeVente;
     Integer montantTTC = 0, montantNet = 0, montantRemise = 0, pourcentage = 0, panierMoyen = 0,
-            montantEsp = 0, montantCheque=0, MontantVirement = 0, montantCB = 0, montantTp = 0, montantDiff = 0,nbreVente=0;
+            montantEsp = 0, montantCheque=0, MontantVirement = 0, montantCB = 0, montantTp = 0, montantDiff = 0,nbreVente=0,montantMobilePayment=0;
 
     public String getBalanceId() {
         return balanceId;
@@ -155,6 +155,14 @@ public class BalanceDTO implements Serializable {
             return false;
         }
         return true;
+    }
+
+    public Integer getMontantMobilePayment() {
+        return montantMobilePayment;
+    }
+
+    public void setMontantMobilePayment(Integer montantMobilePayment) {
+        this.montantMobilePayment = montantMobilePayment;
     }
 
     @Override

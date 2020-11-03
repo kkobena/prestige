@@ -28,13 +28,11 @@ import shedule.DailyStockTask;
 @Startup
 @TransactionManagement(value = TransactionManagementType.BEAN)
 public class DatabaseToolkit {
-    
     private static final Logger LOG = Logger.getLogger(DatabaseToolkit.class.getName());
     @Resource(mappedName = "jdbc/__laborex_pool")
     private DataSource dataSource;
     @Resource(name = "concurrent/__defaultManagedExecutorService")
     ManagedExecutorService mes;
-    
     void runTask() {
         DailyStockTask dailyStockTask = new DailyStockTask();
         dailyStockTask.setDataSource(dataSource);

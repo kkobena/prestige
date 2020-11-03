@@ -16,10 +16,18 @@ import java.util.Objects;
  */
 public class ClientLambdaDTO implements Serializable {
 
-    private String lgCLIENTID, strFIRSTNAME, strLASTNAME, strADRESSE, lgTYPECLIENTID, strSEXE;
+    private String lgCLIENTID, strFIRSTNAME, strLASTNAME, strADRESSE, lgTYPECLIENTID, strSEXE,email;
 
     public String getLgCLIENTID() {
         return lgCLIENTID;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public void setLgCLIENTID(String lgCLIENTID) {
@@ -91,13 +99,14 @@ public class ClientLambdaDTO implements Serializable {
         return true;
     }
 
-    public ClientLambdaDTO(String lgCLIENTID, String strFIRSTNAME, String strLASTNAME, String strADRESSE, String lgTYPECLIENTID, String strSEXE) {
+    public ClientLambdaDTO(String lgCLIENTID, String strFIRSTNAME, String strLASTNAME, String strADRESSE, String lgTYPECLIENTID, String strSEXE,String email) {
         this.lgCLIENTID = lgCLIENTID;
         this.strFIRSTNAME = strFIRSTNAME;
         this.strLASTNAME = strLASTNAME;
         this.strADRESSE = strADRESSE;
         this.lgTYPECLIENTID = lgTYPECLIENTID;
         this.strSEXE = strSEXE;
+        this.email=email;
     }
 
     public ClientLambdaDTO(TClient c) {
@@ -111,6 +120,7 @@ public class ClientLambdaDTO implements Serializable {
         }
 
         this.strSEXE = c.getStrSEXE();
+        this.email=c.getEmail();
     }
 
     public ClientLambdaDTO() {

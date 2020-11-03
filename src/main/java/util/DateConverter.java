@@ -7,6 +7,7 @@ package util;
 
 import com.ibm.icu.text.RuleBasedNumberFormat;
 import com.itextpdf.text.pdf.Barcode128;
+import dal.TClient;
 import dal.TFamille;
 import dal.TPreenregistrementDetail;
 import dal.TPrivilege;
@@ -154,8 +155,10 @@ public final class DateConverter {
     public static final String KEY_SMS_CLOTURE_CAISSE = "KEY_SMS_CLOTURE_CAISSE";
     public static final String KEY_SMS_MODIF_PRIX_VENTE = "KEY_SMS_MODIF_PRIX_VENTE";
     public static final String KEY_MAIL_CLOTURE_CAISSE = "KEY_MAIL_CLOTURE_CAISSE";
-
-
+    public static final String MODE_MOOV = "8";
+    public static final String MODE_ORANGE = "10";
+    public static final String TYPE_REGLEMENT_ORANGE = "7";
+    public static final String MODE_MTN = "9";
     /*
     parametre nombre de mois à considerer
      */
@@ -192,7 +195,7 @@ public final class DateConverter {
             if (result_phone.length() < 11) {
                 result_phone = "0" + result_phone;
             }
-
+         
             return "(" + Str_country_indicatif + ") " + result_phone;
         } catch (Exception e) {
         }

@@ -8,6 +8,7 @@ package dal;
 import dal.enumeration.TypeLog;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,6 +20,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import toolkits.parameters.commonparameter;
 
 /**
  *
@@ -199,4 +201,17 @@ public class TEventLog implements Serializable {
         this.strTYPELOG = strTYPELOG;
     }
 
+    public TEventLog build(TUser user, String ref, String desc, TypeLog typeLog, Object T) {
+        this.lgUSERID = user;
+        this.lgEVENTLOGID = UUID.randomUUID().toString();
+        this.dtCREATED = new Date();
+        this.dtUPDATED = new Date();
+        this.strCREATEDBY = user.getStrLOGIN();
+        this.strSTATUT = commonparameter.statut_enable;
+        this.strTABLECONCERN = T.getClass().getName();
+        this.typeLog = typeLog;
+        this.strTYPELOG = ref;
+        this.strDESCRIPTION = desc + " référence [" + ref + " ]";
+        return this;
+    }
 }

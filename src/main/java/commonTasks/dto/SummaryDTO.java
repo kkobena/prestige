@@ -16,7 +16,7 @@ public class SummaryDTO implements Serializable {
     Integer montantTTC = 0, montantNet = 0, montantRemise = 0, pourcentage = 0, panierMoyen = 0,
             montantEsp = 0, montantCheque=0, montantVirement = 0,
             montantCB = 0, montantTp = 0, montantDiff = 0, nbreVente = 0, 
-            fondCaisse = 0, montantRegDiff = 0,
+            fondCaisse = 0, montantRegDiff = 0,montantMobilePayment=0,
             montantRegleTp = 0, montantEntre = 0, 
             montantAchat = 0, montantSortie = 0, marge = 0,montantTva=0,montantHT=0;
     double ratioVA = 0.0, rationAV = 0.0;
@@ -31,6 +31,14 @@ public class SummaryDTO implements Serializable {
 
     public Integer getMontantHT() {
         return montantHT;
+    }
+
+    public Integer getMontantMobilePayment() {
+        return montantMobilePayment;
+    }
+
+    public void setMontantMobilePayment(Integer montantMobilePayment) {
+        this.montantMobilePayment = montantMobilePayment;
     }
 
     public void setMontantHT(Integer montantHT) {

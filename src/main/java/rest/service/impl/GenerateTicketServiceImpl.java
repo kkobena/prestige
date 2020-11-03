@@ -34,10 +34,7 @@ import dal.enumeration.TypeTransaction;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.print.PageFormat;
-import java.awt.print.Paper;
 import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -465,9 +462,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     @Override
     public List<String> generateDataSummaryVno(TPreenregistrement p) {
-        TTypeReglement tTypeReglement = p.getLgREGLEMENTID().getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID();
+//        TTypeReglement tTypeReglement = p.getLgREGLEMENTID().getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID();
         String id = p.getLgPREENREGISTREMENTID();
         MvtTransaction mvtTransaction = findByPkey(id);
+        TTypeReglement tTypeReglement = mvtTransaction.getReglement();
         List<String> datas = new ArrayList<>();
         if (mvtTransaction.getMontantRemise() > 0) {
             datas.add("* ;(-) " + DateConverter.amountFormat(mvtTransaction.getMontantRemise()) + "; F CFA;1");
@@ -491,8 +489,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     @Override
     public List<String> generateDataSummaryVno(TPreenregistrement p, MvtTransaction mvtTransaction) {
-
-        TTypeReglement tTypeReglement = p.getLgREGLEMENTID().getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID();
+        TTypeReglement tTypeReglement = mvtTransaction.getReglement();
         List<String> datas = new ArrayList<>();
         int remise = Math.abs(mvtTransaction.getMontantRemise());
         if (remise > 0) {
@@ -871,7 +868,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     public List<String> generateDataSummaryVo(TPreenregistrement OTPreenregistrement, MvtTransaction clotureVenteParams) {
         List<String> datas = new ArrayList<>();
-        TTypeReglement reglement = OTPreenregistrement.getLgREGLEMENTID().getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID();
+        TTypeReglement reglement = clotureVenteParams.getReglement();
         int remise = clotureVenteParams.getMontantRemise();
 
         if (OTPreenregistrement.getIntCUSTPART() == 0) {
@@ -950,6 +947,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         Map<TUser, List<MvtTransaction>> mapuser = ticketZData(params).parallelStream().collect(Collectors.groupingBy(MvtTransaction::getCaisse));
         List<String> lstData = new ArrayList<>();
         LongAdder _totalEsp = new LongAdder();
+        LongAdder _totalMobile = new LongAdder();
         LongAdder _totalCredit = new LongAdder();
         LongAdder _totalCheque = new LongAdder();
         LongAdder _totalVirement = new LongAdder();
@@ -961,12 +959,16 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             lstData.add("RECAPITULATIF DE CAISSE: " + k.getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + k.getStrLASTNAME() + " ; ; ; ;1;0");
             lstData.add(" ; ; ; ; ; ;");
             LongAdder utotalEsp = new LongAdder();
+            LongAdder utotalMobile = new LongAdder();
             LongAdder utotalCredit = new LongAdder();
             LongAdder utotalCheque = new LongAdder();
             LongAdder utotalVirement = new LongAdder();
             LongAdder utotalCB = new LongAdder();
-
+            LongAdder totalSortieCaisseMobile = new LongAdder();
             LongAdder rtotalEsp = new LongAdder();
+            LongAdder rtotalMobile = new LongAdder();
+            LongAdder regleEntreeMobile = new LongAdder();
+            LongAdder entreeMobile = new LongAdder();
             LongAdder rtotalCheque = new LongAdder();
             LongAdder rtotalVirement = new LongAdder();
             LongAdder rtotalCB = new LongAdder();
@@ -1006,6 +1008,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                                     utotalCB.add(b.getMontantRegle());
                                     rtotalCB.add(b.getMontantRegle());
                                     break;
+                                case DateConverter.MODE_MOOV:
+                                case DateConverter.MODE_MTN:
+                                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                    utotalMobile.add(b.getMontantRegle());
+                                    rtotalMobile.add(b.getMontantRegle());
+                                    break;
                                 default:
                                     break;
 
@@ -1034,6 +1042,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                                 case DateConverter.MODE_CB:
                                     utotalCB.add(b.getMontantRegle());
                                     rtotalCB.add(b.getMontantRegle());
+                                    break;
+                                case DateConverter.MODE_MOOV:
+                                case DateConverter.MODE_MTN:
+                                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                    utotalMobile.add(b.getMontantRegle());
+                                    rtotalMobile.add(b.getMontantRegle());
                                     break;
                                 default:
                                     break;
@@ -1083,6 +1097,16 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                                     }
 
                                     break;
+                                case DateConverter.MODE_MOOV:
+                                case DateConverter.MODE_MTN:
+                                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                    utotalMobile.add(b.getMontant());
+                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                                        regleEntreeMobile.add(b.getMontant());
+                                    } else {
+                                        entreeMobile.add(b.getMontant());
+                                    }
+                                    break;
                                 default:
                                     break;
 
@@ -1109,6 +1133,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                                     utotalCB.add(b.getMontant());
                                     stotalCB.add(b.getMontant());
                                     break;
+                                case DateConverter.MODE_MOOV:
+                                case DateConverter.MODE_MTN:
+                                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                    utotalMobile.add(b.getMontant());
+                                    totalSortieCaisseMobile.add(b.getMontant());
                                 default:
                                     break;
 
@@ -1122,80 +1151,102 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
             });
 
-            Integer usp = rtotalEsp.intValue();
-            Integer ucredit = utotalCredit.intValue();
-            Integer uCheque = rtotalCheque.intValue();
-            Integer entreeEsp = etotalEsp.intValue();
-            Integer sEsp = stotalEsp.intValue();
-            Integer reEsp = retotalEsp.intValue();
-            Integer cbv = rtotalCB.intValue();
-            Integer virv = rtotalVirement.intValue();
-            Integer entreCh = etotalCheque.intValue();
-            Integer entreCB = etotalCB.intValue();
-            Integer entreVir = etotalVirement.intValue();
-            Integer teglech = rretotalCheque.intValue();
-            Integer teglcb = retotalCB.intValue();
-            Integer teglVir = rretotalVirement.intValue();
+            int usp = rtotalEsp.intValue();
+            int ucredit = utotalCredit.intValue();
+            int uCheque = rtotalCheque.intValue();
+            int montantMobile = utotalMobile.intValue();
+            int montantReglementMobile = rtotalMobile.intValue();
+            int entreeMobileMoney = entreeMobile.intValue();
+            int entreeEsp = etotalEsp.intValue();
+            int sEsp = stotalEsp.intValue();
+            int reEsp = retotalEsp.intValue();
+            int cbv = rtotalCB.intValue();
+            int virv = rtotalVirement.intValue();
+            int entreCh = etotalCheque.intValue();
+            int entreCB = etotalCB.intValue();
+            int entreVir = etotalVirement.intValue();
+            int teglech = rretotalCheque.intValue();
+            int teglcb = retotalCB.intValue();
+            int teglVir = rretotalVirement.intValue();
 
             _totalEsp.add(utotalEsp.intValue());
             _totalCredit.add(ucredit);
+            _totalMobile.add(montantMobile);
             _totalCheque.add(utotalCheque.intValue());
             _totalCB.add(utotalCB.intValue());
             _totalVirement.add(utotalVirement.intValue());
 
-            if (usp.compareTo(0) != 0) {
+            if (usp != 0) {
                 lstData.add("Espèce(vno/vo):" + ";" + DateConverter.amountFormat(usp) + "; F CFA;;0;1");
             }
-            if (ucredit.compareTo(0) != 0) {
+            if (ucredit != 0) {
                 lstData.add("Crédit(vno/vo):" + ";" + DateConverter.amountFormat(ucredit) + "; F CFA;;0;1");
             }
-            if (entreeEsp.compareTo(0) != 0) {
+
+            if (entreeEsp != 0) {
                 lstData.add("Espèce Entrée:" + ";" + DateConverter.amountFormat(entreeEsp) + "; F CFA;;0;1");
             }
-            if (reEsp.compareTo(0) != 0) {
+            if (reEsp != 0) {
                 lstData.add("Espèce Regl:" + ";" + DateConverter.amountFormat(reEsp) + "; F CFA;;0;1");
             }
-            if (sEsp.compareTo(0) != 0) {
+            if (sEsp != 0) {
                 lstData.add("Espèce Sortie:" + ";" + DateConverter.amountFormat(sEsp) + "; F CFA;;0;1");
             }
+
             lstData.add("Total espèce: ;" + DateConverter.amountFormat(utotalEsp.intValue()) + ";F CFA;;1;1");
-            if (uCheque.compareTo(0) != 0) {
+            if (uCheque != 0) {
                 lstData.add("Total Ch (vno/vo): ;" + DateConverter.amountFormat(uCheque) + ";F CFA;;1;1");
             }
-            if (cbv.compareTo(0) != 0) {
+            if (montantMobile != 0) {
+                lstData.add("Mobile (vno/vo): ;" + DateConverter.amountFormat(montantMobile) + ";F CFA;;1;1");
+            }
+
+            if (cbv != 0) {
                 lstData.add("Total CB (vno/vo): ;" + DateConverter.amountFormat(cbv) + ";F CFA;;1;1");
             }
-            if (virv.compareTo(0) != 0) {
+            if (virv != 0) {
                 lstData.add("Total Vir. (vno/vo): ;" + DateConverter.amountFormat(virv) + ";F CFA;;1;1");
             }
-            if (entreCh.compareTo(0) != 0) {
+            if (entreCh != 0) {
                 lstData.add("Total Entrée Chèque : ;" + DateConverter.amountFormat(entreCh) + ";F CFA;;1;1");
             }
-            if (entreCB.compareTo(0) != 0) {
+            if (entreeMobileMoney != 0) {
+                lstData.add("Total Entrée Mobile : ;" + DateConverter.amountFormat(entreeMobileMoney) + ";F CFA;;1;1");
+            }
+
+            if (entreCB != 0) {
                 lstData.add("Total Entrée CB : ;" + DateConverter.amountFormat(entreCB) + ";F CFA;;1;1");
             }
-            if (entreVir.compareTo(0) != 0) {
+            if (entreVir != 0) {
                 lstData.add("Total entrée.Vir: ;" + DateConverter.amountFormat(entreVir) + ";F CFA;;1;1");
             }
-            if (teglech.compareTo(0) != 0) {
+            if (teglech != 0) {
                 lstData.add("Total Regl Ch: ;" + DateConverter.amountFormat(teglech) + ";F CFA;;1;1");
             }
-            if (teglcb.compareTo(0) != 0) {
+            if (montantReglementMobile != 0) {
+                lstData.add("Total.Regl.Mobile: ;" + DateConverter.amountFormat(montantReglementMobile) + ";F CFA;;1;1");
+            }
+            if (teglcb != 0) {
                 lstData.add("Total Regl CB: ;" + DateConverter.amountFormat(teglcb) + ";F CFA;;1;1");
             }
-            if (teglVir.compareTo(0) != 0) {
+            if (teglVir != 0) {
                 lstData.add("Total Regl Vir: ;" + DateConverter.amountFormat(teglVir) + ";F CFA;;1;1");
             }
-            Integer sortieChe = stotalCheque.intValue();
-            Integer sortieCb = stotalCB.intValue();
-            Integer sortieVir = stotalVirement.intValue();
-            if (sortieChe.compareTo(0) != 0) {
+
+            int sortieChe = stotalCheque.intValue();
+            int sortieCb = stotalCB.intValue();
+            int sortieVir = stotalVirement.intValue();
+            int sortieCaisseMobile = totalSortieCaisseMobile.intValue();
+            if (sortieChe != 0) {
                 lstData.add("Total Sortie Ch: ;" + DateConverter.amountFormat(sortieChe) + ";F CFA;;1;1");
             }
-            if (sortieCb.compareTo(0) != 0) {
+            if (sortieCb != 0) {
                 lstData.add("Total Sortie CB: ;" + DateConverter.amountFormat(sortieCb) + ";F CFA;;1;1");
             }
-            if (sortieVir.compareTo(0) != 0) {
+            if (sortieCaisseMobile != 0) {
+                lstData.add("Total.Sortie.Mobile: ;" + DateConverter.amountFormat(sortieCaisseMobile) + ";F CFA;;1;1");
+            }
+            if (sortieVir != 0) {
                 lstData.add("Total Sortie Vir: ;" + DateConverter.amountFormat(sortieVir) + ";F CFA;;1;1");
             }
             lstData.add(" ; ; ; ; ; ;");
@@ -1218,6 +1269,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         int cb = _totalCB.intValue();
         if (cb != 0) {
             lstData.add("TOTAL CB: ; " + DateConverter.amountFormat(cb) + "; F CFA;;1;1;G");
+        }
+        int totalMobilePayment = _totalMobile.intValue();
+        if (totalMobilePayment != 0) {
+            lstData.add("TOTAL MOBILE: ; " + DateConverter.amountFormat(totalMobilePayment) + "; F CFA;;1;1;G");
         }
         int vr = _totalVirement.intValue();
         if (vr != 0) {
@@ -1934,7 +1989,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return getMontantNetVno(montantNet);
 
     }
-
 
     private File receipTmpFile(StringBuilder sb) {
         DataOutputStream dataOutputStream = null;

@@ -5,10 +5,10 @@ Ext.define('testextjs.view.vente.user.ClientLambda', {
     extend: 'Ext.window.Window',
     xtype: 'clientLambda',
     autoShow: false,
-    height:340,
+    height: 340,
     width: '60%',
     modal: true,
-    title:'AJOUTER UN CLIENT A LA VENTE ',
+    title: 'AJOUTER UN CLIENT A LA VENTE ',
     closeAction: 'hide',
     closable: false,
     layout: {
@@ -44,7 +44,7 @@ Ext.define('testextjs.view.vente.user.ClientLambda', {
                             fieldLabel: 'Nom',
                             emptyText: 'Nom',
                             name: 'strFIRSTNAME',
-                            height: 45,
+                            height: 30,
                             allowBlank: false,
                             enableKeyEvents: true
 
@@ -52,19 +52,29 @@ Ext.define('testextjs.view.vente.user.ClientLambda', {
                             fieldLabel: 'Prénom',
                             emptyText: 'Prénom',
                             name: 'strLASTNAME',
-                            height: 45,
+                            height: 30,
                             allowBlank: false,
                             enableKeyEvents: true
 
                         },
+                      
                         {
                             fieldLabel: 'Téléphone',
                             emptyText: 'Téléphone',
                             name: 'strADRESSE',
-                            height: 45,
+                            height: 30,
                             regex: /[0-9.]/,
                             allowBlank: false,
                             enableKeyEvents: true
+                        },  {
+                            fieldLabel: 'E-mail',
+                            emptyText: 'E-mail',
+                            name: 'email',
+                            height: 30,
+                            vtype: 'email',
+                            allowBlank: true,
+                            enableKeyEvents: true
+
                         },
                         {
                             xtype: 'hiddenfield',

@@ -10,7 +10,7 @@ package dal.enumeration;
  * @author Kobena
  */
 public enum TypeLog {
-    SUPPRESSION_PRODUIT("Suppression de produit"),
+    DECONDITIONNEMENT("Deconditionnement de produit"),
     MODIFICATION_PRIX_VENTE_PRODUIT("Modification prix de vente de produit"),
     ANNULATION_DE_VENTE("Annulation de vente"),
     SUPPRESION_DE_FACTURE("Suppression de facture"),
@@ -22,7 +22,7 @@ public enum TypeLog {
     ANNULATION_DE_CAISSE("Annulation de caisse"),
     MVT_DE_CAISSE("Mouvement de caisse"),
     ENTREE_EN_STOCK("Entrée en stock de BL"),
-    ATTRIBUTION_DE_FOND_DE_CAISSE("Validation de caisse"),
+    ATTRIBUTION_DE_FOND_DE_CAISSE("Attribution de fond de caisse"),
     MODIFICATION_DATE_SYSTEME("Modification de la date système"),
     IVENTAIRE("Inventaire du stock"),
     GENERATION_DE_FACTURE("Génération de facture"),
@@ -30,8 +30,8 @@ public enum TypeLog {
     QUANTITE_UG("Entrée quantité UG"),
     MODIFICATION_INFO_VENTE("Modification de vente"),
     RETOUR_FOURNISSEUR("Retour fournisseur"),
-    SAISIS_PERIMES("Saisis de périmés"),
-    DECONDITIONNEMENT("Deconditionnement de produit");
+    SAISIS_PERIMES("Saisis de périmés");
+
     private final String value;
 
     public String getValue() {

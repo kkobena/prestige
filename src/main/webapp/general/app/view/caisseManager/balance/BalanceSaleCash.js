@@ -71,6 +71,10 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                         {name: 'montantRemise',
                             type: 'number'
 
+                        },
+                        {name: 'montantMobilePayment',
+                            type: 'number'
+
                         }
                     ],
             autoLoad: false,
@@ -85,7 +89,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                     totalProperty: 'total',
                     metaProperty: 'metaData'
                 },
-                 timeout: 2400000
+                timeout: 2400000
 
             }
         });
@@ -137,8 +141,8 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                         , {
                             text: 'imprimer',
                             itemId: 'imprimer',
-                             iconCls: 'printable',
-                           tooltip: 'Imprimer la balance vente/caisse',
+                            iconCls: 'printable',
+                            tooltip: 'Imprimer la balance vente/caisse',
                             scope: this
 
                         }
@@ -155,7 +159,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             labelWidth: 120,
                             itemId: 'montantTTC',
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             value: 0
@@ -167,7 +171,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'MONTANT ACHAT',
                             labelWidth: 120,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             itemId: 'montantAchat',
@@ -179,7 +183,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'MARGE:',
                             labelWidth: 55,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             itemId: 'marge',
@@ -208,7 +212,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'FOND.CAISSE',
                             labelWidth: 100,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             itemId: 'fondCaisse',
@@ -221,7 +225,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'REGL.DIFFERE',
                             labelWidth: 100,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             itemId: 'montantRegDiff',
                             fieldStyle: "color:blue;font-weight:800;",
@@ -232,10 +236,25 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             xtype: 'displayfield',
 
                             flex: 0.7,
+                            fieldLabel: 'MOBILE',
+                            labelWidth: 100,
+                            renderer: function (v) {
+                                return Ext.util.Format.number(v, '0,000.');
+                            },
+                            itemId: 'montantMobilePayment',
+                            fieldStyle: "color:blue;font-weight:800;",
+                            value: 0
+
+                        },
+
+                        {
+                            xtype: 'displayfield',
+
+                            flex: 0.7,
                             fieldLabel: 'REGL.TPAYANT:',
                             labelWidth: 100,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             itemId: 'montantRegleTp',
                             fieldStyle: "color:blue;font-weight:800;",
@@ -249,7 +268,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'SORTIE:',
                             labelWidth: 60,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             itemId: 'montantSortie',
                             fieldStyle: "color:red;font-weight:800;",
@@ -263,7 +282,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'ENTREE',
                             labelWidth: 60,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             itemId: 'montantEntre',
                             fieldStyle: "color:green;font-weight:800;",
@@ -282,9 +301,9 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             xtype: 'displayfield',
                             flex: 1,
                             fieldLabel: 'ESPECES',
-                            labelWidth:70,
+                            labelWidth: 70,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             itemId: 'montantEsp',
@@ -297,7 +316,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'PANIER M',
                             labelWidth: 70,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             itemId: 'panierMoyen',
@@ -309,7 +328,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'NB.VENTE',
                             labelWidth: 70,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             itemId: 'nbreVente',
@@ -321,7 +340,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'CHEQUE',
                             labelWidth: 60,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             id: 'montantCheque',
@@ -332,7 +351,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             fieldLabel: 'VIREMENT',
                             labelWidth: 70,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             id: 'montantVirement',
@@ -366,7 +385,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             dataIndex: 'nbreVente',
                             xtype: 'numbercolumn',
                             format: '0,000.',
-                             align: 'right',
+                            align: 'right',
                             flex: 0.5
                         }, {
                             text: 'Montant',
@@ -436,7 +455,17 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCash', {
                             format: '0,000.',
                             align: 'right',
                             flex: 1
-                        }, {
+                        },
+                        {
+                            header: 'P.Mobile',
+                            dataIndex: 'montantMobilePayment',
+                            xtype: 'numbercolumn',
+                            format: '0,000.',
+                            align: 'right',
+                            flex: 1
+                        },
+
+                        {
                             header: 'Tiers payant',
                             dataIndex: 'montantTp',
                             xtype: 'numbercolumn',

@@ -201,7 +201,7 @@ public class ProduitServiceImpl implements ProduitService {
 
     @Override
     public JSONObject supprimerProduitDesactive(String id, TUser tUser) throws JSONException {
-        return updateProuitDesactive(id, commonparameter.statut_delete, tUser, TypeLog.SUPPRESSION_PRODUIT);
+        return updateProuitDesactive(id, commonparameter.statut_delete, tUser, TypeLog.SUPPRESSION_DE_PRODUIT);
     }
 
     @Override

@@ -19,7 +19,7 @@ Ext.define('testextjs.model.caisse.ClientAssurance', {
             name: 'fullName',
             type: 'string'
         },
-        
+
         {
             name: 'strFIRSTNAME',
             type: 'string'
@@ -44,7 +44,7 @@ Ext.define('testextjs.model.caisse.ClientAssurance', {
             name: 'tiersPayants',
             type: 'auto'
         },
-        {name:'preenregistrementstp',auto:'auto'}
+        {name: 'preenregistrementstp', auto: 'auto'}
         , {
             name: 'ayantDroits',
             type: 'auto'
@@ -82,7 +82,7 @@ Ext.define('testextjs.model.caisse.ClientAssurance', {
             name: 'bIsAbsolute',
             type: 'boolean'
 
-        } , {
+        }, {
             name: 'dblQUOTACONSOMENSUELLE',
             type: 'number'
 
@@ -93,11 +93,14 @@ Ext.define('testextjs.model.caisse.ClientAssurance', {
             name: 'compteTp',
             type: 'string'
         },
-         {
+        {
             name: 'remiseId',
             type: 'string'
         }
-
+        , {
+            name: 'email',
+            type: 'string'
+        }
 
     ]
 });

@@ -53,9 +53,12 @@ public class TClient implements Serializable {
     @Basic(optional = false)
     @Column(name = "lg_CLIENT_ID", nullable = false, length = 40)
     private String lgCLIENTID;
+    @Column(name = "email", length = 100)
+    private String email;
     @Column(name = "str_CODE_INTERNE", length = 40)
     private String strCODEINTERNE;
     @Column(name = "str_FIRST_NAME", length = 50)
+
     private String strFIRSTNAME;
     @Column(name = "str_LAST_NAME", length = 50)
     private String strLASTNAME;
@@ -345,6 +348,14 @@ public class TClient implements Serializable {
 
     public void setLgCATEGORYCLIENTID(TCategoryClient lgCATEGORYCLIENTID) {
         this.lgCATEGORYCLIENTID = lgCATEGORYCLIENTID;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
 }
