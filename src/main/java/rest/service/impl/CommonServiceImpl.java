@@ -672,8 +672,9 @@ public class CommonServiceImpl implements Serializable, CommonService {
                 TParameters tp = getEntityManager().find(TParameters.class, "DATE_MIS_A_JOUR_NLLE_VERSION");
                 if (tp != null) {
                     dateUpdat = LocalDate.parse(tp.getStrVALUE().trim(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                     return new JSONObject().put("success", true).put("datemisajour", dateUpdat.toString());
                 }
-                return new JSONObject().put("success", true).put("datemisajour", dateUpdat.toString());
+                return new JSONObject().put("success", false);
             } catch (Exception e) {
                 e.printStackTrace();
                 return new JSONObject().put("success", false);
