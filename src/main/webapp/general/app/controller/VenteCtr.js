@@ -1194,6 +1194,9 @@ Ext.define('testextjs.controller.VenteCtr', {
         if (montantNet > 0 && (typeRegle === '1' || typeRegle === '4')) {
             me.getMontantRecu().setReadOnly(false);
         }
+        if (typeRegle !== '1' || typeRegle !== '4') {
+            me.getMontantRecu().setValue(montantNet);
+        }
     },
     showNetPaidVno: function () {
         var me = this;
@@ -1287,7 +1290,6 @@ Ext.define('testextjs.controller.VenteCtr', {
 
 
             let montantRemis = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
-            console.log(montantRemis, '---------- ');
             var totalRecap = data.montant, montantPaye = montantRecu - montantRemis;
             var param = {
                 "typeVenteId": typeVenteCombo,
@@ -1333,7 +1335,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                                      }*/
                                     me.onPrintTicket(param, typeVenteCombo);
                                 }
-                                console.log(montantRemis, '---------- 2');
                                 me.resetAll(montantRemis);
                                 me.getVnoproduitCombo().focus(false, 100, function () {
                                 });
@@ -4010,7 +4011,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                     me.getVnobtnCloture().focus();
                                 } else {
                                     me.getMontantRecu().enable();
-                                   me.handleMontantField(montantNet);
+                                    me.handleMontantField(montantNet);
                                     me.getMontantRecu().setReadOnly(false);
                                     me.getMontantRecu().focus(true, 50);
                                 }
