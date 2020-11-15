@@ -37,9 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "TFamille.findByLgFAMILLEPARENTID", query = "SELECT t FROM TFamille t WHERE t.lgFAMILLEPARENTID = :lgFAMILLEPARENTID"),
     @NamedQuery(name = "TFamille.findByStrNAME", query = "SELECT t FROM TFamille t WHERE t.strNAME = :strNAME"),
     @NamedQuery(name = "TFamille.findByStrDESCRIPTION", query = "SELECT t FROM TFamille t WHERE t.strDESCRIPTION = :strDESCRIPTION"),
-
     @NamedQuery(name = "TFamille.findByIntCIP", query = "SELECT t FROM TFamille t WHERE t.intCIP = :intCIP"),
-
     @NamedQuery(name = "TFamille.findByStrSTATUT", query = "SELECT t FROM TFamille t WHERE t.strSTATUT = :strSTATUT")
 
 })

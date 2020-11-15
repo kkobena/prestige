@@ -26,6 +26,7 @@ import dal.Groupefournisseur;
 import dal.HMvtProduit;
 import dal.MvtTransaction;
 import dal.MvtTransaction_;
+import dal.Notification;
 import dal.TBilletage;
 import dal.TBilletageDetails;
 import dal.TBonLivraison;
@@ -54,9 +55,11 @@ import dal.TTypeReglement_;
 import dal.TUser;
 import dal.TUser_;
 import dal.Typemvtproduit;
+import dal.enumeration.Canal;
 import dal.enumeration.CategorieTypeMvt;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeLog;
+import dal.enumeration.TypeNotification;
 import dal.enumeration.TypeTransaction;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -103,6 +106,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CaisseService;
 import rest.service.LogService;
+import rest.service.NotificationService;
 import rest.service.TransactionService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -113,17 +117,19 @@ import util.DateConverter;
  */
 @Stateless
 public class CaisseServiceImpl implements CaisseService {
-    
+
     private static final Logger LOG = Logger.getLogger(CaisseServiceImpl.class.getName());
     @EJB
     TransactionService transactionService;
     @EJB
     LogService logService;
+    @EJB
+    NotificationService notificationService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @Resource(name = "concurrent/__defaultManagedExecutorService")
     ManagedExecutorService mes;
-    
+
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = getEntityManager().find(TParameters.class, key);
@@ -132,29 +138,35 @@ public class CaisseServiceImpl implements CaisseService {
             return false;
         }
     }
-    
-    public void sendSms(String msg) {
-        if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
-            Sms sms = new Sms();
-            sms.setMessage(msg);
-            mes.submit(sms);
+
+    public void createNotification(String msg, TypeNotification typeNotification, TUser user) {
+
+        try {
+
+            notificationService.save(new Notification()
+                    .canal(Canal.SMS)
+                    .typeNotification(typeNotification)
+                    .message(msg)
+                    .addUser(user)
+            );
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
-        
+
     }
-    
-    public void sendMail(String msg, String subject) {
-        if (checkParameterByKey(DateConverter.KEY_MAIL_CLOTURE_CAISSE)) {
-            Mail mail = new Mail();
-            mail.setMessage(msg);
-            mail.setSubject(subject);
-            mes.submit(mail);
-        }
-        
-    }
-    
+
+//    public void sendMail(String msg, String subject) {
+//        if (checkParameterByKey(DateConverter.KEY_MAIL_CLOTURE_CAISSE)) {
+//            Mail mail = new Mail();
+//            mail.setMessage(msg);
+//            mail.setSubject(subject);
+////            mes.submit(mail);
+//        }
+//        
+//    }
     public CaisseServiceImpl() {
     }
-    
+
     @Override
     public JSONObject donneeCaisses(CaisseParamsDTO caisseParams, boolean all) {
         JSONObject json = new JSONObject();
@@ -169,11 +181,11 @@ public class CaisseServiceImpl implements CaisseService {
             json.put("total", count).put("data", new JSONArray(data)).put("metaData", new JSONArray(os));
         } catch (JSONException e) {
             e.printStackTrace(System.err);
-            
+
         }
         return json;
     }
-    
+
     @Override
     public SumCaisseDTO cumul(CaisseParamsDTO caisseParams, boolean all) {
         List<SumCaisseDTO> os = new ArrayList<>();
@@ -189,7 +201,7 @@ public class CaisseServiceImpl implements CaisseService {
             dTO.setCaisses(caisses);
             sum = caisses;
         }
-        
+
         Map<String, List<VisualisationCaisseDTO>> map = sum.stream().collect(Collectors.groupingBy(s -> s.getModeRegle()));
         LongAdder montantEspec = new LongAdder();
         LongAdder montantCredit = new LongAdder();
@@ -202,7 +214,7 @@ public class CaisseServiceImpl implements CaisseService {
         LongAdder montantCaisse = new LongAdder();
         LongAdder montantFondCaisse = new LongAdder();
         LongAdder montantMobileMoney = new LongAdder();
-        
+
         map.forEach((k, v) -> {
             switch (k) {
                 case DateConverter.MODE_ESP:
@@ -212,7 +224,7 @@ public class CaisseServiceImpl implements CaisseService {
                             montantFondCaisse.add(b.getMontant());
                         } else {
                             montantEspec.add(b.getMontant());
-                            
+
                             if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
                                 montantCredit.add(b.getMontantCredit());
                                 if (b.getMontant() < 0) {
@@ -226,7 +238,7 @@ public class CaisseServiceImpl implements CaisseService {
                                 }
                             }
                         }
-                        
+
                     });
                     break;
                 case DateConverter.MODE_VIREMENT:
@@ -244,7 +256,7 @@ public class CaisseServiceImpl implements CaisseService {
                                 montantEntree.add(b.getMontant());
                             }
                         }
-                        
+
                     });
                     break;
                 case DateConverter.MODE_CB:
@@ -262,7 +274,7 @@ public class CaisseServiceImpl implements CaisseService {
                                 montantEntree.add(b.getMontant());
                             }
                         }
-                        
+
                     });
                     break;
                 case DateConverter.MODE_CHEQUE:
@@ -299,13 +311,13 @@ public class CaisseServiceImpl implements CaisseService {
                                 montantEntree.add(b.getMontant());
                             }
                         }
-                        
+
                     });
                 default:
                     break;
             }
         });
-        
+
         Integer _montantEspec = montantEspec.intValue();
         Integer _montantCredit = montantCredit.intValue();
         Integer _montantAnnulation = montantAnnulation.intValue();
@@ -319,7 +331,7 @@ public class CaisseServiceImpl implements CaisseService {
         if (_montantFondCaisse.compareTo(0) != 0) {
             os.add(new SumCaisseDTO(_montantFondCaisse, "Fond.Caisse"));
         }
-        
+
         if (_montantcheque.compareTo(0) != 0) {
             os.add(new SumCaisseDTO(_montantcheque, "Chèque"));
         }
@@ -348,7 +360,7 @@ public class CaisseServiceImpl implements CaisseService {
         dTO.setSummary(os);
         return dTO;
     }
-    
+
     @Override
     public List<SumCaisseDTO> montantCaisseAnnule(CaisseParamsDTO caisseParams) {
         List<SumCaisseDTO> lis = new ArrayList<>();
@@ -404,13 +416,13 @@ public class CaisseServiceImpl implements CaisseService {
                 lis.add(new SumCaisseDTO(Long.valueOf(objects[0] + ""), objects[1] + ""));
             });
             return lis;
-            
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
-    
+
     @Override
     public List<SumCaisseDTO> getCaisse(CaisseParamsDTO caisseParams) {
         List<SumCaisseDTO> lis = new ArrayList<>();
@@ -468,14 +480,14 @@ public class CaisseServiceImpl implements CaisseService {
                 lis.add(new SumCaisseDTO(Long.valueOf(objects[0] + ""), objects[1] + ""));
             });
             return lis;
-            
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
-        
+
     }
-    
+
     @Override
     public long countcashTransactions(CaisseParamsDTO caisseParams) {
         List<Predicate> predicates = new ArrayList<>();
@@ -524,14 +536,14 @@ public class CaisseServiceImpl implements CaisseService {
             }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
-            
+
             return ((Long) q.getSingleResult()).intValue();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return 0;
         }
     }
-    
+
     @Override
     public JSONObject resumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, boolean cancel, Boolean allActivite,
             int start, int limit, boolean all, String userId) throws JSONException {
@@ -553,7 +565,7 @@ public class CaisseServiceImpl implements CaisseService {
             return json;
         }
     }
-    
+
     private Integer getBilletageByCaisse(String ld_CAISSE_ID) {
         Integer montant = 0;
         try {
@@ -565,12 +577,12 @@ public class CaisseServiceImpl implements CaisseService {
             }
         } catch (Exception e) {
             return 0;
-            
+
         }
         return montant;
-        
+
     }
-    
+
     private Integer getBilletageByCaisse(String ld_CAISSE_ID, String lg_USER_ID) {
         Integer montant = 0;
         try {
@@ -582,12 +594,12 @@ public class CaisseServiceImpl implements CaisseService {
             }
         } catch (Exception e) {
             return 0;
-            
+
         }
         return montant;
-        
+
     }
-    
+
     @Override
     public List<ResumeCaisseDTO> resumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, Boolean allActivite,
             int start, int limit, boolean cancel, String userId, boolean all) {
@@ -625,35 +637,35 @@ public class CaisseServiceImpl implements CaisseService {
             return Collections.emptyList();
         }
     }
-    
+
     @Override
     public List<VisualisationCaisseDTO> mouvementsCaisses(CaisseParamsDTO caisseParams, boolean all) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
         // Tools | Templates.
     }
-    
+
     @Override
     public List<VisualisationCaisseDTO> visualisationsCaisses(CaisseParamsDTO caisseParams, boolean all) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
         // Tools | Templates.
     }
-    
+
     @Override
     public List<VisualisationCaisseDTO> gestionsCaisses(CaisseParamsDTO caisseParams, boolean all) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
         // Tools | Templates.
     }
-    
+
     @Override
     public List<VisualisationCaisseDTO> recaptilatifsCaisses(CaisseParamsDTO caisseParams, boolean all) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
         // Tools | Templates.
     }
-    
+
     public EntityManager getEntityManager() {
         return em;
     }
-    
+
     @Override
     public GenericDTO balanceVenteCaisseReport(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId) {
@@ -666,7 +678,7 @@ public class CaisseServiceImpl implements CaisseService {
         }
         return generic;
     }
-    
+
     @Override
     public JSONObject balanceVenteCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
             throws JSONException {
@@ -685,7 +697,7 @@ public class CaisseServiceImpl implements CaisseService {
         json.put("metaData", new JSONObject(summary));
         return json;
     }
-    
+
     private List<MvtTransaction> balanceVenteCaisseList(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId) {
         try {
@@ -701,9 +713,9 @@ public class CaisseServiceImpl implements CaisseService {
             e.printStackTrace(System.err);
             return Collections.emptyList();
         }
-        
+
     }
-    
+
     @Override
     public List<VisualisationCaisseDTO> findAllMvtCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId) {
@@ -736,7 +748,7 @@ public class CaisseServiceImpl implements CaisseService {
             return Collections.emptyList();
         }
     }
-    
+
     private GenericDTO balanceFormat(List<MvtTransaction> mvtTransactions) {
         List<BalanceDTO> balances = new ArrayList<>();
         GenericDTO generic = new GenericDTO();
@@ -761,7 +773,7 @@ public class CaisseServiceImpl implements CaisseService {
                 vno.setTypeVente("VNO");
                 int montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
                         montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0, nbreVente = 0, montantMobilePayment = 0;
-                
+
                 for (MvtTransaction mvt : venteVNO) {
                     montantTTC += mvt.getMontant();
                     montantNet += mvt.getMontantNet();
@@ -771,7 +783,7 @@ public class CaisseServiceImpl implements CaisseService {
                     montantDiff += mvt.getMontantRestant();
                     if (mvt.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
                         nbreVente++;
-                        
+
                     }
                     switch (mvt.getReglement().getLgTYPEREGLEMENTID()) {
                         case DateConverter.MODE_ESP:
@@ -791,9 +803,9 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MTN:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
-                        
+
                     }
-                    
+
                 }
                 _montantTTC += montantTTC;
                 _montantNet += montantNet;
@@ -808,7 +820,7 @@ public class CaisseServiceImpl implements CaisseService {
                 if (nbreVente > 0) {
                     panierMoyen = montantTTC / nbreVente;
                 }
-                
+
                 vno.setMontantCB(montantCB);
                 vno.setMontantCheque(montantCheque);
                 vno.setMontantEsp(montantEsp);
@@ -821,7 +833,7 @@ public class CaisseServiceImpl implements CaisseService {
                 vno.setMontantTp(0);
                 vno.setPanierMoyen(panierMoyen);
                 vno.setMontantMobilePayment(montantMobilePayment);
-                
+
             }
             BalanceDTO vo = null;
             if (venteVO != null) {
@@ -830,7 +842,7 @@ public class CaisseServiceImpl implements CaisseService {
                 int montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
                         montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0, montantMobilePayment = 0,
                         nbreVente = 0;
-                
+
                 for (MvtTransaction mvt : venteVO) {
                     montantTTC += mvt.getMontant();
                     montantNet += mvt.getMontantNet();
@@ -841,7 +853,7 @@ public class CaisseServiceImpl implements CaisseService {
                     montantTp += mvt.getMontantCredit();
                     if (mvt.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
                         nbreVente++;
-                        
+
                     }
                     switch (mvt.getReglement().getLgTYPEREGLEMENTID()) {
                         case DateConverter.MODE_ESP:
@@ -861,14 +873,14 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MTN:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
-                        
+
                     }
-                    
+
                 }
                 if (nbreVente > 0) {
                     panierMoyen = montantTTC / nbreVente;
                 }
-                
+
                 vo.setMontantCB(montantCB);
                 vo.setMontantCheque(montantCheque);
                 vo.setMontantEsp(montantEsp);
@@ -891,7 +903,7 @@ public class CaisseServiceImpl implements CaisseService {
                 _montantRemise += montantRemise;
                 _montantDiff += montantDiff;
                 _nbreVente += nbreVente;
-                
+
             }
             if (vo != null) {
                 pourcentageVo = (int) Math.round((Double.valueOf(vo.getMontantNet()) * 100) / Math.abs(_montantNet));
@@ -903,10 +915,10 @@ public class CaisseServiceImpl implements CaisseService {
                 vno.setPourcentage(pourcentageVno);
                 balances.add(vno);
             }
-            
+
             if (achats != null) {
                 montantAchat = achats.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
-                
+
             }
             if (sortieCaisse != null) {
                 Map<String, List<MvtTransaction>> typeMvt = sortieCaisse.parallelStream()
@@ -919,7 +931,7 @@ public class CaisseServiceImpl implements CaisseService {
                 if (sortie != null) {
                     montantSortie = sortie.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
                 }
-                
+
             }
             if (entreesCaisse != null) {
                 Map<String, List<MvtTransaction>> typeMvtEntree = entreesCaisse.parallelStream()
@@ -968,26 +980,26 @@ public class CaisseServiceImpl implements CaisseService {
             }
             summary.setRatioVA(ratioVA);
             summary.setMontantTp(montantTp);
-            
+
         }
         generic.setBalances(balances);
         generic.setSummary(summary);
         return generic;
     }
-    
+
     private TUser findUser(String idUser) {
         return getEntityManager().find(TUser.class, idUser);
     }
-    
+
     public TCaisse getTCaisse(String lg_USER_ID) {
-        
+
         try {
             TypedQuery<TCaisse> query = getEntityManager()
                     .createQuery("SELECT t FROM TCaisse t WHERE t.lgUSERID.lgUSERID = ?1 ", TCaisse.class)
                     .setParameter(1, lg_USER_ID).setMaxResults(1);
             TCaisse o = query.getSingleResult();
             getEntityManager().refresh(o);
-            
+
             return o;
         } catch (Exception e) {
             TUser tu = findUser(lg_USER_ID);
@@ -1001,9 +1013,9 @@ public class CaisseServiceImpl implements CaisseService {
             return OTCaisse;
         }
     }
-    
+
     public TBilletageDetails getTBilletageDetails(String lg_CAISSE_ID) {
-        
+
         try {
             TypedQuery<TBilletageDetails> query = getEntityManager()
                     .createQuery("SELECT t FROM TBilletageDetails t WHERE t.lgBILLETAGEID.ldCAISSEID = ?1",
@@ -1014,9 +1026,9 @@ public class CaisseServiceImpl implements CaisseService {
         } catch (Exception e) {
             return null;
         }
-        
+
     }
-    
+
     public TResumeCaisse getTResumeCaisse(String lg_USER_ID, String str_STATUT) {
         TResumeCaisse OTResumeCaisse = null;
         try {
@@ -1029,7 +1041,7 @@ public class CaisseServiceImpl implements CaisseService {
         }
         return OTResumeCaisse;
     }
-    
+
     @Override
     public JSONObject rollbackcloseCaisse(TUser o, String idCaisse) throws JSONException {
         JSONObject json = new JSONObject();
@@ -1040,7 +1052,7 @@ public class CaisseServiceImpl implements CaisseService {
                 json.put("success", false).put("msg",
                         " Impossible de cloturer la caisse. Ref Inconnu de la caisse inconnu ");
                 return json;
-                
+
             }
             if (OTResumeCaisse.getStrSTATUT().equals(commonparameter.statut_is_Using)) {
                 json.put("success", false).put("msg",
@@ -1074,8 +1086,8 @@ public class CaisseServiceImpl implements CaisseService {
                     + o.getStrLASTNAME() + " effectuée avec succès";
             logService.updateItem(o, idCaisse, Description, TypeLog.ANNULATION_DE_CAISSE, OTResumeCaisse,
                     getEntityManager());
-            sendSms(Description);
-            sendMail(Description, "Annulation de la clôture de la caisse ");
+            createNotification(Description, TypeNotification.ANNULATION_CLOTURE_DE_CAISSE, o);
+
             json.put("success", true).put("msg", "Opération effectuée avec succes ");
         } catch (Exception e) {
 //            if (getEntityManager().getTransaction().isActive()) {
@@ -1083,11 +1095,11 @@ public class CaisseServiceImpl implements CaisseService {
 //            }
             e.printStackTrace(System.err);
             json.put("success", false).put("msg", "Impossible d'annuler la cloture de cette caisse");
-            
+
         }
         return json;
     }
-    
+
     @Override
     public JSONObject closeCaisse(TUser o, String idCaisse) throws JSONException {
         JSONObject json = new JSONObject();
@@ -1113,18 +1125,17 @@ public class CaisseServiceImpl implements CaisseService {
             logService.updateItem(o, idCaisse, Description, TypeLog.VALIDATION_DE_CAISSE, OTResumeCaisse,
                     getEntityManager());
             json.put("success", true).put("msg", " Validation de cloture de caisse effectuée avec succes ");
-            sendSms(Description);
-            sendMail(Description, "Validation de la Cloture de la caisse de");
+            createNotification(Description, TypeNotification.VALIDATION_DE_CAISSE, o);
         } catch (Exception e) {
             e.printStackTrace(System.err);
             json.put("success", false).put("msg", " Echec de validation de cloture de caisse");
-            
+
         }
         return json;
     }
-    
+
     Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
-    
+
     @Override
     public JSONObject tableauBoardDatas(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user, int start,
             int limit, boolean all) throws JSONException {
@@ -1136,23 +1147,23 @@ public class CaisseServiceImpl implements CaisseService {
         } else {
             map = buillTableauBoardData(donneestableauboard(dtStart, dtEnd, checked, emp.getLgEMPLACEMENTID(), start, limit, all));
         }
-        
+
         if (map.isEmpty()) {
             json.put("total", 0);
             json.put("data", new JSONArray());
-            
+
         }
-        
+
         map.forEach((k, v) -> {
             json.put("total", v.size());
             json.put("data", new JSONArray(v));
             json.put("metaData", new JSONObject(k));
-            
+
         });
         return json;
-        
+
     }
-    
+
     private Integer avoirFournisseur(LocalDate date) {
         try {
             Query q = getEntityManager().createQuery("SELECT SUM(o.dlAMOUNT) FROM TRetourFournisseur o WHERE FUNCTION('DATE',o.dtUPDATED)=?1 AND o.strREPONSEFRS <>'' AND o.strSTATUT='enable' ")
@@ -1162,9 +1173,9 @@ public class CaisseServiceImpl implements CaisseService {
 //            e.printStackTrace(System.err);
             return 0;
         }
-        
+
     }
-    
+
     private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardData(List<MvtTransaction> transactions) {
         if (transactions.isEmpty()) {
             return Collections.emptyMap();
@@ -1216,7 +1227,7 @@ public class CaisseServiceImpl implements CaisseService {
                     break;
                     case ACHAT: {
                         montantAchat.add(op.getMontantNet());
-                        
+
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
@@ -1238,15 +1249,15 @@ public class CaisseServiceImpl implements CaisseService {
                                 default:
                                     break;
                             }
-                            
+
                         } catch (Exception e) {
                         }
-                        
+
                     }
                     break;
                     default:
                         break;
-                    
+
                 }
             });
             Integer _montantNet = montantNet.intValue();
@@ -1315,17 +1326,17 @@ public class CaisseServiceImpl implements CaisseService {
         summary.setMontantCredit(_summontantCredit.intValue());
         summary.setMontantAvoir(_summontantAvoir.intValue());
         summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
-        
+
         return summ;
     }
-    
+
     @Override
     public List<Typemvtproduit> findAllTypeMvtProduit() {
         TypedQuery<Typemvtproduit> query = getEntityManager().
                 createQuery("SELECT o FROM Typemvtproduit o", Typemvtproduit.class);
         return query.getResultList();
     }
-    
+
     private List<MvtTransaction> donneestableauboard(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId, int start, int limit, boolean all) {
         try {
@@ -1340,16 +1351,16 @@ public class CaisseServiceImpl implements CaisseService {
             if (!all) {
                 query.setFirstResult(start);
                 query.setMaxResults(limit);
-                
+
             }
             return query.getResultList();
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
         }
-        
+
     }
-    
+
     @Override
     public JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException {
         JSONObject json = new JSONObject();
@@ -1365,7 +1376,7 @@ public class CaisseServiceImpl implements CaisseService {
                 return json.put("success", false).put("msg", "Echec d'encaissement. Mode de règlement inexistant.");
             }
             TMotifReglement motifReglement = emg.find(TMotifReglement.class, "2");
-            
+
             String transac = DateConverter.TRANSACTION_CREDIT;
             if (OTTypeMvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_SORTIE_CAISSE)) {
                 transac = DateConverter.TRANSACTION_DEBIT;
@@ -1384,55 +1395,55 @@ public class CaisseServiceImpl implements CaisseService {
                     caisseDTO.getAmount() > 0 ? caisseDTO.getAmount() : 0, 0, 0, mvtCaisse.getStrREFTICKET());
             addtransactionComptant(OTTypeMvtCaisse, Description, motifReglement, transac, mvtCaisse, tTypeReglement, OTReglement, user, emg);
             logService.updateItem(user, mvtCaisse.getStrREFTICKET(), Description, TypeLog.MVT_DE_CAISSE, mvtCaisse, emg);
+            createNotification(Description, TypeNotification.MVT_DE_CAISSE, user);
             return json.put("success", true).put("msg", "Opération effectuée .").put("mvtId", mvtCaisse.getLgMVTCAISSEID());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             return json.put("success", false).put("msg", "L'opération a échouée.");
         }
-        
+
     }
-    
+
     private TModeReglement findModeByIdOrName(String id, EntityManager emg) {
         try {
             TypedQuery<TModeReglement> tq = emg.createQuery("SELECT o FROM TModeReglement o WHERE o.lgMODEREGLEMENTID LIKE ?1 OR o.strNAME LIKE ?1 OR o.strDESCRIPTION LIKE ?1", TModeReglement.class);
             tq.setParameter(1, id + "%");
+            tq.setMaxResults(1);
             return tq.getSingleResult();
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return null;
         }
     }
-    
+
     private TModeReglement findModeById(String id) {
         try {
             TModeReglement tq = getEntityManager().find(TModeReglement.class, id);
-            
+
             return tq;
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return null;
         }
     }
-    
+
     private TTypeReglement findTypeRegByIdOrName(String id, EntityManager emg) {
         try {
             TypedQuery<TTypeReglement> tq = emg.createQuery("SELECT o FROM TTypeReglement o WHERE o.lgTYPEREGLEMENTID LIKE ?1 OR o.strNAME LIKE ?1 OR o.strDESCRIPTION LIKE ?1", TTypeReglement.class);
             tq.setParameter(1, id + "%");
+            tq.setMaxResults(1);
             return tq.getSingleResult();
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return null;
         }
     }
-    
+
     @Override
     public JSONObject removeMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     public TMvtCaisse addTMvtCaisse(TTypeMvtCaisse OTTypeMvtCaisse, MvtCaisseDTO caisseDTO,
             EntityManager emg, TModeReglement OTModeReglement, TUser user) throws Exception {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -1454,9 +1465,9 @@ public class CaisseServiceImpl implements CaisseService {
         OTMvtCaisse.setLgUSERID(user.getLgUSERID());
         emg.persist(OTMvtCaisse);
         return OTMvtCaisse;
-        
+
     }
-    
+
     private TReglement createReglement(MvtCaisseDTO caisseDTO, TUser user,
             TMvtCaisse mvtCaisse, TModeReglement OTModeReglement, EntityManager emg) throws Exception {
         TReglement OTReglement = new TReglement();
@@ -1477,7 +1488,7 @@ public class CaisseServiceImpl implements CaisseService {
         emg.persist(OTReglement);
         return OTReglement;
     }
-    
+
     public void addtransactionComptant(TTypeMvtCaisse optionalCaisse, String Description, TMotifReglement motifReglement,
             String debitOrcredit, TMvtCaisse op, TTypeReglement ttr, TReglement OTReglement,
             TUser user, EntityManager emg) {
@@ -1509,14 +1520,14 @@ public class CaisseServiceImpl implements CaisseService {
         } else {
             cashTransaction.setIntAMOUNTDEBIT(amount > 0 ? 0 : (-1) * amount);
         }
-        
+
         cashTransaction.setIntAMOUNTREMIS(0);
         cashTransaction.setCaissier(user);
         cashTransaction.setStrREFCOMPTECLIENT("");
         emg.persist(cashTransaction);
-        
+
     }
-    
+
     @Override
     public boolean checkCaisse(TUser ooTUser, EntityManager emg) {
         try {
@@ -1530,35 +1541,35 @@ public class CaisseServiceImpl implements CaisseService {
             return false;
         }
     }
-    
+
     private TCoffreCaisse getStatutCoffre(String userId, EntityManager emg) {
-        
+
         try {
             TypedQuery<TCoffreCaisse> q = emg.createQuery("SELECT t FROM TCoffreCaisse t WHERE t.lgUSERID.lgUSERID = ?1 AND  t.strSTATUT = ?2  AND   FUNCTION('DATE', t.dtCREATED)=CURRENT_DATE ", TCoffreCaisse.class)
                     .setParameter(1, userId).
                     setParameter(2, DateConverter.STATUT_IS_WAITING_VALIDATION);
             return q.getSingleResult();
-            
+
         } catch (Exception e) {
 //            e.printStackTrace(System.err);
             return null;
-            
+
         }
-        
+
     }
-    
+
     @Override
     public JSONObject attribuerFondDeCaisse(String idUser, TUser operateur, Integer amount) throws JSONException {
         EntityManager emg = getEntityManager();
         JSONObject json = new JSONObject();
-        
+
         try {
             TUser user = emg.find(TUser.class, idUser);
             emg.refresh(user);
-            
+
             if (user.getBIsConnected() == null || user.getBIsConnected().equals(false)) {
                 return json.put("success", false).put("msg", "Cet utilisateur n'est pas connecté");
-                
+
             }
             if (checkCaisse(user, emg)) {
                 return json.put("success", false).put("msg", "La caisse de cet utilisateur est en cours d'utilisation");
@@ -1579,7 +1590,7 @@ public class CaisseServiceImpl implements CaisseService {
         }
         return json.put("success", true).put("msg", "L'opération  effectuée ");
     }
-    
+
     private void createCoffreCaisse(TUser OTUser, TUser operateur, double dbl_AMOUNT, EntityManager emg) throws Exception {
         TCoffreCaisse OTCoffreCaisse = new TCoffreCaisse();
         OTCoffreCaisse.setIdCoffreCaisse(UUID.randomUUID().toString());
@@ -1592,8 +1603,9 @@ public class CaisseServiceImpl implements CaisseService {
         String Description = "Reaprovisionement de la caisse de " + OTUser.getStrLOGIN() + " d'un montant de " + OTCoffreCaisse.getIntAMOUNT().intValue() + " par " + operateur.getStrFIRSTNAME() + " " + operateur.getStrLASTNAME();
         logService.updateItem(operateur, OTCoffreCaisse.getIdCoffreCaisse(),
                 Description, TypeLog.ATTRIBUTION_DE_FOND_DE_CAISSE, OTCoffreCaisse, emg);
+        createNotification(Description, TypeNotification.MVT_DE_CAISSE, operateur);
     }
-    
+
     private TCaisse findByUser(String userId) {
         try {
             TypedQuery<TCaisse> q = getEntityManager().createQuery("SELECT o FROM TCaisse o WHERE o.lgUSERID.lgUSERID=?1", TCaisse.class);
@@ -1603,7 +1615,7 @@ public class CaisseServiceImpl implements CaisseService {
             return null;
         }
     }
-    
+
     private TReglement createReglement(String commenatire, TUser user,
             TMvtCaisse mvtCaisse, TModeReglement OTModeReglement) {
         TReglement OTReglement = new TReglement();
@@ -1624,7 +1636,7 @@ public class CaisseServiceImpl implements CaisseService {
         getEntityManager().persist(OTReglement);
         return OTReglement;
     }
-    
+
     public TMvtCaisse addTMvtCaisse(TUser user, TTypeMvtCaisse OTTypeMvtCaisse, TTypeReglement type, String str_NUM_PIECE_COMPTABLE, String lg_MODE_REGLEMENT_ID, double int_AMOUNT) {
         TModeReglement OTModeReglement = findModeById(lg_MODE_REGLEMENT_ID);
         TMvtCaisse OTMvtCaisse = new TMvtCaisse();
@@ -1650,7 +1662,7 @@ public class CaisseServiceImpl implements CaisseService {
         addtransactionComptant(OTTypeMvtCaisse, lg_MODE_REGLEMENT_ID, motifReglement, lg_MODE_REGLEMENT_ID, OTMvtCaisse, type, OTReglement, user, em);
         return OTMvtCaisse;
     }
-    
+
     @Override
     public JSONObject validerFondDeCaisse(String id, TUser user) throws JSONException {
         JSONObject json = new JSONObject();
@@ -1687,25 +1699,26 @@ public class CaisseServiceImpl implements CaisseService {
             getEntityManager().merge(oOTCaisse);
             getEntityManager().persist(OTResumeCaisse);
             String Description = "Validation de fond de caisse " + user.getStrLOGIN() + " d'un montant de " + OTCoffreCaisse.getIntAMOUNT().intValue() + " par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-            
+
             TMvtCaisse OTMvtCaisse = addTMvtCaisse(user, typeMvtCaisse, reglement, Description, "1", OTCoffreCaisse.getIntAMOUNT());
             logService.updateItem(user, OTMvtCaisse.getStrREFTICKET(),
-                    Description, TypeLog.VALIDATION_DE_CAISSE, OTCoffreCaisse, getEntityManager());
+                    Description, TypeLog.VALIDATION_DE_FOND_DE_CAISSE, OTCoffreCaisse, getEntityManager());
             transactionService.addTransaction(user, user, OTMvtCaisse.getLgMVTCAISSEID(),
                     OTCoffreCaisse.getIntAMOUNT().intValue(), OTMvtCaisse.getIntAMOUNT().intValue(),
                     OTCoffreCaisse.getIntAMOUNT().intValue(), 0,
                     Boolean.TRUE, CategoryTransaction.DEBIT,
                     TypeTransaction.SORTIE, reglement, typeMvtCaisse,
                     getEntityManager(), 0, 0, 0, OTMvtCaisse.getStrREFTICKET());
+            createNotification(Description, TypeNotification.MVT_DE_CAISSE, user);
             return json.put("success", true).put("msg", "Opération effectuée ").accumulate("mvtId", OTMvtCaisse.getLgMVTCAISSEID());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return json.put("success", false).put("msg", "Errreur:::: Echec de  validation ");
         }
-        
+
     }
     Comparator<RapportDTO> comparatorReport = Comparator.comparingInt(RapportDTO::getOder);
-    
+
     @Override
     public JSONObject rapportGestionViewData(Params params) throws JSONException {
         JSONObject json = new JSONObject();
@@ -1722,7 +1735,7 @@ public class CaisseServiceImpl implements CaisseService {
                 if (v != null) {
                     data.addAll(v);
                 }
-                
+
             });
             data.sort(comparatorReport);
             json.put("total", data.size()).put("data", new JSONArray(data)).put("metaData", new JSONObject().put("montantCaisse", montantRg.intValue()).put("montantDepense", montantDep.intValue()));
@@ -1731,7 +1744,7 @@ public class CaisseServiceImpl implements CaisseService {
         }
         return json;
     }
-    
+
     @Override
     public Map<Params, List<RapportDTO>> rapportGestion(Params params) {
         List<RapportDTO> rapports = new ArrayList<>();
@@ -1832,13 +1845,13 @@ public class CaisseServiceImpl implements CaisseService {
                 p.setValue(montantReglement.intValue());
                 _myMap.put(p, null);
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
         return _myMap;
     }
-    
+
     private List<MvtTransaction> findTransaction(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId, int start, int limit, boolean all) {
         try {
@@ -1849,20 +1862,20 @@ public class CaisseServiceImpl implements CaisseService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            
+
             if (!all) {
                 query.setFirstResult(start);
                 query.setMaxResults(limit);
-                
+
             }
             return query.getResultList();
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
         }
-        
+
     }
-    
+
     private List<HMvtProduit> mouvementsVente(LocalDate dtStart, LocalDate dtEnd, TUser user, String empl) {
         try {
             TypedQuery<HMvtProduit> query = getEntityManager().createQuery("SELECT o FROM HMvtProduit o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.emplacement.lgEMPLACEMENTID =:empl AND o.typemvtproduit.categorieTypeMvt =:catmvt",
@@ -1876,15 +1889,15 @@ public class CaisseServiceImpl implements CaisseService {
             e.printStackTrace(System.err);
             return Collections.emptyList();
         }
-        
+
     }
     BiFunction<Integer, Integer, Integer> valeurAchat = (prixAchat, qtyVendue) -> prixAchat * qtyVendue;
-    
+
     @Override
     public Integer margeAchatVente(LocalDate dtStart, LocalDate dtEnd, TUser user, String empl) {
         return mouvementsVente(dtStart, dtEnd, user, empl).stream().mapToInt(x -> valeurAchat.apply(x.getPrixAchat(), x.getQteMvt())).sum();
     }
-    
+
     private TClient findClientByVenteId(String id) {
         try {
             TClient tp = getEntityManager().find(TClient.class, id);
@@ -1894,19 +1907,19 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
     Comparator<VisualisationCaisseDTO> comparatorCaisse = Comparator.comparing(VisualisationCaisseDTO::getDateOperation);
-    
+
     private List<VisualisationCaisseDTO> findAllsTransaction(CaisseParamsDTO caisseParams, boolean all) {
-        
+
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<MvtTransaction> cq = cb.createQuery(MvtTransaction.class);
             Root<MvtTransaction> root = cq.from(MvtTransaction.class);
             cq.select(root).orderBy(cb.asc(root.get(MvtTransaction_.createdAt)));
-            
+
             predicates.add(cb.and(cb.equal(root.get(MvtTransaction_.magasin).get(TEmplacement_.lgEMPLACEMENTID),
                     caisseParams.getEmplacementId())));
-            
+
             predicates.add(cb.and(cb.notEqual(root.get(MvtTransaction_.typeTransaction),
                     TypeTransaction.ACHAT)));
             if (caisseParams.getStartHour() != null && caisseParams.getStartEnd() != null) {
@@ -1930,24 +1943,24 @@ public class CaisseServiceImpl implements CaisseService {
             if (caisseParams.getUtilisateurId() != null) {
                 predicates.add(cb.and(cb.equal(root.get(MvtTransaction_.caisse).get(TUser_.lgUSERID), caisseParams.getUtilisateurId())));
             }
-            
+
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<MvtTransaction> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(caisseParams.getStart());
                 q.setMaxResults(caisseParams.getLimit());
             }
-            
+
             return q.getResultList().stream().map(x -> new VisualisationCaisseDTO(x, caisseParams.isFindClient() ? findClientByVenteId(x.getOrganisme()) : null))/*.filter(w->Objects.nonNull(w.getTypeMouvement()) )*/.sorted(comparatorCaisse).collect(Collectors.toList());
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
         }
-        
+
     }
-    
+
     private Long findAllsTransaction(CaisseParamsDTO caisseParams) {
-        
+
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -1956,7 +1969,7 @@ public class CaisseServiceImpl implements CaisseService {
             cq.select(cb.count(root));
             predicates.add(cb.and(cb.equal(root.get(MvtTransaction_.magasin).get(TEmplacement_.lgEMPLACEMENTID),
                     caisseParams.getEmplacementId())));
-            
+
             predicates.add(cb.and(cb.notEqual(root.get(MvtTransaction_.typeTransaction),
                     TypeTransaction.ACHAT)));
             if (caisseParams.getStartHour() != null && caisseParams.getStartEnd() != null) {
@@ -1983,19 +1996,19 @@ public class CaisseServiceImpl implements CaisseService {
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
-            
+
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return 0l;
         }
-        
+
     }
-    
+
     @Override
     public List<VisualisationCaisseDTO> listCaisses(CaisseParamsDTO caisseParams, boolean all) {
         return findAllsTransaction(caisseParams, all);
     }
-    
+
     @Override
     public List<TCashTransaction> cashTransactions(CaisseParamsDTO caisseParams, boolean all) {
         List<Predicate> predicates = new ArrayList<>();
@@ -2055,7 +2068,7 @@ public class CaisseServiceImpl implements CaisseService {
         }
         return data;
     }
-    
+
     @Override
     public Integer totalVenteDepot(LocalDate dtStart, LocalDate dtEnd, String empl) {
         try {
@@ -2069,13 +2082,13 @@ public class CaisseServiceImpl implements CaisseService {
                 return t.intValue();
             }
             return 0;
-            
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return 0;
         }
     }
-    
+
     @Override
     public List<MvtTransaction> venteDepot(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId) {
@@ -2092,9 +2105,9 @@ public class CaisseServiceImpl implements CaisseService {
             e.printStackTrace(System.err);
             return Collections.emptyList();
         }
-        
+
     }
-    
+
     private List<TBonLivraison> findBonLivraisons(LocalDate dtStart, LocalDate dtEnd, int start, int limit, boolean all) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -2112,15 +2125,15 @@ public class CaisseServiceImpl implements CaisseService {
                 q.setFirstResult(start);
                 q.setMaxResults(limit);
             }
-            
+
             return q.getResultList();
-            
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
-    
+
     @Override
     public Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatas(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user,
             int ration, int start, int limit, boolean all) {
@@ -2132,9 +2145,9 @@ public class CaisseServiceImpl implements CaisseService {
         } else {
             return buillTableauBoardData(transactions);
         }
-        
+
     }
-    
+
     private List<TableauBaordPhDTO> buillTableauBoardData(List<TableauBaordPhDTO> tps,
             List<TableauBaordPhDTO> especesCl, List<TableauBaordPhDTO> annulationCl,
             List<TableauBaordPhDTO> annulationAnterieurCl,
@@ -2142,10 +2155,10 @@ public class CaisseServiceImpl implements CaisseService {
         Stream<TableauBaordPhDTO> donneecChaVentes = Stream.concat(tps.parallelStream(), especesCl.parallelStream());
         Stream<TableauBaordPhDTO> annulationcChaVentes = Stream.concat(annulationCl.parallelStream(), annulationAnterieurCl.parallelStream());
         Map<LocalDate, List<TableauBaordPhDTO>> liste = Stream.concat(donneecChaVentes, annulationcChaVentes).collect(Collectors.groupingBy(TableauBaordPhDTO::getMvtDate));
-        
+
         List<TableauBaordPhDTO> tableauBaords = new ArrayList<>();
         List<TableauBaordPhDTO> tableauBaordsAchat = new ArrayList<>();
-        
+
         Map<LocalDate, List<TBonLivraison>> mapbl = bonLivraisons.parallelStream()
                 .collect(Collectors.groupingBy(o -> DateConverter.convertDateToLocalDate(o.getDtDATELIVRAISON())));
 //        boolean avoir = liste.isEmpty();
@@ -2160,11 +2173,11 @@ public class CaisseServiceImpl implements CaisseService {
                 montantEsp.add(b.getMontantEsp());
                 montantCredit.add(b.getMontantCredit());
                 nb.add(b.getNbreVente());
-                
+
                 montantRemise.add(b.getMontantRemise());
                 montantNet.add(b.getMontantNet());
             });
-            
+
             Integer net = montantNet.intValue();
             Integer esp = montantEsp.intValue();
 //            Integer ce = net - Math.abs(esp)+montantCredit.intValue();
@@ -2179,12 +2192,12 @@ public class CaisseServiceImpl implements CaisseService {
 //            baordPh.setMontantAvoir(montantAvoir.intValue());
 
         });
-        
+
         tableauBaords.sort(comparator);
         mapbl.forEach((k, v) -> {
             TableauBaordPhDTO baordPh = new TableauBaordPhDTO();
             baordPh.setMvtDate(k);
-            
+
             LongAdder montantAchatOne = new LongAdder(), montantAchatTwo = new LongAdder(),
                     montantAchatThree = new LongAdder(), montantAchatFour = new LongAdder(),
                     montantAchatFive = new LongAdder(), montantAchat = new LongAdder();
@@ -2221,7 +2234,7 @@ public class CaisseServiceImpl implements CaisseService {
                         break;
                 }
             });
-            
+
             baordPh.setMontantAchatFive(montantAchatFive.intValue());
             baordPh.setMontantAchatTwo(montantAchatTwo.intValue());
             baordPh.setMontantAchatOne(montantAchatOne.intValue());
@@ -2234,7 +2247,7 @@ public class CaisseServiceImpl implements CaisseService {
         List<TableauBaordPhDTO> finaltableauBaords = Stream.concat(tableauBaords.parallelStream(), tableauBaordsAchat.parallelStream()).collect(Collectors.toList());
         return finaltableauBaords;
     }
-    
+
     private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardDataOld(List<TableauBaordPhDTO> tableauBaord) {
         if (tableauBaord.isEmpty()) {
             return Collections.emptyMap();
@@ -2267,7 +2280,7 @@ public class CaisseServiceImpl implements CaisseService {
                     montantAchatFive = new LongAdder(),
                     montantAchat = new LongAdder(), montantAvoir = new LongAdder();
             DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
-            
+
             montantAvoir.add(avoirFournisseur(k));
             v.forEach(s -> {
                 montantEsp.add(s.getMontantEsp());
@@ -2281,9 +2294,9 @@ public class CaisseServiceImpl implements CaisseService {
                 montantAchatFive.add(s.getMontantAchatFive());
                 montantAchatFour.add(s.getMontantAchatFour());
                 montantAchat.add(s.getMontantAchat());
-                
+
             });
-            
+
             Integer _montantNet = montantNet.intValue();
             Integer _montantAchat = montantAchat.intValue();
             if (_montantAchat.compareTo(0) > 0) {
@@ -2352,10 +2365,10 @@ public class CaisseServiceImpl implements CaisseService {
 
         //.sorted(comparator) sort(comparator);
         summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
-        
+
         return summ;
     }
-    
+
     @Override
     public Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatasOld(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user, int ration, int start, int limit, boolean all) {
         TEmplacement emp = user.getLgEMPLACEMENTID();
@@ -2367,7 +2380,7 @@ public class CaisseServiceImpl implements CaisseService {
                 findBonLivraisons(dtStart, dtEnd, start, limit, all));
         return buillTableauBoardDataOld(transactions);
     }
-    
+
     @Override
     public JSONObject tableauBoardDatasOld(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user, int start, int limit, boolean all) throws JSONException {
         TEmplacement emp = user.getLgEMPLACEMENTID();
@@ -2379,21 +2392,21 @@ public class CaisseServiceImpl implements CaisseService {
                 findPreenregistrements(dtStart, dtEnd, emp), especesCl, annulationCl, annulationAnterieurCl,
                 findBonLivraisons(dtStart, dtEnd, start, limit, all));
         Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = buillTableauBoardDataOld(transactions);
-        
+
         if (map.isEmpty()) {
             json.put("total", 0);
             json.put("data", new JSONArray());
-            
+
         }
         map.forEach((k, v) -> {
             json.put("total", v.size());
             json.put("data", new JSONArray(v));
             json.put("metaData", new JSONObject(k));
-            
+
         });
         return json;
     }
-    
+
     private List<TableauBaordPhDTO> findPreenregistrements(LocalDate dtStart, LocalDate dtEnd, TEmplacement empl) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -2418,13 +2431,13 @@ public class CaisseServiceImpl implements CaisseService {
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList();
-            
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
-    
+
     public List<TableauBaordPhDTO> totalEspTableaudebord(LocalDate dtStart, LocalDate dtEnd, String empla) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -2447,7 +2460,7 @@ public class CaisseServiceImpl implements CaisseService {
             return Collections.emptyList();
         }
     }
-    
+
     public List<TableauBaordPhDTO> annulerEspTableaudebord(LocalDate dtStart, LocalDate dtEnd, String empla) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -2464,13 +2477,13 @@ public class CaisseServiceImpl implements CaisseService {
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<TableauBaordPhDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
-            
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return null;
         }
     }
-    
+
     public List<TableauBaordPhDTO> annulerTableaudebord(LocalDate dtStart, LocalDate dtEnd, String empla) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -2485,7 +2498,7 @@ public class CaisseServiceImpl implements CaisseService {
                     cb.sum(root.get(AnnulationSnapshot_.montantRestant))
             ))
                     .groupBy(cb.function("DATE", Date.class, root.get(AnnulationSnapshot_.dateOp)));
-            
+
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(AnnulationSnapshot_.dateOp)), java.sql.Date.valueOf(dtStart),
                     java.sql.Date.valueOf(dtEnd));
             predicates.add(cb.and(btw));
@@ -2498,7 +2511,7 @@ public class CaisseServiceImpl implements CaisseService {
             return Collections.emptyList();
         }
     }
-    
+
     private Integer montantAnnuleGestionCaisse(String userId, LocalDateTime dtStart, LocalDateTime dtEnd, boolean isSummary) {
         List<Predicate> predicates = new ArrayList<>();
         try {
@@ -2518,7 +2531,7 @@ public class CaisseServiceImpl implements CaisseService {
             TypedQuery<MvtTransaction> q = getEntityManager().createQuery(cq);
             List<MvtTransaction> list = q.getResultList();
             return list.stream().map(x -> Math.abs(x.getMontantRegle())).reduce(0, Integer::sum);
-            
+
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return 0;
@@ -2533,23 +2546,23 @@ public class CaisseServiceImpl implements CaisseService {
             CriteriaQuery<AnnulationRecette> cq = cb.createQuery(AnnulationRecette.class);
             Root<AnnulationRecette> root = cq.from(AnnulationRecette.class);
             cq.select(root);
-            
+
             predicates.add(cb.between(root.get(AnnulationRecette_.mvtDate), dtStart, dtEnd));
             if (userId != null && !userId.isEmpty()) {
                 predicates.add(cb.equal(root.get(AnnulationRecette_.caissier).get(TUser_.lgUSERID), userId));
             }
-            
+
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<AnnulationRecette> q = getEntityManager().createQuery(cq);
             List<AnnulationRecette> list = q.getResultList();
             return list.stream().map(x -> Math.abs(x.getMontantRegle())).reduce(0, Integer::sum);
-            
+
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return 0;
         }
     }
-    
+
     private Integer caisseSummary(LocalDate dtStart, LocalDate dtEnd, TUser u, Boolean allActivite, String userId) throws JSONException {
         List<Predicate> predicates = new ArrayList<>();
         try {
@@ -2572,14 +2585,14 @@ public class CaisseServiceImpl implements CaisseService {
             Query q = getEntityManager().createQuery(cq);
             Integer total = (Integer) q.getSingleResult();
             return total != null ? total - (montantAnnuleGestionCaisse(null, dtStart.atStartOfDay(), dtEnd.atStartOfDay(), true) + montantAnnuleRecette(null, dtStart, dtEnd)) : (-1) * montantAnnuleGestionCaisse(null, dtStart.atStartOfDay(), dtEnd.atStartOfDay(), true) + montantAnnuleRecette(null, dtStart, dtEnd);
-            
+
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return 0;
         }
-        
+
     }
-    
+
     private long caisseSummaryCount(LocalDate dtStart, LocalDate dtEnd, TUser u, Boolean allActivite, String userId) {
         List<Predicate> predicates = new ArrayList<>();
         try {
@@ -2601,13 +2614,13 @@ public class CaisseServiceImpl implements CaisseService {
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
-            
+
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return 0;
         }
     }
-    
+
     private List<Predicate> mouvementCaissesPredicats(CriteriaBuilder cb, Root<MvtTransaction> root, CaisseParamsDTO caisseParams) {
         List<Predicate> predicates = new ArrayList<>();
         Predicate btw = cb.between(root.get(MvtTransaction_.mvtDate),
@@ -2620,10 +2633,10 @@ public class CaisseServiceImpl implements CaisseService {
         if (caisseParams.getUtilisateurId() != null) {
             predicates.add(cb.and(cb.equal(root.get(MvtTransaction_.caisse).get(TUser_.lgUSERID), caisseParams.getUtilisateurId())));
         }
-        
+
         return predicates;
     }
-    
+
     public List<VisualisationCaisseDTO> mouvementCaisses(CaisseParamsDTO caisseParams, boolean all) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -2644,7 +2657,7 @@ public class CaisseServiceImpl implements CaisseService {
             return Collections.emptyList();
         }
     }
-    
+
     private Long countMouvementCaisses(CaisseParamsDTO caisseParams) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -2661,11 +2674,11 @@ public class CaisseServiceImpl implements CaisseService {
             return 0l;
         }
     }
-    
+
     private boolean isReglementTierspayant(String typeReglement) {
         return typeReglement.equals(DateConverter.MVT_REGLE_TP);
     }
-    
+
     private TTiersPayant findTiersPayantId(String id) {
         try {
             TTiersPayant tp = getEntityManager().find(TTiersPayant.class, id);
@@ -2674,7 +2687,7 @@ public class CaisseServiceImpl implements CaisseService {
             return null;
         }
     }
-    
+
     @Override
     public JSONObject mouvementCaisses(CaisseParamsDTO caisseParams) throws JSONException {
         JSONObject json = new JSONObject();
@@ -2685,9 +2698,9 @@ public class CaisseServiceImpl implements CaisseService {
         List<SumCaisseDTO> summary = summaryMouvementCaisses(caisseParams);
         List<VisualisationCaisseDTO> data = mouvementCaisses(caisseParams, false);
         return json.put("total", total).put("data", new JSONArray(data)).put("metaData", new JSONArray(summary));
-        
+
     }
-    
+
     private List<SumCaisseDTO> summaryMouvementCaisses(CaisseParamsDTO caisseParams) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -2706,7 +2719,7 @@ public class CaisseServiceImpl implements CaisseService {
             return Collections.emptyList();
         }
     }
-    
+
     @Override
     public Integer montantCa(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement) {
         try {
@@ -2724,12 +2737,12 @@ public class CaisseServiceImpl implements CaisseService {
             return 0;
         }
     }
-    
+
     @Override
     public List<TPreenregistrement> getTtVente(String dt_start, String dt_end, String lgEmp) {
-        
+
         try {
-            
+
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TPreenregistrement> cq = cb.createQuery(TPreenregistrement.class);
             Root<TPreenregistrement> root = cq.from(TPreenregistrement.class);
@@ -2746,19 +2759,19 @@ public class CaisseServiceImpl implements CaisseService {
             Predicate ge = cb.greaterThan(root.get(TPreenregistrement_.intPRICE), 0);
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrement_.dtCREATED)), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             cq.select(root).orderBy(cb.desc(root.get(TPreenregistrement_.intPRICE)));
-            
+
             cq.where(predicate, btw, ge);
             Query q = em.createQuery(cq);
-            
+
             return q.getResultList();
-            
+
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
         }
-        
+
     }
-    
+
     @Override
     public MvtTransaction findByVenteId(String venteId) {
         try {
@@ -2771,7 +2784,7 @@ public class CaisseServiceImpl implements CaisseService {
             return null;
         }
     }
-    
+
     @Override
     public JSONObject save(String dt_start, String dt_end, String lgEmp, int virtualAmount) {
         JSONObject json = new JSONObject();
@@ -2779,21 +2792,21 @@ public class CaisseServiceImpl implements CaisseService {
         List<TPreenregistrement> list = getTtVente(dt_start, dt_end, lgEmp);
         System.out.println("---------------->>>  " + list.size());
         try {
-            
+
             for (TPreenregistrement tPreenregistrement : list) {
                 Integer finalPrice = 0;
-                
+
                 if (virtualAmount > 0) {
                     Integer Net = tPreenregistrement.getIntPRICE();
                     Integer newPrice = 0;
                     int netPercent = (virtualAmount * 100) / Net;
-                    
+
                     if (netPercent >= 100) {
                         newPrice = (Net * 35) / 100;
                     } else if (netPercent > 6) {
                         newPrice = (Net * 30) / 100;
                     }
-                    
+
                     if (virtualAmount > newPrice) {
                         virtualAmount -= newPrice;
                         finalPrice = Net - newPrice;
@@ -2822,7 +2835,7 @@ public class CaisseServiceImpl implements CaisseService {
         }
         return json;
     }
-    
+
     private GenericDTO balanceFormat0(List<MvtTransaction> mvtTransactions) {
         List<BalanceDTO> balances = new ArrayList<>();
         GenericDTO generic = new GenericDTO();
@@ -2847,7 +2860,7 @@ public class CaisseServiceImpl implements CaisseService {
                 vno.setTypeVente("VNO");
                 int montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
                         montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0, nbreVente = 0, montantMobilePayment = 0;
-                
+
                 for (MvtTransaction mvt : venteVNO) {
                     if (Math.abs(mvt.getMontantRemise()) == 0) {//reduction sur les ventes sans remise
                         montantTTC += mvt.getMontantAcc();
@@ -2856,14 +2869,14 @@ public class CaisseServiceImpl implements CaisseService {
                         montantTTC += mvt.getMontant();
                         montantNet += mvt.getMontantNet();
                     }
-                    
+
                     montantRemise += mvt.getMontantRemise();
                     montantTva += mvt.getMontantTva();
                     marge += mvt.getMarge();
                     montantDiff += mvt.getMontantRestant();
                     if (mvt.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
                         nbreVente++;
-                        
+
                     }
                     switch (mvt.getReglement().getLgTYPEREGLEMENTID()) {
                         case DateConverter.MODE_ESP:
@@ -2872,7 +2885,7 @@ public class CaisseServiceImpl implements CaisseService {
                             } else {
                                 montantEsp += mvt.getMontantRegle();
                             }
-                            
+
                             break;
                         case DateConverter.MODE_CHEQUE:
                             montantCheque += mvt.getMontantRegle();
@@ -2889,7 +2902,7 @@ public class CaisseServiceImpl implements CaisseService {
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
                     }
-                    
+
                 }
                 _montantTTC += montantTTC;
                 _montantNet += montantNet;
@@ -2904,7 +2917,7 @@ public class CaisseServiceImpl implements CaisseService {
                 if (nbreVente > 0) {
                     panierMoyen = montantTTC / nbreVente;
                 }
-                
+
                 vno.setMontantCB(montantCB);
                 vno.setMontantCheque(montantCheque);
                 vno.setMontantEsp(montantEsp);
@@ -2917,7 +2930,7 @@ public class CaisseServiceImpl implements CaisseService {
                 vno.setMontantTp(0);
                 vno.setMontantMobilePayment(montantMobilePayment);
                 vno.setPanierMoyen(panierMoyen);
-                
+
             }
             BalanceDTO vo = null;
             if (venteVO != null) {
@@ -2926,7 +2939,7 @@ public class CaisseServiceImpl implements CaisseService {
                 int montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
                         montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0,
                         nbreVente = 0, montantMobilePayment = 0;
-                
+
                 for (MvtTransaction mvt : venteVO) {
                     montantTTC += mvt.getMontant();
                     montantNet += mvt.getMontantNet();
@@ -2937,7 +2950,7 @@ public class CaisseServiceImpl implements CaisseService {
                     montantTp += mvt.getMontantCredit();
                     if (mvt.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
                         nbreVente++;
-                        
+
                     }
                     switch (mvt.getReglement().getLgTYPEREGLEMENTID()) {
                         case DateConverter.MODE_ESP:
@@ -2958,12 +2971,12 @@ public class CaisseServiceImpl implements CaisseService {
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
                     }
-                    
+
                 }
                 if (nbreVente > 0) {
                     panierMoyen = montantTTC / nbreVente;
                 }
-                
+
                 vo.setMontantCB(montantCB);
                 vo.setMontantCheque(montantCheque);
                 vo.setMontantEsp(montantEsp);
@@ -2986,7 +2999,7 @@ public class CaisseServiceImpl implements CaisseService {
                 _montantRemise += montantRemise;
                 _montantDiff += montantDiff;
                 _nbreVente += nbreVente;
-                
+
             }
             if (vo != null) {
                 pourcentageVo = (int) Math.round((Double.valueOf(vo.getMontantNet()) * 100) / Math.abs(_montantNet));
@@ -2998,10 +3011,10 @@ public class CaisseServiceImpl implements CaisseService {
                 vno.setPourcentage(pourcentageVno);
                 balances.add(vno);
             }
-            
+
             if (achats != null) {
                 montantAchat = achats.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
-                
+
             }
             if (sortieCaisse != null) {
                 Map<String, List<MvtTransaction>> typeMvt = sortieCaisse.parallelStream()
@@ -3014,7 +3027,7 @@ public class CaisseServiceImpl implements CaisseService {
                 if (sortie != null) {
                     montantSortie = sortie.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
                 }
-                
+
             }
             if (entreesCaisse != null) {
                 Map<String, List<MvtTransaction>> typeMvtEntree = entreesCaisse.parallelStream()
@@ -3061,37 +3074,37 @@ public class CaisseServiceImpl implements CaisseService {
             }
             summary.setRatioVA(ratioVA);
             summary.setMontantTp(montantTp);
-            
+
         }
         generic.setBalances(balances);
         generic.setSummary(summary);
         return generic;
     }
-    
+
     @Override
     public boolean key_Take_Into_Account() {
         try {
-            
+
             TParameters tp = getEntityManager().find(TParameters.class, DateConverter.KEY_TAKE_INTO_ACCOUNT);
             return (Integer.valueOf(tp.getStrVALUE()) == 1);
-            
+
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
     public boolean key_Params() {
         try {
-            
+
             TParameters tp = getEntityManager().find(TParameters.class, DateConverter.KEY_PARAMS);
             return (Integer.valueOf(tp.getStrVALUE()) == 1);
-            
+
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
     public Integer montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement) {
         try {
@@ -3109,7 +3122,7 @@ public class CaisseServiceImpl implements CaisseService {
             return 0;
         }
     }
-    
+
     private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardData0(List<MvtTransaction> transactions) {
         if (transactions.isEmpty()) {
             return Collections.emptyMap();
@@ -3163,7 +3176,7 @@ public class CaisseServiceImpl implements CaisseService {
                             nbreVente.increment();
                         }
                     }
-                    
+
                     break;
                     case VENTE_CREDIT: {
                         montantTTC.add(op.getMontant());
@@ -3179,7 +3192,7 @@ public class CaisseServiceImpl implements CaisseService {
                     break;
                     case ACHAT: {
                         montantAchat.add(op.getMontantNet());
-                        
+
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
@@ -3201,15 +3214,15 @@ public class CaisseServiceImpl implements CaisseService {
                                 default:
                                     break;
                             }
-                            
+
                         } catch (Exception e) {
                         }
-                        
+
                     }
                     break;
                     default:
                         break;
-                    
+
                 }
             });
             Integer _montantNet = montantNet.intValue();
@@ -3280,5 +3293,5 @@ public class CaisseServiceImpl implements CaisseService {
         summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
         return summ;
     }
-    
+
 }

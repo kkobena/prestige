@@ -11,6 +11,7 @@ import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.RuptureDTO;
 import commonTasks.dto.RuptureDetailDTO;
+import dal.Notification;
 import dal.Rupture;
 import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
@@ -31,7 +32,9 @@ import dal.TMouvementprice;
 import dal.TParameters;
 import dal.TUser;
 import dal.TZoneGeographique;
+import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
+import dal.enumeration.TypeNotification;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -62,6 +65,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.LogService;
+import rest.service.NotificationService;
 import rest.service.OrderService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -77,6 +81,8 @@ public class OrderServiceImpl implements OrderService {
     private EntityManager em;
     private @EJB
     LogService logService;
+    @EJB
+    NotificationService notificationService;
 
     public EntityManager getEmg() {
         return em;
@@ -688,14 +694,24 @@ public class OrderServiceImpl implements OrderService {
         TOrder order = detail.getLgORDERID();
         TFamilleGrossiste grossiste = findOrCreateFamilleGrossiste(f, order.getLgGROSSISTEID());
         if (dto.getPrixAchat() != grossiste.getIntPAF()) {
-            String desc = "Modification du prix d'achat du produit : "+f.getIntCIP()+" " + f.getStrNAME() + " ancien prix: " + grossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
+            String desc = "Modification du prix d'achat du produit : " + f.getIntCIP() + " " + f.getStrNAME() + " ancien prix: " + grossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
             logService.updateItem(user, grossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
+            notificationService.save(new Notification()
+                    .canal(Canal.SMS_EMAIL)
+                    .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE)
+                    .message(desc)
+                    .addUser(user));
             SaveMouvementPrice(f, dto.getPrixAchat(), grossiste.getIntPAF(), f.getIntCIP(), user);
 
         }
         if (dto.getPrixVente() != grossiste.getIntPRICE()) {
             String desc = "Modification du prix de vente du produit :" + f.getStrNAME() + " ancien prix: " + grossiste.getIntPRICE() + " nouveau prix :" + dto.getPrixVente();
             logService.updateItem(user, grossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
+             notificationService.save(new Notification()
+                    .canal(Canal.SMS_EMAIL)
+                    .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE)
+                    .message(desc)
+                    .addUser(user));
             SaveMouvementPrice(f, dto.getPrixVente(), grossiste.getIntPRICE(), f.getIntCIP(), user);
 
         }

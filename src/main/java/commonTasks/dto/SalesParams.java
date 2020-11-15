@@ -9,7 +9,7 @@ import dal.TUser;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import toolkits.parameters.commonparameter;
+import util.DateConverter;
 
 /**
  *
@@ -29,7 +29,7 @@ public class SalesParams implements Serializable {
     private String clientId;
     private String ayantDroitId;
     private Integer montantTp,totalRecap;
-    private String statut=commonparameter.statut_is_Process;
+    private String statut=DateConverter.STATUT_PROCESS;
     private String emplacementId;
     private String medecinId;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();

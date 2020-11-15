@@ -47,9 +47,9 @@ public class JobCalendar {
 //    @PostConstruct
     public void init() {
         exec();
-        removeFacture();
-        removeSuggestionO();
-        updateOrderDetailPrices();
+//        removeFacture();
+//        removeSuggestionO();
+//        updateOrderDetailPrices();
     }
 
 //    @Schedule(dayOfMonth = "*", persistent = false)

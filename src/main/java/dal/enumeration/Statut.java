@@ -10,5 +10,21 @@ package dal.enumeration;
  * @author Kobena
  */
 public enum Statut {
-      ENABLE,DONE, IS_CLOSE, DELETE, PAID, UNPAID, DESABLE, CANCELED, ENATTENTE, ENTRAITEMENT, PERIME, PASSE, SUGGESTION, ENTREESTOCT, STOCK;
+    ENABLE, 
+    DONE,
+    IS_CLOSE,
+    DELETE,
+    PAID, 
+    UNPAID,
+    DESABLE, 
+    CANCELED,
+    ENATTENTE,
+    ENTRAITEMENT,
+    PERIME, 
+    PASSE, 
+    SUGGESTION,
+    ENTREESTOCT,
+    STOCK,
+    SENT, 
+    NOT_SEND;
 }

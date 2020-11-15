@@ -30,8 +30,7 @@ public enum TypeLog {
     QUANTITE_UG("Entrée quantité UG"),
     MODIFICATION_INFO_VENTE("Modification de vente"),
     RETOUR_FOURNISSEUR("Retour fournisseur"),
-    SAISIS_PERIMES("Saisis de périmés");
-
+    SAISIS_PERIMES("Saisis de périmés"),VALIDATION_DE_FOND_DE_CAISSE("Validation de fond de caisse ");
     private final String value;
 
     public String getValue() {

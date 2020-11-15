@@ -182,7 +182,19 @@ public class TPreenregistrement implements Serializable {
     private Boolean checked = true;
     @Column(name = "copy")
     private Boolean copy = false;
+    @Column(name = "imported")
+    private boolean imported = false;
 
+    public boolean isImported() {
+        return imported;
+    }
+
+    public void setImported(boolean imported) {
+        this.imported = imported;
+    }
+
+    
+    
     public Medecin getMedecin() {
         return medecin;
     }
@@ -607,6 +619,5 @@ public class TPreenregistrement implements Serializable {
     public void setIntACCOUNT(Integer intACCOUNT) {
         this.intACCOUNT = intACCOUNT;
     }
-    
-    
+
 }

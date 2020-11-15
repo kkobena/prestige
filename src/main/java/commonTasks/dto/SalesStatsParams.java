@@ -192,4 +192,9 @@ public class SalesStatsParams implements Serializable {
         this.depotOnly = depotOnly;
     }
 
+    @Override
+    public String toString() {
+        return "SalesStatsParams{" + "start=" + start + ", limit=" + limit + ", typeVenteId=" + typeVenteId + ", userId=" + userId + ", query=" + query + ", statut=" + statut + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", hStart=" + hStart + ", hEnd=" + hEnd + ", showAll=" + showAll + ", showAllActivities=" + showAllActivities + ", all=" + all + ", canCancel=" + canCancel + ", depotOnly=" + depotOnly + ", sansBon=" + sansBon + ", onlyAvoir=" + onlyAvoir + '}';
+    }
+
 }

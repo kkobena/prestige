@@ -166,19 +166,7 @@
         String NAME = "";
 
         String str_Product = "";
-        /*  for (int k = 0; k < lstTBonLivraisonDetail.size(); k++) {
-
-            NAME = lstTBonLivraisonDetail.get(k).getLgFAMILLEID().getStrNAME();
-            int num = lstTBonLivraisonDetail.get(k).getIntQTECMDE();
-
-            if (NAME != null) {
-                str_Product = "<b>" + lstTBonLivraisonDetail.get(k).getLgFAMILLEID().getIntCIP() + "&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;" + NAME + "&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;" + new conversion().AmountFormat(lstTBonLivraisonDetail.get(k).getIntPAF(), commonparameter.CHAR_SEPARATEUR_POINT) + " F CFA&nbsp;&nbsp;" + " :  (" + num + ")</b><br> " + str_Product;
-
-                int_NBRE_PRODUIT_BL_DETAIL = int_NBRE_PRODUIT_BL_DETAIL + lstTBonLivraisonDetail.get(k).getIntQTECMDE();
-                
-            }
-
-        }*/
+       
 
         for (int k = 0; k < lstTBonLivraisonDetail.size(); k++) {
             OTFamilleGrossiste = OfamilleGrossisteManagement.findFamilleGrossiste(lstTBonLivraisonDetail.get(k).getLgFAMILLEID().getLgFAMILLEID(), lstTBonLivraisonDetail.get(k).getLgBONLIVRAISONID().getLgORDERID().getLgGROSSISTEID().getLgGROSSISTEID());

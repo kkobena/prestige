@@ -47,9 +47,6 @@ public class LogServiceImpl implements LogService {
 
     public EntityManager getEntityManager() {
         return em;
-//        dataManager manager = new dataManager();
-//        manager.initEntityManager();
-//        return manager.getEm();
     }
 
     @Override

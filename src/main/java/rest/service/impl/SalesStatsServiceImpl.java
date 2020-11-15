@@ -23,9 +23,12 @@ import dal.MvtTransaction;
 import dal.MvtTransaction_;
 import dal.TAyantDroit;
 import dal.TClient;
+import dal.TClient_;
 import dal.TCompteClientTiersPayant;
 import dal.TEmplacement;
+import dal.TFamille;
 import dal.TFamille_;
+import dal.TGroupeTierspayant;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClientTiersPayent;
@@ -33,6 +36,8 @@ import dal.TPreenregistrementCompteClientTiersPayent_;
 import dal.TPreenregistrementDetail;
 import dal.TPreenregistrementDetail_;
 import dal.TPreenregistrement_;
+import dal.TReglement;
+import dal.TTiersPayant;
 import dal.TTypeReglement_;
 import dal.TUser_;
 import dal.enumeration.TypeTransaction;
@@ -581,7 +586,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 q.setMaxResults(params.getLimit());
             }
             List<TPreenregistrement> list = q.getResultList();
-            return list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(),params, findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
+            return list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(), params, findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -947,5 +952,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             return Collections.emptyList();
         }
     }
+
+   
 
 }

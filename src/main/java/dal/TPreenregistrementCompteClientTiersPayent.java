@@ -78,8 +78,6 @@ public class TPreenregistrementCompteClientTiersPayent implements Serializable {
     @JoinColumn(name = "lg_PREENREGISTREMENT_ID", referencedColumnName = "lg_PREENREGISTREMENT_ID")
     @ManyToOne
     private TPreenregistrement lgPREENREGISTREMENTID;
-      /*@Column(name = "template")
-    private Boolean template=Boolean.FALSE;*/
     public TPreenregistrementCompteClientTiersPayent() {
     }
 

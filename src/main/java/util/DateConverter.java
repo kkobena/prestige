@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -79,6 +80,7 @@ public final class DateConverter {
     public static final String STATUT_ENABLE = "enable";
     public static final String STATUT_RUPTURE = "RUPTURE";
     public static final String STATUT_DELETE = "delete";
+    public static final String STATUT_DISABLE = "disable";
     public static final String OTHER = "OTHER";
     public static final String STATUT_IS_IN_USE = "is_Using";
     public static final String STATUT_IS_ASSIGN = "is_assign";
@@ -159,6 +161,9 @@ public final class DateConverter {
     public static final String MODE_ORANGE = "10";
     public static final String TYPE_REGLEMENT_ORANGE = "7";
     public static final String MODE_MTN = "9";
+    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    public static final String KEY_HEURE_EMAIL = "KEY_HEURE_EMAIL";
+
     /*
     parametre nombre de mois à considerer
      */
@@ -195,7 +200,7 @@ public final class DateConverter {
             if (result_phone.length() < 11) {
                 result_phone = "0" + result_phone;
             }
-         
+
             return "(" + Str_country_indicatif + ") " + result_phone;
         } catch (Exception e) {
         }
@@ -503,5 +508,14 @@ public final class DateConverter {
 
     public static int convertSectoDay(int n) {
         return n / (24 * 3600);
+    }
+
+    public static Date dateFromString(String dateFromString) {
+        try {
+            return DATE_FORMAT.parse(dateFromString);
+        } catch (ParseException ex) {
+            Logger.getLogger(DateConverter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

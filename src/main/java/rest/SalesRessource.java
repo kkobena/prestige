@@ -11,9 +11,7 @@ import commonTasks.dto.QueryDTO;
 import commonTasks.dto.SalesParams;
 import dal.TPreenregistrement;
 import dal.TUser;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -32,8 +30,6 @@ import rest.qualifier.SalesPrimary;
 import rest.service.GenerateTicketService;
 import rest.service.SalesService;
 import rest.service.SmsService;
-import rest.service.impl.Mail;
-import rest.service.impl.Sms;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -712,8 +708,8 @@ public class SalesRessource {
         JSONObject jsono = smsService.findAccessToken();
         return Response.ok().entity(jsono.toString()).build();
     }
-
-    @GET
+   
+  /*  @GET
     @Path("sendsms")
     public Response sendSms() throws JSONException {
 
@@ -729,5 +725,8 @@ public class SalesRessource {
         return Response.ok().build();
     }
     @Resource(name = "concurrent/__defaultManagedExecutorService")
-    ManagedExecutorService mes;
+    ManagedExecutorService mes;*/
+    
+    
+    
 }

@@ -2,3 +2,7 @@
 .project
 .classpath
 nb-configuration.xml
+/.apt_generated/
+/.apt_generated_tests/
+/.generated-sources/
+/.generated-test-sources/

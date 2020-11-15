@@ -185,7 +185,6 @@
     <class>dal.TStockSnapshot</class>
     <class>dal.TCompany</class>
     <class>dal.Groupefournisseur</class>
-    <class>dal.Migration</class>
     <class>dal.HMvtProduit</class>
     <class>dal.PVente</class>
     <class>dal.PVenteItem</class>
@@ -201,6 +200,9 @@
     <class>dal.TRuptureHistory</class>
     <class>dal.AnnulationRecette</class>
     <class>dal.Medecin</class>
+    <class>dal.Notification</class>
+    <class>dal.Reference</class>
+    <class>dal.NotificationClient</class>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
       <!--      <property name="hibernate.hbm2ddl.auto" value="update"/>

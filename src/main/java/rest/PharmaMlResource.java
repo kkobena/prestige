@@ -93,11 +93,6 @@ public class PharmaMlResource {
         return Response.ok().entity(json.toString()).build();
     }
     
-    @GET
-    @Path("test")
-    public Response test() throws JSONException {
-        pharmaMlService.test();
-        return Response.ok().entity(new JSONObject().put("success", true).toString()).build();
-    }
+   
 
 }

@@ -88,7 +88,7 @@ Ext.define('testextjs.view.caisseManager.Importation', {
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
                     width: 320,
-                    msg: result.count + ' Produit(s) prix en compte sur ' + result.ligne,
+                    msg: result.count + ' Produit(s) pris en compte sur ' + result.ligne,
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.INFO
 

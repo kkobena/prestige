@@ -12,14 +12,21 @@ import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.TiersPayantParams;
 import dal.TPrivilege;
 import dal.TUser;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -27,12 +34,17 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CommonService;
 import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
+import rest.service.impl.ImportationVente;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 
@@ -53,6 +65,8 @@ public class SalesStatsRessource {
     CommonService commonService;
     @EJB
     GenerateTicketService generateTicketService;
+    @EJB
+    ImportationVente importationVente;
 
     @GET
     @Path("preventes")
@@ -415,4 +429,5 @@ public class SalesStatsRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
 
+   
 }

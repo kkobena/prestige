@@ -11,6 +11,7 @@ import commonTasks.dto.Params;
 import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.RetourFournisseurDTO;
 import commonTasks.dto.SalesStatsParams;
+import dal.Notification;
 import dal.TAjustement;
 import dal.TAjustementDetail;
 import dal.TAjustementDetail_;
@@ -35,7 +36,9 @@ import dal.TRetourdepotdetail;
 import dal.TUser;
 import dal.TUser_;
 import dal.Typemvtproduit;
+import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
+import dal.enumeration.TypeNotification;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -72,6 +75,7 @@ import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.MouvementProduitService;
 import rest.service.MvtProduitService;
+import rest.service.NotificationService;
 import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -93,6 +97,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     MouvementProduitService mouvementProduitService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    NotificationService notificationService;
 
     public MvtProduitServiceImpl() {
     }
@@ -293,8 +299,14 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             TFamille tFamille = it.getLgFAMILLEID();
             if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
                 saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0, commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
-                logService.updateItem(tu, tp.getStrREF(), "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de " + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME(), TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tp, emg);
-
+                String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de " + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
+                logService.updateItem(tu, tp.getStrREF(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tp, emg);
+                notificationService.save(new Notification()
+                        .canal(Canal.EMAIL)
+                        .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT)
+                        .message(desc)
+                        .addUser(tu)
+                );
             }
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
             int initStock = familleStock.getIntNUMBERAVAILABLE();
@@ -338,8 +350,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             TFamille tFamille = it.getLgFAMILLEID();
             if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
                 saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0, commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
-                logService.updateItem(tu, tp.getStrREF(), "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de " + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME(), TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tp, emg);
-
+                String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de " + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
+                logService.updateItem(tu, tFamille.getIntCIP() , desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tFamille, emg);
+                notificationService.save(new Notification()
+                        .canal(Canal.EMAIL)
+                        .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT)
+                        .message(desc)
+                        .addUser(tu));
             }
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
             if (tFamille.getBoolDECONDITIONNE() == 1) {
@@ -384,8 +401,15 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 TFamille tFamille = it.getLgFAMILLEID();
                 if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
                     saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0, commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
-                    logService.updateItem(tu, tp.getStrREF(), "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de " + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME(), TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tp, emg);
+                    String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de " + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
 
+                    logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tFamille, emg);
+
+                    notificationService.save(new Notification()
+                            .canal(Canal.EMAIL)
+                            .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT)
+                            .message(desc)
+                            .addUser(tu));
                 }
                 TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
                 Integer initStock = familleStock.getIntNUMBERAVAILABLE();
@@ -396,7 +420,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                         TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
                         //  LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité parent  {1}", new Object[]{OTFamilleParent.getIntCIP(), stockParent.getIntNUMBERAVAILABLE()});
                         deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
-
                     } else {
                         saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
                     }
@@ -586,8 +609,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         Integer stockInit = OTFamilleStockParent.getIntNUMBERAVAILABLE();
         Integer stockVirtuel = stockInitDetail + (stockInit * qtyDetail);
         int compare = stockVirtuel.compareTo(qteVendue);
-        LOG.log(Level.INFO, "------------  deconditionner >>>>>>>> compare {0} \n stockVirtuel {1} \n qtyDetail {2} \n stockInitDetail {3} stock parent {4}",
-                new Object[]{compare, stockVirtuel, qtyDetail, stockInitDetail, stockInit});
+//        LOG.log(Level.INFO, "------------  deconditionner >>>>>>>> compare {0} \n stockVirtuel {1} \n qtyDetail {2} \n stockInitDetail {3} stock parent {4}",
+//                new Object[]{compare, stockVirtuel, qtyDetail, stockInitDetail, stockInit});
         if (compare >= 0) {
             while (stockInitDetail < qteVendue) {
                 numberToDecondition++;
@@ -631,6 +654,15 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             }
             mouvementProduitService.saveMvtProduit(child.getLgDECONDITIONNEMENTID(), DateConverter.DECONDTIONNEMENT_POSITIF, OTFamilleChild, tu, OTFamilleStockParent.getLgEMPLACEMENTID(), (numberToDecondition * qtyDetail), stockInitDetail, stockInitDetail + (numberToDecondition * qtyDetail) - qteVendue, emg, 0);
             mouvementProduitService.saveMvtProduit(parent.getLgDECONDITIONNEMENTID(), DateConverter.DECONDTIONNEMENT_NEGATIF, OTFamilleParent, tu, OTFamilleStockParent.getLgEMPLACEMENTID(), numberToDecondition, stockInit, stockInit - numberToDecondition, emg, 0);
+            String desc = "Déconditionnement du produit [ " + OTFamilleParent.getIntCIP() + " ] de " + OTFamilleParent.getIntPRICE() + " stock initial " + stockInit + " quantité déconditionnée " + numberToDecondition + " stock finale " + (stockInit - numberToDecondition) + " stock détail initial  " + stockInitDetail + " stock détail final = " + (stockInitDetail + (numberToDecondition * qtyDetail) - qteVendue) + " . Opérateur : " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
+            logService.updateItem(tu, OTFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, OTFamilleParent, emg);
+
+            notificationService.save(new Notification()
+                    .canal(Canal.EMAIL)
+                    .typeNotification(TypeNotification.DECONDITIONNEMENT)
+                    .message(desc)
+                    .addUser(tu));
+
         }
     }
 
@@ -952,7 +984,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 saveMvtArticle(commonparameter.str_ACTION_AJUSTEMENT, action, famille, tUser, familleStock, it.getIntNUMBER(), initStock, emplacement, emg);
                 mouvementProduitService.saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), _action, famille, tUser, emplacement, it.getIntNUMBER(), initStock, initStock + it.getIntNUMBER(), emg, 0);
                 suggestionService.makeSuggestionAuto(familleStock, famille, emg);
-                logService.updateItem(tUser, famille.getIntCIP(), "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]", TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
+                String desc = "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
+                logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
                 it.setStrSTATUT(commonparameter.statut_enable);
                 it.setDtUPDATED(new Date());
                 emg.merge(it);
@@ -1275,6 +1308,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 suggestionService.makeSuggestionAuto(stock, tf, emg);
                 String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + fournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + params.getOperateur().getStrFIRSTNAME() + " " + params.getOperateur().getStrLASTNAME();
                 logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
+                 notificationService.save(new Notification()
+                    .canal(Canal.SMS)
+                    .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
+                    .message(desc)
+                    .addUser(params.getOperateur())
+            );
             });
             fournisseur.setStrSTATUT(DateConverter.STATUT_ENABLE);
             fournisseur.setDtUPDATED(new Date());

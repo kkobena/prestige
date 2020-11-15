@@ -81,7 +81,17 @@ public class ProduitRessource {
         JSONObject json = produitService.activerProduitDesactive(id, tu);
         return Response.ok().entity(json.toString()).build();
     }
-
+  @POST
+    @Path("disable-produit/{id}")
+    public Response desactiverProduitDesactiver(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject json = produitService.desactiverProduitDesactive(id, tu);
+        return Response.ok().entity(json.toString()).build();
+    }
     @POST
     @Path("remove-desactive/{id}")
     public Response removeProduitDesactiver(@PathParam("id") String id) throws JSONException {

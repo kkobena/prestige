@@ -36,6 +36,8 @@ public interface ProduitService {
 
     JSONObject activerProduitDesactive(String id, TUser tUser) throws JSONException;
 
+    JSONObject desactiverProduitDesactive(String id, TUser tUser) throws JSONException;
+
     List<TFamilleStock> getByFamille(String idFamille);
 
     List<TFamilleGrossiste> getFamilleGrossistesByFamille(String idFamille);

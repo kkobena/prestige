@@ -10,6 +10,7 @@ import commonTasks.dto.AjustementDetailDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
 import dal.HMvtProduit;
+import dal.Notification;
 import dal.TAjustement;
 import dal.TAjustementDetail;
 import dal.TAjustementDetail_;
@@ -25,7 +26,9 @@ import dal.TPreenregistrementDetail;
 import dal.TUser;
 import dal.TUser_;
 import dal.Typemvtproduit;
+import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
+import dal.enumeration.TypeNotification;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -54,6 +57,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.MouvementProduitService;
+import rest.service.NotificationService;
 import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -72,7 +76,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
     LogService logService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-
+      @EJB  NotificationService notificationService;
     public EntityManager getEmg() {
         /* dataManager manager = new dataManager();
         manager.initEntityManager();
@@ -335,10 +339,17 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 String action = (compare < 0) ? DateConverter.AJUSTEMENT_POSITIF : DateConverter.AJUSTEMENT_NEGATIF;
                 saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), getTypemvtproduitByID(action, emg), familleStock, tUser, emplacement, it.getIntNUMBER(), initStock, emg, 0);
                 suggestionService.makeSuggestionAuto(familleStock, famille, emg);
-                logService.updateItem(tUser, famille.getIntCIP(), "Ajustement du produit :[  " + famille.getIntCIP() + " ]", TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
+                   String desc= "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
+                logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
                 it.setStrSTATUT(commonparameter.statut_enable);
                 it.setDtUPDATED(new Date());
                 emg.merge(it);
+                 notificationService.save(new Notification() 
+                                    .canal(Canal.EMAIL)
+                                    .typeNotification(TypeNotification.AJUSTEMENT_DE_PRODUIT)
+                                    .message(desc)
+                                    .addUser(tUser)
+                            );
 
             });
             ajustement.setStrCOMMENTAIRE(params.getDescription());

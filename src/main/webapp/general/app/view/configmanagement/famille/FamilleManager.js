@@ -282,7 +282,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 {
                     text: 'P',
                     dataIndex: 'checkExpirationdate',
-                     flex: 0.4,
+                    flex: 0.4,
                     xtype: 'checkcolumn',
                     listeners: {
                         checkChange: function (column, rowIndex, checked, eOpts) {
@@ -317,7 +317,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 {
                     text: 'O',
                     dataIndex: 'scheduled',
-                      flex: 0.4,
+                    flex: 0.4,
                     xtype: 'checkcolumn',
                     listeners: {
                         checkChange: function (column, rowIndex, checked, eOpts) {
@@ -840,35 +840,64 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 function (btn) {
                     if (btn === 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
+                        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
                         Ext.Ajax.request({
-                            url: url_services_transaction_famille + 'delete',
-                            params: {
-                                lg_FAMILLE_ID: rec.get('lg_FAMILLE_ID')
-                            },
-                            success: function (response)
-                            {
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success == "0") {
-                                    Ext.MessageBox.alert('Erreur Message', object.errors);
-                                    return;
-                                } else {
-                                    Ext.MessageBox.alert('Confirmation', object.errors);
+                            method: 'POST',
+                            url: '../api/v1/produit/remove-desactive/' + rec.get('lg_FAMILLE_ID'),
+                            success: function (response, options) {
+                                progress.hide();
+                                var result = Ext.JSON.decode(response.responseText, true);
+                                if (result.success) {
                                     grid.getStore().reload();
+                                } else {
+                                    Ext.MessageBox.show({
+                                        title: 'Message d\'erreur',
+                                        width: 320,
+                                        msg: "L'opération a échouée",
+                                        buttons: Ext.MessageBox.OK,
+                                        icon: Ext.MessageBox.ERROR
+
+                                    });
                                 }
-
                             },
-                            failure: function (response)
-                            {
-
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                //  alert(object);
-
-                                console.log("Bug " + response.responseText);
-                                Ext.MessageBox.alert('Error Message', response.responseText);
-
+                            failure: function (response, options) {
+                                progress.hide();
+                                Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
                             }
+
                         });
-                        return;
+
+
+
+//                        Ext.Ajax.request({
+//                            url: url_services_transaction_famille + 'delete',
+//                            params: {
+//                                lg_FAMILLE_ID: rec.get('lg_FAMILLE_ID')
+//                            },
+//                            success: function (response)
+//                            {
+//                                var object = Ext.JSON.decode(response.responseText, false);
+//                                if (object.success == "0") {
+//                                    Ext.MessageBox.alert('Erreur Message', object.errors);
+//                                    return;
+//                                } else {
+//                                    Ext.MessageBox.alert('Confirmation', object.errors);
+//                                    grid.getStore().reload();
+//                                }
+//
+//                            },
+//                            failure: function (response)
+//                            {
+//
+//                                var object = Ext.JSON.decode(response.responseText, false);
+//                                //  alert(object);
+//
+//                                console.log("Bug " + response.responseText);
+//                                Ext.MessageBox.alert('Error Message', response.responseText);
+//
+//                            }
+//                        });
+//                        return;
                     }
                 });
 
@@ -882,36 +911,62 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 "Desactiver ce produit?" + "<br>Stock actuel: " + rec.get('int_NUMBER_AVAILABLE'),
                 function (btn) {
                     if (btn === 'yes') {
-
+                        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
                         Ext.Ajax.request({
-                            url: url_services_transaction_famille + 'disable',
-                            params: {
-                                lg_FAMILLE_ID: rec.get('lg_FAMILLE_ID')
-                            },
-                            success: function (response)
-                            {
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success === 0) {
-                                    Ext.MessageBox.alert('Desactivation ' + '[' + rec.get('str_NAME') + ']', 'Impossible de desactiver cette ligne');
-                                    return;
+                            method: 'POST',
+                            url: '../api/v1/produit/disable-produit/' + rec.get('lg_FAMILLE_ID'),
+                            success: function (response, options) {
+                                progress.hide();
+                                var result = Ext.JSON.decode(response.responseText, true);
+                                if (result.success) {
+                                    grid.getStore().reload();
                                 } else {
-                                    Ext.MessageBox.alert('Desactivation ' + '[' + rec.get('str_NAME') + ']', 'Desactivation effectuee avec succes');
-//                                    
+                                    Ext.MessageBox.show({
+                                        title: 'Message d\'erreur',
+                                        width: 320,
+                                        msg: "L'opération a échouée",
+                                        buttons: Ext.MessageBox.OK,
+                                        icon: Ext.MessageBox.ERROR
+
+                                    });
                                 }
-                                grid.getStore().reload();
                             },
-                            failure: function (response)
-                            {
-
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                //  alert(object);
-
-                                console.log("Bug " + response.responseText);
-                                Ext.MessageBox.alert('Error Message', response.responseText);
-
+                            failure: function (response, options) {
+                                progress.hide();
+                                Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
                             }
+
                         });
-                        return;
+
+//                        Ext.Ajax.request({
+//                            url: url_services_transaction_famille + 'disable',
+//                            params: {
+//                                lg_FAMILLE_ID: rec.get('lg_FAMILLE_ID')
+//                            },
+//                            success: function (response)
+//                            {
+//                                var object = Ext.JSON.decode(response.responseText, false);
+//                                if (object.success === 0) {
+//                                    Ext.MessageBox.alert('Desactivation ' + '[' + rec.get('str_NAME') + ']', 'Impossible de desactiver cette ligne');
+//                                    return;
+//                                } else {
+//                                    Ext.MessageBox.alert('Desactivation ' + '[' + rec.get('str_NAME') + ']', 'Desactivation effectuee avec succes');
+////                                    
+//                                }
+//                                grid.getStore().reload();
+//                            },
+//                            failure: function (response)
+//                            {
+//
+//                                var object = Ext.JSON.decode(response.responseText, false);
+//                                //  alert(object);
+//
+//                                console.log("Bug " + response.responseText);
+//                                Ext.MessageBox.alert('Error Message', response.responseText);
+//
+//                            }
+//                        });
+//                        return;
                     }
                 });
 

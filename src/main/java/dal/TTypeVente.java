@@ -27,7 +27,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "t_type_vente")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "TTypeVente.findByStrSTATUT", query = "SELECT t FROM TTypeVente t WHERE t.strSTATUT = :strSTATUT")
+    @NamedQuery(name = "TTypeVente.findByStrSTATUT", query = "SELECT t FROM TTypeVente t WHERE t.strSTATUT = :strSTATUT"),
+     @NamedQuery(name = "TTypeVente.findByStrNAME", query = "SELECT t FROM TTypeVente t WHERE t.strNAME = :strNAME")
     })
 public class TTypeVente implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -49,16 +50,7 @@ public class TTypeVente implements Serializable {
     @Column(name = "dt_UPDATED")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtUPDATED;
-//    @OneToMany(mappedBy = "lgTYPEVENTEID")
-//    private Collection<TSnapShopDalyStat> tSnapShopDalyStatCollection;
-//    @OneToMany(mappedBy = "lgTYPEVENTEID")
-//    private Collection<TSnapShopDalyRecetteCaisse> tSnapShopDalyRecetteCaisseCollection;
-//    @OneToMany(mappedBy = "lgTYPEVENTEID")
-//    private Collection<TPreenregistrement> tPreenregistrementCollection;
-//    @OneToMany(mappedBy = "lgTYPEVENTEID")
-//    private Collection<TSnapShopDalyStatFrequentation> tSnapShopDalyStatFrequentationCollection;
-//    @OneToMany(mappedBy = "lgTYPEVENTEID")
-//    private Collection<TSnapShopDalyVente> tSnapShopDalyVenteCollection;
+
 
     public TTypeVente() {
     }

@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
@@ -27,8 +26,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "t_nature_vente")
 @XmlRootElement
 @NamedQueries({
+    @NamedQuery(name = "TNatureVente.findByStrLIBELLE", query = "SELECT t FROM TNatureVente t WHERE t.strLIBELLE = :strLIBELLE"),
     @NamedQuery(name = "TNatureVente.findByStrSTATUT", query = "SELECT t FROM TNatureVente t WHERE t.strSTATUT = :strSTATUT")})
 public class TNatureVente implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -44,7 +45,6 @@ public class TNatureVente implements Serializable {
     private Date dtUPDATED;
     @Column(name = "str_STATUT", length = 40)
     private String strSTATUT;
-  
 
     public TNatureVente() {
     }
@@ -93,8 +93,6 @@ public class TNatureVente implements Serializable {
         this.strSTATUT = strSTATUT;
     }
 
-   
-
     @Override
     public int hashCode() {
         int hash = 0;
@@ -116,5 +114,5 @@ public class TNatureVente implements Serializable {
     public String toString() {
         return "dal.TNatureVente[ lgNATUREVENTEID=" + lgNATUREVENTEID + " ]";
     }
-    
+
 }

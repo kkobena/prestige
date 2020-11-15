@@ -58,7 +58,6 @@ public class TClient implements Serializable {
     @Column(name = "str_CODE_INTERNE", length = 40)
     private String strCODEINTERNE;
     @Column(name = "str_FIRST_NAME", length = 50)
-
     private String strFIRSTNAME;
     @Column(name = "str_LAST_NAME", length = 50)
     private String strLASTNAME;

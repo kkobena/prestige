@@ -10,6 +10,7 @@ import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.DelayedDTO;
 import commonTasks.dto.Params;
 import dal.MvtTransaction;
+import dal.Notification;
 import dal.TCashTransaction;
 import dal.TClient;
 import dal.TClient_;
@@ -28,8 +29,10 @@ import dal.TResumeCaisse;
 import dal.TTypeMvtCaisse;
 import dal.TUser;
 import dal.TUser_;
+import dal.enumeration.Canal;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeLog;
+import dal.enumeration.TypeNotification;
 import dal.enumeration.TypeTransaction;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -54,6 +57,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.LogService;
+import rest.service.NotificationService;
 import rest.service.ReglementService;
 import rest.service.TransactionService;
 import util.DateConverter;
@@ -75,6 +79,8 @@ public class ReglementServiceImpl implements ReglementService {
     TransactionService transactionService;
     @EJB
     LogService logService;
+    @EJB
+    NotificationService notificationService;
 
     public boolean checkCaisse(TUser ooTUser) {
         try {
@@ -137,9 +143,9 @@ public class ReglementServiceImpl implements ReglementService {
                 }
             } else {
                 if (params.getRef() != null) {
-                     predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.lgCLIENTID), params.getRef())));
+                    predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.lgCLIENTID), params.getRef())));
                 }
-               
+
             }
 
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementCompteClient_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
@@ -290,7 +296,7 @@ public class ReglementServiceImpl implements ReglementService {
                         clotureVenteParams.getMontantPaye(),
                         clotureVenteParams.getTotalRecap(), clotureVenteParams.getMontantPaye(), clotureVenteParams.getMontantRecu(), Boolean.TRUE, CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
                         modeReglement.getLgTYPEREGLEMENTID(), OTTypeMvtCaisse, getEmg(),
-                        clotureVenteParams.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), compteClient.getLgCLIENTID().getLgCLIENTID(),clotureVenteParams.getTotalRecap()-clotureVenteParams.getMontantPaye());
+                        clotureVenteParams.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), compteClient.getLgCLIENTID().getLgCLIENTID(), clotureVenteParams.getTotalRecap() - clotureVenteParams.getMontantPaye());
                 listpreenregistrementCompteClient.forEach(a -> {
                     createDossierReglementDetail(a.getLgPREENREGISTREMENTCOMPTECLIENTID(), dossierReglement, a.getIntPRICERESTE());
                     a.setIntPRICERESTE(0);
@@ -299,6 +305,11 @@ public class ReglementServiceImpl implements ReglementService {
                 });
                 logService.updateItem(clotureVenteParams.getUserId(), caisse.getLgMVTCAISSEID(), Description,
                         TypeLog.MVT_DE_CAISSE, caisse, getEmg());
+                notificationService.save(new Notification()
+                        .canal(Canal.SMS_EMAIL)
+                        .typeNotification(TypeNotification.MVT_DE_CAISSE)
+                        .message(Description)
+                        .addUser(clotureVenteParams.getUserId()));
                 return json.put("success", true).put("msg", "Opération effectuée").put("ref", dossierReglement.getLgDOSSIERREGLEMENTID());
             }
 
@@ -311,7 +322,7 @@ public class ReglementServiceImpl implements ReglementService {
 
     @Override
     public JSONObject reglerDiffere(ClotureVenteParams clotureVenteParams) throws JSONException {
-        System.out.println("clotureVenteParams  "+clotureVenteParams);
+        System.out.println("clotureVenteParams  " + clotureVenteParams);
         JSONObject json = new JSONObject();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try {
@@ -339,7 +350,7 @@ public class ReglementServiceImpl implements ReglementService {
                         clotureVenteParams.getMontantPaye(),
                         clotureVenteParams.getTotalRecap(), clotureVenteParams.getMontantPaye(), clotureVenteParams.getMontantRecu(), Boolean.TRUE, CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
                         modeReglement.getLgTYPEREGLEMENTID(), OTTypeMvtCaisse, getEmg(),
-                        clotureVenteParams.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), compteClient.getLgCLIENTID().getLgCLIENTID(),clotureVenteParams.getTotalRecap()-clotureVenteParams.getMontantPaye());
+                        clotureVenteParams.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), compteClient.getLgCLIENTID().getLgCLIENTID(), clotureVenteParams.getTotalRecap() - clotureVenteParams.getMontantPaye());
                 LongAdder montant = new LongAdder();
                 montant.add(clotureVenteParams.getMontantPaye());
                 array.forEach(a -> {
@@ -363,6 +374,11 @@ public class ReglementServiceImpl implements ReglementService {
                 });
                 logService.updateItem(clotureVenteParams.getUserId(), caisse.getLgMVTCAISSEID(), Description,
                         TypeLog.MVT_DE_CAISSE, caisse, getEmg());
+                  notificationService.save(new Notification()
+                        .canal(Canal.SMS_EMAIL)
+                        .typeNotification(TypeNotification.MVT_DE_CAISSE)
+                        .message(Description)
+                        .addUser(clotureVenteParams.getUserId()));
                 return json.put("success", true).put("msg", "Opération effectuée").put("ref", dossierReglement.getLgDOSSIERREGLEMENTID());
             }
 

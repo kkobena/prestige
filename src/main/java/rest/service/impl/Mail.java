@@ -72,6 +72,7 @@ public class Mail implements Runnable {
             Address sender = new InternetAddress(sp.email);
             Address recipient = new InternetAddress(email);
             msg.setText(getMessage());
+           
             msg.setFrom(sender);
             msg.setRecipient(Message.RecipientType.TO, recipient);
             msg.setSubject(getSubject());

@@ -18,6 +18,7 @@ import commonTasks.dto.ValorisationDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.HMvtProduit;
 import dal.HMvtProduit_;
+import dal.Notification;
 import dal.TAjustementDetail;
 import dal.TBonLivraisonDetail;
 import dal.TDeconditionnement;
@@ -43,7 +44,9 @@ import dal.TUser;
 import dal.TWarehouse;
 import dal.TZoneGeographique;
 import dal.TZoneGeographique_;
+import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
+import dal.enumeration.TypeNotification;
 import java.time.LocalDate;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -76,6 +79,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.LogService;
+import rest.service.NotificationService;
 import rest.service.ProduitService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -92,6 +96,8 @@ public class ProduitServiceImpl implements ProduitService {
     private EntityManager em;
     @EJB
     LogService logService;
+    @EJB
+    NotificationService notificationService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -185,10 +191,27 @@ public class ProduitServiceImpl implements ProduitService {
             famille.setDtUPDATED(new Date());
             getEntityManager().merge(famille);
             updateFamilleGrossiste(famille, statut);
-//            getEntityManager().getTransaction().commit();
-//            getEntityManager().clear();
             json.put("success", true).put("msg", "Opération effectuée avec success");
-            logService.updateItem(u, famille.getIntCIP(), famille.getStrNAME(), typeLog, famille, getEntityManager());
+            String desc = " ";
+            TypeNotification notification = TypeNotification.ACTIVATION_DE_PRODUIT;
+            if (DateConverter.STATUT_ENABLE.equalsIgnoreCase(statut)) {
+                desc = "Activation ";
+                notification = TypeNotification.ACTIVATION_DE_PRODUIT;
+            } else if (DateConverter.STATUT_DELETE.equalsIgnoreCase(statut)) {
+                desc = "Suppression ";
+                notification = TypeNotification.SUPPRESSION_DE_PRODUIT;
+            } else if (DateConverter.STATUT_DISABLE.equalsIgnoreCase(statut)) {
+                desc = "Désactivation ";
+                notification = TypeNotification.DESACTIVATION_DE_PRODUIT;
+            }
+
+            desc += " du produit " + famille.getIntCIP() + " " + famille.getStrNAME() + " stock = " + getFamilleStockByProduitId(id, u.getLgEMPLACEMENTID().getLgEMPLACEMENTID()) + ", par " + u.getStrFIRSTNAME() + u.getStrLASTNAME();
+            logService.updateItem(u, famille.getIntCIP(), desc, typeLog, famille, getEntityManager());
+            notificationService.save(new Notification()
+                    .canal(Canal.SMS_EMAIL)
+                    .typeNotification(notification)
+                    .message(desc)
+                    .addUser(u));
         } catch (Exception e) {
             e.printStackTrace(System.err);
 //            if (getEntityManager().getTransaction().isActive()) {
@@ -201,12 +224,17 @@ public class ProduitServiceImpl implements ProduitService {
 
     @Override
     public JSONObject supprimerProduitDesactive(String id, TUser tUser) throws JSONException {
-        return updateProuitDesactive(id, commonparameter.statut_delete, tUser, TypeLog.SUPPRESSION_DE_PRODUIT);
+        return updateProuitDesactive(id, DateConverter.STATUT_DELETE, tUser, TypeLog.SUPPRESSION_DE_PRODUIT);
     }
 
     @Override
     public JSONObject activerProduitDesactive(String id, TUser tUser) throws JSONException {
-        return updateProuitDesactive(id, commonparameter.statut_enable, tUser, TypeLog.ACTIVATION_DE_PRODUIT);
+        return updateProuitDesactive(id, DateConverter.STATUT_ENABLE, tUser, TypeLog.ACTIVATION_DE_PRODUIT);
+    }
+
+    @Override
+    public JSONObject desactiverProduitDesactive(String id, TUser tUser) throws JSONException {
+        return updateProuitDesactive(id, DateConverter.STATUT_DISABLE, tUser, TypeLog.DESACTIVATION_DE_PRODUIT);
     }
 
     private void updateFamilleGrossiste(TFamille famille, String statut) {
@@ -571,14 +599,16 @@ public class ProduitServiceImpl implements ProduitService {
     Comparator<HMvtProduit> comparatorByDate = Comparator.comparing(HMvtProduit::getMvtDate);
     Comparator<HMvtProduit> comparatorByDateTime = Comparator.comparing(HMvtProduit::getCreatedAt);
     Comparator<MvtProduitDTO> mvtrByDate = Comparator.comparing(MvtProduitDTO::getDateOperation);
-int findEcartInventaire(long pk){
-    try {
-        TInventaireFamille tif=this.getEntityManager().find(TInventaireFamille.class, pk);
-        return tif.getIntNUMBER()-tif.getIntNUMBERINIT();
-    } catch (Exception e) {
-        return 0;
+
+    int findEcartInventaire(long pk) {
+        try {
+            TInventaireFamille tif = this.getEntityManager().find(TInventaireFamille.class, pk);
+            return tif.getIntNUMBER() - tif.getIntNUMBERINIT();
+        } catch (Exception e) {
+            return 0;
+        }
     }
-}
+
     @Override
     public List<MvtProduitDTO> suivitMvtArcticle(MvtArticleParams params) {
         try {
@@ -610,7 +640,7 @@ int findEcartInventaire(long pk){
                             break;
 
                         case DateConverter.INVENTAIRE:
-                            mvtProduit.setEcartInventaire(findEcartInventaire( Long.valueOf(values.get(0).getPkey()) ));
+                            mvtProduit.setEcartInventaire(findEcartInventaire(Long.valueOf(values.get(0).getPkey())));
                             mvtProduit.setQtyInv(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.DECONDTIONNEMENT_POSITIF:
@@ -1372,7 +1402,7 @@ int findEcartInventaire(long pk){
             valorisation.setMontantTarif(_montantTarif.intValue());
             Integer montantPu = _montantPu.intValue();
             valorisation.setMontantPu(montantPu);
-                valorisation.setMontantPmd(pmp.intValue());
+            valorisation.setMontantPmd(pmp.intValue());
             return valorisation;
         } catch (Exception e) {
             e.printStackTrace(System.err);

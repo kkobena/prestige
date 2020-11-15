@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
@@ -35,10 +34,11 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TInboudMessage.findByStrSTATUT", query = "SELECT t FROM TInboudMessage t WHERE t.strSTATUT = :strSTATUT"),
     @NamedQuery(name = "TInboudMessage.findByStrPHONE", query = "SELECT t FROM TInboudMessage t WHERE t.strPHONE = :strPHONE")})
 public class TInboudMessage implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
-    @Column(name = "lg_INBOUND_MESSAGE_ID", nullable = false, length = 30)
+    @Column(name = "lg_INBOUND_MESSAGE_ID", nullable = false)
     private String lgINBOUNDMESSAGEID;
     @Column(name = "dt_CREATED")
     @Temporal(TemporalType.TIMESTAMP)
@@ -47,8 +47,7 @@ public class TInboudMessage implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtUPDATED;
     @Basic(optional = false)
-    @Lob
-    @Column(name = "str_MESSAGE", nullable = false, length = 65535)
+    @Column(name = "str_MESSAGE", nullable = false)
     private String strMESSAGE;
     @Column(name = "str_STATUT", length = 20)
     private String strSTATUT;
@@ -139,5 +138,5 @@ public class TInboudMessage implements Serializable {
     public String toString() {
         return "dal.TInboudMessage[ lgINBOUNDMESSAGEID=" + lgINBOUNDMESSAGEID + " ]";
     }
-    
+
 }

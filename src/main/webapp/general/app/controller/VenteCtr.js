@@ -3424,6 +3424,24 @@ Ext.define('testextjs.controller.VenteCtr', {
                                                 {
                                                     xtype: 'button',
                                                     handler: function (btn) {
+                                                        if (slectedRecord) {
+                                                              var parent = btn.up('window');
+                                                                    var field = parent.down('numberfield');
+                                                            slectedRecord.set('taux', field.getValue());
+                                                            var record = slectedRecord.data;
+                                                            var cmp = me.buildCmp(record);
+                                                            tpContainerForm.insert(items.length - 1, cmp);
+                                                            me.addtierspayant(slectedRecord.get('compteTp'), field.getValue());
+                                                            form.destroy();
+                                                        }
+
+                                                    },
+                                                    text: 'Valider'
+
+                                                },
+                                                {
+                                                    xtype: 'button',
+                                                    handler: function (btn) {
                                                         form.destroy();
                                                     },
                                                     text: 'Annuler'

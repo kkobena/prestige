@@ -39,7 +39,7 @@ public class TOutboudMessage implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
-    @Column(name = "lg_OUTBOUND_MESSAGE_ID", nullable = false, length = 30)
+    @Column(name = "lg_OUTBOUND_MESSAGE_ID", nullable = false)
     private String lgOUTBOUNDMESSAGEID;
     @Column(name = "dt_CREATED")
     @Temporal(TemporalType.TIMESTAMP)
@@ -48,8 +48,7 @@ public class TOutboudMessage implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtUPDATED;
     @Basic(optional = false)
-    @Lob
-    @Column(name = "str_MESSAGE", nullable = false, length = 65535)
+    @Column(name = "str_MESSAGE", nullable = false)
     private String strMESSAGE;
     @Column(name = "str_STATUT", length = 20)
     private String strSTATUT;
