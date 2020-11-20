@@ -184,8 +184,9 @@ public class retourFournisseurManagement extends bllBase implements Bonlivraison
         
         try {
             TRetourFournisseurDetail OTRetourFournisseurDetail = this.FindTRetourFournisseurDetail(lg_RETOUR_FRS_DETAIL);
+            
             OTRetourFournisseurDetail.setStrSTATUT(commonparameter.statut_delete);
-            this.persiste(OTRetourFournisseurDetail);
+            this.delete(OTRetourFournisseurDetail);
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             result = true;
             

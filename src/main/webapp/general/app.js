@@ -62,8 +62,6 @@ Ext.application({
         'testextjs.model.Outboudmessage',
         'testextjs.view.sm_user.outboudmessage.OutboudmessageManager',
         'testextjs.model.Preenregistrement',
-        'testextjs.view.sm_user.selectproduct.SelectproductManager',
-
         'testextjs.view.sm_user.role.RoleManager',
         'testextjs.view.sm_user.privilege.PrivilegeManager',
         'testextjs.view.sm_user.module.ModuleManager',
@@ -91,8 +89,6 @@ Ext.application({
         'testextjs.view.sm_user.myaccount.MyaccountManager',
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.Preenregistrement',
-
-        'testextjs.view.sm_user.selectproduct.SelectproductManager',
         'testextjs.view.sm_user.detailsvente.DetailsVenteManager',
         'testextjs.model.DetailsVente',
         'testextjs.view.sm_user.detailsvente.action.add',
@@ -137,7 +133,7 @@ Ext.application({
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.Preenregistrement',
         'testextjs.view.sm_user.dovente.action.displayAyantDroit',
-        'testextjs.view.sm_user.selectproduct.SelectproductManager',
+       
 //
 //        //famille
         'testextjs.model.Famille',
