@@ -351,7 +351,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
                 saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0, commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
                 String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de " + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
-                logService.updateItem(tu, tFamille.getIntCIP() , desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tFamille, emg);
+                logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tFamille, emg);
                 notificationService.save(new Notification()
                         .canal(Canal.EMAIL)
                         .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT)
@@ -718,7 +718,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     private TDeconditionnement createDecondtionne(TFamille OTFamille, int int_NUMBER, TUser tUser, EntityManager emg) {
-
         TDeconditionnement OTDeconditionnement = new TDeconditionnement();
         OTDeconditionnement.setLgDECONDITIONNEMENTID(UUID.randomUUID().toString());
         OTDeconditionnement.setLgFAMILLEID(OTFamille);
@@ -727,12 +726,10 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         OTDeconditionnement.setDtCREATED(new Date());
         OTDeconditionnement.setStrSTATUT(commonparameter.statut_enable);
         emg.persist(OTDeconditionnement);
-
         return OTDeconditionnement;
     }
 
     public void createTMouvementDecon(TFamille OTFamille, TEmplacement OTEmplacement, String str_TYPE_ACTION, String str_ACTION, Integer int_NUMBER, TUser user, EntityManager emg) {
-
         TMouvement OTMouvement = new TMouvement();
         OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
         OTMouvement.setDtDAY(new Date());
@@ -778,7 +775,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     private void createSnapshotMvtArticle(TFamille OTFamille, Integer qty, TUser ooTUser, Integer initStock, Integer finalStock, TEmplacement emplacementId, EntityManager emg) {
-
         Optional<TMouvementSnapshot> tm = findTMouvementSnapshot(OTFamille.getLgFAMILLEID(), emplacementId.getLgEMPLACEMENTID(), emg);
         if (tm.isPresent()) {
             TMouvementSnapshot mouvementSnapshot = tm.get();
@@ -838,7 +834,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         JSONObject json = new JSONObject();
         try {
             String str_NAME = "Ajustement du " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy H:mm"));
-//            emg.getTransaction().begin();
             TAjustement OTAjustement = new TAjustement();
             OTAjustement.setLgAJUSTEMENTID(UUID.randomUUID().toString());
             OTAjustement.setLgUSERID(params.getOperateur());
@@ -849,14 +844,10 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             OTAjustement.setStrSTATUT(commonparameter.statut_is_Process);
             emg.persist(OTAjustement);
             ajusterProduitAjustement(params, OTAjustement, emg);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             json.put("data", new JSONObject().put("lgAJUSTEMENTID", OTAjustement.getLgAJUSTEMENTID()));
         } catch (Exception e) {
             e.printStackTrace(System.err);
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             json.put("success", false).put("msg", "L'opération a échoué");
         }
         return json;
@@ -868,16 +859,11 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         JSONObject json = new JSONObject();
         try {
             TAjustement ajustement = emg.find(TAjustement.class, params.getRefParent());
-//            emg.getTransaction().begin();
             ajusterProduitAjustement(params, ajustement, emg);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             json.put("data", new JSONObject().put("lgAJUSTEMENTID", ajustement.getLgAJUSTEMENTID()));
         } catch (Exception e) {
             e.printStackTrace(System.err);
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             json.put("success", false).put("msg", "L'opération a échoué");
 
         }
@@ -909,29 +895,22 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         EntityManager emg = getEmg();
         JSONObject json = new JSONObject();
         try {
-
             TAjustementDetail ajustementDetail = emg.find(TAjustementDetail.class, params.getRef());
             if (ajustementDetail == null) {
 
                 json.put("success", false).put("msg", "L'opération a échoué");
                 return json;
             }
-//            emg.getTransaction().begin();
             ajustementDetail.setIntNUMBER(params.getValue());
             ajustementDetail.setIntNUMBERAFTERSTOCK(params.getValue() + params.getValueTwo());
             ajustementDetail.setDtUPDATED(new Date());
             emg.merge(ajustementDetail);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             json.put("data", new JSONObject().put("lgAJUSTEMENTID", ajustementDetail.getLgAJUSTEMENTID().getLgAJUSTEMENTID()));
-
             return json;
 
         } catch (Exception e) {
             e.printStackTrace(System.err);
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             json.put("success", false).put("msg", "L'opération a échoué");
             return json;
         }
@@ -939,7 +918,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     private TAjustementDetail updateAjustementDetail(Params params) {
         try {
-
             TAjustementDetail ajustementDetail = findAjustementDetailsByParenId(params.getRefParent(), params.getRefTwo());
             if (ajustementDetail == null) {
                 return null;
@@ -948,7 +926,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             ajustementDetail.setIntNUMBERAFTERSTOCK(ajustementDetail.getIntNUMBERAFTERSTOCK() + params.getValue());
             ajustementDetail.setDtUPDATED(new Date());
             return getEmg().merge(ajustementDetail);
-
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return null;
@@ -960,7 +937,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEmg();
         try {
-
             TAjustement ajustement = emg.find(TAjustement.class, params.getRefParent());
             if (ajustement == null) {
 
@@ -995,7 +971,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             ajustement.setDtUPDATED(new Date());
             ajustement.setStrSTATUT(commonparameter.statut_enable);
             emg.merge(ajustement);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             return json;
 
@@ -1095,13 +1070,10 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             Root<TAjustementDetail> root = cq.from(TAjustementDetail.class);
             Join<TAjustementDetail, TAjustement> st = root.join("lgAJUSTEMENTID", JoinType.INNER);
             cq.select(cb.countDistinct(root.get(TAjustementDetail_.lgAJUSTEMENTID)));
-
             Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TAjustement_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
                     java.sql.Date.valueOf(params.getDtEnd()));
-
             predicates.add(btw);
             predicates.add(cb.equal(st.get(TAjustement_.strSTATUT), commonparameter.statut_enable));
-
             if (params.getQuery() != null && !"".equals(params.getQuery())) {
                 Predicate predicate = cb.or(cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%"));
                 predicates.add(predicate);
@@ -1173,9 +1145,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         try {
 
             TAjustementDetail ajustementDetail = emg.find(TAjustementDetail.class, id);
-//            emg.getTransaction().begin();
             emg.remove(ajustementDetail);
-//            emg.getTransaction().commit();
             return json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
             e.printStackTrace(System.err);
@@ -1256,15 +1226,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEmg();
         try {
-
             TAjustement ajustement = emg.find(TAjustement.class, id);
             List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(id, emg);
-//            emg.getTransaction().begin();
             ajustementDetails.forEach(c -> {
                 emg.remove(c);
             });
             emg.remove(ajustement);
-//            emg.getTransaction().commit();
             return json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
             e.printStackTrace(System.err);
@@ -1284,7 +1251,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             TRetourFournisseur fournisseur = emg.find(TRetourFournisseur.class, params.getRef());
             List<TRetourFournisseurDetail> details = getTRetourFournisseurDetail(params.getRef(), emg);
             DoubleAdder amount = new DoubleAdder();
-//            emg.getTransaction().begin();
             final TEmplacement empl = params.getOperateur().getLgEMPLACEMENTID();
             final String emplecementId = empl.getLgEMPLACEMENTID();
             details.forEach(d -> {
@@ -1300,7 +1266,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 stock.setDtUPDATED(new Date());
                 emg.merge(stock);
                 emg.merge(d);
-
                 mouvementProduitService.saveMvtProduit(0, d.getIntPAF(), d.getLgRETOURFRSDETAIL(),
                         DateConverter.RETOUR_FOURNISSEUR, tf, params.getOperateur(), empl, d.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
                 saveMvtArticle(commonparameter.str_ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, tf,
@@ -1308,12 +1273,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 suggestionService.makeSuggestionAuto(stock, tf, emg);
                 String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + fournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + params.getOperateur().getStrFIRSTNAME() + " " + params.getOperateur().getStrLASTNAME();
                 logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
-                 notificationService.save(new Notification()
-                    .canal(Canal.SMS)
-                    .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
-                    .message(desc)
-                    .addUser(params.getOperateur())
-            );
+                notificationService.save(new Notification()
+                        .canal(Canal.SMS)
+                        .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
+                        .message(desc)
+                        .addUser(params.getOperateur())
+                );
             });
             fournisseur.setStrSTATUT(DateConverter.STATUT_ENABLE);
             fournisseur.setDtUPDATED(new Date());
@@ -1325,9 +1290,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             json.put("success", false).put("msg", "Echec de la validation");
             LOG.log(Level.SEVERE, null, e);
         }
@@ -1392,7 +1354,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             predicates.add(cb.equal(root.get(TRetourFournisseur_.strSTATUT), DateConverter.STATUT_ENABLE));
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TRetourFournisseur_.dtUPDATED)), java.sql.Date.valueOf(dtStart),
                     java.sql.Date.valueOf(dtEnd));
-
             predicates.add(btw);
             if (!StringUtils.isEmpty(fourId)) {
                 predicates.add(cb.equal(root.get(TRetourFournisseur_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), fourId));
@@ -1430,8 +1391,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     public TRetourdepot createRetourdepot(TUser user, String libelle, TEmplacement OTEmplacement,
             String description, String strPKEY) throws Exception {
-        TRetourdepot OTRetourdepot = null;
-        OTRetourdepot = new TRetourdepot();
+        TRetourdepot OTRetourdepot = new TRetourdepot();
         OTRetourdepot.setStrNAME(StringUtils.isEmpty(libelle) ? DateConverter.getShortId(8) : libelle);
         OTRetourdepot.setLgRETOURDEPOTID(UUID.randomUUID().toString());
         OTRetourdepot.setStrDESCRIPTION(description);
@@ -1487,7 +1447,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             retourdepotdetail.setDtUPDATED(new Date());
             total += retourdepotdetail.getIntPRICE();
             collection.add(retourdepotdetail);
-//            getEmg().persist(retourdepotdetail);
             mouvementProduitService.saveMvtProduit(0, f.getIntPAF(), retourdepotdetail.getLgRETOURDEPOTDETAILID(),
                     DateConverter.TMVTP_RETOUR_DEPOT, f, user, officine.getLgEMPLACEMENTID(),
                     ODRetourdepot.getIntNUMBERRETURN(), ofStockInit, ofFinale, this.getEmg(), 0);

@@ -26,7 +26,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
             model: 'testextjs.model.caisse.Vente',
             autoLoad: false,
             pageSize: 15,
-
             proxy: {
                 type: 'ajax',
                 url: '../api/v1/ventestats',
@@ -50,7 +49,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             xtype: 'datefield',
                             fieldLabel: 'Du',
                             itemId: 'dtStart',
-//                            height: 30,
                             labelWidth: 15,
                             flex: 1,
                             submitFormat: 'Y-m-d',
@@ -64,7 +62,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             xtype: 'datefield',
                             fieldLabel: 'Au',
                             itemId: 'dtEnd',
-//                            height: 30,
                             labelWidth: 15,
                             flex: 1,
                             submitFormat: 'Y-m-d',
@@ -80,7 +77,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             emptyText: 'Heure debut(HH:mm)',
                             flex: 0.8,
                             labelWidth: 15,
-//                            height: 30,
                             increment: 30,
                             value: '00:00',
                             format: 'H:i'
@@ -92,7 +88,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             itemId: 'hEnd',
                             emptyText: 'Heure fin(HH:mm)',
                             flex: 0.8,
-//                            height: 30,
                             labelWidth: 15,
                             increment: 30,
                             value: '23:59',
@@ -103,7 +98,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             labelWidth: 65,
                             itemId: 'typeVente',
                             store: store,
-//                            height: 30,
                             flex: 1,
                             valueField: 'typeVente',
                             displayField: 'typeVente',
@@ -139,7 +133,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             ptype: 'rowexpander',
                             rowBodyTpl: new Ext.XTemplate(
                                     '<p>{details}</p>'
-
                                     )
                         }
                     ],
@@ -167,7 +160,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             align: 'center',
                             flex: 0.4
                         }
-
                         , {
                             sortable: false,
                             menuDisabled: true,
@@ -184,7 +176,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             menuDisabled: true,
                             header: 'Montant différé',
                             xtype: 'numbercolumn',
-//                            hidden:true,
                             dataIndex: 'intPRICERESTE',
                             align: 'right',
                             flex: 0.6,
@@ -265,15 +256,12 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             items: [{
                                     icon: 'resources/images/icons/fam/delete.gif',
                                     tooltip: 'Annuler.Vente',
-//                                    scope: me,
                                     getClass: function (value, metadata, record) {
 
                                         if (!record.get('beCancel')) {
-
                                             return 'x-hide-display';
                                         } else {
                                             if (record.get('cancel')) {
-
                                                 return 'x-hide-display';
                                             } else {
                                                 if (record.get('intPRICE') <= 0) {
@@ -379,7 +367,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                         if (record.get('intPRICE') > 0 && !record.get('cancel') && record.get('modification')) {
                                             return 'x-display-hide';
                                         }
-
                                         return 'x-hide-display';
                                     }
 
@@ -401,16 +388,11 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                         if (record.get('intPRICE') > 0 && !record.get('cancel') && record.get('modificationClientTp') && (record.get('strTYPEVENTE') !== "VNO")) {
                                             return 'x-display-hide';
                                         }
-
                                         return 'x-hide-display';
                                     }
 
                                 }]
                         }
-
-
-
-
                     ],
 
                     bbar: {

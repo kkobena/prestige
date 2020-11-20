@@ -1,7 +1,8 @@
 
 /* global Ext */
 
-Ext.define('testextjs.view.vente.user.ClientLambda', {
+Ext.define('testextjs.view.vente.user.ClientLambda', 
+{
     extend: 'Ext.window.Window',
     xtype: 'clientLambda',
     autoShow: false,

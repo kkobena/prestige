@@ -65,4 +65,9 @@ public interface ClientService {
     void updateCompteClientTiersPayantEncourAndPlafond(String venteId);
 
     JSONObject addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, String clientId, String typeTiersPayantId, int taux) throws JSONException;
+
+    JSONObject updateClientInfos(ClientDTO client, String id);
+
+    JSONObject updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO);
+
 }
