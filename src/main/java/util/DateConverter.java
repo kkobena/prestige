@@ -163,6 +163,8 @@ public final class DateConverter {
     public static final String MODE_MTN = "9";
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     public static final String KEY_HEURE_EMAIL = "KEY_HEURE_EMAIL";
+    public static final String CLIENT_ASSURANCE = "1";
+    public static final String CLIENT_CARNET = "2";
 
     /*
     parametre nombre de mois à considerer

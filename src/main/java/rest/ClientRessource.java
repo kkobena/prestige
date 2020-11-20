@@ -241,9 +241,31 @@ public class ClientRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-
         JSONObject json = clientService.addNewTiersPayantToClient(tiersPayantDTO, clientId, typeTiersPayantId, taux);
         return Response.ok().entity(json.toString()).build();
     }
 
+    @POST
+    @Path("update-infos-client/{clientId}")
+    public Response updateClientInfos(ClientDTO clientDTO, @PathParam("clientId") String clientId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject json = clientService.updateClientInfos(clientDTO,clientId);
+        return Response.ok().entity(json.toString()).build();
+    }
+ @POST
+    @Path("update-infos-ayantdroit/{ayantDroitId}")
+    public Response updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO, @PathParam("ayantDroitId") String ayantDroitId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        ayantDroitDTO.setLgAYANTSDROITSID(ayantDroitId);
+        JSONObject json = clientService.updateAyantDroitInfos(ayantDroitDTO);
+        return Response.ok().entity(json.toString()).build();
+    }
 }

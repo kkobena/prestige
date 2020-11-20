@@ -83,7 +83,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
 
     onUpdateClientOrTp: function (view, rowIndex, colIndex, item, e, rec, row) {
         if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modificationClientTp')) {
-//            var data = {'isEdit': true, 'record': rec.data, 'isDevis': false, 'categorie': 'COPY'};
             Ext.create('testextjs.view.vente.user.UpdateVenteClientTpForm', {venteId: rec.get('lgPREENREGISTREMENTID')}).show();
 
         }
@@ -131,9 +130,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             me.onPrintTicket(rec.get('lgPREENREGISTREMENTID'), rec.get('lgTYPEVENTEID'), rec.get('copy'));
         } else if (parseInt(item) === 9) {
             me.testSuppression(rec);
-//             if (!rec.get('cancel') && rec.get('intPRICE') > 0 && !rec.get('beCancel')) {
-//            me.onRemoveClick(rec);
-//             }
 
         } else if (parseInt(item) === 10) {
 

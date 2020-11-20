@@ -123,7 +123,7 @@ public class ClientServiceImpl implements ClientService {
             tc.setDtUPDATED(new Date());
             tc.setDtCREATED(new Date());
             tc.setStrCODEINTERNE(DateConverter.getShortId(6));
-           tc.setEmail(clientLambda.getEmail());
+            tc.setEmail(clientLambda.getEmail());
             emg.persist(tc);
             createCompteClient(tc, emg);
             return tc;
@@ -304,7 +304,7 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    private TClient updateClientCarnet(ClientDTO client, TClient tc, TTiersPayant p, TCompteClientTiersPayant oltp, EntityManager emg) {
+    private TClient updateClientCarnet(ClientDTO client, TClient tc, TCompteClientTiersPayant oltp, EntityManager emg) {
         try {
             tc = updateClient(client, tc);
             updateCompteClient(client, tc, emg);
@@ -356,7 +356,7 @@ public class ClientServiceImpl implements ClientService {
             }
             if (tc == null) {
                 if (client.getStrNUMEROSECURITESOCIAL() != null && !"".equals(client.getStrNUMEROSECURITESOCIAL())) {
-                    if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
+                    if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                         json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
@@ -366,7 +366,7 @@ public class ClientServiceImpl implements ClientService {
             } else {
                 if (client.getStrNUMEROSECURITESOCIAL() != null && !"".equals(client.getStrNUMEROSECURITESOCIAL())) {
                     if (!client.getStrNUMEROSECURITESOCIAL().trim().equals(tc.getStrNUMEROSECURITESOCIAL().trim())) {
-                        if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
+                        if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                             json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
@@ -382,7 +382,7 @@ public class ClientServiceImpl implements ClientService {
                         }
                     }
                 }
-                tc = updateClientCarnet(client, tc, p, oltp, emg);
+                tc = updateClientCarnet(client, tc, oltp, emg);
 
             }
             ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), findTiersPayantByClientId(tc.getLgCLIENTID()));
@@ -410,7 +410,7 @@ public class ClientServiceImpl implements ClientService {
             }
             if (tc == null) {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
-                    if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
+                    if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                         json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
@@ -427,7 +427,7 @@ public class ClientServiceImpl implements ClientService {
             } else {
                 if (client.getStrNUMEROSECURITESOCIAL() != null && !"".equals(client.getStrNUMEROSECURITESOCIAL())) {
                     if (!client.getStrNUMEROSECURITESOCIAL().trim().equals(tc.getStrNUMEROSECURITESOCIAL().trim())) {
-                        if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
+                        if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                             json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
@@ -483,7 +483,7 @@ public class ClientServiceImpl implements ClientService {
         }
         client.setStrSEXE(clientDTO.getStrSEXE());
         client.setStrSTATUT(commonparameter.statut_enable);
-        client.setStrNUMEROSECURITESOCIAL(clientDTO.getStrNUMEROSECURITESOCIAL().trim());
+        client.setStrNUMEROSECURITESOCIAL(clientDTO.getStrNUMEROSECURITESOCIAL());
         client.setStrLASTNAME(clientDTO.getStrLASTNAME().toUpperCase());
         client.setStrFIRSTNAME(clientDTO.getStrFIRSTNAME().toUpperCase());
         client.setDtUPDATED(new Date());
@@ -505,7 +505,7 @@ public class ClientServiceImpl implements ClientService {
         client.setDtCREATED(new Date());
         client.setStrSEXE(clientDTO.getStrSEXE());
         client.setStrSTATUT(commonparameter.statut_enable);
-        client.setStrNUMEROSECURITESOCIAL(clientDTO.getStrNUMEROSECURITESOCIAL().trim());
+        client.setStrNUMEROSECURITESOCIAL(clientDTO.getStrNUMEROSECURITESOCIAL());
         client.setStrLASTNAME(clientDTO.getStrLASTNAME().toUpperCase());
         client.setStrFIRSTNAME(clientDTO.getStrFIRSTNAME().toUpperCase());
         client.setDtUPDATED(new Date());
@@ -583,7 +583,7 @@ public class ClientServiceImpl implements ClientService {
         ayantDroit.setStrSEXE(clientDTO.getStrSEXE());
         ayantDroit.setStrFIRSTNAME(clientDTO.getStrFIRSTNAME().toUpperCase());
         ayantDroit.setStrLASTNAME(clientDTO.getStrLASTNAME().toUpperCase());
-        ayantDroit.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL().trim());
+        ayantDroit.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
         try {
             ayantDroit.setDtNAISSANCE(dateFormat.parse(clientDTO.getDtNAISSANCE()));
         } catch (Exception e) {
@@ -1012,7 +1012,7 @@ public class ClientServiceImpl implements ClientService {
             }
             if (tc == null) {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
-                    if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
+                    if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                         json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
@@ -1026,7 +1026,7 @@ public class ClientServiceImpl implements ClientService {
             } else {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
                     if (!client.getStrNUMEROSECURITESOCIAL().trim().equals(tc.getStrNUMEROSECURITESOCIAL().trim())) {
-                        if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
+                        if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                             json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
@@ -1075,7 +1075,7 @@ public class ClientServiceImpl implements ClientService {
 
             if (tc == null) {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
-                    if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
+                    if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                         json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
@@ -1085,7 +1085,7 @@ public class ClientServiceImpl implements ClientService {
             } else {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
                     if (!client.getStrNUMEROSECURITESOCIAL().trim().equals(tc.getStrNUMEROSECURITESOCIAL().trim())) {
-                        if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL().trim(), p)) {
+                        if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                             json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
@@ -1097,7 +1097,7 @@ public class ClientServiceImpl implements ClientService {
                 if (!oltp.equals(p)) {
                     updateClientCarnet(client, tc, p, oldTpcm);
                 } else {
-                    tc = updateClientCarnet(client, tc, p, oldTpcm, emg);
+                    tc = updateClientCarnet(client, tc, oldTpcm, emg);
                 }
 
             }
@@ -1265,6 +1265,96 @@ public class ClientServiceImpl implements ClientService {
             return null;
         }
 
+    }
+
+    public TCompteClientTiersPayant findCompteClientTiersPayantByClientId(String clientId) {
+
+        try {
+            TypedQuery<TCompteClientTiersPayant> query = getEmg().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2", TCompteClientTiersPayant.class);
+            query.setParameter(1, clientId);
+            query.setParameter(2, DateConverter.STATUT_ENABLE);
+            return query.getResultList().stream().filter(e -> e.getIntPRIORITY().compareTo(1) == 0).findFirst().get();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return null;
+        }
+    }
+
+    @Override
+    public JSONObject updateClientInfos(ClientDTO client, String id) {
+        JSONObject json = new JSONObject();
+        try {
+            client.setLgCLIENTID(id);
+            TClient tc = findById(id, getEmg());
+
+            return updateInfosClient(client, tc);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return json.put("success", false).put("msg", "Erreur de modification du client");
+        }
+
+    }
+
+    private JSONObject updateInfosClient(ClientDTO client, TClient tc) throws Exception {
+        JSONObject json = new JSONObject();
+        EntityManager emg = this.getEmg();
+        ClientDTO data = null;
+        String oldNum = tc.getStrNUMEROSECURITESOCIAL();
+        TCompteClientTiersPayant payant = findCompteClientTiersPayantByClientId(client.getLgCLIENTID());
+        TTiersPayant p = payant.getLgTIERSPAYANTID();
+        if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
+            if (!client.getStrNUMEROSECURITESOCIAL().equals(tc.getStrNUMEROSECURITESOCIAL())) {
+                if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
+                    json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
+                    return json;
+                }
+            }
+        }
+//            tc.setStrSEXE(client.getStrSEXE());
+        tc.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
+        tc.setStrLASTNAME(client.getStrLASTNAME().toUpperCase());
+        tc.setStrFIRSTNAME(client.getStrFIRSTNAME().toUpperCase());
+        tc.setDtUPDATED(new Date());
+        tc.setStrADRESSE(client.getStrADRESSE());
+        getEmg().merge(tc);
+        payant.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
+        getEmg().merge(payant);
+
+        if (tc.getLgTYPECLIENTID().getLgTYPECLIENTID().equals(DateConverter.CLIENT_ASSURANCE)) {
+            TAyantDroit ayantDroit = findAyantDroitByNum(oldNum, emg);
+            ayantDroit.setDtUPDATED(new Date());
+
+//        ayantDroit.setStrSEXE(client.getStrSEXE());
+            ayantDroit.setStrFIRSTNAME(client.getStrFIRSTNAME().toUpperCase());
+            ayantDroit.setStrLASTNAME(client.getStrLASTNAME().toUpperCase());
+            ayantDroit.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
+            getEmg().merge(ayantDroit);
+            data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(), findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
+        } else {
+            data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(), Collections.emptyList());
+        }
+
+        data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(), findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
+        json.put("success", true).put("data", new JSONObject(data));
+        return json;
+
+    }
+
+    @Override
+    public JSONObject updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO) {
+        JSONObject json = new JSONObject();
+        try {
+            TAyantDroit ayantDroit = getEmg().find(TAyantDroit.class, ayantDroitDTO.getLgAYANTSDROITSID());
+            ayantDroit.setStrFIRSTNAME(ayantDroitDTO.getStrFIRSTNAME().toUpperCase());
+            ayantDroit.setStrLASTNAME(ayantDroitDTO.getStrLASTNAME().toUpperCase()); 
+            ayantDroit.setStrNUMEROSECURITESOCIAL(ayantDroitDTO.getStrNUMEROSECURITESOCIAL());
+            getEmg().merge(ayantDroit);
+            return json.put("success", true).put("data", new JSONObject(new AyantDroitDTO(ayantDroit))); 
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return json.put("success", false).put("msg", "Erreur de modification des infos de  l'ayant droit");
+        } 
     }
 
 }

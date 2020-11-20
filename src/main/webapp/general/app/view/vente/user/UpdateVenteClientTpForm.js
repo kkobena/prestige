@@ -195,7 +195,6 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                     items: [
                                         {
                                             xtype: 'container',
-
                                             flex: 1.5,
                                             layout: {type: 'vbox', align: 'stretch'},
                                             items: [
@@ -235,12 +234,20 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                             flex: 0.5,
                                             layout: {type: 'vbox', align: 'middle'},
                                             items: [
-
                                                 {
-                                                    text: 'Modifier le client ',
+                                                    text: 'Changer le client ',
                                                     itemId: 'btnModifierInfo',
                                                     xtype: 'button',
                                                     handler: me.changeClient
+
+                                                },
+                                                {
+                                                    text: 'Modifier infos  client ',
+                                                    itemId: 'btnModifierClient',
+                                                    margin: '10 0 0 0',
+                                                    style: 'background-color:green !important;border-color:green !important; background:green !important;',
+                                                    xtype: 'button',
+                                                    handler: me.changeClientInfos
 
                                                 }
 
@@ -259,7 +266,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                         {
                                             xtype: 'container',
 
-                                            flex: 1.5,
+                                            flex: 1.3,
                                             layout: {type: 'vbox', pack: 'start',
                                                 align: 'middle'},
                                             items: [
@@ -296,7 +303,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                         },
                                         {
                                             xtype: 'container',
-                                            flex: 0.5,
+                                            flex: 0.7,
                                             layout: {type: 'vbox', align: 'middle'},
                                             items: [
 
@@ -305,6 +312,15 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                                     itemId: 'btnModifierAyant',
                                                     xtype: 'button',
                                                     handler: me.changeAyantDroit
+
+                                                },
+                                                {
+                                                    text: 'Modifier infos ayant droit ',
+                                                    itemId: 'btnModifierAyantDroit',
+                                                    margin: '10 0 0 0',
+                                                    style: 'background-color:green !important;border-color:green !important; background:green !important;',
+                                                    xtype: 'button',
+                                                    handler: me.changeInfosAyantDroit
 
                                                 }
 
@@ -481,6 +497,348 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
         };
         return cmp;
     },
+    changeInfosAyantDroit: function (btn) {
+        let me = btn.up('window');
+        let ayantDroit = me.getAyantDroit();
+        let client = me.getClient();
+        if (client.strNUMEROSECURITESOCIAL === ayantDroit.strNUMEROSECURITESOCIAL) {
+            Ext.MessageBox.show({
+                title: 'Message',
+                width: 320,
+                msg: "Il n'est pas possible de modifier les inforamtions de l'ayant droit principal à ce niveau",
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.WARNING
+
+            });
+        } else {
+            var form = Ext.create('Ext.window.Window',
+                    {
+                        autoShow: true,
+                        height: 240,
+                        width: '40%',
+                        modal: true,
+                        title: 'MODIFICATION DES INFORMATIONS GENERALES DE L\'AYANT DROIT',
+                        closeAction: 'hide',
+                        closable: true,
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        items: [
+                            {
+                                xtype: 'form',
+                                bodyPadding: 5,
+                                modelValidation: true,
+                                layout: {
+                                    type: 'fit',
+                                    align: 'stretch'
+                                },
+                                items: [
+
+                                    {
+                                        xtype: 'fieldset',
+                                        title: 'Informations',
+                                        layout: 'anchor',
+                                        defaults: {
+                                            anchor: '100%',
+                                            xtype: 'textfield',
+                                            msgTarget: 'side',
+                                            labelAlign: 'right',
+                                            labelWidth: 115
+                                        },
+                                        items: [
+                                            {
+                                                fieldLabel: 'Nom',
+                                                emptyText: 'Nom',
+                                                name: 'strFIRSTNAME',
+                                                value: ayantDroit.strFIRSTNAME,
+                                                height: 30,
+                                                allowBlank: false,
+                                                enableKeyEvents: true
+
+                                            }, {
+                                                fieldLabel: 'Prénom',
+                                                emptyText: 'Prénom',
+                                                name: 'strLASTNAME',
+                                                value: ayantDroit.strLASTNAME,
+                                                height: 30,
+                                                allowBlank: false,
+                                                enableKeyEvents: true
+
+                                            },
+                                            {
+                                                fieldLabel: 'Matricule',
+                                                emptyText: 'Matricule',
+                                                name: 'strNUMEROSECURITESOCIAL',
+                                                value: ayantDroit.strNUMEROSECURITESOCIAL,
+                                                height: 30,
+                                                allowBlank: false,
+                                                enableKeyEvents: true
+
+                                            }
+
+                                        ]
+                                    }
+
+                                ]
+                            }
+                        ],
+                        dockedItems: [
+                            {
+                                xtype: 'toolbar',
+                                dock: 'bottom',
+                                ui: 'footer',
+                                layout: {
+                                    pack: 'end',
+                                    type: 'hbox'
+                                },
+                                items: [
+                                    {
+                                        xtype: 'button',
+                                        text: 'Enregistrer',
+                                        handler: function (b) {
+                                            var _this = b.up('window'), _form = _this.down('form');
+                                            if (_form.isValid()) {
+                                                var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                                                Ext.Ajax.request({
+                                                    method: 'POST',
+                                                    headers: {'Content-Type': 'application/json'},
+                                                    url: '../api/v1/client/update-infos-ayantdroit/' + me.getAyantDroitId(),
+                                                    params: Ext.JSON.encode(_form.getValues()),
+                                                    success: function (response, options) {
+                                                        progress.hide();
+                                                        var result = Ext.JSON.decode(response.responseText, true);
+                                                        if (result.success) {
+                                                            form.destroy();
+                                                            me.ayantDroit = result.data;
+                                                            me.updateAyantDroitInfosContainer(me, result.data);
+
+                                                        } else {
+                                                            Ext.MessageBox.show({
+                                                                title: 'Message d\'erreur',
+                                                                width: 320,
+                                                                msg: result.msg,
+                                                                buttons: Ext.MessageBox.OK,
+                                                                icon: Ext.MessageBox.ERROR
+
+                                                            });
+                                                        }
+
+                                                    },
+                                                    failure: function (response, options) {
+                                                        progress.hide();
+                                                        Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
+                                                    }
+
+                                                });
+                                            }
+
+                                        }
+
+
+                                    },
+                                    {
+                                        xtype: 'button',
+                                        text: 'Annuler',
+                                        handler: function (btn) {
+                                            form.destroy();
+                                        }
+
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+            );
+        }
+
+    },
+    changeClientInfos: function (btn) {
+        let me = btn.up('window');
+        let client = me.getClient();
+        var form = Ext.create('Ext.window.Window',
+                {
+
+                    autoShow: true,
+                    height: 280,
+                    width: '50%',
+                    modal: true,
+                    title: 'MODIFICATION DES INFORMATIONS GENERALES',
+                    closeAction: 'hide',
+                    closable: true,
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    },
+                    items: [
+                        {
+                            xtype: 'form',
+                            bodyPadding: 5,
+                            modelValidation: true,
+                            layout: {
+                                type: 'fit',
+                                align: 'stretch'
+                            },
+                            items: [
+
+                                {
+                                    xtype: 'fieldset',
+                                    title: 'Information du client',
+                                    layout: 'anchor',
+                                    defaults: {
+                                        anchor: '100%',
+                                        xtype: 'textfield',
+                                        msgTarget: 'side',
+                                        labelAlign: 'right',
+                                        labelWidth: 115
+                                    },
+                                    items: [
+                                        {
+                                            fieldLabel: 'Nom',
+                                            emptyText: 'Nom',
+                                            name: 'strFIRSTNAME',
+                                            value: client.strFIRSTNAME,
+                                            height: 30,
+                                            allowBlank: false,
+                                            enableKeyEvents: true
+
+                                        }, {
+                                            fieldLabel: 'Prénom',
+                                            emptyText: 'Prénom',
+                                            name: 'strLASTNAME',
+                                            value: client.strLASTNAME,
+                                            height: 30,
+                                            allowBlank: false,
+                                            enableKeyEvents: true
+
+                                        },
+                                        {
+                                            fieldLabel: 'Matricule',
+                                            emptyText: 'Matricule',
+                                            name: 'strNUMEROSECURITESOCIAL',
+                                            value: client.strNUMEROSECURITESOCIAL,
+                                            height: 30,
+                                            allowBlank: false,
+                                            enableKeyEvents: true
+
+                                        },
+                                        {
+                                            fieldLabel: 'Téléphone',
+                                            emptyText: 'Téléphone',
+                                            name: 'strADRESSE',
+                                            value: client.strADRESSE,
+                                            height: 30,
+                                            regex: /[0-9.]/,
+                                            allowBlank: true,
+                                            enableKeyEvents: true
+                                        }
+                                        , {
+                                            fieldLabel: 'E-mail',
+                                            emptyText: 'E-mail',
+                                            name: 'email',
+                                            height: 30,
+                                            hidden: true,
+                                            vtype: 'email',
+                                            allowBlank: true,
+                                            enableKeyEvents: true
+
+                                        }
+
+                                    ]
+                                }
+
+                            ]
+                        }
+                    ],
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+                                {
+                                    xtype: 'button',
+                                    text: 'Enregistrer',
+                                    handler: function (b) {
+                                        var _this = b.up('window'), _form = _this.down('form');
+                                        if (_form.isValid()) {
+                                            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                                            Ext.Ajax.request({
+                                                method: 'POST',
+                                                headers: {'Content-Type': 'application/json'},
+                                                url: '../api/v1/client/update-infos-client/' + me.getClientId(),
+                                                params: Ext.JSON.encode(_form.getValues()),
+                                                success: function (response, options) {
+                                                    progress.hide();
+                                                    var result = Ext.JSON.decode(response.responseText, true);
+                                                    if (result.success) {
+                                                        form.destroy();
+                                                        var client = result.data;
+                                                        me.client = client;
+                                                        me.clientId = client.lgCLIENTID;
+                                                        let ayantDroitRecord = {};
+                                                        me.down('form').down('#prenomAssure').setValue(client.strLASTNAME);
+                                                        me.down('form').down('#nomAssure').setValue(client.strFIRSTNAME);
+                                                        me.down('form').down('#numAssure').setValue(client.strNUMEROSECURITESOCIAL);
+                                                        if (client.ayantDroits.length > 0) {
+                                                            if (client.ayantDroits.length == 0) {
+                                                                ayantDroitRecord = client.ayantDroits[0];
+                                                            } else {
+                                                                ayantDroitRecord = client.ayantDroits.filter(e => e.strNUMEROSECURITESOCIAL == client.strNUMEROSECURITESOCIAL)[0];
+                                                            }
+                                                            me.updateAyantDroitInfosContainer(me, ayantDroitRecord);
+                                                            me.ayantDroit = ayantDroitRecord;
+                                                        } else {
+                                                            me.down('form').down('#nomAyantDroit').setValue('');
+                                                            me.down('form').down('#numAyantDroit').setValue('');
+                                                            me.down('form').down('#prenomAyantDroit').setValue('');
+                                                            me.ayantDroitId = null;
+                                                            me.ayantDroit = null;
+                                                        }
+                                                      
+                                                    } else {
+                                                        Ext.MessageBox.show({
+                                                            title: 'Message d\'erreur',
+                                                            width: 320,
+                                                            msg: result.msg,
+                                                            buttons: Ext.MessageBox.OK,
+                                                            icon: Ext.MessageBox.ERROR
+
+                                                        });
+                                                    }
+
+                                                },
+                                                failure: function (response, options) {
+                                                    progress.hide();
+                                                    Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
+                                                }
+
+                                            });
+                                        }
+
+                                    }
+
+
+                                },
+                                {
+                                    xtype: 'button',
+                                    text: 'Annuler',
+                                    handler: function (btn) {
+                                        form.destroy();
+                                    }
+
+                                }
+                            ]
+                        }
+                    ]
+                }
+        );
+
+    },
     changeAyantDroit: function (btn) {
         let me = btn.up('window');
         var ayantStore = Ext.create('Ext.data.Store', {
@@ -496,12 +854,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                     totalProperty: 'total'
                 }
 
-            }/*,
-             listeners: {
-             load: function () {
-             this.add({lgAYANTSDROITSID: '0', fullName: 'AJOUTER UN NOUVEL AYANT  DROIT'});
-             }
-             }*/
+            }
         });
         ayantStore.load({
             scope: this,
@@ -548,8 +901,6 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                                         me.ayantDroitId = ayantDroitRecord.get('lgAYANTSDROITSID');
                                                         me.ayantDroit = ayantDroitRecord.data;
                                                     }
-
-
                                                     form.destroy();
 
                                                 },
@@ -743,28 +1094,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                     queryMode: 'remote',
                                     allowBlank: false,
                                     emptyText: 'Choisir le client...',
-                                    /* listeners: {
-                                     select: function (field) {
-                                     let record = field.findRecord("lgCLIENTID", field.getValue());
-                                     let ayantDroits = record.get('ayantDroits');
-                                     let  tiersPayants = record.get('tiersPayants');
-                                     let   ayantDroit = {};
-                                     let   tiersPayant = {};
-                                     if (ayantDroits.length == 0) {
-                                     ayantDroit = ayantDroits[0];
-                                     } else {
-                                     ayantDroit = record.get('ayantDroits').filter(e => e.strNUMEROSECURITESOCIAL == record.get('strNUMEROSECURITESOCIAL'))[0];
-                                     }
-                                     if (tiersPayants.length == 0) {
-                                     tiersPayant = tiersPayants[0];
-                                     } else {
-                                     tiersPayant = record.get('tiersPayants').filter(e => e.order === 1)[0];
-                                     }
-                                     me.updateAyantDroitInfosContainer(me, ayantDroit);
-                                     me.upadeTiersPayantContainer(me, tierspayant.strFULLNAME, tierspayant.lgTIERSPAYANTID, me.getMessage());
-                                     
-                                     }
-                                     }*/
+
                                 }
 
                             ]
@@ -1289,12 +1619,8 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
         }
     },
     upadeTiersPayantContainer: function (me, fullName, lgTiersPayantId, numBon) {
-        //let parentForm = _win.down('form');
-        /* let tpRecord = parentForm.down('#compteTp').findRecord("lgTIERSPAYANTID", parentForm.down('#compteTp').getValue());
-         let numBon = parentForm.down('#numBon').getValue();*/
         var tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
         tpContainerForm.removeAll();
-//        let obj = {"numBon": numBon, "tpFullName": tpRecord.data.strFULLNAME, "compteTp": tpRecord.data.lgTIERSPAYANTID, "taux": me.getTaux()};
         let obj = {"numBon": numBon ? numBon : null, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": me.getTaux()};
         let cmp = me.buildCmp(obj);
         tpContainerForm.add(cmp);
@@ -1468,6 +1794,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
         me.down('form').down('#prenomAyantDroit').setValue(data.strLASTNAME);
         me.ayantDroitId = data.lgAYANTSDROITSID;
 
-    }
+    },
+
 });
 

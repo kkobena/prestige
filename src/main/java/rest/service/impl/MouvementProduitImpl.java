@@ -687,11 +687,9 @@ public class MouvementProduitImpl implements MouvementProduitService {
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
             Integer qtyDebut = familleStock.getIntNUMBERAVAILABLE();
             if (tFamille.getBoolDECONDITIONNE() == 1) {
-                //LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité produit  {1} \n quantie de la vente {2}", new Object[]{tFamille.getIntCIP(), familleStock.getIntNUMBERAVAILABLE(), it.getIntQUANTITY()});
                 if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
                     TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
                     TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
-                    //  LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité parent  {1}", new Object[]{OTFamilleParent.getIntCIP(), stockParent.getIntNUMBERAVAILABLE()});
                     deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
 
                 } else {
@@ -715,16 +713,14 @@ public class MouvementProduitImpl implements MouvementProduitService {
     }
 
     private List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp, EntityManager emg) {
-
         try {
-
             return emg.
                     createQuery("SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1").
                     setParameter(1, tp.getLgPREENREGISTREMENTID()).
                     getResultList();
 
         } catch (Exception ex) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
     }
@@ -750,11 +746,9 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
                 Integer qtyDebut = familleStock.getIntNUMBERAVAILABLE();
                 if (tFamille.getBoolDECONDITIONNE() == 1) {
-                    //LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité produit  {1} \n quantie de la vente {2}", new Object[]{tFamille.getIntCIP(), familleStock.getIntNUMBERAVAILABLE(), it.getIntQUANTITY()});
                     if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
                         TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
                         TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
-                        //  LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité parent  {1}", new Object[]{OTFamilleParent.getIntCIP(), stockParent.getIntNUMBERAVAILABLE()});
                         deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
 
                     } else {
@@ -772,17 +766,12 @@ public class MouvementProduitImpl implements MouvementProduitService {
 
                 updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
 
-//                it.setStrSTATUT(commonparameter.statut_is_Closed);
                 emg.merge(it);
 
-//                makeSuggestionAuto(familleStock, tFamille);
             });
-//            emg.getTransaction().commit();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
+
         }
     }
 
