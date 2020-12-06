@@ -109,7 +109,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         ancienTierspayant: null,
         toRecalculate: true,
         plafondVente: false,
-        medecinId: null
+        medecinId: null,
+        showStock: false
 
     },
     refs: [
@@ -658,6 +659,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.goToVenteView();
         me.cheickCaisse();
         me.checkModificationPrixU();
+        me.checkShowStock();
         me.checkSansBon();
         me.checkPlafondVenteStatut();
     },
@@ -817,14 +819,21 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
         var record = cmp.findRecord("lgFAMILLEID" || "intCIP", cmp.getValue());
         if (record) {
-            var vnostockField = me.getVnostockField(), vnoemplacementId = me.getVnoemplacementField();
-            vnostockField.setValue(record.get('intNUMBERAVAILABLE'));
+            var vnoemplacementId = me.getVnoemplacementField();
+            me.updateStockField(record.get('intNUMBERAVAILABLE'));
             vnoemplacementId.setValue(record.get('strLIBELLEE'));
             me.getVnoqtyField().focus(true, 100);
         }
 
     },
+    updateStockField: function (stock) {
+        let me = this;
+        if (me.getShowStock()) {
+            let vnostockField = me.getVnostockField();
+            vnostockField.setValue(stock);
+        }
 
+    },
     onUserSelect: function (cmp) {
         var me = this, clientSearchBox = me.getClientSearchTextField(),
                 typeVente = me.getTypeVenteCombo().getValue();
@@ -860,8 +869,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     var produit = result.data;
-                    var vnostockField = me.getVnostockField(), vnoemplacementId = me.getVnoemplacementField();
-                    vnostockField.setValue(produit.intNUMBERAVAILABLE);
+                    var vnoemplacementId = me.getVnoemplacementField();
+                    me.updateStockField(produit.intNUMBERAVAILABLE);
                     vnoemplacementId.setValue(produit.strLIBELLEE);
                     me.getVnoqtyField().focus(true, 100);
                 } else {
@@ -915,8 +924,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                 } else {
                     var record = combo.findRecord("lgFAMILLEID" || "intCIP", combo.getValue());
                     if (record) {
-                        var vnostockField = me.getVnostockField(), vnoemplacementId = me.getVnoemplacementField();
-                        vnostockField.setValue(record.get('intNUMBERAVAILABLE'));
+                        var vnoemplacementId = me.getVnoemplacementField();
+                        me.updateStockField(record.get('intNUMBERAVAILABLE'));
                         vnoemplacementId.setValue(record.get('strLIBELLEE'));
                         me.getVnoqtyField().focus(true, 100);
                     } else {
@@ -1060,7 +1069,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                         produitCmp.clearValue();
                                         produitCmp.setValue(null);
                                         produitCmp.focus(true, 100);
-                                        me.getVnostockField().setValue(0);
+                                        me.updateStockField(0);
                                         me.getVnoemplacementField().setValue('');
 
                                     }
@@ -1132,7 +1141,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 progress.hide();
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    me.getVnostockField().setValue(0);
+                    me.updateStockField(0);
                     me.getVnoemplacementField().setValue('');
                     me.current = result.data;
                     me.getTotalField().setValue(me.getCurrent().intPRICE);
@@ -1903,7 +1912,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                         var comboxProduit = me.getVnoproduitCombo();
                         comboxProduit.clearValue();
                         comboxProduit.setValue(null);
-                        me.getVnostockField().setValue(0);
+                        me.updateStockField(0);
                         me.getVnoemplacementField().setValue('');
                         me.refresh();
 
@@ -2269,6 +2278,20 @@ Ext.define('testextjs.controller.VenteCtr', {
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.canModifyPu = result.data;
+                }
+            }
+
+        });
+    },
+    checkShowStock: function () {
+        var me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/common/autorisations/showstock',
+            success: function (response, options) {
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.showStock = result.data;
                 }
             }
 
@@ -3425,8 +3448,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                                                     xtype: 'button',
                                                     handler: function (btn) {
                                                         if (slectedRecord) {
-                                                              var parent = btn.up('window');
-                                                                    var field = parent.down('numberfield');
+                                                            var parent = btn.up('window');
+                                                            var field = parent.down('numberfield');
                                                             slectedRecord.set('taux', field.getValue());
                                                             var record = slectedRecord.data;
                                                             var cmp = me.buildCmp(record);
@@ -4138,7 +4161,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 progress.hide();
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    me.getVnostockField().setValue(0);
+                    me.updateStockField(0);
                     me.getVnoemplacementField().setValue('');
                     me.current = result.data;
                     me.getTotalField().setValue(me.getCurrent().intPRICE);

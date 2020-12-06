@@ -165,7 +165,8 @@ public final class DateConverter {
     public static final String KEY_HEURE_EMAIL = "KEY_HEURE_EMAIL";
     public static final String CLIENT_ASSURANCE = "1";
     public static final String CLIENT_CARNET = "2";
-
+    public static final String UPDATE_PRICE = "UPDATE_PRICE";
+    public static final String P_AFFICHER_STOCK_A_LA_VENTE = "P_AFFICHER_STOCK_A_LA_VENTE";
     /*
     parametre nombre de mois à considerer
      */
