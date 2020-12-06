@@ -7,7 +7,6 @@ package rest.service.impl;
 
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
-import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
 import dal.TEmplacement;
 import dal.TEmplacement_;

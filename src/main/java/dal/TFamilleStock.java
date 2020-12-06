@@ -8,9 +8,7 @@ package dal;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import javax.persistence.Basic;
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -35,7 +33,9 @@ import toolkits.parameters.commonparameter;
 @Table(name = "t_famille_stock")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "TFamilleStock.findFamilleStockByProduitAndEmplacement", query = "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID =:lgFAMILLEID AND t.lgEMPLACEMENTID.lgEMPLACEMENTID =:lgEMPLACEMENTID AND t.strSTATUT ='enable' ")
+    @NamedQuery(name = "TFamilleStock.findFamilleStockByProduitAndEmplacement", query = "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID =:lgFAMILLEID AND t.lgEMPLACEMENTID.lgEMPLACEMENTID =:lgEMPLACEMENTID AND t.strSTATUT ='enable' "),
+      @NamedQuery(name = "TFamilleStock.findFamilleStockByEmplacement", query = "SELECT t FROM TFamilleStock t WHERE t.lgEMPLACEMENTID.lgEMPLACEMENTID =:lgEMPLACEMENTID "),
+     @NamedQuery(name = "TFamilleStock.findStock", query = "SELECT t.intNUMBERAVAILABLE FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID =:lgFAMILLEID AND t.lgEMPLACEMENTID.lgEMPLACEMENTID =:lgEMPLACEMENTID AND t.strSTATUT ='enable' ")
 })
 //@Cacheable(false)
 public class TFamilleStock implements Serializable {

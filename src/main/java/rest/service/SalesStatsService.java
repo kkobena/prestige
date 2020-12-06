@@ -16,7 +16,6 @@ import commonTasks.dto.VenteDetailsDTO;
 import dal.TPreenregistrement;
 import java.util.List;
 import javax.ejb.Local;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 

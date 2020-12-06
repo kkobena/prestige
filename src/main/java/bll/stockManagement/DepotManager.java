@@ -881,7 +881,7 @@ public class DepotManager extends bll.bllBase {
                 em.getTransaction().begin();
             }
             em.merge(oTRetourdepotdetail);
-            updatestock(OTFamilleStock, int_NUMBER_RETURN, em);
+//            updatestock(OTFamilleStock, int_NUMBER_RETURN, em);
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             if (em.getTransaction().isActive()) {
                 em.getTransaction().commit();
@@ -899,7 +899,7 @@ public class DepotManager extends bll.bllBase {
         return oTRetourdepotdetail;
     }
 
-    private void updatestock(TFamilleStock OTFamilleStock, int stock, EntityManager entityManager) {
+    private void updatestock__(TFamilleStock OTFamilleStock, int stock, EntityManager entityManager) {
         OTFamilleStock.setIntNUMBERAVAILABLE(OTFamilleStock.getIntNUMBERAVAILABLE() - stock);
         OTFamilleStock.setIntNUMBER(OTFamilleStock.getIntNUMBERAVAILABLE());
         entityManager.merge(OTFamilleStock);
@@ -912,7 +912,7 @@ public class DepotManager extends bll.bllBase {
             OTRetourdepotdetail = (TRetourdepotdetail) this.getOdataManager().getEm().createQuery("SELECT t FROM TRetourdepotdetail t WHERE t.lgRETOURDEPOTID.lgRETOURDEPOTID = ?1 AND t.lgFAMILLEID.lgFAMILLEID = ?2")
                     .setParameter(1, lg_RETOURDEPOT_ID).setParameter(2, lg_FAMILLE_ID).getSingleResult();
         } catch (Exception e) {
-            
+
         }
         return OTRetourdepotdetail;
     }
@@ -970,7 +970,7 @@ public class DepotManager extends bll.bllBase {
     }
 
     public TRetourdepot deleteTRetourdepotdetail(String lg_RETOURDEPOTDETAIL_ID) {
-        boolean result = false;
+
         TRetourdepotdetail OTRetourdepotdetail;
         TRetourdepot OTRetourdepot = null;
         try {
@@ -978,7 +978,7 @@ public class DepotManager extends bll.bllBase {
             OTRetourdepot = OTRetourdepotdetail.getLgRETOURDEPOTID();
             if (this.delete(OTRetourdepotdetail)) {
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-                result = true;
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -1452,8 +1452,10 @@ public class DepotManager extends bll.bllBase {
                 OTRetourdepotdetail.setIntPRICEDETAIL(OTRetourdepotdetail.getLgFAMILLEID().getIntPRICE());
 
                 OTFamilleStock = new tellerManagement(this.getOdataManager(), this.getOTUser()).getTProductItemStock(OTRetourdepotdetail.getLgFAMILLEID().getLgFAMILLEID(), OTRetourdepot.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-                mvtProduit.saveMvtProduit(OTRetourdepotdetail.getIntPRICEDETAIL(), OTRetourdepotdetail.getLgRETOURDEPOTDETAILID(), DateConverter.TMVTP_RETOUR_DEPOT, OTRetourdepotdetail.getLgFAMILLEID(), this.getOTUser(), OTRetourdepot.getLgEMPLACEMENTID(), OTRetourdepotdetail.getIntNUMBERRETURN(), OTFamilleStock.getIntNUMBERAVAILABLE(), OTFamilleStock.getIntNUMBERAVAILABLE() + OTRetourdepotdetail.getIntNUMBERRETURN(), 0,this.getOdataManager().getEm());
+                mvtProduit.saveMvtProduit(OTRetourdepotdetail.getIntPRICEDETAIL(), OTRetourdepotdetail.getLgRETOURDEPOTDETAILID(), DateConverter.TMVTP_RETOUR_DEPOT, OTRetourdepotdetail.getLgFAMILLEID(), this.getOTUser(), OTRetourdepot.getLgEMPLACEMENTID(), OTRetourdepotdetail.getIntNUMBERRETURN(), OTFamilleStock.getIntNUMBERAVAILABLE(), OTFamilleStock.getIntNUMBERAVAILABLE() + OTRetourdepotdetail.getIntNUMBERRETURN(), 0, this.getOdataManager().getEm());
+
                 if (!OTRetourdepot.getLgEMPLACEMENTID().getBoolSAMELOCATION()) {
+
                     if (doDestock(OTFamilleStock, lg_TYPE_STOCK_ID, OTRetourdepotdetail.getIntNUMBERRETURN(), false)) {// a decommenter en cas de probleme 17/11/2016
                         dbl_AMOUNT += OTRetourdepotdetail.getIntPRICE();
 
@@ -1472,12 +1474,7 @@ public class DepotManager extends bll.bllBase {
             if (this.getOdataManager().getEm().getTransaction().isActive()) {
                 this.getOdataManager().getEm().getTransaction().commit();
             }
-            if (OTRetourdepot.getLgEMPLACEMENTID().getBoolSAMELOCATION()) {
 
-                this.creditCompteDepot(OTRetourdepot.getLgEMPLACEMENTID().getLgCOMPTECLIENTID(), dbl_AMOUNT.intValue());
-                this.creditCompteDepot(this.getOdataManager().getEm().find(TCompteClient.class, "3"), (-1) * dbl_AMOUNT.intValue());
-
-            }
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
 
         } catch (Exception e) {
@@ -1711,10 +1708,10 @@ public class DepotManager extends bll.bllBase {
         try {
             OTFamilleStock = OtellerManagement.getTProductItemStock(lg_FAMILLE_ID);
             OTFamilleStock.setIntNUMBERAVAILABLE(OTFamilleStock.getIntNUMBERAVAILABLE() + int_QUANTITY);
-            OTFamilleStock.setIntNUMBER(OTFamilleStock.getIntNUMBERAVAILABLE() );
+            OTFamilleStock.setIntNUMBER(OTFamilleStock.getIntNUMBERAVAILABLE());
             OTFamilleStock.setDtUPDATED(new Date());
             this.getOdataManager().getEm().merge(OTFamilleStock);
-           
+
         } catch (Exception e) {
             e.printStackTrace();
         }

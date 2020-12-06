@@ -20,6 +20,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
@@ -42,8 +43,8 @@ import javax.validation.constraints.NotNull;
 })
 @NamedQueries({
     @NamedQuery(name = "Notification.findAllByCreatedAtAndStatus", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND o.statut=:statut "),
-      @NamedQuery(name = "Notification.findAllByStatus", query = "SELECT o FROM Notification o WHERE  o.statut=:statut "),
-    @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanal", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND o.statut=:statut AND o.canal IN :canaux")
+    @NamedQuery(name = "Notification.findAllByStatus", query = "SELECT o FROM Notification o LEFT JOIN FETCH o.notificationClients WHERE  o.statut=:statut "),
+    @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanal", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND  o.statut=:statut AND o.canal IN :canaux")
 
 })
 public class Notification implements Serializable {
@@ -81,8 +82,10 @@ public class Notification implements Serializable {
     @JoinColumn(name = "user_to", referencedColumnName = "lg_USER_ID")
     @ManyToOne
     private TUser userTo;
-    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST,CascadeType.MERGE}, mappedBy = "notification")
+    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "notification")
     private Collection<NotificationClient> notificationClients = new ArrayList<>();
+    @Column(name = "number_attempt", nullable = false)
+    private int numberAttempt = 0;
 
     public String getId() {
         return id;
@@ -229,4 +232,16 @@ public class Notification implements Serializable {
 
     }
 
+    public int getNumberAttempt() {
+        return numberAttempt;
+    }
+
+    public void setNumberAttempt(int numberAttempt) {
+        this.numberAttempt = numberAttempt;
+    }
+
+    public Notification numberAttempt(int numberAttempt) {
+        this.numberAttempt = numberAttempt;
+        return this;
+    }
 }

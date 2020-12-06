@@ -358,16 +358,13 @@ public class CommonServiceImpl implements Serializable, CommonService {
     }
 
     public TOfficine getOfficine() {
-        officine = findOfficine();
-        return officine;
+        return findOfficine();
     }
 
     @Override
     public TOfficine findOfficine() {
-        if (officine == null) {
-            officine = getEntityManager().find(TOfficine.class, "1");
-        }
-        return officine;
+        
+        return getEntityManager().find(TOfficine.class, "1");
     }
 
     @Override
@@ -672,7 +669,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
                 TParameters tp = getEntityManager().find(TParameters.class, "DATE_MIS_A_JOUR_NLLE_VERSION");
                 if (tp != null) {
                     dateUpdat = LocalDate.parse(tp.getStrVALUE().trim(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                     return new JSONObject().put("success", true).put("datemisajour", dateUpdat.toString());
+                    return new JSONObject().put("success", true).put("datemisajour", dateUpdat.toString());
                 }
                 return new JSONObject().put("success", false);
             } catch (Exception e) {

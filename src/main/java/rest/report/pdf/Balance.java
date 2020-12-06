@@ -77,10 +77,9 @@ public class Balance {
     FamilleArticleService familleArticleService;
     @EJB
     FicheArticleService ficheArticleService;
-
     public String generatepdf(Params parasm) throws IOException {
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_balancevente_caissev2";
         String P_H_CLT_INFOS;
         TEmplacement empl = tu.getLgEMPLACEMENTID();
@@ -258,7 +257,7 @@ public class Balance {
                     P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
                     P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
-                   
+
                     break;
                 case DateConverter.MVT_REGLE_TP:
                     P_REGLEMENT_LABEL = val.get(0).getTypeMouvement();
@@ -464,7 +463,7 @@ public class Balance {
         TUser tu = parasm.getOperateur();
         //  List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_gestioncaisses";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -488,7 +487,7 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_pharma_dashboard";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -537,7 +536,7 @@ public class Balance {
         }
         TUser tu = parasm.getOperateur();
 
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -564,7 +563,7 @@ public class Balance {
         }
         TUser tu = parasm.getOperateur();
 
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_reportmanagement";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -595,40 +594,10 @@ public class Balance {
         return "/data/reports/pdf/rapport_gestion_" + report_generate_file;
     }
 
-    public String listeCaisse(CaisseParamsDTO caisseParams, TUser tu) throws IOException {
-        final Comparator<VisualisationCaisseDTO> comparatorCaisse = Comparator.comparing(VisualisationCaisseDTO::getDateOperation);
-        SumCaisseDTO caisse = caisseService.cumul(caisseParams, true);
-        List<VisualisationCaisseDTO> datas = new ArrayList<>();
-        Map<String, List<VisualisationCaisseDTO>> map = caisse.getCaisses().stream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getOperateurId));
-        map.forEach((k, v) -> {
-            v.sort(comparatorCaisse);
-            VisualisationCaisseDTO dto = new VisualisationCaisseDTO();
-            VisualisationCaisseDTO index0 = v.get(0);
-            dto.setDateOperation(index0.getDateOperation());
-            dto.setOperateur(index0.getOperateur());
-            dto.setOperateurId(k);
-            dto.setDatas(v);
-            datas.add(dto);
-        });
-        datas.sort(comparatorCaisse);
-        TOfficine oTOfficine = commonService.findOfficine();
-        String scr_report_file = "rp_listecaisses1";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        LocalDateTime debut = LocalDateTime.of(caisseParams.getStartDate(), caisseParams.getStartHour());
-        String P_PERIODE = "PERIODE DU " + debut.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        LocalDateTime fin = LocalDateTime.of(caisseParams.getEnd(), caisseParams.getStartEnd());
-        P_PERIODE += " AU " + fin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        parameters.put("P_H_CLT_INFOS", "LISTE DES CAISSES  " + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        parameters.put("totaux", caisse.getSummary());
-        parameters.put("sub_reportUrl", jdom.scr_report_file);
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "listecaisses_" + report_generate_file, datas);
-        return "/data/reports/pdf/listecaisses_" + report_generate_file;
-    }
 
     public String suivMvtArticle(LocalDate dtSt, LocalDate dtEn, String produitId, String empl, TUser tu) {
         Comparator<MvtProduitDTO> mvtrByDate = Comparator.comparing(MvtProduitDTO::getDateOperation);
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_suivi_mvt_article";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         TFamille famille = produitService.findById(produitId);
@@ -672,7 +641,7 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_pharma_dashboard";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -717,7 +686,7 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_recap";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -779,7 +748,7 @@ public class Balance {
         }
         TUser tu = parasm.getOperateur();
 
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastatjour";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -802,7 +771,7 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_statfamilleart";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -835,7 +804,7 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_vingtquatre";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -857,7 +826,7 @@ public class Balance {
 
     public String produitPerimes(String query, String dtStart, Peremption filtre, TUser tu, String codeFamile, String codeRayon, String codeGrossiste) throws IOException {
 
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_perimerquery";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
 
@@ -888,7 +857,7 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_stat_vente_rayon";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -919,7 +888,7 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_stat_vente_rayon";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -943,7 +912,7 @@ public class Balance {
     }
 
     public String listeVentes(SalesStatsParams params) {
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_list_avoirs";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getUserId());
         parameters.put("P_H_CLT_INFOS", "LISTE DES AVOIRS");

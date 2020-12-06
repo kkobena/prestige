@@ -91,6 +91,9 @@ public class DatabaseToolkit {
 
     void runTask() {
         DailyStockTask dailyStockTask = new DailyStockTask();
+        dailyStockTask.setDateStock(LocalDate.now());
+        dailyStockTask.setEntityManager(em);
+        dailyStockTask.setUserTransaction(userTransaction);
         dailyStockTask.setDataSource(dataSource);
         mes.submit(dailyStockTask);
         /* Future f = mes.submit(dailyStockTask);
@@ -149,8 +152,8 @@ public class DatabaseToolkit {
     public void createTimer() {
         final TimerConfig email = new TimerConfig("email", false);
         timerService.createCalendarTimer(new ScheduleExpression()
-                //                .minute("*/2")
-                //                .hour("*")
+//                                .minute("*/2")
+//                                .hour("*")
                 .hour(findScheduledValues())
                 .dayOfMonth("*")
                 .year("*"), email
@@ -164,11 +167,10 @@ public class DatabaseToolkit {
                 .dayOfMonth("*")
                 .year("*"), sms
         );
-
     }
 
     public void manageEmail() {
-        List<Notification> data = findByStatut(Statut.NOT_SEND);
+        List<Notification> data = findByStatut(Statut.NOT_SEND).stream().filter(e -> e.getNotificationClients().isEmpty()).collect(Collectors.toList());
         boolean result = sendMail(buildEmailContent(data), null, "Resumé activité prestige 2");
         if (result) {
             try {
@@ -209,11 +211,20 @@ public class DatabaseToolkit {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            System.out.println("response ---  " + response.getStatus());
-            if (response.getStatus() == 200 || response.getStatus() == 201) {
+//            System.out.println("response ---  " + response.getStatus());
+              userTransaction.begin();
+            if (response.getStatus() == 201) {
                 notification.setStatut(Statut.SENT);
-                em.merge(notification);
+
+            } else {
+                notification.setNumberAttempt(notification.getNumberAttempt() + 1);
+                if (notification.getNumberAttempt() >= 3) {
+                    notification.setModfiedAt(LocalDateTime.now());
+                    notification.setStatut(Statut.LOCK);
+                }
             }
+            em.merge(notification);
+            userTransaction.commit();
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -245,7 +256,7 @@ public class DatabaseToolkit {
     public List<Notification> findAllByCanal() {
         try {
             TypedQuery<Notification> q = em.createNamedQuery("Notification.findAllByCreatedAtAndStatusAndCanal", Notification.class);
-            q.setParameter("createdAt", LocalDateTime.parse(LocalDate.now().toString() + " " + "00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            q.setParameter("createdAt", LocalDateTime.parse(LocalDate.now().minusMonths(3).toString() + " " + "00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
             q.setParameter("statut", Statut.NOT_SEND);
             q.setParameter("canaux", Set.of(Canal.SMS));
             return q.getResultList();
@@ -276,9 +287,7 @@ public class DatabaseToolkit {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            System.out.println("response ---  " + response.getStatus());
-            System.out.println("jSONObject ---  " + jSONObject);
-            System.out.println("response ---  " + response.readEntity(String.class));
+            
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }

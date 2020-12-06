@@ -7,6 +7,8 @@ package rest.service.impl;
 
 import commonTasks.dto.NotificationDTO;
 import dal.Notification;
+import dal.NotificationClient;
+import dal.TClient;
 import dal.enumeration.Statut;
 import java.time.LocalDate;
 import java.util.List;
@@ -45,6 +47,11 @@ public class NotificationImpl implements NotificationService {
         getEntityManager().merge(notification);
     }
 
-  
+    @Override
+    public void save(Notification notification, TClient client) {
+        notification.addNotificationClients(new NotificationClient(client, notification));
+        getEntityManager().persist(notification);
+
+    }
 
 }

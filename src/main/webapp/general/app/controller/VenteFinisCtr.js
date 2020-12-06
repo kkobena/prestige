@@ -530,6 +530,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 "dtStart": me.getDtStart().getSubmitValue(),
                 "dtEnd": me.getDtEnd().getSubmitValue(),
                 "typeVenteId": me.getTypeVente().getValue(),
+                "hStart": me.getHStart().getSubmitValue(),
+                "hEnd":me.getHEnd().getSubmitValue(),
                 "onlyAvoir": false,
                 "sansBon": false
             }

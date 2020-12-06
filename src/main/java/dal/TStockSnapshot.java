@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 /**
@@ -18,7 +20,10 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "t_stock_snapshot")
-
+@NamedQueries({
+    @NamedQuery(name = "TStockSnapshot.findAll", query = " SELECT o FROM TStockSnapshot o ORDER BY o.tStockSnapshotPK.familleId ASC ")
+    
+})
 public class TStockSnapshot implements Serializable {
 
     private static final long serialVersionUID = 1L;

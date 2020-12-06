@@ -17,6 +17,7 @@ import commonTasks.dto.TableauBaordSummary;
 import commonTasks.dto.VisualisationCaisseDTO;
 import dal.MvtTransaction;
 import dal.TCashTransaction;
+import dal.TOfficine;
 import dal.TPreenregistrement;
 import dal.TUser;
 import dal.Typemvtproduit;
@@ -153,4 +154,5 @@ Author author = entityManager.find(Author.class, id, properties);
 
     Integer montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
 
+    TOfficine findOfficine();
 }

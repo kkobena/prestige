@@ -52,11 +52,10 @@ public class JobCalendar {
 //        updateOrderDetailPrices();
     }
 
-//    @Schedule(dayOfMonth = "*", persistent = false)
+//    @Schedule(hour = "12", dayOfMonth = "*", persistent = false)
     public void execute() throws InterruptedException {
         exec();
         removeFacture();
-       
 
     }
 
@@ -217,11 +216,11 @@ public class JobCalendar {
         listDonPriceIsZero().forEach(e -> {
             TFamille famille = e.getLgFAMILLEID();
             e.setIntPAF(e.getIntPAF().compareTo(0) == 0 ? famille.getIntPAF() : e.getIntPAF());
-             e.setIntPRICE(e.getIntPRICE().compareTo(0) == 0 ? famille.getIntPRICE() : e.getIntPRICE());
-             e.setDtUPDATED(new Date());
-             getEm().merge(e);
+            e.setIntPRICE(e.getIntPRICE().compareTo(0) == 0 ? famille.getIntPRICE() : e.getIntPRICE());
+            e.setDtUPDATED(new Date());
+            getEm().merge(e);
         });
-        
+
     }
-    
+
 }
