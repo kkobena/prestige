@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TPreenregistrementDetail.findAll", query = "SELECT t FROM TPreenregistrementDetail t"),
     @NamedQuery(name = "TPreenregistrementDetail.findByVenteId", query = "SELECT t FROM TPreenregistrementDetail t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID  = :lgPREENREGISTREMENTID"),})
 public class TPreenregistrementDetail implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -81,7 +82,7 @@ public class TPreenregistrementDetail implements Serializable {
     @Column(name = "bool_ACCOUNT")
     private Boolean boolACCOUNT;
     @Column(name = "int_UG")
-    private Integer intUG;
+    private Integer intUG = 0;
     @Column(name = "montantTva")
     private Integer montantTva = 0;
     @Column(name = "valeurTva")
@@ -90,6 +91,8 @@ public class TPreenregistrementDetail implements Serializable {
     @Column(name = "prixAchat")
     @Basic(optional = false)
     private Integer prixAchat = 0;
+    @Column(name = "montanttvaug")
+    private Integer montantTvaUg = 0;
 
     public TPreenregistrementDetail() {
     }
@@ -318,6 +321,14 @@ public class TPreenregistrementDetail implements Serializable {
 
     public void setMontantTva(Integer montantTva) {
         this.montantTva = montantTva;
+    }
+
+    public Integer getMontantTvaUg() {
+        return montantTvaUg;
+    }
+
+    public void setMontantTvaUg(Integer montantTvaUg) {
+        this.montantTvaUg = montantTvaUg;
     }
 
 }

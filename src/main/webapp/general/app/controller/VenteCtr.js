@@ -110,7 +110,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         toRecalculate: true,
         plafondVente: false,
         medecinId: null,
-        showStock: false
+        showStock: false,
+        checkUg: false
 
     },
     refs: [
@@ -660,6 +661,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.cheickCaisse();
         me.checkModificationPrixU();
         me.checkShowStock();
+        me.oncheckUg();
         me.checkSansBon();
         me.checkPlafondVenteStatut();
     },
@@ -731,7 +733,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                 if (result.success) {
                     me.showAssureContainer(dataRetour);
                     me.getClientSearchTextField().focus(true, 50);
-
                 } else {
                     Ext.Msg.alert("Message", result.msg);
 
@@ -1212,7 +1213,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         var vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
         if (vente) {
             var venteId = vente.lgPREENREGISTREMENTID;
-            var data = {"remiseId": remiseId, "venteId": venteId};
+            var data = {"remiseId": remiseId, "venteId": venteId, "checkUg": me.getCheckUg()};
             var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'POST',
@@ -1319,7 +1320,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                 "banque": banque,
                 "lieux": lieux,
                 "marge": data.marge,
-                "medecinId": medecinId
+                "medecinId": medecinId,
+                "data": data
             };
             var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
@@ -4536,6 +4538,21 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.resetAll();
         me.getVnoproduitCombo().focus(false, 100, function () {
         });
+    },
+    oncheckUg: function () {
+        var me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/common/checkug',
+            success: function (response, options) {
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.checkUg = result.data;
+                }
+            }
+
+        });
     }
-},
-        );
+
+}
+);

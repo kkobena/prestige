@@ -142,14 +142,15 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
                     dock: 'top',
                     items: [
                         {
-                            xtype: 'datefield',
-                            emptyText: 'Périmés avant/ou à',
+                            xtype: 'numberfield',
+                            emptyText: 'Nombre de mois',
                             itemId: 'dtStart',
                             margin: '0 10 0 0',
-                            submitFormat: 'Y-m-d',
-                            flex: 0.8,
+                            flex: 1,
                             labelWidth: 1,
-                            format: 'd/m/Y'
+//                            value: -1,
+                            hideTrigger: true
+
 
                         }, {
                             xtype: 'tbseparator'
@@ -159,6 +160,7 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
                             xtype: 'combo',
                             emptyText: 'filtrer par',
                             labelWidth: 1,
+                            hidden: true,
                             flex: 1,
                             itemId: 'filtre',
                             valueField: 'ID',

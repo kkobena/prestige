@@ -16,15 +16,13 @@ import java.util.Objects;
  * @author DICI
  */
 public class Params implements Serializable {
-//new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource
-
     private static final long serialVersionUID = 1L;
     private String ref, description, refParent, refTwo;
     private Integer value, valueTwo, valueThree, valueFour;
     private String dtStart = LocalDate.now().toString();
     private String dtEnd = dtStart;
     private TUser operateur;
-    boolean scheduled;
+    boolean scheduled,checkug=false;
 
     public String getRefParent() {
         return refParent;
@@ -203,4 +201,13 @@ public class Params implements Serializable {
         this.ref = ref;
         this.description = description;
     }
+
+    public boolean isCheckug() {
+        return checkug;
+    }
+
+    public void setCheckug(boolean checkug) {
+        this.checkug = checkug;
+    }
+    
 }

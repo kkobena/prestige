@@ -363,7 +363,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     @Override
     public TOfficine findOfficine() {
-        
+
         return getEntityManager().find(TOfficine.class, "1");
     }
 
@@ -678,6 +678,20 @@ public class CommonServiceImpl implements Serializable, CommonService {
             }
         }
         return new JSONObject().put("success", true).put("datemisajour", dateUpdat.toString());
+    }
+
+    @Override
+    public boolean checkUg() {
+        try {
+            TParameters tp = getEntityManager().find(TParameters.class, "KEY_CHECK_UG");
+            if (tp != null) {
+                return Integer.valueOf(tp.getStrVALUE().trim()) == 1;
+            }
+            return false;
+        } catch (Exception e) {
+           
+            return false;
+        }
     }
 
 }

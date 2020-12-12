@@ -155,4 +155,12 @@ Author author = entityManager.find(Author.class, id, properties);
     Integer montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
 
     TOfficine findOfficine();
+
+    JSONObject venteUg(LocalDate dtStart, LocalDate dtEnd,String query);
+    
+     JSONObject balanceVenteCaisseVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
+            throws JSONException;
+     
+    GenericDTO balanceVenteCaisseReportVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
+
 }

@@ -14,7 +14,6 @@ import commonTasks.dto.VisualisationCaisseDTO;
 import dal.TOfficine;
 import dal.TPrivilege;
 import dal.TUser;
-import enumeration.Peremption;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -65,6 +64,11 @@ public class BalancePdfServlet extends HttpServlet {
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
+        boolean checkug=false;
+        try {
+            checkug=Boolean.valueOf(request.getParameter("checkug"));
+        } catch (Exception e) {
+        }
         Params params = new Params();
         params.setOperateur(OTUser);
         String codeFamile,
@@ -78,7 +82,7 @@ public class BalancePdfServlet extends HttpServlet {
         if (dtStart != null && !"".equals(dtStart)) {
             params.setDtStart(dtStart);
         }
-
+        params.setCheckug(checkug);
         switch (Action.valueOf(action)) {
             case BALANCE:
                 file = balance.generatepdf(params);
@@ -168,12 +172,12 @@ public class BalancePdfServlet extends HttpServlet {
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
                 query = request.getParameter("query");
-                String _filtre = request.getParameter("filtre");
-                Peremption filtre = Peremption.PERIME;
-                if (!StringUtils.isEmpty(_filtre)) {
-                    filtre = Peremption.valueOf(_filtre);
+                int _n = 0;
+                try {
+                    _n = Integer.valueOf(request.getParameter("nbre"));
+                } catch (Exception e) {
                 }
-                file = balance.produitPerimes(query, dtStart, filtre, OTUser, codeFamile, codeRayon, codeGrossiste);
+                file = balance.produitPerimes(query, _n, OTUser, codeFamile, codeRayon, codeGrossiste);
                 break;
             case STAT_PROVIDER_ARTICLE:
                 codeFamile = request.getParameter("codeFamile");

@@ -108,7 +108,7 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
     },
     onPdfClick: function () {
         var me = this;
-        var dtStart = me.getDtStart().getSubmitValue();
+        var dtStart = me.getDtStart().getValue();
         var codeRayon = me.getRayons().getValue();
         var codeGrossiste = me.getGrossiste().getValue();
         var codeFamile = me.getCodeFamile().getValue();
@@ -126,7 +126,7 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
         if (filtre == null) {
             filtre = '';
         }
-        var linkUrl = '../BalancePdfServlet?mode=PERIMES&dtStart=' + dtStart + '&query=' + query
+        var linkUrl = '../BalancePdfServlet?mode=PERIMES&nbre=' + dtStart + '&query=' + query
                 + '&codeGrossiste=' + codeGrossiste + '&codeRayon=' + codeRayon + '&codeFamile=' + codeFamile + "&filtre=" + filtre;
         window.open(linkUrl);
     },
@@ -135,7 +135,7 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
         var me = this;
         var myProxy = me.getPeremptionGrid().getStore().getProxy();
         myProxy.params = {
-            dtStart: null,
+            dtStart: -1,
             filtre: "PERIME",
             codeFamile: null,
             codeRayon: null,
@@ -143,7 +143,7 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
             query: null
 
         };
-        var dtStart = me.getDtStart().getSubmitValue();
+        var dtStart = me.getDtStart().getValue();
         var codeRayon = me.getRayons().getValue();
         var codeGrossiste = me.getGrossiste().getValue();
         var codeFamile = me.getCodeFamile().getValue();
@@ -163,7 +163,7 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
     },
     doSearch: function () {
         var me = this;
-        var dtStart = me.getDtStart().getSubmitValue();
+        var dtStart = me.getDtStart().getValue();
         var codeRayon = me.getRayons().getValue();
         var codeGrossiste = me.getGrossiste().getValue();
         var codeFamile = me.getCodeFamile().getValue();

@@ -7,7 +7,6 @@ package util;
 
 import com.ibm.icu.text.RuleBasedNumberFormat;
 import com.itextpdf.text.pdf.Barcode128;
-import dal.TClient;
 import dal.TFamille;
 import dal.TPreenregistrementDetail;
 import dal.TPrivilege;

@@ -47,7 +47,7 @@ public class JobCalendar {
 //    @PostConstruct
     public void init() {
         exec();
-//        removeFacture();
+        removeFacture();
 //        removeSuggestionO();
 //        updateOrderDetailPrices();
     }

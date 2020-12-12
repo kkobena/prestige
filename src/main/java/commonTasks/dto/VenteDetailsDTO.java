@@ -5,7 +5,6 @@
  */
 package commonTasks.dto;
 
-import dal.Medecin;
 import dal.TFamille;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
@@ -34,10 +33,26 @@ public class VenteDetailsDTO implements Serializable {
     private String operateur, strRefBon, dateHeure;
     private Date dateOperation;
     private String typeVente,numOrder, medecinId,commentaire,nom;
-    private int intAVOIR, currentStock = 0;
+    private int intAVOIR, currentStock = 0,uniteGratuite,montantUg;
    
     public String getNumOrder() {
         return numOrder;
+    }
+
+    public int getUniteGratuite() {
+        return uniteGratuite;
+    }
+
+    public int getMontantUg() {
+        return montantUg;
+    }
+
+    public void setMontantUg(int montantUg) {
+        this.montantUg = montantUg;
+    }
+
+    public void setUniteGratuite(int uniteGratuite) {
+        this.uniteGratuite = uniteGratuite;
     }
 
     public void setNumOrder(String numOrder) {
@@ -225,6 +240,9 @@ public class VenteDetailsDTO implements Serializable {
         this.dateOp = DateConverter.convertDateToLocalDateTime(p.getDtUPDATED());
         this.dtCREATED = dateFormat.format(p.getDtUPDATED());
         this.ticketName = f.getStrNAME();
+        this.uniteGratuite=d.getIntUG();
+        this.montantUg=d.getIntUG()*d.getIntPRICEUNITAIR();
+          this.dateHeure = dateFormatHeure.format(p.getDtUPDATED());
 //        try {
 //             Medecin m=d.getLgPREENREGISTREMENTID().getMedecin();
 //             this.nom=m.getNom();

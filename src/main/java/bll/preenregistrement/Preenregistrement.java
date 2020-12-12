@@ -2757,7 +2757,6 @@ public class Preenregistrement extends bll.bllBase {
 
                 int_PRICE_OLD = OTPreenregistrementDetail.getIntPRICE();
                 System.out.println("int_PRICE_OLD  **** " + int_PRICE_OLD);
-                //OTPreenregistrementDetail.setIntUG(manageUg(OTFamilleStock, OTPreenregistrementDetail.getIntQUANTITY()));//18062017
                 //code ajouté 08/12/2016
                 if (OTPreenregistrementDetail.getLgFAMILLEID().getBlPROMOTED()) {
                     OTPromotionProduct = this.getPromotionProduct(OTPreenregistrementDetail.getLgFAMILLEID().getLgFAMILLEID());

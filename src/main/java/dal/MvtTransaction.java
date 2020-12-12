@@ -63,7 +63,6 @@ public class MvtTransaction implements Serializable {
     private Integer avoidAmount = 0;
     @Column(name = "montantAcc")
     private Integer montantAcc = 0;
-
     @Column(name = "checked")
     private Boolean checked = true;
     @Column(name = "mvtdate", nullable = false, updatable = false)
@@ -104,6 +103,15 @@ public class MvtTransaction implements Serializable {
     private Integer marge = 0;
     @Column(name = "organisme", length = 100)
     private String organisme;
+
+    @Column(name = "margeug")
+    private Integer margeug = 0;
+    @Column(name = "montantttcug")
+    private Integer montantttcug = 0;
+    @Column(name = "montantnetug")
+    private Integer montantnetug = 0;
+    @Column(name = "montanttvaug")
+    private Integer montantTvaUg = 0;
 
     public String getOrganisme() {
         return organisme;
@@ -349,6 +357,38 @@ public class MvtTransaction implements Serializable {
     @Override
     public String toString() {
         return "MvtTransaction{" + "uuid=" + uuid + ", montant=" + montant + ", montantRestant=" + montantRestant + ", montantRegle=" + montantRegle + ", montantCredit=" + montantCredit + ", montantVerse=" + montantVerse + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", montantPaye=" + montantPaye + ", avoidAmount=" + avoidAmount + ", checked=" + checked + ", mvtDate=" + mvtDate + ", createdAt=" + createdAt + ", user=" + user + ", magasin=" + magasin + ", reglement=" + reglement + ", grossiste=" + grossiste + ", tTypeMvtCaisse=" + tTypeMvtCaisse + ", typeTransaction=" + typeTransaction + ", categoryTransaction=" + categoryTransaction + ", pkey=" + pkey + ", reference=" + reference + ", caisse=" + caisse + ", montantTva=" + montantTva + ", marge=" + marge + ", organisme=" + organisme + '}';
+    }
+
+    public Integer getMargeug() {
+        return margeug;
+    }
+
+    public void setMargeug(Integer margeug) {
+        this.margeug = margeug;
+    }
+
+    public Integer getMontantttcug() {
+        return montantttcug;
+    }
+
+    public void setMontantttcug(Integer montantttcug) {
+        this.montantttcug = montantttcug;
+    }
+
+    public Integer getMontantnetug() {
+        return montantnetug;
+    }
+
+    public void setMontantnetug(Integer montantnetug) {
+        this.montantnetug = montantnetug;
+    }
+
+    public Integer getMontantTvaUg() {
+        return montantTvaUg;
+    }
+
+    public void setMontantTvaUg(Integer montantTvaUg) {
+        this.montantTvaUg = montantTvaUg;
     }
 
 }

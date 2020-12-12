@@ -24,9 +24,9 @@ import org.json.JSONObject;
 @Local
 public interface FicheArticleService {
 
-    JSONObject produitPerimes(String query, String dt_obsolete, Peremption filtre, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
+    JSONObject produitPerimes(String query, int dt_obsolete,/* Peremption filtre,*/ TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
 
-    Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, String dt_obsolete, Peremption filtre, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all);
+    Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int dt_obsolete,/* Peremption filtre,*/ TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all);
 
     JSONObject modifierArticleDatePeremption(String lg_FAMILLE_ID, String dt_peremption) throws JSONException;
 

@@ -18,7 +18,6 @@ import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -65,8 +64,7 @@ public class HMvtProduit implements Serializable {
     @JoinColumn(name = "typeMvt", referencedColumnName = "ID", nullable = false)
     @ManyToOne
     private Typemvtproduit typemvtproduit;
-    @Version
-    private int version;
+   
     @Column(name = "prixUn", nullable = false)
     private Integer prixUn;
     @Column(name = "prixAchat", nullable = false)
@@ -75,6 +73,8 @@ public class HMvtProduit implements Serializable {
     private Integer valeurTva = 0;
     @JoinColumn(name = "checked")
     private Boolean checked = true;
+      @Column(name = "ug", nullable = false)
+    private Integer ug = 0;
     public Integer getValeurTva() {
         return valeurTva;
     }
@@ -122,9 +122,7 @@ public class HMvtProduit implements Serializable {
         return uuid;
     }
 
-    public int getVersion() {
-        return version;
-    }
+  
 
     public Integer getQteMvt() {
         return qteMvt;
@@ -134,9 +132,7 @@ public class HMvtProduit implements Serializable {
         this.qteMvt = qteMvt;
     }
 
-    public void setVersion(int version) {
-        this.version = version;
-    }
+ 
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
@@ -234,6 +230,14 @@ public class HMvtProduit implements Serializable {
 
     public void setTypemvtproduit(Typemvtproduit typemvtproduit) {
         this.typemvtproduit = typemvtproduit;
+    }
+
+    public Integer getUg() {
+        return ug;
+    }
+
+    public void setUg(Integer ug) {
+        this.ug = ug;
     }
 
 }

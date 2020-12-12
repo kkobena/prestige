@@ -175,13 +175,10 @@ public class CommandeServiceImpl implements CommandeService {
             List<TPreenregistrementDetail> avoirs = getAvoirs();
             Set<TPreenregistrementDetail> _avoirs = new HashSet<>();
             TOfficine officine = getEm().find(TOfficine.class, DateConverter.OFFICINE);
-            
             userTransaction.begin();
-            
             if (tp == null) {
                 return json.put("success", false).put("msg", "Paramètre d'autorisation de saisie de produit sans date de péremption inexistant");
             }
-            
             TOrder order = OTBonLivraison.getLgORDERID();
             TGrossiste grossiste = order.getLgGROSSISTEID();
             if (OTBonLivraison == null || OTBonLivraison.getStrSTATUT().equals(DateConverter.STATUT_IS_CLOSED)) {

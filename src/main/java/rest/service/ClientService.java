@@ -42,18 +42,14 @@ public interface ClientService {
 
     List<TiersPayantDTO> findTiersPayants(String query, String type);
 
-    @Deprecated
-    JSONObject updateClientAssurance(ClientDTO client) throws JSONException;
-
+ 
     List<AyantDroitDTO> findAyantDroitByClientId(String clientId, String query);
 
     JSONObject addAyantDroitToClient(AyantDroitDTO ayantDroit) throws JSONException;
 
     JSONObject findClientAssuranceById(String clientId, String venteId) throws JSONException;
 
-    @Deprecated
-    JSONObject updateClientCarnet(ClientDTO client) throws JSONException;
-
+  
     JSONObject updateCreateClientCarnet(ClientDTO client) throws JSONException;
 
     JSONObject createClient(ClientLambdaDTO clientLambda, String venteId) throws JSONException;

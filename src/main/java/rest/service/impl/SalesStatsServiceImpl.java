@@ -610,12 +610,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
                 predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
             }
-//            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + params.gethStart().toString(), formatter)),
-//                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + params.gethEnd().toString()., formatter)));
             Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"), formatter)),
                     java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"), formatter)));
             predicates.add(btw);
-            predicates.add(cb.and(btw));
             predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed)));
             if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
                 predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
@@ -874,7 +871,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 LongAdder ttc = new LongAdder();
                 LongAdder tva = new LongAdder();
                 v.stream().forEach(l -> {
-                    Integer mttc = l.getPrixUn() * l.getQteMvt();
+                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
                     Integer htAmont = (int) Math.ceil(mttc / valeurTva);
                     Integer montantTva = mttc - htAmont;
@@ -956,4 +953,87 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
     }
 
+    @Override
+    public List<TvaDTO> tvaRapport(Params params) {
+
+        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+            return tvasRapport0(params);
+        }
+
+        List<TvaDTO> datas = new ArrayList<>();
+
+        try {
+            List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
+            tvamap.forEach((k, v) -> {
+                TvaDTO otva = new TvaDTO();
+                otva.setTaux(k);
+                LongAdder ht = new LongAdder();
+                LongAdder ttc = new LongAdder();
+                LongAdder tva = new LongAdder();
+                v.stream().forEach(l -> {
+                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    Double valeurTva = 1 + (Double.valueOf(k) / 100);
+                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
+                    Integer montantTva = mttc - htAmont;
+                    ht.add(htAmont);
+                    ttc.add(mttc);
+                    tva.add(montantTva);
+
+                });
+                otva.setMontantHt(ht.intValue());
+                otva.setMontantTtc(ttc.intValue());
+                otva.setMontantTva(tva.intValue());
+                datas.add(otva);
+            });
+
+            return datas;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<TvaDTO> tvaRapportJournalier(Params params) {
+        List<TvaDTO> datas = new ArrayList<>();
+        List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        Map<LocalDate, List<HMvtProduit>> datemap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getMvtDate));
+        datemap.forEach((key, values) -> {
+            Map<Integer, List<HMvtProduit>> tvamap = values.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
+            tvamap.forEach((k, v) -> {
+                TvaDTO otva = new TvaDTO();
+                otva.setLocalOperation(key);
+                otva.setDateOperation(key.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                otva.setTaux(k);
+                LongAdder ht = new LongAdder();
+                LongAdder ttc = new LongAdder();
+                LongAdder tva = new LongAdder();
+                v.stream().forEach(l -> {
+                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    Double valeurTva = 1 + (Double.valueOf(k) / 100);
+                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
+                    Integer montantTva = mttc - htAmont;
+                    ht.add(htAmont);
+                    ttc.add(mttc);
+                    tva.add(montantTva);
+                });
+                otva.setMontantHt(ht.intValue());
+                otva.setMontantTtc(ttc.intValue());
+                otva.setMontantTva(tva.intValue());
+                datas.add(otva);
+            });
+        });
+        return datas;
+
+    }
+
+    @Override
+    public JSONObject tvasData(Params params) throws JSONException {
+        JSONObject json = new JSONObject();
+        List<TvaDTO> datas = tvaRapport(params);
+        json.put("total", datas.size());
+        json.put("data", new JSONArray(datas));
+        return json;
+    }
 }

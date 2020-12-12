@@ -342,4 +342,13 @@ public class CommonRessource {
         return Response.ok().entity(ResultFactory.getSuccessResult(afficherStockVente, 1)).build();
     }
 
+    @GET
+    @Path("checkug")
+    public Response checkUg() throws JSONException {
+        boolean checkug = commonService.checkUg();
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(checkug, 1)).build();
+    }
 }

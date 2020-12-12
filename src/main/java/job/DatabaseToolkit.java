@@ -152,8 +152,8 @@ public class DatabaseToolkit {
     public void createTimer() {
         final TimerConfig email = new TimerConfig("email", false);
         timerService.createCalendarTimer(new ScheduleExpression()
-//                                .minute("*/2")
-//                                .hour("*")
+                //                                .minute("*/2")
+                //                                .hour("*")
                 .hour(findScheduledValues())
                 .dayOfMonth("*")
                 .year("*"), email
@@ -211,8 +211,8 @@ public class DatabaseToolkit {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-//            System.out.println("response ---  " + response.getStatus());
-              userTransaction.begin();
+            LOG.log(Level.INFO, "*******************************>>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
+            userTransaction.begin();
             if (response.getStatus() == 201) {
                 notification.setStatut(Statut.SENT);
 
@@ -287,7 +287,7 @@ public class DatabaseToolkit {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            
+            LOG.log(Level.INFO, "*******************************>>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }

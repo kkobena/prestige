@@ -20,7 +20,7 @@ public class SalesParams implements Serializable {
     private String typeVenteId, natureVenteId, remiseId, userVendeurId, stockId, produitId,typeDepoId;
     private int qte, qteServie, qteUg=0;
     private String  bonRef="";
-    private boolean sansBon;
+    private boolean sansBon,checkUg=false;
     private TUser userId;
     private String venteId;
     private String itemId;
@@ -268,6 +268,14 @@ public class SalesParams implements Serializable {
 
     public void setMedecinId(String medecinId) {
         this.medecinId = medecinId;
+    }
+
+    public boolean isCheckUg() {
+        return checkUg;
+    }
+
+    public void setCheckUg(boolean checkUg) {
+        this.checkUg = checkUg;
     }
 
 }

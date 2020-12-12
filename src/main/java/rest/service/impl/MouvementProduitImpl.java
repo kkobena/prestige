@@ -121,7 +121,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
     }
 
     @Override
-    public void saveMvtProduit(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked) {
+    public void saveMvtProduit(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked,int ug) {
         HMvtProduit h = new HMvtProduit();
         h.setUuid(UUID.randomUUID().toString());
         h.setCreatedAt(LocalDateTime.now());
@@ -138,6 +138,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
         h.setPrixAchat(famille.getIntPAF());
         h.setPkey(pkey);
         h.setQteFinale(qteFinale);
+        h.setUg(ug);
         emg.persist(h);
     }
 
@@ -744,6 +745,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
                     valeurTva = codeTva.getIntVALUE();
                 }
                 TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
+                
                 Integer qtyDebut = familleStock.getIntNUMBERAVAILABLE();
                 if (tFamille.getBoolDECONDITIONNE() == 1) {
                     if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
@@ -806,7 +808,6 @@ public class MouvementProduitImpl implements MouvementProduitService {
             emg.merge(familleStock);
         }
         if (familleStock == null) {
-            LOG.log(Level.INFO, "-----------------------***************familleStock {0}", familleStock);
             if (isDetail) {
                 familleStock = findByParent(OTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID(), emg);
                 if (familleStock == null) {
@@ -823,9 +824,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             } else {
                 familleStock = createStock(OTFamille, qty, OTEmplacement, emg);
                 qteFinale = qty;
-                LOG.log(Level.INFO, "-----------------------************************** familleStock {0} -------------------------", familleStock.getIntNUMBERAVAILABLE());
                 TFamille child = findByParent(OTFamille.getLgFAMILLEID(), emg);
-                LOG.log(Level.INFO, "-----------------------***************child  {0}", child);
                 if (child != null) {
                     familleStock = findByParent(OTFamille.getLgFAMILLEID(), OTEmplacement.getLgEMPLACEMENTID(), emg);
                     if (familleStock == null) {
@@ -857,18 +856,15 @@ public class MouvementProduitImpl implements MouvementProduitService {
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
             Integer qtyDebut = familleStock.getIntNUMBERAVAILABLE();
             if (tFamille.getBoolDECONDITIONNE() == 1) {
-                //LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité produit  {1} \n quantie de la vente {2}", new Object[]{tFamille.getIntCIP(), familleStock.getIntNUMBERAVAILABLE(), it.getIntQUANTITY()});
                 if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
                     TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
                     TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
-                    //  LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité parent  {1}", new Object[]{OTFamilleParent.getIntCIP(), stockParent.getIntNUMBERAVAILABLE()});
                     familleStock = deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
                     saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY()), emg, valeurTva, false);
                 } else {
                     familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
                     emg.merge(familleStock);
                     saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), emg, valeurTva, false);
-
                 }
             } else {
                 familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
@@ -880,12 +876,10 @@ public class MouvementProduitImpl implements MouvementProduitService {
             updateStockDepot(tu, tFamille, it.getIntQUANTITYSERVED(), depot, emg);
             suggestionService.makeSuggestionAuto(familleStock, tFamille, emg);
         });
-
     }
 
     @Override
     public TFamilleStock findStock(String OTFamille, TEmplacement emplacement, EntityManager emg) {
-
         try {
             Query query = emg.createQuery("SELECT t FROM TFamilleStock t WHERE  t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable' ORDER BY t.dtCREATED DESC");
             query.
@@ -902,12 +896,10 @@ public class MouvementProduitImpl implements MouvementProduitService {
         }
 
     }
-
     @Override
     public JSONObject deconditionner(Params params) throws JSONException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
     private HMvtProduit findByItemVenteId(String idVenteItem) {
         TypedQuery<HMvtProduit> tq = getEmg().createQuery("SELECT o FROM HMvtProduit o WHERE o.pkey=?1 ", HMvtProduit.class);
         tq.setParameter(1, idVenteItem);
@@ -923,7 +915,6 @@ public class MouvementProduitImpl implements MouvementProduitService {
             updatefamillenbvente(old.getFamille(), old.getQteMvt(), true, getEmg());
         });
     }
-
     public void saveMvtProduit(String pkey, HMvtProduit old, TUser lgUSERID) {
         HMvtProduit h = new HMvtProduit();
         h.setUuid(UUID.randomUUID().toString());

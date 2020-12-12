@@ -3366,13 +3366,7 @@ public class WarehouseManager extends bll.bllBase {
                 case "ins":
                     int_new_qte = OTProductItemStock.getIntNUMBERAVAILABLE() - int_qte;
                     int_sortie = int_qte;
-                    /* if (OTProductItemStock.getIntUG() != null) {
-                        if (OTPreenregistrementDetail.getIntUG() < OTProductItemStock.getIntUG()) {
-                            OTProductItemStock.setIntUG(OTProductItemStock.getIntUG() - OTPreenregistrementDetail.getIntUG());
-                        } else {
-                            OTProductItemStock.setIntUG(0);
-                        }
-                    }*/
+                   
                     break;
                 default:
                     break;

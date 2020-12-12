@@ -44,8 +44,16 @@ Ext.define('testextjs.controller.TvaCtr', {
 
 
     ],
+    config: {
+        checkUg: false
+
+    },
+
     init: function (application) {
         this.control({
+            'tvastat': {
+                render: this.onReady
+            },
             'tvastat #tvaGrid pagingtoolbar': {
                 beforechange: this.doBeforechange
             },
@@ -63,13 +71,14 @@ Ext.define('testextjs.controller.TvaCtr', {
         });
     },
     onPdfClick: function () {
-        var me = this;
-        var dtStart = me.getDtStart().getSubmitValue();
-        var dtEnd = me.getDtEnd().getSubmitValue();
-        var linkUrl = '../BalancePdfServlet?mode=TVA&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
-        var comboRation=me.getComboRation().getValue();
-        if(comboRation==='Journalier'){
-            linkUrl='../BalancePdfServlet?mode=TVA_JOUR&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
+        let me = this;
+        let dtStart = me.getDtStart().getSubmitValue();
+        let dtEnd = me.getDtEnd().getSubmitValue();
+        let checkug = me.getCheckUg();
+        let linkUrl = '../BalancePdfServlet?mode=TVA&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug;
+        let comboRation = me.getComboRation().getValue();
+        if (comboRation === 'Journalier') {
+            linkUrl = '../BalancePdfServlet?mode=TVA_JOUR&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug;
         }
         window.open(linkUrl);
     },
@@ -82,6 +91,10 @@ Ext.define('testextjs.controller.TvaCtr', {
             dtStart: null
 
         };
+        if (me.getCheckUg()) {
+            myProxy.url = '../api/v2/caisse/tvas';
+        }
+
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
 
@@ -95,19 +108,39 @@ Ext.define('testextjs.controller.TvaCtr', {
 
     doSearch: function () {
         var me = this;
-        me.getTvaGrid().getStore().load({
+        let store = me.getTvaGrid().getStore();
+        if (me.getCheckUg()) {
+            store.getProxy().url = '../api/v2/caisse/tvas';
+        }
+
+        store.load({
             params: {
                 dtStart: me.getDtStart().getSubmitValue(),
                 dtEnd: me.getDtEnd().getSubmitValue()
 
-            }, callback: function (r, e) {
-//                console.log( me.getTtcChart());
-//                me.getTtcChart().setColors(['red','blue']);
-//                me.getTtcChart().redraw();
-
             }
 
         });
+    }, 
+    
+    
+    oncheckUg: function () {
+        var me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/common/checkug',
+            success: function (response, options) {
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.checkUg = result.data;
+                }
+            }
+
+        });
+    },
+    onReady: function () {
+        var me = this;
+        me.oncheckUg();
     }
 
 });
