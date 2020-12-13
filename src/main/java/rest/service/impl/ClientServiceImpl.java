@@ -207,6 +207,7 @@ public class ClientServiceImpl implements ClientService {
             }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = emg.createQuery(cq);
+            q.setMaxResults(100);
             List<TClient> resultat = q.getResultList();
 
             return resultat.stream().map(cl -> new ClientDTO(cl, findTiersPayantByClientId(cl.getLgCLIENTID(), emg), findAyantDroitByClientId(cl.getLgCLIENTID(), emg))).collect(Collectors.toList());

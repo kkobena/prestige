@@ -105,7 +105,6 @@ public class AyantDroitDTO implements Serializable {
     public AyantDroitDTO(TAyantDroit ayantDroit) {
         if (ayantDroit != null) {
             this.lgAYANTSDROITSID = ayantDroit.getLgAYANTSDROITSID();
-
             this.strCODEINTERNE = ayantDroit.getStrCODEINTERNE();
             this.strFIRSTNAME = ayantDroit.getStrFIRSTNAME();
             this.strLASTNAME = ayantDroit.getStrLASTNAME();

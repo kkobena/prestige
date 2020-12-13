@@ -651,7 +651,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     'medecin #queryMedecin': {
                         specialkey: this.onMedecinKey
 
-                    },
+                    }
                 });
     },
 
@@ -754,9 +754,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         const value = field.getValue();
         if (me.getCurrent()) {
             me.modifierTypeVente(value, me.getCurrent().lgPREENREGISTREMENTID, field);
-
         } else {
-
             me.client = null;
             me.ayantDroit = null;
             me.getTpContainerForm().removeAll();
@@ -780,7 +778,6 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.getClientLambda().destroy();
         if (!me.getClient()) {
             me.getTypeReglement().setValue('1');
-
         }
         me.getVnoproduitCombo().focus(true, 100);
     },
@@ -2473,12 +2470,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                         progress.hide();
                         if (successful) {
                             if (records.length > 1) {
-
                                 Ext.create('testextjs.view.vente.user.ClientGrid', {data: clientStore}).show();
-
                             } else if (records.length === 1) {
                                 me.client = records[0];
-//                        console.log(me.getClient().get('tiersPayants'));
                                 me.onSelectClientAssurance();
                             } else {
                                 Ext.MessageBox.show({
@@ -2616,14 +2610,17 @@ Ext.define('testextjs.controller.VenteCtr', {
         var client = me.getClient();
         if (client) {
             var ayantDroits = client.get('ayantDroits'), ayantDroit = null;
-            Ext.each(ayantDroits, function (item) {
-//                console.log(item);
-                if (client.get('strNUMEROSECURITESOCIAL') === item.strNUMEROSECURITESOCIAL) {
-                    ayantDroit = item;
-                    return;
-                }
-
-            });
+            if (ayantDroits.length === 1) {
+                ayantDroit = ayantDroits[0];
+            } else {
+                Ext.each(ayantDroits, function (item) {
+                    if ((client.get('strNUMEROSECURITESOCIAL') === item.strNUMEROSECURITESOCIAL) || (client.get('strCODEINTERNE') === item.strCODEINTERNE)
+                            || (client.get('fullName') === item.fullName)) {
+                        ayantDroit = item;
+                        return;
+                    }
+                });
+            }
             me.ayantDroit = ayantDroit;
             if (ayantDroit) {
                 me.getNomAyantDroit().setValue(ayantDroit.strFIRSTNAME);
