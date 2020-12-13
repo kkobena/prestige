@@ -5,21 +5,33 @@
  */
 package rest.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import commonTasks.dto.FamilleDTO;
+import commonTasks.dto.FamilleGrossisteDTO;
+import commonTasks.dto.FamilleStockDTO;
+import commonTasks.dto.HistoriqueImportationDTO;
 import commonTasks.dto.SalesStatsParams;
+import dal.HistoriqueImportValue;
+import dal.HistoriqueImportation;
+import dal.HistoriqueImportation_;
 import dal.MvtTransaction;
 import dal.Reference;
 import dal.TAyantDroit;
 import dal.TCategorieAyantdroit;
 import dal.TClient;
-import dal.TClient_;
 import dal.TCompteClient;
 import dal.TCompteClientTiersPayant;
 import dal.TEmplacement;
 import dal.TFamille;
+import dal.TFamilleGrossiste;
+import dal.TFamilleStock;
 import dal.TGroupeTierspayant;
 import dal.TModeReglement;
 import dal.TModelFacture;
 import dal.TNatureVente;
+import dal.TParameters;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TPreenregistrementDetail;
@@ -35,22 +47,26 @@ import dal.TTypeTiersPayant;
 import dal.TTypeVente;
 import dal.TTypeVente_;
 import dal.TUser;
+import dal.TUser_;
+import dal.TZoneGeographique;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeTransaction;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Stack;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionManagement;
@@ -58,6 +74,7 @@ import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -70,12 +87,11 @@ import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.exception.ConstraintViolationException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import rest.service.CaisseService;
-import rest.service.SalesStatsService;
+import rest.service.ProduitService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 
@@ -92,9 +108,9 @@ public class ImportationVente {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
-    CaisseService caisseService;
+    private CaisseService caisseService;
     @EJB
-    SalesStatsService salesStatsService;
+    private ProduitService produitService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -695,10 +711,6 @@ public class ImportationVente {
         for (int i = 0; i < items.length(); i++) {
             JSONObject json = items.getJSONObject(i);
             TFamille f = findArticleByCip(json.getString("cip"));
-//            if (f == null) {
-//                continue;
-//            }
-
             TPreenregistrementDetail tpd = new TPreenregistrementDetail(UUID.randomUUID().toString());
             tpd.setBoolACCOUNT(json.getBoolean("boolACCOUNT"));
             tpd.setLgFAMILLEID(f);
@@ -940,4 +952,222 @@ public class ImportationVente {
         }
         return json;
     }
+
+    private TFamille findTFamilleById(String id) {
+        try {
+            return getEntityManager().find(TFamille.class, id);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String fromPreenregistrementItems(String idVente) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<TPreenregistrementDetail> items = findByParent(idVente);
+        Set<FamilleDTO> datas = new HashSet<>(items.size());
+        for (TPreenregistrementDetail item : items) {
+            TFamille famille = item.getLgFAMILLEID();
+            TFamilleStock familleStock = produitService.getByFamille(famille.getLgFAMILLEID()).stream().filter(e -> e.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equals(DateConverter.OFFICINE)).findAny().get();
+            List<TFamilleGrossiste> familleGrossistes = produitService.getFamilleGrossistesByFamille(famille.getLgFAMILLEID());
+            FamilleStockDTO stock = new FamilleStockDTO(item, familleStock);
+            FamilleDTO dTO = new FamilleDTO(famille, familleGrossistes.stream().map(FamilleGrossisteDTO::new).collect(Collectors.toList()), List.of(stock));
+            if (famille.getBoolDECONDITIONNE() == 1) {
+                TFamille parent = findTFamilleById(famille.getLgFAMILLEPARENTID());
+                FamilleDTO parentdTO = new FamilleDTO(parent, produitService.getFamilleGrossistesByFamille(parent.getLgFAMILLEID()).stream().map(FamilleGrossisteDTO::new).collect(Collectors.toList()), Collections.emptyList());
+                dTO.parent(parentdTO);
+            }
+            datas.add(dTO);
+        }
+        return objectMapper.writeValueAsString(datas);
+
+    }
+
+    private TZoneGeographique findGeographiqueById(String id) {
+        try {
+            return getEntityManager().find(TZoneGeographique.class, id);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private TFamilleStock findFamilleStock(String id, String empl) {
+        try {
+            TypedQuery<TFamilleStock> q = getEntityManager().createNamedQuery("TFamilleStock.findFamilleStockByProduitAndEmplacement", TFamilleStock.class);
+            q.setParameter("lgFAMILLEID", id);
+            q.setParameter("lgEMPLACEMENTID", empl);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private TFamilleStock findFamilleStockById(String id) {
+        try {
+            return getEntityManager().find(TFamilleStock.class, id);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private TFamilleGrossiste findFamilleGrossisteById(String id) {
+        try {
+            return getEntityManager().find(TFamilleGrossiste.class, id);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean findpermission() {
+        try {
+            TParameters parameters = getEntityManager().find(TParameters.class, "KEY_EXPORT_VENTE_AS_STOCK");
+            return Integer.valueOf(parameters.getStrVALUE().trim()) == 1;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void updateFamilleGrossiste(List<FamilleGrossisteDTO> grossistes, TFamille famille) throws Exception {
+        for (FamilleGrossisteDTO grossiste : grossistes) {
+            TFamilleGrossiste familleGrossiste = findFamilleGrossisteById(grossiste.getLgFAMILLEGROSSISTEID());
+            if (familleGrossiste != null) {
+                familleGrossiste = FamilleGrossisteDTO.build(grossiste, familleGrossiste);
+                getEntityManager().merge(familleGrossiste);
+            } else {
+                familleGrossiste = FamilleGrossisteDTO.build(grossiste);
+                familleGrossiste.setLgFAMILLEID(famille);
+                getEntityManager().persist(familleGrossiste);
+            }
+        }
+    }
+
+    private void updateFamilleStock(TFamille famille, TEmplacement em) throws Exception {
+        TFamilleStock familleStock = findFamilleStock(famille.getLgFAMILLEID(), em.getLgEMPLACEMENTID());
+        if (familleStock == null) {
+            familleStock = new TFamilleStock();
+            familleStock.setLgEMPLACEMENTID(em);
+            familleStock.setIntNUMBER(0);
+            familleStock.setIntNUMBERAVAILABLE(0);
+            familleStock.setLgFAMILLESTOCKID(UUID.randomUUID().toString());
+            familleStock.setLgFAMILLEID(famille);
+            familleStock.setIntUG(0);
+            getEntityManager().merge(familleStock);
+        }
+    }
+
+    public JSONObject importVenteAsStockFromJsonFile(InputStream inputStream, TUser user) {
+        JSONObject json = new JSONObject();
+        if (!findpermission()) {
+            return json.put("success", false);
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            List<FamilleDTO> datas = mapper.readValue(inputStream, new TypeReference<List<FamilleDTO>>() {
+            });
+            int count = 0;
+            TEmplacement emplacement = user.getLgEMPLACEMENTID();
+            userTransaction.begin();
+            HistoriqueImportation importation = new HistoriqueImportation();
+            importation.setUser(user);
+            int qtyImp = 0, init = 0, montantVente = 0, montantAchat = 0;
+            for (FamilleDTO dto : datas) {
+                List<FamilleStockDTO> stocks = dto.getFamilleStock();
+                List<FamilleGrossisteDTO> grossistes = dto.getFamilleGrosiste();
+                TFamille famille = produitService.findById(dto.getLgFAMILLEID());
+                if (famille != null) {
+                    famille = FamilleDTO.build(dto, famille);
+                    getEntityManager().merge(famille);
+                } else {
+                    famille = FamilleDTO.build(dto);
+                    famille.setLgZONEGEOID(findGeographiqueById(dto.getLgZONEGEOID()));
+                    famille.setLgREMISEID(findRemiseById(dto.getLgREMISEID()));
+                    getEntityManager().persist(famille);
+                }
+                for (FamilleStockDTO stock : stocks) {
+                    qtyImp = stock.getIntNUMBERAVAILABLE();
+                    TFamilleStock familleStock = findFamilleStockById(stock.getLgFAMILLESTOCKID());
+                    if (familleStock != null) {
+                        init = familleStock.getIntNUMBERAVAILABLE();
+                        familleStock = FamilleStockDTO.build(stock, familleStock);
+                        getEntityManager().merge(familleStock);
+                    } else {
+                        familleStock = FamilleStockDTO.build(stock);
+                        familleStock.setLgFAMILLEID(famille);
+                        familleStock.setLgEMPLACEMENTID(emplacement);
+                        getEntityManager().persist(familleStock);
+                    }
+                }
+                updateFamilleGrossiste(grossistes, famille);
+                if (dto.getParent() != null) {
+                    FamilleDTO parent = dto.getParent();
+                    List<FamilleGrossisteDTO> grossistesParent = parent.getFamilleGrosiste();
+                    TFamille familleParent = produitService.findById(parent.getLgFAMILLEID());
+                    if (familleParent == null) {
+                        familleParent = FamilleDTO.build(parent);
+                        familleParent.setLgZONEGEOID(findGeographiqueById(parent.getLgZONEGEOID()));
+                        familleParent.setLgREMISEID(findRemiseById(parent.getLgREMISEID()));
+                        getEntityManager().persist(familleParent);
+                        updateFamilleStock(familleParent, emplacement);
+                    }
+                    updateFamilleGrossiste(grossistesParent, familleParent);
+                }
+                importation.addDetail(new HistoriqueImportValue()
+                        .cip(famille.getIntCIP())
+                        .libelle(famille.getStrNAME())
+                        .montantAchat(dto.getIntPAF() * qtyImp)
+                        .montantVente(dto.getIntPRICE() * qtyImp)
+                        .prixPaf(dto.getIntPAF())
+                        .prixUni(dto.getIntPRICE())
+                        .qty(qtyImp)
+                        .stockInit(init)
+                        .stockOfDay(qtyImp + init)
+                );
+                montantAchat += (dto.getIntPAF() * qtyImp);
+                montantVente += (dto.getIntPRICE() * qtyImp);
+                count++;
+                if (count > 0 && count % 50 == 0) {
+                    getEntityManager().flush();
+                    getEntityManager().clear();
+                }
+            }
+            importation.setMontantAchat(montantAchat);
+            importation.setMontantVente(montantVente);
+            importation.setNbreLigne(count);
+            getEntityManager().persist(importation);
+            userTransaction.commit();
+            json.put("count", count);
+            json.put("ligne", datas.size());
+            json.put("success", true);
+        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            json.put("success", false);
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            json.put("success", false);
+        }
+        return json;
+    }
+
+    public List<HistoriqueImportationDTO> listHistoriqueImportation(LocalDate dtStart, LocalDate dtEnd, String user) {
+        try {
+            List<Predicate> predicates = new ArrayList<>();
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<HistoriqueImportation> cq = cb.createQuery(HistoriqueImportation.class);
+            Root<HistoriqueImportation> root = cq.from(HistoriqueImportation.class);
+            cq.select(root).orderBy(cb.desc(root.get(HistoriqueImportation_.createdAt)));
+            predicates.add(cb.between(root.get(HistoriqueImportation_.mvtDate), dtStart, dtEnd));
+            if (!StringUtils.isEmpty(user)) {
+                predicates.add(
+                        cb.equal(root.get(HistoriqueImportation_.user).get(TUser_.lgUSERID), user));
+            }
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            Query q = getEntityManager().createQuery(cq);
+            List<HistoriqueImportation> data = q.getResultList();
+            return data.stream().map(HistoriqueImportationDTO::new).collect(Collectors.toList());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
 }

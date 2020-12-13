@@ -5,16 +5,12 @@
  */
 package dal;
 
-import com.vladmihalcea.hibernate.type.json.JsonStringType;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -27,8 +23,6 @@ import javax.persistence.TemporalType;
 import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 
 /**
  *
@@ -62,8 +56,7 @@ public class TFamille implements Serializable {
     @Basic(optional = false)
     @Column(name = "lg_FAMILLE_ID", nullable = false, length = 40)
     private String lgFAMILLEID;
-    @Basic(optional = false)
-    @Column(name = "lg_FAMILLE_PARENT_ID", nullable = false, length = 40)
+    @Column(name = "lg_FAMILLE_PARENT_ID", length = 40)
     private String lgFAMILLEPARENTID;
     @Column(name = "str_NAME", length = 60)
     private String strNAME;
@@ -101,10 +94,10 @@ public class TFamille implements Serializable {
     private String strSTATUT;
     @Column(name = "dt_CREATED")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date dtCREATED;
+    private Date dtCREATED=new Date();
     @Column(name = "dt_UPDATED")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date dtUPDATED;
+    private Date dtUPDATED=new Date();
     @Column(name = "int_SEUIL_MIN")
     private Integer intSEUILMIN;
     @Column(name = "int_STOCK_REAPROVISONEMENT")

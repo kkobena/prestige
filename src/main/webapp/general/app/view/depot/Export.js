@@ -16,7 +16,6 @@ Ext.define('testextjs.view.depot.Export', {
     bodyPadding: 15,
     initComponent: function () {
         var me = this;
-
         Ext.applyIf(me, {
 
             items: [

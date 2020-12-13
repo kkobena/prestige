@@ -321,9 +321,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                                 return 'x-display-hide';
                                             }
 
-
                                         }
-
                                     },
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('onSuggestion', view, rowIndex, colIndex, item, e, record, row);
@@ -392,6 +390,28 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                     }
 
                                 }]
+                        },
+
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/download.png',
+                                    tooltip: 'Exporter',
+                                   
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toExportToJson', view, rowIndex, colIndex, item, e, record, row);
+                                    },
+                                    getClass: function (value, metadata, record) {
+                                        if (record.get('intPRICE') > 0 && !record.get('cancel') && record.get('canexport')) {
+                                            return 'x-display-hide';
+                                        }
+                                        return 'x-hide-display';
+                                    }
+
+                                }]
                         }
                     ],
 
@@ -403,7 +423,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
 
                     }
                 }]
-
         });
         me.callParent(arguments);
     }

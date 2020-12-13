@@ -16,7 +16,6 @@ import org.json.JSONPropertyName;
  * @author DICI
  */
 public class FamilleArticleStatDTO implements Serializable {
-
     private static final long serialVersionUID = 1L;
     private String code, libelle, familleId, description,id;
     private Integer montantTTC = 0, montantHT = 0, montantAchat = 0, montantMarge = 0, montantCumulTTC = 0, montantCumulHT = 0, montantCumulAchat = 0;

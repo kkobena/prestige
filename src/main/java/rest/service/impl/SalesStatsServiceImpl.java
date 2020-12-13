@@ -29,6 +29,7 @@ import dal.TEmplacement;
 import dal.TFamille;
 import dal.TFamille_;
 import dal.TGroupeTierspayant;
+import dal.TParameters;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClientTiersPayent;
@@ -543,7 +544,17 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         return json;
     }
 
+    private boolean findpermission() {
+        try {
+            TParameters parameters = getEntityManager().find(TParameters.class, "KEY_EXPORT_VENTE_AS_STOCK");
+            return Integer.valueOf(parameters.getStrVALUE().trim()) == 1;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private List<VenteDTO> listVentes(SalesStatsParams params) {
+        boolean canexport = findpermission();
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             List<Predicate> predicates = new ArrayList<>();
@@ -585,7 +596,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 q.setMaxResults(params.getLimit());
             }
             List<TPreenregistrement> list = q.getResultList();
-            return list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(), params, findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
+            return list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(), params, findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID()))
+                    .canexport(canexport)
+            ).collect(Collectors.toList());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -659,8 +672,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             if (params.isOnlyAvoir()) {
                 predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
             }
-//            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + params.gethStart().toString(), formatter)),
-//                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + params.gethEnd().toString(), formatter)));
+
             Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"), formatter)),
                     java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"), formatter)));
             predicates.add(btw);
@@ -720,11 +732,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasRapport(Params params) {
-
         if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
             return tvasRapport0(params);
         }
-
         List<TvaDTO> datas = new ArrayList<>();
 
         try {
@@ -744,7 +754,6 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     ht.add(htAmont);
                     ttc.add(mttc);
                     tva.add(montantTva);
-
                 });
                 otva.setMontantHt(ht.intValue());
                 otva.setMontantTtc(ttc.intValue());

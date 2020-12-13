@@ -73,7 +73,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 toExport: this.onbtnexportCsv,
                 onSuggestion: this.onSuggestion,
                 ticketModifie: this.printTicketR,
-                toClientOrTp: this.onUpdateClientOrTp
+                toClientOrTp: this.onUpdateClientOrTp,
+                toExportToJson: this.toExportToJson
             },
             'ventemanager #query': {
                 specialkey: this.onSpecialKey
@@ -531,10 +532,13 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 "dtEnd": me.getDtEnd().getSubmitValue(),
                 "typeVenteId": me.getTypeVente().getValue(),
                 "hStart": me.getHStart().getSubmitValue(),
-                "hEnd":me.getHEnd().getSubmitValue(),
+                "hEnd": me.getHEnd().getSubmitValue(),
                 "onlyAvoir": false,
                 "sansBon": false
             }
         });
+    },
+    toExportToJson: function (view, rowIndex, colIndex, item, e, rec, row) {
+             window.location = '../api/v1/vente-depot/as/order/'+rec.get('lgPREENREGISTREMENTID') ;
     }
 });
