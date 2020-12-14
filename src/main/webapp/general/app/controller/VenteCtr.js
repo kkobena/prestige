@@ -2775,13 +2775,10 @@ Ext.define('testextjs.controller.VenteCtr', {
                     var result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         me.onBtnCancelAssClient();
-//                        me.client = result.data;
-                        var recordR = new testextjs.model.caisse.ClientAssurance(result.data);
+                        let recordR = new testextjs.model.caisse.ClientAssurance(result.data);
                         me.client = recordR;
                         if (me.getCurrent()) {
-//                            if (me.getAncienTierspayant() && me.getAncienTierspayant() !== record.get('lgTIERSPAYANTID')) {
                             me.removetierspayanttp(me.getAncienTierspayant(), record.get('lgTIERSPAYANTID'));
-//                            }
 
                         } else {
                             me.onNewClientAssurance();
@@ -2830,8 +2827,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                     "ayantDroitId": _newTp}),
                 success: function (response, options) {
                     var result = Ext.JSON.decode(response.responseText, true);
-                    //var recordR = new testextjs.model.caisse.ClientAssurance(result.data);
-                    // me.client = recordR;
                     me.updateClientAssurance(result.data);
                 }
             });

@@ -4077,8 +4077,8 @@ public class SalesServiceImpl implements SalesService {
     
     private TPreenregistrement updateVenteInfosClientOrtierspayant(SalesParams salesParams) throws Exception {
         TPreenregistrement tp = getEm().find(TPreenregistrement.class, salesParams.getVenteId());
-        updateVente(salesParams, tp);
         clonePreenregistrementTp(tp, salesParams, DateConverter.STATUT_IS_CLOSED);
+         updateVente(salesParams, tp);
         return tp;
     }
     
@@ -4094,6 +4094,9 @@ public class SalesServiceImpl implements SalesService {
             Optional<TCompteClientTiersPayant> op = findOneCompteClientTiersPayantById(b.getCompteTp());
             if (op.isPresent()) {
                 payant = op.get();
+                if(payant.getBISRO()|| (payant.getIntPRIORITY()==1)){
+                    old.setStrREFBON(b.getNumBon());
+                }
                 TPreenregistrementCompteClientTiersPayent opc = null;
                 Optional<TPreenregistrementCompteClientTiersPayent> optc = getTPreenregistrementCompteClientTiersPayent(old.getLgPREENREGISTREMENTID(), b.getCompteTp());
                 if (optc.isPresent()) {
@@ -4111,6 +4114,9 @@ public class SalesServiceImpl implements SalesService {
                 
                 TTiersPayant p = getEm().find(TTiersPayant.class, b.getCompteTp());
                 payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux());
+              if(payant.getBISRO()|| (payant.getIntPRIORITY()==1)){
+                    old.setStrREFBON(b.getNumBon());
+                }
                 JSONObject json = calculVoNetAvecPlafondVente(old, montant, montantVariable, b.getTaux(), list);
                 montantVariable = json.getInt("reste");
                 createNewPreenregistrementCompteClientTiersPayant(payant, json, old, salesParams.getUserId(), statut, b.getNumBon());
@@ -4252,7 +4258,7 @@ public class SalesServiceImpl implements SalesService {
             _new.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
             _new.setStrNUMEROSECURITESOCIAL(a.getStrNUMEROSECURITESOCIAL());
         });
-        _new.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
+//        _new.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
         getEm().merge(_new);
         return _new;
     }
