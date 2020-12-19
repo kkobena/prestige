@@ -32,7 +32,7 @@ Ext.define('testextjs.view.sm_user.balancevente.Balanceventemanager', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: 'myBean?action=para',
+                url: '../myBean?action=para',
                 reader: {
                     type: 'json',
                     root: 'data',

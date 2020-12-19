@@ -79,6 +79,8 @@ public class TOrderDetail implements Serializable {
     private Integer prixAchat = 0;
     @Column(name = "int_ORERSTATUS")
     private Short intORERSTATUS;
+      @Column(name = "ug")
+    private int ug = 0;
 
     public TOrderDetail() {
     }
@@ -246,6 +248,14 @@ public class TOrderDetail implements Serializable {
 
     public void setPrixAchat(Integer prixAchat) {
         this.prixAchat = prixAchat;
+    }
+
+    public int getUg() {
+        return ug;
+    }
+
+    public void setUg(int ug) {
+        this.ug = ug;
     }
 
 }

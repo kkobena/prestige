@@ -894,10 +894,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 otva.setMontantHt(ht.intValue());
                 otva.setMontantTtc(ttc.intValue());
                 otva.setMontantTva(tva.intValue());
-
                 datas.add(otva);
             });
-            int mtn = adder.intValue() * montant;
+            int mtn = adder.intValue() - montant;
             ListIterator listIterator = datas.listIterator();
             while (listIterator.hasNext()) {
                 TvaDTO next = (TvaDTO) listIterator.next();

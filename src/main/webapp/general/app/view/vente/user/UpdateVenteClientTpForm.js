@@ -1243,7 +1243,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                             itemId: 'numBon',
                                             height: 30, flex: 1,
                                             allowBlank: false,
-                                            minValue: 1,
+                                            minValue: 1,/*
                                             enableKeyEvents: true,
                                             listeners: {
                                                 specialKey: function (field, e, options) {
@@ -1261,7 +1261,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
 
                                                     }
                                                 }
-                                            }
+                                            }*/
 
                                         }
 

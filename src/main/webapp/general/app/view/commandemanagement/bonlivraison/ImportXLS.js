@@ -26,9 +26,10 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
     resizable: false,
     initComponent: function () {
         var _this = this;
+       
         storetype = new Ext.data.Store({
             fields: ['name', 'value'],
-            data: [{name: 0, value: 'Laborex'}, {name: 1, value: 'Copharmed'}, {name: 2, value: 'Tedis'},{name: 3, value: 'DPCI'}]
+            data: [{name: 'LABOREX', value: 'Laborex'}, {name: 'COPHARMED', value: 'Copharmed'}, {name: 'TEDIS', value: 'Tedis'},{name: 'DPCI', value: 'DPCI'}]
         });
         ImportXLSStore = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
@@ -82,12 +83,8 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
                         displayField: 'value',
                         queryMode: 'local',
                         width: '100%',
-                        emptyText: 'Choisir le modèle',
-                        listeners: {
-                            select: function (cmp) {
-
-                            }
-                        }
+                        emptyText: 'Choisir le modèle'
+                     
                     },
                     {
                         xtype: 'combo',

@@ -177,7 +177,8 @@ public class BalancePdfServlet extends HttpServlet {
                     _n = Integer.valueOf(request.getParameter("nbre"));
                 } catch (Exception e) {
                 }
-                file = balance.produitPerimes(query, _n, OTUser, codeFamile, codeRayon, codeGrossiste);
+               
+                file = balance.produitPerimes(query, _n,dtStart,dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste);
                 break;
             case STAT_PROVIDER_ARTICLE:
                 codeFamile = request.getParameter("codeFamile");

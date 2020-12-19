@@ -74,18 +74,18 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     }
 
     @Override
-    public JSONObject produitPerimes(String query, int dt_obsolete, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {
-        Pair<VenteDetailsDTO, List<VenteDetailsDTO>> p = produitPerimes(query, dt_obsolete, u, codeFamile, codeRayon, codeGrossiste, start, limit, true);
+    public JSONObject produitPerimes(String query,int nbreMois, String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {
+        Pair<VenteDetailsDTO, List<VenteDetailsDTO>> p = produitPerimes(query, nbreMois,dtStart,dtEnd, u, codeFamile, codeRayon, codeGrossiste, start, limit, true);
         List<VenteDetailsDTO> data = p.getRight();
         return new JSONObject().put("total", data.size()).put("data", new JSONArray(data)).put("metaData", new JSONObject(p.getLeft()));
     }
 
-    VenteDetailsDTO produitPerimes(String query, int dt_obsolete,  TEmplacement emp, String codeFamille, String codeRayon, String codeGrossiste) throws Exception {
+    VenteDetailsDTO produitPerimes(String query,int nbreMois, String dtStart, String dtEnd, TEmplacement emp, String codeFamille, String codeRayon, String codeGrossiste) throws Exception {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
         Root<TFamilleStock> root = cq.from(TFamilleStock.class);
         Join<TFamilleStock, TFamille> fa = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
-        List<Predicate> predicates = perimePredicat(cb, root, fa, query, dt_obsolete, codeFamille, codeRayon, codeGrossiste, emp);
+        List<Predicate> predicates = perimePredicat(cb, root, fa, query, nbreMois,dtStart,dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
         cq.select(cb.construct(VenteDetailsDTO.class,
                 cb.sum(cb.prod(fa.get(TFamille_.intPAF), root.get(TFamilleStock_.intNUMBERAVAILABLE))),
                 cb.sum(cb.prod(fa.get(TFamille_.intPRICE), root.get(TFamilleStock_.intNUMBERAVAILABLE))),
@@ -100,7 +100,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     }
 
     @Override
-    public Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int dt_obsolete, TUser u, String codeFamille, String codeRayon, String codeGrossiste, int start, int limit, boolean all) {
+    public Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser u, String codeFamille, String codeRayon, String codeGrossiste, int start, int limit, boolean all) {
         try {
 
             TEmplacement emp = u.getLgEMPLACEMENTID();
@@ -108,7 +108,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
             Root<TFamilleStock> root = cq.from(TFamilleStock.class);
             Join<TFamilleStock, TFamille> fa = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
-            List<Predicate> predicates = perimePredicat(cb, root, fa, query, dt_obsolete, codeFamille, codeRayon, codeGrossiste, emp);
+            List<Predicate> predicates = perimePredicat(cb, root, fa, query, nbreMois,dtStart,  dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
             if (!StringUtils.isEmpty(codeFamille) && codeFamille.equals("ALL")) {
                 cq.select(cb.construct(VenteDetailsDTO.class,
                         fa.get(TFamille_.intCIP), fa.get(TFamille_.strNAME),
@@ -167,7 +167,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             if (l.isEmpty()) {
                 return Pair.of(new VenteDetailsDTO(), Collections.emptyList());
             }
-            VenteDetailsDTO summary = produitPerimes(query, dt_obsolete, emp, codeFamille, codeRayon, codeGrossiste);
+            VenteDetailsDTO summary = produitPerimes(query, nbreMois,dtStart,dtEnd, emp, codeFamille, codeRayon, codeGrossiste);
 
             return Pair.of(summary, l);
         } catch (Exception e) {
@@ -177,7 +177,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
     }
 
-    private List<Predicate> perimePredicat(CriteriaBuilder cb, Root<TFamilleStock> root, Join<TFamilleStock, TFamille> fa, String query, int dt_obsolete, String codeFamille, String codeRayon, String codeGrossiste, TEmplacement emp) {
+    private List<Predicate> perimePredicat(CriteriaBuilder cb, Root<TFamilleStock> root, Join<TFamilleStock, TFamille> fa, String query, int nbreMois, String dtStart, String dtEnd, String codeFamille, String codeRayon, String codeGrossiste, TEmplacement emp) {
         LocalDate today = LocalDate.now();
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isNotNull(fa.get(TFamille_.dtPEREMPTION)));
@@ -198,11 +198,25 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         if (!StringUtils.isEmpty(codeGrossiste) && !codeGrossiste.equals("ALL")) {
             predicates.add(cb.equal(fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
         }
-        if (dt_obsolete > 0) {
+        if (nbreMois > 0) {
             predicates.add(cb.between(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)),
-                    java.sql.Date.valueOf(today), java.sql.Date.valueOf(today.plusMonths(dt_obsolete))));
+                    java.sql.Date.valueOf(today), java.sql.Date.valueOf(today.plusMonths(nbreMois))));
         } else {
-            predicates.add(cb.lessThanOrEqualTo(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)), new Date()));
+            if (StringUtils.isEmpty(dtEnd) && StringUtils.isEmpty(dtStart)) {
+                predicates.add(cb.lessThanOrEqualTo(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)), new Date()));
+            } else {
+                if (!StringUtils.isEmpty(dtEnd) && !StringUtils.isEmpty(dtStart)) {
+                    predicates.add(cb.between(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)), java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)));
+                } else {
+                    if (!StringUtils.isEmpty(dtStart)) {
+                        predicates.add(cb.equal(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)), java.sql.Date.valueOf(dtStart)));
+                    }
+                   else if (!StringUtils.isEmpty(dtEnd)) {
+                        predicates.add(cb.equal(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)), java.sql.Date.valueOf(dtEnd)));
+                    }
+                }
+
+            }
         }
         return predicates;
     }
@@ -219,7 +233,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             return new JSONObject().put("success", false);
         }
     }
-   
+
     @Override
     public List<ArticleDTO> articleSurStock(TUser u, String query, String codeFamile, String codeRayon, String codeGrossiste, int nbreMois, int nbreConsommation, int start, int limit, boolean all) {
         try {

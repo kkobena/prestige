@@ -3646,9 +3646,31 @@ Ext.define('testextjs.controller.VenteCtr', {
         return cmp;
     },
     doCloture: function () {
+
         var me = this, typeRegle = me.getVnotypeReglement().getValue(),
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
-        if (me.getCaisse()) {
+console.log(me.getToRecalculate());
+//return;
+        if (me.getToRecalculate()) {
+            Ext.MessageBox.show({
+                title: 'Message d\'erreur',
+                width: 320,
+                msg: 'Le net à payer sera recalculer',
+                buttons: Ext.MessageBox.OK,
+                icon: Ext.MessageBox.ERROR,
+                fn: function (buttonId) {
+                    if (buttonId === "ok") {
+                        if (typeVenteCombo === '1') {
+                            me.showNetPaidVno();
+                        } else {
+                            me.showNetPaidAssurance();
+                        }
+                    }
+                }
+            });
+
+        }else{
+             if (me.getCaisse()) {
             if (typeVenteCombo === '1') {
                 if (typeRegle === '1' || '4') {
                     if (typeRegle === '4') {
@@ -3681,6 +3703,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         } else {
             Ext.Msg.alert("Message", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à la validation");
         }
+        }
+       
     },
     onbtncloturerAssurance: function (typeRegleId) {
         var me = this, sansBon = me.getSansBon().getValue(), montantTp = me.getMontantTp().getValue();
@@ -3976,7 +4000,6 @@ Ext.define('testextjs.controller.VenteCtr', {
         var me = this, sansBon = me.getVenteSansBon();
         var result = me.checkEmptyBonRef();
         if (result && !sansBon) {
-
             Ext.MessageBox.show({
                 title: 'Message',
                 width: 320,

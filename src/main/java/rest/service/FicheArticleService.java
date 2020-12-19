@@ -9,7 +9,6 @@ import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TUser;
 import enumeration.MargeEnum;
-import enumeration.Peremption;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
@@ -24,9 +23,9 @@ import org.json.JSONObject;
 @Local
 public interface FicheArticleService {
 
-    JSONObject produitPerimes(String query, int dt_obsolete,/* Peremption filtre,*/ TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
+    JSONObject produitPerimes(String query, int nbreMois,String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
 
-    Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int dt_obsolete,/* Peremption filtre,*/ TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all);
+    Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois,String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all);
 
     JSONObject modifierArticleDatePeremption(String lg_FAMILLE_ID, String dt_peremption) throws JSONException;
 

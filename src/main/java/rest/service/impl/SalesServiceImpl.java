@@ -2013,7 +2013,6 @@ public class SalesServiceImpl implements SalesService {
             tp.setIntPRICEOTHER(tp.getIntPRICE());
             if (!tp.getCopy()) {
                 tp.setDtUPDATED(new Date());
-//                tp.setStrREF(buildRef(LocalDate.now(), Parameter.KEY_LAST_ORDER_NUMBER_VENTE, emg).getString("code"));
             }
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
             java.util.function.Predicate<Optional<TParameters>> test = e -> {
@@ -2357,7 +2356,7 @@ public class SalesServiceImpl implements SalesService {
                         item.setDblQUOTACONSOVENTE(item.getLgCOMPTECLIENTTIERSPAYANTID().getDblQUOTACONSOVENTE() != null ? item.getLgCOMPTECLIENTTIERSPAYANTID().getDblQUOTACONSOVENTE() + item.getIntPRICE() : 0);
                         item.setStrSTATUT(commonparameter.statut_is_Closed);
                         item.setLgUSERID(u);
-                        if (params.isPrincipal() || tierspayants.size() == 1) {
+                        if (params.isPrincipal() ||  (tierspayants.size() == 1) || OTCompteClientTiersPayant.getBISRO() || (OTCompteClientTiersPayant.getIntPRIORITY()==1)) {
                             OTPreenregistrement.setStrREFBON(params.getNumBon());
                         }
                         emg.merge(item);

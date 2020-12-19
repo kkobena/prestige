@@ -37,7 +37,7 @@ public class JobServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         JobStockService jobStockService = new JobStockService();
-        jobStockService.executeJobStockReappro();
+//        jobStockService.executeJobStockReappro();
         jobStockService.executeJobLot();
 
     }

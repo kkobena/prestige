@@ -837,7 +837,7 @@ public class Balance {
         return "/data/reports/pdf/rp_vingtquatre" + report_generate_file;
     }
 
-    public String produitPerimes(String query, int dtStart, TUser tu, String codeFamile, String codeRayon, String codeGrossiste) throws IOException {
+    public String produitPerimes(String query, int nbreMois,String dtStart, String dtEnd, TUser tu, String codeFamile, String codeRayon, String codeGrossiste) throws IOException {
 
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_perimerquery";
@@ -845,7 +845,7 @@ public class Balance {
 
         parameters.put("P_H_CLT_INFOS", "PRODUITS PERIMES ");
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Pair< VenteDetailsDTO, List<VenteDetailsDTO>> p = ficheArticleService.produitPerimes(query, dtStart, tu, codeFamile, codeRayon, codeGrossiste, 0, 0, true);
+        Pair< VenteDetailsDTO, List<VenteDetailsDTO>> p = ficheArticleService.produitPerimes(query, nbreMois, dtStart,  dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0, true);
         VenteDetailsDTO summary = p.getLeft();
         List<VenteDetailsDTO> data = p.getRight();
         if (!StringUtils.isEmpty(codeFamile)) {

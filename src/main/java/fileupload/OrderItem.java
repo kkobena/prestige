@@ -24,8 +24,86 @@ public class OrderItem implements Serializable {
     private Integer ug;
     private Integer prixUn;
     private Double tva;
-     private Integer ligne;
-      private String facture;
+    private Integer ligne;
+    private String facture;
+    private Integer prixAchat;
+
+    public Integer getPrixAchat() {
+        return prixAchat;
+    }
+
+    public void setPrixAchat(Integer prixAchat) {
+        this.prixAchat = prixAchat;
+    }
+
+    public OrderItem cip(String cip) {
+        this.cip = cip;
+        return this;
+    }
+  public OrderItem prixAchat(Integer prixAchat) {
+        this.prixAchat = prixAchat;
+        return this;
+    }
+
+    public OrderItem libelle(String libelle) {
+        this.libelle = libelle;
+        return this;
+    }
+
+    public OrderItem cmde(Integer cmde) {
+        this.cmde = cmde;
+        return this;
+    }
+
+    public OrderItem cmdeL(Integer cmdeL) {
+        this.cmdeL = cmdeL;
+        return this;
+    }
+
+    public OrderItem refBl(String refBl) {
+        this.refBl = refBl;
+        return this;
+    }
+
+    public OrderItem dateBl(String dateBl) {
+        this.dateBl = dateBl;
+        return this;
+    }
+
+    public OrderItem montant(Double montant) {
+        this.montant = montant;
+        return this;
+    }
+
+    public OrderItem ug(Integer ug) {
+        this.ug = ug;
+        return this;
+    }
+
+    public OrderItem prixUn(Integer prixUn) {
+        this.prixUn = prixUn;
+        return this;
+    }
+
+    public OrderItem tva(Double tva) {
+        this.tva = tva;
+        return this;
+    }
+
+    public OrderItem ean(String ean) {
+        this.ean = ean;
+        return this;
+    }
+
+    public OrderItem facture(String facture) {
+        this.facture = facture;
+        return this;
+    }
+
+    public OrderItem ligne(Integer ligne) {
+        this.ligne = ligne;
+        return this;
+    }
 
     public String getCip() {
         return cip;
@@ -124,6 +202,10 @@ public class OrderItem implements Serializable {
     }
 //cophamed
 
+    public OrderItem() {
+
+    }
+
     public OrderItem(String cip, Integer cmde, Integer cmdeL, Double montant) {
         this.cip = cip;
         this.cmde = cmde;
@@ -171,7 +253,8 @@ public class OrderItem implements Serializable {
         this.facture = facture;
     }
 //   printer.printRecord("N° Facture", "N° ligne", "CIP/EAN13", "Libellé du produit", "Qté commandée","Qté livrée","Prix de cession","Prix public","N° commande","Tva");
-    public OrderItem(String facture, Integer ligne,String cip,String libelle, Integer cmde, Integer cmdeL,  Double montant, Double prixUn,  String refBl, Double tva) {
+
+    public OrderItem(String facture, Integer ligne, String cip, String libelle, Integer cmde, Integer cmdeL, Double montant, Double prixUn, String refBl, Double tva) {
         this.cip = cip;
         this.libelle = libelle;
         this.cmde = cmde;

@@ -784,8 +784,9 @@ Ext.application({
         'testextjs.view.facturation.FactureProvisoire',
         'testextjs.view.caisseManager.Importation',
         'testextjs.view.depot.Export',
-        'testextjs.view.depot.Import'
-//        'testextjs.view.actions.action'
+        'testextjs.view.depot.Import',
+        'testextjs.view.actions.action',
+        'testextjs.view.configmanagement.famille.Products'
 
 // 'testextjs.view.sm_user.gestcaisse.GestCaisseManager',
 

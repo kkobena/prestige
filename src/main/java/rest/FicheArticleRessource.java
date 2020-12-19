@@ -45,12 +45,13 @@ public class FicheArticleRessource {
     @GET
     @Path("perimes")
     public Response produitPerimes(
-          @QueryParam(value = "dtStart") int dtStart,
-//            @QueryParam(value = "filtre") Peremption filtre,
+          @QueryParam(value = "nbreMois") int nbreMois,
             @QueryParam(value = "codeFamile") String codeFamile,
             @QueryParam(value = "query") String query,
             @QueryParam(value = "codeRayon") String codeRayon,
-            @QueryParam(value = "codeGrossiste") String codeGrossiste
+            @QueryParam(value = "codeGrossiste") String codeGrossiste,
+             @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
@@ -61,7 +62,7 @@ public class FicheArticleRessource {
       /*  if (filtre == null) {
             filtre = Peremption.PERIME;
         }*/
-        JSONObject jsono = ficheArticleService.produitPerimes(query, dtStart,  tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
+        JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart,  dtEnd,  tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
         return Response.ok().entity(jsono.toString()).build();
     }
 

@@ -50,8 +50,7 @@ public class Reference implements Serializable {
     private int lastIntValue;
     @Column(name = "last_int_tmp_value", length = 8, nullable = false)
     private int lastIntTmpValue;
-//    @Version
-//    private int version;
+
     @Column(name = "devis")
     private boolean devis = false;
 

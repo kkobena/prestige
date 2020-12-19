@@ -15,10 +15,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -132,12 +132,13 @@ public class DatabaseToolkit {
 
 //    @Schedule(second = "*/30", minute = "*", hour = "*", dayOfMonth = "*", year = "*", persistent = true)
     public void manageSms() {
+      
         if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
+           
             mes.submit(() -> {
                 try {
-//                     sendSMS();
-
-                    findAllByCanal().forEach(n -> {
+                    List<Notification> notifications = findAllByCanal();
+                    notifications.forEach(n -> {
                         sendSMS(n);
                     });
                     TimeUnit.SECONDS.sleep(6);
@@ -161,8 +162,8 @@ public class DatabaseToolkit {
 
         final TimerConfig sms = new TimerConfig("sms", false);
         timerService.createCalendarTimer(new ScheduleExpression()
-                .second("*/10")
-                .minute("*")
+//                .second("*/30")
+                .minute("*/2")
                 .hour("*")
                 .dayOfMonth("*")
                 .year("*"), sms
@@ -211,7 +212,7 @@ public class DatabaseToolkit {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            LOG.log(Level.INFO, "*******************************>>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
+//            LOG.log(Level.INFO, "*******************************>>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
             userTransaction.begin();
             if (response.getStatus() == 201) {
                 notification.setStatut(Statut.SENT);
@@ -258,7 +259,7 @@ public class DatabaseToolkit {
             TypedQuery<Notification> q = em.createNamedQuery("Notification.findAllByCreatedAtAndStatusAndCanal", Notification.class);
             q.setParameter("createdAt", LocalDateTime.parse(LocalDate.now().minusMonths(3).toString() + " " + "00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
             q.setParameter("statut", Statut.NOT_SEND);
-            q.setParameter("canaux", Set.of(Canal.SMS));
+            q.setParameter("canaux", EnumSet.of(Canal.SMS));
             return q.getResultList();
         } catch (Exception e) {
             e.printStackTrace(System.err);

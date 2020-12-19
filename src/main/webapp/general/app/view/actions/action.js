@@ -18,9 +18,6 @@ Ext.define('testextjs.view.actions.action', {
     },
     initComponent: function () {
         var me = this;
-
-
-
         me.items = me.buildItems();
         me.dockedItems = [
             {
