@@ -16,7 +16,6 @@ import commonTasks.dto.VenteDetailsDTO;
 import dal.TPreenregistrement;
 import java.util.List;
 import javax.ejb.Local;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -80,5 +79,9 @@ public interface SalesStatsService {
 
     JSONObject findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd, String query, int start, int limit) throws JSONException;
 
-//    JSONArray exportToJson(SalesStatsParams params) throws JSONException;
+    List<TvaDTO> tvaRapport(Params params);
+
+    List<TvaDTO> tvaRapportJournalier(Params params);
+
+    JSONObject tvasData(Params params) throws JSONException;
 }

@@ -80,7 +80,7 @@
                     str_ref = OTRetourdepot.getLgRETOURDEPOTID();
                     int_TOTAL_AMOUNT = ODepotManager.getTotalAmountRetour(OTRetourdepot.getLgRETOURDEPOTID(), OTRetourdepot.getStrSTATUT()).intValue();
                     int_TOTAL_PRODUCT = ODepotManager.getTotalQuantityRetour(OTRetourdepot.getLgRETOURDEPOTID(), OTRetourdepot.getStrSTATUT());
-                    new logger().OCategory.info("lg_RETOURDEPOT_ID nouveau " + str_ref);
+                    
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -124,12 +124,7 @@
 
     }
     String result;
-    /*if (ObllBase.getMessage().equals(commonparameter.PROCESS_SUCCESS)) {
-     result = "{success:\"" + ObllBase.getMessage() + "\", errors: \"" + ObllBase.getDetailmessage() + "\"}";
-
-     } else {
-     result = "{success:\"" + ObllBase.getMessage() + "\", errors: \"" + ObllBase.getDetailmessage() + "\"}";
-     }*/
+    
     if (ObllBase.getMessage().equals(commonparameter.PROCESS_SUCCESS)) {
         result = "{ref:\"" + str_ref + "\", errors_code: \"" + ObllBase.getMessage()+ "\", int_TOTAL_AMOUNT: \"" + conversion.AmountFormat(int_TOTAL_AMOUNT,'.')+ "\", int_TOTAL_PRODUCT: \"" + conversion.AmountFormat(int_TOTAL_PRODUCT,'.') + "\", errors: \"" + ObllBase.getDetailmessage() + "\"}";
     } else {

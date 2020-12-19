@@ -16,7 +16,8 @@ Ext.define('testextjs.view.depot.Import', {
         var me = this;
 
         Ext.applyIf(me, {
-            items: [{
+            items: [
+                {
                     xtype: 'fieldset',
                     title: 'CHOISIR UN FICHIER',
                     defaultType: 'textfield',

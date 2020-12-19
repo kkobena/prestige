@@ -141,43 +141,44 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
                     xtype: 'toolbar',
                     dock: 'top',
                     items: [
+
                         {
                             xtype: 'datefield',
-                            emptyText: 'Périmés avant/ou à',
+                            fieldLabel: 'Du',
                             itemId: 'dtStart',
                             margin: '0 10 0 0',
                             submitFormat: 'Y-m-d',
-                            flex: 0.8,
-                            labelWidth: 1,
+                            flex: 1,
+                            labelWidth: 20,
+                            format: 'd/m/Y'
+
+                        },
+                        {
+                            xtype: 'datefield',
+                            fieldLabel: 'Au',
+                            itemId: 'dtEnd',
+                            labelWidth: 20,
+                            flex: 1,
+                            margin: '0 9 0 0',
+                            submitFormat: 'Y-m-d',
                             format: 'd/m/Y'
 
                         }, {
                             xtype: 'tbseparator'
                         },
-
                         {
-                            xtype: 'combo',
-                            emptyText: 'filtrer par',
-                            labelWidth: 1,
+                            xtype: 'numberfield',
+                            emptyText: 'Nombre de mois',
+                            itemId: 'nbreMois',
+                            margin: '0 10 0 0',
                             flex: 1,
-                            itemId: 'filtre',
-                            valueField: 'ID',
-                            displayField: 'VALUE',
-                            store: Ext.create("Ext.data.Store", {
-                                fields: ["ID", "VALUE"],
-                                data: [{'ID': "PLUS_UN_MOIS", "VALUE": "Périmés il y'a plus 1 mois"},
-                                    {'ID': "MOINS_UN_MOIS", "VALUE": "Périmés il y'a moins 1 mois"},
-                                    {'ID': "PLUS_DEUX_SEMAINES", "VALUE": "Périmés il y'a plus 2 sémaines"},
-                                    {'ID': "MOINS_DEUX_SEMAINES", "VALUE": "Périmés il y'a moins 2 sémaines"},
-                                    {'ID': "DANS_UN_MOIS", "VALUE": "Périment dans 1 mois"},
-                                    {'ID': "DANS_MOINS_UN_MOIS", "VALUE": "Périment dans moins 1 mois"},
-                                    {'ID': "DANS_MOINS_DEUX_SEMAINES", "VALUE": "Périment dans moins 2 sémaines"},
-                                    {'ID': "DANS_MOINS_UNE_SEMAINE", "VALUE": "Périment dans moins 1 sémaines"},
-                                    {'ID': "PERIME", "VALUE": "Tous les périmés"}
+                            labelWidth: 1,
+//                            value: -1,
+                            hideTrigger: true
 
-                                ]
-                            })
-                        }, {
+
+                        },
+                        {
                             xtype: 'tbseparator'
                         },
 
@@ -194,7 +195,7 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
 
                         {
                             xtype: 'combobox',
-                            flex: 1,
+                            flex: 1.2,
                             margin: '0 5 0 0',
                             labelWidth: 5,
                             itemId: 'rayons',
@@ -211,7 +212,7 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
                         },
                         {
                             xtype: 'combobox',
-                            flex: 1,
+                            flex: 1.2,
                             margin: '0 5 0 0',
                             labelWidth: 5,
                             itemId: 'grossiste',
@@ -229,7 +230,7 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
                         },
                         {
                             xtype: 'combobox',
-                            flex: 1,
+                            flex: 1.2,
                             margin: '0 5 0 0',
                             labelWidth: 5,
                             itemId: 'codeFamile',
@@ -247,6 +248,7 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
                         },
                         {
                             text: 'rechercher',
+                            flex: 0.7,
                             tooltip: 'rechercher',
                             itemId: 'rechercher',
                             scope: this,
@@ -255,6 +257,7 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
 
                         , {
                             text: 'imprimer',
+                            flex: 0.7,
                             itemId: 'imprimer',
                             iconCls: 'printable',
                             tooltip: 'imprimer',

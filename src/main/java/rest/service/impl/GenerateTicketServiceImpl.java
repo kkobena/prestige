@@ -287,9 +287,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 if (oTPreenregistrement.getIntPRICE() < 0) {
                     imp.printTicketVente(1);
                 } else {
-//                    for (TPreenregistrementCompteClientTiersPayent b : listeVenteTiersPayants) {
-//                        imp.printTicketVente(1);
-//                    }
                     imp.printTicketVente(1);
                 }
             } else {
@@ -383,6 +380,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
         List<String> datas = new ArrayList<>();
         List<TPreenregistrementDetail> lstTPreenregistrementDetail = listeVenteByIdVente(OTPreenregistrement.getLgPREENREGISTREMENTID());
+     lstTPreenregistrementDetail.sort(Comparator.comparing(TPreenregistrementDetail::getDtCREATED));
         lstTPreenregistrementDetail.forEach((OTPreenregistrementDetail) -> {
             datas.add(" " + OTPreenregistrementDetail.getIntQUANTITY() + "; *;" + DataStringManager.subStringData(OTPreenregistrementDetail.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0, 20) + ";" + DateConverter.amountFormat(OTPreenregistrementDetail.getIntPRICEUNITAIR()) + ";" + DateConverter.amountFormat(OTPreenregistrementDetail.getIntPRICE()));
         });
@@ -396,6 +394,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     public List<String> generateDataVenteSupprime(TPreenregistrement OTPreenregistrement) {
         List<String> datas = new ArrayList<>();
         List<TPreenregistrementDetail> lstTPreenregistrementDetail = listeVenteByIdVente(OTPreenregistrement.getLgPREENREGISTREMENTID());
+      lstTPreenregistrementDetail.sort(Comparator.comparing(TPreenregistrementDetail::getDtCREATED));
         lstTPreenregistrementDetail.forEach((OTPreenregistrementDetail) -> {
             datas.add(" " + (-1 * OTPreenregistrementDetail.getIntQUANTITY()) + ";*;" + DataStringManager.subStringData(OTPreenregistrementDetail.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0, 16) + ";" + DateConverter.amountFormat(OTPreenregistrementDetail.getIntPRICEUNITAIR()) + ";" + DateConverter.amountFormat(OTPreenregistrementDetail.getIntPRICE() * (-1)));
         });

@@ -14,6 +14,7 @@ import commonTasks.dto.TypeRemiseDTO;
 import commonTasks.dto.UserDTO;
 import dal.TEmplacement;
 import dal.TNatureVente;
+import dal.TPrivilege;
 import dal.TTypeVente;
 import dal.TUser;
 import dal.TVille;
@@ -35,6 +36,7 @@ import org.json.JSONObject;
 import rest.service.CommonService;
 import rest.service.LogService;
 import toolkits.parameters.commonparameter;
+import util.DateConverter;
 
 /**
  *
@@ -76,7 +78,7 @@ public class CommonRessource {
     @Path("autorisation-prix-vente")
     public Response autorisationPrixVente() {
         HttpSession hs = servletRequest.getSession();
-        Boolean bool_UPDATE_PRICE = (Boolean) hs.getAttribute(commonparameter.UPDATE_PRICE);
+        Boolean bool_UPDATE_PRICE = (Boolean) hs.getAttribute(DateConverter.UPDATE_PRICE);
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);
@@ -329,5 +331,24 @@ public class CommonRessource {
         cc.setMaxAge(86400);
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("autorisations/showstock")
+    public Response autorisationAfficherStock() {
+        HttpSession hs = servletRequest.getSession();
+        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+        boolean afficherStockVente = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.P_AFFICHER_STOCK_A_LA_VENTE);
+        return Response.ok().entity(ResultFactory.getSuccessResult(afficherStockVente, 1)).build();
+    }
+
+    @GET
+    @Path("checkug")
+    public Response checkUg() throws JSONException {
+        boolean checkug = commonService.checkUg();
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(checkug, 1)).build();
     }
 }

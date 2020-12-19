@@ -211,6 +211,10 @@ Ext.define('testextjs.model.caisse.Vente', {
         {
             name: 'commentaire',
             type: 'string'
+        },
+         {
+            name: 'canexport',
+            type: 'boolean'
         }
     ]
 });

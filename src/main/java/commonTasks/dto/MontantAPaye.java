@@ -18,9 +18,13 @@ public class MontantAPaye implements Serializable {
     private static final long serialVersionUID = 1L;
     private Integer remise = 0, marge = 0, montantTva = 0;
     private Integer montantNet = 0, montant = 0, montantTp = 0, montantAccount = 0;
+    private int montantNetUg = 0;
+    private int montantTtcUg = 0;
+    private int margeUg = 0;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
     private boolean restructuring;
     private String message;
+    private int montantTvaUg = 0;
 
     public boolean isRestructuring() {
         return restructuring;
@@ -125,4 +129,55 @@ public class MontantAPaye implements Serializable {
         return "MontantAPaye{" + "remise=" + remise + ", montantNet=" + montantNet + ", montant=" + montant + ", montantTp=" + montantTp + '}';
     }
 
+    public int getMontantNetUg() {
+        return montantNetUg;
+    }
+
+    public void setMontantNetUg(int montantNetUg) {
+        this.montantNetUg = montantNetUg;
+    }
+
+    public int getMontantTtcUg() {
+        return montantTtcUg;
+    }
+
+    public void setMontantTtcUg(int montantTtcUg) {
+        this.montantTtcUg = montantTtcUg;
+    }
+
+    public int getMargeUg() {
+        return margeUg;
+    }
+
+    public MontantAPaye margeUg(int margeUg) {
+        this.margeUg = margeUg;
+        return this;
+    }
+
+    public void setMargeUg(int margeUg) {
+        this.margeUg = margeUg;
+    }
+
+    public MontantAPaye montantTtcUg(int montantTtcUg) {
+        this.montantTtcUg = montantTtcUg;
+        return this;
+    }
+
+    public MontantAPaye montantNetUg(int montantNetUg) {
+        this.montantNetUg = montantNetUg;
+        return this;
+    }
+
+    public int getMontantTvaUg() {
+        return montantTvaUg;
+    }
+
+    public void setMontantTvaUg(int montantTvaUg) {
+        this.montantTvaUg = montantTvaUg;
+    }
+    
+       public MontantAPaye montantTvaUg(int montantTvaUg) {
+        this.montantTvaUg = montantTvaUg;
+        return this;
+    }
 }

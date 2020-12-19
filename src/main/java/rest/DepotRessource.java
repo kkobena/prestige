@@ -5,20 +5,27 @@
  */
 package rest;
 
+import commonTasks.dto.HistoriqueImportationDTO;
 import dal.TUser;
+import java.time.LocalDate;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.MvtProduitService;
+import rest.service.impl.ImportationVente;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -34,6 +41,8 @@ public class DepotRessource {
     private HttpServletRequest servletRequest;
     @EJB
     private MvtProduitService mvtProduitService;
+    @EJB
+    private ImportationVente importationVente;
 
     @PUT
     @Path("validerretourdepot/{id}")
@@ -47,4 +56,16 @@ public class DepotRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    @GET
+    @Path("historiques")
+    @Produces("application/json") 
+    public Response listeHistoriques(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
+    ) throws JSONException {
+        List<HistoriqueImportationDTO> data = importationVente.listHistoriqueImportation(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
+        JSONObject json = new JSONObject().put("total", data.size())
+                .put("data", new JSONArray(data));
+        return Response.ok().entity(json.toString()).build();
+    }
 }

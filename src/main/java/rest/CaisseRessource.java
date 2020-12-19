@@ -113,7 +113,6 @@ public class CaisseRessource {
             @QueryParam(value = "dtEnd") String dtEnd
     ) {
         HttpSession hs = servletRequest.getSession();
-
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
@@ -328,4 +327,26 @@ public class CaisseRessource {
         JSONObject json = caisseService.mouvementCaisses(caisseParams);
         return Response.ok().entity(json.toString()).build();
     }
+
+    @GET
+    @Path("ca/ug")
+    public Response ugs(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
+    ) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+        JSONObject json = caisseService.venteUg(dtSt, dtEn, null);
+        return Response.ok().entity(json.toString()).build();
+    }
+
 }

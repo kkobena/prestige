@@ -8,7 +8,6 @@ package rest;
 import commonTasks.dto.ArticleDTO;
 import dal.TUser;
 import enumeration.MargeEnum;
-import enumeration.Peremption;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -36,7 +35,6 @@ import toolkits.parameters.commonparameter;
 @Produces("application/json")
 @Consumes("application/json")
 public class FicheArticleRessource {
-
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
@@ -47,12 +45,13 @@ public class FicheArticleRessource {
     @GET
     @Path("perimes")
     public Response produitPerimes(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "filtre") Peremption filtre,
+          @QueryParam(value = "nbreMois") int nbreMois,
             @QueryParam(value = "codeFamile") String codeFamile,
             @QueryParam(value = "query") String query,
             @QueryParam(value = "codeRayon") String codeRayon,
-            @QueryParam(value = "codeGrossiste") String codeGrossiste
+            @QueryParam(value = "codeGrossiste") String codeGrossiste,
+             @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
@@ -60,10 +59,10 @@ public class FicheArticleRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-        if (filtre == null) {
+      /*  if (filtre == null) {
             filtre = Peremption.PERIME;
-        }
-        JSONObject jsono = ficheArticleService.produitPerimes(query, dtStart, filtre, tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
+        }*/
+        JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart,  dtEnd,  tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
         return Response.ok().entity(jsono.toString()).build();
     }
 

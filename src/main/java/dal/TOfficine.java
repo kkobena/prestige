@@ -48,14 +48,11 @@ public class TOfficine implements Serializable {
     @Basic(optional = false)
     @Column(name = "lg_OFFICINE_ID", nullable = false, length = 40)
     private String lgOFFICINEID;
-    @Lob
-    @Column(name = "str_NOM_ABREGE", length = 65535)
+    @Column(name = "str_NOM_ABREGE")
     private String strNOMABREGE;
-    @Lob
-    @Column(name = "str_NOM_COMPLET", length = 65535)
+    @Column(name = "str_NOM_COMPLET")
     private String strNOMCOMPLET;
-    @Lob
-    @Column(name = "str_ADRESSSE_POSTALE", length = 65535)
+    @Column(name = "str_ADRESSSE_POSTALE")
     private String strADRESSSEPOSTALE;
     @Column(name = "lg_MEDECIN_ID", length = 50)
     private String lgMEDECINID;
@@ -76,31 +73,31 @@ public class TOfficine implements Serializable {
     @Column(name = "str_PHONE", length = 100)
     private String strPHONE;
     @Lob
-    @Column(name = "str_COMMENTAIRE1", length = 65535)
+    @Column(name = "str_COMMENTAIRE1")
     private String strCOMMENTAIRE1;
     @Lob
-    @Column(name = "str_COMMENTAIRE2", length = 65535)
+    @Column(name = "str_COMMENTAIRE2")
     private String strCOMMENTAIRE2;
-    @Lob
-    @Column(name = "str_ENTETE", length = 65535)
+  
+    @Column(name = "str_ENTETE")
     private String strENTETE;
-    @Lob
-    @Column(name = "str_COMPTE_CONTRIBUABLE", length = 65535)
+   
+    @Column(name = "str_COMPTE_CONTRIBUABLE")
     private String strCOMPTECONTRIBUABLE;
-    @Lob
-    @Column(name = "str_REGISTRE_COMMERCE", length = 65535)
+   
+    @Column(name = "str_REGISTRE_COMMERCE")
     private String strREGISTRECOMMERCE;
-    @Lob
-    @Column(name = "str_REGISTRE_IMPOSITION", length = 65535)
+   
+    @Column(name = "str_REGISTRE_IMPOSITION")
     private String strREGISTREIMPOSITION;
-    @Lob
-    @Column(name = "str_CENTRE_IMPOSITION", length = 65535)
+  
+    @Column(name = "str_CENTRE_IMPOSITION")
     private String strCENTREIMPOSITION;
-    @Lob
-    @Column(name = "str_NUM_COMPTABLE", length = 65535)
+   
+    @Column(name = "str_NUM_COMPTABLE")
     private String strNUMCOMPTABLE;
-    @Lob
-    @Column(name = "str_COMMENTAIREOFFICINE", length = 65535)
+   
+    @Column(name = "str_COMMENTAIREOFFICINE")
     private String strCOMMENTAIREOFFICINE;
     @Column(name = "str_COMPTE_BANCAIRE", length = 100)
     private String strCOMPTEBANCAIRE;
@@ -310,8 +307,10 @@ public class TOfficine implements Serializable {
 
     @Override
     public String toString() {
-        return "dal.TOfficine[ lgOFFICINEID=" + lgOFFICINEID + " ]";
+        return "TOfficine{" + "strAUTRESPHONES=" + strAUTRESPHONES + ", lgOFFICINEID=" + lgOFFICINEID + ", strNOMABREGE=" + strNOMABREGE + ", strNOMCOMPLET=" + strNOMCOMPLET + ", strADRESSSEPOSTALE=" + strADRESSSEPOSTALE + ", lgMEDECINID=" + lgMEDECINID + ", lgVILLEID=" + lgVILLEID + ", dtCREATED=" + dtCREATED + ", dtUPDATED=" + dtUPDATED + ", strSTATUT=" + strSTATUT + ", strFIRSTNAME=" + strFIRSTNAME + ", strLASTNAME=" + strLASTNAME + ", strPHONE=" + strPHONE + ", strCOMMENTAIRE1=" + strCOMMENTAIRE1 + ", strCOMMENTAIRE2=" + strCOMMENTAIRE2 + ", strENTETE=" + strENTETE + ", strCOMPTECONTRIBUABLE=" + strCOMPTECONTRIBUABLE + ", strREGISTRECOMMERCE=" + strREGISTRECOMMERCE + ", strREGISTREIMPOSITION=" + strREGISTREIMPOSITION + ", strCENTREIMPOSITION=" + strCENTREIMPOSITION + ", strNUMCOMPTABLE=" + strNUMCOMPTABLE + ", strCOMMENTAIREOFFICINE=" + strCOMMENTAIREOFFICINE + ", strCOMPTEBANCAIRE=" + strCOMPTEBANCAIRE + '}';
     }
+
+  
 
     public String getStrAUTRESPHONES() {
         return strAUTRESPHONES;

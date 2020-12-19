@@ -289,16 +289,12 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                     hidden: true,
                                     dataIndex: 'lg_FAMILLE_ID'
                                 },
-                                {
-                                    dataIndex: 'prixDiff',
+                               {
+                                    xtype: 'rownumberer',
                                     text: '#',
-                                    width: 60, 
-                                    renderer: function (v, m, r) {
-                                        if (v) {
-                                            m.style = 'background-color:#d9534f;';
-                                        }
-                                        return '';
-                                    }
+                                    hidden: false,
+                                    width: 40,
+                                    sortable: true
                                 },
                                 {
                                     text: 'CIP',

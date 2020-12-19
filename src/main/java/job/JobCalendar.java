@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
-import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.persistence.EntityManager;
@@ -44,19 +43,18 @@ public class JobCalendar {
         return em;
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         exec();
-//        removeFacture();
+        removeFacture();
 //        removeSuggestionO();
 //        updateOrderDetailPrices();
     }
 
-//    @Schedule(dayOfMonth = "*", persistent = false)
+//    @Schedule(hour = "12", dayOfMonth = "*", persistent = false)
     public void execute() throws InterruptedException {
         exec();
         removeFacture();
-       
 
     }
 
@@ -217,11 +215,11 @@ public class JobCalendar {
         listDonPriceIsZero().forEach(e -> {
             TFamille famille = e.getLgFAMILLEID();
             e.setIntPAF(e.getIntPAF().compareTo(0) == 0 ? famille.getIntPAF() : e.getIntPAF());
-             e.setIntPRICE(e.getIntPRICE().compareTo(0) == 0 ? famille.getIntPRICE() : e.getIntPRICE());
-             e.setDtUPDATED(new Date());
-             getEm().merge(e);
+            e.setIntPRICE(e.getIntPRICE().compareTo(0) == 0 ? famille.getIntPRICE() : e.getIntPRICE());
+            e.setDtUPDATED(new Date());
+            getEm().merge(e);
         });
-        
+
     }
-    
+
 }

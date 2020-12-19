@@ -32,11 +32,10 @@ import toolkits.parameters.commonparameter;
         maxRequestSize = 41943040L
 )
 public class ImportationVenteCtr extends HttpServlet {
-    
+
     @EJB
     ImportationVente importationVente;
 
-    
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -44,13 +43,15 @@ public class ImportationVenteCtr extends HttpServlet {
         TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
         try (PrintWriter out = response.getWriter()) {
             String option = request.getParameter("option");
-           
+
             if (option.contains("import")) {
-                 Part part = request.getPart("fichier");
+                Part part = request.getPart("fichier");
                 JSONObject json = importationVente.importListVenteFromJsonFile(part.getInputStream(), OTUser);
                 out.print(json.toString());
-            } else {
-                
+            } else if (option.contains("asstock")) {
+                Part part = request.getPart("fichier");
+                JSONObject json = importationVente.importVenteAsStockFromJsonFile(part.getInputStream(), OTUser);
+                out.print(json.toString());
             }
         }
     }

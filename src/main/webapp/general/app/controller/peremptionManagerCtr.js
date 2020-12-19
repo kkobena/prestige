@@ -21,8 +21,8 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
         }
 
         , {
-            ref: 'dtStart',
-            selector: 'peremptionquery #dtStart'
+            ref: 'nbreMois',
+            selector: 'peremptionquery #nbreMois'
         },
         {ref: 'rechercherButton',
             selector: 'peremptionquery #rechercher'
@@ -31,10 +31,13 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
         {
             ref: 'rayons',
             selector: 'peremptionquery #rayons'
+        }, {
+            ref: 'dtEnd',
+            selector: 'peremptionquery #dtEnd'
         },
         {
-            ref: 'filtre',
-            selector: 'peremptionquery #filtre'
+            ref: 'dtStart',
+            selector: 'peremptionquery #dtStart'
         },
 
         {
@@ -107,13 +110,20 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
         }
     },
     onPdfClick: function () {
-        var me = this;
-        var dtStart = me.getDtStart().getSubmitValue();
-        var codeRayon = me.getRayons().getValue();
-        var codeGrossiste = me.getGrossiste().getValue();
-        var codeFamile = me.getCodeFamile().getValue();
-        var filtre = me.getFiltre().getValue();
-        var query = me.getQuery().getValue();
+        let me = this;
+        let nbreMois = me.getNbreMois().getValue();
+        let codeRayon = me.getRayons().getValue();
+        let codeGrossiste = me.getGrossiste().getValue();
+        let codeFamile = me.getCodeFamile().getValue();
+        let query = me.getQuery().getValue();
+        let dtStart = me.getDtStart().getSubmitValue();
+        let dtEnd = me.getDtEnd().getSubmitValue();
+        if (dtStart == null) {
+            dtStart = '';
+        }
+        if (dtEnd == null) {
+            dtEnd = '';
+        }
         if (codeFamile == null) {
             codeFamile = '';
         }
@@ -123,11 +133,9 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
         if (codeGrossiste == null) {
             codeGrossiste = '';
         }
-        if (filtre == null) {
-            filtre = '';
-        }
-        var linkUrl = '../BalancePdfServlet?mode=PERIMES&dtStart=' + dtStart + '&query=' + query
-                + '&codeGrossiste=' + codeGrossiste + '&codeRayon=' + codeRayon + '&codeFamile=' + codeFamile + "&filtre=" + filtre;
+        var linkUrl = '../BalancePdfServlet?mode=PERIMES&nbre=' + nbreMois + '&query=' + query
+                + '&codeGrossiste=' + codeGrossiste + '&codeRayon=' + codeRayon +
+                '&codeFamile=' + codeFamile + '&dtEnd=' + dtEnd + '&dtStart=' + dtStart;
         window.open(linkUrl);
     },
 
@@ -135,26 +143,29 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
         var me = this;
         var myProxy = me.getPeremptionGrid().getStore().getProxy();
         myProxy.params = {
-            dtStart: null,
-            filtre: "PERIME",
+            nbreMois: -1,
             codeFamile: null,
             codeRayon: null,
             codeGrossiste: null,
-            query: null
+            query: null,
+            dtEnd: null,
+            dtStart: null
 
         };
-        var dtStart = me.getDtStart().getSubmitValue();
-        var codeRayon = me.getRayons().getValue();
-        var codeGrossiste = me.getGrossiste().getValue();
-        var codeFamile = me.getCodeFamile().getValue();
-        var filtre = me.getFiltre().getValue();
-        var query = me.getQuery().getValue();
+        let nbreMois = me.getNbreMois().getValue();
+        let codeRayon = me.getRayons().getValue();
+        let codeGrossiste = me.getGrossiste().getValue();
+        let codeFamile = me.getCodeFamile().getValue();
+        let query = me.getQuery().getValue();
+        let dtStart = me.getDtStart().getSubmitValue();
+        let dtEnd = me.getDtEnd().getSubmitValue();
         myProxy.setExtraParam('codeRayon', codeRayon);
         myProxy.setExtraParam('codeFamile', codeFamile);
         myProxy.setExtraParam('codeGrossiste', codeGrossiste);
         myProxy.setExtraParam('query', query);
-        myProxy.setExtraParam('filtre', filtre);
+        myProxy.setExtraParam('nbreMois', nbreMois);
         myProxy.setExtraParam('dtStart', dtStart);
+        myProxy.setExtraParam('dtEnd', dtEnd);
     },
     doInitStore: function () {
         var me = this;
@@ -163,20 +174,22 @@ Ext.define('testextjs.controller.peremptionManagerCtr', {
     },
     doSearch: function () {
         var me = this;
-        var dtStart = me.getDtStart().getSubmitValue();
+        var nbreMois = me.getNbreMois().getValue();
         var codeRayon = me.getRayons().getValue();
         var codeGrossiste = me.getGrossiste().getValue();
         var codeFamile = me.getCodeFamile().getValue();
-        var filtre = me.getFiltre().getValue();
         var query = me.getQuery().getValue();
+        let dtStart = me.getDtStart().getSubmitValue();
+        let dtEnd = me.getDtEnd().getSubmitValue();
         me.getPeremptionGrid().getStore().load({
             params: {
-                dtStart: dtStart,
-                filtre: filtre,
+                nbreMois: nbreMois,
                 codeFamile: codeFamile,
                 codeRayon: codeRayon,
                 codeGrossiste: codeGrossiste,
-                query: query
+                query: query,
+                dtStart: dtStart,
+                dtEnd: dtEnd
 
             }
         });

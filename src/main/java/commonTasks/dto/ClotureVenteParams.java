@@ -24,8 +24,17 @@ public class ClotureVenteParams implements Serializable {
     private String venteId;
     private boolean sansBon;
     private String typeVenteId, natureVenteId;
-    private TiersPayantParams compteTp,compteTpNouveau;
+    private TiersPayantParams compteTp, compteTpNouveau;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
+    private MontantAPaye data;
+
+    public MontantAPaye getData() {
+        return data;
+    }
+
+    public void setData(MontantAPaye data) {
+        this.data = data;
+    }
 
     public TUser getUserId() {
         return userId;
@@ -50,8 +59,6 @@ public class ClotureVenteParams implements Serializable {
     public List<TiersPayantParams> getTierspayants() {
         return tierspayants;
     }
-
-    
 
     public void setTierspayants(List<TiersPayantParams> tierspayants) {
         this.tierspayants = tierspayants;

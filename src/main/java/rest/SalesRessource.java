@@ -211,7 +211,6 @@ public class SalesRessource {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
         JSONObject json = salesService.shownetpayVno(params);
-
         return Response.ok().entity(json.toString()).build();
     }
 

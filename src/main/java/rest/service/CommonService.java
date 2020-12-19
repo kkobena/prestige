@@ -95,6 +95,8 @@ public interface CommonService {
     List<ComboDTO> laboratoiresProduits(String query);
 
     boolean afficheurActif();
-    
+
     JSONObject findDateMiseAJour() throws JSONException;
+
+    boolean checkUg();
 }

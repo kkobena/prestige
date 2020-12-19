@@ -32,12 +32,6 @@ public class FacturePdfServlet extends HttpServlet {
     private enum Action {
         DEVIS, LISTE_DIFFERES, DIFFERE, LOG, VENTE_ANNULEES,FACTURE_PROVISOIRES,ALL_FACTURE_PROVISOIRES
     }
-//    private enum ModelFacture{
-//        _0176("lab_facture_0176"),
-//         _0176("lab_facture_0176"),
-//          _0176("lab_facture_0176"),
-//           _0176("lab_facture_0176"),
-//    }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

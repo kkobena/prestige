@@ -448,8 +448,8 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     labelWidth: 100,
                                     itemId: 'stockField',
                                     fieldStyle: "color:blue;",
-                                    flex: 0.7,
-                                    value: 0
+                                    flex: 0.7
+                                  
                                 },
                                 {
                                     xtype: 'displayfield',

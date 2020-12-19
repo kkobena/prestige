@@ -26,5 +26,7 @@ public enum Statut {
     ENTREESTOCT,
     STOCK,
     SENT, 
-    NOT_SEND;
+    NOT_SEND,
+    LOCK
+    ;
 }

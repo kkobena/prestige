@@ -5,21 +5,21 @@
  */
 package rest;
 
+import commonTasks.dto.HistoriqueImportationDTO;
 import commonTasks.dto.SalesStatsParams;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -27,6 +27,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import rest.service.impl.ImportationVente;
 import toolkits.parameters.commonparameter;
 
@@ -35,7 +37,7 @@ import toolkits.parameters.commonparameter;
  * @author koben
  */
 @Path("v1/vente-depot")
-@Produces({"application/json","application/octet-stream"})
+@Produces({"application/json", "application/octet-stream"})
 @Consumes("application/json")
 public class VentesDepotRessource {
 
@@ -75,10 +77,8 @@ public class VentesDepotRessource {
         StreamingOutput output = (OutputStream out) -> {
             try {
                 JSONArray json = importationVente.exportToJson(body);
-                
-//                Writer writer =  new BufferedWriter(new OutputStreamWriter(out,"UTF-8"));//new OutputStreamWriter(out, "UTF-8");
                 out.write(json.toString().getBytes());
-                 out.flush();
+                out.flush();
 
             } catch (IOException ex) {
                 throw new WebApplicationException("File Not Found !!");
@@ -91,6 +91,33 @@ public class VentesDepotRessource {
                 .build();
 
     }
+
+    @GET
+    @Path("as/order/{id}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response exportVenteToJson(
+            @PathParam("id") String id
+    ) {
+
+        StreamingOutput output = (OutputStream out) -> {
+            try {
+                String json = importationVente.fromPreenregistrementItems(id);
+                out.write(json.getBytes());
+                out.flush();
+
+            } catch (IOException ex) {
+                throw new WebApplicationException("File Not Found !!");
+            }
+        };
+        String filename = "vente_depot_stock_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".json";
+        return Response
+                .ok(output, MediaType.APPLICATION_OCTET_STREAM)
+                .header("content-disposition", "attachment; filename = " + filename)
+                .build();
+
+    }
+
+  
 
 //    @GET
 //    @Path("import-ventes/json")

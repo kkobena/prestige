@@ -81,7 +81,6 @@ import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.ProduitService;
-import toolkits.parameters.commonparameter;
 import util.DateConverter;
 
 /**
@@ -1140,7 +1139,6 @@ public class ProduitServiceImpl implements ProduitService {
                         if (BEGIN != null && !"".equals(BEGIN)) {
                             predicates.add(" g.str_CODE >= :debut ");
                             parasm.put("debut", BEGIN);
-
                         }
                         if (END != null && !"".equals(END)) {
                             predicates.add(" g.str_CODE <= :fin ");
@@ -1160,7 +1158,6 @@ public class ProduitServiceImpl implements ProduitService {
                     query.append(",g.str_LIBELLEE AS LIBELLE,g.str_CODE AS CODE FROM t_stock_snapshot o, t_famille f, t_zone_geographique g ");
                     predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
                     predicates.add(" f.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
-
                     if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID) && !"".equals(lgZONEGEOID)) {
                         predicates.add(" f.lg_ZONE_GEO_ID = :idParam ");
                         parasm.put("idParam", lgZONEGEOID);
@@ -1183,7 +1180,6 @@ public class ProduitServiceImpl implements ProduitService {
                     }
                     query.append(" GROUP BY g.lg_ZONE_GEO_ID ORDER BY g.str_CODE ASC ");
                     break;
-
                 case 1:
                     query.append(",g.str_LIBELLE AS LIBELLE,g.str_CODE_FAMILLE AS CODE FROM t_stock_snapshot o, t_famille f, t_famillearticle g");
                     predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
@@ -1250,28 +1246,22 @@ public class ProduitServiceImpl implements ProduitService {
                 int _pmp = Double.valueOf(_item[4] + "").intValue();
                 pmp.add(_pmp);
                 dTO.setMontantPmd(_pmp);
-
                 if (mode == 0) {
-
                     dTO.setLibelle("Tva " + _item[5]);
                 } else {
                     dTO.setLibelle("" + _item[5]);
                     dTO.setCode("" + _item[6]);
                 }
-
                 os.add(dTO);
             });
-
             valorisation.setDatas(os);
             valorisation.setMontantFacture(_montantFacture.intValue());
             valorisation.setMontantTarif(_montantTarif.intValue());
             Integer montantPu = _montantPu.intValue();
-            int qty = _qty.intValue();
             valorisation.setMontantPu(montantPu);
             valorisation.setMontantPmd(pmp.intValue());
             ValorisationDTO tvas = valorisationTva(mode, date, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, emplacementId);
             valorisation.setTvas(tvas);
-
             return valorisation;
         } catch (Exception e) {
             e.printStackTrace(System.err);
@@ -1434,7 +1424,6 @@ public class ProduitServiceImpl implements ProduitService {
                         if (BEGIN != null && !"".equals(BEGIN)) {
                             predicates.add(" g.str_CODE >= :debut ");
                             parasm.put("debut", BEGIN);
-
                         }
                         if (END != null && !"".equals(END)) {
                             predicates.add(" g.str_CODE <= :fin ");
@@ -1454,7 +1443,6 @@ public class ProduitServiceImpl implements ProduitService {
                     query.append(",g.str_LIBELLEE AS LIBELLE,g.str_CODE AS CODE FROM t_famille o, t_famille_stock s, t_zone_geographique g ");
                     predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
                     predicates.add(" o.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
-
                     if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID) && !"".equals(lgZONEGEOID)) {
                         predicates.add(" o.lg_ZONE_GEO_ID = :idParam ");
                         parasm.put("idParam", lgZONEGEOID);
@@ -1546,28 +1534,22 @@ public class ProduitServiceImpl implements ProduitService {
                 _qty.add(qty);
                 pmp.add(_pmp);
                 dTO.setMontantPmd(_pmp);
-
                 if (mode == 0) {
-
                     dTO.setLibelle("Tva " + _item[5]);
                 } else {
                     dTO.setLibelle("" + _item[5]);
                     dTO.setCode("" + _item[6]);
                 }
-
                 os.add(dTO);
             });
-
             valorisation.setDatas(os);
             valorisation.setMontantFacture(_montantFacture.intValue());
             valorisation.setMontantTarif(_montantTarif.intValue());
             Integer montantPu = _montantPu.intValue();
             valorisation.setMontantPu(montantPu);
             valorisation.setMontantPmd(pmp.intValue());
-
             ValorisationDTO tvas = valorisationCurrentStockTva(mode, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, emplacementId);
             valorisation.setTvas(tvas);
-
             return valorisation;
         } catch (Exception e) {
             e.printStackTrace(System.err);

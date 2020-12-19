@@ -24,8 +24,7 @@ END LOOP bl_loop;
 
 END @@ 
 DELIMITER ; 
-CALL proc_updateaccount_mvt('2020-01-01','2025-01-01');
-
 
 INSERT IGNORE INTO t_parameters (`str_KEY`, `str_VALUE`, `str_DESCRIPTION`, `str_TYPE`, `str_STATUT`, `str_IS_EN_KRYPTED`, `str_SECTION_KEY`, `dt_CREATED`, `dt_UPDATED`) 
 	VALUES ('KEY_NOMBRE_TICKETS_VNO', '0', 'NOMBRE DE TICKETS VENTE A CREDIT', 'CUSTOMER', 'enable', NULL, NULL, NULL, NULL);
+CALL proc_updateaccount_mvt('2020-01-01','2025-01-01');

@@ -89,8 +89,16 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
             selector: 'balancesalecahs #marge'
         }
     ],
+    config: {
+        checkUg: false
+
+    },
+
     init: function (application) {
         this.control({
+            'balancesalecahs': {
+                render: this.onReady
+            },
             'balancesalecahs #balanceGrid pagingtoolbar': {
                 beforechange: this.doBeforechange
             },
@@ -108,12 +116,11 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
         });
     },
     onPdfClick: function () {
-        var me = this;
-
-        var dtStart = me.getDtStart().getSubmitValue();
-        var dtEnd = me.getDtEnd().getSubmitValue();
-
-        var linkUrl = '../BalancePdfServlet?mode=BALANCE&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
+        let me = this;
+        let dtStart = me.getDtStart().getSubmitValue();
+        let dtEnd = me.getDtEnd().getSubmitValue();
+        let checkug = me.getCheckUg();
+        let linkUrl = '../BalancePdfServlet?mode=BALANCE&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug;
         window.open(linkUrl);
     },
     doMetachange: function (store, meta) {
@@ -129,6 +136,9 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
             dtStart: null
 
         };
+        if (me.getCheckUg()) {
+            myProxy.url = '../api/v2/caisse/balancesalecash';
+        }
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
 
@@ -142,7 +152,11 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
 
     doSearch: function () {
         var me = this;
-        me.getBalanceGrid().getStore().load({
+        let store = me.getBalanceGrid().getStore();
+        if (me.getCheckUg()) {
+            store.getProxy().url = '../api/v2/caisse/balancesalecash';
+        }
+        store.load({
             params: {
                 dtStart: me.getDtStart().getSubmitValue(),
                 dtEnd: me.getDtEnd().getSubmitValue()
@@ -168,5 +182,23 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
         me.getMarge().setValue(rec.marge);
         me.getMontantMobilePayment().setValue(rec.montantMobilePayment);
 
+    },
+    oncheckUg: function () {
+        var me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/common/checkug',
+            success: function (response, options) {
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.checkUg = result.data;
+                }
+            }
+
+        });
+    },
+    onReady: function () {
+        var me = this;
+        me.oncheckUg();
     }
 });

@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @Table(name = "t_famille")
+
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "TFamille.findAll", query = "SELECT t FROM TFamille t"),
@@ -55,8 +56,7 @@ public class TFamille implements Serializable {
     @Basic(optional = false)
     @Column(name = "lg_FAMILLE_ID", nullable = false, length = 40)
     private String lgFAMILLEID;
-    @Basic(optional = false)
-    @Column(name = "lg_FAMILLE_PARENT_ID", nullable = false, length = 40)
+    @Column(name = "lg_FAMILLE_PARENT_ID", length = 40)
     private String lgFAMILLEPARENTID;
     @Column(name = "str_NAME", length = 60)
     private String strNAME;
@@ -94,10 +94,10 @@ public class TFamille implements Serializable {
     private String strSTATUT;
     @Column(name = "dt_CREATED")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date dtCREATED;
+    private Date dtCREATED=new Date();
     @Column(name = "dt_UPDATED")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date dtUPDATED;
+    private Date dtUPDATED=new Date();
     @Column(name = "int_SEUIL_MIN")
     private Integer intSEUILMIN;
     @Column(name = "int_STOCK_REAPROVISONEMENT")
@@ -292,6 +292,7 @@ public class TFamille implements Serializable {
     private GammeProduit gamme;
     @Column(name = "is_scheduled")
     private boolean scheduled = false;
+   
 
     public int getVersion() {
         return version;

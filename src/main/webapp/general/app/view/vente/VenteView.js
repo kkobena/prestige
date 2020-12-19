@@ -23,7 +23,6 @@ Ext.define('testextjs.view.vente.VenteView', {
         padding: 10
     },
     initComponent: function () {
-
         var natureventeStore = new Ext.data.Store({
             model: 'testextjs.model.caisse.Nature',
             pageSize: null,
@@ -38,8 +37,6 @@ Ext.define('testextjs.view.vente.VenteView', {
                 }
             }
         });
-
-
         var typeventeStore = new Ext.data.Store({
             model: 'testextjs.model.caisse.TypeVente',
             pageSize: null,
@@ -159,9 +156,6 @@ Ext.define('testextjs.view.vente.VenteView', {
                      ]*/
 
                 }
-
-
-
 
             ]
 

@@ -164,18 +164,11 @@ public class SalesServiceImpl implements SalesService {
         ctx.createProducer().send(clientjms, venteId);
     }
     
-    public void sendSms(String msg) {
-        if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
-//            ctx.createProducer().send(amqsms, msg);
-        }
-        
-    }
-    
     public void addTransaction(TClient client, TUser ooTUser, TUser caisse, String pkey,
             Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked,
             CategoryTransaction categoryTransaction, TypeTransaction typeTransaction,
             TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg,
-            Integer montantPaye, Integer montantTva, Integer marge, String reference, int montantAcc, LocalDateTime dateTime, LocalDate localDate) throws Exception {
+            Integer montantPaye, Integer montantTva, Integer marge, String reference, int montantAcc, LocalDateTime dateTime, LocalDate localDate, MontantAPaye data) throws Exception {
         MvtTransaction _new = new MvtTransaction();
         int compare = montantNet.compareTo(montantVerse);
         Integer montantPaid, montantRestant = 0;
@@ -210,6 +203,12 @@ public class SalesServiceImpl implements SalesService {
         _new.setChecked(checked);
         _new.setMontantTva(montantTva);
         _new.setMontantAcc(montantAcc);
+        if (data != null) {
+            _new.setMontantnetug(data.getMontantNetUg());
+            _new.setMontantttcug(data.getMontantTtcUg());
+            _new.setMargeug(data.getMargeUg());
+            _new.setMontantTvaUg(data.getMontantTvaUg());
+        }
         if (client != null) {
             _new.setOrganisme(client.getLgCLIENTID());
         }
@@ -344,6 +343,11 @@ public class SalesServiceImpl implements SalesService {
         _new.setCategoryTransaction(CategoryTransaction.DEBIT);
         _new.setTypeTransaction(old.getTypeTransaction());
         _new.setOrganisme(old.getOrganisme());
+        _new.setMarge((-1) * old.getMarge());
+        _new.setMontantttcug((-1) * old.getMontantttcug());
+        _new.setMontantnetug((-1) * old.getMontantnetug());
+        _new.setMargeug((-1) * old.getMargeug());
+        _new.setMontantTvaUg((-1) * old.getMontantTvaUg());
         _new.setChecked(false);
         emg.persist(_new);
     }
@@ -502,6 +506,10 @@ public class SalesServiceImpl implements SalesService {
             _new.setCategoryTransaction(CategoryTransaction.DEBIT);
             _new.setMontantTva((-1) * cashTransaction.getMontantTva());
             _new.setMarge((-1) * cashTransaction.getMarge());
+            _new.setMontantttcug((-1) * cashTransaction.getMontantttcug());
+            _new.setMontantnetug((-1) * cashTransaction.getMontantnetug());
+            _new.setMargeug((-1) * cashTransaction.getMargeug());
+            _new.setMontantTvaUg((-1) * cashTransaction.getMontantTvaUg());
             _new.setChecked(Boolean.TRUE);
             _new.setReference(_newP.getStrREF());
             _new.setOrganisme(cashTransaction.getOrganisme());
@@ -542,7 +550,6 @@ public class SalesServiceImpl implements SalesService {
             Optional<TRecettes> oprectte = findRecette(tp.getLgPREENREGISTREMENTID(), emg);
             List<TPreenregistrementDetail> preenregistrementDetails = getTPreenregistrementDetail(tp, emg);
             String idVente = tp.getLgPREENREGISTREMENTID();
-            
             TPreenregistrement _new = createPreventeCopy(ooTUser, tp, emg);
             ref = _new.getLgPREENREGISTREMENTID();
             LongAdder montantRestant = new LongAdder();
@@ -610,9 +617,10 @@ public class SalesServiceImpl implements SalesService {
                 updateNbreVenteApresAnnulation(OTFamille, ooTUser, _newItem.getIntQUANTITY(), emg);
                 TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), emplacement, emg);
                 int initStock = familleStock.getIntNUMBERAVAILABLE();
+                familleStock.setIntUG(familleStock.getIntUG() - _newItem.getIntUG());
                 mouvementProduitService.saveMvtProduit(_newItem.getIntPRICEUNITAIR(), _newItem.getLgPREENREGISTREMENTDETAILID(),
                         typemvtproduit, OTFamille, ooTUser, emplacement,
-                        _newItem.getIntQUANTITY(), initStock, initStock - _newItem.getIntQUANTITY(), emg, _newItem.getValeurTva(), checked);
+                        _newItem.getIntQUANTITY(), initStock, initStock - _newItem.getIntQUANTITY(), emg, _newItem.getValeurTva(), checked, e.getIntUG());
                 
                 updateReelStockApresAnnulation(OTFamille, familleStock, ooTUser, _newItem.getIntQUANTITY(), emg);
                 if (!tp.getPkBrand().isEmpty()) {
@@ -680,6 +688,7 @@ public class SalesServiceImpl implements SalesService {
         _new.setIntAVOIRSERVED((-1) * tp.getIntQUANTITYSERVED());
         _new.setBISAVOIR(tp.getBISAVOIR());
         _new.setPrixAchat(tp.getPrixAchat());
+        _new.setMontantTvaUg((-1) * tp.getMontantTvaUg());
         emg.persist(_new);
         return _new;
     }
@@ -724,8 +733,6 @@ public class SalesServiceImpl implements SalesService {
         _new.setLgPREENGISTREMENTANNULEID(tp.getLgPREENREGISTREMENTID());
         _new.setMedecin(tp.getMedecin());
         _new.setStrREF(buildRef(LocalDate.now(), ooTUser.getLgEMPLACEMENTID()).getReference());
-//        _new.setStrREF(buildRef(LocalDate.now(), Parameter.KEY_LAST_ORDER_NUMBER_VENTE, emg).getString("code"));
-
         tp.setBISCANCEL(true);
         tp.setDtANNULER(new Date());
         tp.setLgUSERID(ooTUser);
@@ -735,6 +742,10 @@ public class SalesServiceImpl implements SalesService {
         if (!dateVente.isEqual(LocalDate.now())) {
             _new.setChecked(Boolean.TRUE);
         }
+        _new.setMargeug((-1) * tp.getMargeug());
+        _new.setMontantnetug((-1) * tp.getMontantnetug());
+        _new.setMontantttcug((-1) * tp.getMontantttcug());
+        _new.setMontantTvaUg((-1) * tp.getMontantTvaUg());
         emg.merge(tp);
         emg.persist(_new);
         return _new;
@@ -1072,13 +1083,14 @@ public class SalesServiceImpl implements SalesService {
     public TFamilleStock findStock(String OTFamille, TEmplacement emplacement, EntityManager emg) {
         
         try {
-            Query query = emg.createQuery("SELECT t FROM TFamilleStock t WHERE  t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2");
+            TypedQuery<TFamilleStock> query = emg.createQuery("SELECT t FROM TFamilleStock t WHERE  t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2", TFamilleStock.class);
             query.
                     setParameter(1, OTFamille);
             query.
                     setParameter(2, emplacement.getLgEMPLACEMENTID());
-            TFamilleStock familleStock = (TFamilleStock) query.getSingleResult();
-            LOG.log(Level.INFO, "familleStock {0} ", new Object[]{familleStock});
+            query.setMaxResults(1);
+            TFamilleStock familleStock = query.getSingleResult();
+            
             return familleStock;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -1311,7 +1323,6 @@ public class SalesServiceImpl implements SalesService {
             return null;
         }
         return emg.find(TRemise.class, id);
-//        return new TRemise(id);
     }
     
     private TTypeVente typeVenteFromId(String id, EntityManager emg) {
@@ -1319,7 +1330,6 @@ public class SalesServiceImpl implements SalesService {
             return null;
         }
         return emg.find(TTypeVente.class, id);
-//        return new TTypeVente(id);
     }
     
     private TNatureVente natureVenteFromId(String id, EntityManager emg) {
@@ -1327,7 +1337,6 @@ public class SalesServiceImpl implements SalesService {
             return null;
         }
         return emg.find(TNatureVente.class, id);
-//        return new TNatureVente(id);
     }
     
     public TPreenregistrementDetail addPreenregistrementItem(TPreenregistrement tp, TFamille OTFamille, int qte, int qteServie, int qteUg, Integer pu, EntityManager emg) {
@@ -1386,7 +1395,6 @@ public class SalesServiceImpl implements SalesService {
             detail.setMaxResults(1);
             return Optional.ofNullable(detail.getSingleResult());
         } catch (Exception e) {
-//            LOG.log(Level.SEVERE, null, e);
             return Optional.empty();
         }
     }
@@ -1422,7 +1430,6 @@ public class SalesServiceImpl implements SalesService {
                 tpd.setIntAVOIR(tpd.getIntQUANTITY() - tpd.getIntQUANTITYSERVED());
                 tpd.setDtUPDATED(new Date());
                 tpd.setBISAVOIR(tpd.getIntAVOIR() > 0);
-                
                 tp.setIntPRICE(tp.getIntPRICE() + tpd.getIntPRICE() - int_PRICE_OLD);
                 tp.setMontantTva(tp.getMontantTva() + tpd.getMontantTva() - montantTva);
                 if (tpd.getBoolACCOUNT()) {
@@ -1477,7 +1484,6 @@ public class SalesServiceImpl implements SalesService {
                     int checkPersmission = Integer.valueOf(v.getStrVALUE());
                     if (checkPersmission == 1) {
                         if (!checkpricevente(famille, params.getItemPu(), emg)) {
-//                            emg.getTransaction().rollback();
                             return json.put("success", false).put("decondition", false).put("msg", "Impossible. Vous n'ête pas autorisé à modifier du prix de vente");
                         }
                     }
@@ -1699,25 +1705,27 @@ public class SalesServiceImpl implements SalesService {
         return json;
     }
     
-    private MontantAPaye sumVenteSansRemise(ArrayList<TPreenregistrementDetail> list) {
-        LongAdder montant = new LongAdder();
-        LongAdder montantMarge = new LongAdder();
-        LongAdder montantTva = new LongAdder();
-        LongAdder montantAccount = new LongAdder();
-        list.stream().forEach(x -> {
-            montant.add(x.getIntPRICE());
-            if (x.getLgFAMILLEID().getBoolACCOUNT()) {
-                montantAccount.add(x.getIntPRICE());
-                montantTva.add(x.getMontantTva());
-                montantMarge.add((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * x.getLgFAMILLEID().getIntPAF()));
+    private int qtyUg(int stockUg, int qtyVendue) {
+        int ugVendue = 0;
+        try {
+            if (qtyVendue <= stockUg) {
+                ugVendue = qtyVendue;
+            } else {
+                ugVendue = stockUg;
             }
             
-        });
-        Integer amount = montant.intValue();
-        return new MontantAPaye(amount,
-                amount,
-                0, 0,
-                montantMarge.intValue(), montantTva.intValue()).montantAccount(montantAccount.intValue());
+        } catch (Exception e) {
+        }
+        return ugVendue;
+    }
+    
+    private int margeUg(int qteUg, int qtyVendue, int montantMage) {
+        int margeUg = 0;
+        try {
+            margeUg = (qteUg * montantMage) / qtyVendue;
+        } catch (Exception e) {
+        }
+        return margeUg;
     }
     
     private boolean checkAvoir(ArrayList<TPreenregistrementDetail> list) {
@@ -2005,7 +2013,6 @@ public class SalesServiceImpl implements SalesService {
             tp.setIntPRICEOTHER(tp.getIntPRICE());
             if (!tp.getCopy()) {
                 tp.setDtUPDATED(new Date());
-//                tp.setStrREF(buildRef(LocalDate.now(), Parameter.KEY_LAST_ORDER_NUMBER_VENTE, emg).getString("code"));
             }
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
             java.util.function.Predicate<Optional<TParameters>> test = e -> {
@@ -2106,13 +2113,19 @@ public class SalesServiceImpl implements SalesService {
                     return json;
                 }
             }
-            
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId(), emg);
             Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Parameter.KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE, emg);
             
             Integer montant = tp.getIntPRICE(); //sumVente(lstTPreenregistrementDetail);
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
+            if (isAvoir && tp.getClient() == null) {
+                json.put("success", false);
+                json.put("msg", "Ajouter un client à la vente");
+                json.put("codeError", 0);
+                json.put("codeError", 2);
+                return json;
+            }
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
             Integer amount = montant - tp.getIntPRICEREMISE();
@@ -2142,9 +2155,9 @@ public class SalesServiceImpl implements SalesService {
             tp.setStrSTATUT(commonparameter.statut_is_Closed);
             tp.setStrSTATUTVENTE(statut);
             tp.setIntPRICEOTHER(tp.getIntPRICE());
+            updateUgData(clotureVenteParams.getData(), tp);
             if (!tp.getCopy()) {
                 tp.setDtUPDATED(new Date());
-//                tp.setStrREF(buildRef(LocalDate.now(), Parameter.KEY_LAST_ORDER_NUMBER_VENTE, emg).getString("code"));
             }
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
             java.util.function.Predicate<Optional<TParameters>> test = e -> {
@@ -2166,7 +2179,7 @@ public class SalesServiceImpl implements SalesService {
                     true, CategoryTransaction.CREDIT, TypeTransaction.VENTE_COMPTANT,
                     findById(clotureVenteParams.getTypeRegleId(), emg), typeMvtCaisse.get(),
                     emg,
-                    clotureVenteParams.getMontantPaye(), tp.getMontantTva(), clotureVenteParams.getMarge(), tp.getStrREF(), tp.getIntACCOUNT(), DateConverter.convertDateToLocalDateTime(tp.getDtUPDATED()), DateConverter.convertDateToLocalDate(tp.getDtUPDATED()));
+                    clotureVenteParams.getMontantPaye(), tp.getMontantTva(), clotureVenteParams.getMarge(), tp.getStrREF(), tp.getIntACCOUNT(), DateConverter.convertDateToLocalDateTime(tp.getDtUPDATED()), DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getData());
             
             emg.merge(tp);
             json.put("success", true)
@@ -2183,7 +2196,7 @@ public class SalesServiceImpl implements SalesService {
                 json.put("success", false).put("msg", "Erreur: Echec de validation de la vente");
                 json.put("codeError", 0);
             } catch (JSONException ex) {
-                
+                ex.printStackTrace(System.err);
             }
         }
         return json;
@@ -2343,7 +2356,7 @@ public class SalesServiceImpl implements SalesService {
                         item.setDblQUOTACONSOVENTE(item.getLgCOMPTECLIENTTIERSPAYANTID().getDblQUOTACONSOVENTE() != null ? item.getLgCOMPTECLIENTTIERSPAYANTID().getDblQUOTACONSOVENTE() + item.getIntPRICE() : 0);
                         item.setStrSTATUT(commonparameter.statut_is_Closed);
                         item.setLgUSERID(u);
-                        if (params.isPrincipal() || tierspayants.size() == 1) {
+                        if (params.isPrincipal() ||  (tierspayants.size() == 1) || OTCompteClientTiersPayant.getBISRO() || (OTCompteClientTiersPayant.getIntPRIORITY()==1)) {
                             OTPreenregistrement.setStrREFBON(params.getNumBon());
                         }
                         emg.merge(item);
@@ -2383,7 +2396,6 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         try {
             TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
-//            emg.getTransaction().begin();
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaUpdate<TPreenregistrementDetail> cq = cb.createCriteriaUpdate(TPreenregistrementDetail.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
@@ -2397,12 +2409,8 @@ public class SalesServiceImpl implements SalesService {
             preenregistrement.setDtUPDATED(new Date());
             preenregistrement.setBISAVOIR(false);
             emg.merge(preenregistrement);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             try {
                 json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
             } catch (JSONException ex) {
@@ -2419,19 +2427,16 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         try {
             TPreenregistrementCompteClientTiersPayent OPreenregistrement = emg.find(TPreenregistrementCompteClientTiersPayent.class, idCompteClientItem);
-//            emg.getTransaction().begin();
             OPreenregistrement.setDtUPDATED(new Date());
             OPreenregistrement.setStrREFBON(str_REF_BON);
             TPreenregistrement preenregistrement = OPreenregistrement.getLgPREENREGISTREMENTID();
             preenregistrement.setStrREFBON(str_REF_BON);
             emg.merge(preenregistrement);
             emg.merge(OPreenregistrement);
-//            emg.getTransaction().commit();
+            
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
+            
             try {
                 json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
             } catch (JSONException ex) {
@@ -2449,16 +2454,11 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         try {
             TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
-//            emg.getTransaction().begin();
             preenregistrement.setDtUPDATED(new Date());
             preenregistrement.setBWITHOUTBON(false);
             emg.merge(preenregistrement);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             try {
                 json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
             } catch (JSONException ex) {
@@ -2476,7 +2476,6 @@ public class SalesServiceImpl implements SalesService {
         try {
             TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, params.getVenteId());
             TCompteClientTiersPayant clientTiersPayant = emg.find(TCompteClientTiersPayant.class, params.getTierspayants().get(0).getCompteTp());
-//            emg.getTransaction().begin();
             TPreenregistrementCompteClientTiersPayent clientTiersPayent
                     = new TPreenregistrementCompteClientTiersPayent(UUID.randomUUID().toString());
             clientTiersPayent.setLgUSERID(params.getUserId());
@@ -2490,12 +2489,9 @@ public class SalesServiceImpl implements SalesService {
             clientTiersPayent.setStrSTATUT(commonparameter.statut_is_Process);
             clientTiersPayent.setStrSTATUTFACTURE("unpaid");
             emg.persist(clientTiersPayent);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
+            
             try {
                 json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
             } catch (JSONException ex) {
@@ -2513,7 +2509,6 @@ public class SalesServiceImpl implements SalesService {
         try {
             TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, venteId);
             TCompteClientTiersPayant clientTiersPayant = emg.find(TCompteClientTiersPayant.class, params.getTypeVenteId());
-//            emg.getTransaction().begin();
             TPreenregistrementCompteClientTiersPayent clientTiersPayent
                     = new TPreenregistrementCompteClientTiersPayent(UUID.randomUUID().toString());
             clientTiersPayent.setLgUSERID(preenregistrement.getLgUSERID());
@@ -2528,12 +2523,9 @@ public class SalesServiceImpl implements SalesService {
             clientTiersPayent.setStrSTATUT(commonparameter.statut_is_Process);
             clientTiersPayent.setStrSTATUTFACTURE("unpaid");
             emg.persist(clientTiersPayent);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
+            
             try {
                 json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
             } catch (JSONException ex) {
@@ -2549,16 +2541,12 @@ public class SalesServiceImpl implements SalesService {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
-//            emg.getTransaction().begin();
             TPreenregistrementCompteClientTiersPayent op = (TPreenregistrementCompteClientTiersPayent) emg.createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID = ?1 AND t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?2")
                     .setParameter(1, comptClientTpId).setParameter(2, venteId).getSingleResult();
             emg.remove(op);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
+            
             try {
                 json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
             } catch (JSONException ex) {
@@ -2623,38 +2611,41 @@ public class SalesServiceImpl implements SalesService {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
-            MontantAPaye montantAPaye;
-            TPreenregistrement p = emg.find(TPreenregistrement.class, params.getVenteId());
-            if (params.getRemiseId() == null || "".equals(params.getRemiseId())) {
-                montantAPaye = sumVenteSansRemise(items(p, emg));
-                p.setIntPRICE(montantAPaye.getMontant());
-                p.setIntACCOUNT(montantAPaye.getMontantAccount());
-                p.setIntPRICEOTHER(montantAPaye.getMontant());
-                
-                json.put("success", true).put("msg", "Opération effectuée avec success");
-                json.put("data", new JSONObject(montantAPaye));
-                
+            if (!params.isCheckUg()) {
+                MontantAPaye montantAPaye;
+                TPreenregistrement p = emg.find(TPreenregistrement.class, params.getVenteId());
+                if (params.getRemiseId() == null || "".equals(params.getRemiseId())) {
+                    montantAPaye = sumVenteSansRemise(items(p, emg));
+                    p.setIntPRICE(montantAPaye.getMontant());
+                    p.setIntACCOUNT(montantAPaye.getMontantAccount());
+                    p.setIntPRICEOTHER(montantAPaye.getMontant());
+                    json.put("success", true).put("msg", "Opération effectuée avec success");
+                    json.put("data", new JSONObject(montantAPaye));
+                    
+                } else {
+                    TRemise remise = p.getRemise();
+                    montantAPaye = getRemiseVno(p, remise, p.getIntACCOUNT());
+                    json.put("success", true).put("msg", "Opération effectuée avec success");
+                    json.put("data", new JSONObject(montantAPaye));
+                    
+                }
+                emg.merge(p);
+                afficheurMontantAPayer(montantAPaye.getMontantNet(), "NET A PAYER: ");
+                return json;
             } else {
-                TRemise remise = p.getRemise();
-                montantAPaye = getRemiseVno(p, remise, p.getIntACCOUNT());
-                
-                json.put("success", true).put("msg", "Opération effectuée avec success");
-                json.put("data", new JSONObject(montantAPaye));
-                
+                return shownetpayVnoCheckUg(params);
             }
-            emg.merge(p);
-            afficheurMontantAPayer(montantAPaye.getMontantNet(), "NET A PAYER: ");
+            
         } catch (Exception e) {
             
-            json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
+            return json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
         }
-        return json;
+        
     }
     
     @Override
     public JSONObject addDevisRemisse(SalesParams params) throws JSONException {
         JSONObject json = new JSONObject();
-        
         try {
             TRemise remise = findTRemise(params.getRemiseId(), getEm());
             TPreenregistrement preenregistrement = getEm().find(TPreenregistrement.class, params.getVenteId());
@@ -2662,8 +2653,6 @@ public class SalesServiceImpl implements SalesService {
             preenregistrement.setRemise(remise);
             MontantAPaye montantAPaye = getRemiseVno(preenregistrement, remise,
                     preenregistrement.getIntACCOUNT());
-//            getEm().merge(preenregistrement);
-
             json.put("success", true)
                     .put("msg", "Opération effectuée avec success")
                     .put("data", new JSONObject().put("montantRemise", montantAPaye.getRemise())
@@ -2680,17 +2669,12 @@ public class SalesServiceImpl implements SalesService {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
-//            emg.getTransaction().begin();
             TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, params.getVenteId());
             preenregistrement.setLgREMISEID(params.getRemiseId());
             preenregistrement.setRemise(findTRemise(params.getRemiseId(), emg));
             emg.merge(preenregistrement);
-//            emg.getTransaction().commit();
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
         }
         return json;
@@ -2760,7 +2744,6 @@ public class SalesServiceImpl implements SalesService {
             }
             
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
             return null;
         }
         
@@ -3038,12 +3021,10 @@ public class SalesServiceImpl implements SalesService {
                 return json;
             }
             CriteriaBuilder cb = emg.getCriteriaBuilder();
-            
             CriteriaQuery<TPreenregistrementDetail> cq = cb.createQuery(TPreenregistrementDetail.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> join = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             Join<TPreenregistrementDetail, TFamille> pf = root.join("lgFAMILLEID", JoinType.INNER);
-            
             Predicate p = cb.conjunction();
             if (params.getQuery() != null && !"".equals(params.getQuery())) {
                 p = cb.and(p, cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), params.getQuery() + "%"), cb.like(pf.get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(pf.get(TFamille_.intEAN13), params.getQuery() + "%")));
@@ -3054,9 +3035,7 @@ public class SalesServiceImpl implements SalesService {
             p = cb.and(p, cb.equal(join.get(TPreenregistrement_.lgPREENREGISTREMENTID), params.getVenteId()));
             cq.select(root)
                     .orderBy(cb.desc(root.get(TPreenregistrementDetail_.dtUPDATED)));
-            
             cq.where(p);
-            
             Query q = emg.createQuery(cq);
             if (!all) {
                 q.setFirstResult(params.getStart());
@@ -3079,7 +3058,6 @@ public class SalesServiceImpl implements SalesService {
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> join = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             Join<TPreenregistrementDetail, TFamille> pf = root.join("lgFAMILLEID", JoinType.INNER);
-            
             Predicate p = cb.conjunction();
             if (params.getQuery() != null && !"".equals(params.getQuery())) {
                 p = cb.and(p, cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), params.getQuery() + "%"), cb.like(pf.get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(pf.get(TFamille_.intEAN13), params.getQuery() + "%")));
@@ -3203,7 +3181,6 @@ public class SalesServiceImpl implements SalesService {
             tp.setStrSTATUT(commonparameter.statut_is_Closed);
             tp.setStrSTATUTVENTE(statut);
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), vendeur.getLgEMPLACEMENTID()).getReference());
-//            tp.setStrREF(buildRef(LocalDate.now(), Parameter.KEY_LAST_ORDER_NUMBER_VENTE, emg).getString("code"));
             tp.setIntACCOUNT(tp.getIntPRICE());
             tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
@@ -3222,6 +3199,15 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", false).put("msg", "Erreur: Echec de validation de la vente");
         }
         return json;
+    }
+    
+    private void updateUgData(MontantAPaye data, TPreenregistrement p) {
+        if (data != null) {
+            p.setMargeug(data.getMargeUg());
+            p.setMontantnetug(data.getMontantNetUg());
+            p.setMontantttcug(data.getMontantTtcUg());
+            p.setMontantTvaUg(data.getMontantTvaUg());
+        }
     }
     
     @Override
@@ -3271,8 +3257,8 @@ public class SalesServiceImpl implements SalesService {
             tp.setStrSTATUTVENTE(statut);
             tp.setIntPRICE(montant);
             tp.setIntPRICEOTHER(montant);
+            updateUgData(clotureVenteParams.getData(), tp);
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), vendeur.getLgEMPLACEMENTID()).getReference());
-//            tp.setStrREF(buildRef(LocalDate.now(), Parameter.KEY_LAST_ORDER_NUMBER_VENTE, emg).getString("code"));
             cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
             addtransactionComptant(typeMvtCaisse, tp, false, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), tReglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId(), emg);
             addRecette(clotureVenteParams.getMontantPaye(), "Vente VNO", tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
@@ -3282,7 +3268,7 @@ public class SalesServiceImpl implements SalesService {
                     true, CategoryTransaction.CREDIT, TypeTransaction.VENTE_COMPTANT,
                     findById(clotureVenteParams.getTypeRegleId(), emg), typeMvtCaisse.get(),
                     emg,
-                    clotureVenteParams.getMontantPaye(), tp.getMontantTva(), clotureVenteParams.getMarge(), tp.getStrREF(), tp.getIntACCOUNT(), DateConverter.convertDateToLocalDateTime(tp.getDtUPDATED()), DateConverter.convertDateToLocalDate(tp.getDtUPDATED()));
+                    clotureVenteParams.getMontantPaye(), tp.getMontantTva(), clotureVenteParams.getMarge(), tp.getStrREF(), tp.getIntACCOUNT(), DateConverter.convertDateToLocalDateTime(tp.getDtUPDATED()), DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getData());
             mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emg, emplacement);
             emg.merge(tp);
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref", tp.getLgPREENREGISTREMENTID());
@@ -3556,13 +3542,15 @@ public class SalesServiceImpl implements SalesService {
         _new.setAyantDroit(tp.getAyantDroit());
         _new.setMedecin(tp.getMedecin());
         _new.setStrSTATUT(DateConverter.STATUT_PROCESS);
-//        _new.setLgREGLEMENTID(tp.getLgREGLEMENTID());
         _new.setLgPREENGISTREMENTANNULEID(tp.getLgPREENREGISTREMENTID());
         _new.setStrREF(buildRefTmp(LocalDate.now(), ooTUser.getLgEMPLACEMENTID()).getReferenceTemp());
-//        _new.setStrREF(buildRef(LocalDate.now(), Parameter.KEY_LAST_ORDER_NUMBER_PREVENTE, getEm()).getString("code"));
         _new.setStrREF(tp.getStrREF());
         _new.setChecked(Boolean.TRUE);
         _new.setCopy(Boolean.TRUE);
+        _new.setMargeug(tp.getMargeug());
+        _new.setMontantnetug(tp.getMontantnetug());
+        _new.setMontantttcug(tp.getMontantttcug());
+        _new.setMontantTvaUg(tp.getMontantTvaUg());
         getEm().persist(_new);
         return _new;
     }
@@ -3637,6 +3625,7 @@ public class SalesServiceImpl implements SalesService {
         _new.setIntPRICEUNITAIR(tp.getIntPRICEUNITAIR());
         _new.setValeurTva(tp.getValeurTva());
         _new.setIntUG(tp.getIntUG());
+        _new.setMontantTvaUg(tp.getMontantTvaUg());
         _new.setIntPRICEOTHER(tp.getIntPRICEOTHER());
         _new.setIntPRICEDETAILOTHER(tp.getIntPRICEDETAILOTHER());
         _new.setIntFREEPACKNUMBER(tp.getIntFREEPACKNUMBER());
@@ -4087,103 +4076,9 @@ public class SalesServiceImpl implements SalesService {
     
     private TPreenregistrement updateVenteInfosClientOrtierspayant(SalesParams salesParams) throws Exception {
         TPreenregistrement tp = getEm().find(TPreenregistrement.class, salesParams.getVenteId());
-//        annulerVNO(salesParams.getUserId(), tp);
-        updateVente(salesParams, tp);
-//        List<TPreenregistrementDetail> list = getTPreenregistrementDetail(tp, getEm());
-//        list.forEach(z -> {
-//            cloneItem(z, _new, DateConverter.STATUT_IS_CLOSED);
-//        });
         clonePreenregistrementTp(tp, salesParams, DateConverter.STATUT_IS_CLOSED);
-//        cloneTransaction(transaction(salesParams.getVenteId(), getEm()).get(), _new);
-//        mouvementProduitService.updateVenteStock(salesParams.getUserId(), list);
-
+         updateVente(salesParams, tp);
         return tp;
-    }
-    
-    private TPreenregistrement cloneVente(SalesParams salesParams, TPreenregistrement tp, String statut) {
-        TPreenregistrement _new = new TPreenregistrement();
-        _new.setLgPREENREGISTREMENTID(UUID.randomUUID().toString());
-        _new.setLgUSERID(salesParams.getUserId());
-        _new.setIntPRICEREMISE(tp.getIntPRICEREMISE());
-        _new.setStrSTATUTVENTE(tp.getStrSTATUTVENTE());
-        _new.setIntACCOUNT(tp.getIntACCOUNT());
-        _new.setIntREMISEPARA(tp.getIntREMISEPARA());
-        _new.setIntPRICE(tp.getIntPRICE());
-        _new.setIntPRICEOTHER(tp.getIntPRICEOTHER());
-        _new.setIntCUSTPART(tp.getIntCUSTPART());
-        _new.setMontantTva(tp.getMontantTva());
-        _new.setDtCREATED(tp.getDtCREATED());
-        _new.setDtUPDATED(tp.getDtUPDATED());
-        _new.setLgPARENTID(tp.getLgPREENREGISTREMENTID());
-        _new.setLgUSERVENDEURID(tp.getLgUSERVENDEURID());
-        _new.setLgUSERCAISSIERID(tp.getLgUSERCAISSIERID());
-        _new.setBISAVOIR(tp.getBISAVOIR());
-        _new.setBISCANCEL(false);
-        _new.setLgNATUREVENTEID(tp.getLgNATUREVENTEID());
-        _new.setLgREMISEID(tp.getLgREMISEID());
-        _new.setStrREFTICKET(DateConverter.getShortId(10));
-        _new.setLgTYPEVENTEID(tp.getLgTYPEVENTEID());
-        _new.setStrTYPEVENTE(tp.getStrTYPEVENTE());
-        _new.setStrSTATUTVENTE(tp.getStrSTATUTVENTE());
-        _new.setBWITHOUTBON(tp.getBWITHOUTBON());
-        _new.setLgREGLEMENTID(tp.getLgREGLEMENTID());
-        TClient client = findClient(salesParams.getClientId(), getEm());
-        _new.setClient(client);
-        _new.setStrFIRSTNAMECUSTOMER(client.getStrFIRSTNAME());
-        _new.setStrLASTNAMECUSTOMER(client.getStrLASTNAME());
-        _new.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
-        _new.setStrPHONECUSTOME(client.getStrADRESSE());
-        _new.setStrINFOSCLT("");
-        
-        _new.setIntSENDTOSUGGESTION(0);
-        _new.setPkBrand(tp.getPkBrand());
-        
-        findAyantDroit(salesParams.getAyantDroitId(), getEm()).ifPresent(a -> {
-            _new.setAyantDroit(a);
-            _new.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
-            _new.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
-            _new.setStrNUMEROSECURITESOCIAL(a.getStrNUMEROSECURITESOCIAL());
-            
-        });
-        _new.setStrREFTICKET(DateConverter.getShortId(10));
-        _new.setMedecin(tp.getMedecin());
-        _new.setStrSTATUT(statut);
-        _new.setLgPREENGISTREMENTANNULEID(tp.getLgPREENREGISTREMENTID());
-//        String[] refArray = tp.getStrREF().split("_");
-//        String ref = refArray[0] + "_" + StringUtils.leftPad(refArray[1], 6, '0');
-        _new.setStrREF(tp.getStrREF());
-        _new.setChecked(Boolean.TRUE);
-        _new.setCopy(Boolean.FALSE);
-        _new.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
-        getEm().persist(_new);
-        return _new;
-    }
-    
-    private TPreenregistrementDetail cloneItem(TPreenregistrementDetail tp, TPreenregistrement p, String statut) {
-        TPreenregistrementDetail _new = new TPreenregistrementDetail();
-        _new.setLgPREENREGISTREMENTDETAILID(UUID.randomUUID().toString());
-        _new.setLgPREENREGISTREMENTID(p);
-        _new.setIntPRICE(tp.getIntPRICE());
-        _new.setIntQUANTITY(tp.getIntQUANTITY());
-        _new.setIntQUANTITYSERVED(tp.getIntQUANTITYSERVED());
-        _new.setMontantTva(tp.getMontantTva());
-        _new.setDtCREATED(tp.getDtCREATED());
-        _new.setStrSTATUT(statut);
-        _new.setDtUPDATED(tp.getDtUPDATED());
-        _new.setBoolACCOUNT(tp.getBoolACCOUNT());
-        _new.setLgFAMILLEID(tp.getLgFAMILLEID());
-        _new.setIntPRICEUNITAIR(tp.getIntPRICEUNITAIR());
-        _new.setValeurTva(tp.getValeurTva());
-        _new.setIntUG(tp.getIntUG());
-        _new.setIntPRICEOTHER(tp.getIntPRICEOTHER());
-        _new.setIntPRICEDETAILOTHER(tp.getIntPRICEDETAILOTHER());
-        _new.setIntFREEPACKNUMBER(tp.getIntFREEPACKNUMBER());
-        _new.setIntPRICEREMISE(tp.getIntPRICEREMISE());
-        _new.setIntAVOIR(tp.getIntAVOIR());
-        _new.setIntAVOIRSERVED(tp.getIntQUANTITYSERVED());
-        _new.setBISAVOIR(tp.getBISAVOIR());
-        getEm().persist(_new);
-        return _new;
     }
     
     private void clonePreenregistrementTp(TPreenregistrement old, SalesParams salesParams, String statut) throws Exception {
@@ -4198,6 +4093,9 @@ public class SalesServiceImpl implements SalesService {
             Optional<TCompteClientTiersPayant> op = findOneCompteClientTiersPayantById(b.getCompteTp());
             if (op.isPresent()) {
                 payant = op.get();
+                if(payant.getBISRO()|| (payant.getIntPRIORITY()==1)){
+                    old.setStrREFBON(b.getNumBon());
+                }
                 TPreenregistrementCompteClientTiersPayent opc = null;
                 Optional<TPreenregistrementCompteClientTiersPayent> optc = getTPreenregistrementCompteClientTiersPayent(old.getLgPREENREGISTREMENTID(), b.getCompteTp());
                 if (optc.isPresent()) {
@@ -4215,6 +4113,9 @@ public class SalesServiceImpl implements SalesService {
                 
                 TTiersPayant p = getEm().find(TTiersPayant.class, b.getCompteTp());
                 payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux());
+              if(payant.getBISRO()|| (payant.getIntPRIORITY()==1)){
+                    old.setStrREFBON(b.getNumBon());
+                }
                 JSONObject json = calculVoNetAvecPlafondVente(old, montant, montantVariable, b.getTaux(), list);
                 montantVariable = json.getInt("reste");
                 createNewPreenregistrementCompteClientTiersPayant(payant, json, old, salesParams.getUserId(), statut, b.getNumBon());
@@ -4356,7 +4257,7 @@ public class SalesServiceImpl implements SalesService {
             _new.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
             _new.setStrNUMEROSECURITESOCIAL(a.getStrNUMEROSECURITESOCIAL());
         });
-        _new.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
+//        _new.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
         getEm().merge(_new);
         return _new;
     }
@@ -4424,7 +4325,7 @@ public class SalesServiceImpl implements SalesService {
                 int initStock = familleStock.getIntNUMBERAVAILABLE();
                 mouvementProduitService.saveMvtProduit(_newItem.getIntPRICEUNITAIR(), _newItem.getLgPREENREGISTREMENTDETAILID(),
                         typemvtproduit, OTFamille, ooTUser, emplacement,
-                        _newItem.getIntQUANTITY(), initStock, initStock - _newItem.getIntQUANTITY(), emg, _newItem.getValeurTva(), checked);
+                        _newItem.getIntQUANTITY(), initStock, initStock - _newItem.getIntQUANTITY(), emg, _newItem.getValeurTva(), checked, e.getIntUG());
                 
                 updateReelStockApresAnnulation(OTFamille, familleStock, ooTUser, _newItem.getIntQUANTITY(), emg);
                 if (!tp.getPkBrand().isEmpty()) {
@@ -4679,4 +4580,190 @@ public class SalesServiceImpl implements SalesService {
         }
         return r;
     }
+    
+    private MontantAPaye sumVenteSansRemise(ArrayList<TPreenregistrementDetail> list) {
+        int montant = 0;
+        int montantMarge = 0;
+        int montantTva = 0;
+        int montantAccount = 0;
+        int montantNetUg = 0;
+        int montantTtcUg = 0;
+        int margeUg = 0;
+        for (TPreenregistrementDetail x : list) {
+            montant += x.getIntPRICE();
+            TFamille famille = x.getLgFAMILLEID();
+            if (famille.getBoolACCOUNT()) {
+                int marge = ((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF()));
+                montantAccount += x.getIntPRICE();
+                montantTva += x.getMontantTva();
+                montantMarge += marge;
+                
+            }
+        }
+        return new MontantAPaye(montant,
+                montant,
+                0, 0,
+                montantMarge, montantTva).montantAccount(montantAccount)
+                .margeUg(margeUg)
+                .montantNetUg(montantNetUg)
+                .montantTtcUg(montantTtcUg);
+        
+    }
+    
+    private JSONObject shownetpayVnoCheckUg(SalesParams params) throws JSONException {
+        JSONObject json = new JSONObject();
+        EntityManager emg = this.getEm();
+        try {
+            MontantAPaye montantAPaye;
+            TPreenregistrement p = emg.find(TPreenregistrement.class, params.getVenteId());
+            if (p.getRemise() == null) {
+                montantAPaye = sumVenteSansRemise(items(p, emg), p);
+                p.setIntPRICE(montantAPaye.getMontant());
+                p.setIntACCOUNT(montantAPaye.getMontantAccount());
+                p.setIntPRICEOTHER(montantAPaye.getMontant());
+                json.put("success", true).put("msg", "Opération effectuée avec success");
+                json.put("data", new JSONObject(montantAPaye));
+                
+            } else {
+                TRemise remise = p.getRemise();
+                montantAPaye = getRemiseVnoCheckUg(p, remise);
+                json.put("success", true).put("msg", "Opération effectuée avec success");
+                json.put("data", new JSONObject(montantAPaye));
+                
+            }
+            emg.merge(p);
+            afficheurMontantAPayer(montantAPaye.getMontantNet(), "NET A PAYER: ");
+        } catch (Exception e) {
+            
+            json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
+        }
+        return json;
+    }
+    
+    private MontantAPaye getRemiseVnoCheckUg(TPreenregistrement OTPreenregistrement, TRemise OTRemise) {
+        Integer int_TOTAL_REMISE, int_REMISE_PARA = 0, montantNet = 0;
+        LongAdder totalRemise = new LongAdder();
+        LongAdder totalRemisePara = new LongAdder();
+        LongAdder totalAmount = new LongAdder();
+        LongAdder marge = new LongAdder();
+        LongAdder montantTva = new LongAdder();
+        LongAdder montantAccount = new LongAdder();
+        LongAdder montantTtcUg = new LongAdder();
+        LongAdder margeUg = new LongAdder();
+        LongAdder tvaUg = new LongAdder();
+        TEmplacement emplacement = OTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
+        boolean isVno = OTPreenregistrement.getStrTYPEVENTE().equals(DateConverter.VENTE_COMPTANT);
+        ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, getEm());
+        lstTPreenregistrementDetail.forEach(x -> {
+            totalAmount.add(x.getIntPRICE());
+            montantTva.add(x.getMontantTva());
+            TFamille famille = x.getLgFAMILLEID();
+            Integer remise = 0;
+            if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2") && !famille.getStrCODEREMISE().equals("3")) {
+                TGrilleRemise OTGrilleRemise = grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(), famille, OTRemise.getLgREMISEID());
+                if (OTGrilleRemise != null) {
+                    remise = (int) ((x.getIntPRICE() * OTGrilleRemise.getDblTAUX()) / 100);
+                    if (!x.getBoolACCOUNT()) {
+                        totalRemisePara.add(remise);
+                    }
+                    totalRemise.add(remise);
+                    x.setLgGRILLEREMISEID(OTGrilleRemise.getLgGRILLEREMISEID());
+                }
+                
+            }
+            x.setIntPRICEREMISE(remise);
+            getEm().merge(x);
+            if (x.getLgFAMILLEID().getBoolACCOUNT()) {
+                int _magre = (x.getIntPRICE() - remise - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF());
+                marge.add(_magre);
+                montantAccount.add(x.getIntPRICE());
+                montantTva.add(x.getMontantTva());
+                if (isVno) {
+                    int _margeUg = ((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF()));
+                    
+                    TFamilleStock stock = this.findStock(famille.getLgFAMILLEID(), emplacement, getEm());
+                    if (stock.getIntUG() > 0) {
+                        int qtyUg = qtyUg(stock.getIntUG(), x.getIntQUANTITYSERVED());
+                        int _montant = qtyUg * x.getIntPRICEUNITAIR();
+                        montantTtcUg.add(qtyUg * x.getIntPRICEUNITAIR());
+                        margeUg.add(margeUg(qtyUg, x.getIntQUANTITY(), _margeUg));
+                        if (x.getValeurTva() > 0) {
+                            Double HT = _montant / (1 + (Double.valueOf(x.getValeurTva()) / 100));
+                            int _montantTvaUg = _montant - HT.intValue();
+                            x.setMontantTvaUg(_montantTvaUg);
+                            tvaUg.add(_montantTvaUg);
+                        }
+                    }
+                }
+            }
+        });
+        Integer montantTotal = totalAmount.intValue();
+        int_TOTAL_REMISE = totalRemise.intValue();
+        int tva = montantTva.intValue();
+        montantNet = montantTotal - int_TOTAL_REMISE;
+        OTPreenregistrement.setIntPRICE(montantTotal);
+        OTPreenregistrement.setIntACCOUNT(montantAccount.intValue());
+        OTPreenregistrement.setIntPRICEREMISE(int_TOTAL_REMISE);
+        OTPreenregistrement.setIntREMISEPARA(int_REMISE_PARA);
+        OTPreenregistrement.setMontantTva(tva);
+        if (int_TOTAL_REMISE > 0 && OTRemise == null) {
+            OTPreenregistrement.setRemise(OTRemise);
+        }
+        return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5),
+                montantTotal, 0, DateConverter.arrondiModuloOfNumber(int_TOTAL_REMISE, 5), marge.intValue(), tva)
+                .margeUg(margeUg.intValue())
+                .montantTtcUg(montantTtcUg.intValue())
+                .montantTvaUg(tvaUg.intValue()).
+                montantNetUg(montantTtcUg.intValue());
+    }
+    
+    private MontantAPaye sumVenteSansRemise(ArrayList<TPreenregistrementDetail> list, TPreenregistrement p) {
+        int montant = 0;
+        int montantMarge = 0;
+        int montantTva = 0;
+        int montantAccount = 0;
+        int montantNetUg = 0;
+        int montantTtcUg = 0;
+        int margeUg = 0;
+        int tvaug = 0;
+        TEmplacement emplacement = p.getLgUSERID().getLgEMPLACEMENTID();
+        boolean isVno = p.getStrTYPEVENTE().equals(DateConverter.VENTE_COMPTANT);
+        for (TPreenregistrementDetail x : list) {
+            montant += x.getIntPRICE();
+            TFamille famille = x.getLgFAMILLEID();
+            if (famille.getBoolACCOUNT()) {
+                int marge = ((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF()));
+                montantAccount += x.getIntPRICE();
+                montantTva += x.getMontantTva();
+                montantMarge += marge;
+                if (isVno) {
+                    TFamilleStock stock = this.findStock(famille.getLgFAMILLEID(), emplacement, getEm());
+                    if (stock.getIntUG() > 0) {
+                        int qtyUg = qtyUg(stock.getIntUG(), x.getIntQUANTITYSERVED());
+                        int _montant = qtyUg * x.getIntPRICEUNITAIR();
+                        montantTtcUg += _montant;
+                        montantNetUg = montantTtcUg;
+                        margeUg += margeUg(qtyUg, x.getIntQUANTITY(), marge);
+                        if (x.getValeurTva() > 0) {
+                            Double HT = _montant / (1 + (Double.valueOf(x.getValeurTva()) / 100));
+                            int _montantTvaUg = _montant - HT.intValue();
+                            x.setMontantTvaUg(_montantTvaUg);
+                            tvaug += _montantTvaUg;
+                        }
+                        
+                    }
+                }
+            }
+        }
+        return new MontantAPaye(montant,
+                montant,
+                0, 0,
+                montantMarge, montantTva)
+                .montantTvaUg(tvaug)
+                .montantAccount(montantAccount)
+                .margeUg(margeUg)
+                .montantNetUg(montantNetUg)
+                .montantTtcUg(montantTtcUg);
+    }
+    
 }

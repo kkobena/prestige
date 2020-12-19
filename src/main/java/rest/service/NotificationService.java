@@ -8,10 +8,7 @@ package rest.service;
 import commonTasks.dto.NotificationDTO;
 import dal.Notification;
 import dal.TClient;
-import dal.TUser;
-import dal.enumeration.Canal;
 import dal.enumeration.Statut;
-import dal.enumeration.TypeNotification;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
@@ -28,7 +25,8 @@ public interface NotificationService {
 
     List<NotificationDTO> findAllDto(int criteria, int canal, Statut statut, LocalDate dtStart, LocalDate dtEnd);
 
-    void save(Notification notification) ;
+    void save(Notification notification);
 
-   
+    void save(Notification notification, TClient client);
+
 }

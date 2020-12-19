@@ -360,8 +360,15 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                             height: 370,
                             columns: [
                                 {
-                                    dataIndex: 'prixDiff',
+                                    xtype: 'rownumberer',
                                     text: '#',
+                                    hidden: false,
+                                    width: 40,
+                                    sortable: true
+                                },
+                                {
+                                    dataIndex: 'prixDiff',
+                                    text: '',
                                     width: 40,
                                     renderer: function (v, m, r) {
                                         if (v) {

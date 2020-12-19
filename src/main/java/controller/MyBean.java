@@ -676,7 +676,7 @@ private final static Logger LOGGER = Logger.getLogger(MyBean.class.getName());
 
                     break;
                 case "para":
-                    array = getBalancePara(dt_start, dt_end, "1");
+                    array = getBalancePara(dt_start, dt_end,OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
 
                     arrayObj = new JSONArray();
 
@@ -2224,8 +2224,6 @@ private final static Logger LOGGER = Logger.getLogger(MyBean.class.getName());
     public JSONArray getBalanceParaReport(String dt_start, String dt_end, String lgEmp) {
         EntityManager em = this.getEntityManager();
         JSONArray array = new JSONArray();
-        boolean period = true;
-
         try {
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -2537,7 +2535,6 @@ private final static Logger LOGGER = Logger.getLogger(MyBean.class.getName());
             predicate = cb.and(predicate, cb.notLike(root.get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "2"));
             predicate = cb.and(predicate, cb.equal(root.get(TPreenregistrement_.strSTATUT), "is_Closed"));
             predicate = cb.and(predicate, cb.notEqual(root.get(TPreenregistrement_.intPRICE), root.get(TPreenregistrement_.intACCOUNT)));
-
             Predicate ge = cb.greaterThan(root.get(TPreenregistrement_.intPRICE), 0);
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             cq.multiselect(cb.sum(cb.diff(root.get(TPreenregistrement_.intPRICE), root.get(TPreenregistrement_.intACCOUNT))),

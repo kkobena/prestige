@@ -203,6 +203,7 @@
     <class>dal.Notification</class>
     <class>dal.Reference</class>
     <class>dal.NotificationClient</class>
+    <class>dal.StockSnapshot</class>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
       <!--      <property name="hibernate.hbm2ddl.auto" value="update"/>
@@ -216,7 +217,7 @@
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
       <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
-      <!--<property name="hibernate.show_sql" value="true"/>-->
+      <property name="hibernate.show_sql" value="false"/>
       <property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"/>
     </properties>
   </persistence-unit>

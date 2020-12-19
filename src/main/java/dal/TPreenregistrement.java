@@ -184,6 +184,14 @@ public class TPreenregistrement implements Serializable {
     private Boolean copy = false;
     @Column(name = "imported")
     private boolean imported = false;
+    @Column(name = "margeug")
+    private Integer margeug = 0;
+    @Column(name = "montantttcug")
+    private Integer montantttcug = 0;
+    @Column(name = "montantnetug")
+    private Integer montantnetug = 0;
+    @Column(name = "montanttvaug")
+    private Integer montantTvaUg = 0;
 
     public boolean isImported() {
         return imported;
@@ -193,8 +201,6 @@ public class TPreenregistrement implements Serializable {
         this.imported = imported;
     }
 
-    
-    
     public Medecin getMedecin() {
         return medecin;
     }
@@ -618,6 +624,38 @@ public class TPreenregistrement implements Serializable {
 
     public void setIntACCOUNT(Integer intACCOUNT) {
         this.intACCOUNT = intACCOUNT;
+    }
+
+    public Integer getMargeug() {
+        return margeug;
+    }
+
+    public void setMargeug(Integer margeug) {
+        this.margeug = margeug;
+    }
+
+    public Integer getMontantttcug() {
+        return montantttcug;
+    }
+
+    public void setMontantttcug(Integer montantttcug) {
+        this.montantttcug = montantttcug;
+    }
+
+    public Integer getMontantnetug() {
+        return montantnetug;
+    }
+
+    public void setMontantnetug(Integer montantnetug) {
+        this.montantnetug = montantnetug;
+    }
+
+    public Integer getMontantTvaUg() {
+        return montantTvaUg;
+    }
+
+    public void setMontantTvaUg(Integer montantTvaUg) {
+        this.montantTvaUg = montantTvaUg;
     }
 
 }

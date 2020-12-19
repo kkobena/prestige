@@ -17,6 +17,7 @@ import commonTasks.dto.TableauBaordSummary;
 import commonTasks.dto.VisualisationCaisseDTO;
 import dal.MvtTransaction;
 import dal.TCashTransaction;
+import dal.TOfficine;
 import dal.TPreenregistrement;
 import dal.TUser;
 import dal.Typemvtproduit;
@@ -152,5 +153,14 @@ Author author = entityManager.find(Author.class, id, properties);
     public boolean key_Take_Into_Account();
 
     Integer montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
+
+    TOfficine findOfficine();
+
+    JSONObject venteUg(LocalDate dtStart, LocalDate dtEnd,String query);
+    
+     JSONObject balanceVenteCaisseVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
+            throws JSONException;
+     
+    GenericDTO balanceVenteCaisseReportVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
 
 }

@@ -29,6 +29,7 @@ import dal.TEmplacement;
 import dal.TFamille;
 import dal.TFamille_;
 import dal.TGroupeTierspayant;
+import dal.TParameters;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClientTiersPayent;
@@ -543,9 +544,19 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         return json;
     }
 
-    private List<VenteDTO> listVentes(SalesStatsParams params) {
+    private boolean findpermission() {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddHH:mm");
+            TParameters parameters = getEntityManager().find(TParameters.class, "KEY_EXPORT_VENTE_AS_STOCK");
+            return Integer.valueOf(parameters.getStrVALUE().trim()) == 1;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private List<VenteDTO> listVentes(SalesStatsParams params) {
+        boolean canexport = findpermission();
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TPreenregistrement> cq = cb.createQuery(TPreenregistrement.class);
@@ -560,24 +571,23 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
                 predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
             }
-            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + params.gethStart().toString(), formatter)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + params.gethEnd().toString(), formatter)));
-
-            predicates.add(cb.and(btw));
-            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed)));
+            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"), formatter)),
+                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"), formatter)));
+            predicates.add(btw);
+            predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed));
             if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
+                predicates.add(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId()));
             }
             if (params.getQuery() != null && !"".equals(params.getQuery())) {
                 Predicate predicate = cb.and(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(st.get(TPreenregistrement_.strREFTICKET), params.getQuery() + "%"), cb.like(st.get(TPreenregistrement_.strREF), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%")));
                 predicates.add(predicate);
             }
             if (!params.isShowAll()) {
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
+                predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID()));
             }
             if (!params.isShowAllActivities()) {
                 TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID())));
+                predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID()));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
@@ -586,7 +596,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 q.setMaxResults(params.getLimit());
             }
             List<TPreenregistrement> list = q.getResultList();
-            return list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(), params, findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
+            return list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(), params, findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID()))
+                    .canexport(canexport)
+            ).collect(Collectors.toList());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -596,7 +608,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     public List<VenteDTO> listeVentesReport(SalesStatsParams params) {
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddHH:mm");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TPreenregistrement> cq = cb.createQuery(TPreenregistrement.class);
@@ -611,10 +623,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
                 predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
             }
-            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + params.gethStart().toString(), formatter)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + params.gethEnd().toString(), formatter)));
-
-            predicates.add(cb.and(btw));
+            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"), formatter)),
+                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"), formatter)));
+            predicates.add(btw);
             predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed)));
             if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
                 predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
@@ -647,7 +658,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public long countListeVentes(SalesStatsParams params) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddHH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -661,11 +672,12 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             if (params.isOnlyAvoir()) {
                 predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
             }
-            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + params.gethStart().toString(), formatter)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + params.gethEnd().toString(), formatter)));
 
-            predicates.add(cb.and(btw));
-            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed)));
+            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"), formatter)),
+                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"), formatter)));
+            predicates.add(btw);
+
+            predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed));
 
             if (params.getQuery() != null && !"".equals(params.getQuery())) {
                 Predicate predicate = cb.and(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(st.get(TPreenregistrement_.strREFTICKET), params.getQuery() + "%"), cb.like(st.get(TPreenregistrement_.strREF), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%")));
@@ -720,11 +732,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasRapport(Params params) {
-
         if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
             return tvasRapport0(params);
         }
-
         List<TvaDTO> datas = new ArrayList<>();
 
         try {
@@ -744,7 +754,6 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     ht.add(htAmont);
                     ttc.add(mttc);
                     tva.add(montantTva);
-
                 });
                 otva.setMontantHt(ht.intValue());
                 otva.setMontantTtc(ttc.intValue());
@@ -871,7 +880,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 LongAdder ttc = new LongAdder();
                 LongAdder tva = new LongAdder();
                 v.stream().forEach(l -> {
-                    Integer mttc = l.getPrixUn() * l.getQteMvt();
+                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
                     Integer htAmont = (int) Math.ceil(mttc / valeurTva);
                     Integer montantTva = mttc - htAmont;
@@ -885,10 +894,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 otva.setMontantHt(ht.intValue());
                 otva.setMontantTtc(ttc.intValue());
                 otva.setMontantTva(tva.intValue());
-
                 datas.add(otva);
             });
-            int mtn = adder.intValue() * montant;
+            int mtn = adder.intValue() - montant;
             ListIterator listIterator = datas.listIterator();
             while (listIterator.hasNext()) {
                 TvaDTO next = (TvaDTO) listIterator.next();
@@ -953,6 +961,87 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
     }
 
-   
+    @Override
+    public List<TvaDTO> tvaRapport(Params params) {
 
+        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+            return tvasRapport0(params);
+        }
+
+        List<TvaDTO> datas = new ArrayList<>();
+
+        try {
+            List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
+            tvamap.forEach((k, v) -> {
+                TvaDTO otva = new TvaDTO();
+                otva.setTaux(k);
+                LongAdder ht = new LongAdder();
+                LongAdder ttc = new LongAdder();
+                LongAdder tva = new LongAdder();
+                v.stream().forEach(l -> {
+                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    Double valeurTva = 1 + (Double.valueOf(k) / 100);
+                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
+                    Integer montantTva = mttc - htAmont;
+                    ht.add(htAmont);
+                    ttc.add(mttc);
+                    tva.add(montantTva);
+
+                });
+                otva.setMontantHt(ht.intValue());
+                otva.setMontantTtc(ttc.intValue());
+                otva.setMontantTva(tva.intValue());
+                datas.add(otva);
+            });
+
+            return datas;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<TvaDTO> tvaRapportJournalier(Params params) {
+        List<TvaDTO> datas = new ArrayList<>();
+        List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        Map<LocalDate, List<HMvtProduit>> datemap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getMvtDate));
+        datemap.forEach((key, values) -> {
+            Map<Integer, List<HMvtProduit>> tvamap = values.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
+            tvamap.forEach((k, v) -> {
+                TvaDTO otva = new TvaDTO();
+                otva.setLocalOperation(key);
+                otva.setDateOperation(key.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                otva.setTaux(k);
+                LongAdder ht = new LongAdder();
+                LongAdder ttc = new LongAdder();
+                LongAdder tva = new LongAdder();
+                v.stream().forEach(l -> {
+                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    Double valeurTva = 1 + (Double.valueOf(k) / 100);
+                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
+                    Integer montantTva = mttc - htAmont;
+                    ht.add(htAmont);
+                    ttc.add(mttc);
+                    tva.add(montantTva);
+                });
+                otva.setMontantHt(ht.intValue());
+                otva.setMontantTtc(ttc.intValue());
+                otva.setMontantTva(tva.intValue());
+                datas.add(otva);
+            });
+        });
+        return datas;
+
+    }
+
+    @Override
+    public JSONObject tvasData(Params params) throws JSONException {
+        JSONObject json = new JSONObject();
+        List<TvaDTO> datas = tvaRapport(params);
+        json.put("total", datas.size());
+        json.put("data", new JSONArray(datas));
+        return json;
+    }
 }

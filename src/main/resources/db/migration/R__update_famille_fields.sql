@@ -1,0 +1,3 @@
+/*ALTER TABLE t_famille DROP COLUMN int_CIP2;
+ALTER TABLE t_famille DROP COLUMN int_CIP4;
+ALTER TABLE t_famille DROP COLUMN int_CIP3;*/

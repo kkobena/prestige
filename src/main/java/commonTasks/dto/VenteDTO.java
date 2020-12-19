@@ -26,7 +26,6 @@ import util.DateConverter;
  *
  * @author Kobena
  */
-
 public class VenteDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -44,7 +43,7 @@ public class VenteDTO implements Serializable {
     private String strSTATUT, strREFBON, lgUPDATEDBY, dtCREATED, HEUREVENTE, lgREMISEID, lgUSERVENDEURID, lgTYPEVENTEID, lgNATUREVENTEID, userFullName, userVendeurName;
     private AyantDroitDTO ayantDroit;
     private ClientDTO client;
-    private boolean cancel, avoir, sansbon, beCancel = false, modification;
+    private boolean cancel, avoir, sansbon, beCancel = false, modification, canexport = false;
     private String dateAnnulation;
     private String typeRemiseId, details = " ", userCaissierName, lgUSERCAISSIERID;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
@@ -57,8 +56,21 @@ public class VenteDTO implements Serializable {
     private String medecinId, nom, numOrder, commentaire;
     private boolean modificationClientTp;
 
+    public VenteDTO canexport(boolean canexport) {
+        this.canexport = canexport;
+        return this;
+    }
+
     public boolean isModificationClientTp() {
         return modificationClientTp;
+    }
+
+    public boolean isCanexport() {
+        return canexport;
+    }
+
+    public void setCanexport(boolean canexport) {
+        this.canexport = canexport;
     }
 
     public void setModificationClientTp(boolean modificationClientTp) {
