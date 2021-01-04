@@ -342,7 +342,6 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-  
     private boolean doesNumeroSecuriteSocialExist(String str_NUMERO_SECURITE_SOCIAL, TTiersPayant payant) {
         try {
             TypedQuery<TCompteClientTiersPayant> query = this.getEmg().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.strNUMEROSECURITESOCIAL =?1 AND o.lgTIERSPAYANTID.lgTIERSPAYANTID=?2 ", TCompteClientTiersPayant.class);
@@ -1038,11 +1037,11 @@ public class ClientServiceImpl implements ClientService {
         });
     }
 
-    private TCompteClientTiersPayant createComptClientTierspayant(TClient cdto, TCompteClient OTCompteClient, int taux, TTiersPayant p) {
+    private TCompteClientTiersPayant createComptClientTierspayant(TClient cdto, TCompteClient OTCompteClient, int taux, TTiersPayant p, boolean isRO, int order) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
         OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
         OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
-        OTCompteClientTiersPayant.setBISRO(Boolean.TRUE);
+        OTCompteClientTiersPayant.setBISRO(isRO);
         OTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
         OTCompteClientTiersPayant.setBIsAbsolute(false);
         OTCompteClientTiersPayant.setDtCREATED(new Date());
@@ -1050,7 +1049,7 @@ public class ClientServiceImpl implements ClientService {
         OTCompteClientTiersPayant.setLgCOMPTECLIENTID(OTCompteClient);
         OTCompteClientTiersPayant.setLgTIERSPAYANTID(p);
         OTCompteClientTiersPayant.setIntPOURCENTAGE(taux);
-        OTCompteClientTiersPayant.setIntPRIORITY(1);
+        OTCompteClientTiersPayant.setIntPRIORITY(order);
         OTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
         OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
         OTCompteClientTiersPayant.setDblPLAFOND(0.0);
@@ -1064,8 +1063,14 @@ public class ClientServiceImpl implements ClientService {
     public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant p, int taux) throws Exception {
         TCompteClient compteClient = findByClientId(client.getLgCLIENTID(), this.getEmg());
         updateComptClientTierspayantPriority(compteClient.getLgCOMPTECLIENTID());
-        return createComptClientTierspayant(client, compteClient, taux, p);
+        return createComptClientTierspayant(client, compteClient, taux, p, true, 1);
 
+    }
+
+    @Override
+    public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant p, int taux, TCompteClientTiersPayant old) throws Exception {
+        TCompteClient compteClient = old.getLgCOMPTECLIENTID();
+        return createComptClientTierspayant(client, compteClient, taux, p, old.getBISRO(), old.getIntPRIORITY());
     }
 
     @Override
@@ -1189,7 +1194,6 @@ public class ClientServiceImpl implements ClientService {
                 }
             }
         }
-//            tc.setStrSEXE(client.getStrSEXE());
         tc.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
         tc.setStrLASTNAME(client.getStrLASTNAME().toUpperCase());
         tc.setStrFIRSTNAME(client.getStrFIRSTNAME().toUpperCase());
@@ -1202,8 +1206,6 @@ public class ClientServiceImpl implements ClientService {
         if (tc.getLgTYPECLIENTID().getLgTYPECLIENTID().equals(DateConverter.CLIENT_ASSURANCE)) {
             TAyantDroit ayantDroit = findAyantDroitByNum(oldNum, emg);
             ayantDroit.setDtUPDATED(new Date());
-
-//        ayantDroit.setStrSEXE(client.getStrSEXE());
             ayantDroit.setStrFIRSTNAME(client.getStrFIRSTNAME().toUpperCase());
             ayantDroit.setStrLASTNAME(client.getStrLASTNAME().toUpperCase());
             ayantDroit.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
@@ -1225,14 +1227,14 @@ public class ClientServiceImpl implements ClientService {
         try {
             TAyantDroit ayantDroit = getEmg().find(TAyantDroit.class, ayantDroitDTO.getLgAYANTSDROITSID());
             ayantDroit.setStrFIRSTNAME(ayantDroitDTO.getStrFIRSTNAME().toUpperCase());
-            ayantDroit.setStrLASTNAME(ayantDroitDTO.getStrLASTNAME().toUpperCase()); 
+            ayantDroit.setStrLASTNAME(ayantDroitDTO.getStrLASTNAME().toUpperCase());
             ayantDroit.setStrNUMEROSECURITESOCIAL(ayantDroitDTO.getStrNUMEROSECURITESOCIAL());
             getEmg().merge(ayantDroit);
-            return json.put("success", true).put("data", new JSONObject(new AyantDroitDTO(ayantDroit))); 
+            return json.put("success", true).put("data", new JSONObject(new AyantDroitDTO(ayantDroit)));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return json.put("success", false).put("msg", "Erreur de modification des infos de  l'ayant droit");
-        } 
+        }
     }
 
 }

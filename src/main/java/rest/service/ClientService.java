@@ -42,14 +42,12 @@ public interface ClientService {
 
     List<TiersPayantDTO> findTiersPayants(String query, String type);
 
- 
     List<AyantDroitDTO> findAyantDroitByClientId(String clientId, String query);
 
     JSONObject addAyantDroitToClient(AyantDroitDTO ayantDroit) throws JSONException;
 
     JSONObject findClientAssuranceById(String clientId, String venteId) throws JSONException;
 
-  
     JSONObject updateCreateClientCarnet(ClientDTO client) throws JSONException;
 
     JSONObject createClient(ClientLambdaDTO clientLambda, String venteId) throws JSONException;
@@ -66,4 +64,5 @@ public interface ClientService {
 
     JSONObject updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO);
 
+    TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant tpId, int taux, TCompteClientTiersPayant old) throws Exception;
 }

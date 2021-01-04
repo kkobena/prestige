@@ -778,8 +778,8 @@ Ext.application({
         // Devis
 //        'testextjs.view.sm_user.devis.DevisManager',
         // Entré en stock
-        , 'testextjs.view.sm_user.balancevente.Balanceventemanager',
-        'testextjs.view.Report.BalanceVenteCaisse.BalanceVenteCaisseManager',
+//        , 'testextjs.view.sm_user.balancevente.Balanceventemanager',
+//        'testextjs.view.Report.BalanceVenteCaisse.BalanceVenteCaisseManager',
         'testextjs.view.facturation.ModelFacture',
         'testextjs.view.facturation.FactureProvisoire',
         'testextjs.view.caisseManager.Importation',
@@ -840,7 +840,8 @@ Ext.application({
         'ComparaisonCtr',
         'OrdonnancierCtrl',
         'UgCtr',
-        'ImportationHistoriqueCtr'
+        'ImportationHistoriqueCtr',
+        'ParaCtr'
     ],
     stores: [
         'Menu'

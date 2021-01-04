@@ -47,14 +47,22 @@ Ext.define('testextjs.controller.UgCtr', {
             'venteugs #rechercher': {
                 click: this.doSearch
             },
-           
+            'venteugs #imprimer': {
+                click: this.onPdfClick
+            },
             'venteugs #uggid': {
                 viewready: this.doInitStore
             }
 
         });
     },
-   
+     onPdfClick: function () {
+        var me = this;
+        var dtStart = me.getDtStart().getSubmitValue();
+        var dtEnd = me.getDtEnd().getSubmitValue();
+        var linkUrl = '../SockServlet?mode=UG&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
+        window.open(linkUrl);
+    },
     doMetachange: function (store, meta) {
         var me = this;
         me.buildSummary(meta);
@@ -91,7 +99,6 @@ Ext.define('testextjs.controller.UgCtr', {
     },
     buildSummary: function (rec) {
         var me = this;
-        
         me.getMontantAchat().setValue(rec.montantAchat);
         me.getNbreVente().setValue(rec.nbreVente);
     }

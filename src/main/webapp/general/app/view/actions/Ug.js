@@ -56,9 +56,16 @@ Ext.define('testextjs.view.actions.Ug', {
                             type: 'number'
 
                         },
-                        {name: 'montantUg',
+                           {name: 'stockUg',
                             type: 'number'
 
+                        },
+                        
+                        {name: 'montantUg',
+                            type: 'number'
+                        },
+                         {name: 'stockUg',
+                            type: 'number'
                         }
 
                     ],
@@ -99,7 +106,9 @@ Ext.define('testextjs.view.actions.Ug', {
                             format: 'd/m/Y',
                             value: new Date()
 
-                        }, '-',
+                        },  {
+                            xtype: 'tbseparator'
+                        },
 
                         {
                             xtype: 'datefield',
@@ -112,6 +121,8 @@ Ext.define('testextjs.view.actions.Ug', {
                             format: 'd/m/Y',
                             value: new Date()
 
+                        }, {
+                            xtype: 'tbseparator'
                         },
                         {
                             text: 'rechercher',
@@ -119,6 +130,15 @@ Ext.define('testextjs.view.actions.Ug', {
                             itemId: 'rechercher',
                             scope: this,
                             iconCls: 'searchicon'
+                        } , {
+                            xtype: 'tbseparator'
+                        },
+                        {
+                            text: 'imprimer',
+                            itemId: 'imprimer',
+                            iconCls: 'printable',
+                            tooltip: 'imprimer',
+                            scope: this
                         }
 
                     ]
@@ -192,17 +212,18 @@ Ext.define('testextjs.view.actions.Ug', {
                             align: 'right',
                             flex: 0.5
                         },
-                        /* {
-                            header: 'Montant Vente',
-                            dataIndex: 'intPRICE',
+                       
+                        {
+                            header: 'Qté Ug',
+                            dataIndex: 'uniteGratuite',
                             xtype: 'numbercolumn',
                             format: '0,000.',
                             align: 'right',
                             flex: 0.5
-                        },*/
-                        {
-                            header: 'Qté Ug',
-                            dataIndex: 'uniteGratuite',
+                        },
+                          {
+                            header: 'Qté Ug restante',
+                            dataIndex: 'stockUg',
                             xtype: 'numbercolumn',
                             format: '0,000.',
                             align: 'right',

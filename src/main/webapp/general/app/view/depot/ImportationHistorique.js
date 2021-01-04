@@ -2,7 +2,7 @@
 
 Ext.define('testextjs.view.depot.ImportationHistorique', {
     extend: 'Ext.panel.Panel',
-    xtype: 'importfromjson',
+    xtype: 'exportdepotvents',
     requires: [
         'Ext.grid.plugin.RowExpander'
     ],

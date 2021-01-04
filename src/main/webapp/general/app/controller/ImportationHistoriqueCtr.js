@@ -150,7 +150,7 @@ Ext.define('testextjs.controller.ImportationHistoriqueCtr', {
     },
 
     onImport: function () {
-        Ext.create('testextjs.view.depot.ImportForm');
+        Ext.create('testextjs.view.depot.Import');
     }
 
 }

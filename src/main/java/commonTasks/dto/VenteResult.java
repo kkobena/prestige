@@ -18,45 +18,31 @@ import java.util.UUID;
 public class VenteResult implements Serializable {
 
     private String id = UUID.randomUUID().toString();
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "LABOREX")
     private Integer columnOne = 0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "DPCI")
     private Integer columnTwo = 0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "COPHARMED")
     private Integer columnthree = 0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "TEDIS PHARMA")
     private Integer columnFour = 0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "AUTRES")
     private Integer columnFive = 0;
     @JsonIgnore(value = true)
     private LocalDate dateOperation;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "DATEOPERATION")
     private String dateOperationToString;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "CREDIT")
     private Integer montantCredit = 0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "REMISE")
     private Integer remise = 0;
     private Integer totalVente = 0;
     private String typeVente;
     private Integer montantDiff = 0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "NOMBRE CLIENTS")
     private Long nbreClient = 0l;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "COMPTANT")
     private Integer montantComptant = 0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "RATIOVA")
     private Double rationVenteAchat = 0.0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "RATIOACHV")
     private Double rationAchatVente = 0.0;
     @JsonIgnore(value = true)
     private String groupeLibelle;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "AVOIRS")
     private Integer avoir = 0;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "ACHATS Nets")
     private Integer montantAchat = 0;
     @JsonIgnore(value = true)
     private String type;
-//    @JsonProperty(access = JsonProperty.Access.AUTO, value = "CA Net")
     private Integer netVente = 0;
+
     public Integer getNetVente() {
         return netVente;
     }

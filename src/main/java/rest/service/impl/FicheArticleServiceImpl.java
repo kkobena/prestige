@@ -6,6 +6,7 @@
 package rest.service.impl;
 
 import commonTasks.dto.ArticleDTO;
+import commonTasks.dto.FamilleDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TBonLivraisonDetail;
 import dal.TEmplacement;
@@ -74,18 +75,18 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     }
 
     @Override
-    public JSONObject produitPerimes(String query,int nbreMois, String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {
-        Pair<VenteDetailsDTO, List<VenteDetailsDTO>> p = produitPerimes(query, nbreMois,dtStart,dtEnd, u, codeFamile, codeRayon, codeGrossiste, start, limit, true);
+    public JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {
+        Pair<VenteDetailsDTO, List<VenteDetailsDTO>> p = produitPerimes(query, nbreMois, dtStart, dtEnd, u, codeFamile, codeRayon, codeGrossiste, start, limit, true);
         List<VenteDetailsDTO> data = p.getRight();
         return new JSONObject().put("total", data.size()).put("data", new JSONArray(data)).put("metaData", new JSONObject(p.getLeft()));
     }
 
-    VenteDetailsDTO produitPerimes(String query,int nbreMois, String dtStart, String dtEnd, TEmplacement emp, String codeFamille, String codeRayon, String codeGrossiste) throws Exception {
+    VenteDetailsDTO produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TEmplacement emp, String codeFamille, String codeRayon, String codeGrossiste) throws Exception {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
         Root<TFamilleStock> root = cq.from(TFamilleStock.class);
         Join<TFamilleStock, TFamille> fa = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
-        List<Predicate> predicates = perimePredicat(cb, root, fa, query, nbreMois,dtStart,dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
+        List<Predicate> predicates = perimePredicat(cb, root, fa, query, nbreMois, dtStart, dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
         cq.select(cb.construct(VenteDetailsDTO.class,
                 cb.sum(cb.prod(fa.get(TFamille_.intPAF), root.get(TFamilleStock_.intNUMBERAVAILABLE))),
                 cb.sum(cb.prod(fa.get(TFamille_.intPRICE), root.get(TFamilleStock_.intNUMBERAVAILABLE))),
@@ -102,13 +103,12 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     @Override
     public Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser u, String codeFamille, String codeRayon, String codeGrossiste, int start, int limit, boolean all) {
         try {
-
             TEmplacement emp = u.getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
             Root<TFamilleStock> root = cq.from(TFamilleStock.class);
             Join<TFamilleStock, TFamille> fa = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
-            List<Predicate> predicates = perimePredicat(cb, root, fa, query, nbreMois,dtStart,  dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
+            List<Predicate> predicates = perimePredicat(cb, root, fa, query, nbreMois, dtStart, dtEnd, codeFamille, codeRayon, codeGrossiste, emp);
             if (!StringUtils.isEmpty(codeFamille) && codeFamille.equals("ALL")) {
                 cq.select(cb.construct(VenteDetailsDTO.class,
                         fa.get(TFamille_.intCIP), fa.get(TFamille_.strNAME),
@@ -120,8 +120,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                         fa.get(TFamille_.intPRICE),
                         root.get(TFamilleStock_.intNUMBERAVAILABLE),
                         fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID),
-                        fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE)
-                )
+                        fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE), fa.get(TFamille_.intSEUILMIN))
                 ).groupBy(fa.get(TFamille_.lgFAMILLEID))
                         .orderBy(cb.desc(fa.get(TFamille_.dtPEREMPTION)));
 
@@ -136,7 +135,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                         fa.get(TFamille_.intPRICE),
                         root.get(TFamilleStock_.intNUMBERAVAILABLE),
                         fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID),
-                        fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE)
+                        fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE), fa.get(TFamille_.intSEUILMIN)
                 )
                 ).groupBy(fa.get(TFamille_.lgFAMILLEID))
                         .orderBy(cb.desc(fa.get(TFamille_.dtPEREMPTION)));
@@ -151,7 +150,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                         fa.get(TFamille_.intPRICE),
                         root.get(TFamilleStock_.intNUMBERAVAILABLE),
                         fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID),
-                        fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE)
+                        fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE), fa.get(TFamille_.intSEUILMIN)
                 )
                 ).groupBy(fa.get(TFamille_.lgFAMILLEID))
                         .orderBy(cb.desc(fa.get(TFamille_.dtPEREMPTION)));
@@ -167,7 +166,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             if (l.isEmpty()) {
                 return Pair.of(new VenteDetailsDTO(), Collections.emptyList());
             }
-            VenteDetailsDTO summary = produitPerimes(query, nbreMois,dtStart,dtEnd, emp, codeFamille, codeRayon, codeGrossiste);
+            VenteDetailsDTO summary = produitPerimes(query, nbreMois, dtStart, dtEnd, emp, codeFamille, codeRayon, codeGrossiste);
 
             return Pair.of(summary, l);
         } catch (Exception e) {
@@ -210,8 +209,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                 } else {
                     if (!StringUtils.isEmpty(dtStart)) {
                         predicates.add(cb.equal(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)), java.sql.Date.valueOf(dtStart)));
-                    }
-                   else if (!StringUtils.isEmpty(dtEnd)) {
+                    } else if (!StringUtils.isEmpty(dtEnd)) {
                         predicates.add(cb.equal(cb.function("DATE", Date.class, fa.get(TFamille_.dtPEREMPTION)), java.sql.Date.valueOf(dtEnd)));
                     }
                 }
@@ -447,6 +445,82 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         }
 
         return new JSONObject().put("total", total).put("data", new JSONArray(comparaisonStock(u, query, filtreStock, filtreSeuil, codeFamile, codeRayon, codeGrossiste, stock, seuil, start, limit, false)));
+    }
+
+    private Long produitAccounts(String query, TUser u, String rayon, String filtre
+    ) {
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TFamilleStock> root = cq.from(TFamilleStock.class);
+            Join<TFamilleStock, TFamille> stock = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
+            cq.select(cb.count(root));
+            List<Predicate> predicates = produitAccounts(cb, root, stock, query, rayon, filtre, u);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            Query q = getEntityManager().createQuery(cq);
+            return q.getSingleResult() != null ? (Long) q.getSingleResult() : 0;
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "produitAccounts ---->> ", e);
+            return 0l;
+        }
+    }
+
+    private List<Predicate> produitAccounts(CriteriaBuilder cb, Root<TFamilleStock> root, Join<TFamilleStock, TFamille> stock, String query, String rayon, String filtre, TUser u) {
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.equal(root.get(TFamilleStock_.lgEMPLACEMENTID), u.getLgEMPLACEMENTID()));
+        predicates.add(cb.equal(stock.get(TFamille_.strSTATUT), DateConverter.STATUT_ENABLE));
+        predicates.add(cb.equal(root.get(TFamilleStock_.strSTATUT), DateConverter.STATUT_ENABLE));
+        if (!StringUtils.isEmpty(query)) {
+            predicates.add(cb.or(cb.like(stock.get(TFamille_.intCIP), query + "%"),
+                    cb.like(stock.get(TFamille_.strNAME), query + "%")));
+        }
+        if (!StringUtils.isEmpty(rayon)) {
+            predicates.add(cb.equal(stock.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), rayon));
+        }
+        if (!StringUtils.isEmpty(filtre) && !filtre.equals("A")) {
+            if (filtre.equals("Y")) {
+                predicates.add(cb.isFalse(stock.get(TFamille_.boolACCOUNT)));
+            } else {
+                predicates.add(cb.isTrue(stock.get(TFamille_.boolACCOUNT)));
+            }
+        }
+        return predicates;
+    }
+
+    @Override
+    public JSONObject produitAccounts(String query, String rayon, String filtre, TUser u, int start, int limit) throws JSONException {
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<FamilleDTO> cq = cb.createQuery(FamilleDTO.class);
+            Root<TFamilleStock> root = cq.from(TFamilleStock.class);
+            Join<TFamilleStock, TFamille> stock = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
+            //String id,String cip, String libelle, int prixAchat, int prixUni, int stock, boolean chiffre
+            cq.select(cb.construct(FamilleDTO.class,
+                    stock.get(TFamille_.lgFAMILLEID),
+                    stock.get(TFamille_.intCIP),
+                    stock.get(TFamille_.strNAME),
+                    stock.get(TFamille_.intPAF),
+                    stock.get(TFamille_.intPRICE),
+                    root.get(TFamilleStock_.intNUMBERAVAILABLE),
+                    stock.get(TFamille_.boolACCOUNT)
+            ))
+                    .orderBy(cb.asc(stock.get(TFamille_.strNAME)));
+            List<Predicate> predicates = produitAccounts(cb, root, stock, query, rayon, filtre, u);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<FamilleDTO> typedQuery = getEntityManager().createQuery(cq);
+            typedQuery.setFirstResult(start);
+            typedQuery.setMaxResults(limit);
+
+            List<FamilleDTO> resultList = typedQuery.getResultList();
+            Long total = produitAccounts(query, u, rayon, filtre);
+            return new JSONObject().put("total", total).put("data", new JSONArray(resultList));
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return new JSONObject().put("total", 0).put("data", new JSONArray());
+        }
     }
 
     @Override
@@ -780,4 +854,12 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             return Collections.emptyList();
         }
     }
+
+    @Override
+    public boolean updateProduitAccount(String id, boolean account) {
+        TFamille famille = getEntityManager().find(TFamille.class, id);
+        famille.setBoolACCOUNT(!account);
+        return true;
+    }
+
 }

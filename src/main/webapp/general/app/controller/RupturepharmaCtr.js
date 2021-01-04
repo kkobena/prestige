@@ -583,22 +583,6 @@ Ext.define('testextjs.controller.RupturepharmaCtr', {
 
                     ]
                 });
-
-
-
-
-
-
-
-
-        /*
-         Ext.MessageBox.confirm('Message',
-         'Voulez-vous generer le fichier CSV ?',
-         function (btn) {
-         if (btn === 'yes') {
-         window.location = '../api/v1/rupture/csv?id=' + record.get('id');
-         }
-         });*/
     },
     onPdfClick: function () {
         var me = this;

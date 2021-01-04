@@ -80,7 +80,7 @@ public class TPreenregistrementDetail implements Serializable {
     @ManyToOne(optional = false)
     private TPreenregistrement lgPREENREGISTREMENTID;
     @Column(name = "bool_ACCOUNT")
-    private Boolean boolACCOUNT;
+    private Boolean boolACCOUNT=true;
     @Column(name = "int_UG")
     private Integer intUG = 0;
     @Column(name = "montantTva")

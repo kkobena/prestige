@@ -6,6 +6,7 @@
 package rest;
 
 import commonTasks.dto.ArticleDTO;
+import commonTasks.dto.Params;
 import dal.TUser;
 import enumeration.MargeEnum;
 import java.util.List;
@@ -35,6 +36,7 @@ import toolkits.parameters.commonparameter;
 @Produces("application/json")
 @Consumes("application/json")
 public class FicheArticleRessource {
+
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
@@ -45,12 +47,12 @@ public class FicheArticleRessource {
     @GET
     @Path("perimes")
     public Response produitPerimes(
-          @QueryParam(value = "nbreMois") int nbreMois,
+            @QueryParam(value = "nbreMois") int nbreMois,
             @QueryParam(value = "codeFamile") String codeFamile,
             @QueryParam(value = "query") String query,
             @QueryParam(value = "codeRayon") String codeRayon,
             @QueryParam(value = "codeGrossiste") String codeGrossiste,
-             @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
@@ -59,10 +61,10 @@ public class FicheArticleRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-      /*  if (filtre == null) {
+        /*  if (filtre == null) {
             filtre = Peremption.PERIME;
         }*/
-        JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart,  dtEnd,  tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
+        JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
         return Response.ok().entity(jsono.toString()).build();
     }
 
@@ -165,6 +167,39 @@ public class FicheArticleRessource {
         }
         List<ArticleDTO> datas = ficheArticleService.comparaisonStock(tu, query, filtreStock, filtreSeuil, codeFamile, codeRayon, codeGrossiste, stock, seuil, 0, 0, true);
         JSONObject json = suggestionService.makeSuggestionFromArticleInvendus(datas, tu);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @PUT
+    @Path("account/{id}")
+    public Response updateProduct(@PathParam("id") String id, Params account
+    ) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        boolean res = ficheArticleService.updateProduitAccount(id, account.isCheckug());
+        return Response.ok().entity(new JSONObject().put("success", res).toString()).build();
+    }
+
+    @GET
+    @Path("account")
+    public Response getProducts(
+            @QueryParam(value = "query") String query,
+              @QueryParam(value = "rayon") String rayon,
+                @QueryParam(value = "filtre") String filtre,
+            @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit
+    ) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject json = ficheArticleService.produitAccounts(query,rayon,filtre,tu, start, limit);
         return Response.ok().entity(json.toString()).build();
     }
 }

@@ -250,7 +250,6 @@ public class Reapprovisionnement {
     public void exec() {
         try {
             TParameters p = em.find(TParameters.class, "KEY_DAY_SEUIL_REAPPRO");//derniere date de mise a jour stock reappro
-
             LocalDate date = LocalDate.parse(p.getStrVALUE());
             if (date.getMonthValue() != LocalDate.now().getMonthValue()) {
                 calculStockReappro();

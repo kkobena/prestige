@@ -53,7 +53,8 @@ public class BalancePdfServlet extends HttpServlet {
 
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, TABLEAUOLD, RECAP, TVA_JOUR,
-        STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS
+        STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS,
+        BALANCE_PARA
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -64,9 +65,9 @@ public class BalancePdfServlet extends HttpServlet {
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
-        boolean checkug=false;
+        boolean checkug = false;
         try {
-            checkug=Boolean.valueOf(request.getParameter("checkug"));
+            checkug = Boolean.valueOf(request.getParameter("checkug"));
         } catch (Exception e) {
         }
         Params params = new Params();
@@ -86,6 +87,9 @@ public class BalancePdfServlet extends HttpServlet {
         switch (Action.valueOf(action)) {
             case BALANCE:
                 file = balance.generatepdf(params);
+                break;
+            case BALANCE_PARA:
+                file = balance.tbalancePara(params);
                 break;
             case GESTION_CAISSE:
                 String userId = request.getParameter("userId");
@@ -107,6 +111,7 @@ public class BalancePdfServlet extends HttpServlet {
             case TVA:
                 file = balance.tvapdf(params);
                 break;
+
             case TVA_JOUR:
                 file = balance.tvaJourpdf(params);
                 break;
@@ -177,8 +182,8 @@ public class BalancePdfServlet extends HttpServlet {
                     _n = Integer.valueOf(request.getParameter("nbre"));
                 } catch (Exception e) {
                 }
-               
-                file = balance.produitPerimes(query, _n,dtStart,dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste);
+
+                file = balance.produitPerimes(query, _n, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste);
                 break;
             case STAT_PROVIDER_ARTICLE:
                 codeFamile = request.getParameter("codeFamile");

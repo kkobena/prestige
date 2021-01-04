@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObjectBuilder;
@@ -55,6 +56,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
+import javax.transaction.UserTransaction;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
@@ -85,6 +87,8 @@ public class FileFormaManager extends HttpServlet {
     private JsonBuilderFactory factory;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @Inject
+    private UserTransaction userTransaction;
     private List<OrderItem> items;
 
     private enum Format {
@@ -266,7 +270,7 @@ public class FileFormaManager extends HttpServlet {
         JSONObject json = new JSONObject();
 
         TGrossiste grossiste = em.find(TGrossiste.class, lgGROSSISTE);
-        em.getTransaction().begin();
+   userTransaction.begin();
 
         TOrder order = createOrder(grossiste, commonparameter.statut_is_Process, em, OTUser);
 
@@ -282,20 +286,15 @@ public class FileFormaManager extends HttpServlet {
                     items.add(new OrderItem(row[1], Integer.valueOf(row[3]), row[1], Integer.valueOf(row[3]), Double.valueOf(row[5])));
                 }
 
-                if ((count % 2) == 0) {
-                    em.getTransaction().commit();
-                    em.clear();
-                    em.getTransaction().begin();
+                if ((count % 20) == 0) {
+                    em.flush();
+                            em.clear();
                 }
                 count++;
             }
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().commit();
-                em.clear();
-
-            }
+              userTransaction.commit();
             json.put("count", i);
-            json.put("ligne", count - 1);
+            json.put("ligne", count );
         } catch (IOException e) {
             throw new Exception(e);
         }
@@ -309,18 +308,15 @@ public class FileFormaManager extends HttpServlet {
         JSONObject json = new JSONObject();
         try {
             TGrossiste grossiste = em.find(TGrossiste.class, lgGROSSISTE);
-            em.getTransaction().begin();
+            userTransaction.begin();
 
             TOrder order = createOrder(grossiste, commonparameter.statut_is_Process, em, OTUser);
             CSVParser parser;
             switch (mode) {
                 case LABOREX:
                     parser = new CSVParser(new InputStreamReader(part.getInputStream()), CSVFormat.EXCEL.withDelimiter(';'));
-
                     for (CSVRecord cSVRecord : parser) {
-
                         if (count > 0) {
-
                             int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(2), Integer.valueOf(cSVRecord.get(5)), Double.valueOf(cSVRecord.get(6)).intValue(), Double.valueOf(cSVRecord.get(7)).intValue(), 0);
                             if (ligne == 0) {
 //                                   printer.printRecord("N° Facture", "N° ligne", "CIP/EAN13", "Libellé du produit", "Qté commandée","Qté livrée","Prix de cession","Prix public","N° commande","Tva");
@@ -328,32 +324,27 @@ public class FileFormaManager extends HttpServlet {
                             }
                             i += ligne;
                         }
-                        if ((count % 2) == 0) {
-                            em.getTransaction().commit();
+                        if ((count % 20) == 0) {
+                             em.flush();
                             em.clear();
-                            em.getTransaction().begin();
+
                         }
                         count++;
                     }
-                    if (em.getTransaction().isActive()) {
-                        em.getTransaction().commit();
-                        em.clear();
-
-                    }
+                      userTransaction.commit();
                     json.put("count", i);
                     json.put("ligne", count - 1);
                     break;
                 case COPHARMED:
                     parser = new CSVParser(new InputStreamReader(part.getInputStream()), CSVFormat.EXCEL.withDelimiter(';'));
-
                     for (CSVRecord cSVRecord : parser) {
                         if (count > 0) {
-                            int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(4), Integer.valueOf(cSVRecord.get(9)), Integer.valueOf(cSVRecord.get(11)), Integer.valueOf(cSVRecord.get(13)), Integer.valueOf(cSVRecord.get(10)));
+                            int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(4), Integer.valueOf(cSVRecord.get(9)), Double.valueOf(cSVRecord.get(11)).intValue(), Integer.valueOf(cSVRecord.get(13)), Integer.valueOf(cSVRecord.get(10)));
                             i += ligne;
                             if (ligne == 0) {
                                 OrderItem orderItem = new OrderItem()
                                         .dateBl(cSVRecord.get(0))
-                                        .ug(10)
+                                        .ug(Integer.valueOf(cSVRecord.get(10)))
                                         .facture(cSVRecord.get(1))
                                         .cip(cSVRecord.get(4))
                                         .libelle(cSVRecord.get(6))
@@ -361,51 +352,40 @@ public class FileFormaManager extends HttpServlet {
                                         .ligne(Integer.valueOf(cSVRecord.get(2)))
                                         .prixUn(Integer.valueOf(cSVRecord.get(13)))
                                         .cmde(Integer.valueOf(cSVRecord.get(8)))
-                                        .prixAchat(Integer.valueOf(cSVRecord.get(11)));
+                                        .prixAchat( Double.valueOf(cSVRecord.get(11)).intValue());
                                 items.add(orderItem);
-
                             }
 
                         }
-                        if ((count % 2) == 0) {
-                            em.getTransaction().commit();
+                        if ((count % 20) == 0) {
+                             em.flush();
                             em.clear();
-                            em.getTransaction().begin();
+
                         }
                         count++;
                     }
-                    if (em.getTransaction().isActive()) {
-                        em.getTransaction().commit();
-                        em.clear();
-
-                    }
+                       userTransaction.commit();
                     json.put("count", i);
                     json.put("ligne", count - 1);
                     break;
                 case TEDIS:
                     parser = new CSVParser(new InputStreamReader(part.getInputStream()), CSVFormat.EXCEL.withDelimiter(';'));
-
                     for (CSVRecord cSVRecord : parser) {
 
                         int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(0), Integer.valueOf(cSVRecord.get(3)), Integer.valueOf(cSVRecord.get(4)), 0, 0);
                         i += ligne;
                         if (ligne == 0) {
-                            //OrderItem(String cip, Integer cmde, String ean, Integer cmdeL, Double montant)
                             items.add(new OrderItem(cSVRecord.get(0), Integer.valueOf(cSVRecord.get(1)), cSVRecord.get(0), Integer.valueOf(cSVRecord.get(3)), Double.valueOf(cSVRecord.get(4))));
                         }
 
-                        if ((count % 2) == 0) {
-                            em.getTransaction().commit();
+                        if ((count % 20) == 0) {
+                            em.flush();
                             em.clear();
-                            em.getTransaction().begin();
+
                         }
                         count++;
                     }
-                    if (em.getTransaction().isActive()) {
-                        em.getTransaction().commit();
-                        em.clear();
-
-                    }
+                    userTransaction.commit();
                     json.put("count", i);
                     json.put("ligne", count - 1);
                     break;
@@ -413,9 +393,7 @@ public class FileFormaManager extends HttpServlet {
                     parser = new CSVParser(new InputStreamReader(part.getInputStream()), CSVFormat.EXCEL.withDelimiter(';'));
 
                     for (CSVRecord cSVRecord : parser) {
-
                         int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(2), Integer.valueOf(cSVRecord.get(6)), Double.valueOf(cSVRecord.get(3)).intValue(), Double.valueOf(cSVRecord.get(4)).intValue(), 0);
-
                         i += ligne;
                         if (ligne == 0) {
                             OrderItem orderItem = new OrderItem()
@@ -425,23 +403,18 @@ public class FileFormaManager extends HttpServlet {
                                     .tva(Double.valueOf(cSVRecord.get(5)))
                                     .cmdeL(Integer.valueOf(cSVRecord.get(6)))
                                     .ligne(Integer.valueOf(cSVRecord.get(0)))
-                                    .prixUn(Integer.valueOf(cSVRecord.get(4)))
+                                    .prixUn(Double.valueOf(cSVRecord.get(4)).intValue())
                                     .cmde(Integer.valueOf(cSVRecord.get(7)))// c'est valeur n'est pas explique a cette date19/12/2020
-                                    .prixAchat(Integer.valueOf(cSVRecord.get(3)));
+                                    .prixAchat(Double.valueOf(cSVRecord.get(3)).intValue());
                             items.add(orderItem);
                         }
-                        if ((count % 2) == 0) {
-                            em.getTransaction().commit();
+                        if ((count % 20) == 0) {
+                           em.flush();
                             em.clear();
-                            em.getTransaction().begin();
                         }
                         count++;
                     }
-                    if (em.getTransaction().isActive()) {
-                        em.getTransaction().commit();
-                        em.clear();
-
-                    }
+                      userTransaction.commit();
                     json.put("count", i);
                     json.put("ligne", count - 1);
                     break;
@@ -505,7 +478,7 @@ public class FileFormaManager extends HttpServlet {
                     OTOrderDetail.setUg(ug);
                     em.persist(OTOrderDetail);
                 } else {
-                    OTOrderDetail.setIntNUMBER(OTOrderDetail.getUg() + ug);
+                    OTOrderDetail.setUg(OTOrderDetail.getUg() + ug);
                     OTOrderDetail.setIntNUMBER(OTOrderDetail.getIntNUMBER() + qty);
                     OTOrderDetail.setIntQTEMANQUANT(OTOrderDetail.getIntNUMBER());
                     OTOrderDetail.setIntPRICE(OTOrderDetail.getIntNUMBER() * int_PAF_DETAIL);
@@ -563,7 +536,6 @@ public class FileFormaManager extends HttpServlet {
 
                     printer.printRecord("N° Facture", "N° ligne", "CIP/EAN13", "Libellé du produit", "Qté commandée", "Qté livrée", "Prix de cession", "Prix public", "N° commande", "Tva");
                     for (OrderItem item : list) {
-
                         printer.printRecord(item.getFacture(), item.getLigne(), item.getCip(), item.getLibelle(), item.getCmde(), item.getCmdeL(), item.getMontant(), item.getPrixUn(), item.getRefBl(), item.getTva());
 
                     }
@@ -572,7 +544,9 @@ public class FileFormaManager extends HttpServlet {
                     //Date				Code Cip		Description	Laboratoire	Quantite Demandee	Quantitee livree	Unite Gratuite	Prix de Cession Hors Taxe	Taux Taxe	Prix public	Prix TTC
                     printer.printRecord("Date", "Numero Facture", "Numero Ligne", "Code Interne", "Code CIP", "Code CIP Alternatif", "Description", "Laboratoire", "Quantité demandée", "Quantitee livree", "Unite Gratuite", "Prix de Cession Hors Taxe", "Taux Taxe", "Prix public", "Prix TTC");
                     for (OrderItem item : list) {
-                        printer.printRecord(item.getDateBl(), item.getFacture(), item.getLigne(), "", item.getCip(), "", item.getLibelle(), "" + item.getCmde(), item.getCmdeL(), item.getUg(), item.getPrixAchat(), "", item.getPrixUn(), "");
+                        printer.printRecord(item.getDateBl(),
+                                item.getFacture(),
+                                item.getLigne(), "", item.getCip(), "", item.getLibelle(), "", + item.getCmde(), item.getCmdeL(), item.getUg(), item.getPrixAchat(), "", item.getPrixUn(), "");
 
                     }
                     break;

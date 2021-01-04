@@ -1344,7 +1344,7 @@ public class SalesServiceImpl implements SalesService {
             TCodeTva tva = OTFamille.getLgCODETVAID();
             Optional<TParameters> KEY_TAKE_INTO_ACCOUNT = findParamettre("KEY_TAKE_INTO_ACCOUNT", emg);
             TPreenregistrementDetail tpd = new TPreenregistrementDetail(UUID.randomUUID().toString());
-            tpd.setBoolACCOUNT(false);
+            tpd.setBoolACCOUNT(true);
             tpd.setLgFAMILLEID(OTFamille);
             tpd.setDtCREATED(new Date());
             tpd.setDtUPDATED(new Date());
@@ -1370,8 +1370,10 @@ public class SalesServiceImpl implements SalesService {
             tp.setIntPRICEOTHER(tp.getIntPRICEOTHER() + tpd.getIntPRICE());
             if (KEY_TAKE_INTO_ACCOUNT.isPresent()) {
                 if (Integer.valueOf(KEY_TAKE_INTO_ACCOUNT.get().getStrVALUE().trim()) == 1) {
-                    if ((!OTFamille.getLgZONEGEOID().getBoolACCOUNT() || !OTFamille.getBoolACCOUNT())) {
+                    if (!OTFamille.getLgZONEGEOID().getBoolACCOUNT() || !OTFamille.getBoolACCOUNT()) {
                         tpd.setBoolACCOUNT(false);
+                    } else {
+                        tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
                     }
                 } else {
                     tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
@@ -1512,7 +1514,10 @@ public class SalesServiceImpl implements SalesService {
                 tp.setIntPRICEREMISE(calculRemiseDepot(tp.getIntPRICE(), params.getRemiseDepot()));
                 
             }
-            tp.setIntACCOUNT(tp.getIntACCOUNT() + (detail.getIntPRICE() - oldPrice));
+            if (detail.getBoolACCOUNT()) {
+                tp.setIntACCOUNT(tp.getIntACCOUNT() + (detail.getIntPRICE() - oldPrice));
+            }
+            
             tp.setDtUPDATED(new Date());
             emg.merge(tp);
             emg.merge(detail);
@@ -1560,19 +1565,17 @@ public class SalesServiceImpl implements SalesService {
     ) {
         EntityManager emg = this.getEm();
         try {
-//            emg.getTransaction().begin();
             TPreenregistrementDetail tpd = emg.find(TPreenregistrementDetail.class, itemId);
             TPreenregistrement tp = tpd.getLgPREENREGISTREMENTID();
             tp.setIntPRICE(tp.getIntPRICE() - tpd.getIntPRICE());
             tp.setMontantTva(tp.getMontantTva() - tpd.getMontantTva());
+            if (tpd.getBoolACCOUNT()) {
+                tp.setIntACCOUNT(tp.getIntACCOUNT() - tpd.getIntPRICE());
+            }
             emg.merge(tp);
             emg.remove(tpd);
-//            emg.getTransaction().commit();
             return tp;
         } catch (Exception e) {
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             return null;
             
         }
@@ -2356,7 +2359,7 @@ public class SalesServiceImpl implements SalesService {
                         item.setDblQUOTACONSOVENTE(item.getLgCOMPTECLIENTTIERSPAYANTID().getDblQUOTACONSOVENTE() != null ? item.getLgCOMPTECLIENTTIERSPAYANTID().getDblQUOTACONSOVENTE() + item.getIntPRICE() : 0);
                         item.setStrSTATUT(commonparameter.statut_is_Closed);
                         item.setLgUSERID(u);
-                        if (params.isPrincipal() ||  (tierspayants.size() == 1) || OTCompteClientTiersPayant.getBISRO() || (OTCompteClientTiersPayant.getIntPRIORITY()==1)) {
+                        if (params.isPrincipal() || (tierspayants.size() == 1) || OTCompteClientTiersPayant.getBISRO() || (OTCompteClientTiersPayant.getIntPRIORITY() == 1)) {
                             OTPreenregistrement.setStrREFBON(params.getNumBon());
                         }
                         emg.merge(item);
@@ -3441,11 +3444,11 @@ public class SalesServiceImpl implements SalesService {
             return new JSONObject().put("success", false);
         }
     }
-    
+
     private List<TPreenregistrementCompteClientTiersPayent> getTPreenregistrementCompteClientTiersPayent(String lg_PREENREGISTREMENT_ID) {
         try {
             TypedQuery<TPreenregistrementCompteClientTiersPayent> q
-                    = getEm().createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1 ", TPreenregistrementCompteClientTiersPayent.class)
+                    = getEm().createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1 ORDER BY t.lgCOMPTECLIENTTIERSPAYANTID.intPRIORITY ASC ", TPreenregistrementCompteClientTiersPayent.class)
                             .setParameter(1, lg_PREENREGISTREMENT_ID);
             return q.getResultList();
             
@@ -4077,7 +4080,7 @@ public class SalesServiceImpl implements SalesService {
     private TPreenregistrement updateVenteInfosClientOrtierspayant(SalesParams salesParams) throws Exception {
         TPreenregistrement tp = getEm().find(TPreenregistrement.class, salesParams.getVenteId());
         clonePreenregistrementTp(tp, salesParams, DateConverter.STATUT_IS_CLOSED);
-         updateVente(salesParams, tp);
+        updateVente(salesParams, tp);
         return tp;
     }
     
@@ -4088,12 +4091,16 @@ public class SalesServiceImpl implements SalesService {
         ArrayList<TPreenregistrementDetail> list = items(old, getEm());
         int montant = old.getIntPRICE();
         int montantVariable = montant;
-        for (TiersPayantParams b : salesParams.getTierspayants()) {
+        List<TiersPayantParams> payantParamses = salesParams.getTierspayants();
+        for (TiersPayantParams b : payantParamses) {
             TCompteClientTiersPayant payant = null;
             Optional<TCompteClientTiersPayant> op = findOneCompteClientTiersPayantById(b.getCompteTp());
+            if(!op.isPresent()){
+             op=   findCompteClientTiersPayantByClientIdAndTiersPayantId(client.getLgCLIENTID(), b.getCompteTp());
+            }
             if (op.isPresent()) {
                 payant = op.get();
-                if(payant.getBISRO()|| (payant.getIntPRIORITY()==1)){
+                if (payant.getBISRO() || (payant.getIntPRIORITY() == 1)) {
                     old.setStrREFBON(b.getNumBon());
                 }
                 TPreenregistrementCompteClientTiersPayent opc = null;
@@ -4112,8 +4119,14 @@ public class SalesServiceImpl implements SalesService {
             } else {
                 
                 TTiersPayant p = getEm().find(TTiersPayant.class, b.getCompteTp());
-                payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux());
-              if(payant.getBISRO()|| (payant.getIntPRIORITY()==1)){
+                if (payantParamses.size() > 1) {
+                    TPreenregistrementCompteClientTiersPayent opc = getEm().find(TPreenregistrementCompteClientTiersPayent.class, b.getItemId());
+                    payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux(), opc.getLgCOMPTECLIENTTIERSPAYANTID());
+                } else {
+                    payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux());
+                }
+                
+                if (payant.getBISRO() || (payant.getIntPRIORITY() == 1)) {
                     old.setStrREFBON(b.getNumBon());
                 }
                 JSONObject json = calculVoNetAvecPlafondVente(old, montant, montantVariable, b.getTaux(), list);
@@ -4459,7 +4472,16 @@ public class SalesServiceImpl implements SalesService {
             return Optional.empty();
         }
     }
-    
+      private Optional<TCompteClientTiersPayant> findCompteClientTiersPayantByClientIdAndTiersPayantId(String clientId,String tierspayantId) {
+        try {
+           TypedQuery<TCompteClientTiersPayant> q = getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID = ?1 AND t.lgTIERSPAYANTID.lgTIERSPAYANTID = ?2", TCompteClientTiersPayant.class)
+                    .setParameter(1, clientId).setParameter(2, tierspayantId);
+            q.setMaxResults(1);
+            return Optional.ofNullable(q.getSingleResult());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
     private Optional<TPreenregistrementCompteClientTiersPayent> getTPreenregistrementCompteClientTiersPayent(String lg_PREENREGISTREMENT_ID, String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
         try {
             TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEm().createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1 AND t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID = ?2", TPreenregistrementCompteClientTiersPayent.class)

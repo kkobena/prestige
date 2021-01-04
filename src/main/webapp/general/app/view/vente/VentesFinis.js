@@ -92,7 +92,8 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             increment: 30,
                             value: '23:59',
                             format: 'H:i'
-                        }, '-', {
+                        }, '-', 
+                        {
                             xtype: 'combobox',
                             fieldLabel: 'Type.vente',
                             labelWidth: 65,

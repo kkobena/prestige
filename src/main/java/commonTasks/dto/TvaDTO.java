@@ -18,7 +18,7 @@ public class TvaDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private Integer taux = 0;
-    private Integer montantHt = 0, montantTva = 0, montantTtc = 0;
+    private long montantHt = 0, montantTva = 0, montantTtc = 0;
     private LocalDate localOperation;
      private String dateOperation;
 
@@ -48,29 +48,29 @@ public class TvaDTO implements Serializable {
     }
 
     @JSONPropertyName("Total HT")
-    public Integer getMontantHt() {
+    public long getMontantHt() {
         return montantHt;
     }
 
-    public void setMontantHt(Integer montantHt) {
+    public void setMontantHt(long montantHt) {
         this.montantHt = montantHt;
     }
 
     @JSONPropertyName("Total TVA")
-    public Integer getMontantTva() {
+    public long getMontantTva() {
         return montantTva;
     }
 
-    public void setMontantTva(Integer montantTva) {
+    public void setMontantTva(long montantTva) {
         this.montantTva = montantTva;
     }
 
     @JSONPropertyName("Total TTC")
-    public Integer getMontantTtc() {
+    public long getMontantTtc() {
         return montantTtc;
     }
 
-    public void setMontantTtc(Integer montantTtc) {
+    public void setMontantTtc(long montantTtc) {
         this.montantTtc = montantTtc;
     }
 

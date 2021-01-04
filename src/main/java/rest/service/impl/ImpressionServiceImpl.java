@@ -529,7 +529,7 @@ public class ImpressionServiceImpl implements Printable {
         /* if (this.getType_ticket().equalsIgnoreCase(commonparameter.str_ACTION_VENTE)) {
          graphics.drawString("***** Merci de votre confiance.*****", 15, start);
          }*/
-        graphics.drawString("Logiciel DICI", 125, start + (scale_texte * 2)); //a decommenter apres 11/06/2016
+//        graphics.drawString("Logiciel DICI", 125, start + (scale_texte * 2)); //a decommenter apres 11/06/2016
 //        graphics.drawString("Logiciel DICI", 0, start + (scale_texte * 2));
 
         graphics.drawString(SIMPLE_DATE_FORMAT.format(this.getOperation()), 125, start + (scale_texte * 1)); // imprimante matricielle

@@ -32,11 +32,21 @@ public class VenteDetailsDTO implements Serializable {
     private Integer intPRICEUNITAIR = 0, intQUANTITY = 0, intQUANTITYSERVED = 0, intPRICE = 0, intPRICEREMISE = 0;
     private String operateur, strRefBon, dateHeure;
     private Date dateOperation;
-    private String typeVente,numOrder, medecinId,commentaire,nom;
-    private int intAVOIR, currentStock = 0,uniteGratuite,montantUg;
-   
+    private String typeVente, numOrder, medecinId, commentaire, nom;
+    private int intAVOIR, currentStock = 0, uniteGratuite, montantUg, seuil, stockUg, montantTva, valeurTva;
+    private int montantHt;
+    private int montantNetHt;
+
     public String getNumOrder() {
         return numOrder;
+    }
+
+    public int getMontantNetHt() {
+        return montantNetHt;
+    }
+
+    public void setMontantNetHt(int montantNetHt) {
+        this.montantNetHt = montantNetHt;
     }
 
     public int getUniteGratuite() {
@@ -83,9 +93,30 @@ public class VenteDetailsDTO implements Serializable {
         this.nom = nom;
     }
 
+    public int getMontantHt() {
+        return montantHt;
+    }
+
+    public void setMontantHt(int montantHt) {
+        this.montantHt = montantHt;
+    }
+
     public VenteDetailsDTO operateur(TUser operateur) {
         this.operateur = operateur.getStrFIRSTNAME() + " " + operateur.getStrLASTNAME();
         return this;
+    }
+
+    public VenteDetailsDTO stockUg(int stockUg) {
+        this.stockUg = stockUg;
+        return this;
+    }
+
+    public int getStockUg() {
+        return stockUg;
+    }
+
+    public void setStockUg(int stockUg) {
+        this.stockUg = stockUg;
     }
 
     public VenteDetailsDTO intPRICEUNITAIR(int intPRICEUNITAIR) {
@@ -240,19 +271,16 @@ public class VenteDetailsDTO implements Serializable {
         this.dateOp = DateConverter.convertDateToLocalDateTime(p.getDtUPDATED());
         this.dtCREATED = dateFormat.format(p.getDtUPDATED());
         this.ticketName = f.getStrNAME();
-        this.uniteGratuite=d.getIntUG();
-        this.montantUg=d.getIntUG()*d.getIntPRICEUNITAIR();
-          this.dateHeure = dateFormatHeure.format(p.getDtUPDATED());
-//        try {
-//             Medecin m=d.getLgPREENREGISTREMENTID().getMedecin();
-//             this.nom=m.getNom();
-//             this.medecinId=m.getId();
-//             this.numOrder=m.getNumOrdre();
-//             this.commentaire=m.getCommentaire();
-//        } catch (Exception e) {
-//        }
-       
-
+        this.uniteGratuite = d.getIntUG();
+        this.montantUg = d.getIntUG() * d.getIntPRICEUNITAIR();
+        this.dateHeure = dateFormatHeure.format(p.getDtUPDATED());
+        this.valeurTva = d.getValeurTva();
+        this.montantTva = d.getMontantTva();
+        Double _valeurTva = 1 + (Double.valueOf(d.getValeurTva()) / 100);
+        int htAmont = (int) Math.ceil(d.getIntPRICE() / _valeurTva);
+        this.montantHt = htAmont;
+        htAmont = (int) Math.ceil((d.getIntPRICE() - d.getIntPRICEREMISE()) / _valeurTva);
+        this.montantNetHt = htAmont;
     }
 
     public VenteDetailsDTO(TPreenregistrementDetail d, boolean b) {
@@ -280,6 +308,8 @@ public class VenteDetailsDTO implements Serializable {
         this.operateur = tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
         this.typeVente = p.getLgTYPEVENTEID().getStrNAME();
         this.ticketName = f.getStrNAME();
+        this.valeurTva = d.getValeurTva();
+        this.montantTva = d.getMontantTva();
     }
 
     public String getLgPREENREGISTREMENTDETAILID() {
@@ -445,7 +475,7 @@ public class VenteDetailsDTO implements Serializable {
 
     }
 
-    public VenteDetailsDTO(String cip, String libelle, String rayon, String grossiste, String familleArticle, Date _datePeremption, Integer valeurPrixAchat, Integer valeurPrixVente, Integer qty, String groupById, String groupBy) {
+    public VenteDetailsDTO(String cip, String libelle, String rayon, String grossiste, String familleArticle, Date _datePeremption, Integer valeurPrixAchat, Integer valeurPrixVente, Integer qty, String groupById, String groupBy, int seuil) {
         LocalDate dateTime = DateConverter.convertDateToLocalDate(_datePeremption);
         String date_perem = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         this.intCIP = cip;
@@ -457,6 +487,7 @@ public class VenteDetailsDTO implements Serializable {
         this.ticketName = familleArticle;
         this.dtCREATED = date_perem;
         this.intQUANTITY = qty;
+        this.seuil = seuil;
         Period p = Period.between(toDate, dateTime);
         int nbJours = p.getDays();
         int months = p.normalized().getMonths();
@@ -503,6 +534,32 @@ public class VenteDetailsDTO implements Serializable {
         this.intQUANTITY = d.getIntQUANTITY();
         this.intPRICE = d.getIntPRICE();
         this.currentStock = stock;
+        this.valeurTva = d.getValeurTva();
+        this.montantTva = d.getMontantTva();
+    }
+
+    public int getMontantTva() {
+        return montantTva;
+    }
+
+    public void setMontantTva(int montantTva) {
+        this.montantTva = montantTva;
+    }
+
+    public int getValeurTva() {
+        return valeurTva;
+    }
+
+    public void setValeurTva(int valeurTva) {
+        this.valeurTva = valeurTva;
+    }
+
+    public int getSeuil() {
+        return seuil;
+    }
+
+    public void setSeuil(int seuil) {
+        this.seuil = seuil;
     }
 
 }

@@ -23,12 +23,9 @@ import dal.MvtTransaction;
 import dal.MvtTransaction_;
 import dal.TAyantDroit;
 import dal.TClient;
-import dal.TClient_;
 import dal.TCompteClientTiersPayant;
 import dal.TEmplacement;
-import dal.TFamille;
 import dal.TFamille_;
-import dal.TGroupeTierspayant;
 import dal.TParameters;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
@@ -37,8 +34,6 @@ import dal.TPreenregistrementCompteClientTiersPayent_;
 import dal.TPreenregistrementDetail;
 import dal.TPreenregistrementDetail_;
 import dal.TPreenregistrement_;
-import dal.TReglement;
-import dal.TTiersPayant;
 import dal.TTypeReglement_;
 import dal.TUser_;
 import dal.enumeration.TypeTransaction;
@@ -293,7 +288,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             List<TPreenregistrement> list = q.getResultList();
             List<VenteDTO> data;
             if (!params.isDepotOnly()) {
-                data = list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), (v.getStrTYPEVENTE().equals("VO") ? findClientTiersPayents(v.getLgPREENREGISTREMENTID()).stream().map(TiersPayantParams::new).collect(Collectors.toList()) : Collections.EMPTY_LIST), (v.getAyantDroit() != null ? new AyantDroitDTO(v.getAyantDroit()) : null), (v.getClient() != null ? new ClientDTO(v.getClient()) : null), findByParent(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
+                data = list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), (v.getStrTYPEVENTE().equals("VO") ? findClientTiersPayents(v.getLgPREENREGISTREMENTID()).stream().map(TiersPayantParams::new).collect(Collectors.toList()) : Collections.emptyList()), (v.getAyantDroit() != null ? new AyantDroitDTO(v.getAyantDroit()) : null), (v.getClient() != null ? new ClientDTO(v.getClient()) : null), findByParent(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
             } else {
                 data = list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), new MagasinDTO(findEmplacementById(v.getPkBrand())), findByParent(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
             }
@@ -755,9 +750,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     ttc.add(mttc);
                     tva.add(montantTva);
                 });
-                otva.setMontantHt(ht.intValue());
-                otva.setMontantTtc(ttc.intValue());
-                otva.setMontantTva(tva.intValue());
+                otva.setMontantHt(ht.longValue());
+                otva.setMontantTtc(ttc.longValue());
+                otva.setMontantTva(tva.longValue());
                 datas.add(otva);
             });
 
@@ -847,17 +842,17 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 LongAdder ttc = new LongAdder();
                 LongAdder tva = new LongAdder();
                 v.stream().forEach(l -> {
-                    Integer mttc = l.getPrixUn() * l.getQteMvt();
+                    long mttc = l.getPrixUn() * l.getQteMvt();
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
-                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
-                    Integer montantTva = mttc - htAmont;
+                    long htAmont = (long) Math.ceil(mttc / valeurTva);
+                    long montantTva = mttc - htAmont;
                     ht.add(htAmont);
                     ttc.add(mttc);
                     tva.add(montantTva);
                 });
-                otva.setMontantHt(ht.intValue());
-                otva.setMontantTtc(ttc.intValue());
-                otva.setMontantTva(tva.intValue());
+                otva.setMontantHt(ht.longValue());
+                otva.setMontantTtc(ttc.longValue());
+                otva.setMontantTva(tva.longValue());
                 datas.add(otva);
             });
         });
@@ -869,7 +864,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     public List<TvaDTO> tvasRapport0(Params params) {
         List<TvaDTO> datas = new ArrayList<>();
         try {
-            int montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP);
+            long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP);
             List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
             LongAdder adder = new LongAdder();
@@ -880,10 +875,10 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 LongAdder ttc = new LongAdder();
                 LongAdder tva = new LongAdder();
                 v.stream().forEach(l -> {
-                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    long mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
-                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
-                    Integer montantTva = mttc - htAmont;
+                    long htAmont = (long) Math.ceil(mttc / valeurTva);
+                    long montantTva = mttc - htAmont;
                     ht.add(htAmont);
                     ttc.add(mttc);
                     adder.add(mttc);
@@ -891,12 +886,12 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
                 });
 
-                otva.setMontantHt(ht.intValue());
-                otva.setMontantTtc(ttc.intValue());
-                otva.setMontantTva(tva.intValue());
+                otva.setMontantHt(ht.longValue());
+                otva.setMontantTtc(ttc.longValue());
+                otva.setMontantTva(tva.longValue());
                 datas.add(otva);
             });
-            int mtn = adder.intValue() - montant;
+            long mtn = adder.longValue()- montant;
             ListIterator listIterator = datas.listIterator();
             while (listIterator.hasNext()) {
                 TvaDTO next = (TvaDTO) listIterator.next();
@@ -963,7 +958,6 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvaRapport(Params params) {
-
         if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
             return tvasRapport0(params);
         }
@@ -980,18 +974,18 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 LongAdder ttc = new LongAdder();
                 LongAdder tva = new LongAdder();
                 v.stream().forEach(l -> {
-                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    long mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
-                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
-                    Integer montantTva = mttc - htAmont;
+                    long htAmont = (long) Math.ceil(mttc / valeurTva);
+                    long montantTva = mttc - htAmont;
                     ht.add(htAmont);
                     ttc.add(mttc);
                     tva.add(montantTva);
 
                 });
-                otva.setMontantHt(ht.intValue());
-                otva.setMontantTtc(ttc.intValue());
-                otva.setMontantTva(tva.intValue());
+                otva.setMontantHt(ht.longValue());
+                otva.setMontantTtc(ttc.longValue());
+                otva.setMontantTva(tva.longValue());
                 datas.add(otva);
             });
 
@@ -1018,17 +1012,17 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 LongAdder ttc = new LongAdder();
                 LongAdder tva = new LongAdder();
                 v.stream().forEach(l -> {
-                    Integer mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    long mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
-                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
-                    Integer montantTva = mttc - htAmont;
+                    long htAmont = (long) Math.ceil(mttc / valeurTva);
+                    long montantTva = mttc - htAmont;
                     ht.add(htAmont);
                     ttc.add(mttc);
                     tva.add(montantTva);
                 });
-                otva.setMontantHt(ht.intValue());
-                otva.setMontantTtc(ttc.intValue());
-                otva.setMontantTva(tva.intValue());
+                otva.setMontantHt(ht.longValue());
+                otva.setMontantTtc(ttc.longValue());
+                otva.setMontantTva(tva.longValue());
                 datas.add(otva);
             });
         });

@@ -25,6 +25,7 @@ import dal.Typemvtproduit_;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -78,8 +79,23 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             LongAdder montantHT = new LongAdder();
             LongAdder montantAchat = new LongAdder();
             final LocalDate periode = LocalDate.parse(dtStart);
-            final Integer montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
-            findPreenregistrementDetails(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
+            Period period=Period.between(LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
+           if(period.getMonths()>0){
+                findPreenregistrementDetails(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
+                    .sorted(comparator)
+                    .forEach(x -> {
+                        montantMarge.add(x.getMontantMarge());
+                        montantTTC.add(x.getMontantTTC());
+                        montantAchat.add(x.getMontantAchat());
+                        montantHT.add(x.getMontantHT());
+                        Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                        x.setPourcentageTH(p.longValue());
+                        list.add(x);
+
+                    });
+           }else{
+              findPreenregistrementDetails(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
                     .sorted(comparator)
                     .forEach(x -> {
                         montantMarge.add(x.getMontantMarge());
@@ -88,17 +104,19 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                         montantHT.add(x.getMontantHT());
                         cumulFamilleArticles(periode, x, u);
                         Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-                        x.setPourcentageTH(p.intValue());
+                        x.setPourcentageTH(p.longValue());
                         list.add(x);
 
-                    });
-            summary.setMontantCumulAchat(montantAchat.intValue());
-            summary.setMontantCumulHT(montantHT.intValue());
-            summary.setMontantCumulMarge(montantMarge.intValue());
-            summary.setMontantCumulTTC(montantTTC.intValue());
+                    });  
+           }
+           
+            summary.setMontantCumulAchat(montantAchat.longValue());
+            summary.setMontantCumulHT(montantHT.longValue());
+            summary.setMontantCumulMarge(montantMarge.longValue());
+            summary.setMontantCumulTTC(montantTTC.longValue());
             summary.setPourcentageTH((montanttotalHt / montanttotalHt) * 100);
             Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-            summary.setPourcentageCumulMage(ux.intValue());
+            summary.setPourcentageCumulMage(ux.longValue());
         } catch (Exception e) {
         }
         return Pair.of(summary, list);
@@ -237,7 +255,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         }
     }
 
-    Integer totalMontantHT(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    long totalMontantHT(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             TEmplacement emp = u.getLgEMPLACEMENTID();
@@ -270,7 +288,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
-            return ((Number) q.getSingleResult()).intValue();
+            return ((Number) q.getSingleResult()).longValue();
         } catch (Exception e) {
 //            e.printStackTrace(System.err);
             return 0;
@@ -487,7 +505,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             LongAdder montantHT = new LongAdder();
             LongAdder montantAchat = new LongAdder();
             final LocalDate periode = LocalDate.parse(dtStart);
-            final Integer montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
+            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
             fetchDataForStatisticVenteRayons(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
                     .sorted(comparator)
                     .forEach(x -> {
@@ -497,21 +515,21 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                         montantHT.add(x.getMontantHT());
                         cumulStatisticRayons(periode, x, u);
                         Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-                        x.setPourcentageTH(p.intValue());
+                        x.setPourcentageTH(p.longValue());
                         list.add(x);
 
                     });
-            summary.setMontantCumulAchat(montantAchat.intValue());
-            summary.setMontantCumulHT(montantHT.intValue());
-            summary.setMontantCumulMarge(montantMarge.intValue());
-            summary.setMontantCumulTTC(montantTTC.intValue());
+            summary.setMontantCumulAchat(montantAchat.longValue());
+            summary.setMontantCumulHT(montantHT.longValue());
+            summary.setMontantCumulMarge(montantMarge.longValue());
+            summary.setMontantCumulTTC(montantTTC.longValue());
             try {
                summary.setPourcentageTH((montanttotalHt / montanttotalHt) * 100); 
             } catch (ArithmeticException e) {
             }
             
             Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-            summary.setPourcentageCumulMage(ux.intValue());
+            summary.setPourcentageCumulMage(ux.longValue());
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -529,7 +547,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             LongAdder montantHT = new LongAdder();
             LongAdder montantAchat = new LongAdder();
             final LocalDate periode = LocalDate.parse(dtStart);
-            final Integer montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
+            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
             fetchDataForStatisticVenteGrossistes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
                     .sorted(comparator)
                     .forEach(x -> {
@@ -539,17 +557,17 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                         montantHT.add(x.getMontantHT());
                         cumulStatisticGrossistes(periode, x, u);
                         Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-                        x.setPourcentageTH(p.intValue());
+                        x.setPourcentageTH(p.longValue());
                         list.add(x);
 
                     });
-            summary.setMontantCumulAchat(montantAchat.intValue());
-            summary.setMontantCumulHT(montantHT.intValue());
-            summary.setMontantCumulMarge(montantMarge.intValue());
-            summary.setMontantCumulTTC(montantTTC.intValue());
+            summary.setMontantCumulAchat(montantAchat.longValue());
+            summary.setMontantCumulHT(montantHT.longValue());
+            summary.setMontantCumulMarge(montantMarge.longValue());
+            summary.setMontantCumulTTC(montantTTC.longValue());
             summary.setPourcentageTH((montanttotalHt / montanttotalHt) * 100);
             Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-            summary.setPourcentageCumulMage(ux.intValue());
+            summary.setPourcentageCumulMage(ux.longValue());
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }

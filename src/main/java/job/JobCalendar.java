@@ -47,7 +47,7 @@ public class JobCalendar {
     public void init() {
         exec();
         removeFacture();
-//        removeSuggestionO();
+        removeSuggestionO();
 //        updateOrderDetailPrices();
     }
 

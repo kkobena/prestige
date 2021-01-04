@@ -5,7 +5,6 @@
  */
 package rest;
 
-import commonTasks.dto.HistoriqueImportationDTO;
 import commonTasks.dto.SalesStatsParams;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -27,8 +25,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import rest.service.impl.ImportationVente;
 import toolkits.parameters.commonparameter;
 

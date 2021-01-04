@@ -23,9 +23,9 @@ import org.json.JSONObject;
 @Local
 public interface FicheArticleService {
 
-    JSONObject produitPerimes(String query, int nbreMois,String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
+    JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
 
-    Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois,String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all);
+    Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all);
 
     JSONObject modifierArticleDatePeremption(String lg_FAMILLE_ID, String dt_peremption) throws JSONException;
 
@@ -48,4 +48,8 @@ public interface FicheArticleService {
     List<VenteDetailsDTO> produitConsomamation(TUser u, String query, String dtStart, String dtEnd, String id);
 
     JSONObject produitConsomamation(TUser u, String query, String dtStart, String dtEnd, String id, int start, int limit) throws JSONException;
+
+    boolean updateProduitAccount(String id,boolean account);
+    
+    JSONObject produitAccounts(String query,String rayon,String filtre, TUser u,int start, int limit) throws JSONException;
 }

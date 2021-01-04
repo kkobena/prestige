@@ -7,6 +7,7 @@ package rest.report.pdf;
 
 import commonTasks.dto.RuptureDetailDTO;
 import commonTasks.dto.ValorisationDTO;
+import commonTasks.dto.VenteDetailsDTO;
 import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.Map;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import rest.report.ReportUtil;
+import rest.service.CaisseService;
 import rest.service.CommonService;
 import rest.service.OrderService;
 import rest.service.ProduitService;
@@ -38,6 +40,8 @@ public class Stock {
     CommonService commonService;
     @EJB
     OrderService orderService;
+       @EJB
+    private CaisseService caisseService;
 
     public String valorisation(TUser tu, int mode, LocalDate dtSt, String lgGROSSISTEID, String lgFAMILLEARTICLEID, String lgZONEGEOID, String END, String BEGIN, String emplacementId) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
@@ -86,7 +90,18 @@ public class Stock {
         return "/data/reports/pdf/valorisation_" + report_generate_file;
     }
 
-    public String rupturePharmaMl(TUser tu, LocalDate dtSt, LocalDate dtEnd, String query, String grossisteId, String emplacementId) throws IOException {
+    public String venteUgDTO(TUser tu, LocalDate dtSt, LocalDate dtEnd, String query) throws IOException {
+        TOfficine oTOfficine = commonService.findOfficine();
+        String scr_report_file = "rp_vente_ugs";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        parameters.put("P_H_CLT_INFOS", "VENTES UNITES GRATUITES " + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        List<VenteDetailsDTO> data = caisseService.venteUgDTO(dtSt, dtEnd, query);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_vente_ugs" + report_generate_file, data);
+        return "/data/reports/pdf/rp_vente_ugs" + report_generate_file;
+    }
+  public String rupturePharmaMl(TUser tu, LocalDate dtSt, LocalDate dtEnd, String query, String grossisteId, String emplacementId) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_ruptures_pharmaml";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
@@ -97,5 +112,4 @@ public class Stock {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_ruptures_pharmaml_" + report_generate_file, data);
         return "/data/reports/pdf/rp_ruptures_pharmaml_" + report_generate_file;
     }
-
 }

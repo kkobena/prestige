@@ -76,5 +76,25 @@ public class CaissesRessource {
         JSONObject json = salesStatsService.tvasData(params);
         return Response.ok().entity(json.toString()).build();
     }
+ @GET
+    @Path("balanceparas")
+    public Response balancepara(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
+    ) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+        JSONObject json = caisseService.balancePara(dtSt, dtEn, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        return Response.ok().entity(json.toString()).build();
+    }
 
 }

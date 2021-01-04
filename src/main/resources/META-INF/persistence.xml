@@ -186,10 +186,6 @@
     <class>dal.TCompany</class>
     <class>dal.Groupefournisseur</class>
     <class>dal.HMvtProduit</class>
-    <class>dal.PVente</class>
-    <class>dal.PVenteItem</class>
-    <class>dal.PVenteJour</class>
-    <class>dal.PVenteVOItems</class>
     <class>dal.AnnulationSnapshot</class>
     <class>dal.Typemvtproduit</class>
     <class>dal.MvtTransaction</class>

@@ -20,11 +20,12 @@ public class TiersPayantParams implements Serializable {
     private int taux;
     private String numBon, tpFullName, lgTIERSPAYANTID, lgCOMPTECLIENTID;
     private Integer tpnet = 0, discount = 0;
-    private boolean principal, enabled,activeTiersPayant;
+    private boolean principal, enabled, activeTiersPayant;
     private String numSecurity = "";
     private int order;
     private Integer dbPLAFONDENCOURS = 0, dbCONSOMMATIONMENSUELLE, dblPLAFOND = 0, dblQUOTACONSOMENSUELLE = 0;
     private boolean bIsAbsolute;
+    private String ancienTierPayant,itemId;
 
     public String getCompteTp() {
         return compteTp;
@@ -165,6 +166,8 @@ public class TiersPayantParams implements Serializable {
             TCompteClientTiersPayant cp = c.getLgCOMPTECLIENTTIERSPAYANTID();
             TTiersPayant payant = cp.getLgTIERSPAYANTID();
             this.compteTp = cp.getLgCOMPTECLIENTTIERSPAYANTID();
+            this.ancienTierPayant=cp.getLgCOMPTECLIENTTIERSPAYANTID();
+             this.itemId = c.getLgPREENREGISTREMENTCOMPTECLIENTPAYENTID();
             this.tpFullName = payant.getStrNAME();
             this.principal = cp.getIntPRIORITY() == 1;
             this.lgTIERSPAYANTID = payant.getLgTIERSPAYANTID();
@@ -226,20 +229,38 @@ public class TiersPayantParams implements Serializable {
             this.taux = cp.getIntPOURCENTAGE();
             this.lgCOMPTECLIENTID = cp.getLgCOMPTECLIENTID().getLgCOMPTECLIENTID();
             this.bIsAbsolute = cp.getBIsAbsolute();
-            this.enabled=cp.getBCANBEUSE();
+            this.enabled = cp.getBCANBEUSE();
             try {
-                 this.dblQUOTACONSOMENSUELLE=cp.getDblPLAFOND().intValue(); 
+                this.dblQUOTACONSOMENSUELLE = cp.getDblPLAFOND().intValue();
             } catch (Exception e) {
             }
-          
-            this.activeTiersPayant=payant.getBCANBEUSE();
+
+            this.activeTiersPayant = payant.getBCANBEUSE();
             try {
-                 this.dblPLAFOND=cp.getDblPLAFOND().intValue();
+                this.dblPLAFOND = cp.getDblPLAFOND().intValue();
             } catch (Exception e) {
             }
-           
+
         } catch (Exception e) {
         }
 
     }
+
+    public String getAncienTierPayant() {
+        return ancienTierPayant;
+    }
+
+    public void setAncienTierPayant(String ancienTierPayant) {
+        this.ancienTierPayant = ancienTierPayant;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(String itemId) {
+        this.itemId = itemId;
+    }
+    
+    
 }

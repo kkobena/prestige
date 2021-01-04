@@ -166,7 +166,9 @@ public class TParameters implements Serializable {
 
     @Override
     public String toString() {
-        return "dal.TParameters[ strKEY=" + strKEY + " ]";
+        return "TParameters{" + "strKEY=" + strKEY + ", strVALUE=" + strVALUE + ", strDESCRIPTION=" + strDESCRIPTION + ", strTYPE=" + strTYPE + ", strSTATUT=" + strSTATUT + ", strISENKRYPTED=" + strISENKRYPTED + ", strSECTIONKEY=" + strSECTIONKEY + ", dtCREATED=" + dtCREATED + ", dtUPDATED=" + dtUPDATED + '}';
     }
+
+  
     
 }

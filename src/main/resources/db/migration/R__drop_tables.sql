@@ -1,0 +1,5 @@
+
+DROP TABLE  IF EXISTS pventeitem;
+DROP TABLE  IF EXISTS pventevoitems;
+DROP TABLE  IF EXISTS pventejour;
+DROP TABLE  IF EXISTS pvente;

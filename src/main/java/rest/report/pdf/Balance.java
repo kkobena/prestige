@@ -32,6 +32,7 @@ import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
@@ -786,6 +787,10 @@ public class Balance {
         }
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_statfamilleart";
+        Period periode = Period.between(dtSt, dtEn);
+        if (periode.getMonths() > 0) {
+            scr_report_file = "rp_statfamilleart_periode";
+        }
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
@@ -837,7 +842,7 @@ public class Balance {
         return "/data/reports/pdf/rp_vingtquatre" + report_generate_file;
     }
 
-    public String produitPerimes(String query, int nbreMois,String dtStart, String dtEnd, TUser tu, String codeFamile, String codeRayon, String codeGrossiste) throws IOException {
+    public String produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser tu, String codeFamile, String codeRayon, String codeGrossiste) throws IOException {
 
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_perimerquery";
@@ -845,7 +850,7 @@ public class Balance {
 
         parameters.put("P_H_CLT_INFOS", "PRODUITS PERIMES ");
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Pair< VenteDetailsDTO, List<VenteDetailsDTO>> p = ficheArticleService.produitPerimes(query, nbreMois, dtStart,  dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0, true);
+        Pair< VenteDetailsDTO, List<VenteDetailsDTO>> p = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0, true);
         VenteDetailsDTO summary = p.getLeft();
         List<VenteDetailsDTO> data = p.getRight();
         if (!StringUtils.isEmpty(codeFamile)) {
@@ -935,5 +940,39 @@ public class Balance {
         List<VenteDTO> data = salesStatsService.listeVentesReport(params);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "avoirs_" + report_generate_file, data);
         return "/data/reports/pdf/avoirs_" + report_generate_file;
+    }
+
+    public String tbalancePara(Params parasm) {
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(parasm.getDtStart());
+            dtEn = LocalDate.parse(parasm.getDtEnd());
+        } catch (Exception e) {
+        }
+        TUser tu = parasm.getOperateur();
+        TOfficine oTOfficine = caisseService.findOfficine();
+        String scr_report_file = "rp_balancevente_caissevpara";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        }
+        parameters.put("P_H_CLT_INFOS", "BALANCE VENTE PRODUITS PARA " + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        GenericDTO wrapper = caisseService.balanceVenteCaisseReportPara(dtSt, dtEn, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        List<BalanceDTO> datas = wrapper.getBalances();
+        SummaryDTO summaryDTO = wrapper.getSummary();
+        parameters.put("montantEsp", summaryDTO.getMontantEsp());
+        parameters.put("montantNet", summaryDTO.getMontantNet());
+        parameters.put("montantRemise", summaryDTO.getMontantRemise());
+        parameters.put("nbreVente", summaryDTO.getNbreVente());
+        parameters.put("montantTTC", summaryDTO.getMontantTTC());
+        parameters.put("montantMobilePayment", summaryDTO.getMontantMobilePayment());
+        parameters.put("montantCB", summaryDTO.getMontantCB());
+        parameters.put("montantCheque", summaryDTO.getMontantCheque());
+        parameters.put("montantVirement", summaryDTO.getMontantVirement());
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_balancevente_caissevpara_" + report_generate_file, datas);
+        return "/data/reports/pdf/rp_balancevente_caissevpara_" + report_generate_file;
     }
 }

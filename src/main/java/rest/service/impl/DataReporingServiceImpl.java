@@ -146,31 +146,31 @@ public class DataReporingServiceImpl implements DataReporingService {
                 return Pair.of(count, q.getResultList());
             } else {
                 List<FamilleArticleStatDTO> l = new ArrayList<>();
-
+               long _critere=Long.valueOf(critere);
                 switch (filtre) {
 
                     case EQUAL:
-                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage().compareTo(critere) == 0)
+                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage()== _critere)
                                 .collect(Collectors.toList());
                         break;
                     case GREATER:
-                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage().compareTo(critere) > 0)
+                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() > _critere)
                                 .collect(Collectors.toList());
                         break;
                     case GREATER_EQUAL:
-                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage().compareTo(critere) >= 0)
+                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() >= _critere)
                                 .collect(Collectors.toList());
                         break;
                     case LESS:
-                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage().compareTo(critere) < 0)
+                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() < _critere)
                                 .collect(Collectors.toList());
                         break;
                     case LESS_EQUAL:
-                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage().compareTo(critere) <= 0)
+                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() <= _critere)
                                 .collect(Collectors.toList());
                         break;
                     case NOT:
-                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage().compareTo(critere) != 0)
+                        l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage()!= _critere)
                                 .collect(Collectors.toList());
                         break;
 

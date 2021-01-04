@@ -30,7 +30,7 @@ public class FamilleDTO {
 
     private Short intORERSTATUS;
 
-    private Boolean boolACCOUNT;
+    private boolean boolACCOUNT = true;
 
     private Short bCODEINDICATEUR;
 
@@ -157,6 +157,15 @@ public class FamilleDTO {
     private String laboratoire;
     private String gamme;
     private boolean scheduled;
+    private int stock;
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
 
     private List<FamilleGrossisteDTO> familleGrosiste = new ArrayList<>();
     private List<FamilleStockDTO> familleStock = new ArrayList<>();
@@ -183,11 +192,11 @@ public class FamilleDTO {
         this.intORERSTATUS = intORERSTATUS;
     }
 
-    public Boolean getBoolACCOUNT() {
+    public boolean getBoolACCOUNT() {
         return boolACCOUNT;
     }
 
-    public void setBoolACCOUNT(Boolean boolACCOUNT) {
+    public void setBoolACCOUNT(boolean boolACCOUNT) {
         this.boolACCOUNT = boolACCOUNT;
     }
 
@@ -728,6 +737,16 @@ public class FamilleDTO {
     }
 
     public FamilleDTO() {
+    }
+
+    public FamilleDTO(String id,String cip, String libelle, int prixAchat, int prixUni, int stock, boolean chiffre) {
+       this.lgFAMILLEID=id;
+        this.intCIP = cip;
+        this.strNAME = libelle;
+        this.intPAF = prixAchat;
+        this.intPRICE = prixUni;
+        this.stock = stock;
+        this.boolACCOUNT = !chiffre;
     }
 
     public FamilleDTO(TFamille o, List<FamilleGrossisteDTO> familleGrossiste, List<FamilleStockDTO> stocks) {

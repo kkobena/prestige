@@ -14,6 +14,7 @@ import commonTasks.dto.ResumeCaisseDTO;
 import commonTasks.dto.SumCaisseDTO;
 import commonTasks.dto.TableauBaordPhDTO;
 import commonTasks.dto.TableauBaordSummary;
+import commonTasks.dto.VenteDetailsDTO;
 import commonTasks.dto.VisualisationCaisseDTO;
 import dal.MvtTransaction;
 import dal.TCashTransaction;
@@ -152,15 +153,22 @@ Author author = entityManager.find(Author.class, id, properties);
 
     public boolean key_Take_Into_Account();
 
-    Integer montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
+    long montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
 
     TOfficine findOfficine();
 
-    JSONObject venteUg(LocalDate dtStart, LocalDate dtEnd,String query);
-    
-     JSONObject balanceVenteCaisseVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
+    JSONObject venteUg(LocalDate dtStart, LocalDate dtEnd, String query);
+
+    JSONObject balanceVenteCaisseVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
             throws JSONException;
-     
+
     GenericDTO balanceVenteCaisseReportVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
+
+    List<VenteDetailsDTO> venteUgDTO(LocalDate dtStart, LocalDate dtEnd, String query);
+    
+      JSONObject balancePara(LocalDate dtStart, LocalDate dtEnd,  String emplacementId)
+            throws JSONException;
+
+    GenericDTO balanceVenteCaisseReportPara(LocalDate dtStart, LocalDate dtEnd, String emplacementId);
 
 }

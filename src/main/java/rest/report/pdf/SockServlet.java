@@ -27,7 +27,7 @@ public class SockServlet extends HttpServlet {
     Stock stock;
 
     private enum Action {
-        VALORISATION,RUPTURE_PHARMAML
+        VALORISATION, RUPTURE_PHARMAML, UG
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -52,9 +52,13 @@ public class SockServlet extends HttpServlet {
                 file = stock.valorisation(OTUser, mode, LocalDate.parse(dtStart), lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
                 break;
             case RUPTURE_PHARMAML:
-                 String query = request.getParameter("query");
-                 String grossisteId=  request.getParameter("grossisteId");
-                file=stock.rupturePharmaMl(OTUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, grossisteId, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+                String query = request.getParameter("query");
+                String grossisteId = request.getParameter("grossisteId");
+                file = stock.rupturePharmaMl(OTUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, grossisteId, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+                break;
+
+            case UG:
+                file = stock.venteUgDTO(OTUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
                 break;
 
             default:
