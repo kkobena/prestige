@@ -38,7 +38,8 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
         newData: null,
         typeVente: null,
         taux: null,
-        message: null
+        message: null,
+        selectedData: null
     },
     initComponent: function () {
         var me = this;
@@ -402,9 +403,9 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                     layout: {type: 'hbox', align: 'stretch'},
                     items: [{
                             xtype: 'displayfield',
-                            fieldLabel: 'TP',
+                            fieldLabel: 'TP <span style="color:red;font-weight:bold;">' + _taux + '</span>',
                             flex: 1,
-                            labelWidth: 30,
+                            labelWidth: 50,
                             fieldStyle: "color:blue;",
                             value: record.tpFullName,
                             margin: '0 10 0 0'
@@ -440,6 +441,8 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                             text: 'Modifier le tiers-payant',
                             margin: '0 10 0 0',
                             handler: me.changeTiespayant
+                                   
+
                         }
                     ]
                 },
@@ -461,12 +464,8 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
 //                            fieldStyle: "color:blue;",
                             value: _taux,
                             readOnly: true,
-                            margin: '0 10 0 0',
-                            listeners: {
-                                afterrender: function (field) {
-//                                    field.focus(false, 100);
-                                }
-                            }
+                            margin: '0 10 0 0'
+
                         },
                         {
                             xtype: 'button',
@@ -1053,7 +1052,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                                 tiersPayant = tiersPayants.filter(e => e.order === 1)[0];
                                             }
 //                                            me.tiersparent = tiersPayant;
-                                         
+
 //                                            tpContainerForm.removeAll();
                                             me.client = clientRecord.data;
                                             me.clientId = clientRecord.get('lgCLIENTID');
@@ -1098,7 +1097,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                     displayField: 'fullName',
                                     queryMode: 'remote',
                                     allowBlank: false,
-                                    emptyText: 'Choisir le client...',
+                                    emptyText: 'Choisir le client...'
 
                                 }
 
@@ -1113,10 +1112,14 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
     changeTiespayant: function (btn) {
         let container = btn.up("fieldcontainer").up('container');
         let itemId = container.down('hiddenfield:last');
-        if(itemId){
-            itemId=itemId.getValue();
+        if (itemId) {
+            itemId = itemId.getValue();
         }
+        let rebonCt = btn.up("fieldcontainer").down("textfield").getValue();
+        let tauxCt = container.down("fieldcontainer:last").down("numberfield").getValue();
         let me = btn.up('window');
+        me.selectedData = {"numBon": rebonCt, "taux": tauxCt};
+
         let url = '../api/v1/client/tierspayantsbytype/2';
         if (me.getTypeVente() === '2') {
             url = '../api/v1/client/tierspayantsbytype/1';
@@ -1179,7 +1182,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                         let parentForm = _this.up('window').down('form');
                                         let tpRecord = parentForm.down('#compteTp').findRecord("lgTIERSPAYANTID", parentForm.down('#compteTp').getValue());
                                         let numBon = parentForm.down('#numBon').getValue();
-                                        me.upadeTiersPayantContainer(me, tpRecord.data.strFULLNAME, tpRecord.data.lgTIERSPAYANTID, numBon, itemId, container);
+                                        me.upadeTiersPayantContainer(me, tpRecord.data.strFULLNAME, tpRecord.data.lgTIERSPAYANTID, numBon, itemId, container, me.getSelectedData());
                                         form.destroy();
                                     }
 
@@ -1232,11 +1235,11 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                                     if (field.getValue() !== '0') {
                                                         var parent = field.up('fieldset');
                                                         var numberField = parent.down('#numBon');
-                                                        numberField.setValue(me.getData().strREFBON);
+                                                        numberField.setValue(me.getSelectedData().numBon);
                                                         numberField.focus(false, 50);
                                                     } else {
                                                         /*******************************************************************/
-                                                        field.up('fieldset').down('#numBon').setValue(me.getData().strREFBON);
+                                                        field.up('fieldset').down('#numBon').setValue(me.getSelectedData().numBon);
                                                         me.buildNewTierspayantForm(me, field.up('fieldset').down('#numBon'), itemId);
                                                         /*********************************** FIND *******************************************/
 
@@ -1603,10 +1606,10 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
             });
         }
     },
-    upadeTiersPayantContainer: function (me, fullName, lgTiersPayantId, numBon, detailId, container) {
+    upadeTiersPayantContainer: function (me, fullName, lgTiersPayantId, numBon, detailId, container, selectedData) {
         var tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
         if (container) {
-            console.log(container);
+
             tpContainerForm.remove(container, true);
             tpContainerForm.update();
             tpContainerForm.doLayout();
@@ -1614,7 +1617,12 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
             tpContainerForm.removeAll();
         }
 
-        let obj = {"numBon": numBon ? numBon : null, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": me.getTaux(), "itemId": detailId};
+        let obj;
+        if (selectedData != null) {
+            obj = {"numBon": selectedData.numBon, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": selectedData.taux, "itemId": detailId};
+        } else {
+            obj = {"numBon": numBon ? numBon : null, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": me.getTaux(), "itemId": detailId};
+        }
         let cmp = me.buildCmp(obj);
         tpContainerForm.add(cmp);
     },
