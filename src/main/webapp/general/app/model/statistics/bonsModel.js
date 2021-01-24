@@ -5,7 +5,7 @@ Ext.define('testextjs.model.statistics.bonsModel', {
     idProperty: 'lg_PCMT_ID',
     fields: [
         {name: 'lg_PCMT_ID', type: 'string'},
-        {name: 'REFBON', type: 'string'},
+        {name: 'REFBON', type: 'string'},git
         {name: 'AMOUNT', type: 'number'},
          {name: 'AMOUNT_VENTE', type: 'number'},
           {name: 'CLIENT_FULLNAME', type: 'string'},
