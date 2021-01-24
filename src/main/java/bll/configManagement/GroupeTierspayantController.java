@@ -2033,7 +2033,7 @@ public class GroupeTierspayantController implements Serializable {
         return groupeTierspayant;
     }
 
-    public JSONArray getGroupeInvoice(boolean all, String dt_start, String dt_end, String search, Integer idGrp, String CODEGROUPE, int start, int limit) {
+    public JSONArray getGroupeInvoice(boolean all, String dt_start, String dt_end, String search, Integer idGrp, String CODEGROUPE,boolean ACTION_REGLER_FACTURE, int start, int limit) {
         JSONArray list = new JSONArray();
         EntityManager em = null;
         try {
@@ -2082,6 +2082,7 @@ public class GroupeTierspayantController implements Serializable {
                         status = "paid";
                     }
                     json.put("lg_GROUPE_ID", objects[0]).put("str_LIB", objects[1]).put("NBFACTURES", objects[2]).put("MONTANTRESTANT", objects[3]).put("CODEFACTURE", objects[4]).put("DATECREATION", date.formatterShort.format(objects[5])).put("STATUT", status).put("AMOUNT", objects[7]).put("AMOUNTPAYE", objects[8]);
+                  json.put("ACTION_REGLER_FACTURE", ACTION_REGLER_FACTURE);
                     list.put(json);
                 } catch (JSONException ex) {
                     ex.printStackTrace();

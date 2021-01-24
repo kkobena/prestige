@@ -84,4 +84,14 @@ public interface SalesStatsService {
     List<TvaDTO> tvaRapportJournalier(Params params);
 
     JSONObject tvasData(Params params) throws JSONException;
+
+    List<VenteDetailsDTO> getArticlesVendus(SalesStatsParams params);
+
+    JSONObject articlesVendus(SalesStatsParams params) throws JSONException;
+
+    List<VenteDetailsDTO> getArticlesVendusRecap(SalesStatsParams params);
+
+    JSONObject articlesVendusRecap(SalesStatsParams params) throws JSONException;
+
+    JSONObject articleVendusASuggerer(SalesStatsParams params) throws JSONException;
 }

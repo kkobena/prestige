@@ -5,6 +5,9 @@
 --%>
 
 
+<%@page import="toolkits.parameters.commonparameter"%>
+<%@page import="dal.TUser"%>
+<%@page import="bll.Util"%>
 <%@page import="dal.TGroupeTierspayant"%>
 <%@page import="bll.configManagement.GroupeTierspayantController"%>
 
@@ -24,7 +27,7 @@
 <%
     dataManager OdataManager = new dataManager();
     String search_value = "%%";
-OdataManager.initEntityManager();
+    OdataManager.initEntityManager();
     GroupeTierspayantController groupeCtl = new GroupeTierspayantController(OdataManager.getEmf());
 
     if (request.getParameter("search_value") != null && !"".equals(request.getParameter("search_value"))) {
@@ -33,15 +36,17 @@ OdataManager.initEntityManager();
     if (request.getParameter("query") != null && !"".equals(request.getParameter("query"))) {
         search_value = request.getParameter("query");
     }
+    TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     int start = Integer.valueOf(request.getParameter("start"));
     int limit = Integer.valueOf(request.getParameter("limit"));
     JSONArray arrayObj = new JSONArray();
-
+    boolean ACTION_REGLER_FACTURE = Util.isAllowed(OdataManager.getEm(), Util.ACTION_REGLER_FACTURE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
     List<TGroupeTierspayant> list = groupeCtl.findTGroupeTierspayantEntities(limit, start, search_value);
     int count = groupeCtl.getTGroupeTierspayantCount(search_value);
     for (TGroupeTierspayant obj : list) {
         JSONObject json = new JSONObject();
         json.put("lg_GROUPE_ID", obj.getLgGROUPEID()).put("str_LIBELLE", obj.getStrLIBELLE()).put("str_ADRESSE", obj.getStrADRESSE()).put("str_TELEPHONE", obj.getStrTELEPHONE());
+        json.put("ACTION_REGLER_FACTURE", ACTION_REGLER_FACTURE);
         arrayObj.put(json);
 
     }

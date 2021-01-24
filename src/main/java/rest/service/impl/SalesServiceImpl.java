@@ -1517,8 +1517,6 @@ public class SalesServiceImpl implements SalesService {
             if (detail.getBoolACCOUNT()) {
                 tp.setIntACCOUNT(tp.getIntACCOUNT() + (detail.getIntPRICE() - oldPrice));
             }
-            
-            tp.setDtUPDATED(new Date());
             emg.merge(tp);
             emg.merge(detail);
             JSONObject data = new JSONObject();
@@ -1526,7 +1524,6 @@ public class SalesServiceImpl implements SalesService {
             data.put("strREF", tp.getStrREF());
             data.put("intPRICE", tp.getIntPRICE());
             data.put("intPRICEREMISE", tp.getIntPRICEREMISE());
-            
             afficheurProduit(detail.getLgFAMILLEID().getStrNAME(), detail.getIntQUANTITY(), detail.getIntPRICEUNITAIR(), detail.getIntPRICE());
             return json.put("success", true).put("msg", "Opération effectuée avec success")
                     .put("data", data)/*.put("nets", shownetpayVno(tp))*/;
@@ -1588,7 +1585,7 @@ public class SalesServiceImpl implements SalesService {
     
     private boolean boonDejaUtilise(String refBon, String cmpt) {
         try {
-            TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEm().createQuery("SELECT o FROM  TPreenregistrementCompteClientTiersPayent o WHERE o.strREFBON=?1 AND o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID=?2 AND o.strSTATUT =?3 AND o.lgPREENREGISTREMENTID.strSTATUT=?4", TPreenregistrementCompteClientTiersPayent.class);
+            TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEm().createQuery("SELECT o FROM  TPreenregistrementCompteClientTiersPayent o WHERE o.strREFBON=?1 AND o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTIERSPAYANTID =?2 AND o.strSTATUT =?3 AND o.lgPREENREGISTREMENTID.strSTATUT=?4", TPreenregistrementCompteClientTiersPayent.class);
             q.setParameter(1, refBon);
             q.setParameter(2, cmpt);
             q.setParameter(3, DateConverter.STATUT_IS_CLOSED);
@@ -2344,7 +2341,7 @@ public class SalesServiceImpl implements SalesService {
                 tierspayants.forEach(params -> {
                     TCompteClientTiersPayant OTCompteClientTiersPayant = emg.find(TCompteClientTiersPayant.class, params.getCompteTp());
                     TTiersPayant payant = OTCompteClientTiersPayant.getLgTIERSPAYANTID();
-                    if (boonDejaUtilise(params.getNumBon(), OTCompteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID()) && !OTPreenregistrement.getCopy()) {
+                    if (boonDejaUtilise(params.getNumBon(), payant.getLgTIERSPAYANTID()) && !OTPreenregistrement.getCopy()) {
                         try {
                             json.putOnce("success", false).putOnce("msg", "Le numéro de  <span style='color:red;font-weight:800;'> " + params.getNumBon() + " </span> est déjà utilisé par l'assureur :: " + payant.getStrFULLNAME());
                         } catch (JSONException ex) {

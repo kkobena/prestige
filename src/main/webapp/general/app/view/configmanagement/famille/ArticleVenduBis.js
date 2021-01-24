@@ -1,13 +1,6 @@
 /* global Ext */
 
-var url_services_data_articlevendu_groupe = '../webservices/sm_user/famille/ws_data_article_vendu_groupe.jsp';
-
-
-var url_services_data_utilisateur = '../webservices/sm_user/utilisateur/ws_data.jsp';
-
-
 var Me;
-
 Ext.util.Format.decimalSeparator = ',';
 Ext.util.Format.thousandSeparator = '.';
 function amountformat(val) {
@@ -24,6 +17,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
     id: 'articlevendurecapitulatifID',
     requires: [
         'Ext.selection.CellModel',
+        'testextjs.view.configmanagement.famille.action.detailArticleVendus',
         'Ext.grid.*',
         'Ext.window.Window',
         'Ext.data.*',
@@ -37,28 +31,17 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
     title: 'Liste des articles vendus r&eacute;capitulatif',
     plain: true,
     maximizable: true,
-//    tools: [{type: "pin"}],
     closable: false,
     frame: true,
+    width: '97%',
+    height: 'auto',
+    minHeight: 570,
+    cls: 'custompanel',
     initComponent: function () {
-
         Me = this;
-
         str_TYPE_TRANSACTION = "ALL";
         var itemsPerPage = 20;
 
-        var int_TOTAL = new Ext.form.field.Display(
-                {
-                    xtype: 'displayfield',
-                    flex: 0.7,
-                    fieldLabel: 'TOTAL::',
-                    fieldWidth: 70,
-                    name: 'int_TOTAL',
-                    id: 'int_TOTAL',
-                    renderer: amountformatbis,
-                    fieldStyle: "color:blue;",
-                    value: 0
-                });
 
         var storeUser = new Ext.data.Store({
             model: 'testextjs.model.Utilisateur',
@@ -74,17 +57,86 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                 }
             }
         });
+        var rayons = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
+            fields:
+                    [
+                        {name: 'id',
+                            type: 'string'
+
+                        },
+
+                        {name: 'libelle',
+                            type: 'string'
+
+                        }
+
+                    ],
+            autoLoad: false,
+            pageSize: 9999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/common/rayons',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+
+        });
+
+
         var store = new Ext.data.Store({
-            model: 'testextjs.model.Famille',
+            fields: [
+
+                {name: 'intAVOIR',
+                    type: 'number'
+
+                },
+                {name: 'intPRICE',
+                    type: 'number'
+
+                },
+
+                {name: 'intQUANTITY',
+                    type: 'number'
+
+                },
+                {name: 'currentStock',
+                    type: 'number'
+
+                },
+
+                {name: 'intCIP',
+                    type: 'string'
+
+                },
+                {name: 'strNAME',
+                    type: 'string'
+
+                },
+                {name: 'lgFAMILLEID',
+                    type: 'string'
+
+                }, {name: 'libelleRayon',
+                    type: 'string'
+
+                }
+
+            ],
             pageSize: itemsPerPage,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_articlevendu_groupe,
+                url: '../api/v1/ventestats/article-vendus-recap',
                 reader: {
                     type: 'json',
-                    root: 'results',
-                    totalProperty: 'total'
+                    root: 'data',
+                    totalProperty: 'total',
+                    metaProperty: 'metaData'
                 },
                 timeout: 240000
             }
@@ -136,40 +188,45 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                     sortable: true
                 },
                 {
+                    header: '#',
+                    dataIndex: 'lgFAMILLEID',
+                    hidden: true
+                },
+                {
                     header: 'CIP',
-                    dataIndex: 'int_CIP',
+                    dataIndex: 'intCIP',
                     flex: 0.8
                 },
                 {
                     header: 'Designation',
-                    dataIndex: 'str_DESCRIPTION',
+                    dataIndex: 'strNAME',
                     flex: 2.5
                 },
                 {
                     header: 'Qte Vendue',
-                    dataIndex: 'int_NUMBER_AVAILABLE',
+                    dataIndex: 'intQUANTITY',
                     flex: 0.6,
                     align: 'center'
                 },
                 {
                     header: 'Montant',
-                    dataIndex: 'int_PRICE',
+                    dataIndex: 'intPRICE',
                     renderer: amountformat,
                     align: 'right',
                     flex: 0.8
                 }, {
                     header: 'Stock',
-                    dataIndex: 'int_NUMBER',
+                    dataIndex: 'currentStock',
                     flex: 0.6,
                     align: 'center'
                 }, {
                     header: 'Avoir',
-                    dataIndex: 'int_AVOIR',
+                    dataIndex: 'intAVOIR',
                     flex: 0.6,
                     align: 'center'
                 }, {
                     header: 'Emplacement',
-                    dataIndex: 'lg_ZONE_GEO_ID',
+                    dataIndex: 'libelleRayon',
                     flex: 1
                 }, {
                     xtype: 'actioncolumn',
@@ -198,7 +255,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                             name: 'dt_debut',
                             id: 'dt_debut',
                             labelWidth: 15,
-                            allowBlank: false,
+                            value: new Date(),
                             submitFormat: 'Y-m-d',
                             maxValue: new Date(),
                             format: 'd/m/Y',
@@ -217,7 +274,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                             id: 'dt_fin',
                             labelWidth: 15,
                             flex: 1,
-                            allowBlank: false,
+                            value: new Date(),
                             maxValue: new Date(),
                             submitFormat: 'Y-m-d',
                             format: 'd/m/Y',
@@ -235,7 +292,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                             name: 'h_debut',
                             id: 'h_debut',
                             emptyText: 'Heure debut(HH:mm)',
-                            allowBlank: false,
+
                             flex: 1,
                             labelWidth: 15,
                             increment: 30,
@@ -248,7 +305,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                             name: 'h_fin',
                             id: 'h_fin',
                             emptyText: 'Heure fin(HH:mm)',
-                            allowBlank: false,
+
                             labelWidth: 10,
                             increment: 30,
                             flex: 1,
@@ -266,27 +323,6 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                                             Me.onRechClick();
                                         }
                                     });
-                                }
-                            }
-                        }, '-',
-                        {
-                            xtype: 'combobox',
-                            fieldLabel: 'Utilisateur',
-                            name: 'lg_USER_ID',
-                            id: 'lg_USER_ID',
-                            store: storeUser,
-                            labelWidth: 60,
-                            hidden: true,
-                            flex: 1,
-                            pageSize: 20,
-                            valueField: 'lg_USER_ID',
-                            displayField: 'str_FIRST_LAST_NAME',
-                            typeAhead: true,
-                            queryMode: 'remote',
-                            emptyText: 'Choisir un utilisateur...',
-                            listeners: {
-                                select: function (cmp) {
-                                    Me.onRechClick();
                                 }
                             }
                         }, '-',
@@ -314,6 +350,62 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
 
                     ]
                 },
+                {
+                    xtype: 'toolbar',
+                    dock: 'top',
+                    items: [
+
+                        {
+                            xtype: 'combobox',
+                            fieldLabel: 'Utilisateur',
+                            name: 'lg_USER_ID',
+                            id: 'lg_USER_ID',
+                            store: storeUser,
+                            labelWidth: 60,
+                            hidden: false,
+                            flex: 1,
+                            pageSize: 20,
+                            valueField: 'lg_USER_ID',
+                            displayField: 'str_FIRST_LAST_NAME',
+                            typeAhead: true,
+                            queryMode: 'remote',
+                            emptyText: 'Choisir un utilisateur...',
+                            listeners: {
+                                select: function (cmp) {
+                                    Me.onRechClick();
+                                }
+                            }
+                        }, '-',
+                        {
+                            xtype: 'combobox',
+                            flex: 1,
+                            fieldLabel: 'Emplacements',
+                            labelWidth: 90,
+                            itemId: 'rayons',
+                            id: 'rayons',
+                            store: rayons,
+                            pageSize: 99999,
+                            valueField: 'id',
+                            displayField: 'libelle',
+                            typeAhead: false,
+                            queryMode: 'remote',
+                            minChars: 2,
+                            emptyText: 'Sélectionnez un emplacement',
+                            listeners: {
+                                select: function (cmp) {
+                                    Me.onRechClick();
+                                }
+                            }
+                        },
+
+                        '-', {
+                            text: 'Imprimer par emplacement',
+                            tooltip: 'imprimer',
+                            iconCls: 'printable',
+                            scope: this,
+                            handler: this.onPdfRayon
+                        }
+                    ]},
                 {
                     xtype: 'toolbar',
                     dock: 'top',
@@ -413,40 +505,50 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                 flex: 2,
                 pageSize: itemsPerPage,
                 store: store,
-                items: [int_TOTAL],
+                items: [{
+                        xtype: 'displayfield',
+                        flex: 0.7,
+                        fieldLabel: 'TOTAL::',
+                        fieldWidth: 70,
+                        name: 'int_TOTAL',
+                        id: 'int_TOTAL',
+                        renderer: amountformatbis,
+                        fieldStyle: "color:blue;",
+                        value: 0
+                    }],
                 listeners: {
                     beforechange: function (page, currentPage) {
                         var myProxy = this.store.getProxy();
                         myProxy.params = {
-                            search_value: '',
-                            dt_Date_Debut: '',
-                            dt_Date_Fin: '',
-                            h_debut: '',
-                            h_fin: '',
-                            str_TYPE_TRANSACTION: '',
-                            int_NUMBER: '',
-                            lg_USER_ID: ''
+                            query: '',
+                            nbre: 0,
+                            dtStart: '',
+                            dtEnd: '',
+                            hStart: '',
+                            hEnd: '',
+                            user: '',
+                            stock: 0,
+                            user: '',
+                            typeTransaction: 'ALL',
+                            rayonId: '',
+                            prixachatFiltre: '',
+                            stockFiltre: ''
                         };
 
-                        var str_TYPE_TRANSACTION = "", int_NUMBER = 0, lg_USER_ID = "";
-                        if (Ext.getCmp('str_TYPE_TRANSACTION').getValue() !== null) {
-                            str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
-                        }
-                        if (Ext.getCmp('lg_USER_ID').getValue() !== null) {
-                            lg_USER_ID = Ext.getCmp('lg_USER_ID').getValue();
-                        }
-                        if (Ext.getCmp('int_NUMBER').getValue() !== null) {
-                            int_NUMBER = Ext.getCmp('int_NUMBER').getValue();
-                        }
 
-                        myProxy.setExtraParam('str_TYPE_TRANSACTION', str_TYPE_TRANSACTION);
-                        myProxy.setExtraParam('int_NUMBER', int_NUMBER);
-                        myProxy.setExtraParam('lg_USER_ID', lg_USER_ID);
-                        myProxy.setExtraParam('dt_Date_Debut', Ext.getCmp('dt_debut').getSubmitValue());
-                        myProxy.setExtraParam('dt_Date_Fin', Ext.getCmp('dt_fin').getSubmitValue());
-                        myProxy.setExtraParam('h_debut', Ext.getCmp('h_debut').getSubmitValue());
-                        myProxy.setExtraParam('h_fin', Ext.getCmp('h_fin').getSubmitValue());
-                        myProxy.setExtraParam('search_value', Ext.getCmp('rechecher').getValue());
+
+                        myProxy.setExtraParam('query', Ext.getCmp('rechecher').getValue());
+                        myProxy.setExtraParam('nbre', (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0));
+                        myProxy.setExtraParam('dtStart', Ext.getCmp('dt_debut').getSubmitValue());
+                        myProxy.setExtraParam('dtEnd', Ext.getCmp('dt_fin').getSubmitValue());
+                        myProxy.setExtraParam('hStart', Ext.getCmp('h_debut').getSubmitValue());
+                        myProxy.setExtraParam('hEnd', Ext.getCmp('h_fin').getSubmitValue());
+                        myProxy.setExtraParam('typeTransaction', Ext.getCmp('str_TYPE_TRANSACTION').getValue());
+                        myProxy.setExtraParam('user', Ext.getCmp('lg_USER_ID').getValue());
+                        myProxy.setExtraParam('rayonId', Ext.getCmp('rayons').getValue());
+                        myProxy.setExtraParam('prixachatFiltre', Ext.getCmp('prixachatFiltre').getValue());
+                        myProxy.setExtraParam('stockFiltre', Ext.getCmp('stockFiltre').getValue());
+                        myProxy.setExtraParam('stock', (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0));
                     }
 
                 }
@@ -468,22 +570,16 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
 
     },
     loadStore: function () {
-        this.getStore().load({
-            callback: this.onStoreLoad
-        });
+        this.getStore().addListener('metachange', this.doMetachange, this);
+        this.getStore().load();
     },
-    onStoreLoad: function () {
-        var int_TOTAL = 0;
-        if (this.getStore().getCount() > 0) {
-            this.getStore().each(function (rec) {
-                int_TOTAL += parseInt(rec.get('int_PRICE'));
-            });
-        }
-        Ext.getCmp('int_TOTAL').setValue(int_TOTAL);
+    doMetachange: function (store, meta) {
+        Ext.getCmp('int_TOTAL').setValue(meta.montantTotal);
+
     },
+
     onDetailTransactionClick: function (grid, rowIndex) {
         var record = grid.getStore().getAt(rowIndex);
-        var url = '../webservices/sm_user/famille/ws_data_article_vendu.jsp';
         var dt_debut = Ext.getCmp('dt_debut').getSubmitValue();
         var dt_fin = Ext.getCmp('dt_fin').getSubmitValue();
         var h_debut = Ext.getCmp('h_debut').getSubmitValue();
@@ -493,16 +589,18 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
 
         new testextjs.view.configmanagement.famille.action.detailArticleVendus({
             //record: record.data,
-            int_CIP: record.get('int_CIP'),
-            lg_FAMILLE_ID: record.get('lg_FAMILLE_ID'),
-            str_DESCRIPTION: record.get('str_DESCRIPTION'),
-            titre: "Detail de vente de l'article " + record.get('int_CIP') + " : " + record.get('str_DESCRIPTION'),
-            dt_Date_Debut: dt_debut,
-            dt_Date_Fin: dt_fin,
-            h_debut: h_debut,
-            h_fin: h_fin,
-            type_transaction: type_transaction,
-            int_NUMBER: int_NUMBER
+
+            cip: record.get('intCIP'),
+            produitId: record.get('lgFAMILLEID'),
+            strNAME: record.get('strNAME'),
+            titre: "Detail de vente de l'article " + record.get('intCIP') + " : " + record.get('strNAME'),
+            dtStart: dt_debut,
+            dtEnd: dt_fin,
+            hStart: h_debut,
+            hEnd: h_fin,
+            typeTransaction: type_transaction,
+            nbre: int_NUMBER,
+            user: Ext.getCmp('lg_USER_ID').getValue()
 
         });
 
@@ -510,107 +608,105 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
     },
 
     onRechClick: function () {
-        var val = Ext.getCmp('rechecher');
-        var str_TYPE_TRANSACTION = "", int_NUMBER = 0, lg_USER_ID = "";
-        if (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null) {
-            str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
-        }
-        if (Ext.getCmp('lg_USER_ID').getValue() != null) {
-            lg_USER_ID = Ext.getCmp('lg_USER_ID').getValue();
-        }
-        if (Ext.getCmp('int_NUMBER').getValue() != null) {
-            int_NUMBER = Ext.getCmp('int_NUMBER').getValue();
-        }
-
         if (new Date(Ext.getCmp('dt_debut').getSubmitValue()) > new Date(Ext.getCmp('dt_fin').getSubmitValue())) {
             Ext.MessageBox.alert('Erreur au niveau date', 'La date de d&eacute;but doit &ecirc;tre inf&eacute;rieur &agrave; la date fin');
             return;
         }
-
         this.getStore().load({
             params: {
-                dt_Date_Debut: Ext.getCmp('dt_debut').getSubmitValue(),
-                dt_Date_Fin: Ext.getCmp('dt_fin').getSubmitValue(),
-                lg_USER_ID: lg_USER_ID,
-                search_value: val.getValue(),
-                str_TYPE_TRANSACTION: str_TYPE_TRANSACTION,
-                int_NUMBER: int_NUMBER,
-                h_debut: Ext.getCmp('h_debut').getSubmitValue(),
-                h_fin: Ext.getCmp('h_fin').getSubmitValue(),
+                dtStart: Ext.getCmp('dt_debut').getSubmitValue(),
+                dtEnd: Ext.getCmp('dt_fin').getSubmitValue(),
+                hStart: (Ext.getCmp('h_debut').getSubmitValue() != null ? Ext.getCmp('h_debut').getSubmitValue() : ""),
+                hEnd: (Ext.getCmp('h_fin').getSubmitValue() != null ? Ext.getCmp('h_fin').getSubmitValue() : ""),
+                user: Ext.getCmp('lg_USER_ID').getValue() != null ? Ext.getCmp('lg_USER_ID').getValue() : "",
+                query: Ext.getCmp('rechecher').getValue(),
+                typeTransaction: (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL"),
+                nbre: (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0),
                 prixachatFiltre: Ext.getCmp('prixachatFiltre').getValue(),
                 stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0),
-                stockFiltre: Ext.getCmp('stockFiltre').getValue()
+                stockFiltre: Ext.getCmp('stockFiltre').getValue(),
+                rayonId: Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : ""
 
             }
-        }, url_services_data_articlevendu_groupe);
+        });
     },
     onPdfClick: function () {
-        var str_TYPE_TRANSACTION = "", int_NUMBER = 0, lg_USER_ID = "";
-        if (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null) {
-            str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
-        }
-        if (Ext.getCmp('lg_USER_ID').getValue() != null) {
-            lg_USER_ID = Ext.getCmp('lg_USER_ID').getValue();
-        }
-        if (Ext.getCmp('int_NUMBER').getValue() != null) {
-            int_NUMBER = Ext.getCmp('int_NUMBER').getValue();
-        }
+         let linkUrl = '../SockServlet?mode=ARTICLE_VENDUS_RECAP&dtStart=' + Ext.getCmp('dt_debut').getSubmitValue();
+        linkUrl += "&dtEnd=" + Ext.getCmp('dt_fin').getSubmitValue() + "&hStart=" + (Ext.getCmp('h_debut').getSubmitValue() != null ? Ext.getCmp('h_debut').getSubmitValue() : "");
+        linkUrl += "&hEnd=" + (Ext.getCmp('h_fin').getSubmitValue() != null ? Ext.getCmp('h_fin').getSubmitValue() : "") + "&query=" + Ext.getCmp('rechecher').getValue();
+        linkUrl += "&typeTransaction=" + (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL");
+        linkUrl += "&nbre=" + (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0) + '&prixachatFiltre=' + Ext.getCmp('prixachatFiltre').getValue();
+        linkUrl += "&stock=" + (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0) + '&stockFiltre=' + (Ext.getCmp('stockFiltre').getValue() != null ? Ext.getCmp('stockFiltre').getValue() : "");
+        linkUrl += "&user=" + (Ext.getCmp('lg_USER_ID').getValue() != null ? Ext.getCmp('lg_USER_ID').getValue() : "");
+        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=detail';
 
-        var linkUrl = '../webservices/sm_user/famille/ws_generate_articlevendubroup_pdf.jsp?dt_Date_Debut=' + Ext.getCmp('dt_debut').getSubmitValue() + '&dt_Date_Fin=' + Ext.getCmp('dt_fin').getSubmitValue() + "&h_debut=" + (Ext.getCmp('h_debut').getSubmitValue() != null ? Ext.getCmp('h_debut').getSubmitValue() : "") + "&h_fin=" + (Ext.getCmp('h_fin').getSubmitValue() != null ? Ext.getCmp('h_fin').getSubmitValue() : "") + '&search_value=' + Ext.getCmp('rechecher').getValue() + "&str_TYPE_TRANSACTION=" + str_TYPE_TRANSACTION 
-                + '&int_NUMBER=' + int_NUMBER + "&modedisplay=groupe" + "&prixachatFiltre=" + Ext.getCmp('prixachatFiltre').getValue()
-                + '&stock='+(Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0) + "&stockFiltre=" + Ext.getCmp('stockFiltre').getValue();
+        window.open(linkUrl);
+    },
+
+   
+    onPdfRayon: function () {
+
+        let linkUrl = '../SockServlet?mode=ARTICLE_VENDUS_RECAP&dtStart=' + Ext.getCmp('dt_debut').getSubmitValue();
+        linkUrl += "&dtEnd=" + Ext.getCmp('dt_fin').getSubmitValue() + "&hStart=" + (Ext.getCmp('h_debut').getSubmitValue() != null ? Ext.getCmp('h_debut').getSubmitValue() : "");
+        linkUrl += "&hEnd=" + (Ext.getCmp('h_fin').getSubmitValue() != null ? Ext.getCmp('h_fin').getSubmitValue() : "") + "&query=" + Ext.getCmp('rechecher').getValue();
+        linkUrl += "&typeTransaction=" + (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL");
+        linkUrl += "&nbre=" + (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0) + '&prixachatFiltre=' + Ext.getCmp('prixachatFiltre').getValue();
+        linkUrl += "&stock=" + (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0) + '&stockFiltre=' + (Ext.getCmp('stockFiltre').getValue() != null ? Ext.getCmp('stockFiltre').getValue() : "");
+        linkUrl += "&user=" + (Ext.getCmp('lg_USER_ID').getValue() != null ? Ext.getCmp('lg_USER_ID').getValue() : "");
+        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=rayon';
 
         window.open(linkUrl);
     },
     onSuggereClick: function () {
-        var val = Ext.getCmp('rechecher');
-        var str_TYPE_TRANSACTION = "", int_NUMBER = 0, lg_USER_ID = "";
-        if (Ext.getCmp('str_TYPE_TRANSACTION').getValue() !== null) {
-            str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
-        }
-        if (Ext.getCmp('lg_USER_ID').getValue() !== null) {
-            lg_USER_ID = Ext.getCmp('lg_USER_ID').getValue();
-        }
-        if (Ext.getCmp('int_NUMBER').getValue() !== null) {
-            int_NUMBER = Ext.getCmp('int_NUMBER').getValue();
-        }
-
-        testextjs.app.getController('App').ShowWaitingProcess();
+        let data = {
+            dtStart: Ext.getCmp('dt_debut').getSubmitValue(),
+            prixachatFiltre: Ext.getCmp('prixachatFiltre').getValue(),
+            dtEnd: Ext.getCmp('dt_fin').getSubmitValue(),
+            hStart: (Ext.getCmp('h_debut').getSubmitValue() !== null ? Ext.getCmp('h_debut').getSubmitValue() : ""),
+            hEnd: (Ext.getCmp('h_fin').getSubmitValue() !== null ? Ext.getCmp('h_fin').getSubmitValue() : ""),
+            user: (Ext.getCmp('lg_USER_ID').getValue() !== null ? Ext.getCmp('lg_USER_ID').getValue() : ""),
+            query: Ext.getCmp('rechecher').getValue(),
+            typeTransaction: (Ext.getCmp('str_TYPE_TRANSACTION').getValue() !== null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL"),
+            nbre: (Ext.getCmp('int_NUMBER').getValue() !== null ? Ext.getCmp('int_NUMBER').getValue() : 0),
+            stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0),
+            stockFiltre: Ext.getCmp('stockFiltre').getValue(),
+            prixachatFiltre: Ext.getCmp('prixachatFiltre').getValue(),
+            rayonId: Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : ""
+        };
+        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
-            url: '../webservices/sm_user/suggerercde/ws_suggestion.jsp?mode=sendProductSellToSuggestion',
-            params: {
-                dt_Date_Debut: Ext.getCmp('dt_debut').getSubmitValue(),
-                dt_Date_Fin: Ext.getCmp('dt_fin').getSubmitValue(),
-                h_debut: Ext.getCmp('h_debut').getSubmitValue(),
-                h_fin: Ext.getCmp('h_fin').getSubmitValue(),
-                lg_USER_ID: lg_USER_ID,
-                search_value: val.getValue(),
-                str_TYPE_TRANSACTION: str_TYPE_TRANSACTION,
-                int_NUMBER: int_NUMBER,
-                modedisplay: "groupe",
-                prixachatFiltre: Ext.getCmp('prixachatFiltre').getValue(),
-                stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0),
-                stockFiltre: Ext.getCmp('stockFiltre').getValue()
-            },
-            timeout: 1800000,
+            url: '../api/v1/ventestats/suggerer',
+            method: 'GET',
+          //  headers: {'Content-Type': 'application/json'},
+            params: data,
+            timeout: 2400000,
             success: function (response)
             {
-                testextjs.app.getController('App').StopWaitingProcess();
-                var object = Ext.JSON.decode(response.responseText, false);
-
-                if (object.qty === 0) {
-                    Ext.MessageBox.alert('Error Message', "Les produits n'ont pas été suggérés");
-                    return;
-                } else {
-                    Ext.MessageBox.alert('INFO', object.result);
-
-                }
+                 progress.hide();
+                var result = Ext.JSON.decode(response.responseText, true);
+                  if (result.success) {
+                       Ext.MessageBox.show({
+                        title: 'Message',
+                        width: 320,
+                        msg: 'Nombre de produits en compte : '+  result.count,
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.INFO
+                       
+                    });
+                  }
+                
             },
             failure: function (response)
             {
-                testextjs.app.getController('App').StopWaitingProcess();
-                var object = Ext.JSON.decode(response.responseText, false);
-                Ext.MessageBox.alert('Error Message', response.responseText);
+                 progress.hide();
+                   Ext.MessageBox.show({
+                        title: 'Message d\'erreur',
+                        width: 320,
+                        msg: "L'opération n'a pas abouti",
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR
+                       
+                    });
             }
         });
     }

@@ -26,12 +26,12 @@
     date key = new date();
 
     Date dt_debut, dt_fin;
-    String lg_FACTURE_ID = "%%", lg_customer_id = "%%", lg_TYPE_FACTURE_ID = "%%", search_value = "",CODEGROUPE="";
+    String lg_FACTURE_ID = "%%", lg_customer_id = "%%", lg_TYPE_FACTURE_ID = "%%", search_value = "", CODEGROUPE = "";
     if (request.getParameter("search_value") != null) {
         search_value = request.getParameter("search_value");
 
     }
- if (request.getParameter("CODEGROUPE") != null && request.getParameter("CODEGROUPE") != "") {
+    if (request.getParameter("CODEGROUPE") != null && request.getParameter("CODEGROUPE") != "") {
         CODEGROUPE = request.getParameter("CODEGROUPE");
 
     }
@@ -68,17 +68,17 @@
     String OdateFin = key.DateToString(dt_fin, key.formatterMysqlShort2), OdateDebut = key.DateToString(dt_debut, key.formatterMysqlShort2);;
     dt_debut = key.getDate(OdateDebut, "00:00");
     dt_fin = key.getDate(OdateFin, "23:59");
-    int start = new Integer(request.getParameter("start"));
-    int limit = new Integer(request.getParameter("limit"));
+    int start =  Integer.valueOf(request.getParameter("start"));
+    int limit =  Integer.valueOf(request.getParameter("limit"));
     OdataManager.initEntityManager();
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     factureManagement OfactureManagement = new factureManagement(OdataManager, OTUser);
-    List<TFacture> lstTFacture = OfactureManagement.getListFacture(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID, dt_debut, dt_fin, lg_customer_id,CODEGROUPE, start, limit);
-    int count = OfactureManagement.getListFacturesCount(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID, dt_debut, dt_fin, lg_customer_id,CODEGROUPE); 
+    List<TFacture> lstTFacture = OfactureManagement.getListFacture(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID, dt_debut, dt_fin, lg_customer_id, CODEGROUPE, start, limit);
+    int count = OfactureManagement.getListFacturesCount(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID, dt_debut, dt_fin, lg_customer_id, CODEGROUPE);
     JSONArray arrayObj = new JSONArray();
     boolean isALLOWED = Util.isAllowed(OdataManager.getEm(), Util.ACTIONDELETEINVOICE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
+    boolean ACTION_REGLER_FACTURE = Util.isAllowed(OdataManager.getEm(), Util.ACTION_REGLER_FACTURE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
     for (TFacture of : lstTFacture) {
-
         TTiersPayant OTTiersPayant = (TTiersPayant) OfactureManagement.getgetOrganisme(of.getLgTYPEFACTUREID().getLgTYPEFACTUREID(), of.getStrCUSTOMER());
         JSONObject json = new JSONObject();
         json.put("lg_FACTURE_ID", of.getLgFACTUREID());
@@ -86,15 +86,13 @@
         json.put("int_NB_DOSSIER", of.getIntNBDOSSIER());
         json.put("dt_CREATED", key.DateToString(of.getDtDATEFACTURE(), key.formatterShort));
         String statut = of.getStrSTATUT();
-        String codeGroupe="";
+        String codeGroupe = "";
         if ("enable".equals(statut)) {
-         codeGroupe=OfactureManagement.getGroupeFacturesCodeByFacture(of.getLgFACTUREID());
-          
-            if (codeGroupe !=null) { 
+            codeGroupe = OfactureManagement.getGroupeFacturesCodeByFacture(of.getLgFACTUREID());
+            if (codeGroupe != null) {
                 statut = "group";
             }
         }
-
         json.put("str_STATUT", statut);
         json.put("lg_TYPE_FACTURE_ID", of.getLgTYPEFACTUREID().getStrLIBELLE());
         json.put("str_CUSTOMER_NAME", OTTiersPayant.getStrFULLNAME());
@@ -106,9 +104,10 @@
         json.put("MONTANTFORFETAIRE", of.getDblMONTANTFOFETAIRE());
         json.put("MONTANTBRUT", of.getDblMONTANTBrut());
         json.put("str_CUSTOMER", of.getStrCUSTOMER());
-         json.put("CODEGROUPE", codeGroupe);
+        json.put("CODEGROUPE", codeGroupe);
         json.put("lg_TYPE_TIERS_PAYANT_ID", OTTiersPayant.getLgTYPETIERSPAYANTID().getStrLIBELLETYPETIERSPAYANT());
         json.put("isALLOWED", isALLOWED);
+        json.put("ACTION_REGLER_FACTURE", ACTION_REGLER_FACTURE);
         arrayObj.put(json);
     }
     String result = "({\"total\":\"" + count + " \",\"results\":" + arrayObj.toString() + "})";

@@ -1,4 +1,4 @@
-CREATE TABLE `historique_importation` (
+ CREATE TABLE IF NOT EXISTS  `historique_importation` (
 	`id` VARCHAR(40) NOT NULL,
 `createdAt` DATETIME NOT NULL,
 	`mvtdate` DATE NOT NULL,

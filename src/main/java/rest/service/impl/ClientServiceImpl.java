@@ -10,6 +10,7 @@ import commonTasks.dto.ClientDTO;
 import commonTasks.dto.ClientLambdaDTO;
 import commonTasks.dto.TiersPayantDTO;
 import commonTasks.dto.TiersPayantParams;
+import commonTasks.dto.VenteTiersPayantsDTO;
 import dal.TAyantDroit;
 import dal.TAyantDroit_;
 import dal.TCategorieAyantdroit;
@@ -17,14 +18,18 @@ import dal.TClient;
 import dal.TClient_;
 import dal.TCompteClient;
 import dal.TCompteClientTiersPayant;
+import dal.TCompteClientTiersPayant_;
 import dal.TCompteClient_;
 import dal.TEmplacement_;
 import dal.TGroupeTierspayant;
+import dal.TGroupeTierspayant_;
 import dal.TModelFacture;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClientTiersPayent;
+import dal.TPreenregistrementCompteClientTiersPayent_;
 import dal.TPreenregistrementCompteClient_;
+import dal.TPreenregistrement_;
 import dal.TRemise;
 import dal.TRisque;
 import dal.TTiersPayant;
@@ -41,6 +46,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,9 +58,12 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ClientService;
@@ -1235,6 +1244,85 @@ public class ClientServiceImpl implements ClientService {
             LOG.log(Level.SEVERE, null, e);
             return json.put("success", false).put("msg", "Erreur de modification des infos de  l'ayant droit");
         }
+    }
+
+    @Override
+    public JSONObject ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, int start, int limit) {
+        List<VenteTiersPayantsDTO> data = ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, start, limit, true);
+        JSONObject json = new JSONObject();
+        int nbre = 0;
+        long montant = 0;
+        for (VenteTiersPayantsDTO venteTiersPayantsDTO : data) {
+            nbre += venteTiersPayantsDTO.getNbreDossier();
+            montant += venteTiersPayantsDTO.getMontant();
+        }
+        return json.put("total", data.size()).put("data", new JSONArray(data))
+                .put("metaData", new JSONObject().put("nbre", nbre)
+                        .put("montant", montant)
+                );
+
+    }
+
+    @Override
+    public List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, int start, int limit, boolean all) {
+        List<VenteTiersPayantsDTO> data = new ArrayList<>();
+        try {
+            CriteriaBuilder cb = this.getEmg().getCriteriaBuilder();
+            CriteriaQuery<VenteTiersPayantsDTO> cq = cb.createQuery(VenteTiersPayantsDTO.class);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
+            cq.select(cb.construct(VenteTiersPayantsDTO.class,
+                    root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID),
+                    cb.countDistinct(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID)),
+                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)),
+                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICERESTE))
+            ))
+                    .orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)))
+                    .groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID));
+            List<Predicate> predicates = predicateventesTiersPayants(cb, root, query, dtStart, dtEnd, tiersPayantId, groupeId);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<VenteTiersPayantsDTO> q = this.getEmg().createQuery(cq);
+            if (!all) {
+                q.setFirstResult(start);
+                q.setMaxResults(limit);
+            }
+            return q.getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "{0}", e);
+
+        }
+        return data;
+    }
+
+    List<Predicate> predicateventesTiersPayants(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId) {
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.dtCREATED)), java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
+        predicates.add(btw);
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
+        predicates.add(cb.isFalse(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.bISCANCEL)));
+        predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.intPRICE), 0));
+        predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE), 0));
+          if (!StringUtils.isEmpty(query)) {
+                query = query.toUpperCase();
+                predicates.add(cb.or(cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)), query + "%"),
+                        cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strNAME)), query + "%")
+                        ));
+            }
+
+        if (!StringUtils.isEmpty(tiersPayantId) || !StringUtils.isEmpty(query) || !StringUtils.isEmpty(groupeId)) {
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> join = root.join(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID, JoinType.INNER);
+            if (!StringUtils.isEmpty(tiersPayantId)) {
+                predicates.add(cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
+            }
+          
+            if (!StringUtils.isEmpty(groupeId)) {
+                predicates.add(cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupeId)));
+
+            }
+        }
+        return predicates;
+
     }
 
 }

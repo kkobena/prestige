@@ -116,8 +116,11 @@ Ext.define('testextjs.view.sm_user.editfacture.action.add', {
 
         var colunms = [
             {header: "ID", flex: 1, sortable: true, dataIndex: 'lg_PCMT_ID', hidden: true},
-            {header: "REFERENCE BON", flex: 1.5, sortable: true, dataIndex: 'REFBON'},
-            {header: "MONTANT", flex: 1, sortable: true, dataIndex: 'AMOUNT', renderer: amountformat, align: 'right'},
+             {header: "CLIENT", flex: 1.5, sortable: true, dataIndex: 'CLIENT_FULLNAME'},
+               {header: "DATE", flex: 1, sortable: true, dataIndex: 'DATE_VENTE'},
+            {header: "REFERENCE BON", flex: 0.7, sortable: true, dataIndex: 'REFBON'},
+             {header: "AMOUNT VENTE", flex: 0.7, sortable: true, dataIndex: 'AMOUNT_VENTE', renderer: amountformat, align: 'right'},
+            {header: "MONTANT", flex: 0.7, sortable: true, dataIndex: 'AMOUNT', renderer: amountformat, align: 'right'},
             {header: "", flex: 0.4, dataIndex: 'isChecked', xtype: 'checkcolumn', listeners: {checkChange: this.onCheckChangeSLECT}}
 
 

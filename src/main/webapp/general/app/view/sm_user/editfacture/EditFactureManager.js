@@ -33,7 +33,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         'testextjs.model.Facture',
         'testextjs.view.sm_user.editfacture.action.add',
         'Ext.ux.ProgressBarPager'
-        
+
     ],
     title: 'Gestion des facturations ',
     frame: true,
@@ -77,7 +77,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
         });
 
-        
+
 
         _this.store = factureStore;
         _this.columns = _this.buildDetailsColumns();
@@ -429,8 +429,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
                 ]
             },
-           
-            
+
             {
                 xtype: 'actioncolumn',
                 width: 30,
@@ -459,8 +458,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         handler: this.onPdfClick
                     }]
             },
-           
-            
+
             {
                 xtype: 'actioncolumn',
                 width: 30,
@@ -502,17 +500,24 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 items: [{
                         getClass: function (v, meta, rec) {
 
-                            if (rec.get('str_STATUT') === "enable" || rec.get('str_STATUT') === "is_Process") {
+                            if ((rec.get('str_STATUT') === "enable" || rec.get('str_STATUT') === "is_Process") && rec.get('ACTION_REGLER_FACTURE')) {
                                 return 'nonregle';
                             } else if (rec.get('str_STATUT') === "group") {
                                 return 'groupe';
                             } else if (rec.get('str_STATUT') === 'paid') {
                                 return 'regle';
+                            }else{
+                                 return 'x-hide-display';
                             }
                         },
                         getTip: function (v, meta, rec) {
                             if (rec.get('str_STATUT') === "enable" || rec.get('str_STATUT') === "is_Process") {
-                                return 'R&eacute;gler Facture';
+                                if (rec.get('ACTION_REGLER_FACTURE')) {
+                                    return 'R&eacute;gler Facture';
+                                } else {
+                                    return 'Vous n\êtes pas autorisé';
+                                }
+
                             } else if (rec.get('str_STATUT') === "group") {
                                 return 'La facture est générée pour un groupe';
                             } else {
@@ -539,7 +544,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
     onPaidFactureClick: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
 
-        if (rec.get('str_STATUT') === "enable" || rec.get('str_STATUT') === "is_Process") {
+        if ((rec.get('str_STATUT') === "enable" || rec.get('str_STATUT') === "is_Process") && rec.get('ACTION_REGLER_FACTURE')) {
             var xtype = "doreglementmanager";
             var alias = 'widget.' + xtype;
             //  testextjs.app.getController('App').onLoadNewComponent(xtype, "Faire un r&eacute;glement", "0");
@@ -690,7 +695,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         }
         var search_value = Ext.getCmp('rechecherFacture').getValue();
         var linkUrl = "../webservices/sm_user/facturation/ws_data_relever_facture.jsp" + "?lg_customer_id=" + lg_customer_id + "&dt_debut=" + dt_debut + "&dt_fin=" + dt_fin + "&search_value=" + search_value;
-        window.open(linkUrl); 
+        window.open(linkUrl);
     },
     exportToExcel: function () {
         var lg_customer_id = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),

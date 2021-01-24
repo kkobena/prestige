@@ -1,4 +1,4 @@
-CREATE TABLE `stock_snapshot` (
+ CREATE TABLE IF NOT EXISTS `stock_snapshot` (
 	`id` VARCHAR(40) NOT NULL,
 	`produit_id` VARCHAR(40) NOT NULL,
 	`stock_journalier` LONGTEXT NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
@@ -8,3 +8,4 @@ CREATE TABLE `stock_snapshot` (
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
+

@@ -32,6 +32,7 @@ public class Util {
      public static final String DEPOT_EXTENSION = "5";
       public static final String DEPOT_AGREE = "4";
       public static final String VENTE_ASSURANCE = "2";
+        public static final String ACTION_REGLER_FACTURE = "16012021";
 
     public static boolean isAllowed(EntityManager em,String actionID,String roleID) {
         try {

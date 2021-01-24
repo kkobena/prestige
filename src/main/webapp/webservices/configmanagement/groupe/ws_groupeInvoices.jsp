@@ -5,11 +5,13 @@
 --%>
 
 
+<%@page import="toolkits.parameters.commonparameter"%>
 <%@page import="dal.TPreenregistrementCompteClientTiersPayent"%>
 <%@page import="dal.TTiersPayant"%>
 <%@page import="dal.TGroupeTierspayant"%>
 <%@page import="bll.configManagement.GroupeTierspayantController"%>
-
+<%@page import="dal.TUser"%>
+<%@page import="bll.Util"%>
 <%@page import="java.util.Date"%>
 <%@page import="toolkits.utils.date"%>
 
@@ -54,9 +56,9 @@
     }
     int start = Integer.valueOf(request.getParameter("start"));
     int limit = Integer.valueOf(request.getParameter("limit"));
-    
-
-    JSONArray arrayObj = groupeCtl.getGroupeInvoice(false, dt_start, dt_end,search_value, lg_GROUPE_ID,CODEGROUPE, start, limit);  
+     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+ boolean ACTION_REGLER_FACTURE = Util.isAllowed(OdataManager.getEm(), Util.ACTION_REGLER_FACTURE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
+    JSONArray arrayObj = groupeCtl.getGroupeInvoice(false, dt_start, dt_end,search_value, lg_GROUPE_ID,CODEGROUPE,ACTION_REGLER_FACTURE, start, limit);  
     int count = groupeCtl.getGroupeInvoiceCount(dt_start, dt_end,  search_value,lg_GROUPE_ID,CODEGROUPE); 
     
 

@@ -30,12 +30,52 @@ public class VenteDetailsDTO implements Serializable {
     private String lgPREENREGISTREMENTDETAILID = "", lgPREENREGISTREMENTID = "",
             strREF, lgFAMILLEID, strNAME, intCIP, intEAN13, strSTATUT, dtCREATED, HEURE, ticketName, ticketNum;
     private Integer intPRICEUNITAIR = 0, intQUANTITY = 0, intQUANTITYSERVED = 0, intPRICE = 0, intPRICEREMISE = 0;
-    private String operateur, strRefBon, dateHeure;
+    private String operateur, strRefBon, dateHeure, caissier, caissierId;
     private Date dateOperation;
     private String typeVente, numOrder, medecinId, commentaire, nom;
-    private int intAVOIR, currentStock = 0, uniteGratuite, montantUg, seuil, stockUg, montantTva, valeurTva;
+    private int intAVOIR, currentStock = 0, uniteGratuite, montantUg, seuil, stockUg, montantTva, valeurTva, prixHt;
     private int montantHt;
     private int montantNetHt;
+    private boolean bISAVOIR;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    private final SimpleDateFormat dateFormatHeure = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+    private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
+    private LocalDateTime dateOp;
+    private boolean avoir;
+    private final LocalDate toDate = LocalDate.now();
+    private String rayonId, libelleRayon;
+
+    public String getCaissier() {
+        return caissier;
+    }
+
+    public void setCaissier(String caissier) {
+        this.caissier = caissier;
+    }
+
+    public String getCaissierId() {
+        return caissierId;
+    }
+
+    public void setCaissierId(String caissierId) {
+        this.caissierId = caissierId;
+    }
+
+    public String getRayonId() {
+        return rayonId;
+    }
+
+    public void setRayonId(String rayonId) {
+        this.rayonId = rayonId;
+    }
+
+    public String getLibelleRayon() {
+        return libelleRayon;
+    }
+
+    public void setLibelleRayon(String libelleRayon) {
+        this.libelleRayon = libelleRayon;
+    }
 
     public String getNumOrder() {
         return numOrder;
@@ -111,6 +151,14 @@ public class VenteDetailsDTO implements Serializable {
         return this;
     }
 
+    public int getPrixHt() {
+        return prixHt;
+    }
+
+    public void setPrixHt(int prixHt) {
+        this.prixHt = prixHt;
+    }
+
     public int getStockUg() {
         return stockUg;
     }
@@ -144,13 +192,6 @@ public class VenteDetailsDTO implements Serializable {
     public void setCurrentStock(int currentStock) {
         this.currentStock = currentStock;
     }
-    private boolean bISAVOIR;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-    private final SimpleDateFormat dateFormatHeure = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-    private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
-    private LocalDateTime dateOp;
-    private boolean avoir;
-    private final LocalDate toDate = LocalDate.now();
 
     public VenteDetailsDTO strREF(String strREF) {
         this.strREF = strREF;
@@ -278,6 +319,8 @@ public class VenteDetailsDTO implements Serializable {
         this.montantTva = d.getMontantTva();
         Double _valeurTva = 1 + (Double.valueOf(d.getValeurTva()) / 100);
         int htAmont = (int) Math.ceil(d.getIntPRICE() / _valeurTva);
+        int prixHt_ = (int) Math.ceil(d.getIntPRICEUNITAIR() / _valeurTva);
+        this.prixHt = prixHt_;
         this.montantHt = htAmont;
         htAmont = (int) Math.ceil((d.getIntPRICE() - d.getIntPRICEREMISE()) / _valeurTva);
         this.montantNetHt = htAmont;
@@ -562,4 +605,56 @@ public class VenteDetailsDTO implements Serializable {
         this.seuil = seuil;
     }
 
+    public VenteDetailsDTO(String lgFAMILLEID,
+            String strNAME, String intCIP,
+            Date dateHeure, TUser operateur,
+            TUser caissier, int seuil, int stock, int qty,
+            int avoir, String refVente, String typeVente, String rayonId, String libelleRayon, int price, String tickeNum) {
+        this.lgFAMILLEID = lgFAMILLEID;
+        this.strNAME = strNAME;
+        this.intCIP = intCIP;
+        this.operateur = operateur.getStrFIRSTNAME() + " " + operateur.getStrLASTNAME();
+        this.dtCREATED = dateFormat.format(dateHeure);
+        this.HEURE = heureFormat.format(dateHeure);
+        this.dateHeure = dateFormatHeure.format(dateHeure);
+        this.caissier = caissier.getStrFIRSTNAME() + " " + caissier.getStrLASTNAME();
+        this.caissierId = caissier.getLgUSERID();
+        this.seuil = seuil;
+        this.currentStock = stock;
+        this.intQUANTITY = qty;
+        this.rayonId = rayonId;
+        this.libelleRayon = libelleRayon;
+        this.strREF = refVente;
+        this.typeVente = typeVente;
+        this.intPRICE = price;
+        this.intAVOIR = avoir;
+        this.ticketNum = tickeNum;
+
+    }
+
+    public VenteDetailsDTO(String lgFAMILLEID,
+            String strNAME, String intCIP,
+            TUser operateur,
+            TUser caissier, int stock, long qty,
+            long avoir, String rayonId, String libelleRayon, long price) {
+        this.lgFAMILLEID = lgFAMILLEID;
+        this.strNAME = strNAME;
+        this.intCIP = intCIP;
+        this.operateur = operateur.getStrFIRSTNAME() + " " + operateur.getStrLASTNAME();
+        this.caissier = caissier.getStrFIRSTNAME() + " " + caissier.getStrLASTNAME();
+        this.caissierId = caissier.getLgUSERID();
+        this.currentStock = stock;
+        this.intQUANTITY = (int) qty;
+        this.rayonId = rayonId;
+        this.libelleRayon = libelleRayon;
+        this.intPRICE = (int) price;
+        this.intAVOIR = (int) avoir;
+    }
+    
+      public VenteDetailsDTO( String produit,  long quantiteVendue, String grossiste) {
+        this.intQUANTITY = (int) quantiteVendue;
+        this.lgFAMILLEID = produit;
+        this.typeVente = grossiste;
+        
+    }
 }

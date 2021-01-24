@@ -25,7 +25,11 @@ import dal.TAyantDroit;
 import dal.TClient;
 import dal.TCompteClientTiersPayant;
 import dal.TEmplacement;
+import dal.TFamille;
+import dal.TFamilleStock;
+import dal.TFamilleStock_;
 import dal.TFamille_;
+import dal.TGrossiste_;
 import dal.TParameters;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
@@ -36,6 +40,7 @@ import dal.TPreenregistrementDetail_;
 import dal.TPreenregistrement_;
 import dal.TTypeReglement_;
 import dal.TUser_;
+import dal.TZoneGeographique_;
 import dal.enumeration.TypeTransaction;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -75,6 +80,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CaisseService;
 import rest.service.SalesStatsService;
+import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 
@@ -91,7 +97,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     private EntityManager em;
     @EJB
     CaisseService caisseService;
-
+     @EJB
+    private SuggestionService suggestionService;
     public EntityManager getEntityManager() {
         return em;
     }
@@ -891,7 +898,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 otva.setMontantTva(tva.longValue());
                 datas.add(otva);
             });
-            long mtn = adder.longValue()- montant;
+            long mtn = adder.longValue() - montant;
             ListIterator listIterator = datas.listIterator();
             while (listIterator.hasNext()) {
                 TvaDTO next = (TvaDTO) listIterator.next();
@@ -1038,4 +1045,323 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         json.put("data", new JSONArray(datas));
         return json;
     }
+
+    List<Predicate> articlesVendusSpecialisation(CriteriaBuilder cb, Root<TPreenregistrementDetail> root, Join<TPreenregistrementDetail, TPreenregistrement> jp,
+            Join<TPreenregistrementDetail, TFamille> jf, Join<TFamille, TFamilleStock> st,
+            SalesStatsParams param) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String lg_EMPLACEMENT_ID = param.getUserId().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
+        predicates.add(cb.equal(jp.get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));
+        predicates.add(cb.equal(jp.get(TPreenregistrement_.strSTATUT), "is_Closed"));
+        predicates.add(cb.greaterThan(jp.get(TPreenregistrement_.intPRICE), 0));
+
+        if (!StringUtils.isEmpty(param.getProduitId())) {
+            predicates.add(cb.equal(jf.get(TFamille_.lgFAMILLEID), param.getProduitId()));
+        }
+        if (!StringUtils.isEmpty(param.getQuery())) {
+            predicates.add(cb.or(cb.like(jf.get(TFamille_.strDESCRIPTION), param.getQuery() + "%"), cb.like(jf.get(TFamille_.intCIP), param.getQuery() + "%"), cb.like(jf.get(TFamille_.intEAN13), param.getQuery() + "%")));
+        }
+        Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, jp.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(param.getDtStart().toString() + " " + param.gethStart().toString().concat(":00"), formatter)),
+                java.sql.Timestamp.valueOf(LocalDateTime.parse(param.getDtEnd().toString() + " " + param.gethEnd().toString().concat(":59"), formatter)));
+        predicates.add(btw);
+
+        if (!StringUtils.isEmpty(param.getUser())) {
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID).get(TPreenregistrement_.lgUSERCAISSIERID).get(TUser_.lgUSERID), param.getUser()));
+        }
+        if (!StringUtils.isEmpty(param.getRayonId()) && !"ALL".equals(param.getRayonId())) {
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), param.getRayonId()));
+        }
+        predicates.add(cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
+        if (!StringUtils.isEmpty(param.getTypeTransaction())) {
+            switch (param.getTypeTransaction()) {
+                case Parameter.LESS:
+                    predicates.add(cb.lessThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getNbre()));
+
+                    break;
+                case Parameter.EQUAL:
+                    predicates.add(cb.equal(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getNbre()));
+
+                    break;
+                case Parameter.SEUIL:
+                    predicates.add(cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), jf.get(TFamille_.intSEUILMIN)));
+
+                    break;
+                case Parameter.MORE:
+                    predicates.add(cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getNbre()));
+
+                    break;
+                case Parameter.MOREOREQUAL:
+                    predicates.add(cb.greaterThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getNbre()));
+
+                    break;
+                case Parameter.LESSOREQUAL:
+                    predicates.add(cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getNbre()));
+
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (!StringUtils.isEmpty(param.getPrixachatFiltre())) {
+            switch (param.getPrixachatFiltre()) {
+                case Parameter.LESS:
+                    predicates.add(cb.lessThan(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
+
+                    break;
+                case Parameter.EQUAL:
+                    predicates.add(cb.equal(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
+
+                    break;
+                case Parameter.MORE:
+                    predicates.add(cb.greaterThan(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
+
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (!StringUtils.isEmpty(param.getPrixachatFiltre())) {
+            switch (param.getStockFiltre()) {
+                case Parameter.LESS:
+                    predicates.add(cb.lessThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
+
+                    break;
+                case Parameter.EQUAL:
+                    predicates.add(cb.equal(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
+
+                    break;
+                case Parameter.DIFF:
+                    predicates.add(cb.notEqual(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
+
+                    break;
+                case Parameter.MORE:
+                    predicates.add(cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
+
+                    break;
+                case Parameter.MOREOREQUAL:
+                    predicates.add(cb.greaterThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
+                    break;
+                case Parameter.LESSOREQUAL:
+                    predicates.add(cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
+
+                    break;
+                default:
+                    break;
+
+            }
+        }
+        return predicates;
+
+    }
+
+    @Override
+    public List<VenteDetailsDTO> getArticlesVendus(SalesStatsParams params) {
+        try {
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+            Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
+            Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
+            cq.select(cb.construct(VenteDetailsDTO.class,
+                    jf.get(TFamille_.lgFAMILLEID),
+                    jf.get(TFamille_.strNAME),
+                    jf.get(TFamille_.intCIP),
+                    jp.get(TPreenregistrement_.dtUPDATED),
+                    jp.get(TPreenregistrement_.lgUSERID),
+                    jp.get(TPreenregistrement_.lgUSERCAISSIERID),
+                    jf.get(TFamille_.intSEUILMIN),
+                    st.get(TFamilleStock_.intNUMBERAVAILABLE),
+                    root.get(TPreenregistrementDetail_.intQUANTITY),
+                    root.get(TPreenregistrementDetail_.intAVOIR),
+                    jp.get(TPreenregistrement_.strREF),
+                    jp.get(TPreenregistrement_.strTYPEVENTE),
+                    jf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID),
+                    jf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE),
+                    root.get(TPreenregistrementDetail_.intPRICE),
+                    jp.get(TPreenregistrement_.strREFTICKET)
+            ))
+                    .orderBy(cb.asc(jp.get(TPreenregistrement_.dtUPDATED)));
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
+            if (!params.isAll()) {
+                q.setFirstResult(params.getStart());
+                q.setMaxResults(params.getLimit());
+
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public JSONObject articlesVendus(SalesStatsParams params) throws JSONException {
+        JSONObject json = new JSONObject();
+        long count = getArticlesVendusCount(params);
+        if (count == 0) {
+            json.put("total", count);
+            json.put("data", new JSONArray()).put("metaData", new JSONObject().put("montantTotal", 0));
+            return json;
+        }
+        List<VenteDetailsDTO> data = getArticlesVendus(params);
+        json.put("total", count);
+        json.put("data", new JSONArray(data)).put("metaData", new JSONObject().put("montantTotal", totalMontantArticleVendus(params)));
+        return json;
+    }
+
+    private long getArticlesVendusCount(SalesStatsParams params) {
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+            Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
+            Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
+            cq.select(cb.count(root));
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            Query q = getEntityManager().createQuery(cq);
+            return (long) q.getSingleResult();
+
+        } catch (Exception e) {
+            return 0;
+        }
+
+    }
+
+    private long totalMontantArticleVendus(SalesStatsParams params) {
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+            Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
+            Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
+            cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)));
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            Query q = getEntityManager().createQuery(cq);
+            return (long) q.getSingleResult();
+
+        } catch (Exception e) {
+            return 0;
+        }
+
+    }
+
+    @Override
+    public List<VenteDetailsDTO> getArticlesVendusRecap(SalesStatsParams params) {
+        try {
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+            Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
+            Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
+            cq.select(cb.construct(VenteDetailsDTO.class,
+                    jf.get(TFamille_.lgFAMILLEID),
+                    jf.get(TFamille_.strNAME),
+                    jf.get(TFamille_.intCIP),
+                    jp.get(TPreenregistrement_.lgUSERID),
+                    jp.get(TPreenregistrement_.lgUSERCAISSIERID),
+                    st.get(TFamilleStock_.intNUMBERAVAILABLE),
+                    cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)),
+                    cb.sumAsLong(root.get(TPreenregistrementDetail_.intAVOIR)),
+                    jf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID),
+                    jf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE),
+                    cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE))
+            ))
+                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID))
+                    .orderBy(cb.asc(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
+            if (!params.isAll()) {
+                q.setFirstResult(params.getStart());
+                q.setMaxResults(params.getLimit());
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    private long getArticlesVendusCountRecap(SalesStatsParams params) {
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+            Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
+            Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
+            cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID))
+            ).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            Query q = getEntityManager().createQuery(cq);
+            return q.getResultList().size();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            return 0;
+        }
+
+    }
+
+    @Override
+    public JSONObject articlesVendusRecap(SalesStatsParams params) throws JSONException {
+        JSONObject json = new JSONObject();
+        long count = getArticlesVendusCountRecap(params);
+       
+        if (count == 0) {
+            json.put("total", count);
+            json.put("data", new JSONArray()).put("metaData", new JSONObject().put("montantTotal", 0));
+            return json;
+        }
+        List<VenteDetailsDTO> data = getArticlesVendusRecap(params);
+        json.put("total", count);
+        json.put("data", new JSONArray(data)).put("metaData", new JSONObject().put("montantTotal", totalMontantArticleVendus(params)));
+        return json;
+    }
+
+    @Override
+    public JSONObject articleVendusASuggerer(SalesStatsParams params)  throws JSONException{
+       return suggestionService.makeSuggestion(articlesVendusASuggerer(params));
+    }
+     private List<VenteDetailsDTO> articlesVendusASuggerer(SalesStatsParams params) {
+        try {
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+            Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
+            Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
+            cq.select(cb.construct(VenteDetailsDTO.class,
+                    jf.get(TFamille_.lgFAMILLEID),
+                    cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)),
+                    jf.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID)
+            ))
+                .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
+           
+            return q.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+    
 }

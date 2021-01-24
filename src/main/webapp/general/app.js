@@ -133,7 +133,7 @@ Ext.application({
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.Preenregistrement',
         'testextjs.view.sm_user.dovente.action.displayAyantDroit',
-       
+
 //
 //        //famille
         'testextjs.model.Famille',
@@ -753,7 +753,6 @@ Ext.application({
         /* 0603207 */
         'testextjs.view.configmanagement.categoryclient.CategoryClientManger',
         'testextjs.view.Report.uniteGratuite.UniteGratuite',
-        'testextjs.view.tierspayantmanagement.tierspayant.DetailsVentesTP',
         'testextjs.view.tierspayantmanagement.groupetierspayant.groupe',
         'testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoices',
         'testextjs.view.Report.statqties.qtymanager',
@@ -783,10 +782,12 @@ Ext.application({
         'testextjs.view.facturation.ModelFacture',
         'testextjs.view.facturation.FactureProvisoire',
         'testextjs.view.caisseManager.Importation',
+        'testextjs.view.actions.action',
+        'testextjs.view.configmanagement.famille.Products',
         'testextjs.view.depot.Export',
         'testextjs.view.depot.Import',
-        'testextjs.view.actions.action',
-        'testextjs.view.configmanagement.famille.Products'
+        'testextjs.view.depot.Export'
+
 
 // 'testextjs.view.sm_user.gestcaisse.GestCaisseManager',
 
@@ -839,6 +840,7 @@ Ext.application({
         'SurStockCtr',
         'ComparaisonCtr',
         'OrdonnancierCtrl',
+        'VenteTiersPayantsCtr',
         'UgCtr',
         'ImportationHistoriqueCtr',
         'ParaCtr'

@@ -73,6 +73,8 @@ import javax.ejb.TransactionManagement;
 import javax.ejb.TransactionManagementType;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -85,6 +87,7 @@ import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
+import javax.transaction.Transactional;
 import javax.transaction.UserTransaction;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -1054,7 +1057,16 @@ public class ImportationVente {
             getEntityManager().merge(familleStock);
         }
     }
+// @Transactional(dontRollbackOn = {EntityNotFoundException.class,NoResultException.class})
+    private TFamille findById(String produitId) {
 
+        TFamille d = getEntityManager().find(TFamille.class, produitId);
+        System.out.println("***************************************  " + d);
+        return d;
+
+    }
+
+   
     public JSONObject importVenteAsStockFromJsonFile(InputStream inputStream, TUser user) {
         JSONObject json = new JSONObject();
         if (!findpermission()) {
@@ -1073,7 +1085,8 @@ public class ImportationVente {
             for (FamilleDTO dto : datas) {
                 List<FamilleStockDTO> stocks = dto.getFamilleStock();
                 List<FamilleGrossisteDTO> grossistes = dto.getFamilleGrosiste();
-                TFamille famille = produitService.findById(dto.getLgFAMILLEID());
+
+                TFamille famille = findById(dto.getLgFAMILLEID());
                 if (famille != null) {
                     famille = FamilleDTO.build(dto, famille);
                     getEntityManager().merge(famille);
@@ -1101,7 +1114,7 @@ public class ImportationVente {
                 if (dto.getParent() != null) {
                     FamilleDTO parent = dto.getParent();
                     List<FamilleGrossisteDTO> grossistesParent = parent.getFamilleGrosiste();
-                    TFamille familleParent = produitService.findById(parent.getLgFAMILLEID());
+                    TFamille familleParent = findById(parent.getLgFAMILLEID());
                     if (familleParent == null) {
                         familleParent = FamilleDTO.build(parent);
                         familleParent.setLgZONEGEOID(findGeographiqueById(parent.getLgZONEGEOID()));
@@ -1140,6 +1153,7 @@ public class ImportationVente {
             json.put("success", true);
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             LOG.log(Level.SEVERE, null, ex);
+
             json.put("success", false);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);

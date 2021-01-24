@@ -6,23 +6,29 @@
 package rest.report.pdf;
 
 import commonTasks.dto.RuptureDetailDTO;
+import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.ValorisationDTO;
 import commonTasks.dto.VenteDetailsDTO;
+import commonTasks.dto.VenteTiersPayantsDTO;
 import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import rest.report.ReportUtil;
 import rest.service.CaisseService;
+import rest.service.ClientService;
 import rest.service.CommonService;
 import rest.service.OrderService;
 import rest.service.ProduitService;
+import rest.service.SalesStatsService;
 import toolkits.utils.jdom;
 
 /**
@@ -33,15 +39,19 @@ import toolkits.utils.jdom;
 public class Stock {
 
     @EJB
-    ProduitService produitService;
+    private ProduitService produitService;
     @EJB
-    ReportUtil reportUtil;
+    private ReportUtil reportUtil;
     @EJB
-    CommonService commonService;
+    private CommonService commonService;
     @EJB
-    OrderService orderService;
-       @EJB
+    private OrderService orderService;
+    @EJB
     private CaisseService caisseService;
+    @EJB
+    private ClientService clientService;
+    @EJB
+    private SalesStatsService salesStatsService;
 
     public String valorisation(TUser tu, int mode, LocalDate dtSt, String lgGROSSISTEID, String lgFAMILLEARTICLEID, String lgZONEGEOID, String END, String BEGIN, String emplacementId) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
@@ -101,7 +111,8 @@ public class Stock {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_vente_ugs" + report_generate_file, data);
         return "/data/reports/pdf/rp_vente_ugs" + report_generate_file;
     }
-  public String rupturePharmaMl(TUser tu, LocalDate dtSt, LocalDate dtEnd, String query, String grossisteId, String emplacementId) throws IOException {
+
+    public String rupturePharmaMl(TUser tu, LocalDate dtSt, LocalDate dtEnd, String query, String grossisteId, String emplacementId) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_ruptures_pharmaml";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
@@ -111,5 +122,54 @@ public class Stock {
         List<RuptureDetailDTO> data = orderService.listeRuptures(dtSt, dtEnd, query, grossisteId, emplacementId);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_ruptures_pharmaml_" + report_generate_file, data);
         return "/data/reports/pdf/rp_ruptures_pharmaml_" + report_generate_file;
+    }
+
+    public String ventesTiersPayants(TUser tu, String scr_report_file, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId) {
+        TOfficine oTOfficine = commonService.findOfficine();
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = "PERIODE DU " + LocalDate.parse(dtStart).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        LocalDate end = LocalDate.parse(dtEnd);
+        if (!LocalDate.parse(dtStart).equals(end)) {
+            P_PERIODE += " AU " + end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        parameters.put("P_H_CLT_INFOS", "Liste des Bordereaux " + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        List<VenteTiersPayantsDTO> data = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, 0, 0, true).stream().filter(e -> e.getGroupeId() != null).collect(Collectors.toList());
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_ventetp" + report_generate_file, data);
+        return "/data/reports/pdf/rp_ventetp" + report_generate_file;
+    }
+
+    public String articlesVendusRecap(SalesStatsParams body, String action, String type) {
+        TOfficine oTOfficine = commonService.findOfficine();
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, body.getUserId());
+        String P_PERIODE = "PERIODE DU " + body.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!body.getDtStart().equals(body.getDtEnd())) {
+            P_PERIODE += " AU " + body.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        parameters.put("P_H_CLT_INFOS", "Liste des articles vendus " + P_PERIODE);
+        String scr_report_file = "";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        List<VenteDetailsDTO> data;
+        if (action.equals("ARTICLE_VENDUS_DETAIL")) {
+            scr_report_file = "rp_articlesvendus";
+            data = salesStatsService.getArticlesVendus(body);
+            if (type.equals("user")) {
+                scr_report_file = "rp_articlesvendus_user";
+                data.sort(Comparator.comparing(VenteDetailsDTO::getCaissier));
+            } else if (type.equals("rayon")) {
+                scr_report_file = "rp_articlesvendus_rayon";
+                data.sort(Comparator.comparing(VenteDetailsDTO::getLibelleRayon));
+            }
+        } else {
+            scr_report_file = "rp_articlesvendusgroup";
+            data = salesStatsService.getArticlesVendusRecap(body);
+            if (type.equals("rayon")) {
+                scr_report_file = "rp_articlesvendusgroup_rayon";
+                data.sort(Comparator.comparing(VenteDetailsDTO::getLibelleRayon));
+            }
+        }
+
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "articlesvendus" + report_generate_file, data);
+        return "/data/reports/pdf/articlesvendus" + report_generate_file;
     }
 }

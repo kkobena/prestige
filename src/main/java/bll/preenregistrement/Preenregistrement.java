@@ -89,7 +89,9 @@ import dal.TPreenregistrement_;
 import dal.TPromotionProduct;
 import dal.TTiersPayant;
 import dal.TTypeStockFamille;
+import dal.TUser_;
 import dal.TZoneGeographique;
+import dal.TZoneGeographique_;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.HashMap;
@@ -9946,113 +9948,121 @@ public class Preenregistrement extends bll.bllBase {
         return lstT;
     }
 
-    Predicate articlesVendusSpecialisation(CriteriaBuilder cb, Root<TPreenregistrementDetail> root, Join<TPreenregistrementDetail, TPreenregistrement> jp,
+    List<Predicate> articlesVendusSpecialisation(CriteriaBuilder cb, Root<TPreenregistrementDetail> root, Join<TPreenregistrementDetail, TPreenregistrement> jp,
             Join<TPreenregistrementDetail, TFamille> jf, Join<TFamille, TFamilleStock> st,
-            String search_value, String OdateDebut, String OdateFin, String h_debut, String h_fin, String str_TYPE_TRANSACTION, int int_NUMBER, String lg_FAMILLE_ID, String prixachatFiltre, int stock, String stockFiltre) {
+            String search_value, String OdateDebut, String OdateFin, String h_debut, String h_fin, String str_TYPE_TRANSACTION, int int_NUMBER, String lg_FAMILLE_ID, String prixachatFiltre, int stock, String stockFiltre, String lg_USER_ID, String rayonId) {
         String lg_EMPLACEMENT_ID = this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
-        Predicate predicate = cb.conjunction();
-        predicate = cb.and(predicate, cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
-        predicate = cb.and(predicate, cb.equal(jp.get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));
-        predicate = cb.and(predicate, cb.equal(jp.get(TPreenregistrement_.strSTATUT), "is_Closed"));
-        Predicate ge = cb.greaterThan(jp.get(TPreenregistrement_.intPRICE), 0);
-        predicate = cb.and(predicate, ge);
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
+        predicates.add(cb.equal(jp.get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));
+        predicates.add(cb.equal(jp.get(TPreenregistrement_.strSTATUT), "is_Closed"));
+        predicates.add(cb.greaterThan(jp.get(TPreenregistrement_.intPRICE), 0));
 
         if (!"".equals(lg_FAMILLE_ID)) {
-
-            predicate = cb.and(predicate, cb.equal(jf.get(TFamille_.lgFAMILLEID), lg_FAMILLE_ID));
+            predicates.add(cb.equal(jf.get(TFamille_.lgFAMILLEID), lg_FAMILLE_ID));
         }
         if (!"".equals(search_value)) {
-            predicate = cb.and(predicate, cb.or(cb.like(jf.get(TFamille_.strDESCRIPTION), search_value + "%"), cb.like(jf.get(TFamille_.intCIP), search_value + "%"), cb.like(jf.get(TFamille_.intEAN13), search_value + "%")));
+            predicates.add(cb.or(cb.like(jf.get(TFamille_.strDESCRIPTION), search_value + "%"), cb.like(jf.get(TFamille_.intCIP), search_value + "%"), cb.like(jf.get(TFamille_.intEAN13), search_value + "%")));
         }
         if ("".equals(h_debut)) {
-            Predicate btw = cb.between(cb.function("DATE", Date.class, jp.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(OdateDebut), java.sql.Date.valueOf(OdateFin));
-            predicate = cb.and(predicate, btw);
-        } else {
-            Predicate hour = cb.between(cb.function("TIMESTAMP", Timestamp.class, jp.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(OdateDebut + " " + h_debut + ":00"), java.sql.Timestamp.valueOf(OdateFin + " " + h_fin + ":59"));
-            predicate = cb.and(predicate, hour);
-        }
+            predicates.add(cb.between(cb.function("DATE", Date.class, jp.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(OdateDebut), java.sql.Date.valueOf(OdateFin)));
 
-        predicate = cb.and(predicate, cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
+        } else {
+            predicates.add(cb.between(cb.function("TIMESTAMP", Timestamp.class, jp.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(OdateDebut + " " + h_debut + ":00"), java.sql.Timestamp.valueOf(OdateFin + " " + h_fin + ":59")));
+
+        }
+        if (!org.apache.commons.lang3.StringUtils.isEmpty(lg_USER_ID)) {
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID).get(TPreenregistrement_.lgUSERCAISSIERID).get(TUser_.lgUSERID), lg_USER_ID));
+        }
+        if (!org.apache.commons.lang3.StringUtils.isEmpty(rayonId) && !"ALL".equals(rayonId)) {
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), rayonId));
+        }
+        predicates.add(cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
 
         switch (str_TYPE_TRANSACTION) {
             case Parameter.LESS:
-                Predicate LESS = cb.lessThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER);
-                predicate = cb.and(predicate, LESS);
+                predicates.add(cb.lessThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER));
+
                 break;
             case Parameter.EQUAL:
-                Predicate EQUAL = cb.equal(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER);
-                predicate = cb.and(predicate, EQUAL);
+                predicates.add(cb.equal(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER));
+
                 break;
             case Parameter.SEUIL:
-                Predicate SEUIL = cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), jf.get(TFamille_.intSEUILMIN));
-                predicate = cb.and(predicate, SEUIL);
+                predicates.add(cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), jf.get(TFamille_.intSEUILMIN)));
+
                 break;
             case Parameter.MORE:
-                Predicate MORE = cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER);
-                predicate = cb.and(predicate, MORE);
+                predicates.add(cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER));
+
                 break;
             case Parameter.MOREOREQUAL:
-                Predicate MOREOREQUAL = cb.greaterThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER);
-                predicate = cb.and(predicate, MOREOREQUAL);
+                predicates.add(cb.greaterThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER));
+
                 break;
             case Parameter.LESSOREQUAL:
-                Predicate LESSOREQUAL = cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER);
-                predicate = cb.and(predicate, LESSOREQUAL);
+                predicates.add(cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), int_NUMBER));
+
                 break;
             default:
                 break;
         }
         switch (prixachatFiltre) {
             case Parameter.LESS:
-                Predicate LESS = cb.lessThan(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF));
-                predicate = cb.and(predicate, LESS);
+                predicates.add(cb.lessThan(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
+
                 break;
             case Parameter.EQUAL:
-                Predicate EQUAL = cb.equal(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF));
-                predicate = cb.and(predicate, EQUAL);
+                predicates.add(cb.equal(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
+
                 break;
             case Parameter.MORE:
-                Predicate MORE = cb.greaterThan(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF));
-                predicate = cb.and(predicate, MORE);
+                predicates.add(cb.greaterThan(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
+
                 break;
             default:
                 break;
         }
         switch (stockFiltre) {
             case Parameter.LESS:
-                Predicate LESS = cb.lessThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock);
-                predicate = cb.and(predicate, LESS);
+                predicates.add(cb.lessThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock));
+
                 break;
             case Parameter.EQUAL:
-                Predicate EQUAL = cb.equal(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock);
-                predicate = cb.and(predicate, EQUAL);
+                predicates.add(cb.equal(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock));
+
                 break;
             case Parameter.DIFF:
-                Predicate DIFF = cb.notEqual(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock);
-                predicate = cb.and(predicate, DIFF);
+                predicates.add(cb.notEqual(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock));
+
                 break;
             case Parameter.MORE:
-                Predicate MORE = cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock);
-                predicate = cb.and(predicate, MORE);
+                predicates.add(cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock));
+
                 break;
             case Parameter.MOREOREQUAL:
-                Predicate MOREOREQUAL = cb.greaterThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock);
-                predicate = cb.and(predicate, MOREOREQUAL);
+                predicates.add(cb.greaterThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock));
                 break;
             case Parameter.LESSOREQUAL:
-                Predicate LESSOREQUAL = cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock);
-                predicate = cb.and(predicate, LESSOREQUAL);
+                predicates.add(cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), stock));
+
                 break;
             default:
                 break;
 
         }
-        return predicate;
+        return predicates;
 
     }
 // article venduc 28/11/2017
 
-    public JSONObject getArticlesVendus(String search_value, boolean all, String OdateDebut, String OdateFin, String h_debut, String h_fin, String str_TYPE_TRANSACTION, int int_NUMBER, int start, int limit, String lg_FAMILLE_ID, String prixachatFiltre, int stock, String stockFiltre) {
+    public JSONObject getArticlesVendus(String search_value, boolean all, String OdateDebut, String OdateFin, String h_debut, String h_fin, String str_TYPE_TRANSACTION, int int_NUMBER,
+            int start, int limit, String lg_FAMILLE_ID,
+            String prixachatFiltre,
+            int stock, String stockFiltre,
+            String lg_USER_ID, String rayonId
+    ) {
 
         JSONObject json = new JSONObject();
         JSONArray aray = new JSONArray();
@@ -10079,8 +10089,8 @@ public class Preenregistrement extends bll.bllBase {
                             cb.literal("%H:%i"))
             ).distinct(true)
                     .orderBy(cb.asc(jp.get(TPreenregistrement_.dtUPDATED)));
-            Predicate predicate = articlesVendusSpecialisation(cb, root, jp, jf, st, search_value, OdateDebut, OdateFin, h_debut, h_fin, str_TYPE_TRANSACTION, int_NUMBER, lg_FAMILLE_ID, prixachatFiltre, stock, stockFiltre);
-            cq.where(predicate);
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, search_value, OdateDebut, OdateFin, h_debut, h_fin, str_TYPE_TRANSACTION, int_NUMBER, lg_FAMILLE_ID, prixachatFiltre, stock, stockFiltre, lg_USER_ID, rayonId);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = em.createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -10121,7 +10131,7 @@ public class Preenregistrement extends bll.bllBase {
     }
 
     public int getArticlesVendusCount(String search_value, String OdateDebut, String OdateFin, String h_debut, String h_fin, String str_TYPE_TRANSACTION, int int_NUMBER, String lg_FAMILLE_ID,
-            String prixachatFiltre, int stock, String stockFiltre) {
+            String prixachatFiltre, int stock, String stockFiltre, String lg_USER_ID, String rayonId) {
         EntityManager em = this.getOdataManager().getEm();
         try {
 
@@ -10131,9 +10141,9 @@ public class Preenregistrement extends bll.bllBase {
             Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
             Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
-            Predicate predicate = articlesVendusSpecialisation(cb, root, jp, jf, st, search_value, OdateDebut, OdateFin, h_debut, h_fin, str_TYPE_TRANSACTION, int_NUMBER, lg_FAMILLE_ID, prixachatFiltre, stock, stockFiltre);
+            List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, search_value, OdateDebut, OdateFin, h_debut, h_fin, str_TYPE_TRANSACTION, int_NUMBER, lg_FAMILLE_ID, prixachatFiltre, stock, stockFiltre, lg_USER_ID, rayonId);
             cq.select(cb.countDistinct(root));
-            cq.where(predicate);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = em.createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();
 

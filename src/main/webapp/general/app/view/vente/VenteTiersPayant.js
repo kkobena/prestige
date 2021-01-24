@@ -1,10 +1,10 @@
 
 /* global Ext */
-Ext.define('testextjs.view.actions.Ug', {
+Ext.define('testextjs.view.vente.VenteTiersPayant', {
     extend: 'Ext.panel.Panel',
-    xtype: 'venteugs',
+    xtype: 'tpventes',
     frame: true,
-    title: 'Ventes unités gratuites',
+    title: 'LISTTE DES BORDEREAUX',
     width: '97%',
     height: 500,
     minHeight: 500,
@@ -14,65 +14,113 @@ Ext.define('testextjs.view.actions.Ug', {
         padding: 10
     },
     initComponent: function () {
-        var store = Ext.create('Ext.data.Store', {
+        var groupesStore = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
             fields:
                     [
-                        {name: 'strNAME',
+                        {name: 'id',
                             type: 'string'
 
                         },
-                        {name: 'strREF',
+
+                        {name: 'libelle',
+                            type: 'string'
+
+                        }
+
+                    ],
+            autoLoad: false,
+            pageSize: 9999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/facturation/groupetierspayant',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+
+        });
+        var searchstore = Ext.create('Ext.data.Store', {
+            idProperty: 'lgTIERSPAYANTID',
+            fields:
+                    [
+                        {name: 'lgTIERSPAYANTID',
+                            type: 'string'
+
+                        },
+
+                        {name: 'strFULLNAME',
+                            type: 'string'
+
+                        }
+
+                    ],
+            autoLoad: false,
+            pageSize: 999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/client/tiers-payants',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+
+        });
+        var store = Ext.create('Ext.data.Store', {
+            fields:
+                    [
+                        {name: 'libelleGroupe',
                             type: 'string'
 
                         }, {name: 'HEURE',
                             type: 'string'
 
-                        }, {name: 'dtCREATED',
+                        }, {name: 'codeTiersPayant',
                             type: 'string'
 
                         },
-                        {name: 'intCIP',
+                        {name: 'libelleTiersPayant',
                             type: 'string'
 
-                        }, {name: 'dateHeure',
+                        }, {name: 'tiersPayantId',
                             type: 'string'
                         },
-                        {name: 'operateur',
+                        {name: 'libelleGroupe',
                             type: 'string'
                         },
-                        {name: 'intQUANTITY',
+                        {name: 'montantRemise',
                             type: 'number'
 
                         },
-                        {name: 'intPRICE',
+                        {name: 'montant',
                             type: 'number'
 
                         },
-                        {name: 'intPRICEUNITAIR',
+                        {name: 'groupeId',
                             type: 'number'
 
                         },
-                        {name: 'uniteGratuite',
+                        {name: 'nbreDossier',
                             type: 'number'
 
-                        },
-                           {name: 'stockUg',
-                            type: 'number'
-
-                        },
-                        
-                        {name: 'montantUg',
-                            type: 'number'
                         }
-                        
+
 
                     ],
             autoLoad: false,
-            pageSize: 15,
+            pageSize: 999999,
 
             proxy: {
                 type: 'ajax',
-                url: '../api/v1/caisse/ca/ug',
+                url: '../api/v1/client/ventes-tierspayant',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -85,7 +133,7 @@ Ext.define('testextjs.view.actions.Ug', {
         });
         var me = this;
         Ext.applyIf(me, {
-           
+
             dockedItems: [
 
                 {
@@ -98,22 +146,7 @@ Ext.define('testextjs.view.actions.Ug', {
                             fieldLabel: 'Du',
                             itemId: 'dtStart',
                             labelWidth: 15,
-                            flex: 1,
-                            submitFormat: 'Y-m-d',
-                            maxValue: new Date(),
-                            format: 'd/m/Y',
-                            value: new Date()
-
-                        },  {
-                            xtype: 'tbseparator'
-                        },
-
-                        {
-                            xtype: 'datefield',
-                            fieldLabel: 'Au',
-                            itemId: 'dtEnd',
-                            labelWidth: 15,
-                            flex: 1,
+                            flex: 0.6,
                             submitFormat: 'Y-m-d',
                             maxValue: new Date(),
                             format: 'd/m/Y',
@@ -122,13 +155,78 @@ Ext.define('testextjs.view.actions.Ug', {
                         }, {
                             xtype: 'tbseparator'
                         },
+
+                        {
+                            xtype: 'datefield',
+                            fieldLabel: 'Au',
+                            itemId: 'dtEnd',
+                            labelWidth: 15,
+                            flex: 0.6,
+                            submitFormat: 'Y-m-d',
+                            maxValue: new Date(),
+                            format: 'd/m/Y',
+                            value: new Date()
+
+                        },
+                        {
+                            xtype: 'tbseparator'
+                        },
+                        {
+                            xtype: 'textfield',
+                            itemId: 'query',
+                            flex: 1,
+                            enableKeyEvents: true,
+                            emptyText: 'Taper pour rechercher'
+                        },
+
+                        {
+                            xtype: 'tbseparator'
+                        },
+                        {
+                            xtype: 'combobox',
+                            itemId: 'tpCmb',
+                            fieldLabel: 'Tiers-payant',
+                            flex: 1.4,
+                            store: searchstore,
+                            labelWidth: 90,
+                            pageSize: 9999,
+                            valueField: 'lgTIERSPAYANTID',
+                            displayField: 'strFULLNAME',
+                            minChars: 2,
+                            queryMode: 'remote',
+                            enableKeyEvents: true,
+                            emptyText: 'Selectionner tiers payant...'
+
+
+                        }, {
+                            xtype: 'tbseparator'
+                        },
+                        {
+                            xtype: 'combobox',
+                            fieldLabel: 'Groupes',
+                            flex: 1.4,
+                            labelWidth: 60,
+                            itemId: 'groupTp',
+                            store: groupesStore,
+                            pageSize: 999,
+                            valueField: 'id',
+                            displayField: 'libelle',
+                            typeAhead: true,
+                            queryMode: 'remote',
+                            minChars: 2,
+                            emptyText: 'Sélectionnez un Groupe'
+
+                        }, {
+                            xtype: 'tbseparator'
+                        },
+
                         {
                             text: 'rechercher',
                             tooltip: 'rechercher',
                             itemId: 'rechercher',
                             scope: this,
                             iconCls: 'searchicon'
-                        } , {
+                        }, {
                             xtype: 'tbseparator'
                         },
                         {
@@ -138,6 +236,16 @@ Ext.define('testextjs.view.actions.Ug', {
                             tooltip: 'imprimer',
                             scope: this
                         }
+                        , {
+                            text: 'Imprimer par groupe',
+                            tooltip: 'Imprimer par groupe',
+                            iconCls: 'importicon',
+                            itemId: 'importicon',
+                            scope: this
+                        }
+
+
+
 
                     ]
                 },
@@ -145,31 +253,31 @@ Ext.define('testextjs.view.actions.Ug', {
                     xtype: 'toolbar',
                     dock: 'bottom',
                     items: [
-                         {
+                        {
                             xtype: 'displayfield',
                             flex: 1,
-                            fieldLabel: 'TOTAL QTE UG',
+                            fieldLabel: 'Nombre de dosseirs',
                             labelWidth: 120,
                             renderer: function (v) {
                                 return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
-                            itemId: 'nbreVente',
+                            itemId: 'nbre',
                             value: 0
                         },
                         {
                             xtype: 'displayfield',
                             flex: 1,
-                            fieldLabel: 'MONTANT TOTAL',
+                            fieldLabel: 'Montant total',
                             labelWidth: 120,
                             renderer: function (v) {
                                 return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
-                            itemId: 'montantAchat',
+                            itemId: 'montant',
                             value: 0
                         }
-                        
+
 
                     ]
                 }
@@ -179,7 +287,7 @@ Ext.define('testextjs.view.actions.Ug', {
             items: [
                 {
                     xtype: 'gridpanel',
-                    itemId:'uggid',
+                    itemId: 'uggid',
                     store: store,
                     viewConfig: {
                         forceFit: true,
@@ -190,62 +298,41 @@ Ext.define('testextjs.view.actions.Ug', {
                     columns: [
 
                         {
-                            header: 'Cip',
-                            dataIndex: 'intCIP',
+                            header: 'Groupe',
+                            dataIndex: 'libelleGroupe',
                             flex: 1
 
                         },
                         {
-                            header: 'Libellé',
-                            dataIndex: 'strNAME',
+                            header: 'Code organisme',
+                            dataIndex: 'codeTiersPayant',
+                            flex: 1
+
+                        },
+                        {
+                            header: 'Libellé tiers-payant',
+                            dataIndex: 'libelleTiersPayant',
                             flex: 1
 
                         },
 
                         {
-                            header: 'Qté Vente',
-                            dataIndex: 'intQUANTITY',
+                            header: 'Nbre dossiers',
+                            dataIndex: 'nbreDossier',
                             xtype: 'numbercolumn',
                             format: '0,000.',
                             align: 'right',
-                            flex: 0.5
-                        },
-                       
-                        {
-                            header: 'Qté Ug',
-                            dataIndex: 'uniteGratuite',
-                            xtype: 'numbercolumn',
-                            format: '0,000.',
-                            align: 'right',
-                            flex: 0.5
-                        },
-                          {
-                            header: 'Qté Ug restante',
-                            dataIndex: 'stockUg',
-                            xtype: 'numbercolumn',
-                            format: '0,000.',
-                            align: 'right',
-                            flex: 0.5
-                        },
-                        {
-                            header: 'Montant ug',
-                            dataIndex: 'montantUg',
-                            xtype: 'numbercolumn',
-                            format: '0,000.',
-                            align: 'right',
-                            flex: 0.5
-                        },
-                        {
-                            header: 'Date',
-                            dataIndex: 'dateHeure',
                             flex: 1
                         },
+
                         {
-                            header: 'Référence vente',
-                            dataIndex: 'strREF',
+                            header: 'Montant',
+                            dataIndex: 'montant',
+                            xtype: 'numbercolumn',
+                            format: '0,000.',
+                            align: 'right',
                             flex: 1
                         }
-                        
                     ],
                     selModel: {
                         selType: 'cellmodel'
@@ -253,7 +340,7 @@ Ext.define('testextjs.view.actions.Ug', {
                     bbar: {
                         xtype: 'pagingtoolbar',
                         store: store,
-                         pageSize: 15,
+                        pageSize: 999999,
                         dock: 'bottom',
                         displayInfo: true
 

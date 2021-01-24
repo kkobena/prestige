@@ -178,10 +178,11 @@ Ext.define('testextjs.model.Facture', {
         {
             name: 'CODEGROUPE',
             type: 'string'
+        },
+         {
+            name: 'ACTION_REGLER_FACTURE',
+            type: 'boolean'
         }
-        
-
-
-
+  
     ]
 });

@@ -341,8 +341,8 @@ public class Balance {
 
         parameters.put("P_VENTEDEPOT_LABEL", P_VENTEDEPOT_LABEL);
         parameters.put("P_VENTEDEPOT_ESPECE", DateConverter.amountFormat(P_VENTEDEPOT_ESPECE, ' '));
-        parameters.put("P_VENTEDEPOT_CHEQUES", 0);
-        parameters.put("P_VENTEDEPOT_CB", 0);
+        parameters.put("P_VENTEDEPOT_CHEQUES", "0");
+        parameters.put("P_VENTEDEPOT_CB", "0");
         parameters.put("P_TOTAL_VENTEDEPOT_CAISSE", DateConverter.amountFormat(P_TOTAL_VENTEDEPOT_CAISSE, ' '));
 
         parameters.put("P_REGLEMENTDEPOT_LABEL", P_REGLEMENTDEPOT_LABEL);

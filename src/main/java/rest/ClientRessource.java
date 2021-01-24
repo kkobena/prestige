@@ -268,4 +268,19 @@ public class ClientRessource {
         JSONObject json = clientService.updateAyantDroitInfos(ayantDroitDTO);
         return Response.ok().entity(json.toString()).build();
     }
+    
+    
+    @GET
+    @Path("ventes-tierspayant")
+    public Response ventesTiersPayants(
+             @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit,
+              @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "dtStart") String dtStart,
+             @QueryParam(value = "tiersPayantId") String tiersPayantId,
+              @QueryParam(value = "groupeId") String groupeId,
+            @QueryParam(value = "query") String query) {
+        JSONObject json= clientService.ventesTiersPayants(query, dtStart,dtEnd,tiersPayantId,groupeId,start,limit);
+       return Response.ok().entity(json.toString()).build();
+    }
 }

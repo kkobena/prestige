@@ -495,7 +495,12 @@ public class ProduitServiceImpl implements ProduitService {
 
     @Override
     public TFamille findById(String produitId) {
-        return getEntityManager().find(TFamille.class, produitId);
+        try {
+            return getEntityManager().find(TFamille.class, produitId); 
+        } catch (Exception e) {
+            return  null;
+        }
+       
     }
 
     @Override

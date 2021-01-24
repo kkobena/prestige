@@ -10,6 +10,7 @@ import commonTasks.dto.ClientDTO;
 import commonTasks.dto.ClientLambdaDTO;
 import commonTasks.dto.TiersPayantDTO;
 import commonTasks.dto.TiersPayantParams;
+import commonTasks.dto.VenteTiersPayantsDTO;
 import dal.TClient;
 import dal.TCompteClientTiersPayant;
 import dal.TTiersPayant;
@@ -65,4 +66,8 @@ public interface ClientService {
     JSONObject updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO);
 
     TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant tpId, int taux, TCompteClientTiersPayant old) throws Exception;
+
+    JSONObject ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, int start, int limit);
+
+    List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, int start, int limit, boolean all);
 }

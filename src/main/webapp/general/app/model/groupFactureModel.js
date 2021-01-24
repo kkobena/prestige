@@ -38,8 +38,11 @@ Ext.define('testextjs.model.groupFactureModel', {
         {
             name: 'AMOUNTPAYE',
             type: 'number'
+        },
+         {
+            name: 'ACTION_REGLER_FACTURE',
+            type: 'boolean'
         }
-        
     ]
 });
 

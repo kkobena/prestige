@@ -7,7 +7,9 @@ Ext.define('testextjs.model.statistics.bonsModel', {
         {name: 'lg_PCMT_ID', type: 'string'},
         {name: 'REFBON', type: 'string'},
         {name: 'AMOUNT', type: 'number'},
-        
+         {name: 'AMOUNT_VENTE', type: 'number'},
+          {name: 'CLIENT_FULLNAME', type: 'string'},
+           {name: 'DATE_VENTE', type: 'string'},
         {name: 'dtUPDATED', type: 'string'},
         {name: 'isChecked', type: 'boolean'}
     ]

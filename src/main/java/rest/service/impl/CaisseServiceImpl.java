@@ -3036,7 +3036,7 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     montantRemise += remiseNonPara;
                     montantTTC += (mvt.getMontantAcc() - mvt.getMontantttcug());
-                     int montantNonPara=((mvt.getMontantAcc() - remiseNonPara) - mvt.getMontantnetug());
+                    int montantNonPara = ((mvt.getMontantAcc() - remiseNonPara) - mvt.getMontantnetug());
                     montantNet += montantNonPara;
                     montantTva += (mvt.getMontantTva() - mvt.getMontantTvaUg());
                     marge += (mvt.getMarge() - mvt.getMargeug());
@@ -3045,10 +3045,10 @@ public class CaisseServiceImpl implements CaisseService {
                         nbreVente++;
 
                     }
-                   
+
                     switch (mvt.getReglement().getLgTYPEREGLEMENTID()) {
                         case DateConverter.MODE_ESP:
-                          
+
                             montantEsp += montantNonPara;
                             break;
                         case DateConverter.MODE_CHEQUE:
@@ -3324,16 +3324,20 @@ public class CaisseServiceImpl implements CaisseService {
             v.forEach(op -> {
                 switch (op.getTypeTransaction()) {
                     case VENTE_COMPTANT: {
-                        if (Math.abs(op.getMontantRemise()) == 0) {//reduction sur les ventes sans remise
-                            montantTTC.add(op.getMontantAcc());
-                            montantNet.add(op.getMontantAcc());
-                            montantEsp.add(op.getMontantAcc());
-                        } else {
+
+                        int remise = remisePara(op.getPkey());
+                        int montantNet_ =  op.getMontantAcc() - remise - op.getMontantttcug();
+                        int montantTTC_ =  op.getMontantAcc() - op.getMontantttcug();
+                       
+                        montantNet.add(montantNet_);
+                        montantTTC.add(montantTTC_);
+                        montantEsp.add(montantNet_);
+                        /*
                             montantTTC.add(op.getMontant());
                             montantNet.add(op.getMontantNet());
                             montantEsp.add(op.getMontantRegle());
-                        }
-                        montantRemise.add(op.getMontantRemise());
+                         */
+                        montantRemise.add(remise);
                         montantCredit.add(op.getMontantCredit());
                         montantCredit.add(op.getMontantRestant());
                         if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
@@ -3814,9 +3818,6 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-
- 
-
     private List<MvtTransaction> balanceVenteCaisse(LocalDate dtStart, LocalDate dtEnd,
             String emplacementId) {
         try {
@@ -3976,16 +3977,18 @@ public class CaisseServiceImpl implements CaisseService {
         generic.setSummary(summary);
         return generic;
     }
-   @Override
-    public GenericDTO balanceVenteCaisseReportPara(LocalDate dtStart, LocalDate dtEnd,  String emplacementId) {
-       
+
+    @Override
+    public GenericDTO balanceVenteCaisseReportPara(LocalDate dtStart, LocalDate dtEnd, String emplacementId) {
+
         List<MvtTransaction> transactions = balanceVenteCaisse(dtStart, dtEnd, emplacementId);
-     
-        GenericDTO    generic = balanceFormatPara(transactions);
-        
+
+        GenericDTO generic = balanceFormatPara(transactions);
+
         return generic;
     }
-        @Override
+
+    @Override
     public JSONObject balancePara(LocalDate dtStart, LocalDate dtEnd, String emplacementId) throws JSONException {
 
         List<MvtTransaction> transactions = balanceVenteCaisse(dtStart, dtEnd, emplacementId);

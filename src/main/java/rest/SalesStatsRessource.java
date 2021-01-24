@@ -19,6 +19,7 @@ import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -354,8 +355,9 @@ public class SalesStatsRessource {
         } catch (Exception e) {
         }
         try {
-            body.setDtEnd(LocalDate.parse(dtEnd));
             body.setDtStart(LocalDate.parse(dtStart));
+            body.setDtEnd(LocalDate.parse(dtEnd));
+
         } catch (Exception e) {
         }
         JSONObject jsono = salesService.listeVentes(body);
@@ -418,5 +420,185 @@ public class SalesStatsRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
 
-   
+    @GET
+    @Path("article-vendus")
+    public Response articlesVendus(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd,
+            @QueryParam(value = "user") String user,
+            @QueryParam(value = "query") String query,
+            @QueryParam(value = "typeTransaction") String typeTransaction,
+            @QueryParam(value = "nbre") int nbre,
+            @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "stock") int stock,
+            @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
+            @QueryParam(value = "stockFiltre") String stockFiltre,
+            @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "produitId") String produitId
+    ) throws JSONException {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        SalesStatsParams body = new SalesStatsParams();
+        body.setUserId(tu);
+        body.setUser(user);
+        body.setLimit(limit);
+        body.setStart(start);
+        body.setQuery(query);
+        body.setTypeVenteId(null);
+        body.setStatut(commonparameter.statut_is_Closed);
+        body.setAll(false);
+        body.setStock(stock);
+        body.setRayonId(rayonId);
+        body.setTypeTransaction(typeTransaction);
+        body.setStockFiltre(stockFiltre);
+        body.setPrixachatFiltre(prixachatFiltre);
+        body.setNbre(nbre);
+        body.setProduitId(produitId);
+        try {
+            body.setDtEnd(LocalDate.parse(dtEnd));
+        } catch (Exception e) {
+        }
+        try {
+            body.sethEnd(LocalTime.parse(hEnd));
+        } catch (Exception e) {
+        }
+        try {
+            body.sethStart(LocalTime.parse(hStart));
+        } catch (Exception e) {
+        }
+        try {
+            body.setDtStart(LocalDate.parse(dtStart));
+
+        } catch (Exception e) {
+        }
+        JSONObject jsono = salesService.articlesVendus(body);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    @GET
+    @Path("article-vendus-recap")
+    public Response articlesVendusRecap(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd,
+            @QueryParam(value = "user") String user,
+            @QueryParam(value = "query") String query,
+            @QueryParam(value = "typeTransaction") String typeTransaction,
+            @QueryParam(value = "nbre") int nbre,
+            @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "stock") int stock,
+            @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
+            @QueryParam(value = "stockFiltre") String stockFiltre,
+            @QueryParam(value = "rayonId") String rayonId
+    ) throws JSONException {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        SalesStatsParams body = new SalesStatsParams();
+        body.setUserId(tu);
+        body.setUser(user);
+        body.setLimit(limit);
+        body.setStart(start);
+        body.setQuery(query);
+        body.setTypeVenteId(null);
+        body.setStatut(commonparameter.statut_is_Closed);
+        body.setAll(false);
+        body.setStock(stock);
+        body.setRayonId(rayonId);
+        body.setTypeTransaction(typeTransaction);
+        body.setStockFiltre(stockFiltre);
+        body.setPrixachatFiltre(prixachatFiltre);
+        body.setNbre(nbre);
+        try {
+            body.setDtEnd(LocalDate.parse(dtEnd));
+        } catch (Exception e) {
+        }
+        try {
+            body.sethEnd(LocalTime.parse(hEnd));
+        } catch (Exception e) {
+        }
+        try {
+            body.sethStart(LocalTime.parse(hStart));
+        } catch (Exception e) {
+        }
+        try {
+            body.setDtStart(LocalDate.parse(dtStart));
+
+        } catch (Exception e) {
+        }
+        body.setDepotOnly(false);
+        JSONObject jsono = salesService.articlesVendusRecap(body);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    @GET
+    @Path("suggerer")
+    public Response addVente(
+     @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd,
+            @QueryParam(value = "user") String user,
+            @QueryParam(value = "query") String query,
+            @QueryParam(value = "typeTransaction") String typeTransaction,
+            @QueryParam(value = "nbre") int nbre,
+            @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "stock") int stock,
+            @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
+            @QueryParam(value = "stockFiltre") String stockFiltre,
+            @QueryParam(value = "rayonId") String rayonId
+    ) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+         SalesStatsParams body = new SalesStatsParams();
+        body.setUserId(tu);
+        body.setUser(user);
+        body.setLimit(limit);
+        body.setStart(start);
+        body.setQuery(query);
+        body.setTypeVenteId(null);
+        body.setStatut(commonparameter.statut_is_Closed);
+        body.setAll(false);
+        body.setStock(stock);
+        body.setRayonId(rayonId);
+        body.setTypeTransaction(typeTransaction);
+        body.setStockFiltre(stockFiltre);
+        body.setPrixachatFiltre(prixachatFiltre);
+        body.setNbre(nbre);
+        try {
+            body.setDtEnd(LocalDate.parse(dtEnd));
+        } catch (Exception e) {
+        }
+        try {
+            body.sethEnd(LocalTime.parse(hEnd));
+        } catch (Exception e) {
+        }
+        try {
+            body.sethStart(LocalTime.parse(hStart));
+        } catch (Exception e) {
+        }
+        try {
+            body.setDtStart(LocalDate.parse(dtStart));
+
+        } catch (Exception e) {
+        }
+        JSONObject json = salesService.articleVendusASuggerer(body);
+        return Response.ok().entity(json.toString()).build();
+    }
 }

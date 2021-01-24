@@ -28,7 +28,7 @@ function amountformatbis(val) {
 Ext.define('testextjs.view.configmanagement.famille.action.detailArticleVendus', {
     extend: 'Ext.window.Window',
     xtype: 'detailArticleVendus',
-    id: 'detailArticleVendus_ID',
+
     requires: [
         'Ext.selection.CellModel',
         'Ext.grid.*',
@@ -48,14 +48,16 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticleVendus',
         titre: '',
         obtntext: '',
         nameintern: '',
-        dt_Date_Debut: '',
+        dt_debut: '',
         dt_Date_Fin: '',
-        h_debut: '',
+        dt_fin: '',
         h_fin: '',
         type_transaction: '',
         int_NUMBER: '',
         record: '',
-        lg_FAMILLE_ID: ''
+        lg_FAMILLE_ID: '',
+        user: ''
+
 
     },
     plain: true,
@@ -66,15 +68,15 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticleVendus',
     initComponent: function () {
 
         Me = this;
-        lg_USER_ID = "";
-
-        dt_Date_Debut = this.getDt_Date_Debut();
-        dt_Date_Fin = this.getDt_Date_Fin();
-        h_debut = this.getH_debut();
-        h_fin = this.getH_fin();
-        int_NUMBER = this.getInt_NUMBER();
-        str_TYPE_TRANSACTION = this.getType_transaction();
-        lg_FAMILLE_ID = this.getLg_FAMILLE_ID();
+        console.log(this.dtStart);
+        lg_USER_ID = this.user;
+        dt_Date_Debut = this.dtStart;
+        dt_Date_Fin = this.dtEnd;
+        h_debut = this.hStart;
+        h_fin = this.hEnd;
+        int_NUMBER = this.nbre;
+        str_TYPE_TRANSACTION = this.typeTransaction;
+        lg_FAMILLE_ID = this.produitId;
         var itemsPerPage = 20;
         console.log(lg_FAMILLE_ID);
 
@@ -82,76 +84,91 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticleVendus',
         console.log(dt_Date_Fin);
         console.log(int_NUMBER);
         console.log(str_TYPE_TRANSACTION);
-        /*
-         var int_TOTAL = new Ext.form.field.Display({
-         xtype: 'displayfield',
-         flex: 0.7,
-         fieldLabel: 'TOTAL::',
-         fieldWidth: 70,
-         name: 'int_TOTAL_DETAIL',
-         id: 'int_TOTAL_DETAIL_ID',
-         renderer: amountformatbis,
-         fieldStyle: "color:blue;",
-         value: 0
-         });
-         */
-        var storeUser = new Ext.data.Store({
-            model: 'testextjs.model.Utilisateur',
-            pageSize: itemsPerPage,
-            autoLoad: false,
-            proxy: {
-                type: 'ajax',
-                url: url_services_data_utilisateur,
-                reader: {
-                    type: 'json',
-                    root: 'results',
-                    totalProperty: 'total'
-                }
-            }
-        });
-        var store = new Ext.data.Store({
-            model: 'testextjs.model.Famille',
-            pageSize: itemsPerPage,
-            autoLoad: false,
-            proxy: {
-                type: 'ajax',
-                url: url_services_data_articlevendu, //+ '?lg_FAMILLE_ID='+lg_FAMILLE_ID+'&h_debut='+h_debut+'&h_fin='+h_fin+'&dt_Date_Debut='+dt_Date_Debut+'&dt_Date_Fin='+dt_Date_Fin+'&int_NUMBER='+int_NUMBER+'&str_TYPE_TRANSACTION='+str_TYPE_TRANSACTION,
 
+        var store = new Ext.data.Store({
+            fields: [
+                {name: 'ticketNum',
+                    type: 'string'
+
+                },
+                {name: 'intAVOIR',
+                    type: 'number'
+
+                },
+                {name: 'intPRICE',
+                    type: 'number'
+
+                },
+                {name: 'typeVente',
+                    type: 'string'
+
+                },
+                {name: 'intQUANTITY',
+                    type: 'number'
+
+                },
+                {name: 'currentStock',
+                    type: 'number'
+
+                },
+                {name: 'HEURE',
+                    type: 'string'
+
+                },
+                {name: 'dtCREATED',
+                    type: 'string'
+
+                },
+                {name: 'operateur',
+                    type: 'string'
+
+                },
+                {name: 'caissier',
+                    type: 'string'
+
+                }, {name: 'intCIP',
+                    type: 'string'
+
+                },
+                {name: 'strNAME',
+                    type: 'string'
+
+                },
+                {name: 'lgFAMILLEID',
+                    type: 'string'
+
+                }
+            ],
+            pageSize: itemsPerPage,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/ventestats/article-vendus',
                 reader: {
                     type: 'json',
-                    root: 'results',
-                    totalProperty: 'total'
-                }
+                    root: 'data',
+                    totalProperty: 'total',
+                    metaProperty: 'metaData'
+                },
+                timeout: 240000
             }
 
         });
 
         store.load({
             params: {
-                lg_FAMILLE_ID: lg_FAMILLE_ID,
-                h_debut: h_debut,
-                h_fin: h_fin,
-                dt_Date_Debut: dt_Date_Debut,
-                dt_Date_Fin: dt_Date_Fin,
-                int_NUMBER: int_NUMBER,
-                str_TYPE_TRANSACTION: str_TYPE_TRANSACTION
-                        //str_TYPE_TRANSACTION:'ALL'
+
+                dtStart: dt_Date_Debut,
+                dtEnd: dt_Date_Fin,
+                hStart: h_debut,
+                hEnd: h_fin,
+                user: lg_USER_ID,
+                typeTransaction: str_TYPE_TRANSACTION,
+                nbre: int_NUMBER,
+                produitId: lg_FAMILLE_ID
+
             }
         });
-
-
-
-        var store_type = new Ext.data.Store({
-            fields: ['str_TYPE_TRANSACTION', 'str_desc'],
-            data: [{str_TYPE_TRANSACTION: 'LESS', str_desc: 'Inferieur a'}, {str_TYPE_TRANSACTION: 'MORE', str_desc: 'Superieur a'}, {str_TYPE_TRANSACTION: 'EQUAL', str_desc: 'Egal a'},
-                {str_TYPE_TRANSACTION: 'LESSOREQUAL', str_desc: 'Inferieur ou egal a'}, {str_TYPE_TRANSACTION: 'MOREOREQUAL', str_desc: 'Superieur ou egal a'}]
-        });
-
-        this.cellEditing = new Ext.grid.plugin.CellEditing({
-            clicksToEdit: 1
-        });
-
-
         var form = new Ext.form.Panel({
             width: 1050,
             layout: {
@@ -170,73 +187,66 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticleVendus',
             items: [{
                     columnWidth: 0.65,
                     xtype: 'gridpanel',
-                    id: 'DetailArticleVendusPanelID',
                     store: store,
                     height: 400,
                     columns: [
-                        {
-                            header: 'lg_FAMILLE_ID',
-                            dataIndex: 'lg_FAMILLE_ID',
-                            hidden: true,
-                            flex: 1
-                        },
+
                         {
                             xtype: 'rownumberer',
                             text: 'Num',
                             width: 45,
                             sortable: true
                         },
-                        /*{
-                            header: 'CIP',
-                            dataIndex: 'int_CIP',
-                            flex: 0.8
-                        },
-                        {
-                            header: 'Designation',
-                            dataIndex: 'str_DESCRIPTION',
-                            flex: 2.5
-                        },*/
+
                         {
                             header: 'Date',
-                            dataIndex: 'dt_UPDATED',
+                            dataIndex: 'dtCREATED',
                             flex: 0.8
                         },
                         {
                             header: 'Heure',
-                            dataIndex: 'lg_ETAT_ARTICLE_ID',
+                            dataIndex: 'HEURE',
                             flex: 0.7
                         },
                         {
                             header: 'Qte Vd',
-                            dataIndex: 'int_NUMBER_AVAILABLE',
+                            dataIndex: 'intQUANTITY',
                             flex: 0.6,
                             align: 'center'
                         },
                         {
                             header: 'Prix',
-                            dataIndex: 'int_PRICE',
+                            dataIndex: 'intPRICE',
                             renderer: amountformat,
                             align: 'right',
                             flex: 0.8
                         }, {
                             header: 'Stock',
-                            dataIndex: 'int_NUMBER',
+                            dataIndex: 'currentStock',
                             flex: 0.6,
-                            align: 'center'
+                            renderer: amountformat,
+                            align: 'right'
+
                         }, {
                             header: 'Ticket',
-                            dataIndex: 'int_T',
+                            dataIndex: 'ticketNum',
                             flex: 1
                         }, {
                             header: 'Type.Vente',
-                            dataIndex: 'str_NAME',
-                            flex: 1,
+                            dataIndex: 'typeVente',
+                            flex: 0.7,
                             align: 'center'
+                        }, {
+                            header: 'Avoir',
+                            dataIndex: 'intAVOIR',
+                            flex: 0.6,
+                            renderer: amountformat,
+                            align: 'right'
                         },
                         {
                             header: 'Operateur',
-                            dataIndex: 'lg_AJUSTEMENTDETAIL_ID',
-                            flex: 1.5
+                            dataIndex: 'caissier',
+                            flex: 1
                         }
                     ],
                     tbar: [
@@ -277,24 +287,35 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticleVendus',
                             beforechange: function (page, currentPage) {
                                 var myProxy = this.store.getProxy();
                                 myProxy.params = {
-                                    search_value: '',
-                                    lg_FAMILLE_ID: lg_FAMILLE_ID,
-                                    h_debut: h_debut,
-                                    h_fin: h_fin,
-                                    dt_Date_Debut: dt_Date_Debut,
-                                    dt_Date_Fin: dt_Date_Fin,
-                                    int_NUMBER: int_NUMBER,
-                                    str_TYPE_TRANSACTION: str_TYPE_TRANSACTION
+                                    produitId: lg_FAMILLE_ID,
+                                    query: '',
+                                    nbre: int_NUMBER,
+                                    dtStart: dt_Date_Debut,
+                                    dtEnd: dt_Date_Fin,
+                                    hStart: h_debut,
+                                    hEnd: h_fin,
+                                    stock: 0,
+                                    user: lg_USER_ID,
+                                    typeTransaction: str_TYPE_TRANSACTION,
+                                    rayonId: '',
+                                    prixachatFiltre: '',
+                                    stockFiltre: ''
                                 };
-                                myProxy.setExtraParam('search_value', Ext.getCmp('rechecher').getValue());
-                                myProxy.setExtraParam('lg_FAMILLE_ID', lg_FAMILLE_ID);
-                                myProxy.setExtraParam('h_debut', h_debut);
-                                myProxy.setExtraParam('h_fin', h_fin);
-                                myProxy.setExtraParam('dt_Date_Debut', dt_Date_Debut);
-                                myProxy.setExtraParam('dt_Date_Fin', dt_Date_Fin);
-                                myProxy.setExtraParam('int_NUMBER', int_NUMBER);
-                                myProxy.setExtraParam('str_TYPE_TRANSACTION', str_TYPE_TRANSACTION);
-                                
+
+                                myProxy.setExtraParam('query', Ext.getCmp('rechecher').getValue());
+                                myProxy.setExtraParam('produitId', lg_FAMILLE_ID);
+                                myProxy.setExtraParam('nbre', int_NUMBER);
+                                myProxy.setExtraParam('dtStart', dt_Date_Debut);
+                                myProxy.setExtraParam('dtEnd', dt_Date_Fin);
+                                myProxy.setExtraParam('hStart', h_debut);
+                                myProxy.setExtraParam('hEnd', h_fin);
+                                myProxy.setExtraParam('typeTransaction', str_TYPE_TRANSACTION);
+                                myProxy.setExtraParam('user', lg_USER_ID);
+                                myProxy.setExtraParam('rayonId', '');
+                                myProxy.setExtraParam('prixachatFiltre', '');
+                                myProxy.setExtraParam('stockFiltre', Ext.getCmp('stockFiltre').getValue());
+                                myProxy.setExtraParam('stock', 0);
+
                             }
 
                         }
@@ -306,7 +327,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticleVendus',
 
         var win = new Ext.window.Window({
             autoShow: true,
-            id: 'detailArticle_Vendus_ID',
+
             title: this.getTitre(),
             width: 1200,
             Height: 500,
@@ -323,94 +344,32 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticleVendus',
 
     },
     loadStore: function () {
-        this.getStore().load({
-            callback: this.onStoreLoad
-        });
+        this.getStore().load();
     },
-    onStoreLoad: function () {
-        var int_TOTAL = 0;
-        if (this.getStore().getCount() > 0) {
-            this.getStore().each(function (rec) {
-                int_TOTAL += parseInt(rec.get('int_PRICE'));
-            });
-        }
-        Ext.getCmp('int_TOTAL').setValue(int_TOTAL);
-    },
+
     onRechClick: function () {
         var val = Ext.getCmp('rechecher');
-        if (Ext.getCmp('int_NUMBER').getValue() !== null) {
-            int_NUMBER = Ext.getCmp('int_NUMBER').getValue();
-        }
-        if (new Date(dt_Date_Debut) > new Date(dt_Date_Fin)) {
-            Ext.MessageBox.alert('Erreur au niveau date', 'La date de d&eacute;but doit &ecirc;tre inf&eacute;rieur &agrave; la date fin');
-            return;
-        }
+
 
         this.getStore().load({
+
             params: {
-                dt_Date_Debut: dt_Date_Debut,
-                dt_Date_Fin: dt_Date_Fin,
-                lg_USER_ID: lg_USER_ID,
-                search_value: val.getValue(),
-                str_TYPE_TRANSACTION: str_TYPE_TRANSACTION,
-                int_NUMBER: int_NUMBER
+                dtStart: dt_Date_Debut,
+                dtEnd: dt_Date_Fin,
+                user: lg_USER_ID,
+                query: val.getValue(),
+                typeTransaction: str_TYPE_TRANSACTION,
+                nbre: int_NUMBER,
+                hStart: h_debut,
+                hEnd: h_fin,
+                stock: 0,
+                produitId: lg_FAMILLE_ID,
+                rayonId: '',
+                prixachatFiltre: '',
+                stockFiltre: ''
 
-            }
-        }, url_services_data_articlevendu);
-    },
-    onPdfClick: function () {
-
-        var chaine = location.pathname;
-        var reg = new RegExp("[/]+", "g");
-        var tableau = chaine.split(reg);
-        var sitename = tableau[1];
-        var linkUrl = url_services_data_articlevendu_generate_pdf + '?dt_Date_Debut=' + dt_Date_Debut + '&dt_Date_Fin=' + dt_Date_Fin + "&h_debut=" + h_debut + "&h_fin=" + h_fin + '&search_value=' + Ext.getCmp('rechecher').getValue() + "&str_TYPE_TRANSACTION=" + str_TYPE_TRANSACTION + '&int_NUMBER=' + Ext.getCmp('int_NUMBER').getValue();
-
-
-        window.open(linkUrl);
-    },
-    onSuggereClick: function () {
-        var val = Ext.getCmp('rechecher');
-        testextjs.app.getController('App').ShowWaitingProcess();
-        Ext.Ajax.request({
-            url: url_services_transaction_suggerercde + 'sendProductSellToSuggestion',
-            params: {
-                dt_Date_Debut: dt_Date_Debut,
-                dt_Date_Fin: dt_Date_Fin,
-                h_debut: h_debut,
-                h_fin: h_fin,
-                lg_USER_ID: lg_USER_ID,
-                search_value: val.getValue(),
-                str_TYPE_TRANSACTION: str_TYPE_TRANSACTION,
-                int_NUMBER: int_NUMBER
-            },
-            timeout: 1800000,
-            success: function (response)
-            {
-                testextjs.app.getController('App').StopWaitingProcess();
-                var object = Ext.JSON.decode(response.responseText, false);
-
-                if (object.success === "0") {
-                    Ext.MessageBox.alert('Error Message', object.errors);
-                    return;
-                } else {
-                    Ext.MessageBox.alert('confirmation', object.errors);
-                    var OGrid = Ext.getCmp('gridID');
-                    OGrid.getStore().reload();
-                }
-            },
-            failure: function (response)
-            {
-                testextjs.app.getController('App').StopWaitingProcess();
-                var object = Ext.JSON.decode(response.responseText, false);
-                Ext.MessageBox.alert('Error Message', response.responseText);
             }
         });
-    },
-    onbtnexportCsv: function () {
-        var liste_param = 'dt_Date_Debut:' + dt_Date_Debut + ';dt_Date_Fin:' + dt_Date_Fin + ';h_debut:' + h_debut + ';h_fin:' + h_fin + ';search_value:' + Ext.getCmp('rechecher').getValue() + ';str_TYPE_TRANSACTION:' + str_TYPE_TRANSACTION + ';int_NUMBER:' + Ext.getCmp('int_NUMBER').getValue();
-        var extension = 'csv';
-//        alert(liste_param);
-        window.location = '../MigrationServlet?table_name=TABLE_ORDER_DEPOT' + "&extension=" + extension + "&liste_param=" + liste_param;
     }
+
 });

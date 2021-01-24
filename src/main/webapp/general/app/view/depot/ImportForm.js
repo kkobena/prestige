@@ -47,7 +47,7 @@ Ext.define('testextjs.view.depot.ImportForm', {
                         {
                             xtype: 'hiddenfield',
                             name: 'option',
-                            value: 'asstock'
+                           value: 'asstock'
                         }
 
                     ]

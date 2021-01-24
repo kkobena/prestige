@@ -5,6 +5,7 @@
 --%>
 
 
+<%@page import="util.DateConverter"%>
 <%@page import="dal.TPreenregistrementCompteClientTiersPayent"%>
 <%@page import="dal.TTiersPayant"%>
 <%@page import="dal.TGroupeTierspayant"%>
@@ -56,6 +57,13 @@
        json.put("lg_PCMT_ID", obj.getLgPREENREGISTREMENTCOMPTECLIENTPAYENTID());
         json.put("REFBON", obj.getStrREFBON());
         json.put("AMOUNT", obj.getIntPRICE());
+           json.put("AMOUNT_VENTE", obj.getLgPREENREGISTREMENTID().getIntPRICE());
+           try { 
+               json.put("CLIENT_FULLNAME", obj.getLgPREENREGISTREMENTID().getClient().getStrFIRSTNAME()+" "+obj.getLgPREENREGISTREMENTID().getClient().getStrLASTNAME());  
+               } catch (Exception e) {
+               }
+          
+           json.put("DATE_VENTE", DateConverter.convertDateToDD_MM_YYYY_HH_mm(obj.getLgPREENREGISTREMENTID().getDtUPDATED()));
        json.put("isChecked", false);
        
         

@@ -14,6 +14,7 @@ import dal.enumeration.TypeNotification;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -132,9 +133,8 @@ public class DatabaseToolkit {
 
 //    @Schedule(second = "*/30", minute = "*", hour = "*", dayOfMonth = "*", year = "*", persistent = true)
     public void manageSms() {
-      
+//        sendSMS();
         if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
-           
             mes.submit(() -> {
                 try {
                     List<Notification> notifications = findAllByCanal();
@@ -153,8 +153,8 @@ public class DatabaseToolkit {
     public void createTimer() {
         final TimerConfig email = new TimerConfig("email", false);
         timerService.createCalendarTimer(new ScheduleExpression()
-                //                                .minute("*/2")
-                //                                .hour("*")
+//                                .minute("*/2")
+//                                .hour("*")
                 .hour(findScheduledValues())
                 .dayOfMonth("*")
                 .year("*"), email
@@ -162,7 +162,7 @@ public class DatabaseToolkit {
 
         final TimerConfig sms = new TimerConfig("sms", false);
         timerService.createCalendarTimer(new ScheduleExpression()
-//                .second("*/30")
+                //                .second("*/30")
                 .minute("*/2")
                 .hour("*")
                 .dayOfMonth("*")
@@ -212,7 +212,7 @@ public class DatabaseToolkit {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-//            LOG.log(Level.INFO, "*******************************>>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
+            LOG.log(Level.INFO, "*******************************>>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
             userTransaction.begin();
             if (response.getStatus() == 201) {
                 notification.setStatut(Statut.SENT);
@@ -272,7 +272,7 @@ public class DatabaseToolkit {
             Client client = ClientBuilder.newClient();
             SmsParameters sp = SmsParameters.getInstance();
 
-            String address = null;
+            String address = "57591746";
 
             if (StringUtils.isEmpty(address)) {
                 address = sp.mobile;
@@ -314,10 +314,17 @@ public class DatabaseToolkit {
 
     @Timeout
     public void timeout(Timer timer) {
-        if ("sms".equals(timer.getInfo())) {
-            manageSms();
-        } else if ("email".equals(timer.getInfo())) {
-            manageEmail();
+        try {
+            if ("sms".equals(timer.getInfo())) {
+                manageSms();
+                TimeUnit.SECONDS.sleep(6);
+            } else if ("email".equals(timer.getInfo())) {
+                TimeUnit.SECONDS.sleep(6);
+                manageEmail();
+
+            }
+        } catch (InterruptedException ex) {
+            Logger.getLogger(DatabaseToolkit.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -336,6 +343,7 @@ public class DatabaseToolkit {
         if (StringUtils.isEmpty(content)) {
             return false;
         }
+        content="kobe";
         SmsParameters sp = SmsParameters.getInstance();
         Properties props = new Properties();
         props.put("mail.smtp.host", sp.smtpHost);
@@ -346,17 +354,24 @@ public class DatabaseToolkit {
         props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         Session session = Session.getInstance(props);
         MimeMessage msg = new MimeMessage(session);
-
         try {
-
+            List<Address> listadd = new ArrayList<>();
             if (StringUtils.isEmpty(email)) {
                 email = sp.mailOfficine;
+                String[] emails = email.split(";");
+                for (int i = 0; i < emails.length; i++) {
+                    String email1 = emails[i];
+                    listadd.add(new InternetAddress(email1));
+
+                }
             }
+            Address[] recipient = new InternetAddress[listadd.size()];
+            recipient = listadd.toArray(recipient);
             Address sender = new InternetAddress(sp.email);
-            Address recipient = new InternetAddress(email);
+//            Address recipient = new InternetAddress(email);
             msg.setContent(content, "text/html; charset=utf-8");
             msg.setFrom(sender);
-            msg.setRecipient(Message.RecipientType.TO, recipient);
+            msg.setRecipients(Message.RecipientType.TO, recipient);
             msg.setSubject(subject);
             Transport.send(msg, sp.email, sp.password);
             return true;

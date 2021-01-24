@@ -1201,7 +1201,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         if (montantNet > 0 && (typeRegle === '1' || typeRegle === '4')) {
             me.getMontantRecu().setReadOnly(false);
         }
-        if (typeRegle !== '1' || typeRegle !== '4') {
+        if (typeRegle !== '1' && typeRegle !== '4') {
             me.getMontantRecu().setValue(montantNet);
         }
     },
@@ -1273,8 +1273,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                     remiseId = me.getVnoremise().getValue(),
                     natureCombo = me.getNatureCombo().getValue(),
                     userCombo = me.getUserCombo().getValue(),
-                    montantRecu = me.getMontantRecu().getValue()
-                    ;
+                    montantRecu = me.getMontantRecu().getValue();
+
             if (typeRegleId === '1' && parseInt(montantRecu) < parseInt(netTopay)) {
                 Ext.MessageBox.show({
                     title: 'Avertissement',
@@ -1290,10 +1290,10 @@ Ext.define('testextjs.controller.VenteCtr', {
                     }
                 });
                 return false;
-            }
-            if (typeRegleId === '6' || typeRegleId === '3' || typeRegleId === '2') {
+            } else if (typeRegleId === '6' || typeRegleId === '3' || typeRegleId === '2') {
                 montantRecu = netTopay;
             }
+
 
 
             let montantRemis = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
@@ -1336,11 +1336,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             buttons: Ext.MessageBox.YESNO,
                             fn: function (button) {
                                 if ('yes' == button) {
-                                    /*  if (result.copy) {
-                                     me.onPrintTicketCopy(result.ref);
-                                     } else {
-                                     me.onPrintTicket(param, typeVenteCombo);
-                                     }*/
+
                                     me.onPrintTicket(param, typeVenteCombo);
                                 }
                                 me.resetAll(montantRemis);
@@ -3649,7 +3645,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
         var me = this, typeRegle = me.getVnotypeReglement().getValue(),
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
-console.log(me.getToRecalculate());
+        console.log(me.getToRecalculate());
 //return;
         if (me.getToRecalculate()) {
             Ext.MessageBox.show({
@@ -3669,42 +3665,42 @@ console.log(me.getToRecalculate());
                 }
             });
 
-        }else{
-             if (me.getCaisse()) {
-            if (typeVenteCombo === '1') {
-                if (typeRegle === '1' || '4') {
-                    if (typeRegle === '4') {
-                        var client = me.getClient();
-                        if (client) {
-                            me.onbtncloturerVnoComptant(typeRegle);
-                        } else {
-                            Ext.MessageBox.show({
-                                title: 'Message d\'erreur',
-                                width: 320,
-                                msg: 'Veuillez ajouter un client pour la vente différée',
-                                buttons: Ext.MessageBox.OK,
-                                icon: Ext.MessageBox.ERROR,
-                                fn: function (buttonId) {
-                                    if (buttonId === "ok") {
-                                        me.showAndHideInfosStandardClient(true);
+        } else {
+            if (me.getCaisse()) {
+                if (typeVenteCombo === '1') {
+                    if (typeRegle === '1' || '4') {
+                        if (typeRegle === '4') {
+                            var client = me.getClient();
+                            if (client) {
+                                me.onbtncloturerVnoComptant(typeRegle);
+                            } else {
+                                Ext.MessageBox.show({
+                                    title: 'Message d\'erreur',
+                                    width: 320,
+                                    msg: 'Veuillez ajouter un client pour la vente différée',
+                                    buttons: Ext.MessageBox.OK,
+                                    icon: Ext.MessageBox.ERROR,
+                                    fn: function (buttonId) {
+                                        if (buttonId === "ok") {
+                                            me.showAndHideInfosStandardClient(true);
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
+                        } else {
+                            me.onbtncloturerVnoComptant(typeRegle);
                         }
-                    } else {
-                        me.onbtncloturerVnoComptant(typeRegle);
+
+
                     }
-
-
+                } else {
+                    me.onbtncloturerAssurance(typeRegle);
                 }
             } else {
-                me.onbtncloturerAssurance(typeRegle);
+                Ext.Msg.alert("Message", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à la validation");
             }
-        } else {
-            Ext.Msg.alert("Message", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à la validation");
         }
-        }
-       
+
     },
     onbtncloturerAssurance: function (typeRegleId) {
         var me = this, sansBon = me.getSansBon().getValue(), montantTp = me.getMontantTp().getValue();
@@ -4087,10 +4083,6 @@ console.log(me.getToRecalculate());
                     });
                 }
             }
-
-
-
-
 
         }
     },

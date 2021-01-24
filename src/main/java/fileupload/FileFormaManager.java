@@ -270,31 +270,26 @@ public class FileFormaManager extends HttpServlet {
         JSONObject json = new JSONObject();
 
         TGrossiste grossiste = em.find(TGrossiste.class, lgGROSSISTE);
-   userTransaction.begin();
-
+        userTransaction.begin();
         TOrder order = createOrder(grossiste, commonparameter.statut_is_Process, em, OTUser);
-
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] row = line.split("\t");
-
                 int ligne = createTOrderDetailVIACSV(em, grossiste, order, row[1], Integer.valueOf(row[3]), Integer.valueOf(row[2]), Integer.valueOf(row[5]), 0);
                 i += ligne;
                 if (ligne == 0) {
-//                    
                     items.add(new OrderItem(row[1], Integer.valueOf(row[3]), row[1], Integer.valueOf(row[3]), Double.valueOf(row[5])));
                 }
-
                 if ((count % 20) == 0) {
                     em.flush();
-                            em.clear();
+                    em.clear();
                 }
                 count++;
             }
-              userTransaction.commit();
+            userTransaction.commit();
             json.put("count", i);
-            json.put("ligne", count );
+            json.put("ligne", count);
         } catch (IOException e) {
             throw new Exception(e);
         }
@@ -309,7 +304,6 @@ public class FileFormaManager extends HttpServlet {
         try {
             TGrossiste grossiste = em.find(TGrossiste.class, lgGROSSISTE);
             userTransaction.begin();
-
             TOrder order = createOrder(grossiste, commonparameter.statut_is_Process, em, OTUser);
             CSVParser parser;
             switch (mode) {
@@ -325,13 +319,13 @@ public class FileFormaManager extends HttpServlet {
                             i += ligne;
                         }
                         if ((count % 20) == 0) {
-                             em.flush();
+                            em.flush();
                             em.clear();
 
                         }
                         count++;
                     }
-                      userTransaction.commit();
+                    userTransaction.commit();
                     json.put("count", i);
                     json.put("ligne", count - 1);
                     break;
@@ -352,19 +346,19 @@ public class FileFormaManager extends HttpServlet {
                                         .ligne(Integer.valueOf(cSVRecord.get(2)))
                                         .prixUn(Integer.valueOf(cSVRecord.get(13)))
                                         .cmde(Integer.valueOf(cSVRecord.get(8)))
-                                        .prixAchat( Double.valueOf(cSVRecord.get(11)).intValue());
+                                        .prixAchat(Double.valueOf(cSVRecord.get(11)).intValue());
                                 items.add(orderItem);
                             }
 
                         }
                         if ((count % 20) == 0) {
-                             em.flush();
+                            em.flush();
                             em.clear();
 
                         }
                         count++;
                     }
-                       userTransaction.commit();
+                    userTransaction.commit();
                     json.put("count", i);
                     json.put("ligne", count - 1);
                     break;
@@ -391,7 +385,6 @@ public class FileFormaManager extends HttpServlet {
                     break;
                 case DPCI:
                     parser = new CSVParser(new InputStreamReader(part.getInputStream()), CSVFormat.EXCEL.withDelimiter(';'));
-
                     for (CSVRecord cSVRecord : parser) {
                         int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(2), Integer.valueOf(cSVRecord.get(6)), Double.valueOf(cSVRecord.get(3)).intValue(), Double.valueOf(cSVRecord.get(4)).intValue(), 0);
                         i += ligne;
@@ -409,14 +402,14 @@ public class FileFormaManager extends HttpServlet {
                             items.add(orderItem);
                         }
                         if ((count % 20) == 0) {
-                           em.flush();
+                            em.flush();
                             em.clear();
                         }
                         count++;
                     }
-                      userTransaction.commit();
+                    userTransaction.commit();
                     json.put("count", i);
-                    json.put("ligne", count - 1);
+                    json.put("ligne", count);
                     break;
             }
 
@@ -487,7 +480,6 @@ public class FileFormaManager extends HttpServlet {
                     em.merge(OTOrderDetail);
 
                 }
-
                 return 1;
 
             } else {
@@ -546,7 +538,7 @@ public class FileFormaManager extends HttpServlet {
                     for (OrderItem item : list) {
                         printer.printRecord(item.getDateBl(),
                                 item.getFacture(),
-                                item.getLigne(), "", item.getCip(), "", item.getLibelle(), "", + item.getCmde(), item.getCmdeL(), item.getUg(), item.getPrixAchat(), "", item.getPrixUn(), "");
+                                item.getLigne(), "", item.getCip(), "", item.getLibelle(), "", +item.getCmde(), item.getCmdeL(), item.getUg(), item.getPrixAchat(), "", item.getPrixUn(), "");
 
                     }
                     break;

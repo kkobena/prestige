@@ -24,13 +24,88 @@ public class SalesStatsParams implements Serializable {
     private LocalTime hStart = LocalTime.parse("00:00"), hEnd = LocalTime.parse("23:59");
     private boolean showAll, showAllActivities, all, canCancel;
     private boolean depotOnly = false, sansBon = false, onlyAvoir = false, modification, modificationClientTp;
+    private int nbre;
+    private String produitId;
+    private String prixachatFiltre;
+    private int stock;
+    private String stockFiltre;
+    private String rayonId;
+    private String user;
 
+    private String typeTransaction;
+
+    public String getTypeTransaction() {
+        return typeTransaction;
+    }
+
+    public void setTypeTransaction(String typeTransaction) {
+        this.typeTransaction = typeTransaction;
+    }
+    
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    
+    
     public boolean isModificationClientTp() {
         return modificationClientTp;
     }
 
     public void setModificationClientTp(boolean modificationClientTp) {
         this.modificationClientTp = modificationClientTp;
+    }
+
+    public int getNbre() {
+        return nbre;
+    }
+
+    public void setNbre(int nbre) {
+        this.nbre = nbre;
+    }
+
+    public String getProduitId() {
+        return produitId;
+    }
+
+    public void setProduitId(String produitId) {
+        this.produitId = produitId;
+    }
+
+    public String getPrixachatFiltre() {
+        return prixachatFiltre;
+    }
+
+    public void setPrixachatFiltre(String prixachatFiltre) {
+        this.prixachatFiltre = prixachatFiltre;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public String getStockFiltre() {
+        return stockFiltre;
+    }
+
+    public void setStockFiltre(String stockFiltre) {
+        this.stockFiltre = stockFiltre;
+    }
+
+    public String getRayonId() {
+        return rayonId;
+    }
+
+    public void setRayonId(String rayonId) {
+        this.rayonId = rayonId;
     }
 
     public SalesStatsParams(boolean showAll, String typeVenteId, TUser userId, String query, String statut, LocalDate dtStart, LocalDate dtEnd, int start, int limit) {
@@ -194,6 +269,9 @@ public class SalesStatsParams implements Serializable {
 
     @Override
     public String toString() {
-        return "SalesStatsParams{" + "start=" + start + ", limit=" + limit + ", typeVenteId=" + typeVenteId + ", userId=" + userId + ", query=" + query + ", statut=" + statut + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", hStart=" + hStart + ", hEnd=" + hEnd + ", showAll=" + showAll + ", showAllActivities=" + showAllActivities + ", all=" + all + ", canCancel=" + canCancel + ", depotOnly=" + depotOnly + ", sansBon=" + sansBon + ", onlyAvoir=" + onlyAvoir + '}';
+        return "SalesStatsParams{" + "start=" + start + ", limit=" + limit + ", typeVenteId=" + typeVenteId + ", query=" + query + ", statut=" + statut + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", hStart=" + hStart + ", hEnd=" + hEnd + ", showAll=" + showAll + ", showAllActivities=" + showAllActivities + ", all=" + all + ", canCancel=" + canCancel + ", depotOnly=" + depotOnly + ", sansBon=" + sansBon + ", onlyAvoir=" + onlyAvoir + ", modification=" + modification + ", modificationClientTp=" + modificationClientTp + ", nbre=" + nbre + ", produitId=" + produitId + ", prixachatFiltre=" + prixachatFiltre + ", stock=" + stock + ", stockFiltre=" + stockFiltre + ", rayonId=" + rayonId + ", user=" + user + ", typeTransaction=" + typeTransaction + '}';
     }
+
+ 
+
 }

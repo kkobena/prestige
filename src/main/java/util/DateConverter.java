@@ -520,4 +520,13 @@ public final class DateConverter {
         }
         return null;
     }
+    
+     public static String convertDateToDD_MM_YYYY_HH_mm(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        if (date != null) {
+            return dateFormat.format(date);
+        } else {
+            return "";
+        }
+    }
 }

@@ -79,202 +79,207 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
             id: 'invoiceGRID',
 
             store: groupesInvoice,
-            columns: 
+            columns:
                     [
-                {
-                    xtype: 'rownumberer',
-                    text: '#',
-                    width: 45
+                        {
+                            xtype: 'rownumberer',
+                            text: '#',
+                            width: 45
 
 
-                },
-                {
-                    header: 'ID',
-                    dataIndex: 'lg_GROUPE_ID',
-                    flex: 1,
-                    hidden: true
+                        },
+                        {
+                            header: 'ID',
+                            dataIndex: 'lg_GROUPE_ID',
+                            flex: 1,
+                            hidden: true
 
-                },
-                {
-                    header: 'Libellé',
-                    dataIndex: 'str_LIB',
-                    flex: 1.5
+                        },
+                        {
+                            header: 'Libellé',
+                            dataIndex: 'str_LIB',
+                            flex: 1.5
 
-                },
-                {
-                    header: 'Nombre de factures',
-                    dataIndex: 'NBFACTURES',
-                    align: 'right',
-                    renderer: amountformat,
-                    flex: 1
+                        },
+                        {
+                            header: 'Nombre de factures',
+                            dataIndex: 'NBFACTURES',
+                            align: 'right',
+                            renderer: amountformat,
+                            flex: 1
 
-                },
-                {
-                    header: 'Montant',
-                    dataIndex: 'AMOUNT',
-                    align: 'right',
-                    renderer: amountformat,
-                    flex: 1
+                        },
+                        {
+                            header: 'Montant',
+                            dataIndex: 'AMOUNT',
+                            align: 'right',
+                            renderer: amountformat,
+                            flex: 1
 
-                },
-                {
-                    header: 'Montant Payé',
-                    dataIndex: 'AMOUNTPAYE',
-                    align: 'right',
-                    renderer: amountformat,
-                    flex: 1
+                        },
+                        {
+                            header: 'Montant Payé',
+                            dataIndex: 'AMOUNTPAYE',
+                            align: 'right',
+                            renderer: amountformat,
+                            flex: 1
 
-                },
-                {
-                    header: 'Montant Restant',
-                    dataIndex: 'MONTANTRESTANT',
-                    align: 'right',
-                    renderer: amountformat,
-                    flex: 1
+                        },
+                        {
+                            header: 'Montant Restant',
+                            dataIndex: 'MONTANTRESTANT',
+                            align: 'right',
+                            renderer: amountformat,
+                            flex: 1
 
-                },
+                        },
 
-                {
-                    header: 'Date  d\'édition',
-                    dataIndex: 'DATECREATION',
+                        {
+                            header: 'Date  d\'édition',
+                            dataIndex: 'DATECREATION',
 
-                    flex: 1
+                            flex: 1
 
-                },
+                        },
 
-                {
-                    xtype: 'actioncolumn',
-                    width: 30,
-                    sortable: false,
-                    menuDisabled: true,
-                    items: [{
-                            iconCls: 'detailclients',
-                            tooltip: 'Voir les différentes factures',
-                            scope: this,
-                            handler: function (grid, rowIndex) {
-                                var rec = grid.getStore().getAt(rowIndex);
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    iconCls: 'detailclients',
+                                    tooltip: 'Voir les différentes factures',
+                                    scope: this,
+                                    handler: function (grid, rowIndex) {
+                                        var rec = grid.getStore().getAt(rowIndex);
 
-                                new testextjs.view.tierspayantmanagement.groupetierspayant.action.facturegroupe({
-                                    odatasource: rec.get('CODEFACTURE'),
-                                    parentview: this,
+                                        new testextjs.view.tierspayantmanagement.groupetierspayant.action.facturegroupe({
+                                            odatasource: rec.get('CODEFACTURE'),
+                                            parentview: this,
 
-                                    titre: "Les factures du groupe [" + rec.get('str_LIB') + "]"
-                                });
-                            }
+                                            titre: "Les factures du groupe [" + rec.get('str_LIB') + "]"
+                                        });
+                                    }
 
-                        }]
-                },
-                {
-                    xtype: 'actioncolumn',
-                    width: 30,
-                    sortable: false,
+                                }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
 //                    hidden:true,
-                    menuDisabled: true,
-                    items: [{
-                            getClass: function (v, meta, rec) {
+                            menuDisabled: true,
+                            items: [{
+                                    getClass: function (v, meta, rec) {
 
-                                if (rec.get('STATUT') !== "paid") {
-                                    return 'nonregle';
-                                } else {
-                                    return 'regle';
-                                }
-                            },
-                            getTip: function (v, meta, rec) {
-                                if (rec.get('STATUT') !== "paid") {
-                                    return 'R&eacute;gler Facture';
-                                } else {
-                                    return 'Sold&eacute;e ';
-                                }
-                            },
-                            // icon: 'resources/images/icons/fam/folder_go.png',
-                            // tooltip: 'R&eacute;gler Facture',
-                            scope: this,
-                            handler: this.onPaidFactureClick
-                        }]
-                },
-
-                {
-                    xtype: 'actioncolumn',
-                    width: 30,
-                    sortable: false,
-                    menuDisabled: true,
-                    items: [{
-                            getClass: function (v, meta, rec) {
-                                return 'printable';
-                            },
-                            getTip: function (v, meta, rec) {
-                                return 'Imprimer la facture ';
-                            },
-                            scope: this,
-                            handler: this.onPrint
-                        }]
-                },
-
-                {
-                    xtype: 'actioncolumn',
-                    width: 30,
-                    sortable: false,
-                    menuDisabled: true,
-                    items: [{
-                            getClass: function (v, meta, rec) {
-
-                                if (rec.get('STATUT') !== "paid") {
-                                    return 'unpaid';
-                                } else {
-                                    return 'paid';
-                                }
-                            },
-                            getTip: function (v, meta, rec) {
-                                if (rec.get('STATUT') !== "paid") {
-                                    return 'Supprimer ';
-                                } else {
-                                    return 'Sold&eacute;e ';
-                                }
-                            },
-                            scope: this,
-                            handler: function (grid, rowIndex) {
-                                var rec = grid.getStore().getAt(rowIndex);
-                                if (rec.get('STATUT') === "paid") {
-                                    return;
-                                }
-                                testextjs.app.getController('App').ShowWaitingProcess();
-                                Ext.Ajax.request({
-                                    url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
-                                    params: {
-                                        mode: 7,
-                                        CODEFACTURE: rec.get('CODEFACTURE'),
-                                        lg_GROUPE_ID: rec.get('lg_GROUPE_ID')
-
-
-                                    },
-                                    success: function (response)
-                                    {
-                                        testextjs.app.getController('App').StopWaitingProcess();
-
-                                        var object = Ext.JSON.decode(response.responseText, false);
-                                        if (object.status === 1) {
-                                            grid.getStore().load();
-                                            Ext.MessageBox.alert('INFO', 'Groupe Supprimé');
+                                        if (rec.get('STATUT') !== "paid") {
+                                            if (rec.get('ACTION_REGLER_FACTURE')) {
+                                                return 'nonregle';
+                                            } else {
+                                                return 'x-hide-display';
+                                            }
 
                                         } else {
-                                            Ext.MessageBox.alert('ERROR', 'Erreur de suppression');
+                                            return 'regle';
                                         }
-
                                     },
-                                    failure: function (response)
-                                    {
-                                        testextjs.app.getController('App').StopWaitingProcess();
+                                    getTip: function (v, meta, rec) {
+                                        if (rec.get('STATUT') !== "paid") {
+                                            return 'R&eacute;gler Facture';
+                                        } else {
+                                            return 'Sold&eacute;e ';
+                                        }
+                                    },
+                                    // icon: 'resources/images/icons/fam/folder_go.png',
+                                    // tooltip: 'R&eacute;gler Facture',
+                                    scope: this,
+                                    handler: this.onPaidFactureClick
+                                }]
+                        },
 
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    getClass: function (v, meta, rec) {
+                                        return 'printable';
+                                    },
+                                    getTip: function (v, meta, rec) {
+                                        return 'Imprimer la facture ';
+                                    },
+                                    scope: this,
+                                    handler: this.onPrint
+                                }]
+                        },
+
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    getClass: function (v, meta, rec) {
+
+                                        if (rec.get('STATUT') !== "paid") {
+                                            return 'unpaid';
+                                        } else {
+                                            return 'paid';
+                                        }
+                                    },
+                                    getTip: function (v, meta, rec) {
+                                        if (rec.get('STATUT') !== "paid") {
+                                            return 'Supprimer ';
+                                        } else {
+                                            return 'Sold&eacute;e ';
+                                        }
+                                    },
+                                    scope: this,
+                                    handler: function (grid, rowIndex) {
+                                        var rec = grid.getStore().getAt(rowIndex);
+                                        if (rec.get('STATUT') === "paid") {
+                                            return;
+                                        }
+                                        testextjs.app.getController('App').ShowWaitingProcess();
+                                        Ext.Ajax.request({
+                                            url: '../webservices/configmanagement/groupe/ws_transaction.jsp',
+                                            params: {
+                                                mode: 7,
+                                                CODEFACTURE: rec.get('CODEFACTURE'),
+                                                lg_GROUPE_ID: rec.get('lg_GROUPE_ID')
+
+
+                                            },
+                                            success: function (response)
+                                            {
+                                                testextjs.app.getController('App').StopWaitingProcess();
+
+                                                var object = Ext.JSON.decode(response.responseText, false);
+                                                if (object.status === 1) {
+                                                    grid.getStore().load();
+                                                    Ext.MessageBox.alert('INFO', 'Groupe Supprimé');
+
+                                                } else {
+                                                    Ext.MessageBox.alert('ERROR', 'Erreur de suppression');
+                                                }
+
+                                            },
+                                            failure: function (response)
+                                            {
+                                                testextjs.app.getController('App').StopWaitingProcess();
+
+                                            }
+                                        });
                                     }
-                                });
-                            }
-                        }]
-                }
+                                }]
+                        }
 
 
 
 
-            ],
+                    ],
             selModel: {
                 selType: 'cellmodel'
             },
@@ -354,17 +359,17 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
 
                         },
                         select: function (field, e) {
-                            var mystore= Ext.getCmp('invoiceGRID').getStore();
-                            mystore.getProxy().url ="../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
-                           
-                                mystore.load(
-                                        {params: {
-                                    lg_GROUPE_ID: field.getValue(),
-                                    'dt_end': Ext.getCmp('dt_end').getSubmitValue(),
-                                    'dt_start': Ext.getCmp('dt_start').getSubmitValue(),
-                                    "search_value": Ext.getCmp('groupeSearch').getValue()
+                            var mystore = Ext.getCmp('invoiceGRID').getStore();
+                            mystore.getProxy().url = "../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
 
-                                }});
+                            mystore.load(
+                                    {params: {
+                                            lg_GROUPE_ID: field.getValue(),
+                                            'dt_end': Ext.getCmp('dt_end').getSubmitValue(),
+                                            'dt_start': Ext.getCmp('dt_start').getSubmitValue(),
+                                            "search_value": Ext.getCmp('groupeSearch').getValue()
+
+                                        }});
 
 
 
@@ -392,9 +397,9 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                 if (combox === '' || combox === null) {
                                     combox = '';
                                 }
-                              var mystore= Ext.getCmp('invoiceGRID').getStore();
-                            mystore.getProxy().url ="../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
-                           
+                                var mystore = Ext.getCmp('invoiceGRID').getStore();
+                                mystore.getProxy().url = "../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
+
                                 mystore.load({params: {
                                         lg_GROUPE_ID: combox,
                                         'dt_end': Ext.getCmp('dt_end').getSubmitValue(),
@@ -425,9 +430,9 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                             if (combox === '' || combox === null) {
                                 combox = '';
                             }
-                            codeFact = ''; 
-                            var mystore= Ext.getCmp('invoiceGRID').getStore();
-                            mystore.getProxy().url ="../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
+                            codeFact = '';
+                            var mystore = Ext.getCmp('invoiceGRID').getStore();
+                            mystore.getProxy().url = "../webservices/configmanagement/groupe/ws_groupeInvoices.jsp";
                             mystore.load({params: {
                                     lg_GROUPE_ID: combox,
                                     'dt_end': Ext.getCmp('dt_end').getSubmitValue(),
@@ -513,12 +518,10 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
 
         var rec = grid.getStore().getAt(rowIndex);
 
-        if (rec.get('STATUT') !== "paid") {
+        if (rec.get('STATUT') !== "paid" && rec.get('ACTION_REGLER_FACTURE')) {
             var xtype = "reglementGroupeFacture";
             var alias = 'widget.' + xtype;
-
             var rec = grid.getStore().getAt(rowIndex);
-
             testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Faire un r&eacute;glement", rec.get('lg_GROUPE_ID'), rec.data);
 
         }
