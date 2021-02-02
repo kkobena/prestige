@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1247,8 +1246,8 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public JSONObject ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, int start, int limit) {
-        List<VenteTiersPayantsDTO> data = ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, start, limit, true);
+    public JSONObject ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, String typeTp, int start, int limit) {
+        List<VenteTiersPayantsDTO> data = ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp, start, limit, true);
         JSONObject json = new JSONObject();
         int nbre = 0;
         long montant = 0;
@@ -1264,7 +1263,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, int start, int limit, boolean all) {
+    public List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, String typeTp, int start, int limit, boolean all) {
         List<VenteTiersPayantsDTO> data = new ArrayList<>();
         try {
             CriteriaBuilder cb = this.getEmg().getCriteriaBuilder();
@@ -1278,7 +1277,7 @@ public class ClientServiceImpl implements ClientService {
             ))
                     .orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)))
                     .groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID));
-            List<Predicate> predicates = predicateventesTiersPayants(cb, root, query, dtStart, dtEnd, tiersPayantId, groupeId);
+            List<Predicate> predicates = predicateventesTiersPayants(cb, root, query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp);
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<VenteTiersPayantsDTO> q = this.getEmg().createQuery(cq);
             if (!all) {
@@ -1294,7 +1293,7 @@ public class ClientServiceImpl implements ClientService {
         return data;
     }
 
-    List<Predicate> predicateventesTiersPayants(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId) {
+    List<Predicate> predicateventesTiersPayants(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, String typeTp) {
         List<Predicate> predicates = new ArrayList<>();
         Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.dtCREATED)), java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
@@ -1303,24 +1302,28 @@ public class ClientServiceImpl implements ClientService {
         predicates.add(cb.isFalse(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.bISCANCEL)));
         predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.intPRICE), 0));
         predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE), 0));
-          if (!StringUtils.isEmpty(query)) {
-                query = query.toUpperCase();
-                predicates.add(cb.or(cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)), query + "%"),
-                        cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strNAME)), query + "%")
-                        ));
-            }
+        if (!StringUtils.isEmpty(query)) {
+            query = query.toUpperCase();
+            predicates.add(cb.or(cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)), query + "%"),
+                    cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strNAME)), query + "%")
+            ));
+        }
 
         if (!StringUtils.isEmpty(tiersPayantId) || !StringUtils.isEmpty(query) || !StringUtils.isEmpty(groupeId)) {
             Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> join = root.join(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID, JoinType.INNER);
             if (!StringUtils.isEmpty(tiersPayantId)) {
                 predicates.add(cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
             }
-          
+
             if (!StringUtils.isEmpty(groupeId)) {
                 predicates.add(cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupeId)));
 
             }
+           
         }
+         if (!StringUtils.isEmpty(typeTp) && !"ALL".equals(typeTp)) {
+                predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typeTp));
+            }
         return predicates;
 
     }

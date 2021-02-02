@@ -441,7 +441,7 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                             text: 'Modifier le tiers-payant',
                             margin: '0 10 0 0',
                             handler: me.changeTiespayant
-                                   
+
 
                         }
                     ]
@@ -1111,14 +1111,14 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
 
     changeTiespayant: function (btn) {
         let container = btn.up("fieldcontainer").up('container');
-        let itemId = container.down('hiddenfield:last');
-        if (itemId) {
-            itemId = itemId.getValue();
-        }
-        let rebonCt = btn.up("fieldcontainer").down("textfield").getValue();
+        let hiddenfield = container.down('#compteTp');
+        
+        let rebonCt = btn.up("fieldcontainer").down("textfield");
+        let displayfieldCmp = container.down("fieldcontainer:first").down("displayfield");
+
         let tauxCt = container.down("fieldcontainer:last").down("numberfield").getValue();
         let me = btn.up('window');
-        me.selectedData = {"numBon": rebonCt, "taux": tauxCt};
+        me.selectedData = {"numBon": rebonCt.getValue(), "taux": tauxCt};
 
         let url = '../api/v1/client/tierspayantsbytype/2';
         if (me.getTypeVente() === '2') {
@@ -1182,7 +1182,8 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
                                         let parentForm = _this.up('window').down('form');
                                         let tpRecord = parentForm.down('#compteTp').findRecord("lgTIERSPAYANTID", parentForm.down('#compteTp').getValue());
                                         let numBon = parentForm.down('#numBon').getValue();
-                                        me.upadeTiersPayantContainer(me, tpRecord.data.strFULLNAME, tpRecord.data.lgTIERSPAYANTID, numBon, itemId, container, me.getSelectedData());
+//                                        me.upadeTiersPayantContainer(me, tpRecord.data.strFULLNAME, tpRecord.data.lgTIERSPAYANTID, numBon, itemId, container, me.getSelectedData());
+                                        me.upadeTiersPayantData(tpRecord.data.strFULLNAME, tpRecord.data.lgTIERSPAYANTID, rebonCt, displayfieldCmp, hiddenfield, numBon);
                                         form.destroy();
                                     }
 
@@ -1606,7 +1607,22 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
             });
         }
     },
-    upadeTiersPayantContainer: function (me, fullName, lgTiersPayantId, numBon, detailId, container, selectedData) {
+    upadeTiersPayantData: function (fullName, lgTiersPayantId, rebonCmp, displayfieldCmp, hiddenfield, numBon) {
+        displayfieldCmp.setValue(fullName);
+        hiddenfield.setValue(lgTiersPayantId);
+         console.log(hiddenfield);
+        console.log(hiddenfield.getValue());
+        rebonCmp.setValue(numBon);
+        /* let obj;
+         if (selectedData != null) {
+         obj = {"numBon": selectedData.numBon, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": selectedData.taux, "itemId": detailId};
+         } else {
+         obj = {"numBon": numBon ? numBon : null, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": me.getTaux(), "itemId": detailId};
+         }*/
+
+    },
+
+    upadeTiersPayantContainer: function (me, fullName, lgTiersPayantId, numBon, detailId, container) {
         var tpContainerForm = me.down('form').down('#tpContainer').down('#tpContainerform');
         if (container) {
 
@@ -1617,12 +1633,8 @@ Ext.define('testextjs.view.vente.user.UpdateVenteClientTpForm', {
             tpContainerForm.removeAll();
         }
 
-        let obj;
-        if (selectedData != null) {
-            obj = {"numBon": selectedData.numBon, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": selectedData.taux, "itemId": detailId};
-        } else {
-            obj = {"numBon": numBon ? numBon : null, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": me.getTaux(), "itemId": detailId};
-        }
+        let obj = {"numBon": numBon ? numBon : null, "tpFullName": fullName, "compteTp": lgTiersPayantId, "taux": me.getTaux(), "itemId": detailId};
+
         let cmp = me.buildCmp(obj);
         tpContainerForm.add(cmp);
     },

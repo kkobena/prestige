@@ -941,10 +941,28 @@ Ext.define('testextjs.controller.VenteCtr', {
     onMontantRecuVnoKey: function (field, e, options) {
         var me = this;
         if (e.getKey() === e.ENTER) {
-
-            if (field.getValue() >= 0) {
+            let montantVerse = parseInt(field.getValue());
+            console.log(parseInt(field.getValue()));
+//            if (montantVerse) {
+            if (montantVerse >= 0) {
+                console.log("montantVerse ",montantVerse)
                 me.doCloture();
+
+            } else {
+                Ext.MessageBox.show({
+                    title: 'Message',
+                    width: 320,
+                    msg: 'Veuillez saisir le montant à payer',
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.WARNING,
+                    fn: function (buttonId) {
+                        if (buttonId === "ok") {
+                            field.focus(true, 50);
+                        }
+                    }
+                });
             }
+
         }
 
     },
@@ -3645,62 +3663,75 @@ Ext.define('testextjs.controller.VenteCtr', {
 
         var me = this, typeRegle = me.getVnotypeReglement().getValue(),
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
-        console.log(me.getToRecalculate());
-//return;
-        if (me.getToRecalculate()) {
+
+        if (me.getMontantRecu().getValue() != null) {
+            if (me.getToRecalculate()) {
+                Ext.MessageBox.show({
+                    title: 'Message d\'erreur',
+                    width: 320,
+                    msg: 'Le net à payer sera recalculer',
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.ERROR,
+                    fn: function (buttonId) {
+                        if (buttonId === "ok") {
+                            if (typeVenteCombo === '1') {
+                                me.showNetPaidVno();
+                            } else {
+                                me.showNetPaidAssurance();
+                            }
+                        }
+                    }
+                });
+
+            } else {
+                if (me.getCaisse()) {
+                    if (typeVenteCombo === '1') {
+                        if (typeRegle === '1' || '4') {
+                            if (typeRegle === '4') {
+                                var client = me.getClient();
+                                if (client) {
+                                    me.onbtncloturerVnoComptant(typeRegle);
+                                } else {
+                                    Ext.MessageBox.show({
+                                        title: 'Message d\'erreur',
+                                        width: 320,
+                                        msg: 'Veuillez ajouter un client pour la vente différée',
+                                        buttons: Ext.MessageBox.OK,
+                                        icon: Ext.MessageBox.ERROR,
+                                        fn: function (buttonId) {
+                                            if (buttonId === "ok") {
+                                                me.showAndHideInfosStandardClient(true);
+                                            }
+                                        }
+                                    });
+                                }
+                            } else {
+                                me.onbtncloturerVnoComptant(typeRegle);
+                            }
+
+
+                        }
+                    } else {
+                        me.onbtncloturerAssurance(typeRegle);
+                    }
+                } else {
+                    Ext.Msg.alert("Message", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à la validation");
+                }
+            }
+        } else {
             Ext.MessageBox.show({
-                title: 'Message d\'erreur',
+                title: 'Message',
                 width: 320,
-                msg: 'Le net à payer sera recalculer',
+                msg: 'Veuillez saisir le montant à payer',
                 buttons: Ext.MessageBox.OK,
-                icon: Ext.MessageBox.ERROR,
+                icon: Ext.MessageBox.WARNING,
                 fn: function (buttonId) {
                     if (buttonId === "ok") {
-                        if (typeVenteCombo === '1') {
-                            me.showNetPaidVno();
-                        } else {
-                            me.showNetPaidAssurance();
-                        }
+                        me.getMontantRecu().focus(true, 50);
                     }
                 }
             });
-
-        } else {
-            if (me.getCaisse()) {
-                if (typeVenteCombo === '1') {
-                    if (typeRegle === '1' || '4') {
-                        if (typeRegle === '4') {
-                            var client = me.getClient();
-                            if (client) {
-                                me.onbtncloturerVnoComptant(typeRegle);
-                            } else {
-                                Ext.MessageBox.show({
-                                    title: 'Message d\'erreur',
-                                    width: 320,
-                                    msg: 'Veuillez ajouter un client pour la vente différée',
-                                    buttons: Ext.MessageBox.OK,
-                                    icon: Ext.MessageBox.ERROR,
-                                    fn: function (buttonId) {
-                                        if (buttonId === "ok") {
-                                            me.showAndHideInfosStandardClient(true);
-                                        }
-                                    }
-                                });
-                            }
-                        } else {
-                            me.onbtncloturerVnoComptant(typeRegle);
-                        }
-
-
-                    }
-                } else {
-                    me.onbtncloturerAssurance(typeRegle);
-                }
-            } else {
-                Ext.Msg.alert("Message", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à la validation");
-            }
         }
-
     },
     onbtncloturerAssurance: function (typeRegleId) {
         var me = this, sansBon = me.getSansBon().getValue(), montantTp = me.getMontantTp().getValue();

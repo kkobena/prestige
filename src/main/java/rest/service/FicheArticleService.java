@@ -49,7 +49,11 @@ public interface FicheArticleService {
 
     JSONObject produitConsomamation(TUser u, String query, String dtStart, String dtEnd, String id, int start, int limit) throws JSONException;
 
-    boolean updateProduitAccount(String id,boolean account);
-    
-    JSONObject produitAccounts(String query,String rayon,String filtre, TUser u,int start, int limit) throws JSONException;
+    boolean updateProduitAccount(String id, boolean account);
+
+    JSONObject produitAccounts(String query, String rayon, String filtre, TUser u, int start, int limit) throws JSONException;
+
+    JSONObject saisiePerimes(String query, String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
+
+    List<VenteDetailsDTO> saisiePerimes(String query, String dtStart, String dtEnd, String codeFamile, String codeRayon, String codeGrossiste,Integer grouby, int start, int limit, boolean all);
 }

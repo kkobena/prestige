@@ -314,47 +314,7 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                                             }
                                         }]
                                 }
-                              /*  {
-                                    xtype: 'chart',
-                                    style: 'background:#fff',
-                                    store: data,
-                                    title:'Rapport par TVA',
-                                    flex: 1,
-                                    animate: true,
-                                    legend: {
-                                        position: 'bottom'
-                                    },
-                                    series: [{
-                                            type: 'pie',
-                                            axis: 'left',
-                                            field: 'Total TVA',
-                                            showInLegend: true,
-                                            highlight: {
-                                                segment: {
-                                                    margin: 20
-                                                }
-                                            }, label: {// show the months names inside the pie
-                                                field: 'TAUX',
-                                                display: 'rotate',
-                                                contrast: true,
-                                                font: '18px Arial'
-                                            }, style: {
-                                                opacity: 0.93
-                                                
-                                            },
-                                            tips: {
-                                                trackMouse: true,
-                                                style: 'font-size:11px;background: #fff;color: #6D6D6D;',
-                                                width: 150,
-
-                                                renderer: function (storeItem, item) {
-                                                    this.setTitle(storeItem.get('TAUX') + '%' + '= Total TVA:' + storeItem.get('Total TVA'));
-
-                                                }
-                                            }
-
-                                        }]
-                                }*/
+                          
 
                             ]
                         }

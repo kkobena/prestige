@@ -1320,7 +1320,6 @@ public class CaisseServiceImpl implements CaisseService {
             json.put("data", new JSONArray());
 
         }
-
         map.forEach((k, v) -> {
             json.put("total", v.size());
             json.put("data", new JSONArray(v));
@@ -1376,7 +1375,9 @@ public class CaisseServiceImpl implements CaisseService {
                     montantAchatFive = new LongAdder(),
                     montantAchat = new LongAdder(), montantAvoir = new LongAdder();
             DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
-            montantAvoir.add(avoirFournisseur(k));
+            int avoir = avoirFournisseur(k);
+            montantAvoir.add(avoir);
+
             v.forEach(op -> {
                 switch (op.getTypeTransaction()) {
                     case VENTE_COMPTANT:
@@ -1393,8 +1394,7 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-                        montantAchat.add(op.getMontantNet());
-
+                        montantAchat.add(op.getMontantNet()-avoir);
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
@@ -1419,7 +1419,6 @@ public class CaisseServiceImpl implements CaisseService {
 
                         } catch (Exception e) {
                         }
-
                     }
                     break;
                     default:
@@ -3320,15 +3319,21 @@ public class CaisseServiceImpl implements CaisseService {
                     montantAchatFive = new LongAdder(),
                     montantAchat = new LongAdder(), montantAvoir = new LongAdder();
             DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
-            montantAvoir.add(avoirFournisseur(k));
+            int avoir = avoirFournisseur(k);
+            montantAvoir.add(avoir);
             v.forEach(op -> {
                 switch (op.getTypeTransaction()) {
                     case VENTE_COMPTANT: {
+                        int remiseNonPara = 0;
+                        if (Math.abs(op.getMontantRemise()) > 0) {
+                            remiseNonPara = remiseNonPara(op.getPkey());
+                        }
+                      
+//                    montantRemise += remiseNonPara;
+//                        int remise = remisePara(op.getPkey());
+                        int montantNet_ = op.getMontantAcc() - remiseNonPara - op.getMontantttcug();
+                        int montantTTC_ = op.getMontantAcc() - op.getMontantttcug();
 
-                        int remise = remisePara(op.getPkey());
-                        int montantNet_ =  op.getMontantAcc() - remise - op.getMontantttcug();
-                        int montantTTC_ =  op.getMontantAcc() - op.getMontantttcug();
-                       
                         montantNet.add(montantNet_);
                         montantTTC.add(montantTTC_);
                         montantEsp.add(montantNet_);
@@ -3337,7 +3342,7 @@ public class CaisseServiceImpl implements CaisseService {
                             montantNet.add(op.getMontantNet());
                             montantEsp.add(op.getMontantRegle());
                          */
-                        montantRemise.add(remise);
+                        montantRemise.add(remiseNonPara);
                         montantCredit.add(op.getMontantCredit());
                         montantCredit.add(op.getMontantRestant());
                         if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
@@ -3359,8 +3364,7 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-                        montantAchat.add(op.getMontantNet());
-
+                        montantAchat.add(op.getMontantNet() - avoir);
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {

@@ -6,9 +6,13 @@
 package commonTasks.dto;
 
 import dal.TFamille;
+import dal.TFamillearticle;
+import dal.TGrossiste;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import dal.TUser;
+import dal.TWarehouse;
+import dal.TZoneGeographique;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -44,6 +48,8 @@ public class VenteDetailsDTO implements Serializable {
     private boolean avoir;
     private final LocalDate toDate = LocalDate.now();
     private String rayonId, libelleRayon;
+    private String familleId, libelleFamille;
+    private String grossisteId, libelleGrossiste;
 
     public String getCaissier() {
         return caissier;
@@ -288,6 +294,38 @@ public class VenteDetailsDTO implements Serializable {
 
     public void setHEURE(String HEURE) {
         this.HEURE = HEURE;
+    }
+
+    public String getFamilleId() {
+        return familleId;
+    }
+
+    public void setFamilleId(String familleId) {
+        this.familleId = familleId;
+    }
+
+    public String getLibelleFamille() {
+        return libelleFamille;
+    }
+
+    public void setLibelleFamille(String libelleFamille) {
+        this.libelleFamille = libelleFamille;
+    }
+
+    public String getGrossisteId() {
+        return grossisteId;
+    }
+
+    public void setGrossisteId(String grossisteId) {
+        this.grossisteId = grossisteId;
+    }
+
+    public String getLibelleGrossiste() {
+        return libelleGrossiste;
+    }
+
+    public void setLibelleGrossiste(String libelleGrossiste) {
+        this.libelleGrossiste = libelleGrossiste;
     }
 
     public VenteDetailsDTO(TPreenregistrementDetail d) {
@@ -650,11 +688,57 @@ public class VenteDetailsDTO implements Serializable {
         this.intPRICE = (int) price;
         this.intAVOIR = (int) avoir;
     }
-    
-      public VenteDetailsDTO( String produit,  long quantiteVendue, String grossiste) {
+
+    public VenteDetailsDTO(String produit, long quantiteVendue, String grossiste) {
         this.intQUANTITY = (int) quantiteVendue;
         this.lgFAMILLEID = produit;
         this.typeVente = grossiste;
-        
+
+    }
+
+    public VenteDetailsDTO(TWarehouse warehouse, Integer grouby) {
+        this.dateOperation = warehouse.getDtCREATED();
+        TFamille famille = warehouse.getLgFAMILLEID();
+        this.lgFAMILLEID = famille.getLgFAMILLEID();
+        this.strNAME = famille.getStrNAME();
+        this.intCIP = famille.getIntCIP();
+        this.operateur = warehouse.getLgUSERID().getStrFIRSTNAME() + " " + warehouse.getLgUSERID().getStrLASTNAME();
+        try {
+            this.dtCREATED = dateFormat.format(warehouse.getDtPEREMPTION());
+        } catch (Exception e) {
+        }
+
+        this.intQUANTITY = warehouse.getIntNUMBER();
+        TZoneGeographique zone = famille.getLgZONEGEOID();
+        if (zone != null) {
+            this.rayonId = zone.getLgZONEGEOID();
+            this.libelleRayon = zone.getStrLIBELLEE();
+        }
+        this.intPRICE = warehouse.getIntNUMBER() * famille.getIntPRICE();
+        this.dateHeure = dateFormatHeure.format(warehouse.getDtCREATED());
+        this.intPRICEUNITAIR = famille.getIntPRICE();
+        this.ticketNum = warehouse.getIntNUMLOT();
+//        TGrossiste g=warehouse.getLgGROSSISTEID();
+        TGrossiste g = famille.getLgGROSSISTEID();
+        if (g != null) {
+            this.grossisteId = g.getLgGROSSISTEID();
+            this.libelleGrossiste = g.getStrLIBELLE();
+        }
+        TFamillearticle famillearticle = famille.getLgFAMILLEARTICLEID();
+        this.familleId = famillearticle.getLgFAMILLEARTICLEID();
+        this.libelleFamille = famillearticle.getStrLIBELLE();
+        if (grouby != null) {
+            if (grouby.compareTo(0) == 0) {
+                this.lgPREENREGISTREMENTDETAILID = this.familleId;
+                this.lgPREENREGISTREMENTID = this.libelleFamille;
+            } else if (grouby.compareTo(1) == 0) {
+                this.lgPREENREGISTREMENTDETAILID = this.rayonId;
+                this.lgPREENREGISTREMENTID = this.libelleRayon;
+            } else if (grouby.compareTo(2) == 0) {
+                this.lgPREENREGISTREMENTDETAILID = this.grossisteId;
+                this.lgPREENREGISTREMENTID = this.libelleGrossiste;
+            }
+        }
+
     }
 }

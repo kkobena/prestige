@@ -253,10 +253,11 @@ public class ClientRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-        JSONObject json = clientService.updateClientInfos(clientDTO,clientId);
+        JSONObject json = clientService.updateClientInfos(clientDTO, clientId);
         return Response.ok().entity(json.toString()).build();
     }
- @POST
+
+    @POST
     @Path("update-infos-ayantdroit/{ayantDroitId}")
     public Response updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO, @PathParam("ayantDroitId") String ayantDroitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
@@ -268,19 +269,19 @@ public class ClientRessource {
         JSONObject json = clientService.updateAyantDroitInfos(ayantDroitDTO);
         return Response.ok().entity(json.toString()).build();
     }
-    
-    
+
     @GET
     @Path("ventes-tierspayant")
     public Response ventesTiersPayants(
-             @QueryParam(value = "start") int start,
+            @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit,
-              @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "dtStart") String dtStart,
-             @QueryParam(value = "tiersPayantId") String tiersPayantId,
-              @QueryParam(value = "groupeId") String groupeId,
+            @QueryParam(value = "tiersPayantId") String tiersPayantId,
+            @QueryParam(value = "groupeId") String groupeId,
+            @QueryParam(value = "typeTp") String typeTp,
             @QueryParam(value = "query") String query) {
-        JSONObject json= clientService.ventesTiersPayants(query, dtStart,dtEnd,tiersPayantId,groupeId,start,limit);
-       return Response.ok().entity(json.toString()).build();
+        JSONObject json = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId,typeTp, start, limit);
+        return Response.ok().entity(json.toString()).build();
     }
 }

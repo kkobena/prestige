@@ -54,7 +54,7 @@ public class BalancePdfServlet extends HttpServlet {
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, TABLEAUOLD, RECAP, TVA_JOUR,
         STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS,
-        BALANCE_PARA
+        BALANCE_PARA, SAISIE_PERIMES
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -185,6 +185,18 @@ public class BalancePdfServlet extends HttpServlet {
 
                 file = balance.produitPerimes(query, _n, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste);
                 break;
+            case SAISIE_PERIMES:
+                codeFamile = request.getParameter("codeFamile");
+                codeRayon = request.getParameter("codeRayon");
+                codeGrossiste = request.getParameter("codeGrossiste");
+                query = request.getParameter("query");
+                Integer groupby=null;
+                try {
+                       groupby =Integer.valueOf(request.getParameter("groupby")) ;
+                } catch (Exception e) {
+                }
+                file = balance.saisiePerimes(query, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste,groupby);
+                break;
             case STAT_PROVIDER_ARTICLE:
                 codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
@@ -212,9 +224,7 @@ public class BalancePdfServlet extends HttpServlet {
                 boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
                 boolean canCancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
                 boolean modification = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.P_BT_MODIFICATION_DE_VENTE);
-
                 body.setCanCancel(canCancel);
-
                 body.setQuery(query);
                 body.setTypeVenteId(typeVenteId);
                 body.setStatut(commonparameter.statut_is_Closed);

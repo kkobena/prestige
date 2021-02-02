@@ -67,7 +67,7 @@ public interface ClientService {
 
     TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant tpId, int taux, TCompteClientTiersPayant old) throws Exception;
 
-    JSONObject ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, int start, int limit);
+    JSONObject ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId,String typeTp, int start, int limit);
 
-    List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, int start, int limit, boolean all);
+    List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId,String typeTp, int start, int limit, boolean all);
 }

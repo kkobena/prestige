@@ -61,9 +61,7 @@ public class FicheArticleRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-        /*  if (filtre == null) {
-            filtre = Peremption.PERIME;
-        }*/
+       
         JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
         return Response.ok().entity(jsono.toString()).build();
     }
@@ -202,4 +200,28 @@ public class FicheArticleRessource {
         JSONObject json = ficheArticleService.produitAccounts(query,rayon,filtre,tu, start, limit);
         return Response.ok().entity(json.toString()).build();
     }
+    
+    
+    @GET
+    @Path("saisieperimes")
+    public Response saisiePerimes(
+            @QueryParam(value = "codeFamile") String codeFamile,
+            @QueryParam(value = "query") String query,
+            @QueryParam(value = "codeRayon") String codeRayon,
+            @QueryParam(value = "codeGrossiste") String codeGrossiste,
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd,
+             @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit
+    ) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject jsono = ficheArticleService.saisiePerimes(query, dtStart, dtEnd, tu, codeFamile, codeRayon, codeGrossiste, start, limit);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
 }

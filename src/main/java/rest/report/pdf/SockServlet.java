@@ -44,6 +44,7 @@ public class SockServlet extends HttpServlet {
         String groupeId = request.getParameter("groupeId");
         String tiersPayantId = request.getParameter("tiersPayantId");
         String query = request.getParameter("query");
+          String typeTp = request.getParameter("typeTp");
         String file = "";
 
         switch (SockServlet.Action.valueOf(action)) {
@@ -66,10 +67,10 @@ public class SockServlet extends HttpServlet {
                 file = stock.venteUgDTO(OTUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
                 break;
             case VENTE_TIERS_PAYANT_GROUP:
-                file = stock.ventesTiersPayants(OTUser, "rp_ventetpGroup", query, dtStart, dtEnd, tiersPayantId, groupeId);
+                file = stock.ventesTiersPayants(OTUser, "rp_ventetpGroup", query, dtStart, dtEnd, tiersPayantId, groupeId,typeTp);
                 break;
             case VENTE_TIERS_PAYANT:
-                file = stock.ventesTiersPayants(OTUser, "rp_ventetp", query, dtStart, dtEnd, tiersPayantId, groupeId);
+                file = stock.ventesTiersPayants(OTUser, "rp_ventetp", query, dtStart, dtEnd, tiersPayantId, groupeId,typeTp);
                 break;
             case ARTICLE_VENDUS_DETAIL:
             case ARTICLE_VENDUS_RECAP:

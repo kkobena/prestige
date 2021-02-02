@@ -51,10 +51,14 @@ Ext.define('testextjs.controller.VenteTiersPayantsCtr', {
             ref: 'query',
             selector: 'tpventes #query'
         },
-       {
+        {
             ref: 'importGroup',
             selector: 'tpventes #importicon'
-        } 
+        },
+        {
+            ref: 'typeTp',
+            selector: 'tpventes #typeTp'
+        }
 
 
     ],
@@ -63,22 +67,26 @@ Ext.define('testextjs.controller.VenteTiersPayantsCtr', {
             'tpventes #uggid pagingtoolbar': {
                 beforechange: this.doBeforechange
             },
-             'tpventes #groupTp': {
+            'tpventes #groupTp': {
                 select: this.doSearch
             },
             'tpventes #tpCmb': {
                 select: this.doSearch
             },
+            'tpventes #typeTp': {
+                select: this.doSearch
+            },
+
             'tpventes #rechercher': {
                 click: this.doSearch
             },
             'tpventes #imprimer': {
                 click: this.onPdfClick
             },
-             'tpventes #importicon': {
+            'tpventes #importicon': {
                 click: this.onPdfGroup
             },
-            
+
             'tpventes #uggid': {
                 viewready: this.doInitStore
             }
@@ -91,15 +99,20 @@ Ext.define('testextjs.controller.VenteTiersPayantsCtr', {
         let dtEnd = me.getDtEnd().getSubmitValue();
         let query = me.getQuery().getValue();
         let tiersPayantId = me.getTpCmb().getValue();
-        let groupTp =  groupTp = me.getGroupTp().getValue();
-        if (groupTp==null || groupTp== undefined) {
+        let groupTp = me.getGroupTp().getValue();
+        let   typeTp = me.getTypeTp().getValue();
+        if (typeTp == null || typeTp == undefined) {
+            typeTp = '';
+        }
+        if (groupTp == null || groupTp == undefined) {
             groupTp = '';
         }
-        if (tiersPayantId ==null || tiersPayantId == undefined) {
-            tiersPayantId ='' ;
+        if (tiersPayantId == null || tiersPayantId == undefined) {
+            tiersPayantId = '';
         }
         var linkUrl = '../SockServlet?mode=VENTE_TIERS_PAYANT&dtStart=' + dtStart + '&dtEnd=' + dtEnd
-                + '&query=' + query + '&tiersPayantId=' + tiersPayantId + '&groupeId=' + groupTp;
+                + '&query=' + query + '&tiersPayantId=' + tiersPayantId +
+                '&groupeId=' + groupTp + '&typeTp=' + typeTp;
         window.open(linkUrl);
     },
     doMetachange: function (store, meta) {
@@ -115,10 +128,11 @@ Ext.define('testextjs.controller.VenteTiersPayantsCtr', {
             dtStart: null,
             groupeId: null,
             tiersPayantId: null,
-            query: null
+            query: null,
+            typeTp: 'ALL'
 
         };
-
+        myProxy.setExtraParam('typeTp', me.getTypeTp().getValue());
         myProxy.setExtraParam('groupeId', me.getGroupTp().getValue());
         myProxy.setExtraParam('tiersPayantId', me.getTpCmb().getValue());
         myProxy.setExtraParam('query', me.getQuery().getValue());
@@ -141,7 +155,8 @@ Ext.define('testextjs.controller.VenteTiersPayantsCtr', {
                 dtEnd: me.getDtEnd().getSubmitValue(),
                 query: me.getQuery().getValue(),
                 groupeId: me.getGroupTp().getValue(),
-                tiersPayantId: me.getTpCmb().getValue()
+                tiersPayantId: me.getTpCmb().getValue(),
+                typeTp: me.getTypeTp().getValue()
 
             }
         });
@@ -151,25 +166,29 @@ Ext.define('testextjs.controller.VenteTiersPayantsCtr', {
         me.getMontant().setValue(rec.montant);
         me.getNbre().setValue(rec.nbre);
     },
-    
-    
-     onPdfGroup: function () {
+
+    onPdfGroup: function () {
         var me = this;
         let dtStart = me.getDtStart().getSubmitValue();
         let dtEnd = me.getDtEnd().getSubmitValue();
         let query = me.getQuery().getValue();
-        let tiersPayantId =me.getTpCmb().getValue();
+        let tiersPayantId = me.getTpCmb().getValue();
         let groupTp = me.getGroupTp().getValue();
-         if (groupTp==null || groupTp== undefined) {
+        let   typeTp = me.getTypeTp().getValue();
+        if (typeTp == null || typeTp == undefined) {
+            typeTp = '';
+        }
+        if (groupTp == null || groupTp == undefined) {
             groupTp = '';
         }
-        if (tiersPayantId ==null || tiersPayantId == undefined) {
-            tiersPayantId ='' ;
-         }
-        
+        if (tiersPayantId == null || tiersPayantId == undefined) {
+            tiersPayantId = '';
+        }
+
         var linkUrl = '../SockServlet?mode=VENTE_TIERS_PAYANT_GROUP&dtStart=' + dtStart + '&dtEnd=' + dtEnd
-                + '&query=' + query + '&tiersPayantId=' + tiersPayantId + '&groupeId=' + groupTp;
+                + '&query=' + query + '&tiersPayantId=' + tiersPayantId +
+                '&groupeId=' + groupTp + '&typeTp=' + typeTp;
         window.open(linkUrl);
     }
-    
+
 });

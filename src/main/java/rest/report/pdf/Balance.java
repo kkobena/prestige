@@ -843,12 +843,21 @@ public class Balance {
     }
 
     public String produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser tu, String codeFamile, String codeRayon, String codeGrossiste) throws IOException {
-
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_perimerquery";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-        parameters.put("P_H_CLT_INFOS", "PRODUITS PERIMES ");
+        }
+        parameters.put("P_H_CLT_INFOS", "PRODUITS PERIMES " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         Pair< VenteDetailsDTO, List<VenteDetailsDTO>> p = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0, true);
         VenteDetailsDTO summary = p.getLeft();
@@ -974,5 +983,38 @@ public class Balance {
         parameters.put("montantVirement", summaryDTO.getMontantVirement());
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_balancevente_caissevpara_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_balancevente_caissevpara_" + report_generate_file;
+    }
+
+    public String saisiePerimes(String query, String dtStart, String dtEnd, TUser tu, String codeFamile, String codeRayon, String codeGrossiste, Integer grouby) throws IOException {
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+        TOfficine oTOfficine = caisseService.findOfficine();
+        String scr_report_file = "rp_perimev2";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        }
+        parameters.put("P_H_CLT_INFOS", "PRODUITS PERIMES " + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        List<VenteDetailsDTO> data = ficheArticleService.saisiePerimes(query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste, grouby, 0, 0, true);
+        if (grouby != null) {
+            scr_report_file = "rp_perimegroup";
+            if (grouby.compareTo(0) == 0) {
+                data.sort(Comparator.comparing(VenteDetailsDTO::getLibelleFamille).thenComparing(VenteDetailsDTO::getDateOperation, Comparator.reverseOrder()));
+            } else if (grouby.compareTo(1) == 0) {
+                data.sort(Comparator.comparing(VenteDetailsDTO::getLibelleRayon).thenComparing(VenteDetailsDTO::getDateOperation, Comparator.reverseOrder()));
+            } else if (grouby.compareTo(2) == 0) {
+                data.sort(Comparator.comparing(VenteDetailsDTO::getLibelleGrossiste).thenComparing(VenteDetailsDTO::getDateOperation, Comparator.reverseOrder()));
+            }
+        }
+
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_perimes_" + report_generate_file, data);
+        return "/data/reports/pdf/rp_perimes_" + report_generate_file;
     }
 }

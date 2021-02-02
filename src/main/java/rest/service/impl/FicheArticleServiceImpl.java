@@ -25,6 +25,8 @@ import dal.TPreenregistrementDetail_;
 import dal.TPreenregistrement_;
 import dal.TUser;
 import dal.TUser_;
+import dal.TWarehouse;
+import dal.TWarehouse_;
 import dal.TZoneGeographique_;
 import enumeration.MargeEnum;
 import enumeration.Peremption;
@@ -330,32 +332,6 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                     ).filter(x -> x.getQteSurplus() >= 0).
                     collect(Collectors.toList());
 
-            /* return resultList.stream()
-                    .map(x
-                            -> {
-                        Map<String, Integer> conso = consomationArticle(x[0] + "", emId, nbreConsommation);
-                            int cons = conso.values().stream().reduce(0, Integer::sum);
-                        return new ArticleDTO()
-                                .id(x[0] + "")
-                                .code(x[1] + "")
-                                .libelle(x[2] + "")
-                                .filterId(x[3] + "")
-                                .filterLibelle(x[4] + "")
-                                .prixAchat(Integer.valueOf(x[5] + ""))
-                                .prixVente(Integer.valueOf(x[6] + ""))
-                                .codeGrossiste(x[7] + "")
-                                .stock(Integer.valueOf(x[8] + ""))
-                                .consommation(Integer.valueOf(x[9] + ""))
-                                .stockMoyen(cons / nbreConsommation)
-//                                .stockMoyen(Integer.valueOf(x[9] + "") / nbreConsommation)
-                                .qteSurplus(nbreConsommation)
-                                .datePeremption(x[11] + "")
-                                .coefficient(Double.valueOf(nbreConsommation));
-
-                    }
-                    ).
-                    collect(Collectors.toList());
-             */
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
@@ -549,9 +525,6 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                         stock.get(TFamilleStock_.intNUMBERAVAILABLE),
                         root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE),
                         root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE)
-                /* root.get(TFamille_.intPAF),
-                        root.get(TFamille_.intPRICE),
-                        root.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE)*/
                 ))
                         .groupBy(root.get(TFamille_.lgFAMILLEID)).orderBy(cb.asc(root.get(TFamille_.strNAME)));
             } else if (!StringUtils.isEmpty(codeRayon) || codeRayon.equals(DateConverter.ALL)) {
@@ -860,6 +833,100 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         TFamille famille = getEntityManager().find(TFamille.class, id);
         famille.setBoolACCOUNT(!account);
         return true;
+    }
+
+    @Override
+    public JSONObject saisiePerimes(String query, String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {
+        long count = saisiePerimes(query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
+        if (count == 0) {
+            return new JSONObject().put("total", 0).put("data", new JSONArray());
+        }
+        List<VenteDetailsDTO> data = saisiePerimes(query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste,null, start, limit, false);
+       
+        return new JSONObject().put("total", count).put("data", new JSONArray(data));
+
+    }
+
+    private List<Predicate> saisiePerimesPredicat(CriteriaBuilder cb, Root<TWarehouse> root, Join<TWarehouse, TFamille> fa, String query, String dtStart, String dtEnd, String codeFamille, String codeRayon, String codeGrossiste) {
+        List<Predicate> predicates = new ArrayList<>();
+        LocalDate toDay = LocalDate.now();
+        LocalDate dayEnd = toDay;
+//        predicates.add(cb.equal(fa.get(TFamille_.strSTATUT), DateConverter.STATUT_ENABLE));
+        predicates.add(cb.equal(root.get(TWarehouse_.strSTATUT), DateConverter.STATUT_DELETE));
+        if (!StringUtils.isEmpty(query)) {
+            predicates.add(cb.or(cb.like(fa.get(TFamille_.intCIP), query + "%"),
+                    cb.like(fa.get(TFamille_.strNAME), query + "%"),
+                    cb.like(root.get(TWarehouse_.intNUMLOT), query + "%")
+            ));
+        }
+        if (!StringUtils.isEmpty(codeFamille) && !codeFamille.equals("ALL")) {
+            predicates.add(cb.equal(fa.get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamille));
+        }
+        if (!StringUtils.isEmpty(codeRayon) && !codeRayon.equals("ALL")) {
+            predicates.add(cb.equal(fa.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), codeRayon));
+        }
+        if (!StringUtils.isEmpty(codeGrossiste) && !codeGrossiste.equals("ALL")) {
+            predicates.add(cb.equal(fa.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
+//             predicates.add(cb.equal(root.get(TWarehouse_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
+        }
+        try {
+            toDay = LocalDate.parse(dtStart);
+        } catch (Exception e) {
+        }
+        try {
+            dayEnd = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+        predicates.add(cb.or(cb.between(cb.function("DATE", Date.class, root.get(TWarehouse_.dtCREATED)), java.sql.Date.valueOf(toDay), java.sql.Date.valueOf(dayEnd)), cb.between(cb.function("DATE", Date.class, root.get(TWarehouse_.dtPEREMPTION)), java.sql.Date.valueOf(toDay), java.sql.Date.valueOf(dayEnd))));
+
+        return predicates;
+    }
+
+    @Override
+    public List<VenteDetailsDTO> saisiePerimes(String query, String dtStart, String dtEnd, String codeFamile, String codeRayon, String codeGrossiste,Integer grouby, int start, int limit, boolean all) {
+
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<TWarehouse> cq = cb.createQuery(TWarehouse.class);
+            Root<TWarehouse> root = cq.from(TWarehouse.class);
+            Join<TWarehouse, TFamille> fa = root.join(TWarehouse_.lgFAMILLEID, JoinType.INNER);
+//            List<Predicate> predicates = saisiePerimesPredicat(cb, root, fa, query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
+         List<Predicate> predicates = saisiePerimesPredicat(cb, root, fa, query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
+            cq.select(root)
+                    .orderBy(cb.desc(root.get(TWarehouse_.dtCREATED)));
+
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<TWarehouse> q = getEntityManager().createQuery(cq);
+            if (!all) {
+                q.setFirstResult(start);
+                q.setMaxResults(limit);
+            }
+
+            return q.getResultList().stream().map(x->new VenteDetailsDTO(x,grouby)).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "saisiePerimes", e);
+            return Collections.emptyList();
+        }
+    }
+
+    private long saisiePerimes(String query, String dtStart, String dtEnd, String codeFamile, String codeRayon, String codeGrossiste) {
+        try {
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TWarehouse> root = cq.from(TWarehouse.class);
+            Join<TWarehouse, TFamille> fa = root.join(TWarehouse_.lgFAMILLEID, JoinType.INNER);
+            List<Predicate> predicates = saisiePerimesPredicat(cb, root, fa, query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
+            cq.select(cb.count(root));
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            Query q = getEntityManager().createQuery(cq);
+            return (Long) q.getSingleResult();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "saisiePerimes", e);
+            return 0;
+        }
     }
 
 }

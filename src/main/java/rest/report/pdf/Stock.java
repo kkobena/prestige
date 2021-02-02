@@ -124,7 +124,7 @@ public class Stock {
         return "/data/reports/pdf/rp_ruptures_pharmaml_" + report_generate_file;
     }
 
-    public String ventesTiersPayants(TUser tu, String scr_report_file, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId) {
+    public String ventesTiersPayants(TUser tu, String scr_report_file, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, String typeTp) {
         TOfficine oTOfficine = commonService.findOfficine();
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + LocalDate.parse(dtStart).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -134,7 +134,12 @@ public class Stock {
         }
         parameters.put("P_H_CLT_INFOS", "Liste des Bordereaux " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<VenteTiersPayantsDTO> data = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, 0, 0, true).stream().filter(e -> e.getGroupeId() != null).collect(Collectors.toList());
+        List<VenteTiersPayantsDTO> data = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp, 0, 0, true).stream().filter(e -> e.getGroupeId() != null).collect(Collectors.toList());
+        if ("rp_ventetpGroup".equals(scr_report_file)) {
+            data.sort(Comparator.comparing(VenteTiersPayantsDTO::getLibelleGroupe).thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
+        } else {
+            data.sort(Comparator.comparing(VenteTiersPayantsDTO::getTypeTiersPayant).thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
+        }
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_ventetp" + report_generate_file, data);
         return "/data/reports/pdf/rp_ventetp" + report_generate_file;
     }
