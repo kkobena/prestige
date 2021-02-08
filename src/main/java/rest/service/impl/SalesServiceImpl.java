@@ -1287,6 +1287,7 @@ public class SalesServiceImpl implements SalesService {
             OTPreenregistrement.setCopy(Boolean.FALSE);
             OTPreenregistrement.setStrSTATUTVENTE(commonparameter.statut_nondiffere);
             OTPreenregistrement.setStrSTATUT(salesParams.getStatut());
+            System.out.println("OTPreenregistrement--------------------->>>>   "+OTPreenregistrement.getStrSTATUT());
             OTPreenregistrement.setStrTYPEVENTE(Parameter.KEY_VENTE_NON_ORDONNANCEE);
             TPreenregistrementDetail dt = addPreenregistrementItem(OTPreenregistrement, tf, salesParams.getQte(), salesParams.getQteServie(), salesParams.getQteUg(), salesParams.getItemPu(), emg);
             emg.persist(OTPreenregistrement);
@@ -4783,6 +4784,15 @@ public class SalesServiceImpl implements SalesService {
                 .margeUg(margeUg)
                 .montantNetUg(montantNetUg)
                 .montantTtcUg(montantTtcUg);
+    }
+
+    @Override
+    public JSONObject closePreventeVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID) {
+       TPreenregistrement p =getEm().find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
+       p.setStrSTATUT(DateConverter.STATUT_PROCESS);
+       p.setLgUSERID(ooTUser);
+       getEm().merge(p);
+       return  new JSONObject().put("success", true);
     }
     
 }

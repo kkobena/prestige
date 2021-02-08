@@ -17,7 +17,6 @@ Ext.define('testextjs.controller.DevisListCtr', {
             ref: 'addBtn',
             selector: 'devismanager #addBtn'
         },
-
         {
             ref: 'devisGrid',
             selector: 'devismanager gridpanel'
@@ -56,12 +55,18 @@ Ext.define('testextjs.controller.DevisListCtr', {
             'devismanager #typeVente': {
                 select: this.doSearch
             },
-
             'devismanager gridpanel': {
                 viewready: this.doInitStore
             },
             "devismanager gridpanel actioncolumn": {
-                click: this.handleActionColumn
+                toEdit: this.onEdite,
+                toPrintTicket: this.onPrintTicket,
+                toExportCsv: this.onbtnexportCsv,
+                toExportWord: this.onExportWord,
+                toExportExcel: this.onExportExcel,
+                toRemove: this.onDelete,
+                toTransform: this.transformIntoVente,
+                toPdf:this.onExportPdf
             },
             'devismanager #query': {
                 specialkey: this.onSpecialKey
@@ -69,7 +74,7 @@ Ext.define('testextjs.controller.DevisListCtr', {
             'devismanager #addBtn': {
                 click: this.onAddClick
             },
-            'devismanager #printPdf':{
+            'devismanager #printPdf': {
                 click: this.printLit
             }
         });
@@ -82,6 +87,29 @@ Ext.define('testextjs.controller.DevisListCtr', {
         var linkUrl = '../webservices/sm_user/preenregistrement/ws_generate_pdf.jsp?dt_Date_Debut=' + dtStart + "&dt_Date_Fin=" + dtEnd + "&search_value=" + query + "&str_STATUT=devis&title=LISTE DES DEVIS";
         window.open(linkUrl);
     },
+    onbtnexportCsv: function (view, rowIndex, colIndex, item, e, rec, row) {
+      window.location = '../api/v1/ventestats/devis/csv?id=' + rec.get('lgPREENREGISTREMENTID')+'&ref='+rec.get('strREF') ;
+
+    },
+    onPrintTicket: function (view, rowIndex, colIndex, item, e, rec, row) {
+        var linkUrl = "../FacturePdfServlet?mode=DEVIS&venteId=" + rec.get('lgPREENREGISTREMENTID');
+        window.open(linkUrl);
+
+    },
+    onExportWord: function (view, rowIndex, colIndex, item, e, rec, row) {
+        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID')+"&format=WORD";
+        window.open(linkUrl);
+
+    },
+    onExportExcel: function (view, rowIndex, colIndex, item, e, rec, row) {
+        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID')+"&format=EXCEL";
+        window.open(linkUrl);
+    },
+    onExportPdf: function (view, rowIndex, colIndex, item, e, rec, row) {
+        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID')+"&format=PDF";
+        window.open(linkUrl);
+
+    },
     handleActionColumn: function (view, rowIndex, colIndex, item, e) {
         var me = this;
         var store = me.getDevisGrid().getStore(),
@@ -93,24 +121,21 @@ Ext.define('testextjs.controller.DevisListCtr', {
         } else if (parseInt(item) === 6) {
             me.transformIntoVente(rec);
         } else if (parseInt(item) === 9) {
-          var linkUrl="../FacturePdfServlet?mode=DEVIS&venteId="+rec.get('lgPREENREGISTREMENTID');
+            var linkUrl = "../FacturePdfServlet?mode=DEVIS&venteId=" + rec.get('lgPREENREGISTREMENTID');
             window.open(linkUrl);
         }
-    }, onAddClick: function () {
+    },
+    onAddClick: function () {
         var xtype = "doDevis";
         var data = {'isEdit': false, 'record': {}};
         testextjs.app.getController('App').onRedirectTo(xtype, data);
-
     },
-
-    onDelete: function (id) {
+    onDelete: function (view, rowIndex, colIndex, item, e, rec, row) {
         var me = this;
         var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             method: 'POST',
-//            headers: {'Content-Type': 'application/json'},
-            url: '../api/v1/ventestats/remove/' + id,
-//            params: Ext.JSON.encode(params),
+            url: '../api/v1/ventestats/remove/' + rec.get('lgPREENREGISTREMENTID'),
             success: function (response, options) {
                 progress.hide();
                 var result = Ext.JSON.decode(response.responseText, true);
@@ -134,13 +159,12 @@ Ext.define('testextjs.controller.DevisListCtr', {
 
         });
     },
-    transformIntoVente: function (rec) {
+    transformIntoVente: function (view, rowIndex, colIndex, item, e, rec, row) {
         var data = {'isEdit': true, 'record': rec.data, 'isDevis': true, 'categorie': 'VENTE'};
         var xtype = "doventemanager";
         testextjs.app.getController('App').onRedirectTo(xtype, data);
     },
-
-    onEdite: function (rec) {
+    onEdite: function (view, rowIndex, colIndex, item, e, rec, row) {
         var data = {'isEdit': true, 'record': rec.data};
         var xtype = "doDevis";
         testextjs.app.getController('App').onRedirectTo(xtype, data);
@@ -148,7 +172,6 @@ Ext.define('testextjs.controller.DevisListCtr', {
     doBeforechange: function (page, currentPage) {
         var me = this;
         var myProxy = me.getDevisGrid().getStore().getProxy();
-
         myProxy.params = {
             query: null,
             typeVenteId: null,
@@ -161,26 +184,21 @@ Ext.define('testextjs.controller.DevisListCtr', {
         myProxy.setExtraParam('query', me.getQueryField().getValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
-
     },
-
     doInitStore: function () {
         var me = this;
         me.doSearch();
-
     },
     onSpecialKey: function (field, e, options) {
         if (e.getKey() === e.ENTER) {
             if (field.getValue() && field.getValue().trim() !== "") {
                 var me = this;
                 me.doSearch();
-
             }
         }
     },
     doSearch: function () {
         var me = this;
-
         me.getDevisGrid().getStore().load({
             params: {
                 "statut": 'devis',

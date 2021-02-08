@@ -97,8 +97,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     private EntityManager em;
     @EJB
     CaisseService caisseService;
-     @EJB
+    @EJB
     private SuggestionService suggestionService;
+
     public EntityManager getEntityManager() {
         return em;
     }
@@ -246,6 +247,61 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
     }
 
+    void listePreenregistrement(SalesStatsParams params, CriteriaBuilder cb,
+            Root<TPreenregistrementDetail> root, Join<TPreenregistrementDetail, TPreenregistrement> st, List<Predicate> predicates) {
+        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
+                java.sql.Date.valueOf(params.getDtEnd()));
+        predicates.add(cb.and(btw));
+        if (params.isDepotOnly()) {
+            predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.pkBrand), "")));
+        } else {
+            predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.lgNATUREVENTEID).get("lgNATUREVENTEID"), Parameter.KEY_NATURE_VENTE_DEPOT)));
+        }
+        if (params.getStatut().equals(DateConverter.ALL)) {
+            predicates.add(
+                    cb.or(cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_PROCESS),
+                            cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_PENDING)
+                    ));
+        } else {
+
+            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), params.getStatut())));
+        }
+
+        if (params.getQuery() != null && !"".equals(params.getQuery())) {
+            Predicate predicate = cb.and(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(st.get(TPreenregistrement_.strREF), "%" + params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%")));
+            predicates.add(predicate);
+        }
+        if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
+            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
+        }
+        if (!params.isShowAll()) {
+            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
+        }
+        if (!params.isShowAllActivities()) {
+            TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
+            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID())));
+        }
+    }
+  @Override
+    public long countListeTPreenregistrement(SalesStatsParams params) {
+        try {
+            List<Predicate> predicates = new ArrayList<>();
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
+            cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)));
+           listePreenregistrement(params, cb, root, st, predicates);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            Query q = getEntityManager().createQuery(cq);
+            return (Long) q.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+
+    }
+
     @Override
     public JSONObject getListeTPreenregistrement(SalesStatsParams params) throws JSONException {
         JSONObject json = new JSONObject();
@@ -262,30 +318,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)).distinct(true).orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
-            Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
-                    java.sql.Date.valueOf(params.getDtEnd()));
-            predicates.add(cb.and(btw));
-            if (params.isDepotOnly()) {
-                predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.pkBrand), "")));
-            } else {
-                predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.lgNATUREVENTEID).get("lgNATUREVENTEID"), Parameter.KEY_NATURE_VENTE_DEPOT)));
-            }
-            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), params.getStatut())));
-
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
-                Predicate predicate = cb.and(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(st.get(TPreenregistrement_.strREF), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%")));
-                predicates.add(predicate);
-            }
-            if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
-            }
-            if (!params.isShowAll()) {
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
-            }
-            if (!params.isShowAllActivities()) {
-                TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID())));
-            }
+            listePreenregistrement(params, cb, root, st, predicates);
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
@@ -307,49 +340,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         return json;
     }
 
-    @Override
-    public long countListeTPreenregistrement(SalesStatsParams params) {
-        try {
-            List<Predicate> predicates = new ArrayList<>();
-            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)));
-            Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
-                    java.sql.Date.valueOf(params.getDtEnd()));
-            predicates.add(cb.and(btw));
-            if (params.isDepotOnly()) {
-                predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.pkBrand), "")));
-            } else {
-                predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.lgNATUREVENTEID).get("lgNATUREVENTEID"), Parameter.KEY_NATURE_VENTE_DEPOT)));
-            }
-            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), params.getStatut())));
-
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
-                Predicate predicate = cb.and(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(st.get(TPreenregistrement_.strREF), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%")));
-                predicates.add(predicate);
-            }
-            if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
-            }
-            if (!params.isShowAll()) {
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
-            }
-            if (!params.isShowAllActivities()) {
-                TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
-                predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID())));
-            }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
-            Query q = getEntityManager().createQuery(cq);
-            return (Long) q.getSingleResult();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return 0;
-        }
-
-    }
-
+  
     private List<TPreenregistrementCompteClientTiersPayent> findClientTiersPayents(String idVente) {
         return getEntityManager().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?1 ").setParameter(1, idVente).getResultList();
     }
@@ -410,18 +401,14 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         try {
             TPreenregistrement tp = getEntityManager().find(TPreenregistrement.class, venteId);
             LOG.log(Level.INFO, "{0} {1}", new Object[]{venteId, tp});
-//            getEntityManager().getTransaction().begin();
             deleteItemsBulk(venteId);
             deleteCompteClientBulk(venteId);
             getEntityManager().remove(tp);
-//            getEntityManager().getTransaction().commit();
             json.put("success", true);
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-//            if (getEntityManager().getTransaction().isActive()) {
-//                getEntityManager().getTransaction().rollback();
-//            }
+
             json.put("success", false);
         }
         return json;
@@ -432,19 +419,15 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         JSONObject json = new JSONObject();
         try {
             TPreenregistrement tp = getEntityManager().find(TPreenregistrement.class, venteId);
-//            getEntityManager().getTransaction().begin();
             updateItemsBulk(venteId, statut);
             updateCompteClientBulk(venteId, statut);
             tp.setStrSTATUT(statut);
             getEntityManager().merge(tp);
-//            getEntityManager().getTransaction().commit();
             json.put("success", true);
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-//            if (getEntityManager().getTransaction().isActive()) {
-//                getEntityManager().getTransaction().rollback();
-//            }
+
             json.put("success", false);
         }
         return json;
@@ -1323,7 +1306,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     public JSONObject articlesVendusRecap(SalesStatsParams params) throws JSONException {
         JSONObject json = new JSONObject();
         long count = getArticlesVendusCountRecap(params);
-       
+
         if (count == 0) {
             json.put("total", count);
             json.put("data", new JSONArray()).put("metaData", new JSONObject().put("montantTotal", 0));
@@ -1336,10 +1319,11 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     }
 
     @Override
-    public JSONObject articleVendusASuggerer(SalesStatsParams params)  throws JSONException{
-       return suggestionService.makeSuggestion(articlesVendusASuggerer(params));
+    public JSONObject articleVendusASuggerer(SalesStatsParams params) throws JSONException {
+        return suggestionService.makeSuggestion(articlesVendusASuggerer(params));
     }
-     private List<VenteDetailsDTO> articlesVendusASuggerer(SalesStatsParams params) {
+
+    private List<VenteDetailsDTO> articlesVendusASuggerer(SalesStatsParams params) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
@@ -1352,16 +1336,36 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)),
                     jf.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID)
             ))
-                .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
+                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
-           
+
             return q.getResultList();
         } catch (Exception e) {
             e.printStackTrace();
             return Collections.emptyList();
         }
     }
+ @Override
+    public List<TPreenregistrementDetail> venteDetailByVenteId(String venteId) {
+        try {
+            TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery("SELECT o FROM TPreenregistrementDetail o WHERE o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?1", TPreenregistrementDetail.class);
+            q.setParameter(1, venteId);
+            return  q.getResultList();
+          
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public VenteDTO findVenteDTOById(String idVente) {
+        TPreenregistrement preenregistrement=getEntityManager().find(TPreenregistrement.class, idVente);
+        return new VenteDTO(preenregistrement, venteDetailByVenteId(idVente).stream().map(VenteDetailsDTO::new).collect(Collectors.toList()),new ClientDTO(preenregistrement.getClient()));
+    }
+    
+    
     
 }

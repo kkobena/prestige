@@ -130,13 +130,20 @@ Ext.define('testextjs.view.vente.VenteVNO', {
 
 
                         }, {
-                            text: 'Terminer vente',
+                            text: 'TERMINER LA VENTE',
                             itemId: 'btnCloture',
+                            iconCls: 'icon-clear-group',
+                            scope: this
+                        }, {
+                            text: 'CLOTURER LA PRE-VENTE',
+                            itemId: 'btnClosePrevente',
+                            cls: 'btn-prevente',
+                            hidden: true,
                             iconCls: 'icon-clear-group',
                             scope: this
                         }
                         , {
-                            text: 'Mettre en attente',
+                            text: 'METTRE EN ATTENTE',
                             itemId: 'btnStandBy',
                             iconCls: 'icon-clear-group',
                             scope: this
@@ -449,7 +456,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     itemId: 'stockField',
                                     fieldStyle: "color:blue;",
                                     flex: 0.7
-                                  
+
                                 },
                                 {
                                     xtype: 'displayfield',

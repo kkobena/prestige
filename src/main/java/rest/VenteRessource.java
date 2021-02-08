@@ -27,6 +27,7 @@ import org.json.JSONObject;
 import rest.service.GenerateTicketService;
 import rest.service.SalesService;
 import toolkits.parameters.commonparameter;
+import util.DateConverter;
 
 /**
  *
@@ -67,7 +68,7 @@ public class VenteRessource {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
         params.setUserId(tu);
-        params.setStatut(commonparameter.statut_is_Process);
+        params.setStatut(params.isPrevente()?DateConverter.STATUT_PENDING: DateConverter.STATUT_PROCESS);
         JSONObject json = salesService.createPreVente(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -81,7 +82,7 @@ public class VenteRessource {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
         params.setUserId(tu);
-        params.setStatut(commonparameter.statut_is_Process);
+      params.setStatut(params.isPrevente()?DateConverter.STATUT_PENDING: DateConverter.STATUT_PROCESS);
         JSONObject json = salesService.createPreVenteVo(params);
         return Response.ok().entity(json.toString()).build();
     }

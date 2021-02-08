@@ -19,7 +19,7 @@ Ext.define('testextjs.view.devis.Devis', {
 //        align: 'stretch'
     },
     initComponent: function () {
-      
+
         var vente = Ext.create('Ext.data.Store', {
             model: 'testextjs.model.caisse.Vente',
             autoLoad: false,
@@ -57,7 +57,7 @@ Ext.define('testextjs.view.devis.Devis', {
                             fieldLabel: 'Du',
                             itemId: 'dtStart',
                             height: 30,
-                            labelWidth:30,
+                            labelWidth: 30,
                             flex: 1,
                             submitFormat: 'Y-m-d',
                             maxValue: new Date(),
@@ -70,7 +70,7 @@ Ext.define('testextjs.view.devis.Devis', {
                             fieldLabel: 'Au',
                             itemId: 'dtEnd',
                             height: 30,
-                            labelWidth:30,
+                            labelWidth: 30,
                             flex: 1,
                             submitFormat: 'Y-m-d',
                             maxValue: new Date(),
@@ -126,7 +126,7 @@ Ext.define('testextjs.view.devis.Devis', {
 //                        enableLocking: true,
                         collapsible: true,
                         animCollapse: false,
-                        enableColumnHide:false
+                        enableColumnHide: false
 //                        emptyText: '<h1 style="margin:10px 10px 10px 30%;">Pas de donn&eacute;es</h1>'
                     },
                     columns: [
@@ -138,7 +138,7 @@ Ext.define('testextjs.view.devis.Devis', {
                             flex: 1
                         }, {
                             header: 'MONTANT',
-                             align: 'right',
+                            align: 'right',
                             sortable: false,
                             menuDisabled: true,
                             xtype: 'numbercolumn',
@@ -178,7 +178,10 @@ Ext.define('testextjs.view.devis.Devis', {
                             items: [{
                                     icon: 'resources/images/icons/fam/application_go.png',
                                     tooltip: 'Transformer en Vente',
-                                    scope: me
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toTransform', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+
 
                                 }]
                         },
@@ -191,8 +194,10 @@ Ext.define('testextjs.view.devis.Devis', {
                             items: [{
                                     icon: 'resources/images/icons/fam/page_white_edit.png',
                                     tooltip: 'Modifier',
-                                    menuDisabled: true,
-                                    scope: me
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toEdit', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+
 
                                 }]
                         },
@@ -204,7 +209,9 @@ Ext.define('testextjs.view.devis.Devis', {
                             items: [{
                                     icon: 'resources/images/icons/fam/delete.png',
                                     tooltip: 'Supprimer',
-                                    scope: me
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toRemove', view, rowIndex, colIndex, item, e, record, row);
+                                    }
 
                                 }]
                         },
@@ -216,10 +223,69 @@ Ext.define('testextjs.view.devis.Devis', {
                             items: [{
                                     icon: 'resources/images/icons/fam/printer.png',
                                     tooltip: 'Re-imprimer le proforma',
-                                    scope: me
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toPrintTicket', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+
+                                }]
+                        }, {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/pdf.png',
+                                    tooltip: 'Imprimer',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toPdf', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+
+                                }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/fam/excel_csv2.png',
+                                    tooltip: 'Exporter en csv',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toExportCsv', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+
+                                }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/docx.png',
+                                    tooltip: 'Exporter en word',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toExportWord', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+
+                                }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/fam/excel_icon.png',
+                                    tooltip: 'Exporter en excel',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toExportExcel', view, rowIndex, colIndex, item, e, record, row);
+                                    }
 
                                 }]
                         }
+
+
                     ],
 //            selModel: {
 //                selType: 'cellmodel'

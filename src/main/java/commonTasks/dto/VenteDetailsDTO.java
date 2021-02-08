@@ -39,7 +39,7 @@ public class VenteDetailsDTO implements Serializable {
     private String typeVente, numOrder, medecinId, commentaire, nom;
     private int intAVOIR, currentStock = 0, uniteGratuite, montantUg, seuil, stockUg, montantTva, valeurTva, prixHt;
     private int montantHt;
-    private int montantNetHt;
+    private int montantNetHt,prixAchat;
     private boolean bISAVOIR;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat dateFormatHeure = new SimpleDateFormat("dd/MM/yyyy HH:mm");
@@ -643,6 +643,14 @@ public class VenteDetailsDTO implements Serializable {
         this.seuil = seuil;
     }
 
+    public int getPrixAchat() {
+        return prixAchat;
+    }
+
+    public void setPrixAchat(int prixAchat) {
+        this.prixAchat = prixAchat;
+    }
+
     public VenteDetailsDTO(String lgFAMILLEID,
             String strNAME, String intCIP,
             Date dateHeure, TUser operateur,
@@ -739,6 +747,6 @@ public class VenteDetailsDTO implements Serializable {
                 this.lgPREENREGISTREMENTID = this.libelleGrossiste;
             }
         }
-
+        this.prixAchat = famille.getIntPAF();
     }
 }

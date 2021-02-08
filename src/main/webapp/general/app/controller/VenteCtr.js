@@ -225,6 +225,10 @@ Ext.define('testextjs.controller.VenteCtr', {
         {
             ref: 'encaissement',
             selector: 'doventemanager #contenu #encaissement'
+        },
+        {
+            ref: 'btnClosePrevente',
+            selector: 'doventemanager #contenu #btnClosePrevente'
         }
         ,
         {
@@ -572,6 +576,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                     },
                     'doventemanager #contenu [xtype=toolbar] #btnStandBy': {
                         click: this.putToStandBy
+                    }, 'doventemanager #contenu [xtype=toolbar] #btnClosePrevente': {
+                        click: this.closePrevente
                     },
 
                     'doventemanager #contenu [xtype=toolbar] #btnCloture': {
@@ -945,7 +951,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             console.log(parseInt(field.getValue()));
 //            if (montantVerse) {
             if (montantVerse >= 0) {
-                console.log("montantVerse ",montantVerse)
+                console.log("montantVerse ", montantVerse)
                 me.doCloture();
 
             } else {
@@ -2218,11 +2224,19 @@ Ext.define('testextjs.controller.VenteCtr', {
                 me.componentsToHidePresales();
                 me.updateComboxFields(null, null, null, null, null);
                 me.getVnobtnCloture().hide();
+                 if( me.getCategorie() === 'PREVENTE'){
+                   me.getBtnClosePrevente().show();  
+                }
             } else if (isEdit && me.getCategorie() === 'PREVENTE') {
                 var record = data.record;
                 me.loadExistantSale(record.lgPREENREGISTREMENTID);
                 me.componentsToHidePresales();
                 me.getVnobtnCloture().hide();
+                if( me.getCategorie() === 'PREVENTE'){
+                   me.getBtnClosePrevente().show();  
+                }
+                
+                
             } else if (isEdit && me.getCategorie() === 'COPY') {
                 var record = data.record;
                 me.chargerCopieDeVenteAmodifier(record.lgPREENREGISTREMENTID);
@@ -3659,8 +3673,47 @@ Ext.define('testextjs.controller.VenteCtr', {
         };
         return cmp;
     },
-    doCloture: function () {
+    closePrevente: function () {
+        var me = this
+        const venteId = me.getCurrent().lgPREENREGISTREMENTID;
+        var url = '../api/v1/vente/terminerprevente/' + venteId;
+        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        Ext.Ajax.request({
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            url: url,
+            success: function (response, options) {
+                progress.hide();
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.resetAll();
+                    me.getVnoproduitCombo().focus(false, 100, function () {
+                    });
+                } else {
+                    Ext.MessageBox.show({
+                        title: 'Message d\'erreur',
+                        width: 320,
+                        msg: result.msg,
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR
 
+                    });
+                }
+
+            },
+            failure: function (response, options) {
+                progress.hide();
+                Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
+            }
+
+        });
+
+
+
+
+
+    },
+    doCloture: function () {
         var me = this, typeRegle = me.getVnotypeReglement().getValue(),
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
 
@@ -4135,6 +4188,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             var user = me.getUserCombo().getValue(),
                     nature = me.getNatureCombo().getValue()
                     , remiseId = me.getVnoremise().getValue();
+            const isPrevente = me.getCategorie() === 'PREVENTE';
             if (typeVente === '1') {
                 params = {
                     "typeVenteId": typeVente,
@@ -4146,7 +4200,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                     "devis": false,
                     "remiseId": remiseId,
                     "venteId": venteId,
-                    "userVendeurId": user
+                    "userVendeurId": user,
+                    "prevente": isPrevente
                 };
             } else {
                 var ayantDroit = me.getAyantDroit(), ayantDroitId = null;
@@ -4167,7 +4222,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                     "userVendeurId": user,
                     "tierspayants": tierspayants,
                     "clientId": clientId,
-                    "ayantDroitId": ayantDroitId
+                    "ayantDroitId": ayantDroitId,
+                    "prevente": isPrevente
                 };
             }
 

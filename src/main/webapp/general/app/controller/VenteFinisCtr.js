@@ -122,38 +122,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             }
         }
     },
-    handleActionColumn: function (view, rowIndex, colIndex, item, e, r, row) {
-        var me = this;
-        var store = me.getVentemanagerGrid().getStore(),
-                rec = store.getAt(colIndex);
-
-        if (parseInt(item) === 8) {
-            me.onPrintTicket(rec.get('lgPREENREGISTREMENTID'), rec.get('lgTYPEVENTEID'), rec.get('copy'));
-        } else if (parseInt(item) === 9) {
-            me.testSuppression(rec);
-
-        } else if (parseInt(item) === 10) {
-
-            me.onFacture(rec);
-        } else if (parseInt(item) === 11) {
-            if (rec.get('intPRICE') > 0 && !rec.get('cancel')) {
-                me.onSuggestion(rec.get('lgPREENREGISTREMENTID'));
-            }
-
-        } else if (parseInt(item) === 12) {
-            if (rec.get('lgTYPEVENTEID') === "5") {
-                me.onbtnexportCsv(rec.get('lgPREENREGISTREMENTID'));
-            }
-
-        } else if (parseInt(item) === 13) {
-            if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modification')) {
-//            if (rec.get('modification')) {
-                me.onEdite(rec);
-            }
-
-        }
-
-    },
+    
     updateInfosvente: function (win, formulaire, rec, linkUrl) {
         if (formulaire.isValid()) {
             var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');

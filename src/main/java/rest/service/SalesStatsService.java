@@ -14,6 +14,7 @@ import commonTasks.dto.TvaDTO;
 import commonTasks.dto.VenteDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TPreenregistrement;
+import dal.TPreenregistrementDetail;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
@@ -94,4 +95,8 @@ public interface SalesStatsService {
     JSONObject articlesVendusRecap(SalesStatsParams params) throws JSONException;
 
     JSONObject articleVendusASuggerer(SalesStatsParams params) throws JSONException;
+
+    List<TPreenregistrementDetail> venteDetailByVenteId(String venteId);
+
+    VenteDTO findVenteDTOById(String venteId);
 }

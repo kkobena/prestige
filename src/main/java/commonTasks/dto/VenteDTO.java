@@ -34,7 +34,7 @@ public class VenteDTO implements Serializable {
     private String lgPREENREGISTREMENTID;
     private String strREF;
     private String strREFTICKET;
-    private Integer intPRICE;
+    private Integer intPRICE,montantTva;
     private Integer intPRICEREMISE;
     private String strTYPEVENTE;
     private Integer intCUSTPART, remiseDepot = 0;
@@ -1062,15 +1062,57 @@ public class VenteDTO implements Serializable {
             this.userFullName = op.getStrFIRSTNAME() + " " + op.getStrLASTNAME();
         } catch (Exception e) {
         }
-        Medecin m = tp.getMedecin();
-        this.medecinId = m.getId();
-        this.nom = m.getNom();
-        this.numOrder = m.getNumOrdre();
-        this.commentaire = m.getCommentaire();
-        items.forEach((tpd) -> {
-            this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getIntCIP() + "</span><span style='display:inline-block;width: 25%;'>" + tpd.getStrNAME() + "</span><span style='display:inline-block;width: 10%;'>(" + tpd.getIntQUANTITY() + ")</span><span style='display:inline-block;width: 15%;'>" + DateConverter.amountFormat(tpd.getIntPRICEUNITAIR(), '.') + " F CFA " + "</span></b><br> " + this.details;
-        });
+     
         return this;
+
+    }
+
+    public Integer getMontantTva() {
+        return montantTva;
+    }
+
+    public void setMontantTva(Integer montantTva) {
+        this.montantTva = montantTva;
+    }
+    
+    
+    
+    
+      public VenteDTO(TPreenregistrement tp, List<VenteDetailsDTO> tpds,ClientDTO client) {
+        this.lgPREENREGISTREMENTID = tp.getLgPREENREGISTREMENTID();
+        this.strREF = tp.getStrREF();
+        this.strREFTICKET = tp.getStrREFTICKET();
+        this.intPRICE = tp.getIntPRICE();
+        this.montantTva=tp.getMontantTva();
+        this.intPRICEREMISE = tp.getIntPRICEREMISE();
+        this.strTYPEVENTE = tp.getStrTYPEVENTE();
+        this.intCUSTPART = tp.getIntCUSTPART();
+        this.avoir = tp.getBISAVOIR();
+        this.cancel = tp.getBISCANCEL();
+        this.sansbon = tp.getBWITHOUTBON();
+        this.lgTYPEVENTEID = tp.getLgTYPEVENTEID().getLgTYPEVENTEID();
+      
+        this.dateOperation = tp.getDtUPDATED();
+        this.mvdate = DateConverter.convertDateToYYYY_MM_DD(tp.getDtUPDATED());
+        this.items = tpds;
+       this.client=client;
+        try {
+
+            this.dateAnnulation = dateFormat.format(tp.getDtANNULER());
+            this.heureAnnulation = heureFormat.format(tp.getDtANNULER());
+        } catch (Exception e) {
+        }
+        try {
+            TUser tu = tp.getLgUSERVENDEURID();
+            TUser c = tp.getLgUSERCAISSIERID();
+            TUser op = tp.getLgUSERID();
+            this.lgUSERVENDEURID = tu.getLgUSERID();
+            this.userVendeurName = tu.getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + tu.getStrLASTNAME();
+            this.userCaissierName = c.getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + c.getStrLASTNAME();
+            this.lgUSERCAISSIERID = c.getLgUSERID();
+            this.userFullName = op.getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + op.getStrLASTNAME();
+        } catch (Exception e) {
+        }
 
     }
 }

@@ -25,7 +25,7 @@ public class SalesParams implements Serializable {
     private String venteId;
     private String itemId;
     private Integer itemPu,remiseDepot=0;
-    private boolean devis=false,depot=false;
+    private boolean devis=false,depot=false,prevente=false;
     private String clientId;
     private String ayantDroitId;
     private Integer montantTp,totalRecap;
@@ -276,6 +276,14 @@ public class SalesParams implements Serializable {
 
     public void setCheckUg(boolean checkUg) {
         this.checkUg = checkUg;
+    }
+
+    public boolean isPrevente() {
+        return prevente;
+    }
+
+    public void setPrevente(boolean prevente) {
+        this.prevente = prevente;
     }
 
 }

@@ -6,20 +6,28 @@
 package rest;
 
 import bll.common.Parameter;
+import commonTasks.dto.ArticleHeader;
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.TiersPayantParams;
+import commonTasks.dto.VenteDetailsDTO;
+import dal.TPreenregistrementDetail;
 import dal.TPrivilege;
 import dal.TUser;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -28,7 +36,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CommonService;
@@ -601,4 +614,40 @@ public class SalesStatsRessource {
         JSONObject json = salesService.articleVendusASuggerer(body);
         return Response.ok().entity(json.toString()).build();
     }
+    
+    
+     @GET
+    @Path("devis/csv")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response exportToCsv(@QueryParam("id") String venteId,@QueryParam("ref") String ref) {
+         StreamingOutput output = (OutputStream out) -> {
+            try {
+                List<TPreenregistrementDetail> detailses = salesService.venteDetailByVenteId(venteId);
+                Writer writer = new OutputStreamWriter(out, "UTF-8");
+
+                try (CSVPrinter printer = CSVFormat.EXCEL
+                        .withDelimiter(';').withHeader(ArticleHeader.class).print(writer)) {
+
+                    detailses.forEach(f -> {
+                        try {
+                            printer.printRecord(f.getLgFAMILLEID().getIntCIP(), f.getIntQUANTITY());
+
+                        } catch (IOException ex) {
+
+                        }
+                    });
+
+                }
+            } catch (IOException ex) {
+                throw new WebApplicationException("File Not Found !!");
+            }
+        };
+        String filename = "devis_"+ref+"_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".csv";
+        return Response
+                .ok(output, MediaType.APPLICATION_OCTET_STREAM)
+                .header("content-disposition", "attachment; filename = " + filename)
+                .build();
+
+    }
+    
 }

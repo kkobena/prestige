@@ -5,6 +5,7 @@
  */
 package rest.report.pdf;
 
+import commonTasks.dto.FileForma;
 import commonTasks.dto.Params;
 import dal.TPrivilege;
 import dal.TUser;
@@ -30,7 +31,8 @@ public class FacturePdfServlet extends HttpServlet {
     Facture facture;
 
     private enum Action {
-        DEVIS, LISTE_DIFFERES, DIFFERE, LOG, VENTE_ANNULEES,FACTURE_PROVISOIRES,ALL_FACTURE_PROVISOIRES
+        DEVIS, LISTE_DIFFERES, DIFFERE, LOG, VENTE_ANNULEES, FACTURE_PROVISOIRES,
+        ALL_FACTURE_PROVISOIRES, DEVIS_FACTURE
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -81,9 +83,15 @@ public class FacturePdfServlet extends HttpServlet {
                 file = facture.logs(query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), userId, criteria, OTUser);
                 break;
             case VENTE_ANNULEES:
-                List<TPrivilege> LstTPrivilege = (List<TPrivilege>) session .getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-                file =  facture.annulations(query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), OTUser, LstTPrivilege);
-                break; 
+                List<TPrivilege> LstTPrivilege = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+                file = facture.annulations(query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), OTUser, LstTPrivilege);
+                break;
+
+            case DEVIS_FACTURE:
+                venteId = request.getParameter("venteId");
+                FileForma fileForma = FileForma.valueOf(request.getParameter("format"));
+                file=facture.factureDevisAsFacture(venteId, fileForma, OTUser);
+                break;
             default:
                 break;
         }

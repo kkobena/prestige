@@ -22173,4 +22173,8 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
     font-size: 14px !important;
     font-weight: 700 !important;
 }
+.btn-prevente{
+    background: #00B74A;
+    border-color: #00B74A;
+}
 /*focusCls,labelCls */

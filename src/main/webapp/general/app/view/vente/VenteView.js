@@ -9,13 +9,10 @@ Ext.define('testextjs.view.vente.VenteView', {
     config: {
         data: null
     },
-    //successProperty : 'meta.success'
     frame: true,
-//    title: 'VENTE AU COMPTANT',
     width: '97%',
     height: 'auto',
     minHeight: 570,
-
     cls: 'custompanel',
     layout: {
         type: 'vbox',

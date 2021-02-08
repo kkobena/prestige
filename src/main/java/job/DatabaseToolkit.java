@@ -106,7 +106,7 @@ public class DatabaseToolkit {
         }*/
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         if (dataSource == null) {
             LOG.info("no datasource found to execute the db migrations!");
@@ -343,7 +343,7 @@ public class DatabaseToolkit {
         if (StringUtils.isEmpty(content)) {
             return false;
         }
-        content="kobe";
+      
         SmsParameters sp = SmsParameters.getInstance();
         Properties props = new Properties();
         props.put("mail.smtp.host", sp.smtpHost);

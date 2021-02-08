@@ -34,9 +34,13 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
+import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
+import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.engine.util.JRLoader;
 import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimplePrintServiceExporterConfiguration;
+import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import toolkits.utils.jdom;
 import util.DateConverter;
 
@@ -46,9 +50,9 @@ import util.DateConverter;
  */
 @Stateless
 public class ReportUtil {
-    
+
     private static final Logger LOG = Logger.getLogger(ReportUtil.class.getName());
-    
+
     public JasperReport getReport(String reportName, String reportPath) throws JRException, Exception {
         System.out.println(reportName);
         System.out.println(reportPath);
@@ -61,15 +65,15 @@ public class ReportUtil {
 //            return getDefaultReport(reportName, reportPath);
 
         }
-        
+
     }
-    
+
     public JasperReport compileReport(String reportName, String reportPath) throws Exception {
         InputStream in = null;
         InputStream in2 = null;
         FileOutputStream out = null;
         File jasperFile = null;
-        
+
         try {
 //            File jrxmlFile = new File(ReportUtil.class.getResource(reportPath + reportName + ".jrxml").getFile()); 
             File jrxmlFile = new File(reportPath + reportName + ".jrxml");
@@ -81,13 +85,13 @@ public class ReportUtil {
             JasperCompileManager.compileReportToStream(in, out);
             in2 = new FileInputStream(jasperFile);//ReportUtil.class.getResourceAsStream(reportPath + reportName + ".jasper");
             return (JasperReport) JRLoader.loadObject(in2);
-            
+
         } catch (FileNotFoundException | JRException e) {
-            
+
             if (jasperFile != null) {
                 jasperFile.delete();
             }
-            
+
             throw e;
         } finally {
             if (in != null) {
@@ -99,20 +103,20 @@ public class ReportUtil {
             if (out != null) {
                 out.close();
             }
-            
+
         }
     }
-    
+
     public JasperReport getDefaultReport(String reportName, String reportPath) {
         InputStream resource = null;
         try {
             resource = ReportUtil.class.getResourceAsStream(reportPath + reportName + ".jasper"); //$NON-NLS-1$
             return (JasperReport) JRLoader.loadObject(resource);
-            
+
         } catch (JRException e) {
             LOG.log(Level.SEVERE, null, e);
             return null;
-            
+
         } finally {
             try {
                 if (resource != null) {
@@ -124,33 +128,33 @@ public class ReportUtil {
             }
         }
     }
-    
+
     public void buildReportEmptyDs(Map<String, Object> parameters, String reportName, String path, String pdfPath) {
         try {
             JasperReport jasperReport = getReport(reportName, path);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
             JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
-            
+
         } catch (JRException e) {
             e.printStackTrace(System.err);
-            
+
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }
     }
-    
+
     public void buildReportEmptyDs(Map<String, Object> parameters, String path, String pdfPath) {
         try {
             JasperReport jasperReport = JasperCompileManager.compileReport(path);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, new JREmptyDataSource());
             JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
-            
+
         } catch (JRException e) {
             e.printStackTrace(System.err);
-            
+
         }
     }
-    
+
     public Map<String, Object> officineData(TOfficine oTOfficine, TUser op) {
         Map<String, Object> parameters = new HashMap<>();
         try {
@@ -174,7 +178,7 @@ public class ReportUtil {
             if (oTOfficine.getStrCENTREIMPOSITION() != null) {
                 P_FOOTER_RC += " - Centre des Impôts: " + oTOfficine.getStrCENTREIMPOSITION();
             }
-            
+
             if (oTOfficine.getStrPHONE() != null) {
                 String finalphonestring = oTOfficine.getStrPHONE() != null ? "- Tel: " + DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
                 if (!"".equals(oTOfficine.getStrAUTRESPHONES())) {
@@ -196,25 +200,25 @@ public class ReportUtil {
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
-        
+
         return parameters;
     }
-    
+
     public void buildReport(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
         try {
             JasperReport jasperReport = getReport(reportName, path);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
             JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
-            
+
         } catch (JRException e) {
             e.printStackTrace(System.err);
-            
+
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }
     }
-    
+
     public Map<String, Object> ticketParamsCommons(TOfficine oTOfficine) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("raisonsocial", oTOfficine.getStrNOMCOMPLET());
@@ -223,54 +227,54 @@ public class ReportUtil {
         parameters.put("thanksMsg", oTOfficine.getStrCOMMENTAIRE1());
         parameters.put("adressPhone", oTOfficine.getStrPHONE() + "   |    " + oTOfficine.getStrADRESSSEPOSTALE());
         return parameters;
-        
+
     }
-    
+
     public Map<String, Object> ticketParams(Map<String, Object> parameters, String modeReglement, int net) {
         parameters.put("totalvente", net);
         parameters.put("modeReglement", modeReglement);
         return parameters;
-        
+
     }
-    
+
     public Map<String, Object> numTicketParams(Map<String, Object> parameters, String ticketNum) {
         parameters.put("ticketNum", "Ticket # " + ticketNum);
         return parameters;
-        
+
     }
-    
+
     public Map<String, Object> operateurParams(Map<String, Object> parameters, String fullName) {
         parameters.put("operateur", fullName);
         return parameters;
-        
+
     }
-    
+
     public Map<String, Object> setSignature(Map<String, Object> parameters, String signature) {
         parameters.put("signature", signature);
         return parameters;
-        
+
     }
-    
+
     public Map<String, Object> barecodeDataParams(Map<String, Object> parameters, String barcodeData) {
         parameters.put("barcodeData", barcodeData);
         return parameters;
-        
+
     }
-    
+
     public Map<String, Object> ticketParamsMontantVerse(Map<String, Object> parameters, int montantVerse, int montantRendu) {
         parameters.put("montantVerse", montantVerse);
         parameters.put("montantRendu", montantRendu);
         return parameters;
-        
+
     }
-    
+
     public Map<String, Object> ticketParams(Map<String, Object> parameters, String ticketNum, Date dateOperation, String infosCaisse) {
         parameters.put("dateoperation", dateOperation);
         parameters.put("infosCaisse", infosCaisse);
         return parameters;
-        
+
     }
-    
+
     public Map<String, Object> carnetTpParams(Map<String, Object> parameters, String clientFullName, String matricule, int montantClient, String tierpayantName, int tauxtp, int partTp) {
         parameters.put("matricule ", matricule);
         parameters.put("clientFullName", clientFullName);
@@ -279,9 +283,9 @@ public class ReportUtil {
         parameters.put("tauxtp", tauxtp);
         parameters.put("partTp", partTp);
         return parameters;
-        
+
     }
-    
+
     public void printTicket(Map<String, Object> parameters, String reportName, String path, PrintService printService, List<?> datas) {
         try {
 //            PrinterJob job = PrinterJob.getPrinterJob();
@@ -296,7 +300,7 @@ public class ReportUtil {
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
             JRPrintServiceExporter exporter = new JRPrintServiceExporter();
-            
+
             exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
             SimplePrintServiceExporterConfiguration configuration = new SimplePrintServiceExporterConfiguration();
             configuration.setPrintRequestAttributeSet(printRequestAttributeSet);
@@ -306,10 +310,50 @@ public class ReportUtil {
             configuration.setDisplayPrintDialog(false);
             exporter.setConfiguration(configuration);
             exporter.exportReport();
-            
+
         } catch (JRException e) {
             e.printStackTrace(System.err);
-            
+
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+    }
+
+    public void buildReportDocx(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
+        try {
+            JasperReport jasperReport = getReport(reportName, path);
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            JRDocxExporter exporter = new JRDocxExporter();
+            exporter.setExporterInput(SimpleExporterInput.getInstance(List.of(jasperPrint)));
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(pdfPath));
+             exporter.exportReport();
+        } catch (JRException e) {
+            e.printStackTrace(System.err);
+
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+    }
+
+    public void buildReportExcel(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
+        try {
+            JasperReport jasperReport = getReport(reportName, path);
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            /*
+            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
+             */
+            JRXlsxExporter exporter = new JRXlsxExporter();
+            exporter.setExporterInput(SimpleExporterInput.getInstance(List.of(jasperPrint)));
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(pdfPath));
+            SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+            configuration.setOnePagePerSheet(true);
+            exporter.setConfiguration(configuration);
+            exporter.exportReport();
+        } catch (JRException e) {
+            e.printStackTrace(System.err);
+
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }

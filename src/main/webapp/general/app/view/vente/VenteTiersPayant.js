@@ -182,10 +182,11 @@ Ext.define('testextjs.view.vente.VenteTiersPayant', {
                         {
                             xtype: 'tbseparator'
                         },
+                        
                         {
                             xtype: 'combo',
                             fieldLabel: 'Type tiers-payant',
-                             labelWidth: 110,
+                            labelWidth: 110,
                             flex: 1.2,
                             editable: false,
                             itemId: 'typeTp',
@@ -194,7 +195,6 @@ Ext.define('testextjs.view.vente.VenteTiersPayant', {
                             value: 'ALL',
                             store: Ext.create("Ext.data.Store", {
                                 fields: ["ID", "VALUE"],
-
                                 data: [{'ID': "1", "VALUE": "Assurance"},
                                     {'ID': "2", "VALUE": "Carnet"},
                                     {'ID': "ALL", "VALUE": "Tous"}
@@ -241,16 +241,16 @@ Ext.define('testextjs.view.vente.VenteTiersPayant', {
                             emptyText: 'Sélectionnez un Groupe'
 
                         }
-                       
-                      
+
+
                     ]
                 },
-                
-                 {
+
+                {
                     xtype: 'toolbar',
                     dock: 'top',
                     items: [
-                      '->',
+                        '->',
                         {
                             text: 'rechercher',
                             tooltip: 'rechercher',
@@ -282,7 +282,7 @@ Ext.define('testextjs.view.vente.VenteTiersPayant', {
 
                     ]
                 },
-                
+
                 {
                     xtype: 'toolbar',
                     dock: 'bottom',

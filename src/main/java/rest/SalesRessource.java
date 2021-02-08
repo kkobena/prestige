@@ -31,6 +31,7 @@ import rest.service.GenerateTicketService;
 import rest.service.SalesService;
 import rest.service.SmsService;
 import toolkits.parameters.commonparameter;
+import util.DateConverter;
 
 /**
  *
@@ -131,7 +132,7 @@ public class SalesRessource {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
         params.setUserId(tu);
-        params.setStatut(commonparameter.statut_is_Process);
+       params.setStatut(params.isPrevente()?DateConverter.STATUT_PENDING: DateConverter.STATUT_PROCESS);
         JSONObject json = salesService.createPreVente(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -145,7 +146,7 @@ public class SalesRessource {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
         params.setUserId(tu);
-        params.setStatut(commonparameter.statut_is_Process);
+      params.setStatut(params.isPrevente()?DateConverter.STATUT_PENDING: DateConverter.STATUT_PROCESS);
         JSONObject json = salesService.createPreVenteVo(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -708,23 +709,17 @@ public class SalesRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
    
-  /*  @GET
-    @Path("sendsms")
-    public Response sendSms() throws JSONException {
+    @PUT
+    @Path("terminerprevente/{id}")
+    public Response terminerprevente(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
 
-        Sms sms = new Sms();
-        sms.setMessage("kobena testt");
-//        sms.setReceiverAddres("57591746");
-        mes.submit(sms);
-        Mail mail = new Mail();
-        mail.setMessage("Test laborex ");
-//        mail.setReceiverAddres("badoukobena@gmail.com");
-        mail.setSubject("cloture de caisse ");
-        mes.submit(mail);
-        return Response.ok().build();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        return Response.ok().entity(salesService.closePreventeVente(tu, id).toString()).build();
     }
-    @Resource(name = "concurrent/__defaultManagedExecutorService")
-    ManagedExecutorService mes;*/
     
     
     

@@ -33,6 +33,9 @@ Ext.define('testextjs.controller.PreVentesCtr', {
         , {
             ref: 'queryField',
             selector: 'preenregistrementmanager #query'
+        }, {
+            ref: 'statut',
+            selector: 'preenregistrementmanager #statut'
         }
 
 
@@ -45,7 +48,9 @@ Ext.define('testextjs.controller.PreVentesCtr', {
             'preenregistrementmanager #rechercher': {
                 click: this.doSearch
             },
-
+            'preenregistrementmanager #statut': {
+                select: this.doSearch
+            },
             'preenregistrementmanager gridpanel': {
                 viewready: this.doInitStore
             },
@@ -67,11 +72,13 @@ Ext.define('testextjs.controller.PreVentesCtr', {
                 rec = store.getAt(colIndex);
 
         if (parseInt(item) === 7) {
-            me.onDelete(rec.get('lgPREENREGISTREMENTID'));
+        me.onDelete(rec.get('lgPREENREGISTREMENTID'));
         } else if (parseInt(item) === 6) {
-            me.onEdite(rec);
-        } 
-    }, onAddClick: function () {
+        if (rec.get('strSTATUT') === 'pending') {
+        me.onEdite(rec);
+    }
+        }
+        }, onAddClick: function () {
         var xtype = "doventemanager";
         var data = {'isEdit': false, 'categorie': 'PREVENTE', 'record': {}};
         testextjs.app.getController('App').onRedirectTo(xtype, data);
@@ -80,12 +87,10 @@ Ext.define('testextjs.controller.PreVentesCtr', {
 
     onDelete: function (id) {
         var me = this;
-         var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             method: 'POST',
-//            headers: {'Content-Type': 'application/json'},
             url: '../api/v1/ventestats/remove/' + id,
-//            params: Ext.JSON.encode(params),
             success: function (response, options) {
                 progress.hide();
                 var result = Ext.JSON.decode(response.responseText, true);
@@ -103,13 +108,13 @@ Ext.define('testextjs.controller.PreVentesCtr', {
                 }
             },
             failure: function (response, options) {
-                  progress.hide();
+                progress.hide();
                 Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
             }
 
         });
     },
-   
+
     onEdite: function (rec) {
         var data = {'isEdit': true, 'record': rec.data, 'isDevis': false, 'categorie': 'PREVENTE'};
         var xtype = "doventemanager";
@@ -121,10 +126,10 @@ Ext.define('testextjs.controller.PreVentesCtr', {
 
         myProxy.params = {
             query: null,
-            statut: 'is_Process'
+            statut: 'ALL'
 
         };
-        myProxy.setExtraParam('statut', 'is_Process');
+        myProxy.setExtraParam('statut', me.getStatut().getValue());
         myProxy.setExtraParam('query', me.getQueryField().getValue());
     },
 
@@ -147,7 +152,7 @@ Ext.define('testextjs.controller.PreVentesCtr', {
 
         me.getPendingGrid().getStore().load({
             params: {
-                "statut": 'is_Process',
+                "statut": me.getStatut().getValue(),
                 "query": me.getQueryField().getValue()
             }
         });

@@ -6,8 +6,10 @@
 package rest.report.pdf;
 
 import bll.common.Parameter;
+import commonTasks.dto.ClientDTO;
 import commonTasks.dto.CodeFactureDTO;
 import commonTasks.dto.DelayedDTO;
+import commonTasks.dto.FileForma;
 import commonTasks.dto.LogDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
@@ -265,6 +267,46 @@ public class Facture {
             ex.printStackTrace(System.err);
         }
         return outputStreamFile;
+    }
+
+    public String factureDevisAsFacture(String venteId, FileForma fileForma, TUser tu) throws IOException {
+        Comparator<VenteDetailsDTO> comparator = Comparator.comparing(VenteDetailsDTO::getStrNAME);
+        TOfficine oTOfficine = commonService.findOfficine();
+        String scr_report_file = "rp_proforma_facture";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".pdf";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+
+        VenteDTO venteDTO = salesStatsService.findVenteDTOById(venteId);
+        List<VenteDetailsDTO> datas = venteDTO.getItems();
+        datas.sort(comparator);
+        int total_devis = venteDTO.getIntPRICE() - venteDTO.getIntPRICEREMISE();
+        ClientDTO client = venteDTO.getClient();
+        parameters.put("fullName", client.getFullName());
+        parameters.put("strADRESSE", client.getStrADRESSE());
+        parameters.put("strFIRSTNAME", client.getStrFIRSTNAME());
+        parameters.put("strLASTNAME", client.getStrLASTNAME());
+        parameters.put("strNUMEROSECURITESOCIAL", client.getStrNUMEROSECURITESOCIAL());
+        parameters.put("P_H_CLT_INFOS", "Proforma N° " + venteDTO.getStrREF());
+        parameters.put("intPRICE", venteDTO.getIntPRICE());
+        parameters.put("montantTva", venteDTO.getMontantTva());
+        parameters.put("intPRICEREMISE", venteDTO.getIntPRICEREMISE());
+        parameters.put("P_TOTAL_IN_LETTERS", DateConverter.convertionChiffeLettres(total_devis).toUpperCase() + " -- (" + DateConverter.amountFormat(total_devis) + ")");
+        parameters.put("strREF", venteDTO.getStrREF());
+        switch (fileForma) {
+            case WORD:
+                report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".docx";
+                reportUtil.buildReportDocx(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
+                break;
+            case EXCEL:
+                report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".xlsx";
+                reportUtil.buildReportExcel(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
+                break;
+            default:
+                reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
+                break;
+        }
+
+        return "/data/reports/pdf/proforma_facture_" + report_generate_file;
     }
 
 }
