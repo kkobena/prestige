@@ -8,8 +8,6 @@ var url_services_transaction_retourfournisseurdetails = '../webservices/commande
 var url_services_data_motifretour = '../webservices/configmanagement/motifretour/ws_data.jsp';
 var url_services_data_famille_select_dovente = '../webservices/sm_user/famille/ws_data_jdbc.jsp';
 var url_services_data_famille_select_retour = '../webservices/sm_user/famille/ws_data_retourfrs.jsp';
-
-
 var Me;
 var Omode;
 var ref;
@@ -20,7 +18,6 @@ var int_montant_vente;
 var int_montant_achat;
 var LaborexWorkFlow;
 var store_famille_dovente = null;
-
 Ext.util.Format.decimalSeparator = ',';
 Ext.util.Format.thousandSeparator = '.';
 function amountformat(val) {
@@ -47,7 +44,8 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
         plain: true,
         maximizable: true,
         closable: false,
-        nameintern: ''
+        nameintern: '',
+        current: null
     },
     xtype: 'retourfournisseurmanagerlist',
     id: 'retourfournisseurmanagerlistID',
@@ -65,15 +63,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
         int_total_formated = 0;
         ref = this.getNameintern();
         titre = this.getTitre();
-
-        LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
-        store_famille_dovente = LaborexWorkFlow.BuildStore('testextjs.model.Famille', itemsPerPage, url_services_data_famille_select_retourfournisseur);
-//        ref = this.getNameintern();
-
-
-
-        url_services_data_retourfournisseurdetails = '../webservices/commandemanagement/retourfournisseurdetail/ws_data.jsp?lg_RETOUR_FRS_ID=' + ref;
-
         var storebonlivraison = new Ext.data.Store({
             model: 'testextjs.model.BonLivraison',
             pageSize: itemsPerPage,
@@ -89,34 +78,32 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                 tiemout: 180000
             }
         });
-
         // storetypemotif
         var storetypemotif = new Ext.data.Store({
-            model: 'testextjs.model.MotifRetour',
-            pageSize: itemsPerPage,
+            idProperty: 'lgMOTIFRETOUR',
+            fields: [
+                {name: 'lgMOTIFRETOUR',
+                    type: 'string'
+
+                },
+                {name: 'strLIBELLE',
+                    type: 'string'
+
+                }
+            ],
+            pageSize: 999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_motifretour,
+                url: '../api/v1/common/motifs-retour',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 }
             }
 
         });
-
-        if (titre === "Modification fiche retour fournisseur") {
-            url_services_data_famille_select_retourfournisseur = url_services_data_famille_select_retourfournisseur;
-//            alert("url_services_data_famille_select_retourfournisseur:"+url_services_data_famille_select_retourfournisseur)
-        } else {
-            url_services_data_famille_select_retourfournisseur = "../webservices/sm_user/famille/ws_data_retourfrs.jsp";
-
-
-        }
-
-
         var store_famille_retourfrs = new Ext.data.Store({
             model: 'testextjs.model.Famille',
             pageSize: itemsPerPage,
@@ -129,32 +116,58 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                     root: 'results',
                     totalProperty: 'total'
                 },
-                
                 timeout: 1800
             },
             autoLoad: false
 
         });
         var store_details_retourfournisseur = new Ext.data.Store({
-            model: 'testextjs.model.RetourFournisseurDetail',
-            pageSize: itemsPerPage,
+            idProperty: 'lgRETOURFRSDETAIL',
+            fields: [
+                {name: 'lgRETOURFRSDETAIL',
+                    type: 'string'
+
+                },
+                {name: 'intCIP',
+                    type: 'string'
+
+                },
+                {name: 'strNAME',
+                    type: 'string'
+
+                },
+                {name: 'intSTOCK',
+                    type: 'number'
+
+                },
+                {name: 'motif',
+                    type: 'string'
+
+                },
+                {name: 'intNUMBERRETURN',
+                    type: 'number'
+
+                }, {name: 'ecart',
+                    type: 'number'
+
+                }
+            ],
+            pageSize: 9999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_retourfournisseurdetails,
+                url: '../api/v1/retourfournisseur/retours-items',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 }
             }
 
         });
-
         this.cellEditing = new Ext.grid.plugin.CellEditing({
             clicksToEdit: 1
         });
-
         Ext.apply(this, {
 //            width: 1200,
             width: '98%',
@@ -172,8 +185,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
             defaults: {
                 flex: 1
             },
-            id: 'panelID',
-            //items: ['rech_prod', 'gridpanelID'],
             items: [
                 {
                     items: [{
@@ -221,7 +232,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                                     comboFamille.enable();
                                                     Ext.getCmp('str_NAME').focus(true, 100, function () {
                                                         Ext.getCmp('str_NAME').selectText(0, 1);
-
                                                     });
                                                 }
                                             }
@@ -326,10 +336,8 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                                     var record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
 
                                                     Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
-
                                                     Ext.getCmp('lg_MOTIF_RETOUR').focus(true, 100, function () {
                                                         Ext.getCmp('lg_MOTIF_RETOUR').selectText(0, 1);
-
                                                     });
                                                 }
 
@@ -341,8 +349,8 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                             name: 'lg_MOTIF_RETOUR',
                                             id: 'lg_MOTIF_RETOUR',
                                             store: storetypemotif,
-                                            valueField: 'lg_MOTIF_RETOUR',
-                                            displayField: 'str_LIBELLE',
+                                            valueField: 'lgMOTIFRETOUR',
+                                            displayField: 'strLIBELLE',
                                             typeAhead: true,
                                             pageSize: 20,
                                             queryMode: 'remote',
@@ -353,7 +361,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
 
                                                     Ext.getCmp('int_QUANTITE').focus(true, 100, function () {
                                                         Ext.getCmp('int_QUANTITE').selectText(0, 1);
-
                                                     });
                                                 }
 
@@ -374,14 +381,11 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                             enableKeyEvents: true,
                                             listeners: {
                                                 specialKey: function (field, e, options) {
-                                                    /*if (e.getKey() === e.ENTER) {
-                                                     Me.onbtnadd();
-                                                     }*/
+
                                                     if (e.getKey() === e.ENTER) {
 
                                                         if (Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue() !== "" && Ext.getCmp('int_QUANTITE').getValue() > 0) {
                                                             Me.onbtnadd();
-
                                                         } else {
                                                             // Ext.MessageBox.alert('Error Message', 'Verifiez votre saisie svp', funt);
                                                             Ext.MessageBox.show({
@@ -400,7 +404,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
 
 
                                                             });
-
                                                         }
                                                     }
 
@@ -436,20 +439,20 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                             id: 'gridpanelID',
                             plugins: [this.cellEditing],
                             store: store_details_retourfournisseur,
-                            height: 300,
+                            height: 400,
                             columns: [{
                                     text: 'Details Suggestion Id',
                                     flex: 1,
                                     sortable: true,
                                     hidden: true,
-                                    dataIndex: 'lg_RETOUR_FRS_DETAIL',
-                                    id: 'lg_RETOUR_FRS_DETAIL'
+                                    dataIndex: 'lgRETOURFRSDETAIL'
+
                                 }, {
                                     text: 'Famille',
                                     flex: 1,
                                     sortable: true,
                                     hidden: true,
-                                    dataIndex: 'lg_FAMILLE_ID'
+                                    dataIndex: 'produitId'
                                 },
                                 {
                                     xtype: 'rownumberer',
@@ -459,35 +462,28 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                      locked: true*/
                                 },
                                 {
-                                    text: 'CIP',
+                                    text: 'Cip',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'lg_FAMILLE_CIP'
+                                    dataIndex: 'intCIP'
                                 },
                                 {
-                                    text: 'LEBELLE',
+                                    text: 'Description',
                                     flex: 2,
                                     sortable: true,
-                                    dataIndex: 'lg_FAMILLE_NAME'
+                                    dataIndex: 'strNAME'
                                 },
                                 {
-                                    text: 'DATE PEREMPTION',
+                                    text: 'Stock',
                                     flex: 1,
                                     sortable: true,
-                                    hidden: true,
-                                    dataIndex: 'dt_PEREMPTION'
+                                    dataIndex: 'intSTOCK'
                                 },
                                 {
-                                    text: 'STOCK',
+                                    text: 'Qté Retour',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_STOCK'
-                                },
-                                {
-                                    text: 'QTE Retour',
-                                    flex: 1,
-                                    sortable: true,
-                                    dataIndex: 'int_NUMBER_RETURN',
+                                    dataIndex: 'intNUMBERRETURN',
                                     MaskRe: /[0-9.]/,
                                     minValue: 1,
                                     editor: {
@@ -503,12 +499,12 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                     text: 'DIFF',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_DIFF'
+                                    dataIndex: 'ecart'
                                 },
                                 {
                                     text: 'MOTIF',
                                     flex: 1,
-                                    dataIndex: 'lg_MOTIF_RETOUR'
+                                    dataIndex: 'motif'
                                 },
                                 {
                                     xtype: 'actioncolumn',
@@ -525,7 +521,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                             ],
                             bbar: {
                                 xtype: 'pagingtoolbar',
-                                pageSize: itemsPerPage,
+                                pageSize: 999,
                                 store: store_details_retourfournisseur,
                                 displayInfo: true,
                                 plugins: new Ext.ux.ProgressBarPager()
@@ -561,7 +557,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                     ]
                 }]
         });
-
         this.callParent();
         this.on('afterlayout', this.loadStore, this, {
             delay: 1,
@@ -572,11 +567,9 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
             Ext.getCmp('lg_BON_LIVRAISON_ID').setValue(this.getOdatasource().str_REF_LIVRAISON);
             Ext.getCmp('str_REPONSE_FRS').setValue(this.getOdatasource().str_REPONSE_FRS);
             Ext.getCmp('str_COMMENTAIRE').setValue(this.getOdatasource().str_COMMENTAIRE);
-
             Ext.getCmp('lg_BON_LIVRAISON_ID').disable();
             Ext.getCmp('str_REPONSE_FRS').show();
             Ext.getCmp('str_GROSSISTE_LIBELLE').setValue(this.getOdatasource().str_GROSSISTE_LIBELLE);
-
             /*Ext.getCmp('str_NAME').enable();
              Ext.getCmp('str_NAME').focus();*/
 
@@ -586,37 +579,37 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
             comboFamille.focus();
             comboFamille.getStore().getProxy().url = "../RetourFourData?lg_BON_LIVRAISON_ID=" + this.getOdatasource().str_REF_LIVRAISON;
             comboFamille.getStore().reload();
-
-
         }
 
 
         Ext.getCmp('gridpanelID').on('edit', function (editor, e) {
-
-
-            var qte = Number(e.record.data.int_NUMBER_RETURN);
-            var qteStock = Number(e.record.data.int_STOCK);
+            var qte = Number(e.record.data.intNUMBERRETURN);
+            var qteStock = Number(e.record.data.intSTOCK);
             if (qte < qteStock) {
+                let params = {
+                    lgRETOURFRSDETAIL: e.record.data.lgRETOURFRSDETAIL,
+                    intNUMBERRETURN: qte
+                };
                 Ext.Ajax.request({
-                    url: '../webservices/commandemanagement/retourfournisseur/ws_transaction.jsp?mode=update',
-                    params: {
-                        lg_RETOUR_FRS_DETAIL: e.record.data.lg_RETOUR_FRS_DETAIL,
-                        lg_RETOUR_FRS_ID: ref,
-                        lg_FAMILLE_ID: e.record.data.lg_FAMILLE_ID,
-                        lg_BON_LIVRAISON_ID: Ext.getCmp('lg_BON_LIVRAISON_ID').getValue(),
-                        int_NUMBER_RETURN: qte
-                    },
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    url: '../api/v1/retourfournisseur/update-item',
+                    params: Ext.JSON.encode(params),
                     success: function (response)
                     {
-                        var object = Ext.JSON.decode(response.responseText, false);
-                        if (object.success === 0) {
+                        var result = Ext.JSON.decode(response.responseText, true);
+                        if (!result.success) {
                             Ext.MessageBox.alert('Error Message', object.errors);
                             return;
                         }
 
                         e.record.commit();
-                        var OGrid = Ext.getCmp('gridpanelID');
-                        OGrid.getStore().reload();
+                        Ext.getCmp('gridpanelID').getStore().load({
+                            params: {
+                                retourId: Me.getCurrent()
+
+                            }
+                        });
                         Ext.getCmp('str_NAME').setValue("");
                         Ext.getCmp('lg_MOTIF_RETOUR').setValue("");
                         Ext.getCmp('int_QUANTITE').setValue(1);
@@ -629,8 +622,12 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                     }
                 });
             } else {
-                var OGrid = Ext.getCmp('gridpanelID');
-                OGrid.getStore().reload();
+                Ext.getCmp('gridpanelID').getStore().load({
+                    params: {
+                        retourId: Me.getCurrent()
+
+                    }
+                });
                 Ext.MessageBox.alert('Error Message', 'Verifier la quantite a retourner');
             }
 
@@ -657,7 +654,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                 function (btn) {
                     if (btn == 'yes') {
                         testextjs.app.getController('App').ShowWaitingProcess();
-                        var param = {"ref": ref,
+                        var param = {"ref": Me.getCurrent(),
                             "refTwo": Ext.getCmp('str_REPONSE_FRS').getValue(),
                             "description": Ext.getCmp('str_COMMENTAIRE').getValue()
                         };
@@ -666,15 +663,9 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                             headers: {'Content-Type': 'application/json'},
                             url: '../api/v1/produit/validerretourfour',
                             params: Ext.JSON.encode(param),
-//                            url: url_services_transaction_retourfournisseur + 'validerRupture',
-                            /* params: {
-                             lg_RETOUR_FRS_ID: ref,
-                             str_REPONSE_FRS: Ext.getCmp('str_REPONSE_FRS').getValue(),
-                             str_COMMENTAIRE: Ext.getCmp('str_COMMENTAIRE').getValue()
-                             
-                             },*/
                             success: function (response)
                             {
+                                Me.current = null;
                                 testextjs.app.getController('App').StopWaitingProcess();
                                 var object = Ext.JSON.decode(response.responseText, false);
                                 if (!object.success) {
@@ -696,50 +687,8 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                                 Ext.MessageBox.alert('Error Message', response.responseText);
                             }
                         });
-
-
                     }
                 });
-
-    },
-    checkIfGridIsEmpty: function () {
-        var gridTotalCount = Ext.getCmp('gridpanelID').getStore().getTotalCount();
-        return gridTotalCount;
-    },
-
-    setTitleFrame: function (str_data) {
-        this.title = this.title + " :: Ref " + str_data;
-        ref = str_data;
-        url_services_data_retourfournisseurdetails = '../webservices/commandemanagement/retourfournisseurdetail/ws_data.jsp?lg_RETOUR_FRS_ID=' + ref;
-        var OGrid = Ext.getCmp('gridpanelID');
-        url_services_data_retourfournisseurdetails = '../webservices/commandemanagement/retourfournisseurdetail/ws_data.jsp?lg_RETOUR_FRS_ID=' + ref;
-        OGrid.getStore().getProxy().url = url_services_data_retourfournisseurdetails;
-        OGrid.getStore().reload();
-    },
-
-    onfilterBLcheck: function () {
-        var OGrid = Ext.getCmp('lg_BON_LIVRAISON_ID');
-        var lg_BON_LIVRAISON_ID = OGrid.getValue();
-        var int_name_size = lg_BON_LIVRAISON_ID.length;
-
-
-        if (lg_BON_LIVRAISON_ID !== null && lg_BON_LIVRAISON_ID !== "" && lg_BON_LIVRAISON_ID !== undefined) {
-            var OComponent_length = lg_BON_LIVRAISON_ID.length;
-
-            var url_final = url_services_data_bl_grossiste + "?search_value=" + lg_BON_LIVRAISON_ID + "&str_STATUT=is_Closed";
-            if (OComponent_length >= 3) {
-                OGrid.getStore().getProxy().url = url_final;
-                OGrid.getStore().reload();
-            }
-        } else {
-            //alert('ici');
-            OGrid.getStore().getProxy().url = url_services_data_bl_grossiste + "&str_STATUT=is_Closed";
-            OGrid.getStore().reload();
-
-        }
-
-
-
     },
     onbtnadd: function () {
 
@@ -760,62 +709,70 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
             Ext.MessageBox.alert('Error Message', 'Veuillez selecttionner un article');
             return;
         }
+        let url = '../api/v1/retourfournisseur/new';
+        let params = {};
+        if (Me.getCurrent()) {
+            url = '../api/v1/retourfournisseur/add-item';
+            params = {
+                produitId: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
+                lgRETOURFRSID: Me.getCurrent(),
+                lgMOTIFRETOUR: Ext.getCmp('lg_MOTIF_RETOUR').getValue(),
+                intNUMBERRETURN: Ext.getCmp('int_QUANTITE').getValue()
+            };
+        } else {
+            params = {
+                lgBONLIVRAISONID: Ext.getCmp('lg_BON_LIVRAISON_ID').getValue(),
+                strCOMMENTAIRE: Ext.getCmp('str_COMMENTAIRE').getValue(),
+                items: [{
+                        produitId: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
+                        lgMOTIFRETOUR: Ext.getCmp('lg_MOTIF_RETOUR').getValue(),
+                        intNUMBERRETURN: Ext.getCmp('int_QUANTITE').getValue()
+                    }]
 
-//
+            };
+        }
+        ;
+        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
-            url: '../webservices/commandemanagement/retourfournisseur/ws_transaction.jsp?mode=create',
-            params: {
-//                lg_FAMILLE_ID: Ext.getCmp('str_NAME').getValue(),
-                lg_FAMILLE_ID: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
-                lg_RETOUR_FRS_ID: ref,
-                lg_RETOUR_FRS_DETAIL: null,
-                lg_BON_LIVRAISON_ID: Ext.getCmp('lg_BON_LIVRAISON_ID').getValue(),
-                str_REPONSE_FRS: Ext.getCmp('str_REPONSE_FRS').getValue(),
-                str_COMMENTAIRE: Ext.getCmp('str_COMMENTAIRE').getValue(),
-                lg_MOTIF_RETOUR: Ext.getCmp('lg_MOTIF_RETOUR').getValue(),
-                int_NUMBER_RETURN: Ext.getCmp('int_QUANTITE').getValue()
-
-
-            },
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            url: url,
+            params: Ext.JSON.encode(params),
             success: function (response)
             {
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.success == "0") {
-                    Ext.MessageBox.alert('Error Message', object.errors);
-
+                progress.hide();
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (!result.success) {
+                    Ext.MessageBox.alert('Error Message', result.msg);
                     return;
                 } else {
-                    //Ext.MessageBox.alert('Confirmation', object.errors);
-                    ref = object.ref;
-                    // url_services_data_retourfournisseurdetails = '../webservices/commandemanagement/retourfournisseurdetail/ws_data.jsp?lg_RETOUR_FRS_ID=' + ref;
-                    // Me.setTitleFrame(object.ref);
+                    let data = result.data;
+                    Me.current = data.lgRETOURFRSID;
+                    console.log(data);
                     Ext.getCmp('lg_BON_LIVRAISON_ID').disable();
                     Ext.getCmp('str_NAME').setValue("");
                     Ext.getCmp('lg_MOTIF_RETOUR').setValue("");
                     Ext.getCmp('int_QUANTITE').setValue(1);
 
-                    var OGrid = Ext.getCmp('gridpanelID');
                     var OComboFamille = Ext.getCmp('str_NAME');
                     OComboFamille.focus();
-//                    Ext.getCmp('str_NAME').getStore().reload();
-                    OGrid.getStore().getProxy().url = '../webservices/commandemanagement/retourfournisseurdetail/ws_data.jsp?lg_RETOUR_FRS_ID=' + ref;
-                    OGrid.getStore().reload();
+                    Ext.getCmp('gridpanelID').getStore().load({
+                        params: {
+                            retourId: data.lgRETOURFRSID
 
-                    OComboFamille.getStore().getProxy().url = url_services_data_famille_select_retourfournisseur + "?lg_BON_LIVRAISON_ID=" + value;
-                    Me.SearchArticle();
-
+                        }
+                    });
                 }
 
             },
             failure: function (response)
             {
+                progress.hide();
                 var object = Ext.JSON.decode(response.responseText, false);
                 console.log("Bug " + response.responseText);
                 Ext.MessageBox.alert('Error Message', response.responseText);
             }
         });
-
-
     },
     onRemoveClick: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
@@ -823,20 +780,23 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                 function (btn) {
                     if (btn == 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
-
                         Ext.Ajax.request({
-                            url: url_services_transaction_retourfournisseur + 'deleteDetail',
-                            params: {
-                                lg_RETOUR_FRS_DETAIL: rec.get('lg_RETOUR_FRS_DETAIL')
-                            },
+                            method: 'DELETE',
+                            headers: {'Content-Type': 'application/json'},
+                            url: '../api/v1/retourfournisseur/remove-item/'+rec.get('lgRETOURFRSDETAIL'),
                             success: function (response)
                             {
                                 var object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success === 0) {
+                                if (!object.success) {
                                     Ext.MessageBox.alert('Error Message', object.errors);
                                     return;
                                 }
-                                grid.getStore().reload();
+                                Ext.getCmp('gridpanelID').getStore().load({
+                                    params: {
+                                        retourId: Me.getCurrent()
+
+                                    }
+                                });
                             },
                             failure: function (response)
                             {
@@ -848,60 +808,11 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                         return;
                     }
                 });
-    },
-    onPdfClick: function () {
-        var chaine = location.pathname;
-        var reg = new RegExp("[/]+", "g");
-        var tableau = chaine.split(reg);
-        var sitename = tableau[1];
-        var linkUrl = url_services_pdf_ticket + '?lg_PREENREGISTREMENT_ID=' + ref;
-        window.open(linkUrl);
-        var xtype = "";
-        if (my_view_title === "by_cloturer_vente") {
-            xtype = "ventemanager";
-            testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
-        } else {
-            xtype = "preenregistrementmanager";
-            testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
-        }
-
-    },
-
-    onSelectionChange: function (model, records) {
-        var rec = records[0];
-        if (rec) {
-            this.getForm().loadRecord(rec);
-        }
-    },
-    onsplitovalue: function (Ovalue) {
-
-        var int_ovalue;
-        var string = Ovalue.split(" ");
-        int_ovalue = string[0];
-        return int_ovalue;
-    },
-    SearchArticle: function (url) {
-        var lg_BON_LIVRAISON_ID = "";
-        var lg_FAMILLE_ID = "";
-        if (Ext.getCmp('lg_BON_LIVRAISON_ID').getValue() !== null) {
-            lg_BON_LIVRAISON_ID = Ext.getCmp('lg_BON_LIVRAISON_ID').getValue();
-        }
-        if (Ext.getCmp('str_NAME').getValue() !== null) {
-            lg_FAMILLE_ID = Ext.getCmp('str_NAME').getValue();
-        }
-        Ext.getCmp('str_NAME').getStore().load({
-            params: {
-                lg_FAMILLE_ID: lg_FAMILLE_ID,
-                lg_BON_LIVRAISON_ID: lg_BON_LIVRAISON_ID
-            }
-        }, url_services_data_famille_select_retourfournisseur, function (r, op, suc) {
-            console.log(r);
-        });
-
-
-
-
     }
+
+
+
+
 });
 
 

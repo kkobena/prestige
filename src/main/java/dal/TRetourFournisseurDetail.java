@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
@@ -28,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 
 public class TRetourFournisseurDetail implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -51,15 +51,18 @@ public class TRetourFournisseurDetail implements Serializable {
     @Column(name = "dt_UPDATED")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtUPDATED;
-    @JoinColumn(name = "lg_RETOUR_FRS_ID", referencedColumnName = "lg_RETOUR_FRS_ID",nullable = false)
+    @JoinColumn(name = "lg_RETOUR_FRS_ID", referencedColumnName = "lg_RETOUR_FRS_ID", nullable = false)
     @ManyToOne
     private TRetourFournisseur lgRETOURFRSID;
     @JoinColumn(name = "lg_MOTIF_RETOUR", referencedColumnName = "lg_MOTIF_RETOUR")
-    @ManyToOne
+    @ManyToOne(optional = false)
     private TMotifRetour lgMOTIFRETOUR;
-    @JoinColumn(name = "lg_FAMILLE_ID", referencedColumnName = "lg_FAMILLE_ID",nullable = false)
-    @ManyToOne
+    @JoinColumn(name = "lg_FAMILLE_ID", referencedColumnName = "lg_FAMILLE_ID", nullable = false)
+    @ManyToOne(optional = false)
     private TFamille lgFAMILLEID;
+    @ManyToOne
+    @JoinColumn(name = "bonLivraisonDetail_id", referencedColumnName = "lg_BON_LIVRAISON_DETAIL")
+    private TBonLivraisonDetail bonLivraisonDetail;
 
     public TRetourFournisseurDetail() {
     }
@@ -188,5 +191,13 @@ public class TRetourFournisseurDetail implements Serializable {
     public String toString() {
         return "dal.TRetourFournisseurDetail[ lgRETOURFRSDETAIL=" + lgRETOURFRSDETAIL + " ]";
     }
-    
+
+    public TBonLivraisonDetail getBonLivraisonDetail() {
+        return bonLivraisonDetail;
+    }
+
+    public void setBonLivraisonDetail(TBonLivraisonDetail bonLivraisonDetail) {
+        this.bonLivraisonDetail = bonLivraisonDetail;
+    }
+
 }

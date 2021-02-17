@@ -1394,7 +1394,7 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-                        montantAchat.add(op.getMontantNet()-avoir);
+                        montantAchat.add(op.getMontantNet());
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
@@ -1427,7 +1427,7 @@ public class CaisseServiceImpl implements CaisseService {
                 }
             });
             Integer _montantNet = montantNet.intValue();
-            Integer _montantAchat = montantAchat.intValue();
+            Integer _montantAchat = montantAchat.intValue() - avoir;
             if (_montantAchat.compareTo(0) > 0) {
                 ratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
             }
@@ -1440,11 +1440,11 @@ public class CaisseServiceImpl implements CaisseService {
             baordPh.setNbreVente(nbreVente.intValue());
             baordPh.setMontantAchatTwo(montantAchatTwo.intValue());
             baordPh.setMontantAchatOne(montantAchatOne.intValue());
-            baordPh.setMontantAchat(montantAchat.intValue());
+            baordPh.setMontantAchat(_montantAchat);
             baordPh.setRatioVA(ratioVA.doubleValue());
             baordPh.setRationAV(rationAV.doubleValue());
             baordPh.setMontantTTC(montantTTC.intValue());
-            baordPh.setMontantNet(montantNet.intValue());
+            baordPh.setMontantNet(_montantNet);
             baordPh.setMontantEsp(montantEsp.intValue());
             baordPh.setMontantRemise(montantRemise.intValue());
             baordPh.setMontantCredit(montantCredit.intValue());
@@ -3320,6 +3320,9 @@ public class CaisseServiceImpl implements CaisseService {
                     montantAchat = new LongAdder(), montantAvoir = new LongAdder();
             DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
             int avoir = avoirFournisseur(k);
+            System.out.print("------->>>>>   " + avoir);
+            System.out.print("------->>>>>   " + k);
+            System.out.print("\n");
             montantAvoir.add(avoir);
             v.forEach(op -> {
                 switch (op.getTypeTransaction()) {
@@ -3328,7 +3331,7 @@ public class CaisseServiceImpl implements CaisseService {
                         if (Math.abs(op.getMontantRemise()) > 0) {
                             remiseNonPara = remiseNonPara(op.getPkey());
                         }
-                      
+
 //                    montantRemise += remiseNonPara;
 //                        int remise = remisePara(op.getPkey());
                         int montantNet_ = op.getMontantAcc() - remiseNonPara - op.getMontantttcug();
@@ -3364,7 +3367,7 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-                        montantAchat.add(op.getMontantNet() - avoir);
+                        montantAchat.add(op.getMontantNet());
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
@@ -3398,7 +3401,7 @@ public class CaisseServiceImpl implements CaisseService {
                 }
             });
             Integer _montantNet = montantNet.intValue();
-            Integer _montantAchat = montantAchat.intValue();
+            Integer _montantAchat = montantAchat.intValue()-avoir;
             if (_montantAchat.compareTo(0) > 0) {
                 ratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
             }
@@ -3411,11 +3414,11 @@ public class CaisseServiceImpl implements CaisseService {
             baordPh.setNbreVente(nbreVente.intValue());
             baordPh.setMontantAchatTwo(montantAchatTwo.intValue());
             baordPh.setMontantAchatOne(montantAchatOne.intValue());
-            baordPh.setMontantAchat(montantAchat.intValue());
+            baordPh.setMontantAchat(_montantAchat);
             baordPh.setRatioVA(ratioVA.doubleValue());
             baordPh.setRationAV(rationAV.doubleValue());
             baordPh.setMontantTTC(montantTTC.intValue());
-            baordPh.setMontantNet(montantNet.intValue());
+            baordPh.setMontantNet(_montantNet);
             baordPh.setMontantEsp(montantEsp.intValue());
             baordPh.setMontantRemise(montantRemise.intValue());
             baordPh.setMontantCredit(montantCredit.intValue());

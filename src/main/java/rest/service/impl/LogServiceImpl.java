@@ -51,9 +51,7 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T) {
-//        EntityManager em = this.getEntityManager();
         try {
-//            em.getTransaction().begin();
             TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
             eventLog.setLgUSERID(user);
             eventLog.setDtCREATED(new Date());
@@ -64,13 +62,11 @@ public class LogServiceImpl implements LogService {
             eventLog.setTypeLog(typeLog);
             eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
             getEntityManager().persist(eventLog);
-//            em.getTransaction().commit();
+
 
         } catch (Exception e) {
             e.printStackTrace(System.err);
-//            if (em.getTransaction().isActive()) {
-//                em.getTransaction().rollback();
-//            }
+
         }
     }
 
@@ -192,4 +188,28 @@ public class LogServiceImpl implements LogService {
         eventLog.setStrTYPELOG(ref);
         getEntityManager().persist(eventLog);
     }
+ 
+   @Override
+    public void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T,String remoteHost,String remoteAddr) {
+        try {
+            TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
+            eventLog.setLgUSERID(user);
+            eventLog.setDtCREATED(new Date());
+            eventLog.setDtUPDATED(new Date());
+            eventLog.setStrCREATEDBY(user.getStrLOGIN());
+            eventLog.setStrSTATUT(commonparameter.statut_enable);
+            eventLog.setStrTABLECONCERN(T.getClass().getName());
+            eventLog.setTypeLog(typeLog);
+            eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
+            eventLog.setRemoteAddr(remoteAddr);
+            eventLog.setRemoteHost(remoteHost);
+            getEntityManager().persist(eventLog);
+
+
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+
+        }
+    }
+
 }

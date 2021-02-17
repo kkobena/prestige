@@ -1271,7 +1271,7 @@ public class ClientServiceImpl implements ClientService {
             Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
             cq.select(cb.construct(VenteTiersPayantsDTO.class,
                     root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID),
-                    cb.countDistinct(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID)),
+                    cb.count(root),
                     cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)),
                     cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICERESTE))
             ))

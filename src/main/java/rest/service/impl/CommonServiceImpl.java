@@ -26,6 +26,7 @@ import dal.TFamillearticle_;
 import dal.TGrossiste;
 import dal.TGrossiste_;
 import dal.TImprimante;
+import dal.TMotifRetour;
 import dal.TNatureVente;
 import dal.TOfficine;
 import dal.TParameters;
@@ -689,9 +690,15 @@ public class CommonServiceImpl implements Serializable, CommonService {
             }
             return false;
         } catch (Exception e) {
-           
+
             return false;
         }
+    }
+
+    @Override
+    public List<TMotifRetour> motifsRetour() {
+        TypedQuery<TMotifRetour> tq = getEntityManager().createNamedQuery("TMotifRetour.findAll", TMotifRetour.class);
+        return tq.getResultList();
     }
 
 }

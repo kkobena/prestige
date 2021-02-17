@@ -13,6 +13,7 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -63,7 +64,7 @@ public class TRole implements Serializable {
     private Date dtUPDATED;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "lgROLEID")
     private Collection<TRoleUser> tRoleUserCollection;
-    @OneToMany(mappedBy = "lgROLEID")
+    @OneToMany(mappedBy = "lgROLEID",fetch = FetchType.EAGER)
     private Collection<TRolePrivelege> tRolePrivelegeCollection;
 
     public TRole() {

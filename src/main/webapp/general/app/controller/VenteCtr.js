@@ -2224,19 +2224,19 @@ Ext.define('testextjs.controller.VenteCtr', {
                 me.componentsToHidePresales();
                 me.updateComboxFields(null, null, null, null, null);
                 me.getVnobtnCloture().hide();
-                 if( me.getCategorie() === 'PREVENTE'){
-                   me.getBtnClosePrevente().show();  
+                if (me.getCategorie() === 'PREVENTE') {
+                    me.getBtnClosePrevente().show();
                 }
             } else if (isEdit && me.getCategorie() === 'PREVENTE') {
                 var record = data.record;
                 me.loadExistantSale(record.lgPREENREGISTREMENTID);
                 me.componentsToHidePresales();
                 me.getVnobtnCloture().hide();
-                if( me.getCategorie() === 'PREVENTE'){
-                   me.getBtnClosePrevente().show();  
+                if (me.getCategorie() === 'PREVENTE') {
+                    me.getBtnClosePrevente().show();
                 }
-                
-                
+
+
             } else if (isEdit && me.getCategorie() === 'COPY') {
                 var record = data.record;
                 me.chargerCopieDeVenteAmodifier(record.lgPREENREGISTREMENTID);

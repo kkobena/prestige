@@ -134,9 +134,10 @@ public class Stock {
         }
         parameters.put("P_H_CLT_INFOS", "Liste des Bordereaux " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<VenteTiersPayantsDTO> data = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp, 0, 0, true).stream().filter(e -> e.getGroupeId() != null).collect(Collectors.toList());
+        List<VenteTiersPayantsDTO> data = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp, 0, 0, true);
         if ("rp_ventetpGroup".equals(scr_report_file)) {
-            data.sort(Comparator.comparing(VenteTiersPayantsDTO::getLibelleGroupe).thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
+            data.sort(Comparator.comparing(VenteTiersPayantsDTO::getLibelleGroupe,
+                    Comparator.nullsLast(Comparator.naturalOrder())).thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
         } else {
             data.sort(Comparator.comparing(VenteTiersPayantsDTO::getTypeTiersPayant).thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
         }

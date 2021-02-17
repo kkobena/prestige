@@ -13,6 +13,7 @@ import commonTasks.dto.RisqueDTO;
 import commonTasks.dto.TypeRemiseDTO;
 import commonTasks.dto.UserDTO;
 import dal.TEmplacement;
+import dal.TMotifRetour;
 import dal.TNatureVente;
 import dal.TPrivilege;
 import dal.TTypeVente;
@@ -350,5 +351,16 @@ public class CommonRessource {
         cc.setMaxAge(86400);
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(checkug, 1)).build();
+    }
+    
+    
+    @GET
+    @Path("motifs-retour")
+    public Response motifRetour() {
+        List<TMotifRetour> data = commonService.motifsRetour();
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 }

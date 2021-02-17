@@ -64,6 +64,26 @@ public class TEventLog implements Serializable {
     private TypeLog typeLog;
     @Column(name = "str_TYPE_LOG")
     private String strTYPELOG;
+    @Column(name = "remote_addr")
+    private String remoteAddr;
+    @Column(name = "remote_host")
+    private String remoteHost;
+
+    public String getRemoteAddr() {
+        return remoteAddr;
+    }
+
+    public void setRemoteAddr(String remoteAddr) {
+        this.remoteAddr = remoteAddr;
+    }
+
+    public String getRemoteHost() {
+        return remoteHost;
+    }
+
+    public void setRemoteHost(String remoteHost) {
+        this.remoteHost = remoteHost;
+    }
 
     public TUser getLgUSERID() {
         return lgUSERID;

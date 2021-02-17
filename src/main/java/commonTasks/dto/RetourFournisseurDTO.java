@@ -11,6 +11,7 @@ import dal.TRetourFournisseur;
 import dal.TUser;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONPropertyName;
 import util.DateConverter;
@@ -47,6 +48,16 @@ public class RetourFournisseurDTO implements Serializable {
     private String lgGROSSISTEID;
     private boolean BTNDELETE;
     private String lgBONLIVRAISONID, strREFLIVRAISON, strLIBELLE;
+    private List<RetourDetailsDTO> items = new ArrayList<>();
+    private TUser user;
+
+    public List<RetourDetailsDTO> getItems() {
+        return items;
+    }
+
+    public void setItems(List<RetourDetailsDTO> items) {
+        this.items = items;
+    }
 
     @JSONPropertyName("lg_RETOUR_FRS_ID")
     public String getLgRETOURFRSID() {
@@ -233,6 +244,28 @@ public class RetourFournisseurDTO implements Serializable {
         details.forEach((tpd) -> {
             this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getIntCIP() + "</span><span style='display:inline-block;width: 25%;'>" + tpd.getStrNAME() + "</span><span style='display:inline-block;width: 10%;'>(" + tpd.getIntNUMBERRETURN() + ")</span><span style='display:inline-block;width: 15%;'>" + DateConverter.amountFormat(tpd.getPrixPaf(), '.') + " F CFA " + "</span></b><br> " + this.details;
         });
+    }
+
+    public TUser getUser() {
+        return user;
+    }
+
+    public void setUser(TUser user) {
+        this.user = user;
+    }
+
+    public RetourFournisseurDTO() {
+    }
+
+    public RetourFournisseurDTO(TRetourFournisseur f) {
+         this.lgRETOURFRSID = f.getLgRETOURFRSID();
+        this.strREFRETOURFRS = f.getStrREFRETOURFRS();
+        this.dtDATE = SIMPLE_DATE_FORMAT.format(f.getDtDATE());
+        this.strREPONSEFRS = f.getStrREPONSEFRS();
+        this.strCOMMENTAIRE = f.getStrCOMMENTAIRE();
+        this.dlAMOUNT = f.getDlAMOUNT().intValue();
+       
+       
     }
 
 }

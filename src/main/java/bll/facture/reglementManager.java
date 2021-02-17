@@ -1323,18 +1323,11 @@ public class reglementManager extends bll.bllBase {
                     this.getOdataManager().getEm().getTransaction().begin();
                 }
 
-                //str_FIRST_LAST_NAME non du propriétaire de la carte bancaire ou du cheques
-                System.out.println("int_AMOUNT  *****************  " + int_AMOUNT + " ");
                 dossierReglement = this.createDossiersReglement(facture, (int_AMOUNT > 0 ? int_AMOUNT : int_AMOUNT_RECU), "bordereau", dt_reglement, montantattendu);
                 OTReglement = this.CreateTReglement(OTCompteClient.getLgCOMPTECLIENTID(), dossierReglement.getLgDOSSIERREGLEMENTID(), str_BANQUE, str_LIEU, str_CODE_MONNAIE, str_COMMENTAIRE, this.getOdataManager().getEm().find(TModeReglement.class, lg_MODE_REGLEMENT_ID), int_TAUX, int_AMOUNT, str_FIRST_LAST_NAME, dt_reglement, true);
-
-                //double dbl_amount = (double) int_AMOUNT;
                 TTypeMvtCaisse OTTypeMvtCaisse = this.getOdataManager().getEm().find(TTypeMvtCaisse.class, facture.getLgTYPEFACTUREID().getLgTYPEFACTUREID());
-
                 OTReglement.setBISFACTURE(true);
-
                 this.getOdataManager().getEm().persist(OTReglement);
-
                 TPreenregistrementCompteClientTiersPayent OTPreenregistrementCompteClientTiersPayent = null;
                 if (lg_NATURE_PAIEMENT.equals("2")) {
 
@@ -1659,7 +1652,8 @@ public class reglementManager extends bll.bllBase {
                         dossierReglement.getDblAMOUNT().intValue(), Boolean.TRUE,
                         CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
                         OTReglement.getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID(), OTTypeMvtCaisse,
-                        this.getOdataManager().getEm(), dossierReglement.getDblAMOUNT().intValue(), 0, caisse.getStrREFTICKET(), OTCompteClientTiersPayant.getLgTIERSPAYANTID().getLgTIERSPAYANTID());
+                        this.getOdataManager().getEm(), dossierReglement.getDblAMOUNT().intValue(),
+                        0, caisse.getStrREFTICKET(), OTCompteClientTiersPayant.getLgTIERSPAYANTID().getLgTIERSPAYANTID());
                 updateItem(this.getOTUser(), caisse.getLgMVTCAISSEID(), Description, TypeLog.MVT_DE_CAISSE, caisse, this.getOdataManager().getEm());
 
             }

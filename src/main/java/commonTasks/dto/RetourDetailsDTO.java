@@ -28,11 +28,19 @@ public class RetourDetailsDTO implements Serializable {
     private Date dateOperation;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
-    private String lgRETOURFRSDETAIL, strNAME, intCIP, strLIBELLE, motif, dtCREATED, HEURE;
-    private Integer intNUMBERRETURN = 0, intNUMBERANSWER = 0, qtyMvt = 0,prixPaf=0;
+    private String lgRETOURFRSDETAIL, strNAME, intCIP, strLIBELLE, motif, dtCREATED, HEURE,produitId,lgMOTIFRETOUR,lgRETOURFRSID;
+    private Integer intNUMBERRETURN = 0, intNUMBERANSWER = 0, qtyMvt = 0,prixPaf=0,intSTOCK,ecart;
 
     public String getOperateur() {
         return operateur;
+    }
+
+    public String getProduitId() {
+        return produitId;
+    }
+
+    public void setProduitId(String produitId) {
+        this.produitId = produitId;
     }
 
     public Integer getPrixPaf() {
@@ -65,6 +73,14 @@ public class RetourDetailsDTO implements Serializable {
 
     public String getStrNAME() {
         return strNAME;
+    }
+
+    public String getLgRETOURFRSID() {
+        return lgRETOURFRSID;
+    }
+
+    public void setLgRETOURFRSID(String lgRETOURFRSID) {
+        this.lgRETOURFRSID = lgRETOURFRSID;
     }
 
     public void setStrNAME(String strNAME) {
@@ -127,6 +143,22 @@ public class RetourDetailsDTO implements Serializable {
         this.intNUMBERANSWER = intNUMBERANSWER;
     }
 
+    public String getLgMOTIFRETOUR() {
+        return lgMOTIFRETOUR;
+    }
+
+    public void setLgMOTIFRETOUR(String lgMOTIFRETOUR) {
+        this.lgMOTIFRETOUR = lgMOTIFRETOUR;
+    }
+
+    public Integer getEcart() {
+        return ecart;
+    }
+
+    public void setEcart(Integer ecart) {
+        this.ecart = ecart;
+    }
+
     public RetourDetailsDTO(TRetourFournisseurDetail d) {
         TRetourFournisseur f = d.getLgRETOURFRSID();
         TFamille tf = d.getLgFAMILLEID();
@@ -135,10 +167,12 @@ public class RetourDetailsDTO implements Serializable {
         this.dateOperation = f.getDtUPDATED();
         this.lgRETOURFRSDETAIL = d.getLgRETOURFRSDETAIL();
         this.strNAME = tf.getStrNAME();
+        this.produitId=tf.getLgFAMILLEID();
         this.intCIP = tf.getIntCIP();
         this.strLIBELLE = f.getLgGROSSISTEID().getStrLIBELLE();
         try {
               this.motif = d.getLgMOTIFRETOUR().getStrLIBELLE();
+              
         } catch (Exception e) {
         }
        
@@ -147,6 +181,9 @@ public class RetourDetailsDTO implements Serializable {
         this.intNUMBERANSWER = d.getIntNUMBERANSWER();
         this.intNUMBERRETURN = d.getIntNUMBERRETURN();
         this.prixPaf=d.getIntPAF();
+        this.intSTOCK=d.getIntSTOCK();
+        this.ecart=d.getIntSTOCK()-d.getIntNUMBERRETURN();
+        this.lgRETOURFRSID=d.getLgRETOURFRSID().getLgRETOURFRSID();
     }
 
     public RetourDetailsDTO(TDeconditionnement d) {
@@ -176,6 +213,14 @@ public class RetourDetailsDTO implements Serializable {
         this.qtyMvt = qtyMvt;
     }
 
+    public Integer getIntSTOCK() {
+        return intSTOCK;
+    }
+
+    public void setIntSTOCK(Integer intSTOCK) {
+        this.intSTOCK = intSTOCK;
+    }
+
     public RetourDetailsDTO(HMvtProduit d, boolean inventaire) {
         TUser tu = d.getLgUSERID();
         this.operateur = tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
@@ -186,4 +231,9 @@ public class RetourDetailsDTO implements Serializable {
         this.intNUMBERANSWER = d.getQteFinale();
         this.qtyMvt = d.getQteMvt();
     }
+
+    public RetourDetailsDTO() {
+    }
+    
+    
 }

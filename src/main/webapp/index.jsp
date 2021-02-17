@@ -12,7 +12,7 @@
     if (request.getParameter("action") != null) {
         if (request.getParameter("action").equals("logout")) {
             //Kill session iser  
-            session.setAttribute(commonparameter.AIRTIME_USER, null);
+          //  session.setAttribute(commonparameter.AIRTIME_USER, null);
             
         }
     }

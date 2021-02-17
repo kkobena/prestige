@@ -81,7 +81,8 @@ public class ProduitRessource {
         JSONObject json = produitService.activerProduitDesactive(id, tu);
         return Response.ok().entity(json.toString()).build();
     }
-  @POST
+
+    @POST
     @Path("disable-produit/{id}")
     public Response desactiverProduitDesactiver(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
@@ -92,6 +93,7 @@ public class ProduitRessource {
         JSONObject json = produitService.desactiverProduitDesactive(id, tu);
         return Response.ok().entity(json.toString()).build();
     }
+
     @POST
     @Path("remove-desactive/{id}")
     public Response removeProduitDesactiver(@PathParam("id") String id) throws JSONException {
@@ -394,4 +396,6 @@ public class ProduitRessource {
         JSONObject json = mvtProduitService.loadetourFournisseur(dtStart, dtEnd, start, limit, fourId, query, asAuthority);
         return Response.ok().entity(json.toString()).build();
     }
+
+   
 }

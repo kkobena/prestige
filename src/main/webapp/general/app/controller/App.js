@@ -153,7 +153,7 @@ Ext.define('testextjs.controller.App', {
     gettuserName: function () {
 
         Ext.getCmp('commonsettingapp').setText("Str_customer_name");
-        alert(Ext.getCmp('commonsettingapp'));
+     
         return Str_customer_name;
     }
     ,

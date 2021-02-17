@@ -141,9 +141,8 @@ Ext.define('testextjs.view.Header', {
                     {
                         xtype: 'component',
                         cls: 'liner',
-                       
-                       
-                         html: '<p class="microsoft marquee"><span id="bienvenu" >Bienvenue à   <span id="officine">  * ' + OFFICINE + ' *</span>  </span></p>'
+
+                        html: '<p class="microsoft marquee"><span id="bienvenu" >Bienvenue à   <span id="officine">  * ' + OFFICINE + ' *</span>  </span></p>'
                                 //  html: '<span style="font-size: 2.5em;font-weight:bold;font-family:Buxton Sketch;color:white;display:inline-block;margin-right:350px;margin-top:20px;width: 100%;">' + OFFICINE + '</span>'
                     }, {
                 xtype: 'component',
@@ -160,18 +159,17 @@ Ext.define('testextjs.view.Header', {
         this.callParent();
     },
     Deconnexion: function () {
-        var internal_url = '../webservices/usermanagement/ws_transaction.jsp?mode=deconnexion';
+//        var internal_url = '../webservices/usermanagement/ws_transaction.jsp?mode=deconnexion';
         Ext.Ajax.request({
-            url: internal_url,
-            params: {
-//                lg_USER_ID: lg_USER_ID.getValue()
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/user/logout',
 
-            },
-            success: function (response)
+            success: function (response, options)
             {
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.success === "0") {
-                    Ext.MessageBox.alert('Error Message', object.errors);
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (!result.success) {
+                    Ext.MessageBox.alert('Error Message', result.errors);
                     return;
                 }
                 localStorage.clear();

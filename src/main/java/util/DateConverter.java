@@ -166,6 +166,7 @@ public final class DateConverter {
     public static final String CLIENT_CARNET = "2";
     public static final String UPDATE_PRICE = "UPDATE_PRICE";
     public static final String P_AFFICHER_STOCK_A_LA_VENTE = "P_AFFICHER_STOCK_A_LA_VENTE";
+    public static final String AIRTIME_USER = "AIRTIME_USER";
     /*
     parametre nombre de mois à considerer
      */
@@ -520,8 +521,8 @@ public final class DateConverter {
         }
         return null;
     }
-    
-     public static String convertDateToDD_MM_YYYY_HH_mm(Date date) {
+
+    public static String convertDateToDD_MM_YYYY_HH_mm(Date date) {
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         if (date != null) {
             return dateFormat.format(date);

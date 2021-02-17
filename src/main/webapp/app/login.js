@@ -10,7 +10,7 @@ $(function () {
 
         var str_login = $('#str_login').val();
         var str_password = $('#str_password').val();
-        Doconnexion(str_login, str_password);
+        authenticate(str_login, str_password);
     });
 
     $("#str_password").keypress(function (e) {
@@ -19,7 +19,7 @@ $(function () {
         if (key == 13) {
             var str_login = $('#str_login').val();
             var str_password = $('#str_password').val();
-            Doconnexion(str_login, str_password);
+            authenticate(str_login, str_password);
         }
 
     });

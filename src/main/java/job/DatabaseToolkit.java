@@ -106,7 +106,7 @@ public class DatabaseToolkit {
         }*/
     }
 
-    @PostConstruct
+   @PostConstruct
     public void init() {
         if (dataSource == null) {
             LOG.info("no datasource found to execute the db migrations!");

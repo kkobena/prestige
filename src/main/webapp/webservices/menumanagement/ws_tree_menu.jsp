@@ -34,7 +34,6 @@
 <%
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     new logger().OCategory.info(" ws tree_menu TUser  " + OTUser.getStrLOGIN());
-
     OdataManager.initEntityManager();
     Oprivilege.LoadDataManger(OdataManager);
     Oprivilege.LoadMultilange(OTranslate);

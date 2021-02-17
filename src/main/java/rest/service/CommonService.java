@@ -13,6 +13,7 @@ import commonTasks.dto.RisqueDTO;
 import commonTasks.dto.TypeRemiseDTO;
 import commonTasks.dto.UserDTO;
 import dal.TImprimante;
+import dal.TMotifRetour;
 import dal.TNatureVente;
 import dal.TOfficine;
 import dal.TPrivilege;
@@ -99,4 +100,5 @@ public interface CommonService {
     JSONObject findDateMiseAJour() throws JSONException;
 
     boolean checkUg();
+      List<TMotifRetour> motifsRetour();
 }

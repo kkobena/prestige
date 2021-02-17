@@ -11,7 +11,6 @@ import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.TiersPayantParams;
-import commonTasks.dto.VenteDetailsDTO;
 import dal.TPreenregistrementDetail;
 import dal.TPrivilege;
 import dal.TUser;
