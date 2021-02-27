@@ -483,7 +483,7 @@ public class Balance {
         return "/data/reports/pdf/gestioncaisses" + report_generate_file;
     }
 
-    public String tableauBordPharmation(Params parasm, boolean ratio) {
+    public String tableauBordPharmation(Params parasm, boolean ratio, boolean monthly) {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(parasm.getDtStart());
@@ -502,8 +502,13 @@ public class Balance {
         parameters.put("P_H_CLT_INFOS", "TABLEAU DE BORD DU PHARMACIEN \nARRETE " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         List<TableauBaordPhDTO> datas = new ArrayList<>();
+        Map<TableauBaordSummary, List<TableauBaordPhDTO>> map;
+        if (monthly) {
+            map = caisseService.tableauBoardDatasMonthly(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+        } else {
+            map = caisseService.tableauBoardDatas(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+        }
 
-        Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = caisseService.tableauBoardDatas(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
         if (!map.isEmpty()) {
             map.forEach((k, v) -> {
                 datas.addAll(v);
@@ -1017,4 +1022,51 @@ public class Balance {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_perimes_" + report_generate_file, data);
         return "/data/reports/pdf/rp_perimes_" + report_generate_file;
     }
+
+    public String familleArticleveto(String dtStart, String dtEnd, String codeFamile, String query, TUser tu, String codeRayon, String codeGrossiste) throws IOException {
+
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+        TOfficine oTOfficine = caisseService.findOfficine();
+        String scr_report_file = "rp_statfamilleartveto";
+        Period periode = Period.between(dtSt, dtEn);
+        if (periode.getMonths() > 0) {
+            scr_report_file = "rp_statfamilleart_periodeveto";
+        }
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        parameters.put("P_H_CLT_INFOS", "Statistiques Familles Articles  ".toUpperCase() + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = familleArticleService.statistiqueParFamilleArticleVeto(dtStart, dtEnd, codeFamile, query, tu, codeRayon, codeGrossiste);
+        List<FamilleArticleStatDTO> datas = pair.getRight();
+        FamilleArticleStatDTO summary = pair.getLeft();
+        parameters.put("montantTTC", summary.getMontantCumulTTC());
+        parameters.put("montantHT", summary.getMontantCumulHT());
+        parameters.put("montantAchat", summary.getMontantCumulAchat());
+        parameters.put("montantMarge", summary.getMontantCumulMarge());
+        parameters.put("pourcentageMarge", summary.getPourcentageCumulMage());
+        parameters.put("pourcentageTH", summary.getPourcentageTH());
+
+        parameters.put("totalRemiseVO", summary.getTotalRemiseVO());
+        parameters.put("totalRemiseVNO", summary.getTotalRemiseVNO());
+        parameters.put("totalRemiseVetoVO", summary.getTotalRemiseVetoVO());
+        parameters.put("totalRemiseVetoVNO", summary.getTotalRemiseVetoVNO());
+        parameters.put("montantCumulRemise", summary.getMontantCumulRemise());
+        parameters.put("totalCaVO", summary.getTotalCaVO());
+        parameters.put("totalCaVNO", summary.getTotalCaVNO());
+        parameters.put("totalCaVetoVO", summary.getTotalCaVetoVO());
+        parameters.put("totalCaVetoVNO", summary.getTotalCaVetoVNO());
+        parameters.put("totalRemiseVeto", summary.getTotalRemiseVeto());
+        parameters.put("totalCaVeto", summary.getTotalCaVeto());
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_statfamilleart_" + report_generate_file, datas);
+        return "/data/reports/pdf/rp_statfamilleart_" + report_generate_file;
+    }
+
 }

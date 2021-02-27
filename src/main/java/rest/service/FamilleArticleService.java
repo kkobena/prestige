@@ -37,4 +37,6 @@ public interface FamilleArticleService {
 
     JSONObject statistiqueParGrossistesView(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) throws JSONException;
 
+    JSONObject statistiqueParFamilleArticleViewVeto(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) throws JSONException;
+ Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParFamilleArticleVeto(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste);
 }

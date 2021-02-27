@@ -39,7 +39,7 @@ public class VenteDetailsDTO implements Serializable {
     private String typeVente, numOrder, medecinId, commentaire, nom;
     private int intAVOIR, currentStock = 0, uniteGratuite, montantUg, seuil, stockUg, montantTva, valeurTva, prixHt;
     private int montantHt;
-    private int montantNetHt,prixAchat;
+    private int montantNetHt, prixAchat;
     private boolean bISAVOIR;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat dateFormatHeure = new SimpleDateFormat("dd/MM/yyyy HH:mm");
@@ -50,6 +50,15 @@ public class VenteDetailsDTO implements Serializable {
     private String rayonId, libelleRayon;
     private String familleId, libelleFamille;
     private String grossisteId, libelleGrossiste;
+    private boolean deconditionne;
+
+    public boolean isDeconditionne() {
+        return deconditionne;
+    }
+
+    public void setDeconditionne(boolean deconditionne) {
+        this.deconditionne = deconditionne;
+    }
 
     public String getCaissier() {
         return caissier;
@@ -696,11 +705,23 @@ public class VenteDetailsDTO implements Serializable {
         this.intPRICE = (int) price;
         this.intAVOIR = (int) avoir;
     }
+    private String lgFAMILLEPARENTID;
 
-    public VenteDetailsDTO(String produit, long quantiteVendue, String grossiste) {
+    public String getLgFAMILLEPARENTID() {
+        return lgFAMILLEPARENTID;
+    }
+
+    public void setLgFAMILLEPARENTID(String lgFAMILLEPARENTID) {
+        this.lgFAMILLEPARENTID = lgFAMILLEPARENTID;
+    }
+
+    public VenteDetailsDTO(String produit, long quantiteVendue, String grossiste, Short bool_DECONDITIONNE, String lgFAMILLEPARENTID) {
         this.intQUANTITY = (int) quantiteVendue;
         this.lgFAMILLEID = produit;
         this.typeVente = grossiste;
+        this.deconditionne = bool_DECONDITIONNE == 1;
+        this.lgFAMILLEPARENTID = lgFAMILLEPARENTID;
+        this.lgPREENREGISTREMENTDETAILID=produit;
 
     }
 
@@ -749,4 +770,6 @@ public class VenteDetailsDTO implements Serializable {
         }
         this.prixAchat = famille.getIntPAF();
     }
+    
+    
 }

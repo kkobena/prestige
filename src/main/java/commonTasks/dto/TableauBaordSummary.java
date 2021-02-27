@@ -14,7 +14,7 @@ import java.io.Serializable;
 public class TableauBaordSummary implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    Integer montantTTC = 0, montantNet = 0, montantRemise = 0,
+    long montantTTC = 0, montantNet = 0, montantRemise = 0,
             montantEsp = 0,
             montantCredit = 0,
             nbreVente = 0, montantAchatOne = 0, montantAchatTwo = 0,
@@ -22,115 +22,115 @@ public class TableauBaordSummary implements Serializable {
             montantAchat = 0, montantAchatNet = 0,montantAvoir=0;
     double ratioVA = 0.0, rationAV = 0.0;
 
-    public Integer getMontantTTC() {
+    public long getMontantTTC() {
         return montantTTC;
     }
 
-    public void setMontantTTC(Integer montantTTC) {
+    public void setMontantTTC(long montantTTC) {
         this.montantTTC = montantTTC;
     }
 
-    public Integer getMontantNet() {
+    public long getMontantNet() {
         return montantNet;
     }
 
-    public Integer getMontantAvoir() {
+    public long getMontantAvoir() {
         return montantAvoir;
     }
 
-    public void setMontantAvoir(Integer montantAvoir) {
+    public void setMontantAvoir(long montantAvoir) {
         this.montantAvoir = montantAvoir;
     }
 
-    public void setMontantNet(Integer montantNet) {
+    public void setMontantNet(long montantNet) {
         this.montantNet = montantNet;
     }
 
-    public Integer getMontantRemise() {
+    public long getMontantRemise() {
         return montantRemise;
     }
 
-    public void setMontantRemise(Integer montantRemise) {
+    public void setMontantRemise(long montantRemise) {
         this.montantRemise = montantRemise;
     }
 
-    public Integer getMontantEsp() {
+    public long getMontantEsp() {
         return montantEsp;
     }
 
-    public void setMontantEsp(Integer montantEsp) {
+    public void setMontantEsp(long montantEsp) {
         this.montantEsp = montantEsp;
     }
 
-    public Integer getMontantCredit() {
+    public long getMontantCredit() {
         return montantCredit;
     }
 
-    public void setMontantCredit(Integer montantCredit) {
+    public void setMontantCredit(long montantCredit) {
         this.montantCredit = montantCredit;
     }
 
-    public Integer getNbreVente() {
+    public long getNbreVente() {
         return nbreVente;
     }
 
-    public void setNbreVente(Integer nbreVente) {
+    public void setNbreVente(long nbreVente) {
         this.nbreVente = nbreVente;
     }
 
-    public Integer getMontantAchatOne() {
+    public long getMontantAchatOne() {
         return montantAchatOne;
     }
 
-    public void setMontantAchatOne(Integer montantAchatOne) {
+    public void setMontantAchatOne(long montantAchatOne) {
         this.montantAchatOne = montantAchatOne;
     }
 
-    public Integer getMontantAchatTwo() {
+    public long getMontantAchatTwo() {
         return montantAchatTwo;
     }
 
-    public void setMontantAchatTwo(Integer montantAchatTwo) {
+    public void setMontantAchatTwo(long montantAchatTwo) {
         this.montantAchatTwo = montantAchatTwo;
     }
 
-    public Integer getMontantAchatThree() {
+    public long getMontantAchatThree() {
         return montantAchatThree;
     }
 
-    public void setMontantAchatThree(Integer montantAchatThree) {
+    public void setMontantAchatThree(long montantAchatThree) {
         this.montantAchatThree = montantAchatThree;
     }
 
-    public Integer getMontantAchatFour() {
+    public long getMontantAchatFour() {
         return montantAchatFour;
     }
 
-    public void setMontantAchatFour(Integer montantAchatFour) {
+    public void setMontantAchatFour(long montantAchatFour) {
         this.montantAchatFour = montantAchatFour;
     }
 
-    public Integer getMontantAchatFive() {
+    public long getMontantAchatFive() {
         return montantAchatFive;
     }
 
-    public void setMontantAchatFive(Integer montantAchatFive) {
+    public void setMontantAchatFive(long montantAchatFive) {
         this.montantAchatFive = montantAchatFive;
     }
 
-    public Integer getMontantAchat() {
+    public long getMontantAchat() {
         return montantAchat;
     }
 
-    public void setMontantAchat(Integer montantAchat) {
+    public void setMontantAchat(long montantAchat) {
         this.montantAchat = montantAchat;
     }
 
-    public Integer getMontantAchatNet() {
+    public long getMontantAchatNet() {
         return montantAchatNet;
     }
 
-    public void setMontantAchatNet(Integer montantAchatNet) {
+    public void setMontantAchatNet(long montantAchatNet) {
         this.montantAchatNet = montantAchatNet;
     }
 

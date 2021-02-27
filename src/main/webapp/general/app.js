@@ -598,7 +598,7 @@ Ext.application({
         // 'testextjs.view.sms_user.facturation.action.add'
 
         //Report
-        'testextjs.view.Report.statistiquefamillearticle.statistiquefamillearticlemanager',
+       
         'testextjs.model.Statistiquefamille',
 //        'testextjs.view.Report.statistiquevente.statistiqueventemanager',
 
@@ -843,6 +843,7 @@ Ext.application({
         'VenteTiersPayantsCtr',
         'UgCtr',
         'ImportationHistoriqueCtr',
+        'FamilleArticleStatVetoCtr',
         'ParaCtr'
     ],
     stores: [

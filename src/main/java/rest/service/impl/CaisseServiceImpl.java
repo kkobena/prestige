@@ -74,6 +74,8 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1342,14 +1344,27 @@ public class CaisseServiceImpl implements CaisseService {
 
     }
 
+    private Integer avoirFournisseur(String dateString) {
+        try {
+            Query q = getEntityManager().createNativeQuery("SELECT COALESCE(SUM(o.dl_AMOUNT),0) FROM  t_retour_fournisseur o where DATE_FORMAT(o.dt_UPDATED,'%Y%m')= ?1 AND o.str_REPONSE_FRS <>'' AND o.str_STATUT='enable'")
+                    .setParameter(1, dateString);
+            return ((Number) q.getSingleResult()).intValue();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return 0;
+        }
+
+    }
+
     private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardData(List<MvtTransaction> transactions) {
         if (transactions.isEmpty()) {
             return Collections.emptyMap();
         }
+
         Map<TableauBaordSummary, List<TableauBaordPhDTO>> summ = new HashMap<>();
         List<TableauBaordPhDTO> tableauBaords = new ArrayList<>();
         TableauBaordSummary summary = new TableauBaordSummary();
-        Map<LocalDate, List<MvtTransaction>> map = transactions.parallelStream()
+        Map<LocalDate, List<MvtTransaction>> map = transactions.stream()
                 .collect(Collectors.groupingBy(o -> o.getMvtDate()));
         LongAdder _summontantTTC = new LongAdder(), _summontantNet = new LongAdder(),
                 _summontantRemise = new LongAdder(),
@@ -1468,29 +1483,29 @@ public class CaisseServiceImpl implements CaisseService {
             _summontantAvoir.add(baordPh.getMontantAvoir());
             tableauBaords.add(baordPh);
         });
-        Integer _montantNet = _summontantNet.intValue();
-        Integer _montantAchat = _summontantAchat.intValue();
-        if (_montantAchat.compareTo(0) > 0) {
+        Long _montantNet = _summontantNet.longValue();
+        Long _montantAchat = _summontantAchat.longValue();
+        if (_montantAchat.compareTo(0l) > 0) {
             _sumratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
         }
-        if (_montantNet.compareTo(0) > 0) {
+        if (_montantNet.compareTo(0l) > 0) {
             _sumrationAV.add(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
         }
-        summary.setMontantAchatFive(_summontantAchatFive.intValue());
-        summary.setMontantAchatFour(_summontantAchatFour.intValue());
-        summary.setMontantAchatThree(_summontantAchatThree.intValue());
-        summary.setNbreVente(_sumnbreVente.intValue());
-        summary.setMontantAchatTwo(_summontantAchatTwo.intValue());
-        summary.setMontantAchatOne(_summontantAchatOne.intValue());
-        summary.setMontantAchat(_summontantAchat.intValue());
+        summary.setMontantAchatFive(_summontantAchatFive.longValue());
+        summary.setMontantAchatFour(_summontantAchatFour.longValue());
+        summary.setMontantAchatThree(_summontantAchatThree.longValue());
+        summary.setNbreVente(_sumnbreVente.longValue());
+        summary.setMontantAchatTwo(_summontantAchatTwo.longValue());
+        summary.setMontantAchatOne(_summontantAchatOne.longValue());
+        summary.setMontantAchat(_summontantAchat.longValue());
         summary.setRatioVA(_sumratioVA.doubleValue());
         summary.setRationAV(_sumrationAV.doubleValue());
-        summary.setMontantTTC(_summontantTTC.intValue());
-        summary.setMontantNet(_summontantNet.intValue());
-        summary.setMontantEsp(_summontantEsp.intValue());
-        summary.setMontantRemise(_summontantRemise.intValue());
-        summary.setMontantCredit(_summontantCredit.intValue());
-        summary.setMontantAvoir(_summontantAvoir.intValue());
+        summary.setMontantTTC(_summontantTTC.longValue());
+        summary.setMontantNet(_summontantNet.longValue());
+        summary.setMontantEsp(_summontantEsp.longValue());
+        summary.setMontantRemise(_summontantRemise.longValue());
+        summary.setMontantCredit(_summontantCredit.longValue());
+        summary.setMontantAvoir(_summontantAvoir.longValue());
         summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
 
         return summ;
@@ -3320,9 +3335,7 @@ public class CaisseServiceImpl implements CaisseService {
                     montantAchat = new LongAdder(), montantAvoir = new LongAdder();
             DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
             int avoir = avoirFournisseur(k);
-            System.out.print("------->>>>>   " + avoir);
-            System.out.print("------->>>>>   " + k);
-            System.out.print("\n");
+
             montantAvoir.add(avoir);
             v.forEach(op -> {
                 switch (op.getTypeTransaction()) {
@@ -3401,7 +3414,7 @@ public class CaisseServiceImpl implements CaisseService {
                 }
             });
             Integer _montantNet = montantNet.intValue();
-            Integer _montantAchat = montantAchat.intValue()-avoir;
+            Integer _montantAchat = montantAchat.intValue() - avoir;
             if (_montantAchat.compareTo(0) > 0) {
                 ratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
             }
@@ -3442,29 +3455,29 @@ public class CaisseServiceImpl implements CaisseService {
             _summontantAvoir.add(baordPh.getMontantAvoir());
             tableauBaords.add(baordPh);
         });
-        Integer _montantNet = _summontantNet.intValue();
-        Integer _montantAchat = _summontantAchat.intValue();
-        if (_montantAchat.compareTo(0) > 0) {
+        Long _montantNet = _summontantNet.longValue();
+        Long _montantAchat = _summontantAchat.longValue();
+        if (_montantAchat.compareTo(0l) > 0) {
             _sumratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
         }
-        if (_montantNet.compareTo(0) > 0) {
+        if (_montantNet.compareTo(0l) > 0) {
             _sumrationAV.add(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
         }
-        summary.setMontantAchatFive(_summontantAchatFive.intValue());
-        summary.setMontantAchatFour(_summontantAchatFour.intValue());
-        summary.setMontantAchatThree(_summontantAchatThree.intValue());
-        summary.setNbreVente(_sumnbreVente.intValue());
-        summary.setMontantAchatTwo(_summontantAchatTwo.intValue());
-        summary.setMontantAchatOne(_summontantAchatOne.intValue());
-        summary.setMontantAchat(_summontantAchat.intValue());
+        summary.setMontantAchatFive(_summontantAchatFive.longValue());
+        summary.setMontantAchatFour(_summontantAchatFour.longValue());
+        summary.setMontantAchatThree(_summontantAchatThree.longValue());
+        summary.setNbreVente(_sumnbreVente.longValue());
+        summary.setMontantAchatTwo(_summontantAchatTwo.longValue());
+        summary.setMontantAchatOne(_summontantAchatOne.longValue());
+        summary.setMontantAchat(_summontantAchat.longValue());
         summary.setRatioVA(_sumratioVA.doubleValue());
         summary.setRationAV(_sumrationAV.doubleValue());
-        summary.setMontantTTC(_summontantTTC.intValue());
-        summary.setMontantNet(_summontantNet.intValue());
-        summary.setMontantEsp(_summontantEsp.intValue());
-        summary.setMontantRemise(_summontantRemise.intValue());
-        summary.setMontantCredit(_summontantCredit.intValue());
-        summary.setMontantAvoir(_summontantAvoir.intValue());
+        summary.setMontantTTC(_summontantTTC.longValue());
+        summary.setMontantNet(_summontantNet.longValue());
+        summary.setMontantEsp(_summontantEsp.longValue());
+        summary.setMontantRemise(_summontantRemise.longValue());
+        summary.setMontantCredit(_summontantCredit.longValue());
+        summary.setMontantAvoir(_summontantAvoir.longValue());
         summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
         return summ;
     }
@@ -4009,6 +4022,401 @@ public class CaisseServiceImpl implements CaisseService {
         json.put("data", balances);
         json.put("metaData", new JSONObject(summary));
         return json;
+    }
+
+    @Override
+    public JSONObject tableauBoardDatasGroupByMonth(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user, int start,
+            int limit, boolean all) throws JSONException {
+        TEmplacement emp = user.getLgEMPLACEMENTID();
+        JSONObject json = new JSONObject();
+        Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = new HashMap<>();
+        if (key_Take_Into_Account() || key_Params()) {
+            map = buillTableauBoardDataMonthly(donneestableauboard(dtStart, dtEnd, checked, emp.getLgEMPLACEMENTID(), start, limit, all));
+        } else {
+            map = buillTableauBoardDataGroupByMonth(donneestableauboard(dtStart, dtEnd, checked, emp.getLgEMPLACEMENTID(), start, limit, all));
+        }
+
+        if (map.isEmpty()) {
+            json.put("total", 0);
+            json.put("data", new JSONArray());
+
+        }
+        map.forEach((k, v) -> {
+            json.put("total", v.size());
+            json.put("data", new JSONArray(v));
+            json.put("metaData", new JSONObject(k));
+
+        });
+        return json;
+
+    }
+
+    private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardDataGroupByMonth(List<MvtTransaction> transactions) {
+        if (transactions.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        DateTimeFormatter DD_MM_YYY = DateTimeFormatter.ofPattern("yyyyMMdd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
+        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("MM/yyyy");
+        Map<TableauBaordSummary, List<TableauBaordPhDTO>> summ = new HashMap<>();
+        List<TableauBaordPhDTO> tableauBaords = new ArrayList<>();
+        TableauBaordSummary summary = new TableauBaordSummary();
+        Map<Integer, List<MvtTransaction>> map = transactions.stream()
+                .collect(Collectors.groupingBy(o -> Integer.valueOf(o.getMvtDate().format(formatter))));
+        LongAdder _summontantTTC = new LongAdder(), _summontantNet = new LongAdder(),
+                _summontantRemise = new LongAdder(),
+                _summontantEsp = new LongAdder(),
+                _summontantCredit = new LongAdder(),
+                _sumnbreVente = new LongAdder(), _summontantAchatOne = new LongAdder(),
+                _summontantAchatTwo = new LongAdder(),
+                _summontantAchatThree = new LongAdder(), _summontantAchatFour = new LongAdder(),
+                _summontantAchatFive = new LongAdder(),
+                _summontantAvoir = new LongAdder(),
+                _summontantAchat = new LongAdder();
+        DoubleAdder _sumratioVA = new DoubleAdder(), _sumrationAV = new DoubleAdder();
+        map.forEach((k, v) -> {
+            TableauBaordPhDTO baordPh = new TableauBaordPhDTO();
+            baordPh.setMvtDateInt(k);
+            String dateMvt = String.valueOf(k);
+            dateMvt = dateMvt.concat("01");
+            LocalDate perode = LocalDate.parse(dateMvt, DD_MM_YYY);
+            perode = LocalDate.of(perode.getYear(), perode.getMonth(), perode.lengthOfMonth());
+            baordPh.setDateOperation(perode.format(formatter2));
+            baordPh.setMvtDate(perode);
+            LongAdder montantTTC = new LongAdder(), montantNet = new LongAdder(),
+                    montantRemise = new LongAdder(),
+                    montantEsp = new LongAdder(),
+                    montantCredit = new LongAdder(),
+                    nbreVente = new LongAdder(), montantAchatOne = new LongAdder(),
+                    montantAchatTwo = new LongAdder(),
+                    montantAchatThree = new LongAdder(), montantAchatFour = new LongAdder(),
+                    montantAchatFive = new LongAdder(),
+                    montantAchat = new LongAdder(), montantAvoir = new LongAdder();
+            DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
+            int avoir = avoirFournisseur(k.toString());
+            montantAvoir.add(avoir);
+
+            v.forEach(op -> {
+                switch (op.getTypeTransaction()) {
+                    case VENTE_COMPTANT:
+                    case VENTE_CREDIT: {
+                        montantTTC.add(op.getMontant() - op.getMontantttcug());
+                        montantNet.add(op.getMontantNet() - op.getMontantnetug());
+                        montantRemise.add(op.getMontantRemise());
+                        montantEsp.add(op.getMontantRegle() - op.getMontantnetug());
+                        montantCredit.add(op.getMontantCredit());
+                        montantCredit.add(op.getMontantRestant());
+                        if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
+                            nbreVente.increment();
+                        }
+                    }
+                    break;
+                    case ACHAT: {
+                        montantAchat.add(op.getMontantNet());
+                        try {
+                            Groupefournisseur g = op.getGrossiste().getGroupeId();
+                            switch (g.getLibelle()) {
+                                case DateConverter.LABOREXCI:
+                                    montantAchatOne.add(op.getMontantNet());
+                                    break;
+                                case DateConverter.DPCI:
+                                    montantAchatTwo.add(op.getMontantNet());
+                                    break;
+                                case DateConverter.COPHARMED:
+                                    montantAchatThree.add(op.getMontantNet());
+                                    break;
+                                case DateConverter.TEDIS:
+                                    montantAchatFour.add(op.getMontantNet());
+                                    break;
+                                case DateConverter.AUTRES:
+                                    montantAchatFive.add(op.getMontantNet());
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                        } catch (Exception e) {
+                        }
+                    }
+                    break;
+                    default:
+                        break;
+
+                }
+            });
+            Integer _montantNet = montantNet.intValue();
+            Integer _montantAchat = montantAchat.intValue() - avoir;
+            if (_montantAchat.compareTo(0) > 0) {
+                ratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
+            }
+            if (_montantNet.compareTo(0) > 0) {
+                rationAV.add(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
+            }
+            baordPh.setMontantAchatFive(montantAchatFive.intValue());
+            baordPh.setMontantAchatFour(montantAchatFour.intValue());
+            baordPh.setMontantAchatThree(montantAchatThree.intValue());
+            baordPh.setNbreVente(nbreVente.intValue());
+            baordPh.setMontantAchatTwo(montantAchatTwo.intValue());
+            baordPh.setMontantAchatOne(montantAchatOne.intValue());
+            baordPh.setMontantAchat(_montantAchat);
+            baordPh.setRatioVA(ratioVA.doubleValue());
+            baordPh.setRationAV(rationAV.doubleValue());
+            baordPh.setMontantTTC(montantTTC.intValue());
+            baordPh.setMontantNet(_montantNet);
+            baordPh.setMontantEsp(montantEsp.intValue());
+            baordPh.setMontantRemise(montantRemise.intValue());
+            baordPh.setMontantCredit(montantCredit.intValue());
+            baordPh.setMontantAvoir(montantAvoir.intValue());
+
+            /**
+             * ** ***************
+             */
+            _summontantAchatFive.add(baordPh.getMontantAchatFive());
+            _summontantAchatFour.add(baordPh.getMontantAchatFour());
+            _summontantAchatThree.add(baordPh.getMontantAchatThree());
+            _sumnbreVente.add(baordPh.getNbreVente());
+            _summontantAchatTwo.add(baordPh.getMontantAchatTwo());
+            _summontantAchatOne.add(baordPh.getMontantAchatOne());
+            _summontantAchat.add(baordPh.getMontantAchat());
+            _summontantTTC.add(baordPh.getMontantTTC());
+            _summontantNet.add(baordPh.getMontantNet());
+            _summontantEsp.add(baordPh.getMontantEsp());
+            _summontantRemise.add(baordPh.getMontantRemise());
+            _summontantCredit.add(baordPh.getMontantCredit());
+            _summontantAvoir.add(baordPh.getMontantAvoir());
+            tableauBaords.add(baordPh);
+        });
+        Long _montantNet = _summontantNet.longValue();
+        Long _montantAchat = _summontantAchat.longValue();
+        if (_montantAchat.compareTo(0l) > 0) {
+            _sumratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
+        }
+        if (_montantNet.compareTo(0l) > 0) {
+            _sumrationAV.add(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
+        }
+        summary.setMontantAchatFive(_summontantAchatFive.longValue());
+        summary.setMontantAchatFour(_summontantAchatFour.longValue());
+        summary.setMontantAchatThree(_summontantAchatThree.longValue());
+        summary.setNbreVente(_sumnbreVente.longValue());
+        summary.setMontantAchatTwo(_summontantAchatTwo.longValue());
+        summary.setMontantAchatOne(_summontantAchatOne.longValue());
+        summary.setMontantAchat(_summontantAchat.longValue());
+        summary.setRatioVA(_sumratioVA.doubleValue());
+        summary.setRationAV(_sumrationAV.doubleValue());
+        summary.setMontantTTC(_summontantTTC.longValue());
+        summary.setMontantNet(_summontantNet.longValue());
+        summary.setMontantEsp(_summontantEsp.longValue());
+        summary.setMontantRemise(_summontantRemise.longValue());
+        summary.setMontantCredit(_summontantCredit.longValue());
+        summary.setMontantAvoir(_summontantAvoir.longValue());
+        summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
+
+        return summ;
+    }
+
+    
+     @Override
+    public Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatasMonthly(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user,
+            int ration, int start, int limit, boolean all) {
+        TEmplacement emp = user.getLgEMPLACEMENTID();
+        List<MvtTransaction> transactions = donneestableauboard(dtStart, dtEnd, checked, emp.getLgEMPLACEMENTID(),
+                start, limit, all);
+        if (key_Params() || key_Take_Into_Account()) {
+            return buillTableauBoardDataMonthly(transactions);
+        } else {
+            return buillTableauBoardDataGroupByMonth(transactions);
+        }
+
+    }
+    
+    
+     private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardDataMonthly(List<MvtTransaction> transactions) {
+        if (transactions.isEmpty()) {
+            return Collections.emptyMap();
+        }
+         DateTimeFormatter DD_MM_YYY = DateTimeFormatter.ofPattern("yyyyMMdd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
+        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("MM/yyyy");
+        Map<TableauBaordSummary, List<TableauBaordPhDTO>> summ = new HashMap<>();
+        List<TableauBaordPhDTO> tableauBaords = new ArrayList<>();
+        TableauBaordSummary summary = new TableauBaordSummary();
+       Map<Integer, List<MvtTransaction>> map = transactions.stream()
+                .collect(Collectors.groupingBy(o -> Integer.valueOf(o.getMvtDate().format(formatter))));
+        LongAdder _summontantTTC = new LongAdder(), _summontantNet = new LongAdder(),
+                _summontantRemise = new LongAdder(),
+                _summontantEsp = new LongAdder(),
+                _summontantCredit = new LongAdder(),
+                _sumnbreVente = new LongAdder(), _summontantAchatOne = new LongAdder(),
+                _summontantAchatTwo = new LongAdder(),
+                _summontantAchatThree = new LongAdder(), _summontantAchatFour = new LongAdder(),
+                _summontantAchatFive = new LongAdder(),
+                _summontantAvoir = new LongAdder(),
+                _summontantAchat = new LongAdder();
+        DoubleAdder _sumratioVA = new DoubleAdder(), _sumrationAV = new DoubleAdder();
+        map.forEach((k, v) -> {
+            TableauBaordPhDTO baordPh = new TableauBaordPhDTO();
+            baordPh.setMvtDateInt(k);
+            String dateMvt = String.valueOf(k);
+            dateMvt = dateMvt.concat("01");
+            LocalDate perode = LocalDate.parse(dateMvt, DD_MM_YYY);
+            perode = LocalDate.of(perode.getYear(), perode.getMonth(), perode.lengthOfMonth());
+            baordPh.setDateOperation(perode.format(formatter2));
+            baordPh.setMvtDate(perode);
+            LongAdder montantTTC = new LongAdder(), montantNet = new LongAdder(),
+                    montantRemise = new LongAdder(),
+                    montantEsp = new LongAdder(),
+                    montantCredit = new LongAdder(),
+                    nbreVente = new LongAdder(), montantAchatOne = new LongAdder(),
+                    montantAchatTwo = new LongAdder(),
+                    montantAchatThree = new LongAdder(), montantAchatFour = new LongAdder(),
+                    montantAchatFive = new LongAdder(),
+                    montantAchat = new LongAdder(), montantAvoir = new LongAdder();
+            DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
+           int avoir = avoirFournisseur(k.toString());
+            montantAvoir.add(avoir);
+            v.forEach(op -> {
+                switch (op.getTypeTransaction()) {
+                    case VENTE_COMPTANT: {
+                        int remiseNonPara = 0;
+                        if (Math.abs(op.getMontantRemise()) > 0) {
+                            remiseNonPara = remiseNonPara(op.getPkey());
+                        }
+
+//                    montantRemise += remiseNonPara;
+//                        int remise = remisePara(op.getPkey());
+                        int montantNet_ = op.getMontantAcc() - remiseNonPara - op.getMontantttcug();
+                        int montantTTC_ = op.getMontantAcc() - op.getMontantttcug();
+
+                        montantNet.add(montantNet_);
+                        montantTTC.add(montantTTC_);
+                        montantEsp.add(montantNet_);
+                        /*
+                            montantTTC.add(op.getMontant());
+                            montantNet.add(op.getMontantNet());
+                            montantEsp.add(op.getMontantRegle());
+                         */
+                        montantRemise.add(remiseNonPara);
+                        montantCredit.add(op.getMontantCredit());
+                        montantCredit.add(op.getMontantRestant());
+                        if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
+                            nbreVente.increment();
+                        }
+                    }
+
+                    break;
+                    case VENTE_CREDIT: {
+                        montantTTC.add(op.getMontant());
+                        montantNet.add(op.getMontantNet());
+                        montantRemise.add(op.getMontantRemise());
+                        montantEsp.add(op.getMontantRegle());
+                        montantCredit.add(op.getMontantCredit());
+                        montantCredit.add(op.getMontantRestant());
+                        if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
+                            nbreVente.increment();
+                        }
+                    }
+                    break;
+                    case ACHAT: {
+                        montantAchat.add(op.getMontantNet());
+                        try {
+                            Groupefournisseur g = op.getGrossiste().getGroupeId();
+                            switch (g.getLibelle()) {
+                                case DateConverter.LABOREXCI:
+                                    montantAchatOne.add(op.getMontantNet());
+                                    break;
+                                case DateConverter.DPCI:
+                                    montantAchatTwo.add(op.getMontantNet());
+                                    break;
+                                case DateConverter.COPHARMED:
+                                    montantAchatThree.add(op.getMontantNet());
+                                    break;
+                                case DateConverter.TEDIS:
+                                    montantAchatFour.add(op.getMontantNet());
+                                    break;
+                                case DateConverter.AUTRES:
+                                    montantAchatFive.add(op.getMontantNet());
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                        } catch (Exception e) {
+                        }
+
+                    }
+                    break;
+                    default:
+                        break;
+
+                }
+            });
+            Integer _montantNet = montantNet.intValue();
+            Integer _montantAchat = montantAchat.intValue() - avoir;
+            if (_montantAchat.compareTo(0) > 0) {
+                ratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
+            }
+            if (_montantNet.compareTo(0) > 0) {
+                rationAV.add(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
+            }
+            baordPh.setMontantAchatFive(montantAchatFive.intValue());
+            baordPh.setMontantAchatFour(montantAchatFour.intValue());
+            baordPh.setMontantAchatThree(montantAchatThree.intValue());
+            baordPh.setNbreVente(nbreVente.intValue());
+            baordPh.setMontantAchatTwo(montantAchatTwo.intValue());
+            baordPh.setMontantAchatOne(montantAchatOne.intValue());
+            baordPh.setMontantAchat(_montantAchat);
+            baordPh.setRatioVA(ratioVA.doubleValue());
+            baordPh.setRationAV(rationAV.doubleValue());
+            baordPh.setMontantTTC(montantTTC.intValue());
+            baordPh.setMontantNet(_montantNet);
+            baordPh.setMontantEsp(montantEsp.intValue());
+            baordPh.setMontantRemise(montantRemise.intValue());
+            baordPh.setMontantCredit(montantCredit.intValue());
+            baordPh.setMontantAvoir(montantAvoir.intValue());
+
+            /**
+             * ** ***************
+             */
+            _summontantAchatFive.add(baordPh.getMontantAchatFive());
+            _summontantAchatFour.add(baordPh.getMontantAchatFour());
+            _summontantAchatThree.add(baordPh.getMontantAchatThree());
+            _sumnbreVente.add(baordPh.getNbreVente());
+            _summontantAchatTwo.add(baordPh.getMontantAchatTwo());
+            _summontantAchatOne.add(baordPh.getMontantAchatOne());
+            _summontantAchat.add(baordPh.getMontantAchat());
+            _summontantTTC.add(baordPh.getMontantTTC());
+            _summontantNet.add(baordPh.getMontantNet());
+            _summontantEsp.add(baordPh.getMontantEsp());
+            _summontantRemise.add(baordPh.getMontantRemise());
+            _summontantCredit.add(baordPh.getMontantCredit());
+            _summontantAvoir.add(baordPh.getMontantAvoir());
+            tableauBaords.add(baordPh);
+        });
+        Long  _montantNet = _summontantNet.longValue();
+        Long _montantAchat = _summontantAchat.longValue();
+        if (_montantAchat.compareTo(0l) > 0) {
+            _sumratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
+        }
+        if (_montantNet.compareTo(0l) > 0) {
+            _sumrationAV.add(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
+        }
+        summary.setMontantAchatFive(_summontantAchatFive.longValue());
+        summary.setMontantAchatFour(_summontantAchatFour.longValue());
+        summary.setMontantAchatThree(_summontantAchatThree.longValue());
+        summary.setNbreVente(_sumnbreVente.longValue());
+        summary.setMontantAchatTwo(_summontantAchatTwo.longValue());
+        summary.setMontantAchatOne(_summontantAchatOne.longValue());
+        summary.setMontantAchat(_summontantAchat.longValue());
+        summary.setRatioVA(_sumratioVA.doubleValue());
+        summary.setRationAV(_sumrationAV.doubleValue());
+        summary.setMontantTTC(_summontantTTC.longValue());
+        summary.setMontantNet(_summontantNet.longValue());
+        summary.setMontantEsp(_summontantEsp.longValue());
+        summary.setMontantRemise(_summontantRemise.longValue());
+        summary.setMontantCredit(_summontantCredit.longValue());
+        summary.setMontantAvoir(_summontantAvoir.longValue());
+        summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
+        return summ;
     }
 
 }

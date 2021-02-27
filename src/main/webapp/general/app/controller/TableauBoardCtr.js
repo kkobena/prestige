@@ -27,6 +27,9 @@ Ext.define('testextjs.controller.TableauBoardCtr', {
         }, {
             ref: 'rationAV',
             selector: 'tableauPhama #rationAV'
+        }, {
+            ref: 'monthly',
+            selector: 'tableauPhama #monthly'
         },
 
         {
@@ -83,16 +86,19 @@ Ext.define('testextjs.controller.TableauBoardCtr', {
         });
     },
     onPdfClick: function () {
-        var me = this;
+        let me = this;
 
-        var dtStart = me.getDtStart().getSubmitValue();
-        var dtEnd = me.getDtEnd().getSubmitValue();
-        var ratio = true;
-        var v = me.getComboRation().getValue().split('/');
+        let dtStart = me.getDtStart().getSubmitValue();
+        let dtEnd = me.getDtEnd().getSubmitValue();
+        let ratio = true;
+        let v = me.getComboRation().getValue().split('/');
+       let monthlycomp=me.getMonthly();
+       let monthly=monthlycomp.checked;
         if (v[1] === 'Achat') {
             ratio = false;
         }
-        var linkUrl = '../BalancePdfServlet?mode=TABLEAU&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&ratio=' + ratio;
+        var linkUrl = '../BalancePdfServlet?mode=TABLEAU&dtStart=' + dtStart + 
+                '&dtEnd=' + dtEnd + '&ratio=' + ratio+'&monthly='+monthly;
         window.open(linkUrl);
     },
     doMetachange: function (store, meta) {
@@ -105,9 +111,13 @@ Ext.define('testextjs.controller.TableauBoardCtr', {
         var myProxy = me.getTableauBoardGrid().getStore().getProxy();
         myProxy.params = {
             dtEnd: null,
-            dtStart: null
+            dtStart: null,
+            monthly: false
 
         };
+         let monthlycomp=me.getMonthly();
+       let monthly=monthlycomp.checked;
+        myProxy.setExtraParam('monthly', monthly);
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
 
@@ -121,10 +131,13 @@ Ext.define('testextjs.controller.TableauBoardCtr', {
 
     doSearch: function () {
         var me = this;
+           let monthlycomp=me.getMonthly();
+       let monthly=monthlycomp.checked;
         me.getTableauBoardGrid().getStore().load({
             params: {
                 dtStart: me.getDtStart().getSubmitValue(),
-                dtEnd: me.getDtEnd().getSubmitValue()
+                dtEnd: me.getDtEnd().getSubmitValue(),
+                monthly:monthly
 
             }
         });
@@ -133,7 +146,6 @@ Ext.define('testextjs.controller.TableauBoardCtr', {
         var me = this;
         me.getMontantNet().setValue(rec.montantNet);
         me.getMontantAchat().setValue(rec.montantAchat);
-        
          me.getRatioVA().setValue(rec.ratioVA);
         me.getRatioAV().setValue(rec.rationAV);
         me.getMontantRemise().setValue(rec.montantRemise);

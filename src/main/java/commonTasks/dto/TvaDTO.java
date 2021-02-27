@@ -20,7 +20,7 @@ public class TvaDTO implements Serializable {
     private Integer taux = 0;
     private long montantHt = 0, montantTva = 0, montantTtc = 0;
     private LocalDate localOperation;
-     private String dateOperation;
+    private String dateOperation;
 
     @JSONPropertyName("TAUX")
     public Integer getTaux() {
@@ -101,4 +101,13 @@ public class TvaDTO implements Serializable {
         return "TvaDTO{" + "taux=" + taux + ", montantHt=" + montantHt + ", montantTva=" + montantTva + ", montantTtc=" + montantTtc + '}';
     }
 
+    public TvaDTO() {
+    }
+
+    public TvaDTO(Integer taux, long montantHt, long montantTva, long montantTtc) {
+        this.taux=taux;
+        this.montantHt=montantHt;
+        this.montantTtc=montantTtc;
+        this.montantTva=montantTva;
+    }
 }

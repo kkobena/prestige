@@ -54,7 +54,7 @@ public class BalancePdfServlet extends HttpServlet {
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, TABLEAUOLD, RECAP, TVA_JOUR,
         STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS,
-        BALANCE_PARA, SAISIE_PERIMES
+        BALANCE_PARA, SAISIE_PERIMES,STAT_FAMILLE_ARTICLE_VETO
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -101,7 +101,8 @@ public class BalancePdfServlet extends HttpServlet {
                 break;
             case TABLEAU:
                 boolean ration = Boolean.valueOf(request.getParameter("ration"));
-                file = balance.tableauBordPharmation(params, ration);
+                  boolean monthly = Boolean.valueOf(request.getParameter("monthly"));
+                file = balance.tableauBordPharmation(params, ration,monthly);
                 break;
             case TABLEAUOLD:
                 boolean _ration = Boolean.valueOf(request.getParameter("ration"));
@@ -164,6 +165,13 @@ public class BalancePdfServlet extends HttpServlet {
                 codeGrossiste = request.getParameter("codeGrossiste");
                 query = request.getParameter("query");
                 file = balance.familleArticle(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste);
+                break;
+            case STAT_FAMILLE_ARTICLE_VETO:
+                 codeFamile = request.getParameter("codeFamile");
+                codeRayon = request.getParameter("codeRayon");
+                codeGrossiste = request.getParameter("codeGrossiste");
+                query = request.getParameter("query");
+                file = balance.familleArticleveto(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste);
                 break;
             case EDITION20_80:
                 codeFamile = request.getParameter("codeFamile");

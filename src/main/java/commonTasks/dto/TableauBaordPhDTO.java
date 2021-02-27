@@ -18,6 +18,7 @@ import util.DateConverter;
  * @author DICI
  */
 public class TableauBaordPhDTO implements Serializable {
+
     private static final long serialVersionUID = 1L;
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private boolean vente;
@@ -54,13 +55,30 @@ public class TableauBaordPhDTO implements Serializable {
 //    @JsonProperty("RATIOACHV")
     private double rationAV = 0.0;
     private LocalDate mvtDate;
+    private Integer mvtDateInt;
+  
+
+    public Integer getMvtDateInt() {
+        return mvtDateInt;
+    }
+
+    public void setMvtDateInt(Integer mvtDateInt) {
+        this.mvtDateInt = mvtDateInt;
+    }
 
     public String getDateOperation() {
         try {
-            this.dateOperation = mvtDate.format(dateFormat);
+            if(dateOperation==null){
+                  this.dateOperation = mvtDate.format(dateFormat);
+            }
+          
         } catch (Exception e) {
         }
         return dateOperation;
+    }
+
+    public void setDateOperation(String dateOperation) {
+        this.dateOperation = dateOperation;
     }
 
     @JSONPropertyName("AVOIR")
@@ -257,14 +275,14 @@ public class TableauBaordPhDTO implements Serializable {
 
     }
 
-    public TableauBaordPhDTO(long montantTTC, long montantRemise, Date dateOp, long nbreVente, long  customPart,String typeVente) {
+    public TableauBaordPhDTO(long montantTTC, long montantRemise, Date dateOp, long nbreVente, long customPart, String typeVente) {
         this.montantRemise = (int) montantRemise;
         this.montantTTC = (int) montantTTC;
         this.nbreVente = (int) nbreVente;
         this.mvtDate = DateConverter.convertDateToLocalDate(dateOp);
         this.montantNet = (int) (montantTTC - montantRemise);
         if (typeVente.contains(DateConverter.VENTE_ASSURANCE)) {
-         this.montantCredit=(int)(montantTTC-customPart);
+            this.montantCredit = (int) (montantTTC - customPart);
         }
         this.vente = true;
     }

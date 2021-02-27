@@ -165,10 +165,15 @@ Author author = entityManager.find(Author.class, id, properties);
     GenericDTO balanceVenteCaisseReportVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
 
     List<VenteDetailsDTO> venteUgDTO(LocalDate dtStart, LocalDate dtEnd, String query);
-    
-      JSONObject balancePara(LocalDate dtStart, LocalDate dtEnd,  String emplacementId)
+
+    JSONObject balancePara(LocalDate dtStart, LocalDate dtEnd, String emplacementId)
             throws JSONException;
 
     GenericDTO balanceVenteCaisseReportPara(LocalDate dtStart, LocalDate dtEnd, String emplacementId);
 
+    JSONObject tableauBoardDatasGroupByMonth(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user, int start,
+            int limit, boolean all) throws JSONException;
+
+    Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatasMonthly(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user,
+            int ration, int start, int limit, boolean all);
 }

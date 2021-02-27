@@ -167,6 +167,7 @@ public final class DateConverter {
     public static final String UPDATE_PRICE = "UPDATE_PRICE";
     public static final String P_AFFICHER_STOCK_A_LA_VENTE = "P_AFFICHER_STOCK_A_LA_VENTE";
     public static final String AIRTIME_USER = "AIRTIME_USER";
+    public static final String VETERINAIRE="51217125136245583494";
     /*
     parametre nombre de mois à considerer
      */

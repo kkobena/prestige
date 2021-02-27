@@ -51,10 +51,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -282,7 +285,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID())));
         }
     }
-  @Override
+
+    @Override
     public long countListeTPreenregistrement(SalesStatsParams params) {
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -291,7 +295,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)));
-           listePreenregistrement(params, cb, root, st, predicates);
+            listePreenregistrement(params, cb, root, st, predicates);
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
@@ -340,7 +344,6 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         return json;
     }
 
-  
     private List<TPreenregistrementCompteClientTiersPayent> findClientTiersPayents(String idVente) {
         return getEntityManager().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?1 ").setParameter(1, idVente).getResultList();
     }
@@ -1323,7 +1326,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         return suggestionService.makeSuggestion(articlesVendusASuggerer(params));
     }
 
-    private List<VenteDetailsDTO> articlesVendusASuggerer(SalesStatsParams params) {
+    private Set<VenteDetailsDTO> articlesVendusASuggerer(SalesStatsParams params) {
+        List<VenteDetailsDTO> datas = new ArrayList<>();
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
@@ -1334,26 +1338,79 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             cq.select(cb.construct(VenteDetailsDTO.class,
                     jf.get(TFamille_.lgFAMILLEID),
                     cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)),
-                    jf.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID)
+                    jf.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID),
+                    jf.get(TFamille_.boolDECONDITIONNE),
+                    jf.get(TFamille_.lgFAMILLEPARENTID)
             ))
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
+            datas = q.getResultList();
+            List<VenteDetailsDTO> details = new ArrayList<>();
+            Iterator<VenteDetailsDTO> iterator = datas.iterator();
+            while (iterator.hasNext()) {
+                VenteDetailsDTO next = iterator.next();
+                if (next.isDeconditionne()) {
+                    details.add(next);
+                    iterator.remove();
 
-            return q.getResultList();
+                }
+
+            }
+            Set<VenteDetailsDTO> datasFinal = datas.stream().collect(Collectors.toSet());
+            Map<String, Integer> map = details.stream().collect(Collectors.groupingBy(VenteDetailsDTO::getLgFAMILLEPARENTID, Collectors.summingInt(VenteDetailsDTO::getIntQUANTITY)));
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                String key = entry.getKey();
+                Integer val = entry.getValue();
+                TFamille famille = getById(key);
+                if (famille != null) {
+                    int qty = (int) Math.ceil(Double.valueOf(val) / famille.getIntNUMBERDETAIL());
+                    VenteDetailsDTO d = new VenteDetailsDTO();
+                    d.setLgFAMILLEID(key);
+                    d.setLgPREENREGISTREMENTDETAILID(key);
+                    d.setIntQUANTITY(qty);
+                    d.setTypeVente(famille.getLgGROSSISTEID().getLgGROSSISTEID());
+                    Set<VenteDetailsDTO> setD = new HashSet<>();
+                    if (datasFinal.contains(d)) {
+                        Iterator<VenteDetailsDTO> iterator1 = datasFinal.iterator();
+                        while (iterator1.hasNext()) {
+                            VenteDetailsDTO next = iterator1.next();
+                            if (next.equals(d)) {
+                                iterator1.remove();
+                                next.setIntQUANTITY(next.getIntQUANTITY() + qty);
+                                setD.add(next);
+                            }
+
+                        }
+                    } else {
+                        datasFinal.add(d);
+                    }
+                    datasFinal.addAll(setD);
+                }
+            }
+            return datasFinal;
         } catch (Exception e) {
             e.printStackTrace();
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
     }
- @Override
+
+    private TFamille getById(String id) {
+        try {
+            return getEntityManager().find(TFamille.class, id);
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
+    @Override
     public List<TPreenregistrementDetail> venteDetailByVenteId(String venteId) {
         try {
             TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery("SELECT o FROM TPreenregistrementDetail o WHERE o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?1", TPreenregistrementDetail.class);
             q.setParameter(1, venteId);
-            return  q.getResultList();
-          
+            return q.getResultList();
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
@@ -1362,10 +1419,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public VenteDTO findVenteDTOById(String idVente) {
-        TPreenregistrement preenregistrement=getEntityManager().find(TPreenregistrement.class, idVente);
-        return new VenteDTO(preenregistrement, venteDetailByVenteId(idVente).stream().map(VenteDetailsDTO::new).collect(Collectors.toList()),new ClientDTO(preenregistrement.getClient()));
+        TPreenregistrement preenregistrement = getEntityManager().find(TPreenregistrement.class, idVente);
+        return new VenteDTO(preenregistrement, venteDetailByVenteId(idVente).stream().map(VenteDetailsDTO::new).collect(Collectors.toList()), new ClientDTO(preenregistrement.getClient()));
     }
-    
-    
-    
+
 }

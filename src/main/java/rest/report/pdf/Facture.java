@@ -13,6 +13,7 @@ import commonTasks.dto.FileForma;
 import commonTasks.dto.LogDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
+import commonTasks.dto.TvaDTO;
 import commonTasks.dto.VenteDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TClient;
@@ -39,6 +40,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.HttpSession;
@@ -82,6 +84,21 @@ public class Facture {
         TPreenregistrement op = salesStatsService.findOneById(venteId);
         List<VenteDetailsDTO> datas = salesStatsService.venteDetailsByVenteId(venteId);
         datas.sort(comparator);
+        List<TvaDTO> tvas = new ArrayList<>();
+        Map<Integer, List<VenteDetailsDTO>> maps = datas.stream().collect(Collectors.groupingBy(VenteDetailsDTO::getValeurTva));
+        for (Map.Entry<Integer, List<VenteDetailsDTO>> entry : maps.entrySet()) {
+            Integer key = entry.getKey();
+            long montantHt = 0, montantTva = 0, montantTtc = 0;
+//            new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{factures})
+            List<VenteDetailsDTO> val = entry.getValue();
+            for (VenteDetailsDTO venteDetailsDTO : val) {
+                montantHt += venteDetailsDTO.getMontantHt();
+                montantTva += venteDetailsDTO.getMontantTva();
+                montantTtc += venteDetailsDTO.getIntPRICE();
+            }
+            tvas.add(new TvaDTO(key, montantHt, montantTva, montantTtc));
+        }
+        tvas.sort(Comparator.comparing(TvaDTO::getTaux, Comparator.naturalOrder()));
         Integer total_devis = op.getIntPRICE() - op.getIntPRICEREMISE();
         TClient client = op.getClient();
         String P_CLIENT = (client.getStrNUMEROSECURITESOCIAL() != null && !"".equals(client.getStrNUMEROSECURITESOCIAL()) ? client.getStrNUMEROSECURITESOCIAL() + " | " : "") + client.getStrFIRSTNAME() + " " + client.getStrLASTNAME();
@@ -89,6 +106,7 @@ public class Facture {
         parameters.put("P_BARE_CODE", DateConverter.buildLineBarecode(op.getStrREFTICKET()));
         parameters.put("P_REFERENCE", op.getLgPREENREGISTREMENTID());
         parameters.put("P_H_CLT_INFOS", "Proforma N° " + op.getStrREF());
+        parameters.put("tvas", tvas);
         parameters.put("totalBrut", op.getIntPRICE());
         parameters.put("totalNet", op.getIntPRICE() - op.getIntPRICEREMISE());
         parameters.put("str_REF", op.getStrREF());

@@ -175,8 +175,6 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
                 }
             }
 
-
-
         });
 
 
@@ -293,10 +291,7 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
                     margin: '0 15 0 0',
                     value: "0"
                 });
-        /*  this.cellEditing = new Ext.grid.plugin.CellEditing({
-         clicksToEdit: 1
-         });*/
-
+       
         Ext.apply(this, {
             width: '99%',
             height: 580,
@@ -315,8 +310,7 @@ Ext.define('testextjs.view.sm_user.reglement.action.DoReglement', {
             defaults: {
                 flex: 1
             },
-//            id: 'panelID',
-            // items: ['gridpanelID'],
+
             items: [
                 {
                     xtype: 'fieldset',

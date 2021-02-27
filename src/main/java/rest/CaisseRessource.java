@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -184,7 +185,8 @@ public class CaisseRessource {
     @Path("tableauboard")
     public Response tableauBoard(
             @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
+            @QueryParam(value = "dtEnd") String dtEnd,
+            @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly
     ) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -197,7 +199,13 @@ public class CaisseRessource {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        JSONObject json = caisseService.tableauBoardDatas(dtSt, dtEn, true, tu, 0, 0, true);
+        JSONObject json = null;
+        if (monthly) {
+            json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
+        } else {
+            json = caisseService.tableauBoardDatas(dtSt, dtEn, true, tu, 0, 0, true);
+        }
+
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -349,4 +357,25 @@ public class CaisseRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    @GET
+    @Path("tableauboard-groupbymonth")
+    public Response tableauBoardGroupByMonth(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
+    ) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+
+        } catch (Exception e) {
+        }
+        JSONObject json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
+        return Response.ok().entity(json.toString()).build();
+    }
 }

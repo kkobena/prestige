@@ -491,13 +491,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.retourFrsManager
         }
 
         this.getStore().load({
-//            params: {
-//                search_value: val.value,
-//                lg_GROSSISTE_ID: lg_GROSSISTE_ID,
-//                datedebut: valdatedebut,
-//                datefin: valdatefin
-//            }
-
             params: {
                 query: val.value,
                 fourId: lg_GROSSISTE_ID,
@@ -509,6 +502,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.retourFrsManager
     },
     Response: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
+        console.log(rec);
         var xtype = "reponseretourfournisseurmanager";
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Prise en compte de la r&eacute;ponse du retour fournisseur " + rec.get('str_REF_RETOUR_FRS'), rec.get('lg_RETOUR_FRS_ID'), rec.data);
 

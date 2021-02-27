@@ -32,7 +32,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
     title: 'Prise en compte de la r&eacute;ponse du retour fournisseur',
     bodyPadding: 5,
     layout: 'column',
-    initComponent: function() {
+    initComponent: function () {
 
         Me = this;
         var itemsPerPage = 20;
@@ -47,9 +47,56 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
         //fin url
 
         //store
-        var store = LaborexWorkFlow.BuildStore('testextjs.model.RetourFournisseurDetail', itemsPerPage, url_services_data_retourfournisseurdetails, true);
-        //fin store
+//        var store = LaborexWorkFlow.BuildStore('testextjs.model.RetourFournisseurDetail', itemsPerPage, url_services_data_retourfournisseurdetails, true);
+        var store = new Ext.data.Store({
+            idProperty: 'lgRETOURFRSDETAIL',
+            fields: [
+                {name: 'lgRETOURFRSDETAIL',
+                    type: 'string'
 
+                },
+                {name: 'intCIP',
+                    type: 'string'
+
+                },
+                {name: 'strNAME',
+                    type: 'string'
+
+                },
+                {name: 'intSTOCK',
+                    type: 'number'
+
+                },
+                {name: 'intNUMBERANSWER',
+                    type: 'number'
+
+                },
+                {name: 'intNUMBERRETURN',
+                    type: 'number'
+
+                }, {name: 'ecart',
+                    type: 'number'
+
+                }
+            ],
+            pageSize: 9999,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/retourfournisseur/retours-items',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+            }
+
+        });
+        store.load({
+            params: {
+                retourId: ref
+            }
+        })
         this.cellEditing = new Ext.grid.plugin.CellEditing({
             clicksToEdit: 1
         });
@@ -132,6 +179,13 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
                             height: 300,
                             columns: [
                                 {
+
+                                    text: '',
+                                    hidden: true,
+                                    dataIndex: 'lgRETOURFRSDETAIL'
+
+                                },
+                                {
                                     xtype: 'rownumberer',
                                     text: 'LG',
                                     width: 45,
@@ -141,31 +195,31 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
                                     text: 'CIP',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'lg_FAMILLE_CIP'
+                                    dataIndex: 'intCIP'
                                 },
                                 {
                                     text: 'LEBELLE',
                                     flex: 2,
                                     sortable: true,
-                                    dataIndex: 'lg_FAMILLE_NAME'
+                                    dataIndex: 'strNAME'
                                 },
                                 {
                                     text: 'Stock pendant Ret',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_STOCK'
+                                    dataIndex: 'intSTOCK'
                                 },
                                 {
                                     text: 'QTE Retourn&eacute;e',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_NUMBER_RETURN'
+                                    dataIndex: 'intNUMBERRETURN'
                                 },
                                 {
                                     text: 'QTE Valid&eacute;',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_NUMBER_ANSWER',
+                                    dataIndex: 'intNUMBERANSWER',
                                     MaskRe: /[0-9.]/,
                                     minValue: 0,
                                     editor: {
@@ -180,7 +234,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
                             ],
                             bbar: {
                                 xtype: 'pagingtoolbar',
-                                pageSize: itemsPerPage,
+                                pageSize: 999,
                                 store: store,
                                 displayInfo: true,
                                 plugins: new Ext.ux.ProgressBarPager()
@@ -217,24 +271,24 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
 
         this.callParent();
         /*this.on('afterlayout', this.loadStore, this, {
-            delay: 1,
-            single: true
-        });*/
+         delay: 1,
+         single: true
+         });*/
 
         Ext.getCmp('str_GROSSISTE_REPONSERETOUR').setValue(this.getOdatasource().str_GROSSISTE_LIBELLE);
         Ext.getCmp('str_REF_BL_REPONSERETOUR').setValue(this.getOdatasource().str_REF_LIVRAISON);
         Ext.getCmp('dbl_AMOUNT_REPONSERETOUR').setValue(Ext.util.Format.number(this.getOdatasource().MONTANTRETOUR, '0,000.') + "CFA");
 
-        Ext.getCmp('gridpanelReponseretourID').on('validateedit', function(editor, e) {
+        Ext.getCmp('gridpanelReponseretourID').on('validateedit', function (editor, e) {
             var plugin2 = Ext.getCmp('gridpanelReponseretourID').getPlugin();
-            if (e.value <= e.record.data.int_NUMBER_RETURN) {
+            if (e.value <= e.record.data.intNUMBERRETURN) {
                 Ext.Ajax.request({
                     url: url_services_transaction_retourfournisseur + 'updateanswer',
                     params: {
-                        lg_RETOUR_FRS_DETAIL: e.record.data.lg_RETOUR_FRS_DETAIL,
+                        lg_RETOUR_FRS_DETAIL: e.record.data.lgRETOURFRSDETAIL,
                         int_NUMBER_RETURN: e.value
                     },
-                    success: function(response)
+                    success: function (response)
                     {
                         var object = Ext.JSON.decode(response.responseText, false);
                         if (object.success == 0) {
@@ -243,7 +297,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
                         }
                         e.record.commit();
                     },
-                    failure: function(response)
+                    failure: function (response)
                     {
                         console.log("Bug " + response.responseText);
                         Ext.MessageBox.alert('Error Message', response.responseText);
@@ -251,8 +305,8 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
                 });
             } else {
                 Ext.MessageBox.alert('Erreur', 'V&eacute;rifier la quantit&eacute; &agrave; en avoir',
-                        function() {
-                            e.record.data.int_NUMBER_ANSWER = e.record.data.int_NUMBER_ANSWER;
+                        function () {
+                            e.record.data.intNUMBERANSWER = e.record.data.intNUMBERANSWER;
                             plugin2.startEdit(e.rowIdx, e.colIdx);
                         });
                 return;
@@ -260,16 +314,16 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
 
         });
     },
-    onbtncancel: function() {
+    onbtncancel: function () {
 
         var xtype = "";
         xtype = "retourfrsmanager";
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
-    onbtnvalider: function() {
+    onbtnvalider: function () {
         Ext.MessageBox.confirm('Confirmation',
                 'Les quantit&eacute;s seront consid&eacute;es comme en Avoir',
-                function(btn) {
+                function (btn) {
                     if (btn == 'yes') {
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
@@ -279,7 +333,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
                                 str_REPONSE_FRS: "Prise en compte de la réponse du retour fournisseur liée au BL N° " + Ext.getCmp('str_REF_BL_REPONSERETOUR').getValue()
 
                             },
-                            success: function(response)
+                            success: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
                                 var object = Ext.JSON.decode(response.responseText, false);
@@ -292,7 +346,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.reponsere
 
 
                             },
-                            failure: function(response)
+                            failure: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
                                 var object = Ext.JSON.decode(response.responseText, false);

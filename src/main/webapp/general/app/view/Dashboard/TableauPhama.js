@@ -3,7 +3,7 @@
 Ext.define('testextjs.view.Dashboard.TableauPhama', {
     extend: 'Ext.tab.Panel',
     xtype: 'tableauPhama',
-  
+
     frame: true,
     width: '97%',
     height: 'auto',
@@ -94,7 +94,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                     totalProperty: 'total',
                     metaProperty: 'metaData'
                 },
-                 timeout: 2400000
+                timeout: 2400000
             }
         });
         var me = this;
@@ -110,7 +110,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             itemId: 'dtStart',
                             margin: '0 10 0 0',
                             submitFormat: 'Y-m-d',
-                            flex: 1,
+                            flex: 0.6,
                             labelWidth: 20,
                             maxValue: new Date(),
                             value: new Date(),
@@ -121,7 +121,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             fieldLabel: 'Au',
                             itemId: 'dtEnd',
                             labelWidth: 20,
-                            flex: 1,
+                            flex: 0.6,
                             maxValue: new Date(),
                             value: new Date(),
                             margin: '0 9 0 0',
@@ -129,6 +129,13 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             format: 'd/m/Y'
 
                         },
+                        {
+                            xtype: 'checkbox',
+                            boxLabel: 'Mensuel',
+                            checked: false,
+                            itemId: 'monthly'
+                        },
+
                         {
                             text: 'rechercher',
                             tooltip: 'rechercher',
@@ -139,7 +146,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                         {
                             xtype: 'combo',
                             value: 'Ratio Ventes/Achats',
-                            flex: 1,
+                            flex: 1.3,
                             itemId: 'comboRation',
                             labelWidth: 60,
                             fieldLabel: 'Filtrer par',
@@ -165,7 +172,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             labelWidth: 60,
                             itemId: 'montantNet',
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             value: 0
@@ -178,7 +185,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             labelWidth: 60,
                             itemId: 'montantRemise',
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             value: 0
@@ -190,7 +197,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             fieldLabel: 'ACHAT NET',
                             labelWidth: 80,
                             renderer: function (v) {
-                                return Ext.util.Format.number(v, '0,000.') ;
+                                return Ext.util.Format.number(v, '0,000.');
                             },
                             fieldStyle: "color:blue;font-weight:800;",
                             itemId: 'montantAchat',
@@ -520,7 +527,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                     bbar: {
                         xtype: 'pagingtoolbar',
                         store: data,
-                         pageSize: 99999,
+                        pageSize: 99999,
                         dock: 'bottom',
                         displayInfo: true
 
@@ -613,7 +620,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                                 'AUTRES',
                                 'Achat net'
                             ],
-                    title: 'Valeur achat pas groupe grossiste',
+                            title: 'Valeur achat pas groupe grossiste',
                             minimum: 0
                         }, {
                             type: 'Category',

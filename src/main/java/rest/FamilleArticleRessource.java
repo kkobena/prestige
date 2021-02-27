@@ -139,4 +139,25 @@ public class FamilleArticleRessource {
         JSONObject jsono = familleArticleService.statistiqueParRayonsView(dtStart, dtEnd, codeFamillle, query, tu, codeRayon, codeGrossiste);
         return Response.ok().entity(jsono.toString()).build();
     }
+    
+    @GET
+    @Path("veto")
+    public Response statistiqueFamilleArticlesVeto(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "codeFamillle") String codeFamillle,
+            @QueryParam(value = "query") String query,
+            @QueryParam(value = "codeRayon") String codeRayon,
+            @QueryParam(value = "codeGrossiste") String codeGrossiste
+    ) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject jsono = familleArticleService.statistiqueParFamilleArticleViewVeto(dtStart, dtEnd, codeFamillle, query, tu, codeRayon, codeGrossiste);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
 }

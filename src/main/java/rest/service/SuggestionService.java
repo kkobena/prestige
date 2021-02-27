@@ -14,6 +14,7 @@ import dal.TSuggestionOrderDetails;
 import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import javax.ejb.Local;
 import javax.persistence.EntityManager;
 import org.json.JSONException;
@@ -50,6 +51,8 @@ public interface SuggestionService {
      */
     JSONObject makeSuggestion(List<VenteDetailsDTO> datas) throws JSONException;
 
-    JSONObject makeSuggestionFromArticleInvendus(List<ArticleDTO> datas,TUser tu) throws JSONException;
-    
+    JSONObject makeSuggestionFromArticleInvendus(List<ArticleDTO> datas, TUser tu) throws JSONException;
+
+    JSONObject makeSuggestion(Set<VenteDetailsDTO> datas) throws JSONException;
+
 }
