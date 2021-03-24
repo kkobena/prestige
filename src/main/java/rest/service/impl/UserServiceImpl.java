@@ -5,7 +5,6 @@
  */
 package rest.service.impl;
 
-import bll.userManagement.authentification;
 import com.kstruct.gethostname4j.Hostname;
 import commonTasks.dto.ManagedUserVM;
 import dal.TOfficine;
@@ -29,7 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import rest.service.LogService;
 import rest.service.UserService;
-import toolkits.parameters.commonparameter;
 import toolkits.security.Md5;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import util.Afficheur;
@@ -50,7 +48,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public TUser connexion(ManagedUserVM managedUser, HttpServletRequest request) {
         try {
-            TypedQuery<TUser> q = getEm().createQuery("SELECT t FROM TUser t WHERE t.strLOGIN = ?1 AND t.strPASSWORD = ?2 AND t.strSTATUT =?3 ", TUser.class).
+            TypedQuery<TUser> q = getEm().createQuery("SELECT t FROM TUser t  WHERE t.strLOGIN = ?1 AND t.strPASSWORD = ?2 AND t.strSTATUT =?3 ", TUser.class).
                     setParameter(1, managedUser.getLogin()).
                     setParameter(2, Md5.encode(managedUser.getPassword())).
                     setParameter(3, DateConverter.STATUT_ENABLE).setMaxResults(1);
@@ -59,7 +57,6 @@ public class UserServiceImpl implements UserService {
             OTUser.setIntCONNEXION(OTUser.getIntCONNEXION() + 1);
             OTUser.setBIsConnected(true);
             getEm().merge(OTUser);
-
             String desc = "Authentification de " + OTUser.getStrFIRSTNAME() + " " + OTUser.getStrLASTNAME() + " à partir de l'adresse " + request.getRemoteAddr() + " : nom poste " + getHostName(request);
             logService.updateLogFile(OTUser, OTUser.getStrLOGIN(), desc, TypeLog.AUTHENTIFICATION, OTUser, getHostName(request), request.getRemoteAddr());
             afficheur("Caisse: " + OTUser.getStrLASTNAME());
@@ -132,6 +129,7 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
     public TRoleUser getTRoleUser(String lg_USER_ID) {
 
         try {
@@ -147,18 +145,31 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    private List<TRoleUser> loadRoleUser(String userId) {
+        TypedQuery<TRoleUser> q = this.getEm().createQuery("SELECT o FROM TRoleUser o WHERE o.lgUSERID.lgUSERID=?1 ", TRoleUser.class);
+        q.setParameter(1, userId);
+        return q.getResultList();
+    }
+
+    private List<TRolePrivelege> loadTRolePrivelege(String roleId) {
+        TypedQuery<TRolePrivelege> q = this.getEm().createQuery("SELECT o FROM  TRolePrivelege o WHERE o.lgROLEID.lgROLEID =?1 AND o.lgPRIVILEGEID.strSTATUT='enable'", TRolePrivelege.class);
+        q.setParameter(1, roleId);
+        return q.getResultList();
+    }
+
     @Override
     public List<TPrivilege> getAllPrivilege(TUser oTUser) {
 
         List<TPrivilege> LstTPrivilege = new ArrayList<>();
         try {
 
-            Collection<TRoleUser> CollTRoleUser = oTUser.getTRoleUserCollection();
+            List<TRoleUser> CollTRoleUser = loadRoleUser(oTUser.getLgUSERID());
+
             Iterator iteraror = CollTRoleUser.iterator();
             while (iteraror.hasNext()) {
                 Object el = iteraror.next();
                 TRoleUser OTRoleUser = (TRoleUser) el;
-                Collection<TRolePrivelege> CollTRolePrivelege = OTRoleUser.getLgROLEID().getTRolePrivelegeCollection();
+                List<TRolePrivelege> CollTRolePrivelege = loadTRolePrivelege(OTRoleUser.getLgROLEID().getLgROLEID());
                 Iterator iterarorTRolePrivelege = CollTRolePrivelege.iterator();
                 while (iterarorTRolePrivelege.hasNext()) {
                     Object elTRolePrivelege = iterarorTRolePrivelege.next();

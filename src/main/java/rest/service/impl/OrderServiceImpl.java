@@ -127,11 +127,7 @@ public class OrderServiceImpl implements OrderService {
                 TFamille famille = d.getLgFAMILLEID();
                 TFamilleStock stock = getTProductItemStock(famille.getLgFAMILLEID(), emp);
                 if (stock != null) {
-                    /*   createBLDetail(OTBonLivraison, grossiste, famille,
-                            d.getIntQTEREPGROSSISTE(), (d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT()),
-                            d.getIntPRICEDETAIL(), "", "", "", d.getIntPRICEDETAIL(), d.getIntPAFDETAIL(), d.getIntPRICEDETAIL(), famille.getLgZONEGEOID(), stock.getIntNUMBERAVAILABLE());
-
-                     */
+                    
                     createBLDetail(OTBonLivraison, grossiste, famille, d, famille.getLgZONEGEOID(), stock.getIntNUMBERAVAILABLE());
                     d.setStrSTATUT(Parameter.STATUT_ENTREE_STOCK);
                     d.setDtUPDATED(new Date());
@@ -195,21 +191,7 @@ public class OrderServiceImpl implements OrderService {
         OTBonLivraisonDetail.setLgZONEGEOID(OTZoneGeographique);
         OTBonLivraisonDetail.setIntQTECMDE(d.getIntQTEREPGROSSISTE());
         OTBonLivraisonDetail.setIntQTERECUE(d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT());
-        /*
-        if (d.getPrixUnitaire() != null && (d.getPrixUnitaire().compareTo(d.getIntPRICEDETAIL()) != 0)) {
-            OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getPrixUnitaire());
-            OTBonLivraisonDetail.setIntPRIXVENTE(d.getPrixUnitaire());
-        } else {
-            OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
-            OTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
-        }
-        if (d.getPrixAchat() != null && (d.getPrixAchat().compareTo(d.getIntPAFDETAIL()) != 0)) {
-            OTBonLivraisonDetail.setIntPAF(d.getPrixAchat());
-            OTBonLivraisonDetail.setIntPAREEL(d.getPrixAchat());
-        } else {
-            OTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
-            OTBonLivraisonDetail.setIntPAREEL(d.getIntPAFDETAIL());
-        }*/
+       
         OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
         OTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
         OTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());

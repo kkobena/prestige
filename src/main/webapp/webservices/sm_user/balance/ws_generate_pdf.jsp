@@ -45,7 +45,7 @@
 
 <%    String lg_TYPE_REGLEMENT_ID = "%%", lg_EMPLACEMENT_ID = "%%";
     int VENTE_BRUT = 0, TOTAL_REMISE = 0, VENTE_NET = 0, TOTAL_GLOBAL = 0, NB = 0;
-    String P_VENTEDEPOT_LABEL = "Ventes aux dépôts extensions", P_REGLEMENTDEPOT_LABEL = "Règlement des ventes des dépôts";
+    String P_VENTEDEPOT_LABEL = "Ventes aux d?p?ts extensions", P_REGLEMENTDEPOT_LABEL = "R?glement des ventes des d?p?ts";
     double P_VO_PERCENT = 0d, P_VNO_PERCENT = 0d, P_VENTEDEPOT_ESPECE = 0d, P_VENTEDEPOT_CHEQUES = 0d, P_VENTEDEPOT_CB = 0d,
             P_TOTAL_VENTEDEPOT_CAISSE = 0d, P_REGLEMENTDEPOT_ESPECE = 0d, P_REGLEMENTDEPOT_CHEQUES = 0d, P_REGLEMENTDEPOT_CB = 0d,
             P_TOTAL_REGLEMENTDEPOT_CAISSE = 0d;
@@ -304,7 +304,7 @@
     }
 
     /* subquery parameters */
-    //code ajouté 05/04/2016
+    //code ajout? 05/04/2016
     if (OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
         P_VENTEDEPOT_ESPECE = (-1) * OPreenregistrement.getPriceVenteToDepot("", Parameter.VENTE_DEPOT_EXTENSION, str_Date_Debut, str_Date_Fin);
         P_TOTAL_VENTEDEPOT_CAISSE = P_VENTEDEPOT_ESPECE + P_VENTEDEPOT_CHEQUES + P_VENTEDEPOT_CB;
@@ -329,7 +329,7 @@
     parameters.put("P_REGLEMENTDEPOT_CB", conversion.AmountFormat((int) P_REGLEMENTDEPOT_CB, ' '));
     parameters.put("P_TOTAL_REGLEMENTDEPOT_CAISSE", conversion.AmountFormat((int) P_TOTAL_REGLEMENTDEPOT_CAISSE, ' '));
 
-    //fin code ajouté 05/04/2016
+    //fin code ajout? 05/04/2016
     P_TOTAL_SORTIE_CAISSE = P_SORTIECAISSE_ESPECE + P_SORTIECAISSE_CHEQUES + P_SORTIECAISSE_CB;
     P_TOTAL_ENTREE_CAISSE = P_ENTREECAISSE_ESPECE + P_ENTREECAISSE_CHEQUES + P_ENTREECAISSE_CB;
     P_TOTAL_REGLEMENT_CAISSE = P_REGLEMENT_ESPECE + P_REGLEMENT_CHEQUES + P_REGLEMENT_CB;
@@ -341,7 +341,7 @@
     P_TOTAL_VIREMENT_GLOBAL = P_ENTREECAISSE_VIREMENT + P_SORTIECAISSE_VIREMENT + P_REGLEMENT_VIREMENT + P_ACCOMPTE_VIREMENT + P_DIFFERE_VIREMENT;
     P_TOTAL_CB_GLOBAL = P_TOTAL_CARTEBANCAIRE + P_SORTIECAISSE_CB + P_ENTREECAISSE_CB + P_REGLEMENT_CB + P_ACCOMPTE_CB + P_DIFFERE_CB + P_REGLEMENTDEPOT_CB;
 
-    /* code ajouté 15/07/2015 */
+    /* code ajout? 15/07/2015 */
     P_TOTAL_GLOBAL_CAISSE = +P_TOTAL_ESPECES_GLOBAL + P_TOTAL_CHEQUES_GLOBAL + P_TOTAL_CB_GLOBAL;
 
     parameters.put("P_TOTAL_GLOBAL_CAISSE", conversion.AmountFormat((int) P_TOTAL_GLOBAL_CAISSE, ' '));
@@ -405,17 +405,17 @@
     String P_FOOTER_RC = "";
 
     if (oTOfficine.getStrREGISTRECOMMERCE() != null) {
-        P_FOOTER_RC += "RC N° " + oTOfficine.getStrREGISTRECOMMERCE();
+        P_FOOTER_RC += "RC N? " + oTOfficine.getStrREGISTRECOMMERCE();
     }
 
     if (oTOfficine.getStrCOMPTECONTRIBUABLE() != null) {
-        P_FOOTER_RC += " - CC N° " + oTOfficine.getStrCOMPTECONTRIBUABLE();
+        P_FOOTER_RC += " - CC N? " + oTOfficine.getStrCOMPTECONTRIBUABLE();
     }
     if (oTOfficine.getStrREGISTREIMPOSITION() != null) {
-        P_FOOTER_RC += " - Régime d'Imposition " + oTOfficine.getStrREGISTREIMPOSITION();
+        P_FOOTER_RC += " - R?gime d'Imposition " + oTOfficine.getStrREGISTREIMPOSITION();
     }
     if (oTOfficine.getStrCENTREIMPOSITION() != null) {
-        P_FOOTER_RC += " - Centre des Impôts: " + oTOfficine.getStrCENTREIMPOSITION();
+        P_FOOTER_RC += " - Centre des Imp?ts: " + oTOfficine.getStrCENTREIMPOSITION();
     }
 
     if (oTOfficine.getStrPHONE() != null) {
@@ -432,7 +432,7 @@
         P_INSTITUTION_ADRESSE += " - Compte Bancaire: " + oTOfficine.getStrCOMPTEBANCAIRE();
     }
     if (oTOfficine.getStrNUMCOMPTABLE() != null) {
-        P_INSTITUTION_ADRESSE += " - CPT N°: " + oTOfficine.getStrNUMCOMPTABLE();
+        P_INSTITUTION_ADRESSE += " - CPT N?: " + oTOfficine.getStrNUMCOMPTABLE();
     }
     parameters.put("P_INSTITUTION_ADRESSE", P_INSTITUTION_ADRESSE);
     parameters.put("P_FOOTER_RC", P_FOOTER_RC);
@@ -448,6 +448,4 @@
 
 
 %>
-
-
 

@@ -531,4 +531,17 @@ public final class DateConverter {
             return "";
         }
     }
+    
+       public static String amountFormat(long lgAmount, char separator) {
+        String result = "0";
+        try {
+            DecimalFormatSymbols amountSymbols = new DecimalFormatSymbols();
+            amountSymbols.setGroupingSeparator(separator);
+            DecimalFormat amountFormat = new DecimalFormat("###,###", amountSymbols);
+            result = amountFormat.format(lgAmount);
+        } catch (NumberFormatException ex) {
+
+        }
+        return result;
+    }
 }

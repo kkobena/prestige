@@ -164,9 +164,8 @@ public class ResumeCaisseDTO implements Serializable {
         this.billetage = montantBilletage;
         this.montantAnnule = Math.abs(montantAnnule);
         this.intSOLDEMATIN = caisse.getIntSOLDEMATIN();
-        this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR()) - montantAnnule);
+        this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR()-caisse.getIntSOLDEMATIN()) - montantAnnule);
         this.cancel = cancel;
-//        this.soldeTotal = caisse.getIntSOLDESOIR() + caisse.getIntSOLDEMATIN();
         this.soldeTotal = caisse.getIntSOLDESOIR();
         this.statut = caisse.getStrSTATUT();
         if (caisse.getStrSTATUT().equals(DateConverter.STATUT_IS_IN_USE)) {

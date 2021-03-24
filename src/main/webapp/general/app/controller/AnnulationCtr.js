@@ -34,7 +34,7 @@ Ext.define('testextjs.controller.AnnulationCtr', {
             ref: 'dtEnd',
             selector: 'venteannuler #dtEnd'
         },
-         {
+        {
             ref: 'totalAmount',
             selector: 'venteannuler #totalAmount'
         }
@@ -67,7 +67,10 @@ Ext.define('testextjs.controller.AnnulationCtr', {
             },
             "venteannuler gridpanel actioncolumn": {
                 click: this.handleActionColumn
+            }, 'venteannuler #printPlus': {
+                click: this.printPlus
             }
+
         });
     },
     handleActionColumn: function (view, rowIndex, colIndex, item, e, r, row) {
@@ -103,6 +106,15 @@ Ext.define('testextjs.controller.AnnulationCtr', {
 
         window.open(linkUrl);
     },
+
+    printPlus: function () {
+        var me = this,
+                query = me.getQueryField().getValue(),
+                dtStart = me.getDtStart().getSubmitValue(),
+                dtEnd = me.getDtEnd().getSubmitValue();
+        var linkUrl = '../FacturePdfServlet?dtStart=' + dtStart + "&dtEnd=" + dtEnd + "&query=" + query + "&mode=VENTE_ANNULEES_PLUS";
+        window.open(linkUrl);
+    },
     doBeforechange: function (page, currentPage) {
         var me = this;
         var myProxy = me.getVenteannulerGrid().getStore().getProxy();
@@ -122,7 +134,7 @@ Ext.define('testextjs.controller.AnnulationCtr', {
 
     doInitStore: function () {
         var me = this;
-         me.getVenteannulerGrid().getStore().addListener('metachange', this.doMetachange, this);
+        me.getVenteannulerGrid().getStore().addListener('metachange', this.doMetachange, this);
         me.doSearch();
 
     },
@@ -143,9 +155,9 @@ Ext.define('testextjs.controller.AnnulationCtr', {
             }
         });
     },
-     doMetachange: function (store, meta) {
+    doMetachange: function (store, meta) {
         var me = this;
-      me.getTotalAmount().setValue(meta);
+        me.getTotalAmount().setValue(meta);
 
     }
 });

@@ -188,14 +188,12 @@ public class TUser implements Serializable {
    @OneToMany(mappedBy = "lgUSERID")
     private Collection<TEventLog> tEventLogCollection;
 
-
     public TUser() {
     }
 
     public TUser(String lgUSERID) {
         this.lgUSERID = lgUSERID;
     }
-
     public TUser(String lgUSERID, String strLOGIN, String strTYPE) {
         this.lgUSERID = lgUSERID;
         this.strLOGIN = strLOGIN;

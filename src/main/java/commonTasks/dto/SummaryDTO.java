@@ -13,7 +13,7 @@ import java.io.Serializable;
  */
 public class SummaryDTO implements Serializable {
     private static final long serialVersionUID = 1L;
-    Integer montantTTC = 0, montantNet = 0, montantRemise = 0, pourcentage = 0, panierMoyen = 0,
+    long montantTTC = 0, montantNet = 0, montantRemise = 0, pourcentage = 0, panierMoyen = 0,
             montantEsp = 0, montantCheque=0, montantVirement = 0,
             montantCB = 0, montantTp = 0, montantDiff = 0, nbreVente = 0, 
             fondCaisse = 0, montantRegDiff = 0,montantMobilePayment=0,
@@ -21,179 +21,179 @@ public class SummaryDTO implements Serializable {
             montantAchat = 0, montantSortie = 0, marge = 0,montantTva=0,montantHT=0;
     double ratioVA = 0.0, rationAV = 0.0;
 
-    public Integer getMontantTTC() {
+    public long getMontantTTC() {
         return montantTTC;
     }
 
-    public Integer getMontantTva() {
+    public long getMontantTva() {
         return montantTva;
     }
 
-    public Integer getMontantHT() {
+    public long getMontantHT() {
         return montantHT;
     }
 
-    public Integer getMontantMobilePayment() {
+    public long getMontantMobilePayment() {
         return montantMobilePayment;
     }
 
-    public void setMontantMobilePayment(Integer montantMobilePayment) {
+    public void setMontantMobilePayment(long montantMobilePayment) {
         this.montantMobilePayment = montantMobilePayment;
     }
 
-    public void setMontantHT(Integer montantHT) {
+    public void setMontantHT(long montantHT) {
         this.montantHT = montantHT;
     }
 
-    public void setMontantTva(Integer montantTva) {
+    public void setMontantTva(long montantTva) {
         this.montantTva = montantTva;
     }
 
-    public void setMontantTTC(Integer montantTTC) {
+    public void setMontantTTC(long montantTTC) {
         this.montantTTC = montantTTC;
     }
 
-    public Integer getMontantNet() {
+    public long getMontantNet() {
         return montantNet;
     }
 
-    public void setMontantNet(Integer montantNet) {
+    public void setMontantNet(long montantNet) {
         this.montantNet = montantNet;
     }
 
-    public Integer getMontantRemise() {
+    public long getMontantRemise() {
         return montantRemise;
     }
 
-    public void setMontantRemise(Integer montantRemise) {
+    public void setMontantRemise(long montantRemise) {
         this.montantRemise = montantRemise;
     }
 
-    public Integer getPourcentage() {
+    public long getPourcentage() {
         return pourcentage;
     }
 
-    public void setPourcentage(Integer pourcentage) {
+    public void setPourcentage(long pourcentage) {
         this.pourcentage = pourcentage;
     }
 
-    public Integer getPanierMoyen() {
+    public long getPanierMoyen() {
         return panierMoyen;
     }
 
-    public void setPanierMoyen(Integer panierMoyen) {
+    public void setPanierMoyen(long panierMoyen) {
         this.panierMoyen = panierMoyen;
     }
 
-    public Integer getMontantEsp() {
+    public long getMontantEsp() {
         return montantEsp;
     }
 
-    public void setMontantEsp(Integer montantEsp) {
+    public void setMontantEsp(long montantEsp) {
         this.montantEsp = montantEsp;
     }
 
-    public Integer getMontantCheque() {
+    public long getMontantCheque() {
         return montantCheque;
     }
 
-    public void setMontantCheque(Integer montantCheque) {
+    public void setMontantCheque(long montantCheque) {
         this.montantCheque = montantCheque;
     }
 
-    public Integer getMontantVirement() {
+    public long getMontantVirement() {
         return montantVirement;
     }
 
-    public void setMontantVirement(Integer MontantVirement) {
+    public void setMontantVirement(long MontantVirement) {
         this.montantVirement = MontantVirement;
     }
 
-    public Integer getMontantCB() {
+    public long getMontantCB() {
         return montantCB;
     }
 
-    public void setMontantCB(Integer montantCB) {
+    public void setMontantCB(long montantCB) {
         this.montantCB = montantCB;
     }
 
-    public Integer getMontantTp() {
+    public long getMontantTp() {
         return montantTp;
     }
 
-    public void setMontantTp(Integer montantTp) {
+    public void setMontantTp(long montantTp) {
         this.montantTp = montantTp;
     }
 
-    public Integer getMontantDiff() {
+    public long getMontantDiff() {
         return montantDiff;
     }
 
-    public void setMontantDiff(Integer montantDiff) {
+    public void setMontantDiff(long montantDiff) {
         this.montantDiff = montantDiff;
     }
 
-    public Integer getNbreVente() {
+    public long getNbreVente() {
         return nbreVente;
     }
 
-    public void setNbreVente(Integer nbreVente) {
+    public void setNbreVente(long nbreVente) {
         this.nbreVente = nbreVente;
     }
 
-    public Integer getFondCaisse() {
+    public long getFondCaisse() {
         return fondCaisse;
     }
 
-    public void setFondCaisse(Integer fondCaisse) {
+    public void setFondCaisse(long fondCaisse) {
         this.fondCaisse = fondCaisse;
     }
 
-    public Integer getMontantRegDiff() {
+    public long getMontantRegDiff() {
         return montantRegDiff;
     }
 
-    public void setMontantRegDiff(Integer montantRegDiff) {
+    public void setMontantRegDiff(long montantRegDiff) {
         this.montantRegDiff = montantRegDiff;
     }
 
-    public Integer getMontantRegleTp() {
+    public long getMontantRegleTp() {
         return montantRegleTp;
     }
 
-    public void setMontantRegleTp(Integer montantRegleTp) {
+    public void setMontantRegleTp(long montantRegleTp) {
         this.montantRegleTp = montantRegleTp;
     }
 
-    public Integer getMontantEntre() {
+    public long getMontantEntre() {
         return montantEntre;
     }
 
-    public void setMontantEntre(Integer montantEntre) {
+    public void setMontantEntre(long montantEntre) {
         this.montantEntre = montantEntre;
     }
 
-    public Integer getMontantAchat() {
+    public long getMontantAchat() {
         return montantAchat;
     }
 
-    public void setMontantAchat(Integer montantAchat) {
+    public void setMontantAchat(long montantAchat) {
         this.montantAchat = montantAchat;
     }
 
-    public Integer getMontantSortie() {
+    public long getMontantSortie() {
         return montantSortie;
     }
 
-    public void setMontantSortie(Integer montantSortie) {
+    public void setMontantSortie(long montantSortie) {
         this.montantSortie = montantSortie;
     }
 
-    public Integer getMarge() {
+    public long getMarge() {
         return marge;
     }
 
-    public void setMarge(Integer marge) {
+    public void setMarge(long marge) {
         this.marge = marge;
     }
 

@@ -327,4 +327,32 @@ public class Facture {
         return "/data/reports/pdf/proforma_facture_" + report_generate_file;
     }
 
+    public String annulationsPlus(String query,
+            LocalDate dtSt, LocalDate dtEn, TUser u, List<TPrivilege> LstTPrivilege) throws IOException {
+        TOfficine oTOfficine = commonService.findOfficine();
+        String scr_report_file = "rp_produits_annules";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, u);
+        boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
+        boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
+        SalesStatsParams body = new SalesStatsParams();
+        body.setQuery(query);
+        body.setStatut(DateConverter.STATUT_IS_CLOSED);
+        body.setAll(true);
+        body.setShowAll(asAuthority);
+        body.setShowAllActivities(allActivitis);
+        body.setUserId(u);
+        body.setDtEnd(dtEn);
+        body.setDtStart(dtSt);
+        List<VenteDetailsDTO> datas = salesStatsService.annulationVentePlus(body);
+        String P_PERIODE = " DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        }
+        parameters.put("P_H_CLT_INFOS", "LISTE DES ARTICLES ANNULES DU   " + P_PERIODE);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_produits_annules_" + report_generate_file, datas);
+        return "/data/reports/pdf/rp_produits_annules_" + report_generate_file;
+    }
+
 }

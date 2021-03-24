@@ -74,7 +74,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -852,6 +851,7 @@ public class CaisseServiceImpl implements CaisseService {
             throws JSONException {
         List<MvtTransaction> transactions = balanceVenteCaisseList(dtStart, dtEnd, checked, emplacementId);
         GenericDTO generic = null;
+     
         if (key_Take_Into_Account() || key_Params()) {
             generic = balanceFormat0(transactions);
         } else {
@@ -921,6 +921,7 @@ public class CaisseServiceImpl implements CaisseService {
         List<BalanceDTO> balances = new ArrayList<>();
         GenericDTO generic = new GenericDTO();
         SummaryDTO summary = new SummaryDTO();
+    
         if (!mvtTransactions.isEmpty()) {
             Map<TypeTransaction, List<MvtTransaction>> map = mvtTransactions.parallelStream()
                     .collect(Collectors.groupingBy(o -> o.getTypeTransaction()));
@@ -931,7 +932,7 @@ public class CaisseServiceImpl implements CaisseService {
             List<MvtTransaction> sortieCaisse = map.get(TypeTransaction.SORTIE);
             BalanceDTO vno = null;
             int pourcentageVo;
-            int _montantTTC = 0, _montantNet = 0, _montantRemise = 0, _montantEsp = 0,
+            long _montantTTC = 0, _montantNet = 0, _montantRemise = 0, _montantEsp = 0,
                     _montantCheque = 0, _MontantVirement = 0, _montantCB = 0, _montantDiff = 0, _nbreVente = 0,
                     montantAchat = 0, montantSortie = 0, marge = 0, fondCaisse = 0, montantReglDiff = 0, montantRegleTp = 0,
                     montantEntre = 0, montantTva = 0, montantTp = 0, _montantMobilePayment = 0;
@@ -940,9 +941,8 @@ public class CaisseServiceImpl implements CaisseService {
             if (venteVNO != null) {
                 vno = new BalanceDTO();
                 vno.setTypeVente("VNO");
-                int montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
+                long montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
                         montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0, nbreVente = 0, montantMobilePayment = 0;
-
                 for (MvtTransaction mvt : venteVNO) {
                     montantTTC += mvt.getMontant();
                     montantNet += mvt.getMontantNet();
@@ -1008,7 +1008,7 @@ public class CaisseServiceImpl implements CaisseService {
             if (venteVO != null) {
                 vo = new BalanceDTO();
                 vo.setTypeVente("VO");
-                int montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
+                long montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
                         montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0, montantMobilePayment = 0,
                         nbreVente = 0;
 
@@ -1086,7 +1086,7 @@ public class CaisseServiceImpl implements CaisseService {
             }
 
             if (achats != null) {
-                montantAchat = achats.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                montantAchat = achats.stream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
 
             }
             if (sortieCaisse != null) {
@@ -1095,10 +1095,10 @@ public class CaisseServiceImpl implements CaisseService {
                 List<MvtTransaction> fond = typeMvt.get(DateConverter.MVT_FOND_CAISSE);
                 List<MvtTransaction> sortie = typeMvt.get(DateConverter.MVT_SORTIE_CAISSE);
                 if (fond != null) {
-                    fondCaisse = fond.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                    fondCaisse = fond.stream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
                 }
                 if (sortie != null) {
-                    montantSortie = sortie.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                    montantSortie = sortie.stream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
                 }
 
             }
@@ -1109,14 +1109,14 @@ public class CaisseServiceImpl implements CaisseService {
                 List<MvtTransaction> diff = typeMvtEntree.get(DateConverter.MVT_REGLE_DIFF);
                 List<MvtTransaction> reglementTp = typeMvtEntree.get(DateConverter.MVT_REGLE_TP);
                 if (entree != null) {
-                    montantEntre = entree.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                    montantEntre = entree.stream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
                 }
                 if (diff != null) {
-                    montantReglDiff = diff.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                    montantReglDiff = diff.stream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
                 }
                 if (reglementTp != null) {
-                    montantRegleTp = reglementTp.parallelStream().map(MvtTransaction::getMontant).reduce(0,
-                            Integer::sum);
+                    montantRegleTp = reglementTp.stream().mapToLong(MvtTransaction::getMontant).reduce(0,
+                            Long::sum);
                 }
             }
             if (montantAchat > 0) {
@@ -1236,9 +1236,6 @@ public class CaisseServiceImpl implements CaisseService {
                 return json;
             }
             TBilletageDetails OTBilletageDetails = this.getTBilletageDetails(idCaisse);
-//            getEntityManager().getTransaction().begin();
-//            TCaisse OTCaisse = new TCaisse();
-//            OTCaisse.setIntSOLDE(OTResumeCaisse.getIntSOLDESOIR().doubleValue());
             OTResumeCaisse.setLgUPDATEDBY(o.getStrLOGIN());
             OTResumeCaisse.setIntSOLDESOIR(0);
             OTResumeCaisse.setStrSTATUT(commonparameter.statut_is_Using);
@@ -1259,9 +1256,6 @@ public class CaisseServiceImpl implements CaisseService {
 
             json.put("success", true).put("msg", "Opération effectuée avec succes ");
         } catch (Exception e) {
-//            if (getEntityManager().getTransaction().isActive()) {
-//                getEntityManager().getTransaction().rollback();
-//            }
             e.printStackTrace(System.err);
             json.put("success", false).put("msg", "Impossible d'annuler la cloture de cette caisse");
 
@@ -3021,6 +3015,7 @@ public class CaisseServiceImpl implements CaisseService {
         List<BalanceDTO> balances = new ArrayList<>();
         GenericDTO generic = new GenericDTO();
         SummaryDTO summary = new SummaryDTO();
+       
         if (!mvtTransactions.isEmpty()) {
             Map<TypeTransaction, List<MvtTransaction>> map = mvtTransactions.parallelStream()
                     .collect(Collectors.groupingBy(o -> o.getTypeTransaction()));
@@ -3031,7 +3026,7 @@ public class CaisseServiceImpl implements CaisseService {
             List<MvtTransaction> sortieCaisse = map.get(TypeTransaction.SORTIE);
             BalanceDTO vno = null;
             Integer pourcentageVo;
-            int _montantTTC = 0, _montantNet = 0, _montantRemise = 0, _montantEsp = 0,
+            long _montantTTC = 0, _montantNet = 0, _montantRemise = 0, _montantEsp = 0,
                     _montantCheque = 0, _MontantVirement = 0, _montantCB = 0, _montantDiff = 0, _nbreVente = 0,
                     montantAchat = 0, montantSortie = 0, marge = 0, fondCaisse = 0, montantReglDiff = 0, montantRegleTp = 0,
                     montantEntre = 0, montantTva = 0, montantTp = 0, _montantMobilePayment = 0;
@@ -3050,7 +3045,7 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     montantRemise += remiseNonPara;
                     montantTTC += (mvt.getMontantAcc() - mvt.getMontantttcug());
-                    int montantNonPara = ((mvt.getMontantAcc() - remiseNonPara) - mvt.getMontantnetug());
+                    long montantNonPara = ((mvt.getMontantAcc() - remiseNonPara) - mvt.getMontantnetug());
                     montantNet += montantNonPara;
                     montantTva += (mvt.getMontantTva() - mvt.getMontantTvaUg());
                     marge += (mvt.getMarge() - mvt.getMargeug());
@@ -3114,7 +3109,7 @@ public class CaisseServiceImpl implements CaisseService {
             if (venteVO != null) {
                 vo = new BalanceDTO();
                 vo.setTypeVente("VO");
-                int montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
+                long montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
                         montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0,
                         nbreVente = 0, montantMobilePayment = 0;
 
@@ -3191,7 +3186,7 @@ public class CaisseServiceImpl implements CaisseService {
             }
 
             if (achats != null) {
-                montantAchat = achats.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                montantAchat = achats.parallelStream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
 
             }
             if (sortieCaisse != null) {
@@ -3200,10 +3195,10 @@ public class CaisseServiceImpl implements CaisseService {
                 List<MvtTransaction> fond = typeMvt.get(DateConverter.MVT_FOND_CAISSE);
                 List<MvtTransaction> sortie = typeMvt.get(DateConverter.MVT_SORTIE_CAISSE);
                 if (fond != null) {
-                    fondCaisse = fond.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                    fondCaisse = fond.parallelStream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
                 }
                 if (sortie != null) {
-                    montantSortie = sortie.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                    montantSortie = sortie.parallelStream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
                 }
 
             }
@@ -3214,14 +3209,14 @@ public class CaisseServiceImpl implements CaisseService {
                 List<MvtTransaction> diff = typeMvtEntree.get(DateConverter.MVT_REGLE_DIFF);
                 List<MvtTransaction> reglementTp = typeMvtEntree.get(DateConverter.MVT_REGLE_TP);
                 if (entree != null) {
-                    montantEntre = entree.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                    montantEntre = entree.parallelStream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
                 }
                 if (diff != null) {
-                    montantReglDiff = diff.parallelStream().map(MvtTransaction::getMontant).reduce(0, Integer::sum);
+                    montantReglDiff = diff.parallelStream().mapToLong(MvtTransaction::getMontant).reduce(0, Long::sum);
                 }
                 if (reglementTp != null) {
-                    montantRegleTp = reglementTp.parallelStream().map(MvtTransaction::getMontant).reduce(0,
-                            Integer::sum);
+                    montantRegleTp = reglementTp.parallelStream().mapToLong(MvtTransaction::getMontant).reduce(0,
+                            Long::sum);
                 }
             }
             if (montantAchat > 0) {

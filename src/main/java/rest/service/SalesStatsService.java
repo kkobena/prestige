@@ -99,4 +99,5 @@ public interface SalesStatsService {
     List<TPreenregistrementDetail> venteDetailByVenteId(String venteId);
 
     VenteDTO findVenteDTOById(String venteId);
+    List<VenteDetailsDTO> annulationVentePlus(SalesStatsParams params);
 }

@@ -89,7 +89,6 @@ public class DatabaseToolkit {
     private TimerService timerService;
     @Inject
     private UserTransaction userTransaction;
-
     void runTask() {
         DailyStockTask dailyStockTask = new DailyStockTask();
         dailyStockTask.setDateStock(LocalDate.now());

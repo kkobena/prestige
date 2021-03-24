@@ -32,7 +32,7 @@ public class FacturePdfServlet extends HttpServlet {
 
     private enum Action {
         DEVIS, LISTE_DIFFERES, DIFFERE, LOG, VENTE_ANNULEES, FACTURE_PROVISOIRES,
-        ALL_FACTURE_PROVISOIRES, DEVIS_FACTURE
+        ALL_FACTURE_PROVISOIRES, DEVIS_FACTURE,VENTE_ANNULEES_PLUS
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -91,6 +91,11 @@ public class FacturePdfServlet extends HttpServlet {
                 venteId = request.getParameter("venteId");
                 FileForma fileForma = FileForma.valueOf(request.getParameter("format"));
                 file=facture.factureDevisAsFacture(venteId, fileForma, OTUser);
+                break;
+            case VENTE_ANNULEES_PLUS:
+                 List<TPrivilege> LstTPrivilege_ = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+                file = facture.annulationsPlus(query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), OTUser, LstTPrivilege_);
+          
                 break;
             default:
                 break;

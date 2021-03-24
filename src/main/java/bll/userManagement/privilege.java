@@ -47,6 +47,10 @@ public class privilege extends bllBase {
     public void loadUser(TUser oTUser) {
         this.setOTUser(oTUser);
     }
+   public static boolean hasAuthorityByName(List<TPrivilege> LstTPrivilege, String authorityName) {
+        java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(authorityName);
+        return LstTPrivilege.stream().anyMatch(p);
+    }
 
     public boolean isAvalaible(String str_Privilege_name) {
         boolean result = false;

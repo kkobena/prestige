@@ -50,15 +50,16 @@
     for (int i = 0; i < lstTMenu.size(); i++) {
 
         OdataManager.getEm().refresh(lstTMenu.get(i));
-      
 
-        if (Oprivilege.isAvalaible(lstTMenu.get(i).getPKey())) {
+        boolean isValid = privilege.hasAuthorityByName((List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE), lstTMenu.get(i).getPKey());
+        if (isValid) {
+//    if (Oprivilege.isAvalaible(lstTMenu.get(i).getPKey())) {
             List<TSousMenu> lstTSousMenu = new ArrayList<TSousMenu>();
-            lstTSousMenu = OdataManager.getEm().createQuery("SELECT t FROM TSousMenu t WHERE t.lgMENUID.lgMENUID = ?1  AND t.strStatus LIKE ?2 ORDER BY t.intPRIORITY ASC")
+            lstTSousMenu = OdataManager.getEm().createQuery("SELECT t FROM TSousMenu t WHERE t.lgMENUID.lgMENUID = ?1  AND t.strStatus = ?2 ORDER BY t.intPRIORITY ASC")
                     .setParameter(1, lstTMenu.get(i).getLgMENUID())
                     .setParameter(2, commonparameter.statut_enable)
                     .getResultList();
-            
+
             JSONObject json = new JSONObject();
             //affichage des menus
             json.put("text", lstTMenu.get(i).getStrDESCRIPTION());
@@ -72,9 +73,9 @@
                 OdataManager.getEm().refresh(OTSousMenu);
                 JSONObject json_sub = new JSONObject();
 
-                //  new logger().OCategory.info("Sous menu ---> "+OTSousMenu.getPKey());
-                if (Oprivilege.isAvalaible(lstTSousMenu.get(j).getPKey())) {
-                  
+                boolean isValid2 = privilege.hasAuthorityByName((List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE), lstTSousMenu.get(j).getPKey());
+                //if (Oprivilege.isAvalaible(lstTSousMenu.get(j).getPKey())) {
+                if (isValid2) {
                     json_sub.put("id", OTSousMenu.getStrCOMPOSANT());
                     json_sub.put("text", OTSousMenu.getStrDESCRIPTION());//leaf:true
                     json_sub.put("leaf", "true");
@@ -92,8 +93,7 @@
         }
     }
 
-   // new logger().OCategory.info("menu te sous menu --->" + arrayObj.toString());
-
+  
 
 %>
 

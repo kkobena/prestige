@@ -95,6 +95,14 @@ Ext.define('testextjs.view.vente.Removed', {
                             itemId: 'printPdf',
                             scope: this,
                             iconCls: 'printable'
+                        },
+                         '-',
+                        {
+                            text: 'Imprimer +',
+                            tooltip: 'imprimer +',
+                            itemId: 'printPlus',
+                            scope: this,
+                            iconCls: 'printable'
                         }
                     ]
                 }

@@ -173,7 +173,8 @@ public class Balance {
         parameters.put("P_TOTAL_TIERSPAYANT", DateConverter.amountFormat(summary.getMontantTp(), ' '));
         parameters.put("P_TOTAL_AVOIR", DateConverter.amountFormat(summary.getMontantDiff(), ' '));
         parameters.put("P_TOTAL_PERCENT", totalP + "");
-        parameters.put("P_TOTAL_VENTE", DateConverter.amountFormat(summary.getMontantEsp() + summary.getMontantCheque() + summary.getMontantVirement() + summary.getMontantCB(), ' '));
+        parameters.put("P_TOTAL_VENTE", DateConverter.amountFormat(summary.getMontantEsp() + summary.getMontantCheque() + summary.getMontantVirement() + 
+                summary.getMontantCB()+summary.getMontantMobilePayment(), ' '));
         String P_FONDCAISSE_LABEL = "",
                 P_SORIECAISSE_LABEL = "",
                 P_ENTREECAISSE_LABEL = "",
@@ -181,7 +182,7 @@ public class Balance {
                 P_ACCOMPTE_LABEL = "",
                 P_DIFFERE_LABEL = "",
                 P_TOTAL_CAISSE_LABEL = "";
-        int P_SORTIECAISSE_ESPECE = 0,
+        long P_SORTIECAISSE_ESPECE = 0,
                 P_SORTIECAISSE_CHEQUES = 0,
                 P_SORTIECAISSE_MOBILE = 0,
                 P_SORTIECAISSE_CB = 0,
@@ -215,7 +216,7 @@ public class Balance {
                 P_TOTAL_ESPECES_GLOBAL,
                 P_TOTAL_CHEQUES_GLOBAL,
                 P_TOTAL_CB_GLOBAL;
-        Map<String, List<VisualisationCaisseDTO>> typeMvtMap = findAllMvtCaisse.parallelStream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getTypeMvt));
+        Map<String, List<VisualisationCaisseDTO>> typeMvtMap = findAllMvtCaisse.stream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getTypeMvt));
         for (Map.Entry<String, List<VisualisationCaisseDTO>> entry : typeMvtMap.entrySet()) {
             String key = entry.getKey();
             List<VisualisationCaisseDTO> val = entry.getValue();
@@ -224,78 +225,78 @@ public class Balance {
             switch (key) {
                 case DateConverter.MVT_FOND_CAISSE:
                     P_FONDCAISSE_LABEL = val.get(0).getTypeMouvement();
-                    P_FONDCAISSE = val.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_FONDCAISSE = val.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     break;
                 case DateConverter.MVT_SORTIE_CAISSE:
                     P_SORIECAISSE_LABEL = val.get(0).getTypeMouvement();
-                    typeRe = val.parallelStream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getModeRegle));
+                    typeRe = val.stream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getModeRegle));
                     list = typeRe.get(DateConverter.MODE_ESP);
-                    P_SORTIECAISSE_ESPECE = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_SORTIECAISSE_ESPECE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_CHEQUE);
-                    P_SORTIECAISSE_CHEQUES = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_SORTIECAISSE_CHEQUES = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_CB);
-                    P_SORTIECAISSE_CB = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_SORTIECAISSE_CB = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_VIREMENT);
-                    P_SORTIECAISSE_VIREMENT = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_SORTIECAISSE_VIREMENT = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_MOOV);
-                    P_SORTIECAISSE_MOBILE = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_SORTIECAISSE_MOBILE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
-                    P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
-                    P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     break;
 
                 case DateConverter.MVT_ENTREE_CAISSE:
                     P_ENTREECAISSE_LABEL = val.get(0).getTypeMouvement();
-                    typeRe = val.parallelStream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getModeRegle));
+                    typeRe = val.stream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getModeRegle));
                     list = typeRe.get(DateConverter.MODE_ESP);
-                    P_ENTREECAISSE_ESPECE = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_ENTREECAISSE_ESPECE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_CHEQUE);
-                    P_ENTREECAISSE_CHEQUES = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_ENTREECAISSE_CHEQUES = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_CB);
-                    P_ENTREECAISSE_CB = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_ENTREECAISSE_CB = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_VIREMENT);
-                    P_ENTREECAISSE_VIREMENT = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
-                    P_ENTREECAISSE_MOBILE = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_ENTREECAISSE_VIREMENT = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                    P_ENTREECAISSE_MOBILE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
-                    P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
-                    P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
 
                     break;
                 case DateConverter.MVT_REGLE_TP:
                     P_REGLEMENT_LABEL = val.get(0).getTypeMouvement();
-                    typeRe = val.parallelStream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getModeRegle));
+                    typeRe = val.stream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getModeRegle));
                     list = typeRe.get(DateConverter.MODE_ESP);
-                    P_REGLEMENT_ESPECE = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_REGLEMENT_ESPECE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_CHEQUE);
-                    P_REGLEMENT_CHEQUES = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_REGLEMENT_CHEQUES = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_CB);
-                    P_REGLEMENT_CB = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_REGLEMENT_CB = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_VIREMENT);
-                    P_REGLEMENT_VIREMENT = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
-                    P_REGLEMENT_MOBILE = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_REGLEMENT_VIREMENT = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                    P_REGLEMENT_MOBILE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
-                    P_REGLEMENT_MOBILE += (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_REGLEMENT_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
-                    P_REGLEMENT_MOBILE += (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_REGLEMENT_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     break;
                 case DateConverter.MVT_REGLE_DIFF:
                     P_DIFFERE_LABEL = val.get(0).getTypeMouvement();
-                    typeRe = val.parallelStream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getModeRegle));
+                    typeRe = val.stream().collect(Collectors.groupingBy(VisualisationCaisseDTO::getModeRegle));
                     list = typeRe.get(DateConverter.MODE_ESP);
-                    P_DIFFERE_ESPECE = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_DIFFERE_ESPECE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_CHEQUE);
-                    P_DIFFERE_CHEQUES = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_DIFFERE_CHEQUES = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_CB);
-                    P_DIFFERE_CB = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_DIFFERE_CB = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_VIREMENT);
-                    P_DIFFERE_VIREMENT = (list == null) ? 0 : list.parallelStream().map(VisualisationCaisseDTO::getMontantNet).reduce(0, Integer::sum);
+                    P_DIFFERE_VIREMENT = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     break;
             }
 
         }
-        int P_VENTEDEPOT_ESPECE = 0, P_REGLEMENTDEPOT_MOBILE = 0, P_TOTAL_REGLEMENTDEPOT_CAISSE = 0, P_TOTAL_VENTEDEPOT_CAISSE = 0, P_REGLEMENTDEPOT_ESPECE = 0, P_REGLEMENTDEPOT_CB = 0, P_REGLEMENTDEPOT_CHEQUES = 0;
+        long P_VENTEDEPOT_ESPECE = 0, P_REGLEMENTDEPOT_MOBILE = 0, P_TOTAL_REGLEMENTDEPOT_CAISSE = 0, P_TOTAL_VENTEDEPOT_CAISSE = 0, P_REGLEMENTDEPOT_ESPECE = 0, P_REGLEMENTDEPOT_CB = 0, P_REGLEMENTDEPOT_CHEQUES = 0;
         if (empl.getLgEMPLACEMENTID().equals(DateConverter.OFFICINE)) {
             P_VENTEDEPOT_ESPECE = (-1) * caisseService.totalVenteDepot(dtSt, dtEn, empl.getLgEMPLACEMENTID());
             P_TOTAL_VENTEDEPOT_CAISSE = P_VENTEDEPOT_ESPECE;
@@ -305,7 +306,7 @@ public class Balance {
                 LongAdder ch = new LongAdder();
                 LongAdder cb = new LongAdder();
                 LongAdder mobile = new LongAdder();
-                transactions.parallelStream().forEach(de -> {
+                transactions.stream().forEach(de -> {
                     String typ = de.getReglement().getLgTYPEREGLEMENTID();
                     switch (typ) {
                         case DateConverter.MODE_ESP:
@@ -327,10 +328,10 @@ public class Balance {
                     }
 
                 });
-                P_REGLEMENTDEPOT_ESPECE = esp.intValue();
-                P_REGLEMENTDEPOT_CHEQUES = ch.intValue();
-                P_REGLEMENTDEPOT_CB = cb.intValue();
-                P_REGLEMENTDEPOT_MOBILE = mobile.intValue();
+                P_REGLEMENTDEPOT_ESPECE = esp.longValue();
+                P_REGLEMENTDEPOT_CHEQUES = ch.longValue();
+                P_REGLEMENTDEPOT_CB = cb.longValue();
+                P_REGLEMENTDEPOT_MOBILE = mobile.longValue();
                 P_TOTAL_REGLEMENTDEPOT_CAISSE = P_REGLEMENTDEPOT_ESPECE + P_REGLEMENTDEPOT_CHEQUES + P_REGLEMENTDEPOT_CB + P_REGLEMENTDEPOT_MOBILE;
             }
 
@@ -752,7 +753,6 @@ public class Balance {
     Comparator<TvaDTO> comparatorTvaDTO = Comparator.comparing(TvaDTO::getLocalOperation);
 
     public String tvaJourpdf(Params parasm) throws IOException {
-
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(parasm.getDtStart());
@@ -760,7 +760,6 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastatjour";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);

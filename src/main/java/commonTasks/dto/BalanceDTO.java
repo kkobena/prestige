@@ -17,7 +17,7 @@ public class BalanceDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private String balanceId = UUID.randomUUID().toString();
     private String typeVente;
-    Integer montantTTC = 0, montantNet = 0, montantRemise = 0, pourcentage = 0, panierMoyen = 0,
+    long montantTTC = 0, montantNet = 0, montantRemise = 0, pourcentage = 0, panierMoyen = 0,
             montantEsp = 0, montantCheque=0, MontantVirement = 0, montantCB = 0, montantTp = 0, montantDiff = 0,nbreVente=0,montantMobilePayment=0;
 
     public String getBalanceId() {
@@ -36,99 +36,99 @@ public class BalanceDTO implements Serializable {
         this.typeVente = typeVente;
     }
 
-    public Integer getMontantTTC() {
+    public long getMontantTTC() {
         return montantTTC;
     }
 
-    public void setMontantTTC(Integer montantTTC) {
+    public void setMontantTTC(long montantTTC) {
         this.montantTTC = montantTTC;
     }
 
-    public Integer getMontantNet() {
+    public long getMontantNet() {
         return montantNet;
     }
 
-    public void setMontantNet(Integer montantNet) {
+    public void setMontantNet(long montantNet) {
         this.montantNet = montantNet;
     }
 
-    public Integer getMontantRemise() {
+    public long getMontantRemise() {
         return montantRemise;
     }
 
-    public void setMontantRemise(Integer montantRemise) {
+    public void setMontantRemise(long montantRemise) {
         this.montantRemise = montantRemise;
     }
 
-    public Integer getPourcentage() {
+    public long getPourcentage() {
         return pourcentage;
     }
 
-    public void setPourcentage(Integer pourcentage) {
+    public void setPourcentage(long pourcentage) {
         this.pourcentage = pourcentage;
     }
 
-    public Integer getPanierMoyen() {
+    public long getPanierMoyen() {
         return panierMoyen;
     }
 
-    public Integer getNbreVente() {
+    public long getNbreVente() {
         return nbreVente;
     }
 
-    public void setNbreVente(Integer nbreVente) {
+    public void setNbreVente(long nbreVente) {
         this.nbreVente = nbreVente;
     }
 
-    public void setPanierMoyen(Integer panierMoyen) {
+    public void setPanierMoyen(long panierMoyen) {
         this.panierMoyen = panierMoyen;
     }
 
-    public Integer getMontantEsp() {
+    public long getMontantEsp() {
         return montantEsp;
     }
 
-    public void setMontantEsp(Integer montantEsp) {
+    public void setMontantEsp(long montantEsp) {
         this.montantEsp = montantEsp;
     }
 
-    public Integer getMontantCheque() {
+    public long getMontantCheque() {
         return montantCheque;
     }
 
-    public void setMontantCheque(Integer montantCheque) {
+    public void setMontantCheque(long montantCheque) {
         this.montantCheque = montantCheque;
     }
 
-    public Integer getMontantVirement() {
+    public long getMontantVirement() {
         return MontantVirement;
     }
 
-    public void setMontantVirement(Integer MontantVirement) {
+    public void setMontantVirement(long MontantVirement) {
         this.MontantVirement = MontantVirement;
     }
 
-    public Integer getMontantCB() {
+    public long getMontantCB() {
         return montantCB;
     }
 
-    public void setMontantCB(Integer montantCB) {
+    public void setMontantCB(long montantCB) {
         this.montantCB = montantCB;
     }
 
-    public Integer getMontantTp() {
+    public long getMontantTp() {
         return montantTp;
     }
 
-    public void setMontantTp(Integer montantTp) {
+    public void setMontantTp(long montantTp) {
         this.montantTp = montantTp;
     }
 
-    public Integer getMontantDiff() {
+    public long getMontantDiff() {
         return montantDiff;
     }
 
-    public void setMontantDiff(Integer montantDiff) {
+    public void setMontantDiff(long montantDiff) {
         this.montantDiff = montantDiff;
     }
 
@@ -157,11 +157,11 @@ public class BalanceDTO implements Serializable {
         return true;
     }
 
-    public Integer getMontantMobilePayment() {
+    public long getMontantMobilePayment() {
         return montantMobilePayment;
     }
 
-    public void setMontantMobilePayment(Integer montantMobilePayment) {
+    public void setMontantMobilePayment(long montantMobilePayment) {
         this.montantMobilePayment = montantMobilePayment;
     }
 

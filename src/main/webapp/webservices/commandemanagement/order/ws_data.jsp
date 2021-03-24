@@ -191,17 +191,13 @@
 
         List<TOrderDetail> lstTOrderDetail = new ArrayList<TOrderDetail>();
         lstTOrderDetail = OorderManagement.getTOrderDetail("", lstTOrder.get(i).getLgORDERID(), lstTOrder.get(i).getStrSTATUT());
-
-        /*  for (int k = 0; k < lstTOrderDetail.size(); k++) {
-            //new logger().OCategory.info(" lstTSuggestionOrderDetails.get(k).getLgFAMILLEID().getStrNAME() @@@@  "+lstTSuggestionOrderDetails.get(k).getLgFAMILLEID().getLgFAMILLEID());
-            str_Product = "<b>" + lstTOrderDetail.get(k).getLgFAMILLEID().getIntCIP() + "&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;" + lstTOrderDetail.get(k).getLgFAMILLEID().getStrNAME() + "&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;" + new conversion().AmountFormat(lstTOrderDetail.get(k).getLgFAMILLEID().getIntPRICE(), commonparameter.CHAR_SEPARATEUR_POINT) + " F CFA&nbsp;&nbsp;" + " :  (" + lstTOrderDetail.get(k).getIntQTEREPGROSSISTE() + ")</b><br> " + str_Product;
-
-            nb = nb + lstTOrderDetail.get(k).getIntQTEREPGROSSISTE();
-
-          
-        }*/
         for (int k = 0; k < lstTOrderDetail.size(); k++) {
-            OTFamilleGrossiste = OfamilleGrossisteManagement.findFamilleGrossiste(lstTOrderDetail.get(k).getLgFAMILLEID().getLgFAMILLEID(), lstTOrderDetail.get(k).getLgORDERID().getLgGROSSISTEID().getLgGROSSISTEID());
+            try {
+                   OTFamilleGrossiste = OfamilleGrossisteManagement.findFamilleGrossiste(lstTOrderDetail.get(k).getLgFAMILLEID().getLgFAMILLEID(), lstTOrderDetail.get(k).getLgORDERID().getLgGROSSISTEID().getLgGROSSISTEID());  
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+           
             str_Product = "<b><span style='display:inline-block;width: 7%;'>" + (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE() : lstTOrderDetail.get(k).getLgFAMILLEID().getIntCIP()) + "</span><span style='display:inline-block;width: 25%;'>" + lstTOrderDetail.get(k).getLgFAMILLEID().getStrDESCRIPTION() + "</span><span style='display:inline-block;width: 10%;'>(" + lstTOrderDetail.get(k).getIntQTEREPGROSSISTE() + ")</span><span style='display:inline-block;width: 15%;'>" + conversion.AmountFormat(lstTOrderDetail.get(k).getIntPAFDETAIL(), '.') + " F CFA " + "</span></b><br> " + str_Product;
 
             //str_Product = "<b><span style='display:inline-block;width: 7%;'>" + lstTOrderDetail.get(k).getLgFAMILLEID().getIntCIP() + "</span><span style='display:inline-block;width: 25%;'>" + lstTOrderDetail.get(k).getLgFAMILLEID().getStrDESCRIPTION() + "</span><span style='display:inline-block;width: 10%;'>(" + lstTOrderDetail.get(k).getIntQTEREPGROSSISTE()+ ")</span><span style='display:inline-block;width: 15%;'>" + conversion.AmountFormat(lstTOrderDetail.get(k).getIntPAFDETAIL(), '.') + " F CFA " + "</span></b><br> " + str_Product;

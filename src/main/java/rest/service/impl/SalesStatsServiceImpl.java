@@ -1423,4 +1423,24 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         return new VenteDTO(preenregistrement, venteDetailByVenteId(idVente).stream().map(VenteDetailsDTO::new).collect(Collectors.toList()), new ClientDTO(preenregistrement.getClient()));
     }
 
+    @Override
+    public List<VenteDetailsDTO> annulationVentePlus(SalesStatsParams params) {
+        try {
+
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<TPreenregistrementDetail> cq = cb.createQuery(TPreenregistrementDetail.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TPreenregistrement> st = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(root).orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
+            List<Predicate> predicates = predicatesVentesAnnulees(params, cb, root, st);
+            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(cq);
+            return q.getResultList().stream().map(v -> new VenteDetailsDTO(v, true)).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
 }

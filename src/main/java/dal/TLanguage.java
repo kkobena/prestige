@@ -7,7 +7,6 @@
 package dal;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -15,12 +14,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -61,9 +58,7 @@ public class TLanguage implements Serializable {
     private Date dtUPDATED;
     @Column(name = "str_STATUT", length = 40)
     private String strSTATUT;
-    @OneToMany(mappedBy = "lgLanguageID")
-    private Collection<TUser> tUserCollection;
-
+  
     public TLanguage() {
     }
 
@@ -135,15 +130,7 @@ public class TLanguage implements Serializable {
         this.strSTATUT = strSTATUT;
     }
 
-    @XmlTransient
-    public Collection<TUser> getTUserCollection() {
-        return tUserCollection;
-    }
-
-    public void setTUserCollection(Collection<TUser> tUserCollection) {
-        this.tUserCollection = tUserCollection;
-    }
-
+   
     @Override
     public int hashCode() {
         int hash = 0;

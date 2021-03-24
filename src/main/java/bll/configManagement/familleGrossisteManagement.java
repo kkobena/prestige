@@ -256,7 +256,7 @@ public class familleGrossisteManagement extends bllBase {
             OTFamilleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
            this.getOdataManager().getEm().refresh(OTFamilleGrossiste);
         } catch (Exception e) {
-//                 e.printStackTrace();
+                 e.printStackTrace();
         }
 
         return OTFamilleGrossiste;

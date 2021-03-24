@@ -818,10 +818,7 @@ public class InvoiceServlet extends HttpServlet {
 
 //         jdom.scr_report_file + "rp_complementaire.jrxml"
             JasperReport jasperReport = JasperCompileManager.compileReport(scr_report_file);
-
             jasperPrint = JasperFillManager.fillReport(jasperReport, params);
-
-            System.err.println("Filling time : " + (System.currentTimeMillis() - start));
         } catch (JSONException ex) {
             Logger.getLogger(InvoiceServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
