@@ -161,9 +161,8 @@ public class DataReportingServlet extends HttpServlet {
                 file = dataReporting.produitConsomamation(OTUser, query, dtStart, dtEnd, id, libelle, cip);
                 break;
             case COMPTE_EXPLOITATION:
-                String codeTo = request.getParameter("codeTo");
-                String codeFrom = request.getParameter("codeFrom");
-                file = dataReporting.donneesCompteExploitation(dtStart, dtEnd, codeFrom, codeTo, OTUser);
+                
+                file = dataReporting.donneesCompteExploitation(dtStart, dtEnd, OTUser);
                 break;
 
         }

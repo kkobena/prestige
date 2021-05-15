@@ -282,7 +282,7 @@ public class DataReporting {
         return "/data/reports/pdf/consoarticle_comparaison_" + report_generate_file;
     }
 
-    public String donneesCompteExploitation(String dtStart, String dtEnd, String codeFrom, String codeTo, TUser tu) throws IOException {
+    public String donneesCompteExploitation(String dtStart, String dtEnd, TUser tu) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_compte_exploitation";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
@@ -296,10 +296,15 @@ public class DataReporting {
         parameters.put("especeMarge", o.getEspeceMarge());
         parameters.put("especeVetoMarge", o.getEspeceVetoMarge());
         parameters.put("creditVetoMarge", o.getCreditVetoMarge());
+
+        parameters.put("totalCaTTC", o.getTotalCaTTC());
+        parameters.put("totalCaHT", o.getTotalCaHT());
+        parameters.put("totalTVA", o.getTotalTVA());
+        parameters.put("totalRemise", o.getTotalRemise());
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".pdf";
-        List<DonneesExploitationDTO> data = donneesExploitationService.donneesCompteExploitation(dtStart, dtEnd, codeFrom, codeTo, tu);
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf
-                + "rp_compte_exploitation_" + report_generate_file, data);
+//        List<DonneesExploitationDTO> data = donneesExploitationService.donneesCompteExploitation(dtStart, dtEnd, codeFrom, codeTo, tu);
+        reportUtil.buildReportEmptyDs(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf
+                + "rp_compte_exploitation_" + report_generate_file);
         return "/data/reports/pdf/rp_compte_exploitation_" + report_generate_file;
     }
 
