@@ -27,7 +27,8 @@
     OdataManager.initEntityManager();
     String search_value = "%%", zoneIDO = "%%";
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
-    StockManager OStockManager = new StockManager(OdataManager, OTUser);
+      TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    StockManager OStockManager = new StockManager(OdataManager, user);
     if (request.getParameter("zoneIDO") != null && !"".equals(request.getParameter("zoneIDO"))) {
         zoneIDO = request.getParameter("zoneIDO");
     }

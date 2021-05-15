@@ -154,22 +154,7 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
 
         }
     },
-    showAndHideCbInfos: function (v) {
-        var me = this;
-        if (v === '2' || v === '3' || v === '6') {
-            me.getCbContainer().show();
-            if (v !== '6') {
-                me.getRefCb().setFieldLabel('NOM');
-                me.getMontantRecu().setReadOnly(true);
-            } else {
-                me.getRefCb().setFieldLabel('REFERENCE');
-                me.getMontantRecu().setReadOnly(false);
-            }
-        } else {
 
-            me.getCbContainer().hide();
-        }
-    },
     onSelect: function (_this, record, index) {
         var me = this;
         var total = 0;
@@ -198,26 +183,67 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
 
     },
     typeReglementSelectEvent: function (field) {
-        var me = this;
-        var value = field.getValue().trim();
-        if (value === '1') {
+        let me = this;
+        let value = field.getValue().trim();
+        let nature = me.getNature().getValue();
+        if (value === '1' || value === '7' || value === '8' || value === '8') {
             me.getMontantRecu().enable();
-            me.showAndHideCbInfos(value);
+            me.getMontantRecu().setReadOnly(false);
+            me.getCbContainer().hide();
         } else {
-            if (value === '2' || value === '3' || value === '6') {
-                me.showAndHideCbInfos(value);
-                me.getMontantRecu().setValue(me.getMontantNet().getValue());
-                me.getMontantRecu().disable();
 
+            if (nature === 2) {
+                if (value === '2' || value === '3' || value === '6') {
+                    me.showAndHideCbInfos(value);
+                    me.getMontantRecu().setValue(me.getMontantNet().getValue());
+                    me.getMontantRecu().disable();
+
+                }
             } else {
-                me.getMontantRecu().setValue(0);
-                me.getMontantRecu().setReadOnly(false);
-                me.getMontantRecu().focus(true);
+                if (value === '2' || value === '3' || value === '6') {
+                    me.showAndHideCbInfos0(value);
+                    me.getMontantRecu().enable();
+                    me.getMontantRecu().setReadOnly(false);
+                }
+
             }
+
 
         }
     },
+    showAndHideCbInfos: function (v) {
+        var me = this;
+        if (v === '2' || v === '3' || v === '6') {
+            me.getCbContainer().show();
+            if (v !== '6') {
+                me.getRefCb().setFieldLabel('NOM');
+                me.getMontantRecu().setReadOnly(true);
+            } else {
+                me.getRefCb().setFieldLabel('REFERENCE');
+                me.getMontantRecu().setReadOnly(false);
+            }
+        } else {
 
+            me.getCbContainer().hide();
+        }
+    },
+
+    showAndHideCbInfos0: function (v) {
+        var me = this;
+        if (v === '2' || v === '3' || v === '6') {
+            me.getCbContainer().show();
+            if (v !== '6') {
+                me.getRefCb().setFieldLabel('NOM');
+
+            } else {
+                me.getRefCb().setFieldLabel('REFERENCE');
+
+            }
+        } else {
+
+            me.getCbContainer().hide();
+        }
+    },
     updateCombox: function (x) {
         var me = this;
         me.getTypeReglement().getStore().load(function (records, operation, success) {
@@ -260,26 +286,29 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
 
     doSearch: function () {
         var me = this;
-        me.getGridReglement().getStore().load({
-            params: {
-                dtStart: me.getDtStart().getSubmitValue(),
-                dtEnd: me.getDtEnd().getSubmitValue(),
-                userId: me.getClient().getValue(),
-                pairclient: true
+        if (me.getClient().getValue()) {
+            me.getGridReglement().getStore().load({
+                params: {
+                    dtStart: me.getDtStart().getSubmitValue(),
+                    dtEnd: me.getDtEnd().getSubmitValue(),
+                    userId: me.getClient().getValue(),
+                    pairclient: true
 
-            },
-            callback: function (records, operation, successful) {
-                var total = 0, nb = 0;
-                Ext.each(records, function (item) {
-                    total += item.get('montantAttendu');
-                    nb++;
-                });
-                me.getMontantRestant().setValue(total);
-                me.getMontantNet().setValue(total);
-              me.getMontantPayer().setValue(total);
-                me.getNb().setValue(nb);
-            }
-        });
+                },
+                callback: function (records, operation, successful) {
+                    var total = 0, nb = 0;
+                    Ext.each(records, function (item) {
+                        total += item.get('montantAttendu');
+                        nb++;
+                    });
+                    me.getMontantRestant().setValue(total);
+                    me.getMontantNet().setValue(total);
+                    me.getMontantPayer().setValue(total);
+                    me.getNb().setValue(nb);
+                }
+            });
+        }
+
     }
     ,
     onReady: function () {
@@ -289,8 +318,6 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
         if (data) {
             var isEdit = data.isEdit;
             if (isEdit) {
-//                var record = data.record;
-//                me.loadExistant(record);
             } else {
                 me.current = null;
 
@@ -354,7 +381,7 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
         var montantRecu = me.getMontantRecu().getValue();
         var montantRemis = (montantRecu > montantNet) ? montantRecu - montantNet : 0;
         var montantPaye = montantRecu - montantRemis;
-        if (nature == 2) {
+        if (nature === 2) {
             if (montantRecu < montantNet) {
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
@@ -436,68 +463,69 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
             }
 
         } else {
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-            Ext.Ajax.request({
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                url: '../api/v1/reglement/reglementdiffere',
-                params: Ext.JSON.encode({
-                    "montantRecu": montantRecu,
-                    "montantRemis": montantRemis,
-                    "montantPaye": montantPaye,
-                    "clientId": clientId,
-                    "typeRegleId": mode,
-                    "nom": nom,
-                    "banque": banque,
-                    "lieux": lieux,
-                    "totalRecap": totalRecap,
-                    "natureVenteId": dateReglement,
-                    "commentaire": JSON.stringify(me.getSelected())
-                }),
-                success: function (response, options) {
-                    var result = Ext.JSON.decode(response.responseText, true);
-                    progress.hide();
-                    if (result.success) {
+            if (montantRecu > 0) {
+                var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                Ext.Ajax.request({
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    url: '../api/v1/reglement/reglementdiffere',
+                    params: Ext.JSON.encode({
+                        "montantRecu": montantRecu,
+                        "montantRemis": montantRemis,
+                        "montantPaye": montantPaye,
+                        "clientId": clientId,
+                        "typeRegleId": mode,
+                        "nom": nom,
+                        "banque": banque,
+                        "lieux": lieux,
+                        "totalRecap": totalRecap,
+                        "natureVenteId": dateReglement,
+                        "commentaire": JSON.stringify(me.getSelected())
+                    }),
+                    success: function (response, options) {
+                        var result = Ext.JSON.decode(response.responseText, true);
+                        progress.hide();
+                        if (result.success) {
 
-                        Ext.MessageBox.show({
-                            title: 'Impression du ticket',
-                            msg: 'Voulez-vous imprimer le ticket ?',
-                            buttons: Ext.MessageBox.YESNO,
-                            fn: function (button) {
-                                if ('yes' == button)
-                                {
-                                    me.onPrintTicket(result.ref);
-                                }
-                                me.goBack();
+                            Ext.MessageBox.show({
+                                title: 'Impression du ticket',
+                                msg: 'Voulez-vous imprimer le ticket ?',
+                                buttons: Ext.MessageBox.YESNO,
+                                fn: function (button) {
+                                    if ('yes' == button)
+                                    {
+                                        me.onPrintTicket(result.ref);
+                                    }
+                                    me.goBack();
 
-                            },
-                            icon: Ext.MessageBox.QUESTION
-                        });
-                    } else {
-                        Ext.MessageBox.show({
-                            title: 'Message d\'erreur',
-                            width: 320,
-                            msg: result.msg,
-                            buttons: Ext.MessageBox.OK,
-                            icon: Ext.MessageBox.ERROR,
-                            fn: function (buttonId) {
-                                if (buttonId === "ok") {
-                                    me.getMontantRecu().focus(true, 100);
+                                },
+                                icon: Ext.MessageBox.QUESTION
+                            });
+                        } else {
+                            Ext.MessageBox.show({
+                                title: 'Message d\'erreur',
+                                width: 320,
+                                msg: result.msg,
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.ERROR,
+                                fn: function (buttonId) {
+                                    if (buttonId === "ok") {
+                                        me.getMontantRecu().focus(true, 100);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
+
+                    },
+                    failure: function (response, options) {
+                        progress.hide();
+                        Ext.Msg.alert("Message", 'Erreur du serveur ' + response.status);
                     }
 
-                },
-                failure: function (response, options) {
-                    progress.hide();
-                    Ext.Msg.alert("Message", 'Erreur du serveur ' + response.status);
-                }
+                });
 
-            });
-
+            }
         }
-
     }
 
 

@@ -42,10 +42,8 @@
     if (request.getParameter("query") != null && !"".equals(request.getParameter("query"))) {
         search_value = request.getParameter("query");
     }
-    int start = Integer.valueOf(request.getParameter("start"));
-    int limit = Integer.valueOf(request.getParameter("limit"));
+ 
     JSONArray arrayObj = new JSONArray();
-
     List<TFacture> tps = groupeCtl.getGroupeInvoiceDetails( search_value,  CODEFACTURE);
     int count = groupeCtl.getGroupeInvoiceDetailsCount(search_value,  CODEFACTURE);
     for (TFacture f : tps) {

@@ -37,9 +37,9 @@
             String p = request.getParameter("start"); // get paramerer ?page=
 
             if (p != null) {
-                int int_page = new Integer(p).intValue();
+                int int_page =  Integer.valueOf(p);
                 int_page = (int_page / DATA_PER_PAGE) + 1;
-                p = new Integer(int_page).toString();
+                p = String.valueOf(int_page);
 
                 // Strip quotation marks
                 StringBuffer buffer = new StringBuffer();
@@ -50,7 +50,7 @@
                     }
                 }
                 p = buffer.toString();
-                Integer intTemp = new Integer(p);
+                Integer intTemp = Integer.valueOf(p);
 
                 pageAsInt = intTemp.intValue();
 
@@ -70,7 +70,7 @@
     String dt_debut=date.formatterMysqlShort.format(new Date())+" 23:59" , dt_fin=date.formatterMysql.format(new Date());
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     dataManager OdataManager = new dataManager();
-    List<EntityData> ListEntityData = new ArrayList<EntityData>();
+    List<EntityData> ListEntityData = new ArrayList<>();
     factureManagement OfactureManagement = new factureManagement(OdataManager, OTUser);
     if (request.getParameter("dt_debut") != null && !"".equals(request.getParameter("dt_debut"))) {
         dt_debut = request.getParameter("dt_debut");

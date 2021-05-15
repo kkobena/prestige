@@ -4,15 +4,16 @@
  */
 package bll;
 
-
 //import dal.TFamille;
 //import dal.TUser;
+import dal.TPrivilege;
 import dal.TUser;
 import dal.dataManager;
 import dal.jconnexion;
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.List;
 import multilangue.Translate;
 import toolkits.filesmanagers.FilesType.PicFile;
@@ -41,6 +42,7 @@ public class bllBase {
     protected jconnexion Ojconnexion;
     public java.sql.Connection oConnection;
     private TUser OTUser;
+    private List<TPrivilege> usersPrivileges = new ArrayList<>();
 
     public void checkDatamanager() {
         if (OTranslate == null) {
@@ -663,6 +665,14 @@ public class bllBase {
             new logger().OCategory.error(e.getMessage());
             this.buildErrorTraceMessage(e.getMessage());
         }
+    }
+
+    public List<TPrivilege> getUsersPrivileges() {
+        return usersPrivileges;
+    }
+
+    public void setUsersPrivileges(List<TPrivilege> usersPrivileges) {
+        this.usersPrivileges = usersPrivileges;
     }
 
 }

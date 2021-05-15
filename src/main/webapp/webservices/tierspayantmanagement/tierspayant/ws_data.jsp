@@ -253,7 +253,7 @@
             json.put("dbl_QUOTA_CONSO_MENSUELLE", OTCompteClient.getDblQUOTACONSOMENSUELLE());
         }
 
-        List<TCompteClientTiersPayant> lstTCompteClientTiersPayant = new ArrayList<TCompteClientTiersPayant>();
+        List<TCompteClientTiersPayant> lstTCompteClientTiersPayant = new ArrayList<>();
         lstTCompteClientTiersPayant = OclientManagement.getTiersPayantsByClient("", "%%", lstTTiersPayant.get(i).getLgTIERSPAYANTID(), str_STATUT);
         String str_Product = "";
         for (int k = 0; k < lstTCompteClientTiersPayant.size(); k++) {

@@ -1041,6 +1041,7 @@ public class ClientServiceImpl implements ClientService {
     private void updateComptClientTierspayantPriority(String OTCompteClient) {
         findTCompteClientTiersPayanCompteClient(OTCompteClient).forEach(c -> {
             c.setIntPRIORITY(c.getIntPRIORITY() + 1);
+            c.setDtUPDATED(new Date());
             getEmg().merge(c);
         });
     }
@@ -1319,13 +1320,19 @@ public class ClientServiceImpl implements ClientService {
                 predicates.add(cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupeId)));
 
             }
-           
+
         }
-         if (!StringUtils.isEmpty(typeTp) && !"ALL".equals(typeTp)) {
-                predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typeTp));
-            }
+        if (!StringUtils.isEmpty(typeTp) && !"ALL".equals(typeTp)) {
+            predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typeTp));
+        }
         return predicates;
 
     }
 
+    public TCompteClientTiersPayant updateOrCreateClientCarnet(TClient client, TTiersPayant p, int taux) throws Exception {
+        TCompteClient compteClient = findByClientId(client.getLgCLIENTID(), this.getEmg());
+        updateComptClientTierspayantPriority(compteClient.getLgCOMPTECLIENTID());
+        return createComptClientTierspayant(client, compteClient, taux, p, true, 1);
+
+    }
 }

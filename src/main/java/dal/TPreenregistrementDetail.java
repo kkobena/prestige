@@ -80,7 +80,7 @@ public class TPreenregistrementDetail implements Serializable {
     @ManyToOne(optional = false)
     private TPreenregistrement lgPREENREGISTREMENTID;
     @Column(name = "bool_ACCOUNT")
-    private Boolean boolACCOUNT=true;
+    private Boolean boolACCOUNT = true;
     @Column(name = "int_UG")
     private Integer intUG = 0;
     @Column(name = "montantTva")
@@ -329,6 +329,34 @@ public class TPreenregistrementDetail implements Serializable {
 
     public void setMontantTvaUg(Integer montantTvaUg) {
         this.montantTvaUg = montantTvaUg;
+    }
+
+    public TPreenregistrementDetail(TPreenregistrementDetail p) {
+        this.lgPREENREGISTREMENTDETAILID = p.getLgPREENREGISTREMENTDETAILID();
+        this.intQUANTITY = p.getIntQUANTITY();
+        this.intQUANTITYSERVED = p.getIntQUANTITYSERVED();
+        this.intAVOIR = p.getIntAVOIR();
+        this.intAVOIRSERVED = p.getIntAVOIRSERVED();
+        this.intPRICE = p.getIntPRICE();
+        this.intPRICEUNITAIR = p.getIntPRICEUNITAIR();
+        this.intNUMBER = p.getIntNUMBER();
+        this.strSTATUT = p.getStrSTATUT();
+        this.dtCREATED = p.getDtCREATED();
+        this.dtUPDATED = p.getDtUPDATED();
+        this.lgGRILLEREMISEID = p.getLgGRILLEREMISEID();
+        this.intPRICEREMISE = p.getIntPRICEREMISE();
+        this.bISAVOIR = p.getBISAVOIR();
+        this.intFREEPACKNUMBER = p.getIntFREEPACKNUMBER();
+        this.intPRICEOTHER = p.getIntPRICEOTHER();
+        this.intPRICEDETAILOTHER = p.getIntPRICEDETAILOTHER();
+        this.lgFAMILLEID = p.getLgFAMILLEID();
+        this.lgPREENREGISTREMENTID = p.getLgPREENREGISTREMENTID();
+        this.boolACCOUNT = p.getBoolACCOUNT();
+        this.intUG = p.getIntUG();
+        this.montantTva = p.getMontantTva();
+        this.valeurTva = p.getValeurTva();
+        this.prixAchat = p.getPrixAchat();
+        this.montantTvaUg = p.getMontantTvaUg();
     }
 
 }

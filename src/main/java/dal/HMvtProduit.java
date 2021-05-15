@@ -18,7 +18,9 @@ import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.hibernate.annotations.Formula;
 
 /**
  *
@@ -33,7 +35,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 )
 @XmlRootElement
 public class HMvtProduit implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -64,7 +65,6 @@ public class HMvtProduit implements Serializable {
     @JoinColumn(name = "typeMvt", referencedColumnName = "ID", nullable = false)
     @ManyToOne
     private Typemvtproduit typemvtproduit;
-   
     @Column(name = "prixUn", nullable = false)
     private Integer prixUn;
     @Column(name = "prixAchat", nullable = false)
@@ -73,8 +73,23 @@ public class HMvtProduit implements Serializable {
     private Integer valeurTva = 0;
     @JoinColumn(name = "checked")
     private Boolean checked = true;
-      @Column(name = "ug", nullable = false)
+    @Column(name = "ug", nullable = false)
     private Integer ug = 0;
+   /* @Formula("qteMvt*prixUn")
+    private double montantTtc;
+    @Formula("(qteMvt*prixUn)/(1+(valeurTva/100))")
+    private double montantHt;*/
+
+    /*@Transient
+    public double getMontantHt() {
+        return montantHt;
+    }
+
+    @Transient
+    public double getMontantTtc() {
+        return montantTtc;
+    }*/
+
     public Integer getValeurTva() {
         return valeurTva;
     }
@@ -118,11 +133,10 @@ public class HMvtProduit implements Serializable {
         this.pkey = pkey;
     }
 
+ 
     public String getUuid() {
         return uuid;
     }
-
-  
 
     public Integer getQteMvt() {
         return qteMvt;
@@ -131,8 +145,6 @@ public class HMvtProduit implements Serializable {
     public void setQteMvt(Integer qteMvt) {
         this.qteMvt = qteMvt;
     }
-
- 
 
     public void setUuid(String uuid) {
         this.uuid = uuid;

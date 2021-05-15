@@ -340,6 +340,7 @@ public class SuggestionImpl implements SuggestionService {
             list.forEach(item -> {
                 TFamille famille = item.getLgFAMILLEID();
                 TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, getEmg());
+                System.out.println("---------------------->> suggestiob auto "+familleStock);
                 if (familleStock != null) {
                     makeSuggestionAuto(familleStock, famille, getEmg());
                 }
@@ -357,6 +358,7 @@ public class SuggestionImpl implements SuggestionService {
             if (OTFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN()) {
                 
                 int statut = verifierProduitDansLeProcessusDeCommande(famille);
+                System.out.println("processs ----------------->>> "+statut);
                 if (statut == 0 || statut == 1) {
                     TSuggestionOrder OTSuggestionOrder;
                     Integer int_QTE_A_SUGGERE;

@@ -265,11 +265,11 @@
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
 
     OdataManager.initEntityManager();
-
-    Preenregistrement OPreenregistrement = new Preenregistrement(OdataManager, OTUser);
-    DiffereManagement ODiffereManagement = new DiffereManagement(OdataManager, OTUser);
-    DevisManagement ODevisManagement = new DevisManagement(OdataManager, OTUser);
-    tellerManagement OtellerManagement = new tellerManagement(OdataManager, OTUser);
+ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    Preenregistrement OPreenregistrement = new Preenregistrement(OdataManager, user);
+    DiffereManagement ODiffereManagement = new DiffereManagement(OdataManager, user);
+    DevisManagement ODevisManagement = new DevisManagement(OdataManager, user);
+    tellerManagement OtellerManagement = new tellerManagement(OdataManager, user);
 
     str_ref = lg_PREENREGISTREMENT_ID;
     JSONObject value = new JSONObject();

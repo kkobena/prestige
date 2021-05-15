@@ -82,7 +82,7 @@
 %>
 <!-- fin logic de gestion des page -->
 
-<%    List<TOrderDetail> lstTOrderDetail = new ArrayList<dal.TOrderDetail>();
+<%    List<TOrderDetail> lstTOrderDetail = new ArrayList<>();
     String lg_ORDER_ID = "%%", search_value = "", str_STATUT = commonparameter.statut_is_Process, filtre = DateConverter.ALL;
     int start = 0, limit = 0;
 

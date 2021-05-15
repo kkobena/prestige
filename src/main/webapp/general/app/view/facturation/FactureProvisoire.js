@@ -10,7 +10,6 @@ Ext.define('testextjs.view.facturation.FactureProvisoire', {
     scrollable: true,
     width: '98%',
     minHeight: 500,
-
     cls: 'custompanel',
     layout: {
         type: 'fit'
@@ -63,7 +62,6 @@ Ext.define('testextjs.view.facturation.FactureProvisoire', {
                     ],
             autoLoad: false,
             pageSize: 999,
-
             proxy: {
                 type: 'ajax',
                 url: '../api/v1/client/tiers-payants',
@@ -167,15 +165,13 @@ Ext.define('testextjs.view.facturation.FactureProvisoire', {
 //                padding: '8',
                     items: [
                         {
-                            text: 'Cr&eacute;er',
+                            text: 'Créer',
                             scope: this,
                             iconCls: 'addicon',
                             itemId: 'newBtn',
                             handler: function () {
                                 var xtype = "oneditfacture";
                                 testextjs.app.getController('App').onRedirectTo(xtype, {});
-
-
 
                             }
                         }
@@ -396,7 +392,7 @@ Ext.define('testextjs.view.facturation.FactureProvisoire', {
 //                                        window.open(linkUrl);
                                     }
                                 }]
-                        },
+                        }
                     ],
                     selModel: {
                         selType: 'rowmodel'

@@ -55,6 +55,7 @@ import dal.TParameters;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import dal.TPreenregistrement_;
+import dal.TPrivilege;
 import dal.TRemise;
 import dal.TSnapshotFamillesell;
 import dal.TTypeStock;
@@ -81,7 +82,6 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.StringUtils;
@@ -96,6 +96,7 @@ import util.DateConverter;
 public class familleManagement extends bllBase implements Famillemanagerinterface {
 
     Object Otable = TFamille.class;
+   
 
     public familleManagement(dataManager OdataManager) {
         this.setOdataManager(OdataManager);
@@ -107,6 +108,8 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         this.setOdataManager(OdataManager);
         this.checkDatamanager();
     }
+
+  
 
     public TFamille create(String str_NAME, String str_DESCRIPTION, int int_PRICE, int int_PRICE_TIPS,
             int int_TAUX_MARQUE, int int_PAF, int int_PAT, int int_S, String int_T, String int_CIP,
@@ -3637,12 +3640,24 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         return result;
 
     }
+  private TFamilleGrossiste getFamilleGrossisteByCIP(String CIP,TGrossiste OGrossiste) {
+        TFamilleGrossiste OTFamilleGrossiste = null;
+        try {
+            OTFamilleGrossiste = (TFamilleGrossiste) this.getOdataManager().getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE o.strCODEARTICLE =?1 AND o.strSTATUT = ?2 AND o.lgGROSSISTEID=?3").setParameter(1, CIP).
+                    setParameter(2, commonparameter.statut_enable).
+                      setParameter(3, OGrossiste)
+                    .setMaxResults(1).getSingleResult();
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return OTFamilleGrossiste;
+    }
     public boolean updateFamilleGrossisteCip(String CIP, TFamille OFamille, TGrossiste OGrossiste, int mode, String currentcip) {
         boolean isUpdate = false;
         String Codecip = CIP;
         System.out.println(" current cip " + currentcip + " CIP " + CIP);
-        TFamilleGrossiste familleGrossiste = getFamilleGrossisteByCIP(CIP);
+        TFamilleGrossiste familleGrossiste = getFamilleGrossisteByCIP(CIP,OGrossiste);
         TFamilleGrossiste OFamilleGrossiste = getFamilleGrossisteByIDANDLGROSSISTE(OFamille.getLgFAMILLEID(), OGrossiste.getLgGROSSISTEID());
         TFamille OTFamilleDecontionne = null;
         TFamilleGrossiste OTFamilleGrossisteDeconditionne = null;
@@ -3736,7 +3751,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
     private TFamilleGrossiste getFamilleGrossiste(String CIP) {
         TFamilleGrossiste OTFamilleGrossiste = null;
         try {
-            OTFamilleGrossiste = (TFamilleGrossiste) this.getOdataManager().getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE o.strCODEARTICLE =?1 AND o.strSTATUT = ?2").setParameter(1, CIP).setParameter(2, commonparameter.statut_enable).getSingleResult();
+            OTFamilleGrossiste = (TFamilleGrossiste) this.getOdataManager().getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE o.strCODEARTICLE =?1 AND o.strSTATUT = ?2").setParameter(1, CIP).setParameter(2, commonparameter.statut_enable).setMaxResults(1).getSingleResult();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -3747,7 +3762,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
     private TFamilleGrossiste getFamilleGrossisteByCIP(String CIP) {
         TFamilleGrossiste OTFamilleGrossiste = null;
         try {
-            OTFamilleGrossiste = (TFamilleGrossiste) this.getOdataManager().getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE o.strCODEARTICLE =?1 AND o.strSTATUT = ?2").setParameter(1, CIP).setParameter(2, commonparameter.statut_enable).getSingleResult();
+            OTFamilleGrossiste = (TFamilleGrossiste) this.getOdataManager().getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE o.strCODEARTICLE =?1 AND o.strSTATUT = ?2").setParameter(1, CIP).setParameter(2, commonparameter.statut_enable).setMaxResults(1).getSingleResult();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -5082,6 +5097,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         JSONArray jsonarray = new JSONArray();
         String lg_EMPLACEMENT_ID = "";
         SnapshotManager OSnapshotManager = new SnapshotManager(this.getOdataManager(), this.getOTUser());
+        boolean ACTION_DESACTIVE_PRODUIT = DateConverter.hasAuthorityByName(getUsersPrivileges(), DateConverter.ACTION_DESACTIVE_PRODUIT);
         try {
             lg_EMPLACEMENT_ID = emp.getLgEMPLACEMENTID();
             EntityManager em = this.getOdataManager().getEm();
@@ -5139,6 +5155,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 JSONObject json = new JSONObject();
                 try {
 
+                    json.put("ACTION_DESACTIVE_PRODUIT", ACTION_DESACTIVE_PRODUIT);
                     json.put("BTNDELETE", Boolean.valueOf(Obj[1].toString()));
                     json.put("P_BT_UPDATE", Boolean.valueOf(Obj[2].toString()));
                     json.put("P_UPDATE_PAF", Boolean.valueOf(Obj[3].toString()));

@@ -63,8 +63,8 @@
 
 <%
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
-    Map<String, LinkedHashSet<TFacture>> invoicesToPrint = new HashMap<String, LinkedHashSet<TFacture>>();
-    List<InputStream> inputPdfList = new ArrayList<InputStream>();
+    Map<String, LinkedHashSet<TFacture>> invoicesToPrint = new HashMap<>();
+    List<InputStream> inputPdfList = new ArrayList<>();
 
     jdom.InitRessource();
     jdom.LoadRessource();

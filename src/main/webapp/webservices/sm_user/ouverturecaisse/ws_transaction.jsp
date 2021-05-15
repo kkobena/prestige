@@ -26,10 +26,10 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
 
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -50,7 +50,7 @@
             new logger().oCategory.info("Creation");
 
 
-            caisseManagement OcaisseManagement = new caisseManagement(OdataManager, OTUser);
+            caisseManagement OcaisseManagement = new caisseManagement(OdataManager, user);
             TMvtCaisse OTMvtCaisse = OcaisseManagement.OpenCaisse(request.getParameter("ID_COFFRE_CAISSE"));
 
 
@@ -59,9 +59,6 @@
             }
             ObllBase.setMessage(OcaisseManagement.getMessage());
             ObllBase.setDetailmessage(OcaisseManagement.getDetailmessage());
-
-
-
 
         }
 

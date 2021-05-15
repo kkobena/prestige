@@ -156,7 +156,9 @@ Ext.define('testextjs.model.Client', {
         {
             name: 'remiseId',
             type: 'string'
-        }
+        },
+         {name: 'P_BTN_DESACTIVER_CLIENT', type: 'boolean'}
+        
 
 
 

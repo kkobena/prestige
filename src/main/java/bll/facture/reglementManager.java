@@ -754,7 +754,6 @@ public class reglementManager extends bll.bllBase {
             }
             this.setMessage(ODriverPrinter.getMessage());
             this.setDetailmessage(ODriverPrinter.getDetailmessage());
-            
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -1108,12 +1107,12 @@ public class reglementManager extends bll.bllBase {
                 if (caisse != null) {
 //            TRecettes OTRecettes = new caisseManagement(this.getOdataManager(), this.getOTUser()).AddRecette(int_AMOUNT, Parameter.KEY_TYPE_RECETTE_VENTE_BOISSON, OTTypeMvtCaisse.getStrDESCRIPTION(), facture.getStrCODEFACTURE(), int_AMOUNT_REMIS, int_AMOUNT_RECU, dossierReglement.getLgDOSSIERREGLEMENTID(), OTReglement.getLgMODEREGLEMENTID().getLgMODEREGLEMENTID(), commonparameter.OTHER, Parameter.KEY_TASK_ENTREE_CAISSE, OTReglement.getLgREGLEMENTID(), lg_COMPTECLIENT_TIERSPAYANT_ID, "2", OTTypeMvtCaisse.getLgTYPEMVTCAISSEID(), commonparameter.TRANSACTION_CREDIT);
                     String Description = "Reglement de différé  " + dossierReglement.getDblAMOUNT() + " Type de mouvement " + OTTypeMvtCaisse.getStrDESCRIPTION() + " PAR " + this.getOTUser().getStrFIRSTNAME() + " " + this.getOTUser().getStrLASTNAME();
-                    addTransaction(this.getOTUser(), this.getOTUser(),dossierReglement.getLgDOSSIERREGLEMENTID(),
+                    addTransaction(this.getOTUser(), this.getOTUser(), dossierReglement.getLgDOSSIERREGLEMENTID(),
                             dossierReglement.getDblAMOUNT().intValue(), 0, dossierReglement.getDblAMOUNT().intValue(),
                             dossierReglement.getDblAMOUNT().intValue(), Boolean.TRUE,
                             CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
                             OTReglement.getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID(), OTTypeMvtCaisse,
-                            dossierReglement.getDblAMOUNT().intValue(), 0, caisse.getStrREFTICKET(),lg_CLIENT_ID);
+                            dossierReglement.getDblAMOUNT().intValue(), 0, caisse.getStrREFTICKET(), lg_CLIENT_ID);
                     updateItem(this.getOTUser(), caisse.getLgMVTCAISSEID(), Description,
                             TypeLog.MVT_DE_CAISSE, caisse);
 
@@ -1992,20 +1991,14 @@ public class reglementManager extends bll.bllBase {
 
                     break;
                 case 3:
-                    listFacture = controller.getGroupeInvoiceDetails(true, "", "", CODEFACTURE, -1, -1);
-                    /* listFacture.stream().filter((t) -> {
-                         return (!t.getStrSTATUT().equals(commonparameter.statut_paid));  
-                    });*/
-                    listFacture.removeIf((t) -> {
-                        return (t.getStrSTATUT().equals(commonparameter.statut_paid));
-                    });
-
+                    listFacture = controller.getGroupeInvoiceDetails(CODEFACTURE);
                     for (TFacture OFacture : listFacture) {
                         if (int_AMOUNT_RECU > 0) {
                             int_AMOUNT_RECU = makePartialInvoice(OFacture, OTTypeMvtCaisse, int_AMOUNT_RECU, dt_reglement, modeRe, str_BANQUE, str_LIEU, str_CODE_MONNAIE, str_COMMENTAIRE, int_TAUX, str_FIRST_LAST_NAME);
                         } else {
                             break;
                         }
+
                     }
 
                     break;
@@ -2120,7 +2113,7 @@ public class reglementManager extends bll.bllBase {
                     dossierReglement.getDblAMOUNT().intValue(), Boolean.TRUE,
                     CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
                     OTReglement.getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID(), OTTypeMvtCaisse,
-                    this.getOdataManager().getEm(), dossierReglement.getDblAMOUNT().intValue(), 0, caisse.getStrREFTICKET(), OTCompteClientTiersPayant.getLgTIERSPAYANTID().getLgTIERSPAYANTID());
+                    this.getOdataManager().getEm(), dossierReglement.getDblAMOUNT().intValue(), 0, caisse.getStrREFTICKET(), (facture.getTiersPayant() != null ? facture.getTiersPayant().getLgTIERSPAYANTID() : null));
             updateItem(this.getOTUser(), caisse.getLgMVTCAISSEID(), Description, TypeLog.MVT_DE_CAISSE, caisse, this.getOdataManager().getEm());
             this.updateSnapshotVenteSociete(dossierReglement.getLgDOSSIERREGLEMENTID(), facture.getLgFACTUREID());
         } catch (Exception e) {
@@ -2172,7 +2165,6 @@ public class reglementManager extends bll.bllBase {
         try {
 
             montantattendu = facture.getDblMONTANTRESTANT();
-            System.out.println("-------------------> montantattendu  " + montantattendu + " int_AMOUNT " + int_AMOUNT);
             Double _amount = montantattendu;
             if (int_AMOUNT > montantattendu) {
                 int_AMOUNT -= montantattendu;
@@ -2250,7 +2242,15 @@ public class reglementManager extends bll.bllBase {
             og.setIntPAYE(facture.getDblMONTANTPAYE().intValue() + _amount.intValue());
             og.setDtUPDATED(new Date());
             this.getOdataManager().getEm().merge(og);
-            this.AddTMvtCaisse(OTTypeMvtCaisse, OTTypeMvtCaisse.getStrCODECOMPTABLE(), dossierReglement.getLgDOSSIERREGLEMENTID(), OTReglement.getLgMODEREGLEMENTID().getLgMODEREGLEMENTID(), dossierReglement.getDblAMOUNT(), str_BANQUE, str_LIEU, str_CODE_MONNAIE, str_COMMENTAIRE, int_TAUX, dossierReglement.getDtCREATED(), true, str_FIRST_LAST_NAME, this.getOTUser().getLgUSERID(), OTTypeMvtCaisse.getStrDESCRIPTION() + " de la facture " + facture.getStrCODEFACTURE(), 0, _amount.intValue(), true, new Date(), OTReglement.getLgMODEREGLEMENTID(), OTReglement);
+            TMvtCaisse caisse = this.AddTMvtCaisse(OTTypeMvtCaisse, OTTypeMvtCaisse.getStrCODECOMPTABLE(), dossierReglement.getLgDOSSIERREGLEMENTID(), OTReglement.getLgMODEREGLEMENTID().getLgMODEREGLEMENTID(), dossierReglement.getDblAMOUNT(), str_BANQUE, str_LIEU, str_CODE_MONNAIE, str_COMMENTAIRE, int_TAUX, dossierReglement.getDtCREATED(), true, str_FIRST_LAST_NAME, this.getOTUser().getLgUSERID(), OTTypeMvtCaisse.getStrDESCRIPTION() + " de la facture " + facture.getStrCODEFACTURE(), 0, _amount.intValue(), true, new Date(), OTReglement.getLgMODEREGLEMENTID(), OTReglement);
+            String Description = "Reglement de facture  " + dossierReglement.getDblAMOUNT() + " Type de mouvement " + OTTypeMvtCaisse.getStrDESCRIPTION() + " PAR " + this.getOTUser().getStrFIRSTNAME() + " " + this.getOTUser().getStrLASTNAME();
+            addTransaction(this.getOTUser(), this.getOTUser(), dossierReglement.getLgDOSSIERREGLEMENTID(),
+                    dossierReglement.getDblAMOUNT().intValue(), 0, dossierReglement.getDblAMOUNT().intValue(),
+                    dossierReglement.getDblAMOUNT().intValue(), Boolean.TRUE,
+                    CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
+                    OTReglement.getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID(), OTTypeMvtCaisse,
+                    this.getOdataManager().getEm(), dossierReglement.getDblAMOUNT().intValue(), 0, caisse.getStrREFTICKET(), (facture.getTiersPayant() != null ? facture.getTiersPayant().getLgTIERSPAYANTID() : null));
+            updateItem(this.getOTUser(), caisse.getLgMVTCAISSEID(), Description, TypeLog.MVT_DE_CAISSE, caisse, this.getOdataManager().getEm());
             this.updateSnapshotVenteSociete(dossierReglement.getLgDOSSIERREGLEMENTID(), facture.getLgFACTUREID());
 
         } catch (Exception e) {
@@ -2333,7 +2333,7 @@ public class reglementManager extends bll.bllBase {
             Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked,
             CategoryTransaction categoryTransaction, TypeTransaction typeTransaction,
             TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse,
-            Integer montantPaye, Integer montantTva, String reference,String organisme) {
+            Integer montantPaye, Integer montantTva, String reference, String organisme) {
         MvtTransaction _new = new MvtTransaction();
         int compare = montantNet.compareTo(montantVerse);
         Integer montantPaid, montantRestant = 0;

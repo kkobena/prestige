@@ -92,12 +92,7 @@ public class factureManagement extends bll.bllBase {
                 return null;
             }
             String CODEFACTURE = OParameters.getStrVALUE();
-            /* if (str_TypeFacture.equals("3")) {
-                CODEFACTURE = getSequencier(str_CUSTOMER);
-            } else {
-                CODEFACTURE = new date().getShortId(10);
-            }*/
-
+          
             OTFacture.setLgFACTUREID(new date().getComplexId());
             OTFacture.setDtDEBUTFACTURE(dt_debut);
 
@@ -1031,7 +1026,7 @@ public class factureManagement extends bll.bllBase {
 
     }
 
-    public boolean deleteInvoice(String lg_FACTURE_ID,TUser user) {
+    public boolean deleteInvoice(String lg_FACTURE_ID, TUser user) {
         boolean isDeleted = true;
         TFacture OFacture;
         try {
@@ -1052,7 +1047,7 @@ public class factureManagement extends bll.bllBase {
                 }
 
                 this.getOdataManager().getEm().remove(OFacture);
-                String description = "La facture  numéro : " + OFacture.getStrCODEFACTURE() + " a été supprimée par "+user.getStrFIRSTNAME()+" "+user.getStrLASTNAME();
+                String description = "La facture  numéro : " + OFacture.getStrCODEFACTURE() + " a été supprimée par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
                 updateItem(this.getOTUser(), OFacture.getLgFACTUREID(), description, TypeLog.SUPPRESION_DE_FACTURE, OFacture, this.getOdataManager().getEm());
 
                 if (this.getOdataManager().getEm().getTransaction().isActive()) {
@@ -1546,7 +1541,7 @@ public class factureManagement extends bll.bllBase {
             this.getOdataManager().getEm().persist(OTFacture);
             OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
             this.getOdataManager().getEm().merge(OParameters);
-            String description = "Génération de la facture numéro : " + OTFacture.getStrCODEFACTURE()+" période du "+DateConverter.convertDateToDD_MM_YYYY(OTFacture.getDtDEBUTFACTURE())+" Au " + DateConverter.convertDateToDD_MM_YYYY(OTFacture.getDtFINFACTURE())+" tiers-payant: "+OTFacture.getTiersPayant().getStrFULLNAME()+" ";
+            String description = "Génération de la facture numéro : " + OTFacture.getStrCODEFACTURE() + " période du " + DateConverter.convertDateToDD_MM_YYYY(OTFacture.getDtDEBUTFACTURE()) + " Au " + DateConverter.convertDateToDD_MM_YYYY(OTFacture.getDtFINFACTURE()) + " tiers-payant: " + OTFacture.getTiersPayant().getStrFULLNAME() + " ";
             updateItem(this.getOTUser(), "", description, TypeLog.GENERATION_DE_FACTURE, OTFacture, this.getOdataManager().getEm());
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
 
@@ -1753,7 +1748,7 @@ public class factureManagement extends bll.bllBase {
                 this.getOdataManager().getEm().getTransaction().rollback();
 
             }
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             this.buildErrorTraceMessage("La facture n'a pas pu être générée");
         }
         return factures;
@@ -1813,7 +1808,7 @@ public class factureManagement extends bll.bllBase {
                 OFacture.setMontantTvaVente(montantTva);
                 OFacture.setMontantVente(montantvente);
                 this.getOdataManager().getEm().persist(OFacture);
-                String description = "Génération de la facture numéro : " + OFacture.getStrCODEFACTURE()+" période du "+DateConverter.convertDateToDD_MM_YYYY(OFacture.getDtDEBUTFACTURE())+" Au " + DateConverter.convertDateToDD_MM_YYYY(OFacture.getDtFINFACTURE())+" tiers-payant: "+OTTiersPayant.getStrFULLNAME()+" ";
+                String description = "Génération de la facture numéro : " + OFacture.getStrCODEFACTURE() + " période du " + DateConverter.convertDateToDD_MM_YYYY(OFacture.getDtDEBUTFACTURE()) + " Au " + DateConverter.convertDateToDD_MM_YYYY(OFacture.getDtFINFACTURE()) + " tiers-payant: " + OTTiersPayant.getStrFULLNAME() + " ";
                 updateItem(this.getOTUser(), "", description, TypeLog.GENERATION_DE_FACTURE, OFacture, this.getOdataManager().getEm());
                 updateInvoicePlafond(OFacture, OTTiersPayant);
 

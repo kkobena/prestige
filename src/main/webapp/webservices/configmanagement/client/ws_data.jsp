@@ -3,6 +3,7 @@
     Created on : 25 oct. 2015, 08:07:30
     Author     : KKOFFI
 --%>
+<%@page import="dal.TPrivilege"%>
 <%@page import="toolkits.parameters.commonparameter"%>
 <%@page import="toolkits.utils.conversion"%>
 <%@page import="bll.configManagement.clientManagement"%>
@@ -22,6 +23,7 @@
 
 <%
     dataManager OdataManager = new dataManager();
+    OdataManager.initEntityManager();
     String lg_TYPE_CLIENT_ID = "", search_value = "", str_STATUT = commonparameter.statut_enable;
     
 
@@ -51,7 +53,10 @@
        limit= Integer.valueOf(request.getParameter("limit"));
     }
       TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
-    clientManagement OclientManagement = new clientManagement(OdataManager,OTUser);
+       TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+       clientManagement OclientManagement = new clientManagement(OdataManager,user);
+          OclientManagement.setUsersPrivileges((List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE));
+   
     JSONObject data = OclientManagement.getClients(search_value, lg_TYPE_CLIENT_ID, str_STATUT, start, limit);
 
 

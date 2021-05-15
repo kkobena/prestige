@@ -28,6 +28,7 @@
 
     OdataManager.initEntityManager();
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+       TUser user=OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     int lg_GROUPE_ID = 0, MODE_SELECTION = 0;
     String  dt_start = date.formatterMysqlShort.format(new Date()), dt_end = dt_start;
     boolean isOK = false;
@@ -45,11 +46,11 @@
     }
 
     if (request.getParameter("MODE_SELECTION") != null && !"".equals(request.getParameter("MODE_SELECTION"))) {
-        MODE_SELECTION = new Integer(request.getParameter("MODE_SELECTION"));
+        MODE_SELECTION =  Integer.valueOf(request.getParameter("MODE_SELECTION"));
     }
 
     if (request.getParameter("lg_GROUPE_ID") != null && !"".equals(request.getParameter("lg_GROUPE_ID"))) {
-        lg_GROUPE_ID = new Integer(request.getParameter("lg_GROUPE_ID"));
+        lg_GROUPE_ID =  Integer.valueOf(request.getParameter("lg_GROUPE_ID"));
     }
     if (request.getParameter("unselectedrecords") != null && !"".equals(request.getParameter("unselectedrecords"))) {
         unselectedrecords = new JSONArray(request.getParameter("unselectedrecords"));
@@ -62,7 +63,7 @@
     GroupeTierspayantController groupeCtl = new GroupeTierspayantController(OdataManager.getEmf());
     JSONObject data = new JSONObject();
     int success = 0;
-    Map<String, LinkedHashSet<TFacture>> grfact = groupeCtl.generateGroupeFacture(dt_start, dt_end, lg_GROUPE_ID, listProductSelected, unselectedrecords,  MODE_SELECTION,OTUser);
+    Map<String, LinkedHashSet<TFacture>> grfact = groupeCtl.generateGroupeFacture(dt_start, dt_end, lg_GROUPE_ID, listProductSelected, unselectedrecords,  MODE_SELECTION,user);
 
     success = grfact.size();
     if (success > 0) {

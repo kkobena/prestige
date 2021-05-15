@@ -105,9 +105,16 @@ public class TvaDTO implements Serializable {
     }
 
     public TvaDTO(Integer taux, long montantHt, long montantTva, long montantTtc) {
-        this.taux=taux;
-        this.montantHt=montantHt;
-        this.montantTtc=montantTtc;
-        this.montantTva=montantTva;
+        this.taux = taux;
+        this.montantHt = montantHt;
+        this.montantTtc = montantTtc;
+        this.montantTva = montantTva;
+    }
+
+    public TvaDTO(Integer taux, double montantHt, double montantTtc) {
+        this.taux = taux;
+        this.montantHt = (long) Math.ceil(montantHt);
+        this.montantTtc = (long) Math.ceil(montantTtc);
+        this.montantTva = this.montantTtc - this.montantHt;
     }
 }

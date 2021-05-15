@@ -222,12 +222,22 @@ public class TPreenregistrementCompteClientTiersPayent implements Serializable {
         return "dal.TPreenregistrementCompteClientTiersPayent[ lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=" + lgPREENREGISTREMENTCOMPTECLIENTPAYENTID + " ]";
     }
 
- /*   public Boolean getTemplate() {
-        return template;
+    public TPreenregistrementCompteClientTiersPayent(TPreenregistrementCompteClientTiersPayent p) {
+        this.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID = p.getLgPREENREGISTREMENTCOMPTECLIENTPAYENTID();
+        this.strSTATUT = p.getStrSTATUT();
+        this.dtCREATED = p.getDtCREATED();
+        this.dtUPDATED = p.getDtUPDATED();
+        this.intPERCENT = p.getIntPERCENT();
+        this.intPRICE = p.getIntPRICE();
+        this.intPRICERESTE = p.getIntPRICERESTE();
+        this.strLASTTRANSACTION = p.getStrLASTTRANSACTION();
+        this.strSTATUTFACTURE = p.getStrSTATUTFACTURE();
+        this.strREFBON = p.getStrREFBON();
+        this.dblQUOTACONSOVENTE = p.getDblQUOTACONSOVENTE();
+        this.lgUSERID = p.getLgUSERID();
+        this.lgCOMPTECLIENTTIERSPAYANTID = p.getLgCOMPTECLIENTTIERSPAYANTID();
+        this.lgPREENREGISTREMENTID = p.getLgPREENREGISTREMENTID();
     }
 
-    public void setTemplate(Boolean template) {
-        this.template = template;
-    }*/
-    
+
 }

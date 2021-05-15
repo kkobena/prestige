@@ -164,7 +164,7 @@ public class ResumeCaisseDTO implements Serializable {
         this.billetage = montantBilletage;
         this.montantAnnule = Math.abs(montantAnnule);
         this.intSOLDEMATIN = caisse.getIntSOLDEMATIN();
-        this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR()-caisse.getIntSOLDEMATIN()) - montantAnnule);
+
         this.cancel = cancel;
         this.soldeTotal = caisse.getIntSOLDESOIR();
         this.statut = caisse.getStrSTATUT();
@@ -172,6 +172,40 @@ public class ResumeCaisseDTO implements Serializable {
             this.intSOLDESOIR = caisse.getIntSOLDESOIR();
             this.strSTATUT = "En cours d'utilisation ";
         } else {
+            this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN()) - montantAnnule);
+            this.intSOLDESOIR = caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN();
+            if (caisse.getStrSTATUT().equals(DateConverter.STATUT_PROCESS)) {
+                this.strSTATUT = "Fermée ";
+
+            }
+        }
+
+    }
+
+    // constructeur pour les officines qui prennent en compte le fond de caisse dans la recette
+     public ResumeCaisseDTO(TResumeCaisse caisse, Integer montantBilletage, Integer montantAnnule, boolean cancel,boolean prendreEnCompteFondCaisse) {
+
+        this.ldCAISSEID = caisse.getLdCAISSEID();
+        this.dtCREATED = dateFormat.format(caisse.getDtCREATED());
+        try {
+            this.dtUPDATED = dateFormat.format(caisse.getDtUPDATED());
+        } catch (Exception e) {
+            this.dtUPDATED = "PAS ENCORE FERMEE";
+        }
+        TUser u = caisse.getLgUSERID();
+        this.userFullName = u.getStrFIRSTNAME() + " " + u.getStrLASTNAME();
+        this.billetage = montantBilletage;
+        this.montantAnnule = Math.abs(montantAnnule);
+        this.intSOLDEMATIN = caisse.getIntSOLDEMATIN();
+
+        this.cancel = cancel;
+        this.soldeTotal = caisse.getIntSOLDESOIR();
+        this.statut = caisse.getStrSTATUT();
+        if (caisse.getStrSTATUT().equals(DateConverter.STATUT_IS_IN_USE)) {
+            this.intSOLDESOIR = caisse.getIntSOLDESOIR();
+            this.strSTATUT = "En cours d'utilisation ";
+        } else {
+            this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR()) - montantAnnule);
             this.intSOLDESOIR = caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN();
             if (caisse.getStrSTATUT().equals(DateConverter.STATUT_PROCESS)) {
                 this.strSTATUT = "Fermée ";

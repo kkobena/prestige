@@ -10,7 +10,6 @@ Ext.define('testextjs.view.facturation.EditerFactureProvisoire', {
     width: '98%',
     minHeight: 550,
     cls: 'custompanel',
-//    bodyPadding: 5,
     layout: {
         type: 'vbox',
         align: 'stretch',
@@ -23,19 +22,14 @@ Ext.define('testextjs.view.facturation.EditerFactureProvisoire', {
         selectAll: null
     },
     initComponent: function () {
-
         var typeTp = Ext.create('Ext.data.Store', {
             autoLoad: true,
             fields: ['value', 'name', "code"],
             data: [
                 {"value": "1", "name": "Assurance", "code": '01'},
                 {"value": "2", "name": "Carnet", "code": '02'}
-//                {"value": "ALL", "name": "Tous", "code": 'ALL'}
             ]
         });
-
-
-
         var store_type_filter = Ext.create('Ext.data.Store', {
             autoLoad: true,
             fields: ['value', 'name'],
@@ -182,8 +176,6 @@ Ext.define('testextjs.view.facturation.EditerFactureProvisoire', {
 
         });
 
-
-
         var me = this;
         Ext.applyIf(me, {
             dockedItems: [
@@ -191,14 +183,12 @@ Ext.define('testextjs.view.facturation.EditerFactureProvisoire', {
                     xtype: 'toolbar',
                     dock: 'bottom',
                     ui: 'footer',
-//                padding: '8',
                     items: ['->',
                         {
                             text: 'Editer',
                             itemId: 'btnedit',
                             iconCls: 'icon-clear-group',
                             scope: this
-
 
                         }, {
                             text: 'Retour',
@@ -209,7 +199,6 @@ Ext.define('testextjs.view.facturation.EditerFactureProvisoire', {
                         }
                     ]
                 }
-
             ],
             items: [
                 {
@@ -533,20 +522,12 @@ Ext.define('testextjs.view.facturation.EditerFactureProvisoire', {
                                     displayInfo: true
 
                                 }]
-
                         }
-
                     ]
                 }
-
-
             ]
-
         });
         me.callParent(arguments);
     }
 
-
 });
-
-

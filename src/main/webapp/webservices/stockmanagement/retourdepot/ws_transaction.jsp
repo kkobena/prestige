@@ -57,21 +57,21 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+  TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
 
     ObllBase.setDetailmessage("Erreur serveur");
-    DepotManager ODepotManager = new DepotManager(OdataManager, OTUser);
+    DepotManager ODepotManager = new DepotManager(OdataManager, user);
     str_ref = lg_RETOURDEPOT_ID;
     if (request.getParameter("mode") != null) {
         if (request.getParameter("mode").equals("create")) {
             try {
                 if (request.getParameter("lg_RETOURDEPOT_ID").equals("0")) { 
-                    OTRetourdepot = ODepotManager.createTRetourdepot(str_NAME, OTUser.getLgEMPLACEMENTID(), str_DESCRIPTION,"");
+                    OTRetourdepot = ODepotManager.createTRetourdepot(str_NAME, user.getLgEMPLACEMENTID(), str_DESCRIPTION,"");
                 } else {
                     OTRetourdepot = ODepotManager.updateTRetourdepot(lg_RETOURDEPOT_ID, str_DESCRIPTION);
                 }

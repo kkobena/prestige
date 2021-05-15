@@ -49,7 +49,8 @@
 <%
     Translate OTranslate = new Translate();
     dataManager OdataManager = new dataManager();
-    List<EntityData> entityDatas = new ArrayList<EntityData>();
+    OdataManager.initEntityManager();
+    List<EntityData> entityDatas = new ArrayList<>();
     TParameters OTParameters;
     bllBase ObllBase = new bllBase();
     factureManagement facManagement = null;
@@ -61,8 +62,8 @@
 
 <%
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
-    List<TFacture> factures = new ArrayList<TFacture>();
-    List<InputStream> inputPdfList = new ArrayList<InputStream>();
+    List<TFacture> factures = new ArrayList<>();
+    List<InputStream> inputPdfList = new ArrayList<>();
     jdom Ojdom = new jdom();
     Ojdom.InitRessource();
     Ojdom.LoadRessource();
@@ -73,7 +74,8 @@
     reportManager OreportManager = new reportManager();
     bllBase obllBase = new bllBase();
     obllBase.checkDatamanager();
-    facManagement = new factureManagement(OdataManager, OTUser);
+     TUser user=OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    facManagement = new factureManagement(OdataManager, user);
     GroupeTierspayantController controller = new GroupeTierspayantController(OdataManager.getEmf());
     TOfficine oTOfficine = obllBase.getOdataManager().getEm().find(dal.TOfficine.class, "1");
     String P_H_INSTITUTION = oTOfficine.getStrNOMABREGE();
@@ -356,7 +358,7 @@
             new date());
     ObllBase.setOTranslate(OTranslate);
 
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
 
     Ojconnexion.CloseConnexion();
 

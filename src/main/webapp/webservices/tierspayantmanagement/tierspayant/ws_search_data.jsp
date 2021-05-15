@@ -26,7 +26,7 @@
 
 <%
     dataManager OdataManager = new dataManager();
-    List<TTiersPayant> lstTTiersPayant = new ArrayList<TTiersPayant>();
+    List<TTiersPayant> lstTTiersPayant = new ArrayList<>();
 
 %>
 
@@ -162,7 +162,7 @@
         arrayObj.put(json);
     }
     String result = "({\"total\":\"" + lstTTiersPayant.size() + " \",\"results\":" + arrayObj.toString() + "})";
-    new logger().OCategory.info("result   ----  " + result);
+   
 %>
 
 <%= result%>

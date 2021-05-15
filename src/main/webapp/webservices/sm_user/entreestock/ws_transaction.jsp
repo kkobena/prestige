@@ -69,10 +69,11 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-    WarehouseManager OWarehouseManager = new WarehouseManager(OdataManager, OTUser);
+     TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    WarehouseManager OWarehouseManager = new WarehouseManager(OdataManager, user);
 
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);

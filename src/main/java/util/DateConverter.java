@@ -167,7 +167,12 @@ public final class DateConverter {
     public static final String UPDATE_PRICE = "UPDATE_PRICE";
     public static final String P_AFFICHER_STOCK_A_LA_VENTE = "P_AFFICHER_STOCK_A_LA_VENTE";
     public static final String AIRTIME_USER = "AIRTIME_USER";
-    public static final String VETERINAIRE="51217125136245583494";
+    public static final String VETERINAIRE = "51217125136245583494";
+    public static final String ACTION_DESACTIVE_PRODUIT = "ACTION_DESACTIVE_PRODUIT";
+    public static final String P_BTN_DESACTIVER_CLIENT = "P_BTN_DESACTIVER_CLIENT";
+    public static final String P_BTN_DESACTIVER_TIERS_PAYANT = "P_BTN_DESACTIVER_TIERS_PAYANT";
+    public static final String TIERS_PAYANT_CARNET_ID="2";
+    public static final String KEY_PRENDRE_EN_COMPTE_FOND_CAISSE= "KEY_PRENDRE_EN_COMPTE_FOND_CAISSE";
     /*
     parametre nombre de mois à considerer
      */
@@ -324,7 +329,7 @@ public final class DateConverter {
 
             DecimalFormat amountFormat = new DecimalFormat("###,###", amountSymbols);
             result = amountFormat.format(lg_Amount);
-        } catch (Exception ex) {
+        } catch (NumberFormatException ex) {
 
         }
         return result;
@@ -531,8 +536,8 @@ public final class DateConverter {
             return "";
         }
     }
-    
-       public static String amountFormat(long lgAmount, char separator) {
+
+    public static String amountFormat(long lgAmount, char separator) {
         String result = "0";
         try {
             DecimalFormatSymbols amountSymbols = new DecimalFormatSymbols();

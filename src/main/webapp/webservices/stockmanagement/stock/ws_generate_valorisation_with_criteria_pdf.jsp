@@ -82,10 +82,10 @@
         date key = new date();
         reportManager OreportManager = new reportManager();
         OdataManager.initEntityManager();
-
+  TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
         TOfficine oTOfficine = OdataManager.getEm().find(dal.TOfficine.class, "1");
-        familleManagement OfamilleManager = new familleManagement(OdataManager, OTUser);
-        List<EntityData> listtva = new ArrayList<EntityData>();
+        familleManagement OfamilleManager = new familleManagement(OdataManager, user);
+        List<EntityData> listtva = new ArrayList<>();
         Map parameters = new HashMap();
         String file_name = "rp_valoristion";
         if (str_TYPE_TRANSACTION.equals("Famille")) {

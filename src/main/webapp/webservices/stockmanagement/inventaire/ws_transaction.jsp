@@ -39,12 +39,12 @@
     String str_NAME = "%%", str_DESCRIPTION = "%%", lg_ZONE_GEO_ID = "%%", lg_FAMILLEARTICLE_ID = "%%", int_CIP = "%%", lg_FAMILLE_ID = "%%", lg_INVENTAIRE_ID = "%%", lg_GROSSISTE_ID = "%%", lg_INVENTAIRE_FAMILLE_ID = "%%", str_TYPE_TRANSACTION = "", lg_TYPE_STOCK_ID = "1";
     int int_PRICE = 0, int_NUMBER = 0, int_QTE_REAPPROVISIONNEMENT = 0;
     boolean bool_INVENTAIRE = true;
-    List<TFamille> lstTFamille = new ArrayList<TFamille>();
+    List<TFamille> lstTFamille = new ArrayList<>();
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -64,7 +64,7 @@
         int_QTE_REAPPROVISIONNEMENT = Integer.parseInt(request.getParameter("int_QTE_REAPPROVISIONNEMENT"));
         new logger().OCategory.info("int_QTE_REAPPROVISIONNEMENT " + int_QTE_REAPPROVISIONNEMENT);
     }
-    
+
     if (request.getParameter("bool_INVENTAIRE") != null) {
         bool_INVENTAIRE = Boolean.valueOf(request.getParameter("bool_INVENTAIRE"));
         new logger().OCategory.info("bool_INVENTAIRE " + bool_INVENTAIRE);
@@ -134,7 +134,7 @@
         new logger().OCategory.info("str_TYPE_TRANSACTION " + str_TYPE_TRANSACTION);
     }
 
-    if (!OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
+    if (!user.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
         lg_TYPE_STOCK_ID = "3";
     }
 
@@ -144,8 +144,8 @@
      }*/
     new logger().oCategory.info("le mode : " + request.getParameter("mode"));
 
-    InventaireManager OInventaireManager = new InventaireManager(OdataManager, OTUser);
-    familleManagement OfamilleManagement = new familleManagement(OdataManager, OTUser);
+    InventaireManager OInventaireManager = new InventaireManager(OdataManager, user);
+    familleManagement OfamilleManagement = new familleManagement(OdataManager, user);
     if (request.getParameter("mode") != null) {
 
         if (request.getParameter("mode").toString().equals("create")) {
@@ -180,7 +180,7 @@
             ObllBase.setDetailmessage(OInventaireManager.getDetailmessage());
             ObllBase.setMessage(OInventaireManager.getMessage());
         } else if (request.getParameter("mode").toString().equals("updateinventairefamille")) {
-            
+
             OInventaireManager.updateInventaireFamille(lg_INVENTAIRE_FAMILLE_ID, lg_INVENTAIRE_ID, lg_FAMILLE_ID, int_CIP, str_DESCRIPTION, lg_ZONE_GEO_ID, lg_FAMILLEARTICLE_ID, lg_GROSSISTE_ID, int_PRICE, int_NUMBER);
             ObllBase.setDetailmessage(OInventaireManager.getDetailmessage());
             ObllBase.setMessage(OInventaireManager.getMessage());

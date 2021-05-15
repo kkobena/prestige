@@ -54,19 +54,19 @@
 %>
 <%    TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+        TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
 
     ObllBase.setDetailmessage("PAS D'ACTION");
     if (request.getParameter("nbrbons") != null && !"".equals(request.getParameter("nbrbons"))) {
-        nbrbons = new Integer(request.getParameter("nbrbons"));
+        nbrbons =  Integer.valueOf(request.getParameter("nbrbons"));
     }
     if (request.getParameter("montantFact") != null && !"".equals(request.getParameter("montantFact"))) {
-        montantFact = new Integer(request.getParameter("montantFact"));
+        montantFact =  Integer.valueOf(request.getParameter("montantFact"));
     }
 
     if (request.getParameter("str_FIRST_NAME") != null && !"".equals(request.getParameter("str_FIRST_NAME"))) {
@@ -272,8 +272,8 @@
 
     // new logger().oCategory.info("lg_OPTIMISATION_QUANTITE_ID   @@@@@@@@@@@@@@@@     " + request.getParameter("lg_OPTIMISATION_QUANTITE_ID"));
     if (request.getParameter("mode") != null) {
-        tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager,OTUser);
-        factureManagement OfactureManagement = new factureManagement(OdataManager, OTUser);
+        tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager,user);
+        factureManagement OfactureManagement = new factureManagement(OdataManager, user);
         TSequencier OTSequencier = OfactureManagement.CreateSequencier();
         if (request.getParameter("mode").toString().equals("create")) {
 

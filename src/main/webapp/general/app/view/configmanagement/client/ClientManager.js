@@ -127,8 +127,8 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                         var result = "<div style='text-align: right; font-weight: bold;'>" + amountformat(val) + "</div>";
                         return result;
                     }
-                }, 
-                
+                },
+
                 {
                     header: 'Etat.Plafond',
                     dataIndex: 'dbl_QUOTA_CONSO_MENSUELLE',
@@ -142,12 +142,12 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                 }, {
                     header: 'Genre',
                     dataIndex: 'str_SEXE',
-                    align:'center',
+                    align: 'center',
                     flex: 0.4
                 }, {
                     header: 'Securite Sociale',
                     dataIndex: 'str_NUMERO_SECURITE_SOCIAL',
-                    flex:0.8
+                    flex: 0.8
                 }, {
                     header: 'Adresse',
                     dataIndex: 'str_ADRESSE',
@@ -175,7 +175,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
 
 
                 },
-              
+
                 {
                     xtype: 'actioncolumn',
                     width: 30,
@@ -267,7 +267,13 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     items: [{
                             icon: 'resources/images/icons/fam/disable.png',
                             tooltip: 'Desactiver le client',
-                            scope: this,
+                            scope: this, getClass: function (value, metadata, record) {
+                                if (record.get('P_BTN_DESACTIVER_CLIENT')) {
+                                    return 'x-display-hide';
+                                } else {
+                                    return 'x-hide-display';
+                                }
+                            },
                             handler: this.onDesableClick
                         }]
                 },

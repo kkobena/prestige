@@ -26,6 +26,7 @@
 
     double NET_A_PAYER = 0.0, AMOUNT_PAYE, int_AMOUNT_REMIS = 0.0, int_AMOUNT_RECU = 0.0;
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+     TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     if (request.getParameter("dt_reglement") != null && !"".equals(request.getParameter("dt_reglement"))) {
         //  new logger().OCategory.info("dt_reglement " + request.getParameter(now+ " ********************************************** "));
         String now = request.getParameter("dt_reglement") + " " + date.NomadicUiFormatTime.format(new Date());
@@ -96,14 +97,14 @@
     }
     int mode = 0;
     if (request.getParameter("mode") != null && !"".equals(request.getParameter("mode"))) {
-        mode = new Integer(request.getParameter("mode"));
+        mode =  Integer.valueOf(request.getParameter("mode"));
 
     }
     if (request.getParameter("CODEFACTURE") != null && !"".equals(request.getParameter("CODEFACTURE"))) {
         CODEFACTURE = request.getParameter("CODEFACTURE");
 
     }
-    reglementManager OreglementManager = new reglementManager(OdataManager, OTUser);
+    reglementManager OreglementManager = new reglementManager(OdataManager, user);
     JSONObject data = new JSONObject();
     data = OreglementManager.makeGroupInvoicePayment(CODEFACTURE, -1, str_BANQUE, str_LIEU, str_CODE_MONNAIE, str_LIEU, MODE_REGLEMENT, int_TAUX_CHANGE, NET_A_PAYER, 0, int_AMOUNT_RECU, listFactureDeatils, str_NOM, uncheckedlist, dt_reglement, mode);
 

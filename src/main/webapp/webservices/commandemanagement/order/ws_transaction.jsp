@@ -168,17 +168,17 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
 
     ObllBase.setDetailmessage("SUGGESTION WS TRANSACTION");
-
-    orderManagement OorderManagement = new orderManagement(OdataManager, OTUser);
-    suggestionManagement OsuggestionManagement = new suggestionManagement(OdataManager, OTUser);
+    
+    orderManagement OorderManagement = new orderManagement(OdataManager, user);
+    suggestionManagement OsuggestionManagement = new suggestionManagement(OdataManager, user);
   
 
     if (request.getParameter("mode") != null) {

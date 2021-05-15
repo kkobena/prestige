@@ -11,7 +11,6 @@ import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
-import javax.ejb.Remote;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -20,7 +19,6 @@ import org.json.JSONObject;
  * @author DICI
  */
 @Local
-//@Remote
 public interface DashBoardService {
 
     RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query);

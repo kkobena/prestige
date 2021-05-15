@@ -35,7 +35,7 @@
     TFamille OTFamille = null;
     TGrossiste OTGrossiste = null;
 
-    List<TSuggestionOrderDetails> lstTSuggestionOrderDetails = new ArrayList<TSuggestionOrderDetails>();
+    List<TSuggestionOrderDetails> lstTSuggestionOrderDetails = new ArrayList<>();
 
 
 %>
@@ -122,9 +122,9 @@
     }
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -133,9 +133,9 @@
     new logger().oCategory.info("le mode : " + request.getParameter("mode"));
     new logger().oCategory.info("ID  Famille  " + request.getParameter("lg_FAMILLE_ID"));
 
-    WarehouseManager OWarehouseManager = new WarehouseManager(OdataManager, OTUser);
-    orderManagement OorderManagement = new orderManagement(OdataManager, OTUser);
-    suggestionManagement OsuggestionManagement = new suggestionManagement(OdataManager, OTUser);
+    WarehouseManager OWarehouseManager = new WarehouseManager(OdataManager, user);
+    orderManagement OorderManagement = new orderManagement(OdataManager, user);
+    suggestionManagement OsuggestionManagement = new suggestionManagement(OdataManager, user);
     grossisteManagement OgrossisteManagement = new grossisteManagement(OdataManager);
     boolean answer_fusion = false;
 

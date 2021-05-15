@@ -721,6 +721,22 @@ public class SalesRessource {
         return Response.ok().entity(salesService.closePreventeVente(tu, id).toString()).build();
     }
     
-    
+     @PUT
+    @Path("clone-devis/{id}")
+    public Response clonerDevis(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        return Response.ok().entity(salesService.clonerDevis(tu, id).toString()).build();
+    }
+     @GET
+    @Path("test")
+    public Response test() throws JSONException {
+      salesService.upadteVente();
+        return Response.ok().build();
+    }
     
 }

@@ -489,6 +489,10 @@ Ext.define('testextjs.model.Famille', {
         {name: 'scheduled',
 
             type: 'boolean'
+        },
+        {name: 'ACTION_DESACTIVE_PRODUIT',
+
+            type: 'boolean'
         }
     ]
 });

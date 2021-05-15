@@ -185,7 +185,21 @@ Ext.define('testextjs.view.devis.Devis', {
 
                                 }]
                         },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/duplicate_3671686.png',
+                                    tooltip: 'Cloner le devis',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('toClone', view, rowIndex, colIndex, item, e, record, row);
+                                    }
 
+
+                                }]
+                        },
                         {
                             xtype: 'actioncolumn',
                             width: 30,
@@ -197,8 +211,6 @@ Ext.define('testextjs.view.devis.Devis', {
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('toEdit', view, rowIndex, colIndex, item, e, record, row);
                                     }
-
-
                                 }]
                         },
                         {

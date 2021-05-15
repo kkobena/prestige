@@ -66,9 +66,9 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -76,7 +76,7 @@
     if (request.getParameter("mode") != null) {
 
         if (request.getParameter("mode").equals("reglement")) {
-          
+
             boolean regle = false;
             if (STATUS.equalsIgnoreCase("NON REGLE")) {
                 regle = service.markNONREGLEBonLivraison(lg_BON_LIVRAISON_ID);
@@ -95,7 +95,7 @@
         } else if (request.getParameter("mode").equals("modifproductprice")) {
 
             try {
-                ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, OTUser);
+                ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, user);
                 JSONObject json = ObonLivraisonManagement.changePrice(lg_BON_LIVRAISON_DETAIL, int_PRIX_REFERENCE, int_PRIX_VENTE, int_PAF, int_PA_REEL, lg_ZONE_GEO_ID);
                 amountMHT = json.getInt("montantMHT");
                 amountMTTC = json.getInt("amountMTTC");
@@ -128,10 +128,10 @@
             // new logger().oCategory.info("Suppression ville " + request.getParameter("lg_BON_LIVRAISON_DETAIL").toString());
         } else if (request.getParameter("mode").equals("closureBonLivraison")) {
             try {
-               
-                ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, OTUser);
-               // ObonLivraisonManagement.closureBonlivraison(lg_BON_LIVRAISON_ID);
-              ObonLivraisonManagement.closurerBonlivraison(lg_BON_LIVRAISON_ID); 
+
+                ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, user);
+                // ObonLivraisonManagement.closureBonlivraison(lg_BON_LIVRAISON_ID);
+                ObonLivraisonManagement.closurerBonlivraison(lg_BON_LIVRAISON_ID);
                 ObllBase.setDetailmessage(ObonLivraisonManagement.getDetailmessage());
                 ObllBase.setMessage(ObonLivraisonManagement.getMessage());
             } catch (Exception e) {
@@ -139,7 +139,7 @@
             }
             // new logger().oCategory.info("Suppression ville " + request.getParameter("lg_BON_LIVRAISON_DETAIL").toString());
         } else if (request.getParameter("mode").equals("disable")) {
-            ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, OTUser);
+            ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, user);
             ObonLivraisonManagement.deleteBonLivraison(lg_BON_LIVRAISON_ID);
             ObllBase.setDetailmessage(ObonLivraisonManagement.getDetailmessage());
             ObllBase.setMessage(ObonLivraisonManagement.getMessage());
@@ -148,10 +148,10 @@
     }
 
     if (ObllBase.getMessage().equals(commonparameter.PROCESS_SUCCESS)) {
-        result = "{success:\"" + ObllBase.getDetailmessage() + "\", amountMHT:\""+amountMHT+"\" , amountMTTC:\""+amountMTTC+"\" , errors: \"" + ObllBase.getMessage() + "\"}";
+        result = "{success:\"" + ObllBase.getDetailmessage() + "\", amountMHT:\"" + amountMHT + "\" , amountMTTC:\"" + amountMTTC + "\" , errors: \"" + ObllBase.getMessage() + "\"}";
 
     } else {
-        result = "{success:\"" + ObllBase.getDetailmessage() + "\",   amountMHT:\""+amountMHT+"\" , amountMTTC:\""+amountMTTC+"\" , errors: \"" + ObllBase.getMessage() + "\"}";
+        result = "{success:\"" + ObllBase.getDetailmessage() + "\",   amountMHT:\"" + amountMHT + "\" , amountMTTC:\"" + amountMTTC + "\" , errors: \"" + ObllBase.getMessage() + "\"}";
     }
 
 %>

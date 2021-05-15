@@ -85,10 +85,8 @@ public class TUser implements Serializable {
     private String strCREATEDBY;
     @Column(name = "str_UPDATED_BY", length = 20)
     private String strUPDATEDBY;
-   
     @Column(name = "str_FIRST_NAME", length = 255)
     private String strFIRSTNAME;
-  
     @Column(name = "str_LAST_NAME", length = 255)
     private String strLASTNAME;
     @Column(name = "str_LAST_CONNECTION_DATE")
@@ -115,78 +113,19 @@ public class TUser implements Serializable {
     private Boolean bIsConnected;
     @Column(name = "str_PIC", length = 50)
     private String strPIC;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TBonLivraison> tBonLivraisonCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TOrder> tOrderCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TSnapShopDalyStat> tSnapShopDalyStatCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TResumeCaisse> tResumeCaisseCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TCaisse> tCaisseCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TRetourdepot> tRetourdepotCollection;
     @OneToMany(mappedBy = "lgUSERID",fetch = FetchType.EAGER)
     private Collection<TRoleUser> tRoleUserCollection;
-    @OneToMany( mappedBy = "lgUSERID")
-    private Collection<TInventaire> tInventaireCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TRetourFournisseur> tRetourFournisseurCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TAjustement> tAjustementCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TBilletage> tBilletageCollection;
-    @OneToMany( mappedBy = "lgUSERID")
-    private Collection<TWarehouse> tWarehouseCollection;
-    @OneToMany(mappedBy = "lgUSERIDOUT")
-    private Collection<TNotification> tNotificationCollection;
-    @OneToMany(mappedBy = "lgUSERIDIN")
-    private Collection<TNotification> tNotificationCollection1;
-    @OneToMany( mappedBy = "lgUSERID")
-    private Collection<TUserImprimante> tUserImprimanteCollection;
-    @OneToMany( mappedBy = "lgUSERID")
-    private Collection<TUserFone> tUserFoneCollection;
-    @OneToMany(mappedBy = "strCREATEDBY")
-    private Collection<TMvtCaisse> tMvtCaisseCollection;
-    @OneToMany(mappedBy = "lgUSERCAISSIERID")
-    private Collection<TPreenregistrement> tPreenregistrementCollection;
-    @OneToMany(mappedBy = "lgUSERVENDEURID")
-    private Collection<TPreenregistrement> tPreenregistrementCollection1;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TPreenregistrement> tPreenregistrementCollection2;
-    @OneToMany( mappedBy = "lgUSERID")
-    private Collection<TLot> tLotCollection;
     @JoinColumn(name = "lg_EMPLACEMENT_ID", referencedColumnName = "lg_EMPLACEMENT_ID", nullable = false)
     @ManyToOne(optional = false)
     private TEmplacement lgEMPLACEMENTID;
     @JoinColumn(name = "lg_Language_ID", referencedColumnName = "lg_Language_ID")
     @ManyToOne
     private TLanguage lgLanguageID;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TReglement> tReglementCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TPreenregistrementCompteClient> tPreenregistrementCompteClientCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TCodeGestion> tCodeGestionCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TCashTransaction> tCashTransactionCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TDossierReglement> tDossierReglementCollection;
-    @OneToMany( mappedBy = "lgUSERID")
-    private Collection<TMouvementprice> tMouvementpriceCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TRetrocession> tRetrocessionCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TPreenregistrementCompteClientTiersPayent> tPreenregistrementCompteClientTiersPayentCollection;
-    @OneToMany( mappedBy = "lgUSERID")
-    private Collection<TMouvement> tMouvementCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TCoffreCaisse> tCoffreCaisseCollection;
-    @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TDeconditionnement> tDeconditionnementCollection;
-   @OneToMany(mappedBy = "lgUSERID")
-    private Collection<TEventLog> tEventLogCollection;
+ 
+  
+ 
+
+
 
     public TUser() {
     }
@@ -384,60 +323,15 @@ public class TUser implements Serializable {
         this.strPIC = strPIC;
     }
 
-    @XmlTransient
-    public Collection<TBonLivraison> getTBonLivraisonCollection() {
-        return tBonLivraisonCollection;
-    }
+   
 
-    public void setTBonLivraisonCollection(Collection<TBonLivraison> tBonLivraisonCollection) {
-        this.tBonLivraisonCollection = tBonLivraisonCollection;
-    }
+   
 
-    @XmlTransient
-    public Collection<TOrder> getTOrderCollection() {
-        return tOrderCollection;
-    }
+   
 
-    public void setTOrderCollection(Collection<TOrder> tOrderCollection) {
-        this.tOrderCollection = tOrderCollection;
-    }
+  
 
-    @XmlTransient
-    public Collection<TSnapShopDalyStat> getTSnapShopDalyStatCollection() {
-        return tSnapShopDalyStatCollection;
-    }
-
-    public void setTSnapShopDalyStatCollection(Collection<TSnapShopDalyStat> tSnapShopDalyStatCollection) {
-        this.tSnapShopDalyStatCollection = tSnapShopDalyStatCollection;
-    }
-
-    @XmlTransient
-    public Collection<TResumeCaisse> getTResumeCaisseCollection() {
-        return tResumeCaisseCollection;
-    }
-
-    public void setTResumeCaisseCollection(Collection<TResumeCaisse> tResumeCaisseCollection) {
-        this.tResumeCaisseCollection = tResumeCaisseCollection;
-    }
-
-    @XmlTransient
-    public Collection<TCaisse> getTCaisseCollection() {
-        return tCaisseCollection;
-    }
-
-    public void setTCaisseCollection(Collection<TCaisse> tCaisseCollection) {
-        this.tCaisseCollection = tCaisseCollection;
-    }
-
-    @XmlTransient
-    public Collection<TRetourdepot> getTRetourdepotCollection() {
-        return tRetourdepotCollection;
-    }
-
-    public void setTRetourdepotCollection(Collection<TRetourdepot> tRetourdepotCollection) {
-        this.tRetourdepotCollection = tRetourdepotCollection;
-    }
-
+    
     @XmlTransient
     public Collection<TRoleUser> getTRoleUserCollection() {
         return tRoleUserCollection;
@@ -447,131 +341,27 @@ public class TUser implements Serializable {
         this.tRoleUserCollection = tRoleUserCollection;
     }
 
-    @XmlTransient
-    public Collection<TInventaire> getTInventaireCollection() {
-        return tInventaireCollection;
-    }
 
-    public void setTInventaireCollection(Collection<TInventaire> tInventaireCollection) {
-        this.tInventaireCollection = tInventaireCollection;
-    }
 
-    @XmlTransient
-    public Collection<TRetourFournisseur> getTRetourFournisseurCollection() {
-        return tRetourFournisseurCollection;
-    }
+   
 
-    public void setTRetourFournisseurCollection(Collection<TRetourFournisseur> tRetourFournisseurCollection) {
-        this.tRetourFournisseurCollection = tRetourFournisseurCollection;
-    }
 
-    @XmlTransient
-    public Collection<TAjustement> getTAjustementCollection() {
-        return tAjustementCollection;
-    }
 
-    public void setTAjustementCollection(Collection<TAjustement> tAjustementCollection) {
-        this.tAjustementCollection = tAjustementCollection;
-    }
+    
+  
 
-    @XmlTransient
-    public Collection<TBilletage> getTBilletageCollection() {
-        return tBilletageCollection;
-    }
 
-    public void setTBilletageCollection(Collection<TBilletage> tBilletageCollection) {
-        this.tBilletageCollection = tBilletageCollection;
-    }
+    
+   
 
-    @XmlTransient
-    public Collection<TWarehouse> getTWarehouseCollection() {
-        return tWarehouseCollection;
-    }
+    
 
-    public void setTWarehouseCollection(Collection<TWarehouse> tWarehouseCollection) {
-        this.tWarehouseCollection = tWarehouseCollection;
-    }
 
-    @XmlTransient
-    public Collection<TNotification> getTNotificationCollection() {
-        return tNotificationCollection;
-    }
+   
+   
 
-    public void setTNotificationCollection(Collection<TNotification> tNotificationCollection) {
-        this.tNotificationCollection = tNotificationCollection;
-    }
 
-    @XmlTransient
-    public Collection<TNotification> getTNotificationCollection1() {
-        return tNotificationCollection1;
-    }
 
-    public void setTNotificationCollection1(Collection<TNotification> tNotificationCollection1) {
-        this.tNotificationCollection1 = tNotificationCollection1;
-    }
-
-    @XmlTransient
-    public Collection<TUserImprimante> getTUserImprimanteCollection() {
-        return tUserImprimanteCollection;
-    }
-
-    public void setTUserImprimanteCollection(Collection<TUserImprimante> tUserImprimanteCollection) {
-        this.tUserImprimanteCollection = tUserImprimanteCollection;
-    }
-
-    @XmlTransient
-    public Collection<TUserFone> getTUserFoneCollection() {
-        return tUserFoneCollection;
-    }
-
-    public void setTUserFoneCollection(Collection<TUserFone> tUserFoneCollection) {
-        this.tUserFoneCollection = tUserFoneCollection;
-    }
-
-    @XmlTransient
-    public Collection<TMvtCaisse> getTMvtCaisseCollection() {
-        return tMvtCaisseCollection;
-    }
-
-    public void setTMvtCaisseCollection(Collection<TMvtCaisse> tMvtCaisseCollection) {
-        this.tMvtCaisseCollection = tMvtCaisseCollection;
-    }
-
-    @XmlTransient
-    public Collection<TPreenregistrement> getTPreenregistrementCollection() {
-        return tPreenregistrementCollection;
-    }
-
-    public void setTPreenregistrementCollection(Collection<TPreenregistrement> tPreenregistrementCollection) {
-        this.tPreenregistrementCollection = tPreenregistrementCollection;
-    }
-
-    @XmlTransient
-    public Collection<TPreenregistrement> getTPreenregistrementCollection1() {
-        return tPreenregistrementCollection1;
-    }
-
-    public void setTPreenregistrementCollection1(Collection<TPreenregistrement> tPreenregistrementCollection1) {
-        this.tPreenregistrementCollection1 = tPreenregistrementCollection1;
-    }
-
-    @XmlTransient
-    public Collection<TPreenregistrement> getTPreenregistrementCollection2() {
-        return tPreenregistrementCollection2;
-    }
-
-    public void setTPreenregistrementCollection2(Collection<TPreenregistrement> tPreenregistrementCollection2) {
-        this.tPreenregistrementCollection2 = tPreenregistrementCollection2;
-    }
-
-    @XmlTransient
-    public Collection<TLot> getTLotCollection() {
-        return tLotCollection;
-    }
-
-    public void setTLotCollection(Collection<TLot> tLotCollection) {
-        this.tLotCollection = tLotCollection;
-    }
 
     public TEmplacement getLgEMPLACEMENTID() {
         return lgEMPLACEMENTID;
@@ -589,113 +379,7 @@ public class TUser implements Serializable {
         this.lgLanguageID = lgLanguageID;
     }
 
-    @XmlTransient
-    public Collection<TReglement> getTReglementCollection() {
-        return tReglementCollection;
-    }
 
-    public void setTReglementCollection(Collection<TReglement> tReglementCollection) {
-        this.tReglementCollection = tReglementCollection;
-    }
-
-    @XmlTransient
-    public Collection<TPreenregistrementCompteClient> getTPreenregistrementCompteClientCollection() {
-        return tPreenregistrementCompteClientCollection;
-    }
-
-    public void setTPreenregistrementCompteClientCollection(Collection<TPreenregistrementCompteClient> tPreenregistrementCompteClientCollection) {
-        this.tPreenregistrementCompteClientCollection = tPreenregistrementCompteClientCollection;
-    }
-
-    @XmlTransient
-    public Collection<TCodeGestion> getTCodeGestionCollection() {
-        return tCodeGestionCollection;
-    }
-
-    public void setTCodeGestionCollection(Collection<TCodeGestion> tCodeGestionCollection) {
-        this.tCodeGestionCollection = tCodeGestionCollection;
-    }
-
-    @XmlTransient
-    public Collection<TCashTransaction> getTCashTransactionCollection() {
-        return tCashTransactionCollection;
-    }
-
-    public void setTCashTransactionCollection(Collection<TCashTransaction> tCashTransactionCollection) {
-        this.tCashTransactionCollection = tCashTransactionCollection;
-    }
-
-    @XmlTransient
-    public Collection<TDossierReglement> getTDossierReglementCollection() {
-        return tDossierReglementCollection;
-    }
-
-    public void setTDossierReglementCollection(Collection<TDossierReglement> tDossierReglementCollection) {
-        this.tDossierReglementCollection = tDossierReglementCollection;
-    }
-
-    @XmlTransient
-    public Collection<TDeconditionnement> getTDeconditionnementCollection() {
-        return tDeconditionnementCollection;
-    }
-
-    public void setTDeconditionnementCollection(Collection<TDeconditionnement> tDeconditionnementCollection) {
-        this.tDeconditionnementCollection = tDeconditionnementCollection;
-    }
-    
-    @XmlTransient
-    public Collection<TMouvementprice> getTMouvementpriceCollection() {
-        return tMouvementpriceCollection;
-    }
-
-    public void setTMouvementpriceCollection(Collection<TMouvementprice> tMouvementpriceCollection) {
-        this.tMouvementpriceCollection = tMouvementpriceCollection;
-    }
-
-    @XmlTransient
-    public Collection<TRetrocession> getTRetrocessionCollection() {
-        return tRetrocessionCollection;
-    }
-
-    public void setTRetrocessionCollection(Collection<TRetrocession> tRetrocessionCollection) {
-        this.tRetrocessionCollection = tRetrocessionCollection;
-    }
-
-    @XmlTransient
-    public Collection<TPreenregistrementCompteClientTiersPayent> getTPreenregistrementCompteClientTiersPayentCollection() {
-        return tPreenregistrementCompteClientTiersPayentCollection;
-    }
-
-    public void setTPreenregistrementCompteClientTiersPayentCollection(Collection<TPreenregistrementCompteClientTiersPayent> tPreenregistrementCompteClientTiersPayentCollection) {
-        this.tPreenregistrementCompteClientTiersPayentCollection = tPreenregistrementCompteClientTiersPayentCollection;
-    }
-
-    @XmlTransient
-    public Collection<TMouvement> getTMouvementCollection() {
-        return tMouvementCollection;
-    }
-
-    public void setTMouvementCollection(Collection<TMouvement> tMouvementCollection) {
-        this.tMouvementCollection = tMouvementCollection;
-    }
-
-    @XmlTransient
-    public Collection<TCoffreCaisse> getTCoffreCaisseCollection() {
-        return tCoffreCaisseCollection;
-    }
-
-    public void setTCoffreCaisseCollection(Collection<TCoffreCaisse> tCoffreCaisseCollection) {
-        this.tCoffreCaisseCollection = tCoffreCaisseCollection;
-    }
-
-     @XmlTransient
-    public Collection<TEventLog> getTEventLogs() {
-        return tEventLogCollection;
-    }
-
-    public void setTEventLogCollection(Collection<TEventLog> tEventLogCollection) {
-        this.tEventLogCollection = tEventLogCollection;
-    }
     
     @Override
     public int hashCode() {

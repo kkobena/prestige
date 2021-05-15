@@ -231,6 +231,13 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantManager'
                             icon: 'resources/images/icons/fam/disable.png',
                             tooltip: 'Desactiver le tiers payant',
                             scope: this,
+                             getClass: function (value, metadata, record) {
+                                if (record.get('P_BTN_DESACTIVER_TIERS_PAYANT')) {
+                                    return 'x-display-hide';
+                                } else {
+                                    return 'x-hide-display';
+                                }
+                            },
                             handler: this.onDesableClick
                         }]
                 },

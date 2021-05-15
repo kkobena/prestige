@@ -87,9 +87,9 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -143,7 +143,7 @@ new logger().oCategory.info("ID connecté " + OTUser.getLgUSERID());
 
         } else if (request.getParameter("mode").toString().equals("delete")) {
 
-            Ouser.deleteUser(lg_USER_ID, OTUser);
+            Ouser.deleteUser(lg_USER_ID, user);
             ObllBase.setMessage(Ouser.getMessage());
             ObllBase.setDetailmessage(Ouser.getDetailmessage());
             /* OTUser.setStrSTATUT(commonparameter.statut_delete);

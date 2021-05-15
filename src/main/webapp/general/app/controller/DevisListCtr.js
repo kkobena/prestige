@@ -66,7 +66,8 @@ Ext.define('testextjs.controller.DevisListCtr', {
                 toExportExcel: this.onExportExcel,
                 toRemove: this.onDelete,
                 toTransform: this.transformIntoVente,
-                toPdf:this.onExportPdf
+                toPdf: this.onExportPdf,
+                toClone: this.toClone
             },
             'devismanager #query': {
                 specialkey: this.onSpecialKey
@@ -88,7 +89,7 @@ Ext.define('testextjs.controller.DevisListCtr', {
         window.open(linkUrl);
     },
     onbtnexportCsv: function (view, rowIndex, colIndex, item, e, rec, row) {
-      window.location = '../api/v1/ventestats/devis/csv?id=' + rec.get('lgPREENREGISTREMENTID')+'&ref='+rec.get('strREF') ;
+        window.location = '../api/v1/ventestats/devis/csv?id=' + rec.get('lgPREENREGISTREMENTID') + '&ref=' + rec.get('strREF');
 
     },
     onPrintTicket: function (view, rowIndex, colIndex, item, e, rec, row) {
@@ -97,16 +98,16 @@ Ext.define('testextjs.controller.DevisListCtr', {
 
     },
     onExportWord: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID')+"&format=WORD";
+        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=WORD";
         window.open(linkUrl);
 
     },
     onExportExcel: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID')+"&format=EXCEL";
+        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=EXCEL";
         window.open(linkUrl);
     },
     onExportPdf: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID')+"&format=PDF";
+        var linkUrl = "../FacturePdfServlet?mode=DEVIS_FACTURE&venteId=" + rec.get('lgPREENREGISTREMENTID') + "&format=PDF";
         window.open(linkUrl);
 
     },
@@ -159,10 +160,41 @@ Ext.define('testextjs.controller.DevisListCtr', {
 
         });
     },
+    toClone: function (view, rowIndex, colIndex, item, e, rec, row) {
+        var me = this;
+        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        Ext.Ajax.request({
+            method: 'PUT',
+            url: '../api/v1/vente/clone-devis/' + rec.get('lgPREENREGISTREMENTID'),
+            success: function (response, options) {
+                progress.hide();
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.doSearch();
+                } else {
+                    Ext.MessageBox.show({
+                        title: 'Message d\'erreur',
+                        width: 320,
+                        msg: "L'opération a échouée",
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR
+
+                    });
+                }
+            },
+            failure: function (response, options) {
+                progress.hide();
+                Ext.Msg.alert("Message", 'server-side failure with status code' + response.status);
+            }
+
+        });
+
+    },
     transformIntoVente: function (view, rowIndex, colIndex, item, e, rec, row) {
         var data = {'isEdit': true, 'record': rec.data, 'isDevis': true, 'categorie': 'VENTE'};
         var xtype = "doventemanager";
         testextjs.app.getController('App').onRedirectTo(xtype, data);
+    
     },
     onEdite: function (view, rowIndex, colIndex, item, e, rec, row) {
         var data = {'isEdit': true, 'record': rec.data};

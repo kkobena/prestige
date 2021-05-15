@@ -37,9 +37,9 @@
     // str_CODE_TYPE_TIERS_PAYANT
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -72,18 +72,17 @@
 
             new logger().oCategory.info("Suppression du GroupeFamille " + request.getParameter("lg_TYPE_TIERS_PAYANT_ID").toString());
 
-        } else {
-        }
+        } 
 
     }
 
     String result;
     TTypeTiersPayant OTTypeTiersPayant = new dal.TTypeTiersPayant();
     if (ObllBase.getMessage().equals(commonparameter.PROCESS_SUCCESS)) {
-        result = "{success:1,lg_TYPE_TIERS_PAYANT_ID: \"" + OTTypeTiersPayant.getLgTYPETIERSPAYANTID()+ "\" }";
+        result = "{success:1,lg_TYPE_TIERS_PAYANT_ID: \"" + OTTypeTiersPayant.getLgTYPETIERSPAYANTID() + "\" }";
     } else {
         result = "{success:\"" + ObllBase.getMessage() + "\", errors: \"" + ObllBase.getDetailmessage() + "\"}";
     }
-    new logger().OCategory.info("JSON " + result); 
+    new logger().OCategory.info("JSON " + result);
 %>
 <%=result%>

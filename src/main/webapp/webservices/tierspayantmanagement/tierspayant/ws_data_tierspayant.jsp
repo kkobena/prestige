@@ -28,7 +28,7 @@
     dataManager OdataManager = new dataManager();
     date key = new date();
 
-    List<TPreenregistrementCompteClientTiersPayent> lstTPreenregistrementCompteClientTiersPayent = new ArrayList<TPreenregistrementCompteClientTiersPayent>();
+    List<TPreenregistrementCompteClientTiersPayent> lstTPreenregistrementCompteClientTiersPayent = new ArrayList<>();
 
 
 %>
@@ -87,8 +87,8 @@
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
 
     OdataManager.initEntityManager();
-
-    tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager, OTUser);
+  TUser user=OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager, user);
 
     if (request.getParameter("lg_PREENREGISTREMENT_ID") != null) {
         lg_PREENREGISTREMENT_ID = request.getParameter("lg_PREENREGISTREMENT_ID").toString();

@@ -50,6 +50,7 @@ import toolkits.parameters.commonparameter;
 import toolkits.utils.conversion;
 import toolkits.utils.date;
 import toolkits.utils.logger;
+import util.DateConverter;
 
 /**
  *
@@ -710,7 +711,6 @@ public class clientManagement extends bllBase {
         }
     }
 
-   
     public TCompteClient createClient(String str_FIRST_NAME, String str_LAST_NAME,
             String str_NUMERO_SECURITE_SOCIAL, Date dt_NAISSANCE,
             String str_SEXE, String str_ADRESSE,
@@ -845,7 +845,7 @@ public class clientManagement extends bllBase {
 
     //liste des types clients
     public List<TTypeClient> getListTypeClientByType(String search_value, String lg_TYPE_CLIENT_ID, String str_TYPE) {
-        List<TTypeClient> lstTTypeClient = new ArrayList<TTypeClient>();
+        List<TTypeClient> lstTTypeClient = new ArrayList<>();
         try {
             lstTTypeClient = this.getOdataManager().getEm().createQuery("SELECT t FROM TTypeClient t WHERE t.lgTYPECLIENTID LIKE ?1 AND t.strNAME LIKE ?2 AND t.strSTATUT = ?3 AND t.strTYPE LIKE ?4").
                     setParameter(1, lg_TYPE_CLIENT_ID)
@@ -864,7 +864,7 @@ public class clientManagement extends bllBase {
     //fin liste des types clients
     //liste des clients par type de tiers payants
     public List<TCompteClientTiersPayant> getListTypeClientByTypeTierspayant(String search_value, String lg_TYPE_TIERS_PAYANT_ID) {
-        List<TCompteClientTiersPayant> lstTCompteClientTiersPayant = new ArrayList<TCompteClientTiersPayant>();
+        List<TCompteClientTiersPayant> lstTCompteClientTiersPayant = new ArrayList<>();
         try {
             lstTCompteClientTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgTIERSPAYANTID.lgTYPETIERSPAYANTID.lgTYPETIERSPAYANTID LIKE ?1 AND (t.lgCOMPTECLIENTID.lgCLIENTID.strFIRSTNAME LIKE ?2 OR t.lgCOMPTECLIENTID.lgCLIENTID.strLASTNAME LIKE ?4 OR t.lgTIERSPAYANTID.strFULLNAME LIKE ?5) AND t.strSTATUT = ?3 AND t.lgCOMPTECLIENTID.lgCLIENTID.strSTATUT = ?6 ORDER BY t.lgCOMPTECLIENTID.lgCLIENTID.strFIRSTNAME ASC").
                     setParameter(1, lg_TYPE_TIERS_PAYANT_ID)
@@ -1672,14 +1672,18 @@ public class clientManagement extends bllBase {
             List<TClient> list = q.getResultList();
             Integer dbl_total_differe = 0;
             JSONArray array = new JSONArray();
-            boolean isALLOWED = Util.isAllowed(em, Util.ACTIONDELETE, this.getOTUser().getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
-
+            boolean isALLOWED = DateConverter.hasAuthorityById(getUsersPrivileges(), Util.ACTIONDELETE);
+            boolean P_BTN_DESACTIVER_CLIENT = DateConverter.hasAuthorityByName(getUsersPrivileges(), DateConverter.P_BTN_DESACTIVER_CLIENT);
+          
             for (TClient c : list) {
                 JSONObject json = new JSONObject();
                 String lg_CATEGORIE_AYANTDROIT_ID = "";
                 String lg_RISQUE_ID = "";
                 String lg_COMPTE_CLIENT_ID = "";
                 json.put("BTNDELETE", isALLOWED);
+                json.put("P_BTN_DESACTIVER_CLIENT", P_BTN_DESACTIVER_CLIENT);
+             
+
                 try {
                     TCompteClient tCompteClient = getCompteClientt(c.getLgCLIENTID());
 

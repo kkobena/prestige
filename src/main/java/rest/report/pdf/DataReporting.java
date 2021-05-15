@@ -6,6 +6,7 @@
 package rest.report.pdf;
 
 import commonTasks.dto.ArticleDTO;
+import commonTasks.dto.DonneesExploitationDTO;
 import commonTasks.dto.FamilleArticleStatDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TOfficine;
@@ -23,6 +24,7 @@ import javax.ejb.Stateless;
 import rest.report.ReportUtil;
 import rest.service.CommonService;
 import rest.service.DataReporingService;
+import rest.service.DonneesExploitation;
 import rest.service.FicheArticleService;
 import toolkits.utils.jdom;
 
@@ -41,6 +43,8 @@ public class DataReporting {
     CommonService commonService;
     @EJB
     FicheArticleService ficheArticleService;
+    @EJB
+    private DonneesExploitation donneesExploitationService;
 
     public String margeProduitsVendus(String dtStart, String dtEnd, String codeFamile, Integer critere, String query, TUser tu, String codeRayon, String codeGrossiste, MargeEnum filtre) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
@@ -260,13 +264,14 @@ public class DataReporting {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_comparaison_tock_" + report_generate_file, data);
         return "/data/reports/pdf/rp_comparaison_tock_" + report_generate_file;
     }
- public String produitConsomamation(TUser tu, String query, String dtStart, String dtEnd, String id,String libelle,String cip) throws IOException {
+
+    public String produitConsomamation(TUser tu, String query, String dtStart, String dtEnd, String id, String libelle, String cip) throws IOException {
 
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_consoarticle_comparaison";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + LocalDate.parse(dtStart).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " AU " + LocalDate.parse(dtEnd).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        parameters.put("P_H_CLT_INFOS", "CONSOMMATION DE L'ARTICLE\n   "+libelle+"\n CODE CIP :  "+cip+" "
+        parameters.put("P_H_CLT_INFOS", "CONSOMMATION DE L'ARTICLE\n   " + libelle + "\n CODE CIP :  " + cip + " "
                 + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".pdf";
 //        Comparator<ArticleDTO> comparator = Comparator.comparing(ArticleDTO::getFilterId)
@@ -276,4 +281,26 @@ public class DataReporting {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "consoarticle_comparaison_" + report_generate_file, data);
         return "/data/reports/pdf/consoarticle_comparaison_" + report_generate_file;
     }
+
+    public String donneesCompteExploitation(String dtStart, String dtEnd, String codeFrom, String codeTo, TUser tu) throws IOException {
+        TOfficine oTOfficine = commonService.findOfficine();
+        String scr_report_file = "rp_compte_exploitation";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = "PERIODE DU " + LocalDate.parse(dtStart).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " AU " + LocalDate.parse(dtEnd).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        parameters.put("P_H_CLT_INFOS", "PRESENTATION COMPTE D'EXPLOITATION" + P_PERIODE);
+        DonneesExploitationDTO o = donneesExploitationService.donneesCompteExploitation(tu, dtStart, dtEnd);
+        parameters.put("espece", o.getEspece());
+        parameters.put("especeVeto", o.getEspeceVeto());
+        parameters.put("credit", o.getCredit());
+        parameters.put("creditVeto", o.getCreditVeto());
+        parameters.put("especeMarge", o.getEspeceMarge());
+        parameters.put("especeVetoMarge", o.getEspeceVetoMarge());
+        parameters.put("creditVetoMarge", o.getCreditVetoMarge());
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".pdf";
+        List<DonneesExploitationDTO> data = donneesExploitationService.donneesCompteExploitation(dtStart, dtEnd, codeFrom, codeTo, tu);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf
+                + "rp_compte_exploitation_" + report_generate_file, data);
+        return "/data/reports/pdf/rp_compte_exploitation_" + report_generate_file;
+    }
+
 }

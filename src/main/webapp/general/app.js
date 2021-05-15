@@ -844,7 +844,8 @@ Ext.application({
         'UgCtr',
         'ImportationHistoriqueCtr',
         'FamilleArticleStatVetoCtr',
-        'ParaCtr'
+        'ParaCtr',
+        'CompteExploitationCtr'
     ],
     stores: [
         'Menu'

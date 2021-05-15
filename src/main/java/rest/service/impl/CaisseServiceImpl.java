@@ -793,12 +793,21 @@ public class CaisseServiceImpl implements CaisseService {
                 q.setFirstResult(start);
                 q.setMaxResults(limit);
             }
-            return q.getResultList().stream()
-                    .map(o -> new ResumeCaisseDTO(o,
-                    getBilletageByCaisse(o.getLdCAISSEID(), o.getLgUSERID().getLgUSERID()),
-                    montantAnnuleGestionCaisse(o.getLgUSERID().getLgUSERID(), DateConverter.convertDateToLocalDateTime(o.getDtCREATED()), DateConverter.convertDateToLocalDateTime(o.getDtUPDATED()), false) + montantAnnuleRecette(o.getLgUSERID().getLgUSERID(), DateConverter.convertDateToLocalDate(o.getDtCREATED()), DateConverter.convertDateToLocalDate(o.getDtCREATED())),
-                    cancel))
-                    .collect(Collectors.toList());
+            if (!isTrue(DateConverter.KEY_PRENDRE_EN_COMPTE_FOND_CAISSE)) {
+                return q.getResultList().stream()
+                        .map(o -> new ResumeCaisseDTO(o,
+                        getBilletageByCaisse(o.getLdCAISSEID(), o.getLgUSERID().getLgUSERID()),
+                        montantAnnuleGestionCaisse(o.getLgUSERID().getLgUSERID(), DateConverter.convertDateToLocalDateTime(o.getDtCREATED()), DateConverter.convertDateToLocalDateTime(o.getDtUPDATED()), false) + montantAnnuleRecette(o.getLgUSERID().getLgUSERID(), DateConverter.convertDateToLocalDate(o.getDtCREATED()), DateConverter.convertDateToLocalDate(o.getDtCREATED())),
+                        cancel))
+                        .collect(Collectors.toList());
+            } else {
+                return q.getResultList().stream()
+                        .map(o -> new ResumeCaisseDTO(o,
+                        getBilletageByCaisse(o.getLdCAISSEID(), o.getLgUSERID().getLgUSERID()),
+                        montantAnnuleGestionCaisse(o.getLgUSERID().getLgUSERID(), DateConverter.convertDateToLocalDateTime(o.getDtCREATED()), DateConverter.convertDateToLocalDateTime(o.getDtUPDATED()), false) + montantAnnuleRecette(o.getLgUSERID().getLgUSERID(), DateConverter.convertDateToLocalDate(o.getDtCREATED()), DateConverter.convertDateToLocalDate(o.getDtCREATED())),
+                        cancel, true))
+                        .collect(Collectors.toList());
+            }
         } catch (Exception e) {
             e.printStackTrace(System.err);
             return Collections.emptyList();
@@ -850,8 +859,8 @@ public class CaisseServiceImpl implements CaisseService {
     public JSONObject balanceVenteCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
             throws JSONException {
         List<MvtTransaction> transactions = balanceVenteCaisseList(dtStart, dtEnd, checked, emplacementId);
-        GenericDTO generic = null;
-     
+        GenericDTO generic;
+
         if (key_Take_Into_Account() || key_Params()) {
             generic = balanceFormat0(transactions);
         } else {
@@ -921,7 +930,7 @@ public class CaisseServiceImpl implements CaisseService {
         List<BalanceDTO> balances = new ArrayList<>();
         GenericDTO generic = new GenericDTO();
         SummaryDTO summary = new SummaryDTO();
-    
+
         if (!mvtTransactions.isEmpty()) {
             Map<TypeTransaction, List<MvtTransaction>> map = mvtTransactions.parallelStream()
                     .collect(Collectors.groupingBy(o -> o.getTypeTransaction()));
@@ -2269,12 +2278,13 @@ public class CaisseServiceImpl implements CaisseService {
             String emplacementId) {
         try {
             TypedQuery<MvtTransaction> query = getEntityManager().createQuery(
-                    "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN ?1 AND ?2 AND o.magasin.lgEMPLACEMENTID <>?3 AND o.checked=?4 ",
+                    "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.magasin.lgEMPLACEMENTID <>:empl AND o.checked=:checked AND o.typeTransaction IN :typetransac ",
                     MvtTransaction.class);
-            query.setParameter(1, dtStart);
-            query.setParameter(2, dtEnd);
-            query.setParameter(3, emplacementId);
-            query.setParameter(4, checked);
+            query.setParameter("dtStart", dtStart);
+            query.setParameter("dtEnd", dtEnd);
+            query.setParameter("empl", emplacementId);
+            query.setParameter("checked", checked);
+            query.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT));
             return query.getResultList();
         } catch (Exception e) {
             e.printStackTrace(System.err);
@@ -3015,7 +3025,7 @@ public class CaisseServiceImpl implements CaisseService {
         List<BalanceDTO> balances = new ArrayList<>();
         GenericDTO generic = new GenericDTO();
         SummaryDTO summary = new SummaryDTO();
-       
+
         if (!mvtTransactions.isEmpty()) {
             Map<TypeTransaction, List<MvtTransaction>> map = mvtTransactions.parallelStream()
                     .collect(Collectors.groupingBy(o -> o.getTypeTransaction()));
@@ -4209,8 +4219,7 @@ public class CaisseServiceImpl implements CaisseService {
         return summ;
     }
 
-    
-     @Override
+    @Override
     public Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatasMonthly(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user,
             int ration, int start, int limit, boolean all) {
         TEmplacement emp = user.getLgEMPLACEMENTID();
@@ -4223,19 +4232,18 @@ public class CaisseServiceImpl implements CaisseService {
         }
 
     }
-    
-    
-     private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardDataMonthly(List<MvtTransaction> transactions) {
+
+    private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardDataMonthly(List<MvtTransaction> transactions) {
         if (transactions.isEmpty()) {
             return Collections.emptyMap();
         }
-         DateTimeFormatter DD_MM_YYY = DateTimeFormatter.ofPattern("yyyyMMdd");
+        DateTimeFormatter DD_MM_YYY = DateTimeFormatter.ofPattern("yyyyMMdd");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
         DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("MM/yyyy");
         Map<TableauBaordSummary, List<TableauBaordPhDTO>> summ = new HashMap<>();
         List<TableauBaordPhDTO> tableauBaords = new ArrayList<>();
         TableauBaordSummary summary = new TableauBaordSummary();
-       Map<Integer, List<MvtTransaction>> map = transactions.stream()
+        Map<Integer, List<MvtTransaction>> map = transactions.stream()
                 .collect(Collectors.groupingBy(o -> Integer.valueOf(o.getMvtDate().format(formatter))));
         LongAdder _summontantTTC = new LongAdder(), _summontantNet = new LongAdder(),
                 _summontantRemise = new LongAdder(),
@@ -4267,7 +4275,7 @@ public class CaisseServiceImpl implements CaisseService {
                     montantAchatFive = new LongAdder(),
                     montantAchat = new LongAdder(), montantAvoir = new LongAdder();
             DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
-           int avoir = avoirFournisseur(k.toString());
+            int avoir = avoirFournisseur(k.toString());
             montantAvoir.add(avoir);
             v.forEach(op -> {
                 switch (op.getTypeTransaction()) {
@@ -4387,7 +4395,7 @@ public class CaisseServiceImpl implements CaisseService {
             _summontantAvoir.add(baordPh.getMontantAvoir());
             tableauBaords.add(baordPh);
         });
-        Long  _montantNet = _summontantNet.longValue();
+        Long _montantNet = _summontantNet.longValue();
         Long _montantAchat = _summontantAchat.longValue();
         if (_montantAchat.compareTo(0l) > 0) {
             _sumratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
@@ -4414,4 +4422,33 @@ public class CaisseServiceImpl implements CaisseService {
         return summ;
     }
 
+    public JSONObject balanceCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
+            throws JSONException {
+        List<MvtTransaction> transactions = balanceVenteCaisseList(dtStart, dtEnd, checked, emplacementId);
+        GenericDTO generic;
+
+        if (key_Take_Into_Account() || key_Params()) {
+            generic = balanceFormat0(transactions);
+        } else {
+            generic = balanceFormat(transactions);
+        }
+        JSONObject json = new JSONObject();
+        List<BalanceDTO> balances = generic.getBalances();
+        SummaryDTO summary = generic.getSummary();
+        json.put("total", balances.size());
+        json.put("data", balances);
+        json.put("metaData", new JSONObject(summary));
+        return json;
+    }
+
+    private boolean isTrue(String parameterKey) {
+        try {
+
+            TParameters tp = getEntityManager().find(TParameters.class, parameterKey);
+            return (Integer.valueOf(tp.getStrVALUE()) == 1);
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

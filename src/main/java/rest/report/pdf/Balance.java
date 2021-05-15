@@ -94,7 +94,7 @@ public class Balance {
         }
         BalanceDTO vo = new BalanceDTO();
         BalanceDTO vno = new BalanceDTO();
-        GenericDTO generic = null;
+        GenericDTO generic;
         if (!parasm.isCheckug()) {
             generic = caisseService.balanceVenteCaisseReport(dtSt, dtEn, true, empl.getLgEMPLACEMENTID());
         } else {
@@ -173,15 +173,15 @@ public class Balance {
         parameters.put("P_TOTAL_TIERSPAYANT", DateConverter.amountFormat(summary.getMontantTp(), ' '));
         parameters.put("P_TOTAL_AVOIR", DateConverter.amountFormat(summary.getMontantDiff(), ' '));
         parameters.put("P_TOTAL_PERCENT", totalP + "");
-        parameters.put("P_TOTAL_VENTE", DateConverter.amountFormat(summary.getMontantEsp() + summary.getMontantCheque() + summary.getMontantVirement() + 
-                summary.getMontantCB()+summary.getMontantMobilePayment(), ' '));
+        parameters.put("P_TOTAL_VENTE", DateConverter.amountFormat(summary.getMontantEsp() + summary.getMontantCheque() + summary.getMontantVirement()
+                + summary.getMontantCB() + summary.getMontantMobilePayment(), ' '));
         String P_FONDCAISSE_LABEL = "",
                 P_SORIECAISSE_LABEL = "",
                 P_ENTREECAISSE_LABEL = "",
                 P_REGLEMENT_LABEL = "",
                 P_ACCOMPTE_LABEL = "",
                 P_DIFFERE_LABEL = "",
-                P_TOTAL_CAISSE_LABEL = "";
+                P_TOTAL_CAISSE_LABEL ;
         long P_SORTIECAISSE_ESPECE = 0,
                 P_SORTIECAISSE_CHEQUES = 0,
                 P_SORTIECAISSE_MOBILE = 0,
@@ -208,7 +208,7 @@ public class Balance {
                 P_FONDCAISSE = 0,
                 P_DIFFERE_CHEQUES = 0,
                 P_DIFFERE_CB = 0,
-                P_TOTAL_GLOBAL_CAISSE, P_TOTAL_GLOBALE_MOBILE = 0,
+                P_TOTAL_GLOBAL_CAISSE, P_TOTAL_GLOBALE_MOBILE ,
                 P_DIFFERE_ESPECE = 0,
                 P_DIFFERE_VIREMENT = 0,
                 P_TOTAL_VIREMENT_GLOBAL,
@@ -240,7 +240,7 @@ public class Balance {
                     P_SORTIECAISSE_VIREMENT = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_MOOV);
                     P_SORTIECAISSE_MOBILE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
-                    list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
+                    list = typeRe.get(DateConverter.MODE_MTN);
                     P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
                     P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
@@ -257,8 +257,9 @@ public class Balance {
                     P_ENTREECAISSE_CB = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_VIREMENT);
                     P_ENTREECAISSE_VIREMENT = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                    list = typeRe.get(DateConverter.MODE_MOOV);
                     P_ENTREECAISSE_MOBILE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
-                    list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
+                    list = typeRe.get(DateConverter.MODE_MTN);
                     P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
                     P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
@@ -275,8 +276,9 @@ public class Balance {
                     P_REGLEMENT_CB = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.MODE_VIREMENT);
                     P_REGLEMENT_VIREMENT = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                    list = typeRe.get(DateConverter.MODE_MOOV);
                     P_REGLEMENT_MOBILE = (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
-                    list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
+                    list = typeRe.get(DateConverter.MODE_MTN);
                     P_REGLEMENT_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
                     P_REGLEMENT_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
@@ -306,7 +308,28 @@ public class Balance {
                 LongAdder ch = new LongAdder();
                 LongAdder cb = new LongAdder();
                 LongAdder mobile = new LongAdder();
-                transactions.stream().forEach(de -> {
+                for (MvtTransaction de : transactions) {
+                     String typ = de.getReglement().getLgTYPEREGLEMENTID();
+                    switch (typ) {
+                        case DateConverter.MODE_ESP:
+                            esp.add(de.getMontantRegle());
+                            break;
+                        case DateConverter.MODE_CB:
+                            cb.add(de.getMontantRegle());
+                            break;
+                        case DateConverter.MODE_CHEQUE:
+                            ch.add(de.getMontantRegle());
+                            break;
+                        case DateConverter.MODE_MOOV:
+                        case DateConverter.TYPE_REGLEMENT_ORANGE:
+                        case DateConverter.MODE_MTN:
+                            mobile.add(de.getMontantRegle());
+                            break;
+                        default:
+                            break;
+                    }
+                }
+               /* transactions.stream().forEach(de -> {
                     String typ = de.getReglement().getLgTYPEREGLEMENTID();
                     switch (typ) {
                         case DateConverter.MODE_ESP:
@@ -327,7 +350,7 @@ public class Balance {
                             break;
                     }
 
-                });
+                });*/
                 P_REGLEMENTDEPOT_ESPECE = esp.longValue();
                 P_REGLEMENTDEPOT_CHEQUES = ch.longValue();
                 P_REGLEMENTDEPOT_CB = cb.longValue();

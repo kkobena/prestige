@@ -10,8 +10,11 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -72,8 +75,13 @@ public class ArticleDTO implements Serializable {
 
     public ArticleDTO datePeremption(String datePeremption) {
         try {
-            this.datePeremption = dateFormat.format(datePeremption);
+              
+           if(!StringUtils.isEmpty(datePeremption)){
+               this.datePeremption = LocalDate.parse(datePeremption.substring(0, datePeremption.indexOf(" "))).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+           }
+            
         } catch (Exception e) {
+           // e.printStackTrace();
         }
 
         return this;

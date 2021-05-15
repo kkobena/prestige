@@ -14,7 +14,7 @@ Ext.define('testextjs.model.TiersPayant', {
         {
             name: 'str_CLIENT',
             type: 'string'
-        }, 
+        },
         {
             name: 'int_PRICE_VENTE',
             type: 'int'
@@ -238,36 +238,36 @@ Ext.define('testextjs.model.TiersPayant', {
             name: 'str_NUMERO_SECURITE_SOCIAL',
             type: 'string'
         },
-         {
+        {
             name: 'b_IsAbsolute',
             type: 'boolean'
         }
-        ,{
-            name:'db_CONSOMMATION_MENSUELLE',
-            type:'number'
+        , {
+            name: 'db_CONSOMMATION_MENSUELLE',
+            type: 'number'
         }
-        ,{
-            name:'dbl_PLAFOND_CREDIT',
-            type:'number'
+        , {
+            name: 'dbl_PLAFOND_CREDIT',
+            type: 'number'
         },
         {
-            name:'b_CANBEUSE',
-            type:'boolean'
+            name: 'b_CANBEUSE',
+            type: 'boolean'
         },
         {
-            name:'lgGROUPEID',
-            type:'string'
+            name: 'lgGROUPEID',
+            type: 'string'
         },
         {
-            name:'nbrbons',
-            type:'number'
+            name: 'nbrbons',
+            type: 'number'
         },
         {
-            name:'montantFact',
-            type:'number'
-        }
-        
-        
-        
+            name: 'montantFact',
+            type: 'number'
+        },
+        {name: 'P_BTN_DESACTIVER_TIERS_PAYANT', type: 'boolean'}
+
+
     ]
 });

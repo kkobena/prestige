@@ -29,7 +29,7 @@ public class DataReportingServlet extends HttpServlet {
 
     private enum ActionDataReporting {
         MARGE_PRODUITS, UNITES_VENDUES, UNITES_GAMME, UNITES_LABORATOIRES, ARTICLES_NON_VENDUES, ARTICLES_SUR_STOCK,
-        COMPARAISON_STOCK, COMPARAISON_STOCK_DETAIL
+        COMPARAISON_STOCK, COMPARAISON_STOCK_DETAIL, COMPTE_EXPLOITATION
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -159,6 +159,11 @@ public class DataReportingServlet extends HttpServlet {
                 String libelle = request.getParameter("libelle");
                 String cip = request.getParameter("cip");
                 file = dataReporting.produitConsomamation(OTUser, query, dtStart, dtEnd, id, libelle, cip);
+                break;
+            case COMPTE_EXPLOITATION:
+                String codeTo = request.getParameter("codeTo");
+                String codeFrom = request.getParameter("codeFrom");
+                file = dataReporting.donneesCompteExploitation(dtStart, dtEnd, codeFrom, codeTo, OTUser);
                 break;
 
         }

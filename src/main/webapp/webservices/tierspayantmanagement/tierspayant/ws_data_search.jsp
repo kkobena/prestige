@@ -19,7 +19,7 @@
 <%
   dataManager OdataManager = new dataManager();
 
-    List<TTiersPayant> lstTTiersPayant = new ArrayList<TTiersPayant>();  
+    List<TTiersPayant> lstTTiersPayant = new ArrayList<>();  
 
 %>
 <%    int DATA_PER_PAGE = 10, count = 0, pages_curr = 0;

@@ -44,15 +44,14 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
-    WarehouseManager OWarehouseManager = new WarehouseManager(OdataManager, OTUser);
-    SnapshotManager OSnapshotManager = new SnapshotManager(OdataManager, OTUser);
-    StockManager OStockManager = new StockManager(OdataManager, OTUser);
+    WarehouseManager OWarehouseManager = new WarehouseManager(OdataManager, user);
+    StockManager OStockManager = new StockManager(OdataManager, user);
 
     ObllBase.setDetailmessage("PAS D'ACTION");
 
@@ -106,18 +105,18 @@
 
         } else if (request.getParameter("mode").equals("doPerime")) {
             try {
-                 TFamilleStock OTFamilleStock = new tellerManagement(OdataManager, OTUser).getTProductItemStock(lg_FAMILLE_ID);
+                TFamilleStock OTFamilleStock = new tellerManagement(OdataManager, user).getTProductItemStock(lg_FAMILLE_ID);
                 new logger().oCategory.info("Stock avant avec perime " + OTFamilleStock.getIntNUMBERAVAILABLE());
                 if (OTFamilleStock.getIntNUMBERAVAILABLE() < int_NUMBER) {
                     ObllBase.buildErrorTraceMessage("La quantité à envoyer en périmé doit être inférieure ou égale à la quantité en stock");
                 } else {
                     TWarehouse OTWarehouse = OWarehouseManager.AddStock(OTFamilleStock.getLgFAMILLEID(), int_NUMBER, int_NUM_LOT);
-               
+
                     for (int i = 0; i < OTWarehouse.getIntNUMBER(); i++) {
                         OWarehouseManager.addProductItemInWarehouseDetail("", OTWarehouse.getLgFAMILLEID(), OTWarehouse.getDtPEREMPTION(), OTWarehouse);
                     }
-                    
-                   // OSnapshotManager.SaveMouvementFamille(OTWarehouse.getLgFAMILLEID(), "", commonparameter.REMOVE, commonparameter.str_ACTION_PERIME, int_NUMBER); a decommenter en cas de probleme
+
+                    // OSnapshotManager.SaveMouvementFamille(OTWarehouse.getLgFAMILLEID(), "", commonparameter.REMOVE, commonparameter.str_ACTION_PERIME, int_NUMBER); a decommenter en cas de probleme
                     ObllBase.setDetailmessage(OWarehouseManager.getDetailmessage());
                     ObllBase.setMessage(OWarehouseManager.getMessage());
                 }

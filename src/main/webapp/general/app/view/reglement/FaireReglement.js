@@ -436,7 +436,7 @@ Ext.define('testextjs.view.reglement.FaireReglement', {
                         }, {
                             xtype: 'fieldset',
                             labelAlign: 'right',
-                            height: 80,
+                            height: 130,
                             title: '<span style="color:blue;">REGLEMENT</span>',
                             layout: 'anchor',
                             defaults: {
@@ -480,7 +480,6 @@ Ext.define('testextjs.view.reglement.FaireReglement', {
                                     border: true,
                                     hidden: true,
                                     style: 'border-bottom:1px #9999ff solid;padding-bottom:3px;',
-//                            hidden: true,
                                     bodyPadding: 2,
                                     margin: '5 0 5 0',
                                     items: [

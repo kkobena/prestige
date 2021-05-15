@@ -10,6 +10,7 @@ import dal.TCompteClient;
 import dal.TCompteClientTiersPayant;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TPreenregistrementCompteClientTiersPayent_;
+import dal.TPrivilege;
 import dal.TTiersPayant;
 import dal.TTiersPayant_;
 import dal.TTypeTiersPayant;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -42,6 +44,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.date;
+import util.DateConverter;
 
 /**
  *
@@ -51,12 +54,13 @@ import toolkits.utils.date;
 public class Tierspayant extends HttpServlet {
 
     TUser OTUser = null;
-    dataManager OdataManager = null;
+    @PersistenceContext(unitName = "JTA_UNIT")
+    private EntityManager em;
 
     public Integer getAccount(String tp) {
         Integer account = 0;
         try {
-            EntityManager em = OdataManager.getEm();
+
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Integer> cq = cb.createQuery(Integer.class);
             Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
@@ -79,12 +83,11 @@ public class Tierspayant extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        OdataManager = new dataManager();
-        OdataManager.initEntityManager();
+
         response.setContentType("application/json;charset=UTF-8");
         HttpSession session = request.getSession();
         OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
-
+        List<TPrivilege> privileges = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         String search_value = "", lg_TYPE_TIERS_PAYANT_ID = "";
         try (PrintWriter out = response.getWriter()) {
             if (request.getParameter("search_value") != null) {
@@ -112,7 +115,8 @@ public class Tierspayant extends HttpServlet {
             int count = ShowAllOrOneTierspayant(search_value, lg_TYPE_TIERS_PAYANT_ID);
             data.put("total", count);
             JSONArray jsonarray = new JSONArray();
-            boolean isALLOWED = Util.isAllowed(OdataManager.getEm(), Util.ACTIONDELETE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
+            boolean isALLOWED = DateConverter.hasAuthorityById(privileges, Util.ACTIONDELETE);
+            boolean P_BTN_DESACTIVER_TIERS_PAYANT = DateConverter.hasAuthorityByName(privileges, DateConverter.P_BTN_DESACTIVER_TIERS_PAYANT);
             for (TTiersPayant tTiersPayant : list) {
                 JSONObject json = new JSONObject();
                 TCompteClient OTCompteClient = getTCompteClient(tTiersPayant.getLgTIERSPAYANTID());
@@ -233,6 +237,7 @@ public class Tierspayant extends HttpServlet {
                     str_Product = "Aucun client associé";
                 }
                 json.put("BTNDELETE", isALLOWED);
+                json.put("P_BTN_DESACTIVER_TIERS_PAYANT", P_BTN_DESACTIVER_TIERS_PAYANT);
                 json.put("int_NUMBER_CLIENT", lstTCompteClientTiersPayant.size());
                 json.put("str_FAMILLE_ITEM", str_Product);
                 jsonarray.put(json);
@@ -287,7 +292,7 @@ public class Tierspayant extends HttpServlet {
 
     private List<TTiersPayant> ShowAllOrOneTierspayant(String search_value, String lg_TYPE_TIERS_PAYANT_ID, int start, int limit) {
         List<TTiersPayant> list = new ArrayList<>();
-        EntityManager em = OdataManager.getEm();
+   
         try {
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -322,7 +327,7 @@ public class Tierspayant extends HttpServlet {
 
     private int ShowAllOrOneTierspayant(String search_value, String lg_TYPE_TIERS_PAYANT_ID) {
 
-        EntityManager em = OdataManager.getEm();
+    
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
@@ -348,7 +353,7 @@ public class Tierspayant extends HttpServlet {
 
     private TCompteClient getTCompteClient(String P_KEY) {
         TCompteClient OTCompteClient = null;
-        EntityManager em = OdataManager.getEm();
+        
         try {
             OTCompteClient = em.createQuery("SELECT t FROM TCompteClient t WHERE t.pKey = ?1 AND t.strSTATUT = ?2", TCompteClient.class).
                     setParameter(1, P_KEY).
@@ -365,7 +370,7 @@ public class Tierspayant extends HttpServlet {
         List<TCompteClientTiersPayant> lstTCompteClientTiersPayant = new ArrayList<>();
         try {
 
-            lstTCompteClientTiersPayant = OdataManager.getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE  t.lgTIERSPAYANTID.lgTIERSPAYANTID = ?1   ORDER BY t.intPRIORITY ASC")
+            lstTCompteClientTiersPayant = em.createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE  t.lgTIERSPAYANTID.lgTIERSPAYANTID = ?1   ORDER BY t.intPRIORITY ASC")
                     .setParameter(1, lg_TIERS_PAYANT_ID).getResultList();
         } catch (Exception e) {
             e.printStackTrace();

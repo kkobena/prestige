@@ -13,7 +13,7 @@
 <%@page import="org.json.JSONObject"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%
-    TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+    
     String lg_FAMILLE_ID = request.getParameter("lg_FAMILLE_ID");
     boolean enabled = Boolean.parseBoolean(request.getParameter("checked"));
     JSONObject json = new JSONObject();

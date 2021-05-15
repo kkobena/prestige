@@ -44,9 +44,9 @@
     }
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -66,15 +66,14 @@
             //MODE MODIFICATION
         } else if (request.getParameter("mode").toString().equals("update")) {
 
-            
             OFabricantManagement.update(lg_FABRIQUANT_ID, str_CODE, str_NAME, str_DESCRIPTION, str_ADRESSE, str_TELEPHONE);
             ObllBase.setMessage(OFabricantManagement.getMessage());
             ObllBase.setDetailmessage(OFabricantManagement.getDetailmessage());
             //MODE SUPPRESSION
         } else if (request.getParameter("mode").toString().equals("delete")) {
 
-           OFabricantManagement.deleteFabriquant(lg_FABRIQUANT_ID);
-           ObllBase.setMessage(OFabricantManagement.getMessage());
+            OFabricantManagement.deleteFabriquant(lg_FABRIQUANT_ID);
+            ObllBase.setMessage(OFabricantManagement.getMessage());
             ObllBase.setDetailmessage(OFabricantManagement.getDetailmessage());
         }
     }

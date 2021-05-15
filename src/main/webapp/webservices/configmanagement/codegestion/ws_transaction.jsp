@@ -34,9 +34,9 @@
     boolean bool_OPTIMISATION_SEUIL_CMDE = false;
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -116,7 +116,7 @@
     
     new logger().OCategory.info("le mode : " + request.getParameter("mode"));
     
-    CodeGestionManager OCodeGestionManager = new CodeGestionManager(OdataManager, OTUser);
+    CodeGestionManager OCodeGestionManager = new CodeGestionManager(OdataManager, user);
     
     if (request.getParameter("mode") != null) {
 

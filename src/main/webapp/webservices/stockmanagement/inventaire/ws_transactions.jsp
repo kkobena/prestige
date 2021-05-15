@@ -41,9 +41,9 @@
     boolean iSChecked = true;
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+TUser user=OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -137,7 +137,7 @@
         new logger().OCategory.info("str_TYPE_TRANSACTION " + str_TYPE_TRANSACTION);
     }
 
-    if (!OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
+    if (!user.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
         lg_TYPE_STOCK_ID = "3";
     }
     JSONObject json = new JSONObject();
@@ -146,7 +146,7 @@
     String result = "", code_statut = commonparameter.PROCESS_FAILED, desc_satut = "";
     new logger().oCategory.info("le mode : " + request.getParameter("mode"));
 
-    InventaireManager OInventaireManager = new InventaireManager(OdataManager, OTUser);
+    InventaireManager OInventaireManager = new InventaireManager(OdataManager, user);
 
     if (request.getParameter("mode") != null) {
 

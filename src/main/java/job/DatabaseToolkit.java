@@ -64,6 +64,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
+import org.json.JSONException;
 import org.json.JSONObject;
 import shedule.DailyStockTask;
 import util.DateConverter;
@@ -89,6 +90,7 @@ public class DatabaseToolkit {
     private TimerService timerService;
     @Inject
     private UserTransaction userTransaction;
+
     void runTask() {
         DailyStockTask dailyStockTask = new DailyStockTask();
         dailyStockTask.setDateStock(LocalDate.now());
@@ -105,7 +107,7 @@ public class DatabaseToolkit {
         }*/
     }
 
-   @PostConstruct
+    @PostConstruct
     public void init() {
         if (dataSource == null) {
             LOG.info("no datasource found to execute the db migrations!");
@@ -152,8 +154,8 @@ public class DatabaseToolkit {
     public void createTimer() {
         final TimerConfig email = new TimerConfig("email", false);
         timerService.createCalendarTimer(new ScheduleExpression()
-//                                .minute("*/2")
-//                                .hour("*")
+                //                                .minute("*/2")
+                //                                .hour("*")
                 .hour(findScheduledValues())
                 .dayOfMonth("*")
                 .year("*"), email
@@ -225,7 +227,7 @@ public class DatabaseToolkit {
             }
             em.merge(notification);
             userTransaction.commit();
-        } catch (Exception e) {
+        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException | JSONException e) {
             e.printStackTrace(System.err);
         }
     }
@@ -342,7 +344,6 @@ public class DatabaseToolkit {
         if (StringUtils.isEmpty(content)) {
             return false;
         }
-      
         SmsParameters sp = SmsParameters.getInstance();
         Properties props = new Properties();
         props.put("mail.smtp.host", sp.smtpHost);
@@ -358,10 +359,8 @@ public class DatabaseToolkit {
             if (StringUtils.isEmpty(email)) {
                 email = sp.mailOfficine;
                 String[] emails = email.split(";");
-                for (int i = 0; i < emails.length; i++) {
-                    String email1 = emails[i];
+                for (String email1 : emails) {
                     listadd.add(new InternetAddress(email1));
-
                 }
             }
             Address[] recipient = new InternetAddress[listadd.size()];
@@ -375,7 +374,7 @@ public class DatabaseToolkit {
             Transport.send(msg, sp.email, sp.password);
             return true;
         } catch (MessagingException ex) {
-            ex.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, "---->>>>  ", ex);
             return false;
         }
     }
@@ -384,16 +383,15 @@ public class DatabaseToolkit {
         if (notifications.isEmpty()) {
             return null;
         }
-
         StringBuilder sb = new StringBuilder();
         Map<TypeNotification, List<Notification>> map = notifications.stream().collect(Collectors.groupingBy(Notification::getTypeNotification));
         sb.append("<html><body>");
         map.forEach((key, values) -> {
-            sb.append("<h2 style='margin: 10px;padding: 5px;'>");
-            sb.append(key.getValue()).append("</h2><ol>");
+            sb.append("<h2 style='margin: 10px;padding: 5px;'>")
+                    .append(key.getValue()).append("</h2><ol>");
             values.forEach(e -> {
-                sb.append("<li>").append(e.getMessage());
-                sb.append("</li>");
+                sb.append("<li>").append(e.getMessage())
+                        .append("</li>");
             });
             sb.append("</ol>");
         });

@@ -26,12 +26,12 @@
 <%@page import="java.util.List"%>
 
 <%
-   
+
     dataManager OdataManager = new dataManager();
     int lg_GROUPE_ID = -1;
     OdataManager.initEntityManager();
     GroupeTierspayantController groupeCtl = new GroupeTierspayantController(OdataManager.getEmf());
-    String CODEGROUPE=""; 
+    String CODEGROUPE = "";
     String search_value = "", dt_start = date.formatterMysqlShort.format(date.getPreviousMonth(new Date())), dt_end = date.formatterMysqlShort.format(new Date());
 
     if (request.getParameter("dt_start") != null && !"".equals(request.getParameter("dt_start"))) {
@@ -47,20 +47,20 @@
     if (request.getParameter("search_value") != null && !"".equals(request.getParameter("search_value"))) {
         search_value = request.getParameter("search_value");
     }
-     if (request.getParameter("CODEGROUPE") != null && !"".equals(request.getParameter("CODEGROUPE"))&& !"undefined".equals(request.getParameter("CODEGROUPE"))) {
+    if (request.getParameter("CODEGROUPE") != null && !"".equals(request.getParameter("CODEGROUPE")) && !"undefined".equals(request.getParameter("CODEGROUPE"))) {
         CODEGROUPE = request.getParameter("CODEGROUPE");
     }
-   
+
     if (request.getParameter("query") != null && !"".equals(request.getParameter("query"))) {
         search_value = request.getParameter("query");
     }
     int start = Integer.valueOf(request.getParameter("start"));
     int limit = Integer.valueOf(request.getParameter("limit"));
-     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
- boolean ACTION_REGLER_FACTURE = Util.isAllowed(OdataManager.getEm(), Util.ACTION_REGLER_FACTURE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
-    JSONArray arrayObj = groupeCtl.getGroupeInvoice(false, dt_start, dt_end,search_value, lg_GROUPE_ID,CODEGROUPE,ACTION_REGLER_FACTURE, start, limit);  
-    int count = groupeCtl.getGroupeInvoiceCount(dt_start, dt_end,  search_value,lg_GROUPE_ID,CODEGROUPE); 
-    
+    TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+       TUser user=OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    boolean ACTION_REGLER_FACTURE = Util.isAllowed(OdataManager.getEm(), Util.ACTION_REGLER_FACTURE, user.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
+    JSONArray arrayObj = groupeCtl.getGroupeInvoice(false, dt_start, dt_end, search_value, lg_GROUPE_ID, CODEGROUPE, ACTION_REGLER_FACTURE, start, limit);
+    int count = groupeCtl.getGroupeInvoiceCount(dt_start, dt_end, search_value, lg_GROUPE_ID, CODEGROUPE);
 
     JSONObject data = new JSONObject();
 

@@ -82,7 +82,7 @@ public class SockServlet extends HttpServlet {
                 } catch (Exception e) {
                 }
                 try {
-                    Integer.valueOf(request.getParameter("nbre"));
+                 nbre=   Integer.valueOf(request.getParameter("nbre"));
                 } catch (Exception e) {
                 }
                 String rayonId = request.getParameter("rayonId");

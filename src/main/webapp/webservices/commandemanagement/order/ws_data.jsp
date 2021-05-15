@@ -77,7 +77,7 @@
 %>
 <!-- fin logic de gestion des page -->
 
-<%    List<TOrder> lstTOrder = new ArrayList<TOrder>();
+<%    List<TOrder> lstTOrder = new ArrayList<>();
     String lg_ORDER_ID = "%%", str_REF_ORDER = "%%", lg_GROSSISTE_ID = "%%", str_STATUT = "is_Process", search_value = "";
     int int_LINE = 0;
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
@@ -114,8 +114,9 @@
     }
     new logger().OCategory.info("str_STATUT   " + str_STATUT);
 
-    orderManagement OorderManagement = new orderManagement(OdataManager, OTUser);
+    orderManagement OorderManagement = new orderManagement(OdataManager, OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID()));
     familleGrossisteManagement OfamilleGrossisteManagement = new familleGrossisteManagement(OdataManager);
+    OfamilleGrossisteManagement.setOTUser(OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID()));
     /*lstTOrder = OdataManager.getEm().createQuery("SELECT t FROM TOrder t WHERE (t.strREFORDER LIKE ?1 OR t.lgGROSSISTEID.strLIBELLE LIKE ?2) AND t.strSTATUT LIKE ?3 ORDER BY t.dtCREATED DESC ")
      // .setParameter(1, lg_ORDER_ID)
      .setParameter(1, Os_Search_poste.getOvalue())

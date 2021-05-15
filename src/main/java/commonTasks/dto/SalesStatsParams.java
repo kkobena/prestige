@@ -269,8 +269,30 @@ public class SalesStatsParams implements Serializable {
 
     @Override
     public String toString() {
-        return "SalesStatsParams{" + "start=" + start + ", limit=" + limit + ", typeVenteId=" + typeVenteId + ", query=" + query + ", statut=" + statut + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", hStart=" + hStart + ", hEnd=" + hEnd + ", showAll=" + showAll + ", showAllActivities=" + showAllActivities + ", all=" + all + ", canCancel=" + canCancel + ", depotOnly=" + depotOnly + ", sansBon=" + sansBon + ", onlyAvoir=" + onlyAvoir + ", modification=" + modification + ", modificationClientTp=" + modificationClientTp + ", nbre=" + nbre + ", produitId=" + produitId + ", prixachatFiltre=" + prixachatFiltre + ", stock=" + stock + ", stockFiltre=" + stockFiltre + ", rayonId=" + rayonId + ", user=" + user + ", typeTransaction=" + typeTransaction + '}';
+        StringBuilder sb = new StringBuilder();
+        sb.append("SalesStatsParams{typeVenteId=").append(typeVenteId);
+        sb.append(", userId=").append(userId);
+        sb.append(", query=").append(query);
+        sb.append(", statut=").append(statut);
+        sb.append(", dtStart=").append(dtStart);
+        sb.append(", dtEnd=").append(dtEnd);
+        sb.append(", hStart=").append(hStart);
+        sb.append(", hEnd=").append(hEnd);
+        sb.append(", showAll=").append(showAll);
+        sb.append(", showAllActivities=").append(showAllActivities);
+        sb.append(", all=").append(all);
+        sb.append(", canCancel=").append(canCancel);
+        sb.append(", nbre=").append(nbre);
+        sb.append(", prixachatFiltre=").append(prixachatFiltre);
+        sb.append(", stock=").append(stock);
+        sb.append(", stockFiltre=").append(stockFiltre);
+        sb.append(", rayonId=").append(rayonId);
+        sb.append(", user=").append(user);
+        sb.append(", typeTransaction=").append(typeTransaction);
+        sb.append('}');
+        return sb.toString();
     }
+
 
  
 

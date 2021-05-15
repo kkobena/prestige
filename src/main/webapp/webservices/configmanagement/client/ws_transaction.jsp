@@ -200,9 +200,9 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -211,9 +211,9 @@
     Ojconnexion.initConnexion();
     Ojconnexion.OpenConnexion();
 
-    clientManagement OclientManagement = new clientManagement(OdataManager, OTUser);
+    clientManagement OclientManagement = new clientManagement(OdataManager, user);
 
-    tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager, OTUser);
+    tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager, user);
     ayantDroitManagement OayantDroitManagement = new ayantDroitManagement(OdataManager);
     ObllBase.setDetailmessage("PAS D'ACTION RETOUR");
     new logger().oCategory.info("le mode : " + request.getParameter("mode"));
@@ -228,7 +228,7 @@
                 lg_TYPE_CLIENT_ID = lg_TYPE_TIERS_PAYANT_ID;
             }
 
-            OTCompteClient = OclientManagement.createClient(str_FIRST_NAME, str_LAST_NAME, str_NUMERO_SECURITE_SOCIAL, dt_NAISSANCE, str_SEXE, str_ADRESSE, str_DOMICILE, str_AUTRE_ADRESSE, str_CODE_POSTAL, str_COMMENTAIRE, lg_VILLE_ID, dbl_QUOTA_CONSO_MENSUELLE, dbl_CAUTION, dbl_SOLDE, lg_TYPE_CLIENT_ID, lg_CATEGORIE_AYANTDROIT_ID, lg_RISQUE_ID, lg_TIERS_PAYANT_ID, int_POURCENTAGE, int_PRIORITY, str_CODE_INTERNE, dbl_PLAFOND, lg_COMPANY_ID, db_PLAFOND_ENCOURS, b_IsAbsolute,remiseId); 
+            OTCompteClient = OclientManagement.createClient(str_FIRST_NAME, str_LAST_NAME, str_NUMERO_SECURITE_SOCIAL, dt_NAISSANCE, str_SEXE, str_ADRESSE, str_DOMICILE, str_AUTRE_ADRESSE, str_CODE_POSTAL, str_COMMENTAIRE, lg_VILLE_ID, dbl_QUOTA_CONSO_MENSUELLE, dbl_CAUTION, dbl_SOLDE, lg_TYPE_CLIENT_ID, lg_CATEGORIE_AYANTDROIT_ID, lg_RISQUE_ID, lg_TIERS_PAYANT_ID, int_POURCENTAGE, int_PRIORITY, str_CODE_INTERNE, dbl_PLAFOND, lg_COMPANY_ID, db_PLAFOND_ENCOURS, b_IsAbsolute, remiseId);
 
             if (OTCompteClient != null) {
                 OclientManagement.setDetailmessage("Opération effectuée avec succèes");
@@ -239,7 +239,7 @@
         } else if (request.getParameter("mode").equals("update")) {
             //   clientManagement OclientManagement = new clientManagement(OdataManager);
             //OclientManagement.update(lg_CLIENT_ID, str_CODE_INTERNE, str_FIRST_NAME, str_LAST_NAME, str_NUMERO_SECURITE_SOCIAL, dt_NAISSANCE, str_SEXE, str_ADRESSE, str_DOMICILE, str_AUTRE_ADRESSE, str_CODE_POSTAL, str_COMMENTAIRE, lg_VILLE_ID, lg_MEDECIN_ID, dbl_QUOTA_CONSO_MENSUELLE, dbl_CAUTION, dbl_SOLDE, lg_TYPE_CLIENT_ID, lg_AYANTS_DROITS_ID, lg_CATEGORIE_AYANTDROIT_ID, lg_RISQUE_ID);
-            OTCompteClient = OclientManagement.update2(lg_CLIENT_ID, str_CODE_INTERNE, str_FIRST_NAME, str_LAST_NAME, str_NUMERO_SECURITE_SOCIAL, dt_NAISSANCE, str_SEXE, str_ADRESSE, str_DOMICILE, str_AUTRE_ADRESSE, str_CODE_POSTAL, str_COMMENTAIRE, lg_VILLE_ID, lg_MEDECIN_ID, dbl_QUOTA_CONSO_MENSUELLE, dbl_CAUTION, lg_TYPE_CLIENT_ID, lg_AYANTS_DROITS_ID, lg_CATEGORIE_AYANTDROIT_ID, lg_RISQUE_ID, lg_TIERS_PAYANT_ID, int_POURCENTAGE, int_PRIORITY, dbl_QUOTA_CONSO_VENTE, lg_COMPANY_ID, (int) dbl_PLAFOND, db_PLAFOND_ENCOURS, b_IsAbsolute,remiseId);
+            OTCompteClient = OclientManagement.update2(lg_CLIENT_ID, str_CODE_INTERNE, str_FIRST_NAME, str_LAST_NAME, str_NUMERO_SECURITE_SOCIAL, dt_NAISSANCE, str_SEXE, str_ADRESSE, str_DOMICILE, str_AUTRE_ADRESSE, str_CODE_POSTAL, str_COMMENTAIRE, lg_VILLE_ID, lg_MEDECIN_ID, dbl_QUOTA_CONSO_MENSUELLE, dbl_CAUTION, lg_TYPE_CLIENT_ID, lg_AYANTS_DROITS_ID, lg_CATEGORIE_AYANTDROIT_ID, lg_RISQUE_ID, lg_TIERS_PAYANT_ID, int_POURCENTAGE, int_PRIORITY, dbl_QUOTA_CONSO_VENTE, lg_COMPANY_ID, (int) dbl_PLAFOND, db_PLAFOND_ENCOURS, b_IsAbsolute, remiseId);
             ObllBase.setDetailmessage(OclientManagement.getDetailmessage());
             ObllBase.setMessage(OclientManagement.getMessage());
 
@@ -257,7 +257,7 @@
             ObllBase.setMessage(OclientManagement.getMessage());
         } else if (request.getParameter("mode").toString().equals("updateInfoCompte")) {
             new logger().OCategory.info("lg_COMPTE_CLIENT_ID " + lg_COMPTE_CLIENT_ID);
-            clientManager OclientManager = new clientManager(OdataManager, OTUser);
+            clientManager OclientManager = new clientManager(OdataManager, user);
 
             try {
                 OTCompteClient = ObllBase.getOdataManager().getEm().find(TCompteClient.class, lg_COMPTE_CLIENT_ID);

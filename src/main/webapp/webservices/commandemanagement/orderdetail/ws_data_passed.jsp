@@ -80,7 +80,7 @@
 <!-- fin logic de gestion des page -->
 
 <%    
- List<TOrderDetail> lstTOrderDetail = new ArrayList<TOrderDetail>();
+ List<TOrderDetail> lstTOrderDetail = new ArrayList<>();
     String lg_ORDERDETAIL_ID = "%%", str_REF_ORDER = "%%",
             lg_GROSSISTE_ID = "%%", lg_ORDER_ID = "%%", str_STATUT = "passed", search_value = "";
     

@@ -5,6 +5,7 @@
  */
 package commonTasks.dto;
 
+import dal.enumeration.TypeTransaction;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
@@ -14,11 +15,13 @@ import java.util.UUID;
  * @author DICI
  */
 public class BalanceDTO implements Serializable {
+
     private static final long serialVersionUID = 1L;
     private String balanceId = UUID.randomUUID().toString();
-    private String typeVente;
+    private String typeVente, reglement;
     long montantTTC = 0, montantNet = 0, montantRemise = 0, pourcentage = 0, panierMoyen = 0,
-            montantEsp = 0, montantCheque=0, MontantVirement = 0, montantCB = 0, montantTp = 0, montantDiff = 0,nbreVente=0,montantMobilePayment=0;
+            montantEsp = 0, montantCheque = 0, marge = 0, MontantVirement = 0, montantTva = 0, montantCB = 0, montantTp = 0, montantDiff = 0, nbreVente = 0, montantMobilePayment = 0;
+    private TypeTransaction typeTransaction;
 
     public String getBalanceId() {
         return balanceId;
@@ -26,6 +29,14 @@ public class BalanceDTO implements Serializable {
 
     public void setBalanceId(String balanceId) {
         this.balanceId = balanceId;
+    }
+
+    public TypeTransaction getTypeTransaction() {
+        return typeTransaction;
+    }
+
+    public void setTypeTransaction(TypeTransaction typeTransaction) {
+        this.typeTransaction = typeTransaction;
     }
 
     public String getTypeVente() {
@@ -165,11 +176,64 @@ public class BalanceDTO implements Serializable {
         this.montantMobilePayment = montantMobilePayment;
     }
 
+    public long getMontantTva() {
+        return montantTva;
+    }
+
+    public void setMontantTva(long montantTva) {
+        this.montantTva = montantTva;
+    }
+
     @Override
     public String toString() {
         return "BalanceDTO{" + "balanceId=" + balanceId + ", typeVente=" + typeVente + ", montantTTC=" + montantTTC + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", pourcentage=" + pourcentage + ", panierMoyen=" + panierMoyen + ", montantEsp=" + montantEsp + ", montantCheque=" + montantCheque + ", MontantVirement=" + MontantVirement + ", montantCB=" + montantCB + ", montantTp=" + montantTp + ", montantDiff=" + montantDiff + '}';
     }
+/*
+    constructor vente
+    */
+    public BalanceDTO(long montantTTC, long montantNet,
+            long montantRemise, long montantTva, long marge, long montantDiff,
+            long montantTp, long nbreVente, long montantEsp, int typeTransaction, String reglement) {
+        this.montantTTC = montantTTC;
+        this.montantRemise = montantRemise;
+        this.montantNet = montantNet;
+        this.montantTva = montantTva;
+        this.marge = marge;
+        this.montantTp = montantTp;
+        this.nbreVente = nbreVente;
+        this.montantDiff = montantDiff;
+        this.montantEsp = montantEsp;
+        switch (typeTransaction) {
+            case 0:
+                this.typeTransaction = TypeTransaction.VENTE_COMPTANT;
+                break;
+            case 1:
+                this.typeTransaction = TypeTransaction.VENTE_CREDIT;
+                break;
+            default:
+                break;
+        }
+        this.reglement = reglement;
 
+    }
 
+    public String getReglement() {
+        return reglement;
+    }
+
+    public void setReglement(String reglement) {
+        this.reglement = reglement;
+    }
+
+    public long getMarge() {
+        return marge;
+    }
+
+    public void setMarge(long marge) {
+        this.marge = marge;
+    }
+
+    public BalanceDTO() {
+    }
 
 }

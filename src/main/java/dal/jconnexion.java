@@ -73,7 +73,7 @@ public class jconnexion {
     }
 
     private void set_Connection(Connection StringConnexion) {
-        StringConnexion = StringConnexion;
+        this.StringConnexion = StringConnexion;
     }
     //accesseur des propriete privee
 

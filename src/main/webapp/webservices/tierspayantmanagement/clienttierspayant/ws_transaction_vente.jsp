@@ -41,20 +41,19 @@
 <%    String lg_COMPTE_CLIENT_ID = "%%", lg_COMPTE_CLIENT_TIERS_PAYANT_ID = "%%", lg_TIERS_PAYANT_ID = "%%", str_NUMERO_SECURITE_SOCIAL = "";
     int int_POURCENTAGE = 0;
     double dbl_QUOTA_CONSO_MENSUELLE = 0.00, dbl_QUOTA_CONSO_VENTE = 0.0;
-    
-  boolean  b_IsAbsolute=false;
-  Integer dbPLAFONDENCOURS=0; 
+
+    boolean b_IsAbsolute = false;
+    Integer dbPLAFONDENCOURS = 0;
     int int_PRIORITY = 0;
     String RFIND = "", RFIND_TAUX = "", RFIND_PRIORITY = "", RFIND_COMPTE_CLIENT_TIERS_PAYANT_ID = "";
     if (request.getParameter("lg_COMPTE_CLIENT_TIERS_PAYANT_ID") != null) {
         lg_COMPTE_CLIENT_TIERS_PAYANT_ID = request.getParameter("lg_COMPTE_CLIENT_TIERS_PAYANT_ID");
         new logger().OCategory.info("lg_COMPTE_CLIENT_TIERS_PAYANT_ID " + lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
     }
-     if (request.getParameter("str_NUMERO_SECURITE_SOCIAL") != null) {
+    if (request.getParameter("str_NUMERO_SECURITE_SOCIAL") != null) {
         str_NUMERO_SECURITE_SOCIAL = request.getParameter("str_NUMERO_SECURITE_SOCIAL");
         new logger().OCategory.info("str_NUMERO_SECURITE_SOCIAL " + str_NUMERO_SECURITE_SOCIAL);
     }
-    
 
     if (request.getParameter("lg_COMPTE_CLIENT_ID") != null) {
         lg_COMPTE_CLIENT_ID = request.getParameter("lg_COMPTE_CLIENT_ID");
@@ -81,28 +80,29 @@
 
     if (request.getParameter("dbl_QUOTA_CONSO_VENTE") != null) {
         dbl_QUOTA_CONSO_VENTE = Double.parseDouble(request.getParameter("dbl_QUOTA_CONSO_VENTE"));
-        
-        dbPLAFONDENCOURS=Integer.valueOf(request.getParameter("dbl_QUOTA_CONSO_VENTE"));
+
+        dbPLAFONDENCOURS = Integer.valueOf(request.getParameter("dbl_QUOTA_CONSO_VENTE"));
         new logger().OCategory.info("dbl_QUOTA_CONSO_VENTE " + dbl_QUOTA_CONSO_VENTE);
     }
 
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager);
 
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
 
     ObllBase.setDetailmessage("PAS D'ACTION RETOUR");
-  
+
     if (request.getParameter("mode") != null) {
 
         if (request.getParameter("mode").toString().equals("create")) {
             new logger().OCategory.info("create");
-            OTCompteClientTiersPayant = OtierspayantManagement.create_compteclt_tierspayant(lg_COMPTE_CLIENT_ID, lg_TIERS_PAYANT_ID, int_POURCENTAGE, int_PRIORITY, dbl_QUOTA_CONSO_MENSUELLE, dbl_QUOTA_CONSO_VENTE, str_NUMERO_SECURITE_SOCIAL,dbPLAFONDENCOURS,b_IsAbsolute); 
+            OTCompteClientTiersPayant = OtierspayantManagement.create_compteclt_tierspayant(lg_COMPTE_CLIENT_ID, lg_TIERS_PAYANT_ID, int_POURCENTAGE, int_PRIORITY, dbl_QUOTA_CONSO_MENSUELLE, dbl_QUOTA_CONSO_VENTE, str_NUMERO_SECURITE_SOCIAL, dbPLAFONDENCOURS, b_IsAbsolute);
             //OTCompteClientTiersPayant = OtierspayantManagement.createcompteclttierspayant(lg_COMPTE_CLIENT_ID, lg_TIERS_PAYANT_ID, int_POURCENTAGE,int_PRIORITY);
             // new logger().OCategory.info(" OTCompteClientTiersPayant create  " + OTCompteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID());
             if (OTCompteClientTiersPayant == null) {

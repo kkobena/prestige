@@ -30,9 +30,10 @@
     JSONArray listFactureDeatils = new JSONArray();
     JSONArray uncheckedlist = new JSONArray();
     dataManager OdataManager = new dataManager();
-
+OdataManager.initEntityManager();
     Integer NET_A_PAYER = 0, AMOUNT_PAYE, int_AMOUNT_REMIS = 0, int_AMOUNT_RECU = 0;
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+     TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     if (request.getParameter("dt_reglement") != null && !"".equals(request.getParameter("dt_reglement"))) {
         String now = request.getParameter("dt_reglement") + " " + date.NomadicUiFormatTime.format(new Date());
         dt_reglement = date.formatterMysql2.parse(now);
@@ -112,7 +113,7 @@
 
     bllBase ObllBase = new bllBase();
 
-    reglementManager OreglementManager = new reglementManager(OdataManager, OTUser);
+    reglementManager OreglementManager = new reglementManager(OdataManager, user);
     if (request.getParameter("mode") != null) {
 
         if (request.getParameter("mode").equals("doReglement")) {

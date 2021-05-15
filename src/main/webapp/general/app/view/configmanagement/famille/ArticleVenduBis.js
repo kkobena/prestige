@@ -145,12 +145,13 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
 
         var store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
-            data: [{str_TYPE_TRANSACTION: 'LESS', str_desc: 'Inferieur a'}, {str_TYPE_TRANSACTION: 'MORE', str_desc: 'Superieur a'}, {str_TYPE_TRANSACTION: 'EQUAL', str_desc: 'Egal a'},
-                {str_TYPE_TRANSACTION: 'LESSOREQUAL', str_desc: 'Inferieur ou egal a'}, {str_TYPE_TRANSACTION: 'MOREOREQUAL', str_desc: 'Superieur ou egal a'}
-                , {str_TYPE_TRANSACTION: 'SEUIL', str_desc: 'Seuil atteint'},
+            data: [{str_TYPE_TRANSACTION: 'LESS', str_desc: 'Inferieur à'}, {str_TYPE_TRANSACTION: 'MORE', str_desc: 'Superieur à'}, {str_TYPE_TRANSACTION: 'EQUAL', str_desc: 'Egal à'},
+                {str_TYPE_TRANSACTION: 'LESSOREQUAL', str_desc: 'Inferieur ou egal à'}, {str_TYPE_TRANSACTION: 'MOREOREQUAL', str_desc: 'Superieur ou egal à'}, {str_TYPE_TRANSACTION: 'SEUIL',
+                    str_desc: 'Seuil atteint'},
                 {str_TYPE_TRANSACTION: 'ALL', str_desc: "Tous"}
             ]
         });
+
         var filtreAchat = new Ext.data.Store({
             fields: ['id', 'libelle'],
             data: [
@@ -164,6 +165,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
             fields: ['id', 'libelle'],
             data: [
                 {id: 'LESS', libelle: "Inférieur"},
+                {id: 'EQUAL', libelle: "Egal à"},
                 {id: 'MORE', libelle: "Supérieur"},
                 {id: 'DIFF', libelle: "Différent"},
                 {id: 'MOREOREQUAL', libelle: "Superieur ou égal"},
@@ -631,7 +633,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
         });
     },
     onPdfClick: function () {
-         let linkUrl = '../SockServlet?mode=ARTICLE_VENDUS_RECAP&dtStart=' + Ext.getCmp('dt_debut').getSubmitValue();
+        let linkUrl = '../SockServlet?mode=ARTICLE_VENDUS_RECAP&dtStart=' + Ext.getCmp('dt_debut').getSubmitValue();
         linkUrl += "&dtEnd=" + Ext.getCmp('dt_fin').getSubmitValue() + "&hStart=" + (Ext.getCmp('h_debut').getSubmitValue() != null ? Ext.getCmp('h_debut').getSubmitValue() : "");
         linkUrl += "&hEnd=" + (Ext.getCmp('h_fin').getSubmitValue() != null ? Ext.getCmp('h_fin').getSubmitValue() : "") + "&query=" + Ext.getCmp('rechecher').getValue();
         linkUrl += "&typeTransaction=" + (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL");
@@ -643,7 +645,6 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
         window.open(linkUrl);
     },
 
-   
     onPdfRayon: function () {
 
         let linkUrl = '../SockServlet?mode=ARTICLE_VENDUS_RECAP&dtStart=' + Ext.getCmp('dt_debut').getSubmitValue();
@@ -677,36 +678,36 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
         Ext.Ajax.request({
             url: '../api/v1/ventestats/suggerer',
             method: 'GET',
-          //  headers: {'Content-Type': 'application/json'},
+            //  headers: {'Content-Type': 'application/json'},
             params: data,
             timeout: 2400000,
             success: function (response)
             {
-                 progress.hide();
+                progress.hide();
                 var result = Ext.JSON.decode(response.responseText, true);
-                  if (result.success) {
-                       Ext.MessageBox.show({
+                if (result.success) {
+                    Ext.MessageBox.show({
                         title: 'Message',
                         width: 320,
-                        msg: 'Nombre de produits en compte : '+  result.count,
+                        msg: 'Nombre de produits en compte : ' + result.count,
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.INFO
-                       
+
                     });
-                  }
-                
+                }
+
             },
             failure: function (response)
             {
-                 progress.hide();
-                   Ext.MessageBox.show({
-                        title: 'Message d\'erreur',
-                        width: 320,
-                        msg: "L'opération n'a pas abouti",
-                        buttons: Ext.MessageBox.OK,
-                        icon: Ext.MessageBox.ERROR
-                       
-                    });
+                progress.hide();
+                Ext.MessageBox.show({
+                    title: 'Message d\'erreur',
+                    width: 320,
+                    msg: "L'opération n'a pas abouti",
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.ERROR
+
+                });
             }
         });
     }

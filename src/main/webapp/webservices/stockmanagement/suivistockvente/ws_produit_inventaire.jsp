@@ -40,8 +40,9 @@ if (request.getParameter("datedebut") != null) {
     }
     OdataManager.initEntityManager();
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+     TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     new logger().OCategory.info("user connecté   " + OTUser.getStrFIRSTNAME());
-    SnapshotManager OSnapshotManager = new SnapshotManager(OdataManager, OTUser);
+    SnapshotManager OSnapshotManager = new SnapshotManager(OdataManager, user);
 
    
     JSONArray arrayObj = OSnapshotManager.suiviMvtArticleInventaire(str_Date_Debut, str_Date_Fin, lg_FAMILLE_ID);

@@ -81,14 +81,14 @@ public class SnapshotManager extends bll.bllBase {
     private final SimpleDateFormat dateFormat2 = new SimpleDateFormat("HH:mm:ss");
 
     public SnapshotManager(dataManager odataManager) {
-        this.setOdataManager(odataManager);
-        this.checkDatamanager();
+        super.setOdataManager(odataManager);
+        super.checkDatamanager();
     }
 
     public SnapshotManager(dataManager odataManager, TUser oTUser) {
-        this.setOTUser(oTUser);
-        this.setOdataManager(odataManager);
-        this.checkDatamanager();
+        super.setOTUser(oTUser);
+        super.setOdataManager(odataManager);
+        super.checkDatamanager();
     }
 
     public List<TSnapShopDalyRecette> getTSnapShopDalyRecetteVeille() {

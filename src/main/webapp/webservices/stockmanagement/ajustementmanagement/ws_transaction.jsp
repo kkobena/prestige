@@ -12,31 +12,29 @@
 <%@page import="toolkits.parameters.commonparameter"  %>
 <%@page import="java.math.BigInteger"  %>
 
-<%  
+<%
     Translate oTranslate = new Translate();
     dataManager OdataManager = new dataManager();
     TUser OTUser = null;
-   
+
 
 %>
 
 
 
 
-<%
-     String lg_AJUSTEMENT_ID = "";
+<%    String lg_AJUSTEMENT_ID = "";
 
     if (request.getParameter("lg_AJUSTEMENT_ID") != null) {
         lg_AJUSTEMENT_ID = request.getParameter("lg_AJUSTEMENT_ID");
-        new logger().OCategory.info("lg_AJUSTEMENT_ID ------ "+lg_AJUSTEMENT_ID);
+        new logger().OCategory.info("lg_AJUSTEMENT_ID ------ " + lg_AJUSTEMENT_ID);
     }
-    
-   
+
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -44,7 +42,7 @@
     ObllBase.setDetailmessage("PAS D'ACTION");
     new logger().oCategory.info("le mode : " + request.getParameter("mode"));
 
-    AjustementManagement OAjustementManagement = new AjustementManagement(OdataManager, OTUser);
+    AjustementManagement OAjustementManagement = new AjustementManagement(OdataManager, user);
 
     if (request.getParameter("mode") != null) {
 

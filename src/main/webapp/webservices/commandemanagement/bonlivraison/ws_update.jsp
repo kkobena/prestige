@@ -26,7 +26,7 @@
     String lgBONLIVRAISONID = request.getParameter("lgBONLIVRAISONID");
     String dt_DATELIVRAISON = request.getParameter("dt_DATE_LIVRAISON");
     String str_REF = request.getParameter("str_REF");
-    int intMHT = new Integer(request.getParameter("int_MHT")), intTVA = new Integer(request.getParameter("int_TVA"));
+    int intMHT =  Integer.valueOf(request.getParameter("int_MHT")), intTVA = Integer.valueOf(request.getParameter("int_TVA"));
 
     bonLivraisonManagement bl = new bonLivraisonManagement(OdataManager);
 

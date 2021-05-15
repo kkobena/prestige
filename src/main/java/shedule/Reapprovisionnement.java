@@ -234,14 +234,14 @@ public class Reapprovisionnement {
         }
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         try {
             TParameters semois = em.find(TParameters.class, "SEMOIS");
             if (semois != null && Integer.valueOf(semois.getStrVALUE()) == 1) {
                 exec();
             }
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             e.printStackTrace(System.err);
         }
 

@@ -75,9 +75,9 @@
 
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-
+ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
@@ -86,7 +86,7 @@
     new logger().oCategory.info("le mode : " + request.getParameter("mode"));
     new logger().oCategory.info("ID " + request.getParameter("lg_PREENREGISTREMENT_ID"));
 
-    DiffereManagement ODiffereManagement = new DiffereManagement(OdataManager, OTUser);
+    DiffereManagement ODiffereManagement = new DiffereManagement(OdataManager, user);
 
     if (request.getParameter("mode") != null) {
 

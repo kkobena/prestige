@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
@@ -181,7 +182,7 @@ public class CommandeServiceImpl implements CommandeService {
             }
             TOrder order = OTBonLivraison.getLgORDERID();
             TGrossiste grossiste = order.getLgGROSSISTEID();
-            if (OTBonLivraison == null || OTBonLivraison.getStrSTATUT().equals(DateConverter.STATUT_IS_CLOSED)) {
+            if ( OTBonLivraison.getStrSTATUT().equals(DateConverter.STATUT_IS_CLOSED)) {
                 return json.put("success", false).put("msg", "Impossible de trouver ce bon. Verifier s'il ce bon n'est pas deja cloturé");
             }
             List<TBonLivraisonDetail> lstTBonLivraisonDetail = bonLivraisonDetail(id, emg);
@@ -277,7 +278,7 @@ public class CommandeServiceImpl implements CommandeService {
                     .addUser(user)
             );
             
-            Map<TClient, List<TPreenregistrementDetail>> map = _avoirs.stream().collect(Collectors.groupingBy(e -> e.getLgPREENREGISTREMENTID().getClient()));
+            Map<TClient, List<TPreenregistrementDetail>> map = _avoirs.stream().filter(e->Objects.nonNull(e.getLgPREENREGISTREMENTID().getClient())).collect(Collectors.groupingBy(e -> e.getLgPREENREGISTREMENTID().getClient()));
             map.forEach((k, v) -> {
                 if (k != null) {
                     StringBuilder sb = new StringBuilder();
@@ -857,7 +858,6 @@ public class CommandeServiceImpl implements CommandeService {
                 if (famille != null) {
                     totalItemsCount++;
                     s.add(famille);
-                    
                     TOrderDetail item = findByProductAndOrder(order, famille);
                     if (item == null) {
                         continue;
@@ -873,7 +873,6 @@ public class CommandeServiceImpl implements CommandeService {
                             nbreNonPrisEnCompte++;
                         }
                     } else {
-                        
                         orderService.creerRuptureItem(rupture, famille, qty);
                         getEm().remove(item);
                         nbreNonPrisEnCompte++;
@@ -882,11 +881,13 @@ public class CommandeServiceImpl implements CommandeService {
                 }
             }
             Set<TOrderDetail> orderDetails = productNotInOrderResponse(s, order, l.size(), totalItemsCount);
-            for (TOrderDetail orderDetail : orderDetails) {
+            nbreNonPrisEnCompte = orderDetails.stream().map(orderDetail -> {
                 orderService.creerRuptureItem(rupture, orderDetail.getLgFAMILLEID(), orderDetail.getIntNUMBER());
+                return orderDetail;
+            }).map(orderDetail -> {
                 getEm().remove(orderDetail);
-                nbreNonPrisEnCompte++;
-            }
+                return orderDetail;
+            }).map(_item -> 1).reduce(nbreNonPrisEnCompte, Integer::sum);
             if (nbrePrisEnCompte == 0) {
                 order.setStrSTATUT(DateConverter.STATUT_DELETE);
                 getEm().merge(order);

@@ -13,31 +13,32 @@
     Integer int_NUMBER = 0;
     String int_NUM_LOT = "";
     String dt_peremption = "";
-  
-     if (request.getParameter("lg_FAMILLE_ID") != null && !"".equals(request.getParameter("lg_FAMILLE_ID"))) {
-         lg_FAMILLE_ID = request.getParameter("lg_FAMILLE_ID");
-        
+
+    if (request.getParameter("lg_FAMILLE_ID") != null && !"".equals(request.getParameter("lg_FAMILLE_ID"))) {
+        lg_FAMILLE_ID = request.getParameter("lg_FAMILLE_ID");
+
     }
-   
-     if (request.getParameter("int_NUMBER") != null && !"".equals(request.getParameter("int_NUMBER"))) {
+
+    if (request.getParameter("int_NUMBER") != null && !"".equals(request.getParameter("int_NUMBER"))) {
         int_NUMBER = Integer.valueOf(request.getParameter("int_NUMBER"));
-        
+
     }
     int_NUM_LOT = request.getParameter("int_NUM_LOT");
-     if (request.getParameter("int_NUM_LOT") != null && !"".equals(request.getParameter("int_NUM_LOT"))) {
-         int_NUM_LOT = request.getParameter("int_NUM_LOT");
-        
+    if (request.getParameter("int_NUM_LOT") != null && !"".equals(request.getParameter("int_NUM_LOT"))) {
+        int_NUM_LOT = request.getParameter("int_NUM_LOT");
+
     }
-   
-     if (request.getParameter("dt_peremption") != null && !"".equals(request.getParameter("dt_peremption"))) {
+
+    if (request.getParameter("dt_peremption") != null && !"".equals(request.getParameter("dt_peremption"))) {
         dt_peremption = request.getParameter("dt_peremption");
-        
+
     }
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     dataManager OdataManager = new dataManager();
-
-    WarehouseManager OWarehouseManager = new WarehouseManager(OdataManager, OTUser);
+    OdataManager.initEntityManager();
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    WarehouseManager OWarehouseManager = new WarehouseManager(OdataManager, user);
 
     JSONObject json = new JSONObject();
     if ("PENDING".equals(request.getParameter("MODE"))) {

@@ -26,6 +26,7 @@
     date key = new date();
 
     dataManager OdataManager = new dataManager();
+    OdataManager.initEntityManager();
 
 
 %>
@@ -37,8 +38,8 @@
     String dt_debut = date.formatterMysqlShort.format(new Date()), dt_fin = date.formatterMysql.format(new Date());
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
 
-    factureManagement OfactureManagement = new factureManagement(OdataManager, OTUser);
-    List<EntityData> ListEntityData = new ArrayList<EntityData>();
+    factureManagement OfactureManagement = new factureManagement(OdataManager, OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID()));
+    List<EntityData> ListEntityData = new ArrayList<>();
     if (request.getParameter("recordsToSend") != null && !"".equals(request.getParameter("recordsToSend"))) {
         recordsToSend = request.getParameter("recordsToSend");
 
@@ -77,7 +78,7 @@
     }
 
     bllBase ObllBase = new bllBase();
-    LinkedHashSet<TFacture> invoicesToPrint = new LinkedHashSet<TFacture>();
+    LinkedHashSet<TFacture> invoicesToPrint = new LinkedHashSet<>();
     if (request.getParameter("mode") != null) {
 
         if (request.getParameter("mode").equals("create facture tiers")) {

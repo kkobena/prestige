@@ -29,6 +29,7 @@
     dataManager OdataManager = new dataManager();
 
     OdataManager.initEntityManager();
+    TUser user=OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     int lg_GROUPE_ID = 0, mode = 0;
     String str_LIBELLE = "", search_value = "%%", str_TELEPHONE = "", str_ADRESSE = "", CODEFACTURE = "", LGFACTURE = "";
     boolean isOK = false;
@@ -36,7 +37,7 @@
     TGroupeTierspayant gtp = null;
     JSONArray listtp = new JSONArray();
     if (request.getParameter("MONTANTRESTANT") != null && !"".equals(request.getParameter("MONTANTRESTANT"))) {
-        MONTANTRESTANT = new Integer(request.getParameter("MONTANTRESTANT"));
+        MONTANTRESTANT =  Integer.valueOf(request.getParameter("MONTANTRESTANT"));
     }
     if (request.getParameter("LGFACTURE") != null && !"".equals(request.getParameter("LGFACTURE"))) {
         LGFACTURE = request.getParameter("LGFACTURE");
@@ -46,10 +47,10 @@
         CODEFACTURE = request.getParameter("CODEFACTURE");
     }
     if (request.getParameter("lg_GROUPE_ID") != null && !"".equals(request.getParameter("lg_GROUPE_ID"))) {
-        lg_GROUPE_ID = new Integer(request.getParameter("lg_GROUPE_ID"));
+        lg_GROUPE_ID = Integer.valueOf(request.getParameter("lg_GROUPE_ID"));
     }
     if (request.getParameter("mode") != null && !"".equals(request.getParameter("mode"))) {
-        mode = new Integer(request.getParameter("mode"));
+        mode = Integer.valueOf(request.getParameter("mode"));
     }
     if (request.getParameter("listtp") != null && !"".equals(request.getParameter("listtp"))) {
         listtp = new JSONArray(request.getParameter("listtp"));
@@ -101,12 +102,12 @@
             break;
         case 7:
             boolean okDeleted = true; 
-            factureManagement OfactureManagement = new factureManagement(OdataManager, OTUser);
+            factureManagement OfactureManagement = new factureManagement(OdataManager, user);
             List<TGroupeFactures> factureses = groupeCtl.getgroupeFacturesByCodeFacture(CODEFACTURE, lg_GROUPE_ID);
          
             for (TGroupeFactures obj : factureses) {
                
-                if (!OfactureManagement.deleteInvoice(obj.getLgFACTURESID().getLgFACTUREID(),OTUser)) {
+                if (!OfactureManagement.deleteInvoice(obj.getLgFACTURESID().getLgFACTUREID(),user)) {
                     okDeleted = false;
                 }
             }

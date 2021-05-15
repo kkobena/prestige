@@ -76,21 +76,16 @@
     }
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager);
-
     bllBase ObllBase = new bllBase();
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
     ObllBase.LoadMultilange(oTranslate);
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
 
     ObllBase.setDetailmessage("PAS D'ACTION RETOUR");
-    new logger().oCategory.info("le mode : " + request.getParameter("mode"));
-    new logger().oCategory.info("ID " + request.getParameter("lg_COMPTE_CLIENT_ID"));
-
-    new logger().oCategory.info("lg_COMPTE_CLIENT_ID   @@@@@@@@@@@@@@@@     " + request.getParameter("lg_COMPTE_CLIENT_ID"));
-    clientManager OclientManager = new clientManager(OdataManager, OTUser);
-    Preenregistrement OPreenregistrement = new Preenregistrement(OdataManager, OTUser);
+   
     if (request.getParameter("mode") != null) {
 
         if (request.getParameter("mode").toString().equals("create")) {

@@ -77,7 +77,7 @@
 %>
 <!-- fin logic de gestion des page -->
 
-<%    List<TOrder> lstTOrder = new ArrayList<TOrder>();
+<%    List<TOrder> lstTOrder = new ArrayList<>();
     String lg_ORDER_ID = "%%", str_REF_ORDER = "%%", lg_GROSSISTE_ID = "%%", str_STATUT = "%%";
     int int_LINE;
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);

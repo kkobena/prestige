@@ -495,11 +495,11 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     menuDisabled: true,
                     items: [{
                             icon: 'resources/images/icons/fam/disable.png',
-                            tooltip: 'Desactiver l\'article',
+                            tooltip: 'Désactiver l\'article',
                             scope: this,
                             handler: this.onDesableClick,
                             getClass: function (value, metadata, record) {
-                                if (record.get('lg_EMPLACEMENT_ID') == "1") {  //read your condition from the record
+                                if (record.get('lg_EMPLACEMENT_ID') === "1" && record.get('ACTION_DESACTIVE_PRODUIT')) {  //read your condition from the record
                                     return 'x-display-hide'; //affiche l'icone
                                 } else {
                                     return 'x-hide-display'; //cache l'icone

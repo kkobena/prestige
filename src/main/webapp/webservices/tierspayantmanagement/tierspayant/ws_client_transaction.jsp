@@ -25,13 +25,13 @@
 <%
             TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
             OdataManager.initEntityManager();
-
+  TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
             if (request.getParameter("lg_COMPTE_CLIENT_ID") != null) {
                 lg_COMPTE_CLIENT_ID = request.getParameter("lg_COMPTE_CLIENT_ID");
             }
 
             bllBase ObllBase = new bllBase();
-            ObllBase.setOTUser(OTUser);
+            ObllBase.setOTUser(user);
             ObllBase.LoadDataManger(OdataManager);
             ObllBase.LoadMultilange(oTranslate);
             //ObllBase.setMessage(commonparameter.PROCESS_SUCCESS);

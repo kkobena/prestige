@@ -25,12 +25,12 @@
 
 <%
     dataManager OdataManager = new dataManager();
- TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+    TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-    int  MODE_SELECTION = 0;
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    int MODE_SELECTION = 0;
     String lg_TIERS_PAYANT_ID = "", search_value = "", dt_start = date.formatterMysqlShort.format(new Date()), dt_end = dt_start;
-   
-    
+
     JSONArray listProductSelected = new JSONArray();
     JSONArray unselectedrecords = new JSONArray();
     if (request.getParameter("listProductSelected") != null && !"".equals(request.getParameter("listProductSelected"))) {
@@ -44,10 +44,9 @@
     }
 
     if (request.getParameter("MODE_SELECTION") != null && !"".equals(request.getParameter("MODE_SELECTION"))) {
-        MODE_SELECTION = new Integer(request.getParameter("MODE_SELECTION"));
+        MODE_SELECTION = Integer.valueOf(request.getParameter("MODE_SELECTION"));
     }
 
-    
     if (request.getParameter("lg_TIERS_PAYANT_ID") != null && !"".equals(request.getParameter("lg_TIERS_PAYANT_ID"))) {
         lg_TIERS_PAYANT_ID = request.getParameter("lg_TIERS_PAYANT_ID");
     }
@@ -61,7 +60,7 @@
     GroupeTierspayantController groupeCtl = new GroupeTierspayantController(OdataManager.getEmf());
     JSONObject data = new JSONObject();
     int success = 0;
-    Set<TFacture> grfact= groupeCtl.generateFacture(dt_start, dt_end,unselectedrecords,listProductSelected ,lg_TIERS_PAYANT_ID,MODE_SELECTION,OTUser);   
+    Set<TFacture> grfact = groupeCtl.generateFacture(dt_start, dt_end, unselectedrecords, listProductSelected, lg_TIERS_PAYANT_ID, MODE_SELECTION, user);
 
     success = grfact.size();
     if (success > 0) {

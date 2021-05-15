@@ -26,10 +26,12 @@
 
 <%
     dataManager OdataManager = new dataManager();
+    OdataManager.initEntityManager();
     String search_value = "%%", zoneID = "%%";
    
       TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
-       StockManager OStockManager = new StockManager(OdataManager,OTUser);
+       TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+       StockManager OStockManager = new StockManager(OdataManager,user);
     if (request.getParameter("zoneID") != null && !"".equals(request.getParameter("zoneID"))) {
         zoneID = request.getParameter("zoneID");
     }

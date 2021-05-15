@@ -123,5 +123,11 @@ public interface SalesService {
 
     void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp) throws Exception;
 
-       JSONObject closePreventeVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID);
+    JSONObject closePreventeVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID);
+
+    JSONObject clonerDevis(TUser ooTUser, String devisId) throws JSONException;
+
+    void updateVenteTva();
+
+    void upadteVente();
 }

@@ -31,17 +31,17 @@
         lg_TIERS_PAYANT_ID = request.getParameter("lg_TIERS_PAYANT_ID");
     }
  if (request.getParameter("dt_start_vente") != null && !"".equals(request.getParameter("dt_start_vente"))) {
-        dt_start = request.getParameter("dt_start_vente");
-    }
-    if (request.getParameter("dt_end_vente") != null && !"".equals(request.getParameter("dt_end_vente"))) {
-        dt_end = request.getParameter("dt_end_vente");
+         dt_start = request.getParameter("dt_start_vente");
+     }
+     if (request.getParameter("dt_end_vente") != null && !"".equals(request.getParameter("dt_end_vente"))) {
+         dt_end = request.getParameter("dt_end_vente");
 
-    }
-    JSONArray array = m.getTiersPayantDATA(dt_start, dt_end, lg_TIERS_PAYANT_ID);
-    JSONObject data = new JSONObject();
- 
-    data.put("data", array);
-    data.put("total", 1);
+     }
+     JSONArray array = m.getTiersPayantDATA(dt_start, dt_end, lg_TIERS_PAYANT_ID);
+     JSONObject data = new JSONObject();
+
+     data.put("data", array);
+     data.put("total", 1);
 %>
 
 <%= data%>

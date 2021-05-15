@@ -77,8 +77,6 @@
         date key = new date();
         reportManager OreportManager = new reportManager();
         OdataManager.initEntityManager();
-        StatisticSales statisticSales = new StatisticSales(OdataManager);
-
         TOfficine oTOfficine = OdataManager.getEm().find(dal.TOfficine.class, "1");
         Map parameters = new HashMap();
           String scr_report_file = "rp_activte_operateurportrait";

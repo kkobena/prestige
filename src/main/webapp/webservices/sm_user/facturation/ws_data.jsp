@@ -1,3 +1,5 @@
+<%@page import="util.DateConverter"%>
+<%@page import="dal.TPrivilege"%>
 <%@page import="dal.TGroupeFactures"%>
 <%@page import="bll.Util"%>
 <%@page import="dal.TTiersPayant"%>
@@ -68,16 +70,20 @@
     String OdateFin = key.DateToString(dt_fin, key.formatterMysqlShort2), OdateDebut = key.DateToString(dt_debut, key.formatterMysqlShort2);;
     dt_debut = key.getDate(OdateDebut, "00:00");
     dt_fin = key.getDate(OdateFin, "23:59");
-    int start =  Integer.valueOf(request.getParameter("start"));
-    int limit =  Integer.valueOf(request.getParameter("limit"));
+    int start = Integer.valueOf(request.getParameter("start"));
+    int limit = Integer.valueOf(request.getParameter("limit"));
     OdataManager.initEntityManager();
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     factureManagement OfactureManagement = new factureManagement(OdataManager, OTUser);
     List<TFacture> lstTFacture = OfactureManagement.getListFacture(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID, dt_debut, dt_fin, lg_customer_id, CODEGROUPE, start, limit);
     int count = OfactureManagement.getListFacturesCount(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID, dt_debut, dt_fin, lg_customer_id, CODEGROUPE);
     JSONArray arrayObj = new JSONArray();
-    boolean isALLOWED = Util.isAllowed(OdataManager.getEm(), Util.ACTIONDELETEINVOICE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
-    boolean ACTION_REGLER_FACTURE = Util.isAllowed(OdataManager.getEm(), Util.ACTION_REGLER_FACTURE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
+    //   boolean isALLOWED = Util.isAllowed(OdataManager.getEm(), Util.ACTIONDELETEINVOICE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
+    //  boolean ACTION_REGLER_FACTURE = Util.isAllowed(OdataManager.getEm(), Util.ACTION_REGLER_FACTURE, OTUser.getTRoleUserCollection().stream().findFirst().get().getLgROLEID().getLgROLEID());
+    List<TPrivilege> LstTPrivilege = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+    boolean isALLOWED = DateConverter.hasAuthorityById(LstTPrivilege, Util.ACTIONDELETEINVOICE);
+    boolean ACTION_REGLER_FACTURE = DateConverter.hasAuthorityById(LstTPrivilege, Util.ACTION_REGLER_FACTURE);
+
     for (TFacture of : lstTFacture) {
         TTiersPayant OTTiersPayant = (TTiersPayant) OfactureManagement.getgetOrganisme(of.getLgTYPEFACTUREID().getLgTYPEFACTUREID(), of.getStrCUSTOMER());
         JSONObject json = new JSONObject();
