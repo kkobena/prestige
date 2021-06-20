@@ -2671,28 +2671,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         var cmp = me.buildCmp(record);
         tpContainerForm.add(cmp);
     },
-    onbtnModifierAyantDroitInfo: function () {
-        var me = this, client = me.getClient();
-        if (client) {
-            var ayantDroitWin = Ext.create('testextjs.view.vente.user.AyantDroitGrid');
-            me.getAyantdroiGrid().getStore().load({
-                params: {"clientId": client.get('lgCLIENTID')},
-                callback: function (records, operation, successful) {
 
-                    if (successful) {
-//                        if (records.length > 0) {
-                        ayantDroitWin.show();
-//                        }
-                    }
-                }
-
-            }
-
-            );
-
-        }
-
-    },
     onbtnModifierInfo: function () {
         var me = this,
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
@@ -3153,10 +3132,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     ]
                 });
     },
-    onBtnCancelBtnAyantDroit: function () {
-        var me = this, win = me.getAyantdroitView();
-        win.destroy();
-    },
+   
     createAyantDroitForm: function () {
         var me = this, client = me.getClient();
         if (!client) {
@@ -4628,7 +4604,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     putToStandBy: function () {
-        var me = this
+        var me = this;
         me.resetAll();
         me.getVnoproduitCombo().focus(false, 100, function () {
         });
@@ -4646,7 +4622,47 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
 
         });
-    }
+    },
 
+    onbtnModifierAyantDroitInfo: function () {
+        var me = this, client = me.getClient();
+        if (client) {
+           me.loadAyantDroits(client.get('lgCLIENTID'));
+            /*
+            var ayantDroitWin = Ext.create('testextjs.view.vente.user.AyantDroitGrid');
+            me.getAyantdroiGrid().getStore().load({
+                params: {"clientId": client.get('lgCLIENTID')},
+                callback: function (records, operation, successful) {
+
+                    if (successful) {                   
+                        ayantDroitWin.show();
+                    }
+                }
+
+            }
+
+            );*/
+        }
+
+    },
+     onBtnCancelBtnAyantDroit: function () {
+        var me = this, win = me.getAyantdroitView();
+        win.destroy();
+    },
+    loadAyantDroits: function (clientId) {
+        var me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/client/ayant-droits',
+            params: {"clientId": clientId},
+            success: function (response, options) {
+                var result = Ext.JSON.decode(response.responseText, true);
+                var ayantDroitWin = Ext.create('testextjs.view.vente.user.AyantDroitGrid');
+                me.getAyantdroiGrid().getStore().loadData(result.data);
+                ayantDroitWin.show();
+            }
+
+        });
+    }
 }
 );

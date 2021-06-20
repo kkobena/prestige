@@ -43,7 +43,7 @@ public class JobCalendar {
         return em;
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         exec();
         removeFacture();
@@ -219,7 +219,5 @@ public class JobCalendar {
             e.setDtUPDATED(new Date());
             getEm().merge(e);
         });
-
     }
-
 }

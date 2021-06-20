@@ -39,7 +39,7 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
         maximizable: true,
         closable: false,
         nameintern: ''
-        //  headerPosition :'top'
+                //  headerPosition :'top'
     },
     xtype: 'addPerimer',
     id: 'addPerimerID',
@@ -287,22 +287,22 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
                                                         }
 
                                                         Ext.Ajax.request({
-                                                            url: '../webservices/Report/saisieperimes/ws_transaction.jsp',
+                                                            //  url: '../webservices/Report/saisieperimes/ws_transaction.jsp',
+                                                            url: '../api/v1/gestionperime/add',
                                                             method: 'POST',
+                                                            headers: {'Content-Type': 'application/json'},
+                                                            params: Ext.JSON.encode({
+                                                                refParent: dt_peremption,
+                                                                refTwo: int_NUM_LOT,
+                                                                value: int_NUMBER,
+                                                                ref: lg_FAMILLE_ID
 
-                                                            params: {
-                                                                MODE: 'PENDING',
-                                                                dt_peremption: dt_peremption,
-                                                                int_NUM_LOT: int_NUM_LOT,
-                                                                int_NUMBER: int_NUMBER,
-                                                                lg_FAMILLE_ID: lg_FAMILLE_ID
 
-
-                                                            },
+                                                            }),
                                                             success: function (response, options) {
 
                                                                 var object = Ext.JSON.decode(response.responseText, false);
-                                                                if (object.success === 1) {
+                                                                if (object.success) {
                                                                     Ext.getCmp('gridpanelArticlePerimes').getStore().load();
                                                                     Ext.getCmp('str_DATEPERMTION').setValue('');
                                                                     Ext.getCmp('str_CODE_LOT').setValue('');
@@ -460,25 +460,23 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
                             listeners: {
                                 edit: function (src, e) {
                                     var record = e.record;
-
-
                                     Ext.Ajax.request({
-                                        url: '../webservices/Report/saisieperimes/ws_transaction.jsp',
+                                        url: '../api/v1/gestionperime/update',
                                         method: 'POST',
-                                        params: {
-                                            MODE: 'UPDATE',
-                                            ID: record.get("ID"),
-                                            dt_peremption: record.get("DATEPEREMPTION"),
-                                            int_NUM_LOT: record.get("LOT"),
-                                            int_NUMBER: record.get("QTY")
+                                        headers: {'Content-Type': 'application/json'},
+                                        params: Ext.JSON.encode({
+                                            refParent: record.get("DATEPEREMPTION"),
+                                            refTwo: record.get("LOT"),
+                                            value: record.get("QTY"),
+                                            ref: record.get("ID")
 
+                                        }),
 
-                                        },
                                         success: function (response)
                                         {
                                             var obj = Ext.decode(response.responseText);
 
-                                            if (obj.success === 1) {
+                                            if (obj.success) {
 
                                                 e.record.commit();
                                             } else {
@@ -648,22 +646,21 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
         }
 
         Ext.Ajax.request({
-            url: '../webservices/Report/saisieperimes/ws_transaction.jsp',
+
+            url: '../api/v1/gestionperime/add',
             method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            params: Ext.JSON.encode({
+                refParent: dt_peremption,
+                refTwo: int_NUM_LOT,
+                value: int_NUMBER,
+                ref: lg_FAMILLE_ID
 
-            params: {
-                MODE: 'PENDING',
-                dt_peremption: dt_peremption,
-                int_NUM_LOT: int_NUM_LOT,
-                int_NUMBER: int_NUMBER,
-                lg_FAMILLE_ID: lg_FAMILLE_ID
-
-
-            },
+            }),
             success: function (response, options) {
 
                 var object = Ext.JSON.decode(response.responseText, false);
-                if (object.success === 1) {
+                if (object.success) {
                     Ext.getCmp('gridpanelArticlePerimes').getStore().load();
                     Ext.getCmp('str_DATEPERMTION').setValue('');
                     Ext.getCmp('str_CODE_LOT').setValue('');
@@ -703,39 +700,19 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
         var rec = grid.getStore().getAt(rowIndex);
 
         Ext.Ajax.request({
-            url: '../webservices/Report/saisieperimes/ws_transaction.jsp',
-            method: 'POST',
-
-            params: {
-                MODE: 'REMOVE',
-                ID: rec.get('ID')
-
-
-            },
+            url: '../api/v1/gestionperime/' + rec.get('ID'),
+            method: 'DELETE',
             success: function (response, options) {
 
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.success === 1) {
-                    Ext.getCmp('gridpanelArticlePerimes').getStore().load();
-                    Ext.MessageBox.show({
-                        title: 'Infos',
-                        width: 320,
-                        msg: "Suppression effectuee avec success",
-                        buttons: Ext.MessageBox.OK,
-                        icon: Ext.MessageBox.INFO
+                Ext.getCmp('gridpanelArticlePerimes').getStore().load();
+                Ext.MessageBox.show({
+                    title: 'Infos',
+                    width: 320,
+                    msg: "Suppression effectuee avec success",
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.INFO
 
-                    });
-
-                } else {
-                    Ext.MessageBox.show({
-                        title: 'Eurreur',
-                        width: 320,
-                        msg: 'Eurreur de Suppression',
-                        buttons: Ext.MessageBox.OK,
-                        icon: Ext.MessageBox.ERROR
-
-                    });
-                }
+                });
 
 
             }, failure: function (response, options) {
@@ -757,28 +734,20 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
     },
 
     CreateFacture: function (val) {
-
-
-
         var store = Ext.getCmp('gridpanelArticlePerimes').getStore();
         if (store.getCount() <= 0) {
-
             return;
         } else {
             var record = store.getAt(0);
             myAppController.ShowWaitingProcess();
             Ext.Ajax.request({
-                url: '../webservices/Report/saisieperimes/ws_transaction.jsp',
-                method: 'POST',
+                url: '../api/v1/gestionperime/close/' + record.get('ID'),
+                method: 'PUT',
                 timeout: 24000000,
-                params: {
-                    MODE: 'ALL',
-                    ID: record.get('ID')
-                },
                 success: function (response, options) {
                     myAppController.StopWaitingProcess();
                     var object = Ext.JSON.decode(response.responseText, false);
-                    if (object.success === 1) {
+                    if (object.success) {
 
                         Ext.MessageBox.show({
                             title: 'Infos',
@@ -805,15 +774,7 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
             });
         }
 
-
-
-
-
-
-
-
-
-    },
+    }
 
 });
 

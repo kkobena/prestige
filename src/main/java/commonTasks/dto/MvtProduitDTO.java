@@ -16,6 +16,7 @@ import java.util.List;
  * @author DICI
  */
 public class MvtProduitDTO implements Serializable {
+
     private static final long serialVersionUID = 1L;
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 //    private final DateTimeFormatter heureFormat = DateTimeFormatter.ofPattern("HH:mm");
@@ -25,8 +26,8 @@ public class MvtProduitDTO implements Serializable {
     int stockInit = 0, stockFinal = 0, currentStock = 0, qtyPerime = 0, qtyAjust = 0;
     int qtyAjustSortie = 0, qtyDeconEntrant = 0, qtyDecondSortant = 0, qtyEntree = 0;
     private String typeMvtId, categorieMvt;
-    private int qtyMvt = 0,ecartInventaire=0;
-    
+    private int qtyMvt = 0, ecartInventaire = 0;
+
     private List<MvtProduitDTO> produits = new ArrayList<>();
 
     public String getProduitId() {
@@ -98,7 +99,7 @@ public class MvtProduitDTO implements Serializable {
     }
 
     public void setDateOperation(LocalDate dateOperation) {
-        this.dateOp=dateOperation.format(dateFormat);
+        this.dateOp = dateOperation.format(dateFormat);
         this.dateOperation = dateOperation;
     }
 
@@ -247,4 +248,7 @@ public class MvtProduitDTO implements Serializable {
         this.currentStock = currentStock;
     }
 
+    public MvtProduitDTO(Integer qty) {
+        this.stockInit = qty;
+    }
 }

@@ -1220,7 +1220,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
                                         var dt_debut = Ext.getCmp('dt_debut').getSubmitValue();
                                         var dt_fin = Ext.getCmp('dt_fin').getSubmitValue();
-                                        new testextjs.view.stockmanagement.suivistockvente.action.detailStock({
+                                     /*   new testextjs.view.stockmanagement.suivistockvente.action.detailStock({
                                             odatasource: id,
                                             parentview: this,
                                             mode: "update",
@@ -1228,6 +1228,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                             datedin: dt_fin,
                                             titre: str_NAME
                                         });
+                                        */
+                                        Me_Workflow.buildDetail(id,dt_debut,dt_fin,str_NAME);
+                                        
+                                        
                                         win.close();
                                     }
                                 }
@@ -1449,7 +1453,464 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
         });
 
+    },
+     buildDetail: function (id,dtStart,dtEnd,libelle) {
+        var me = this;
+        var storeProduits = new Ext.data.Store({
+            fields:
+                    [
+                        {
+                            name: 'dateOp',
+                            type: 'string'
+                        },
+                        {
+                            name: 'produitId',
+                            type: 'string'
+                        },
+                        {
+                            name: 'cip',
+                            type: 'string'
+                        },
+                        {
+                            name: 'produitName',
+                            type: 'string'
+                        }, {
+                            name: 'qtyVente',
+                            type: 'number'
+                        }, {
+                            name: 'stockInit',
+                            type: 'number'
+                        }, {
+                            name: 'stockFinal',
+                            type: 'number'
+                        }
+                        , {
+                            name: 'qtyAjust',
+                            type: 'number'
+                        }, {
+                            name: 'qtyAnnulation',
+                            type: 'number'
+                        }
+                        , {
+                            name: 'qtyRetour',
+                            type: 'number'
+                        }, {
+                            name: 'qtyRetourDepot',
+                            type: 'number'
+                        }, {
+                            name: 'qtyInv',
+                            type: 'number'
+                        }, {
+                            name: 'qtyPerime',
+                            type: 'number'
+                        }, {
+                            name: 'qtyAjustSortie',
+                            type: 'number'
+                        }, {
+                            name: 'qtyDeconEntrant',
+                            type: 'number'
+                        }, {
+                            name: 'qtyDecondSortant',
+                            type: 'number'
+                        }, {
+                            name: 'qtyEntree',
+                            type: 'number'
+                        },
+                         {
+                            name: 'ecartInventaire',
+                            type: 'number'
+                        }
+                    ],
+            pageSize: null,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/produit/monitoringproduct',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total',
+                    metaProperty: 'metaData'
+                }
+            }
+        });
+        storeProduits.addListener('metachange', function (store, rec) {
+//            console.log(form.query('#imprimer'));
+            form.query('#qtyEntree')[0].setValue(rec.qtyEntree);
+            form.query('#qtyDecondSortant')[0].setValue(rec.qtyDecondSortant);
+            form.query('#qtyDeconEntrant')[0].setValue(rec.qtyDeconEntrant);
+            form.query('#qtyAjustSortie')[0].setValue(rec.qtyAjustSortie);
+            form.query('#qtyVente')[0].setValue(rec.qtyVente);
+            form.query('#qtyAjust')[0].setValue(rec.qtyAjust);
+            form.query('#qtyAnnulation')[0].setValue(rec.qtyAnnulation);
+            form.query('#qtyRetour')[0].setValue(rec.qtyRetour);
+            form.query('#qtyRetourDepot')[0].setValue(rec.qtyRetourDepot);
+            form.query('#qtyInv')[0].setValue(rec.qtyInv);
+            form.query('#qtyPerime')[0].setValue(rec.qtyPerime);
+
+        }, this);
+        storeProduits.load({
+            params: {
+                produitId: id,
+                dtStart: dtStart,
+                dtEnd:dtEnd
+            }
+        });
+        var form = Ext.create('Ext.window.Window',
+                {
+                    xtype: 'mvtdetail',
+                    alias: 'widget.mvtdetail',
+                    autoShow: true,
+                    height: 570,
+                    width: '80%',
+                    modal: true,
+                    title: "Détail de l'article [ " + libelle + " ]",
+                    closeAction: 'hide',
+
+                    closable: true,
+                    maximizable: true,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'top',
+                            items: [
+                                {
+                                    text: 'imprimer',
+                                    itemId: 'imprimer',
+                                    iconCls: 'printable',
+                                    tooltip: 'imprimer',
+                                    scope: this,
+                                    handler: function () {
+                                       
+                                        var linkUrl = '../BalancePdfServlet?mode=SUIVIMVT&dtStart=' + dtStart + '&dtEnd=' + dtEnd + "&produitId=" + id;
+                                        window.open(linkUrl);
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            items: [
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Vente',
+                                    labelWidth: 50,
+                                    itemId: 'qtyVente',
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    value: 0
+
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Ret.Four',
+                                    labelWidth: 70,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyRetour',
+                                    value: 0
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Périmée',
+                                    labelWidth: 55,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyPerime',
+                                    value: 0
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Entrée',
+                                    labelWidth: 60,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyEntree',
+                                    value: 0
+
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Ajust.Entrant',
+                                    labelWidth: 80,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyAjust',
+                                    value: 0
+
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Ajust.Sortant',
+                                    labelWidth: 80,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyAjustSortie',
+                                    value: 0
+
+                                }
+                            ]
+                        },
+
+                        {
+                            xtype: "toolbar",
+                            dock: 'bottom',
+                            items: [
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Décon.Entrant',
+                                    labelWidth: 85,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyDeconEntrant',
+                                    value: 0
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Décon.Sortie',
+                                    labelWidth: 80,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyDecondSortant',
+                                    value: 0
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Ret.Dépôt',
+                                    labelWidth: 80,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyRetourDepot'
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Inv',
+                                    labelWidth: 40,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyInv',
+                                    value: 0
+                                },
+                                {
+                                    xtype: 'displayfield',
+                                    flex: 1,
+                                    fieldLabel: 'Annulation',
+                                    labelWidth: 80,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:600;",
+                                    itemId: 'qtyAnnulation', value: 0
+                                }
+
+                            ]
+                        }
+                    ],
+                    items: [
+                        {
+                            xtype: 'gridpanel',
+                            store: storeProduits,
+                            viewConfig: {
+                                forceFit: true,
+                                columnLines: true,
+                                enableColumnHide: false
+
+                            },
+                            columns: [
+
+                                {
+                                    header: 'Date',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    dataIndex: 'dateOp',
+                                    flex: 1
+                                }, {
+                                    text: 'Qté.Init',
+                                    xtype: 'numbercolumn',
+                                    dataIndex: 'stockInit',
+                                    flex: 0.7,
+                                    align: 'right',
+                                    format: '0,000.'
+                                },
+                                {
+                                    text: 'Sortie',
+                                    columns:
+                                            [
+                                                {
+                                                    text: 'Vente',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyVente',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                },
+                                                {
+                                                    text: 'Ret.four',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyRetour',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                },
+                                                {
+                                                    text: 'Qté.périmé',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyPerime',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                },
+                                                {
+                                                    text: 'Qté.Ajustée',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyAjustSortie',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                },
+                                                {
+                                                    text: 'Qté.Décon',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyDecondSortant',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                }
+                                            ]
+                                },
+                                {
+                                    text: 'Entrée',
+                                    columns:
+                                            [
+                                                {
+                                                    text: 'Qté.Entrée',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyEntree',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                },
+                                                {
+                                                    text: 'Qté.Ajustée',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyAjust',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                },
+                                                {
+                                                    text: 'Qté.Décon',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyDeconEntrant',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                },
+                                                {
+                                                    text: 'Qté.Annulée',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyAnnulation',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                },
+                                                {
+                                                    text: 'Qté.Ret.Depôt',
+                                                    xtype: 'numbercolumn',
+                                                    dataIndex: 'qtyRetourDepot',
+                                                    flex: 0.7,
+                                                    align: 'right',
+                                                    format: '0,000.'
+                                                }
+                                            ]
+                                }
+                                ,
+                                {
+                                    text: 'Qté.Inv',
+                                    xtype: 'numbercolumn',
+                                    dataIndex: 'qtyInv',
+                                    flex: 0.7,
+                                    align: 'right',
+                                    format: '0,000.'
+                                },
+                                {
+                                    text: 'Ecart.Inv',
+                                    xtype: 'numbercolumn',
+                                    dataIndex: 'ecartInventaire',
+                                    flex: 0.7,
+                                    align: 'right',
+                                    format: '0,000.'
+                                },
+                                {
+                                    text: 'Stock',
+                                    xtype: 'numbercolumn',
+                                    dataIndex: 'stockFinal',
+                                    flex: 0.7,
+                                    align: 'right',
+                                    format: '0,000.'
+                                }
+
+                            ],
+
+                            bbar: {
+                                xtype: 'pagingtoolbar',
+                                store: storeProduits,
+                                dock: 'bottom',
+                                displayInfo: true,
+                                beforechange: function (page, currentPage) {
+                                    var myProxy = storeProduits.getProxy();
+                                    myProxy.params = {
+                                        produitId: null,
+                                        dtStart: null,
+                                        dtEnd: null
+                                    };
+                                    myProxy.setExtraParam('produitId', rec.get('produitId'));
+                                    myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
+                                    myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
+
+                                }
+                            }
+                        }
+                    ]
+                });
+
     }
+    
 
 });
 

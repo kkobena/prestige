@@ -549,4 +549,12 @@ public final class DateConverter {
         }
         return result;
     }
+    public static LocalDate convertDateToLocalDateAndReturnNull(Date dateToConvert) {
+        if (dateToConvert == null) {
+            return null;
+        }
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
 }

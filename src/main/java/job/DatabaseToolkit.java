@@ -7,10 +7,12 @@ package job;
 
 import dal.Notification;
 import dal.NotificationClient;
+import dal.StockDailyValue;
 import dal.TParameters;
 import dal.enumeration.Canal;
 import dal.enumeration.Statut;
 import dal.enumeration.TypeNotification;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -47,6 +49,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.sql.DataSource;
 import javax.transaction.HeuristicMixedException;
@@ -107,7 +110,7 @@ public class DatabaseToolkit {
         }*/
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         if (dataSource == null) {
             LOG.info("no datasource found to execute the db migrations!");
@@ -129,6 +132,9 @@ public class DatabaseToolkit {
         }
         runTask();
         createTimer();
+        mes.submit(() -> {
+            updateStockDailyValue();
+        });
 
     }
 
@@ -195,7 +201,7 @@ public class DatabaseToolkit {
             SmsParameters sp = SmsParameters.getInstance();
             List<NotificationClient> toClients = findNotificationClients(notification);
             String address = null;
-            if (!toClients.isEmpty()) {// a revoir pour les envois multiples
+            if (!toClients.isEmpty()) { // a revoir pour les envois multiples
                 address = toClients.get(0).getClient().getStrADRESSE();
             }
 
@@ -397,5 +403,39 @@ public class DatabaseToolkit {
         });
         sb.append("</body></html>");
         return sb.toString();
+    }
+
+    void updateStockDailyValue() {
+        try {
+            List<Integer> ids = List.of(Integer.valueOf(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))),
+                    Integer.valueOf(LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"))), Integer.valueOf(LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyyMMdd"))), Integer.valueOf(LocalDate.now().minusDays(3).format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
+            userTransaction.begin();
+            for (Integer id : ids) {
+                if (!checkIsAlreadyUpdated(id)) {
+                    List<Tuple> list = em.createNativeQuery("SELECT SUM(s.int_NUMBER_AVAILABLE * f.int_PRICE) AS VALEUR_VENTE,SUM(s.int_NUMBER_AVAILABLE * f.int_PAF) AS VALEUR_ACHAT from t_famille f,t_famille_stock s WHERE s.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND s.lg_EMPLACEMENT_ID='1' AND s.int_NUMBER_AVAILABLE >0 AND f.str_STATUT='enable' ", Tuple.class).getResultList();
+                    Tuple t = list.get(0);
+                    StockDailyValue sdv = new StockDailyValue();
+                    sdv.setId(id);
+                    sdv.setValeurAchat(t.get(1, BigDecimal.class).longValue());
+                    sdv.setValeurVente(t.get(0, BigDecimal.class).longValue());
+                    em.persist(sdv);
+                }
+            }
+            userTransaction.commit();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "===>> updateStockDailyValue", e);
+        }
+    }
+
+    boolean checkIsAlreadyUpdated(int day) {
+        try {
+            StockDailyValue sdv = em.find(StockDailyValue.class, day);
+            return sdv != null;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "===>> updateStockDailyValue", e);
+            return false;
+        }
+
     }
 }

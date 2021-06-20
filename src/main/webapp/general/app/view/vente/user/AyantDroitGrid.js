@@ -10,12 +10,13 @@ Ext.define('testextjs.view.vente.user.AyantDroitGrid', {
     modal: true,
     title: 'LISTE DES AYANTS DROITS CORRESPONDANTS',
     iconCls: 'icon-grid',
-    closeAction: 'hide',
+    closeAction: 'destroy',
     closable: true,
     layout: {
         type: 'fit'
 //        align: 'stretch'
     },
+      
     initComponent: function () {
         var ayantStore = Ext.create('Ext.data.Store', {
             model: 'testextjs.model.caisse.AyantDroit',
@@ -136,11 +137,6 @@ Ext.define('testextjs.view.vente.user.AyantDroitGrid', {
                         selType: 'rowmodel',
                         mode: 'SINGLE'
                     },
-
-//            selModel: {
-//                selType: 'cellmodel'
-//                selType: 'checkboxmodel',
-//            },
 
                     dockedItems: [
                         {

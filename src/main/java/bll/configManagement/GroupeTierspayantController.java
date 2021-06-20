@@ -5280,7 +5280,6 @@ public class GroupeTierspayantController implements Serializable {
             cq.where(p, btw, cb.in(root.get(TMvtCaisse_.lgUSERID)).value(sub));
             Query q = em.createQuery(cq);
             List<Object[]> list = q.getResultList();
-
             list.forEach((t) -> {
                 JSONObject ob = new JSONObject();
                 try {

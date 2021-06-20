@@ -103,7 +103,6 @@ public class MvtTransaction implements Serializable {
     private Integer marge = 0;
     @Column(name = "organisme", length = 100)
     private String organisme;
-
     @Column(name = "margeug")
     private Integer margeug = 0;
     @Column(name = "montantttcug")
@@ -112,6 +111,19 @@ public class MvtTransaction implements Serializable {
     private Integer montantnetug = 0;
     @Column(name = "montanttvaug")
     private Integer montantTvaUg = 0;
+    @JoinColumn(name = "vente_id", referencedColumnName = "lg_PREENREGISTREMENT_ID", nullable = true)
+    @ManyToOne
+    private TPreenregistrement preenregistrement;
+
+    public TPreenregistrement getPreenregistrement() {
+        return preenregistrement;
+    }
+
+    public void setPreenregistrement(TPreenregistrement preenregistrement) {
+        this.preenregistrement = preenregistrement;
+    }
+    
+    
 
     public String getOrganisme() {
         return organisme;

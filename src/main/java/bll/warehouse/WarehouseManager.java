@@ -2688,7 +2688,7 @@ public class WarehouseManager extends bll.bllBase {
             }
             if (this.checkIsExist(lg_FAMILLE_ID).size() > 0) {
                 TWarehouse tw = getTWarehouse(lg_FAMILLE_ID, int_NUM_LOT);
-                if (tw == null) {
+                if (tw != null) {
                     json = updateStock(tw, int_NUMBER);
                 } else {
                     json = updateFamillyStock(lg_FAMILLE_ID, int_NUMBER, int_NUM_LOT, dt_peremption);

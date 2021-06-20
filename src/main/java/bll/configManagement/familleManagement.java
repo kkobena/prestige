@@ -5489,7 +5489,6 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
 
             cq.where(predicate);
             Query q = em.createQuery(cq);
-
             q.setFirstResult(0);
             q.setMaxResults(1);
             date = (String) q.getSingleResult();

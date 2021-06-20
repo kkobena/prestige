@@ -496,11 +496,37 @@ public class ProduitServiceImpl implements ProduitService {
     @Override
     public TFamille findById(String produitId) {
         try {
-            return getEntityManager().find(TFamille.class, produitId); 
+            return getEntityManager().find(TFamille.class, produitId);
         } catch (Exception e) {
-            return  null;
+            return null;
         }
-       
+
+    }
+
+    private MvtProduitDTO findInitialQty(LocalDate dtStart, String produitId) {
+        try {
+            TypedQuery<MvtProduitDTO> q = getEntityManager().createQuery("SELECT new commonTasks.dto.MvtProduitDTO(o.qteDebut) FROM HMvtProduit o WHERE o.mvtDate=?1 AND o.famille.lgFAMILLEID=?2 ORDER BY o.createdAt ASC ", MvtProduitDTO.class);
+            q.setParameter(1, dtStart);
+            q.setParameter(2, produitId);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "findInitialQty", e);
+            return null;
+        }
+    }
+
+    private MvtProduitDTO findFinalQty(LocalDate dtStart, String produitId) {
+        try {
+            TypedQuery<MvtProduitDTO> q = getEntityManager().createQuery("SELECT new commonTasks.dto.MvtProduitDTO(o.qteFinale) FROM HMvtProduit o WHERE o.mvtDate=?1 AND o.famille.lgFAMILLEID=?2 ORDER BY o.createdAt DESC ", MvtProduitDTO.class);
+            q.setParameter(1, dtStart);
+            q.setParameter(2, produitId);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "findFinalQty", e);
+            return null;
+        }
     }
 
     @Override
@@ -519,11 +545,13 @@ public class ProduitServiceImpl implements ProduitService {
                 LongAdder venteStock = new LongAdder();
                 mvt.setDateOperation(k);
                 values.sort(comparatorByDateTime);
-                Deque<HMvtProduit> queue = new ArrayDeque<>(values);
-                HMvtProduit first = queue.getFirst();
-                mvt.setStockInit(first.getQteDebut());
-                HMvtProduit last = queue.getLast();
-                mvt.setStockFinal(last.getQteFinale());
+                // Deque<HMvtProduit> queue = new ArrayDeque<>(values);
+                // HMvtProduit first = queue.getFirst();
+                MvtProduitDTO init = findInitialQty(k, values.get(0).getFamille().getLgFAMILLEID());
+                mvt.setStockInit(init.getStockInit());
+                // HMvtProduit last = queue.getLast();
+                MvtProduitDTO stockFinal = findFinalQty(k, values.get(0).getFamille().getLgFAMILLEID());
+                mvt.setStockFinal(stockFinal.getStockInit());
                 Map<String, List<HMvtProduit>> map = values.stream().collect(Collectors.groupingBy(p -> p.getTypemvtproduit().getId()));
                 map.forEach((e, val) -> {
                     switch (e) {

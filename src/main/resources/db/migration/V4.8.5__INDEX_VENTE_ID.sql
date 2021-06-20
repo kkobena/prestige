@@ -1,0 +1,15 @@
+ALTER TABLE mvttransaction ADD COLUMN   IF NOT EXISTS `vente_id` VARCHAR(40) NULL DEFAULT NULL;
+CREATE INDEX  `indexMvtTranstionmvdate` ON mvttransaction(`mvtdate`);
+CREATE	INDEX `indexMvtTranstype` ON mvttransaction (`typeTransaction`);
+CREATE	INDEX `indexMvtpkey` ON mvttransaction (`pkey`);
+CREATE	INDEX `indexMvtchecked` ON mvttransaction (`checked`);
+CREATE	INDEX `indexMvtcategorie` ON mvttransaction (`categorie`);
+CREATE	INDEX `indexMvtRef` ON mvttransaction (`reference`);
+CREATE	INDEX `FKuexkrw2hgawujvv9vo4i6dwn` ON mvttransaction (`caisse`);
+CREATE	INDEX `FK6lv5o5akgq7danlitleaq9cqs` ON mvttransaction (`grossisteId`);
+CREATE	INDEX `FKvw5wh8ecb02thq9dirkfmtj7` ON mvttransaction (`lg_EMPLACEMENT_ID`);
+CREATE	INDEX `FKba0l8rx03twx6cp9s94esl2av` ON mvttransaction (`typeReglementId`);
+CREATE	INDEX `FKry0qq7ajuqv0m1my3dymecy39` ON mvttransaction (`typeMvtCaisseId`);
+CREATE	INDEX `FKnfo31ibba0bipr7582l5ubfxb` ON mvttransaction (`lg_USER_ID`);
+CREATE	INDEX `FKphgk3j16oxgdds9658fbb8eti`ON mvttransaction  (`vente_id`);
+ALTER TABLE `mvttransaction` DROP INDEX IF  EXISTS `pkey_unq`;
