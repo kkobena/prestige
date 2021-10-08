@@ -20,6 +20,9 @@ Ext.define('testextjs.controller.AjusteListCtr', {
         {
             ref: 'queryBtn',
             selector: 'ajustementmanager #rechercher'
+        }, {
+            ref: 'typeAjustement',
+            selector: 'ajustementmanager #typeAjustement'
         },
 
         {
@@ -118,7 +121,10 @@ Ext.define('testextjs.controller.AjusteListCtr', {
             },
             'itemAjustement [xtype=toolbar] #btnCloture': {
                 click: this.onPrintPdf
-            }
+            },
+            'ajustementmanager #imprimer': {
+                click: this.onPdfClick
+            },
         });
     },
     onPrintPdf: function () {
@@ -142,14 +148,14 @@ Ext.define('testextjs.controller.AjusteListCtr', {
     },
     toItem: function (view, rowIndex, colIndex, item, e, record, row) {
         var me = this;
-           me.goToItem(record);
-       
+        me.goToItem(record);
+
     },
     print: function (view, rowIndex, colIndex, item, e, record, row) {
         var me = this;
-             me.printTicket(record.get('lgAJUSTEMENTID'));
+        me.printTicket(record.get('lgAJUSTEMENTID'));
     },
-  
+
     goToItem: function (rec) {
         var data = {'record': rec.data, 'isEdit': true};
         var xtype = "itemAjustement";
@@ -174,10 +180,12 @@ Ext.define('testextjs.controller.AjusteListCtr', {
         myProxy.params = {
             query: null,
             dtStart: null,
-            dtEnd: null
+            dtEnd: null,
+            typeFiltre: null
 
         };
 
+        myProxy.setExtraParam('typeFiltre', me.getTypeAjustement().getValue());
         myProxy.setExtraParam('query', me.getQueryField().getValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
@@ -256,8 +264,23 @@ Ext.define('testextjs.controller.AjusteListCtr', {
             params: {
                 "query": me.getQueryField().getValue(),
                 "dtStart": me.getDtStart().getSubmitValue(),
-                "dtEnd": me.getDtEnd().getSubmitValue()
+                "dtEnd": me.getDtEnd().getSubmitValue(),
+                "typeFiltre": me.getTypeAjustement().getValue()
             }
         });
+    },
+    onPdfClick: function () {
+        var me = this;
+        var dtStart = me.getDtStart().getSubmitValue();
+        var dtEnd = me.getDtEnd().getSubmitValue();
+        var query = me.getQueryField().getValue();
+        var typeFiltre = me.getTypeAjustement().getValue();
+        if (typeFiltre == null) {
+            typeFiltre = '';
+        }
+        var linkUrl = '../DataReportingServlet?mode=ALL_AJUSTEMENTS&dtStart=' + dtStart + '&dtEnd=' + dtEnd
+                + '&typeFiltre=' + typeFiltre + '&query=' + query;
+        window.open(linkUrl);
     }
+
 });

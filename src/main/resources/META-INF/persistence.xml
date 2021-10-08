@@ -200,6 +200,11 @@
     <class>dal.Reference</class>
     <class>dal.NotificationClient</class>
     <class>dal.StockSnapshot</class>
+    <class>dal.Flag</class>
+    <class>dal.HistoriqueImportation</class>
+    <class>dal.StockDailyValue</class>
+    <class>dal.Licence</class>
+    <class>dal.MotifAjustement</class>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
       <!--      <property name="hibernate.hbm2ddl.auto" value="update"/>

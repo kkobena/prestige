@@ -61,7 +61,7 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                             value: new Date(),
                             format: 'd/m/Y'
 
-                        }, 
+                        },
                         {
                             xtype: 'datefield',
                             fieldLabel: 'Au',
@@ -75,7 +75,7 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                             format: 'd/m/Y'
 
                         },
-                         {
+                        {
                             xtype: 'combo',
                             value: 'Periode',
                             flex: 1,
@@ -83,8 +83,16 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                             labelWidth: 60,
                             fieldLabel: 'Filtrer par',
                             store: ['Periode', 'Journalier']
+                        }, {
+                            xtype: 'combo',
+                            value: 'TOUT',
+                            flex: 1,
+                            itemId: 'typeVente',
+                            labelWidth: 90,
+                            fieldLabel: 'Type vente',
+                            store: ['TOUT', 'VNO']
                         },
-                        
+
                         {
                             text: 'rechercher',
                             tooltip: 'rechercher',
@@ -123,6 +131,7 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                         {
                             header: 'Taux',
                             dataIndex: 'TAUX',
+                            align: 'right',
                             summaryType: "count",
                             summaryRenderer: function (value) {
 
@@ -199,7 +208,7 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                 },
                 {
                     xtype: 'panel',
-                     title: 'Graphe du résultat par TVA',
+                    title: 'Graphe du résultat par TVA',
                     layout:
                             {
                                 type: 'vbox',
@@ -220,11 +229,11 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                                 {
                                     xtype: 'chart',
                                     store: data,
-                                    itemId:'ttcChart',
-                                     title:'Rapport par Montant TTC',
+                                    itemId: 'ttcChart',
+                                    title: 'Rapport par Montant TTC',
                                     flex: 1,
-                                    shadow : true,
-                                    insetPadding : 10,
+                                    shadow: true,
+                                    insetPadding: 10,
                                     animate: true,
 //                                     theme: 'Base:gradients',
 //                                    config: {colors: ['#6F5092', '#64BD4F']},
@@ -237,8 +246,8 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                                             field: 'Total TTC',
                                             showInLegend: true,
 //                                            title:'RAPPORT PAR MONTANT TTC',
-                                            donut : 25,
-                                            
+                                            donut: 25,
+
 //                                            renderer:function(sprite, record, attributes, index, store) {
 //                                                console.log(attributes);
 //                                                return ;
@@ -253,7 +262,7 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                                                 contrast: true,
                                                 font: '18px Arial'
                                             }, style: {
-                                              
+
                                                 opacity: 0.93
 //                                                 colors: ['#00B8BF', '#EDFF9F','#00B8BF', '#EDFF9F']
                                             },
@@ -275,7 +284,7 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                                     style: 'background:#fff',
                                     store: data,
                                     flex: 1,
-                                     title:'Rapport par Montant HT',
+                                    title: 'Rapport par Montant HT',
                                     animate: true,
 
                                     legend: {
@@ -286,8 +295,8 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                                             axis: 'left',
                                             field: 'Total HT',
                                             showInLegend: true,
-                                           
-                                            donut : 25,
+
+                                            donut: 25,
                                             highlight: {
                                                 segment: {
                                                     margin: 20
@@ -299,8 +308,8 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                                                 font: '18px Arial'
                                             }
                                             , style: {
-                                               opacity: 0.93
-                                               
+                                                opacity: 0.93
+
                                             },
                                             tips: {
                                                 trackMouse: true,
@@ -314,7 +323,7 @@ Ext.define('testextjs.view.Dashboard.TvaStat', {
                                             }
                                         }]
                                 }
-                          
+
 
                             ]
                         }

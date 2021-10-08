@@ -7,6 +7,7 @@ package commonTasks.dto;
 
 import dal.TGroupeTierspayant;
 import dal.TTiersPayant;
+import dal.TTypeTiersPayant;
 import java.io.Serializable;
 
 /**
@@ -14,8 +15,10 @@ import java.io.Serializable;
  * @author koben
  */
 public class ErpTiersPayant implements Serializable {
+
     private static final long serialVersionUID = 1L;
-    private String  tiersPayantId, tiersPayantLibelle,adresse,telephone ,groupeLibelle;
+    private String tiersPayantId, tiersPayantLibelle, adresse, telephone, groupeLibelle;
+    private String typeId, typeLibelle;
     private Integer groupeId;
 
     public ErpTiersPayant(TTiersPayant p) {
@@ -23,12 +26,17 @@ public class ErpTiersPayant implements Serializable {
         this.tiersPayantLibelle = p.getStrFULLNAME();
         this.adresse = p.getStrADRESSE();
         this.telephone = p.getStrTELEPHONE();
-        TGroupeTierspayant g=p.getLgGROUPEID();
-        if(g!=null){
-          this.groupeId = g.getLgGROUPEID();  
-          this.groupeLibelle=g.getStrLIBELLE();
+        TGroupeTierspayant g = p.getLgGROUPEID();
+        if (g != null) {
+            this.groupeId = g.getLgGROUPEID();
+            this.groupeLibelle = g.getStrLIBELLE();
         }
-        
+        TTypeTiersPayant payant=p.getLgTYPETIERSPAYANTID();
+        if(payant!=null){
+            this.typeId=payant.getLgTYPETIERSPAYANTID();
+            this.typeLibelle=payant.getStrLIBELLETYPETIERSPAYANT();
+        }
+
     }
 
     public String getTiersPayantId() {
@@ -79,10 +87,20 @@ public class ErpTiersPayant implements Serializable {
         this.groupeId = groupeId;
     }
 
-   
-    
-    
-    
-    
-    
+    public String getTypeId() {
+        return typeId;
+    }
+
+    public void setTypeId(String typeId) {
+        this.typeId = typeId;
+    }
+
+    public String getTypeLibelle() {
+        return typeLibelle;
+    }
+
+    public void setTypeLibelle(String typeLibelle) {
+        this.typeLibelle = typeLibelle;
+    }
+
 }

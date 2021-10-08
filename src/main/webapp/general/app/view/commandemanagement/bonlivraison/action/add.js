@@ -907,9 +907,7 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                                                             if (btn == 'yes') {
                                                                 var linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue();
                                                                 onPdfBLClick(linkUrl);
-                                                                // testextjs.app.getController('App').onLunchPrinter(linkUrl);
-//                                                                    Me.onbtncancel();
-                                                                // testextjs.app.getController('App').StopWaitingProcess();
+                                                              
                                                                 var xtype = "";
                                                                 xtype = "bonlivraisonmanager";
                                                                 testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");

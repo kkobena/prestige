@@ -323,7 +323,7 @@ public class SuggestionImpl implements SuggestionService {
                 TFamille famille = item.getLgFAMILLEID();
                 TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, emg);
                 if (familleStock != null) {
-                    makeSuggestionAuto(familleStock, famille, emg);
+                    makeSuggestionAuto(familleStock, famille);
                 }
                 
             });
@@ -340,9 +340,8 @@ public class SuggestionImpl implements SuggestionService {
             list.forEach(item -> {
                 TFamille famille = item.getLgFAMILLEID();
                 TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, getEmg());
-                System.out.println("---------------------->> suggestiob auto "+familleStock);
                 if (familleStock != null) {
-                    makeSuggestionAuto(familleStock, famille, getEmg());
+                    makeSuggestionAuto(familleStock, famille);
                 }
                 
             });
@@ -353,17 +352,15 @@ public class SuggestionImpl implements SuggestionService {
     }
     
     @Override
-    public void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille, EntityManager emg) {
+    public void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille) {
+        EntityManager emg=getEmg();
         if (famille.getIntSEUILMIN() != null && famille.getBoolDECONDITIONNE() == 0) {
             if (OTFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN()) {
-                
                 int statut = verifierProduitDansLeProcessusDeCommande(famille);
-                System.out.println("processs ----------------->>> "+statut);
                 if (statut == 0 || statut == 1) {
                     TSuggestionOrder OTSuggestionOrder;
                     Integer int_QTE_A_SUGGERE;
                     TGrossiste grossiste = famille.getLgGROSSISTEID();
-                    
                     if (grossiste != null) {
                         OTSuggestionOrder = checkSuggestionGrossiteExiste(grossiste.getLgGROSSISTEID(), emg);
                         if (statut == 0) {

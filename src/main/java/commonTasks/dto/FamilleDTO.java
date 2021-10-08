@@ -21,6 +21,7 @@ import dal.TZoneGeographique;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -739,8 +740,8 @@ public class FamilleDTO {
     public FamilleDTO() {
     }
 
-    public FamilleDTO(String id,String cip, String libelle, int prixAchat, int prixUni, int stock, boolean chiffre) {
-       this.lgFAMILLEID=id;
+    public FamilleDTO(String id, String cip, String libelle, int prixAchat, int prixUni, int stock, boolean chiffre) {
+        this.lgFAMILLEID = id;
         this.intCIP = cip;
         this.strNAME = libelle;
         this.intPAF = prixAchat;
@@ -914,30 +915,51 @@ public class FamilleDTO {
     }
 
     private static TTypeetiquette etiquetteFromId(String id) {
+         if (StringUtils.isEmpty(id)) {
+            return null;
+        }
         return new TTypeetiquette(id);
     }
 
     private static TFormeArticle formeFromId(String id) {
+         if (StringUtils.isEmpty(id)) {
+            return null;
+        }
         return new TFormeArticle(id);
     }
 
     private static TCodeTva tvaFromId(String id) {
+         if (StringUtils.isEmpty(id)) {
+            return null;
+        }
         return new TCodeTva(id);
     }
 
     private static TCodeActe acteFromId(String id) {
+         if (StringUtils.isEmpty(id)) {
+            return null;
+        }
         return new TCodeActe(id);
     }
 
     private static TGrossiste grossisteFromId(String id) {
+         if (StringUtils.isEmpty(id)) {
+            return null;
+        }
         return new TGrossiste(id);
     }
 
     private static TFamillearticle familleFromId(String id) {
+         if (StringUtils.isEmpty(id)) {
+            return null;
+        }
         return new TFamillearticle(id);
     }
 
     private static TCodeGestion gestionFromId(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
         return new TCodeGestion(id);
     }
 

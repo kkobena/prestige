@@ -42,6 +42,9 @@ Ext.define('testextjs.model.caisse.Ajustement', {
         {
             name: 'commentaire',
             type: 'string'
+        },{
+            name: 'typeLibelle',
+            type: 'string'
         },
         {
             name: 'canCancel',

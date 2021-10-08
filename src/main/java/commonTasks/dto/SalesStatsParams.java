@@ -28,9 +28,17 @@ public class SalesStatsParams implements Serializable {
     private String produitId;
     private String prixachatFiltre;
     private int stock;
-    private String stockFiltre;
+    private String stockFiltre,typeFiltre;
     private String rayonId;
     private String user;
+
+    public String getTypeFiltre() {
+        return typeFiltre;
+    }
+
+    public void setTypeFiltre(String typeFiltre) {
+        this.typeFiltre = typeFiltre;
+    }
 
     private String typeTransaction;
 

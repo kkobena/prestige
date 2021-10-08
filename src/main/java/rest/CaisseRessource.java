@@ -199,7 +199,7 @@ public class CaisseRessource {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        JSONObject json = null;
+        JSONObject json ;
         if (monthly) {
             json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
         } else {

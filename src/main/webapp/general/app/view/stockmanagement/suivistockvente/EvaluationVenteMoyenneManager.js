@@ -154,6 +154,7 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
                     id: 'datedebut',
                     fieldLabel: 'Du',
                     name: 'datedebut',
+                     hidden:true,
                     emptyText: 'Date debut',
                     submitFormat: 'Y-m-d',
                     maxValue: new Date(), //                    flex: 0.7,
@@ -169,6 +170,7 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
                     id: 'datefin',
                     fieldLabel: 'Au',
                     name: 'datefin',
+                    hidden:true,
                     emptyText: 'Date fin',
                     maxValue: new Date(),
                     //                    flex: 0.7,
@@ -182,6 +184,7 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
                 }, '-', {
                     xtype: 'textfield',
                     id: 'rechecher',
+                       width: 350,
                     name: 'facture',
                     emptyText: 'Rech',
                     listeners: {
@@ -214,9 +217,6 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
                             datefin: '',
                             search_value: ''
                         };
-
-                        myProxy.setExtraParam('datedebut', Ext.getCmp('datedebut').getSubmitValue());
-                        myProxy.setExtraParam('datefin', Ext.getCmp('datefin').getSubmitValue());
                         myProxy.setExtraParam('search_value', Ext.getCmp('rechecher').getValue());
                     }
 
@@ -242,18 +242,11 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
     },
     onRechClick: function() {
         var val = Ext.getCmp('rechecher');
-
-        if (new Date(Ext.getCmp('datedebut').getSubmitValue()) > new Date(Ext.getCmp('datefin').getSubmitValue())) {
-            Ext.MessageBox.alert('Erreur au niveau date', 'La date de d&eacute;but doit &ecirc;tre inf&eacute;rieur &agrave; la date fin');
-            return;
-        }
-
-
         this.getStore().load({
             params: {
                 search_value: val.getValue(),
-                datedebut: Ext.getCmp('datedebut').getSubmitValue(),
-                datefin: Ext.getCmp('datefin').getSubmitValue()
+                datedebut: '',
+                datefin: ''
             }
         }, url_services_data_evaluationventemoyenne);
     }

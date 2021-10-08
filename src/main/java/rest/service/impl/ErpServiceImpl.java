@@ -67,7 +67,7 @@ public class ErpServiceImpl implements ErpService {
     @Override
     public List<ErpCaComptant> caComptant(String dtStart, String dtEnd) {
         try {
-            List<Tuple> list = getEntityManager().createNativeQuery("SELECT SUM(m.montantRegle) AS MONTANTREGLE,SUM(m.montantPaye) AS MONTANTPAYE, SUM(m.montantRemise) AS montantRemise, SUM(m.montantTva) as montantTva,m.mvtdate,m.typeReglementId FROM mvttransaction m where m.checked=1 AND m.typeTransaction=0 AND m.lg_EMPLACEMENT_ID='1' AND DATE(m.mvtdate) BETWEEN ?1 AND ?2 GROUP BY m.mvtdate,m.typeReglementId", Tuple.class)
+            List<Tuple> list = getEntityManager().createNativeQuery("SELECT SUM(m.montantRegle) AS MONTANTREGLE,SUM(m.montantPaye) AS MONTANTPAYE, SUM(m.montantRemise) AS montantRemise, SUM(m.montantTva) as montantTva,m.mvtdate,m.typeReglementId FROM mvttransaction m where m.checked=1 AND (m.typeTransaction=0 OR m.typeTransaction=1) AND m.lg_EMPLACEMENT_ID='1' AND DATE(m.mvtdate) BETWEEN ?1 AND ?2 GROUP BY m.mvtdate,m.typeReglementId", Tuple.class)
                     .setParameter(1, LocalDate.parse(dtStart))
                     .setParameter(2, LocalDate.parse(dtEnd))
                     .getResultList();

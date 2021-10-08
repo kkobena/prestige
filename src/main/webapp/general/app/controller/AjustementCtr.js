@@ -6,11 +6,9 @@ Ext.define('testextjs.controller.AjustementCtr', {
     models: [
         'testextjs.model.caisse.Produit',
         'testextjs.model.caisse.ItemAjust'
-
     ],
     views: [
         'testextjs.view.produits.Ajuster'
-
     ],
     config: {
         current: null
@@ -47,6 +45,8 @@ Ext.define('testextjs.controller.AjustementCtr', {
 
         {ref: 'vnostockField',
             selector: 'doajustementmanager #stockField'
+        }, {ref: 'typeAjustement',
+            selector: 'doajustementmanager #typeAjustement'
         },
 
         {ref: 'vnobtnCloture',
@@ -89,6 +89,9 @@ Ext.define('testextjs.controller.AjustementCtr', {
                         afterrender: this.produitCmpAfterRender,
                         select: this.produitSelect,
                         specialkey: this.onProduitSpecialKey
+                    },
+                     'doajustementmanager #typeAjustement': {
+                        select: this.onMotifSelect
                     }
                     ,
 
@@ -116,7 +119,6 @@ Ext.define('testextjs.controller.AjustementCtr', {
                         click: this.doCloture
                     }
 
-
                 });
     },
 
@@ -129,19 +131,20 @@ Ext.define('testextjs.controller.AjustementCtr', {
     produitCmpAfterRender: function (cmp) {
         cmp.focus();
     },
+     onMotifSelect: function (cmp, record) {
+            var me = this;
+             me.getVnoqtyField().focus(true, 100);
+     },
     produitSelect: function (cmp, record) {
         var me = this;
-
         var record = cmp.findRecord("lgFAMILLEID" || "intCIP", cmp.getValue());
-
         if (record) {
-            var vnostockField = me.getVnostockField();
+            let motifField = me.getTypeAjustement();
+            let vnostockField = me.getVnostockField();
             vnostockField.setValue(record.get('intNUMBERAVAILABLE'));
-            me.getVnoqtyField().focus(true, 100);
+//            me.getVnoqtyField().focus(true, 100);
+            motifField.focus(true, 100);
         }
-
-
-
     },
 
     onProduitSpecialKey: function (field, e) {
@@ -156,8 +159,8 @@ Ext.define('testextjs.controller.AjustementCtr', {
                     if (record) {
                         var vnostockField = me.getVnostockField();
                         vnostockField.setValue(record.get('intNUMBERAVAILABLE'));
-
-                        me.getVnoqtyField().focus(true, 100);
+//                        me.getVnoqtyField().focus(true, 100);
+                        me.getTypeAjustement().focus(true, 100);
                     } else {
                         me.checkDouchette(combo);
                     }
@@ -180,7 +183,8 @@ Ext.define('testextjs.controller.AjustementCtr', {
                     var produit = result.data;
                     var vnostockField = me.getVnostockField();
                     vnostockField.setValue(produit.intNUMBERAVAILABLE);
-                    me.getVnoqtyField().focus(true, 100);
+//                    me.getVnoqtyField().focus(true, 100);
+                    me.getTypeAjustement().focus(true, 100);
                 } else {
                     field.focus(true, 100);
                 }
@@ -188,7 +192,6 @@ Ext.define('testextjs.controller.AjustementCtr', {
             }
 
         });
-
     },
     onSpecialSpecialKey: function (field, e, options) {
         if (e.getKey() === e.ENTER) {
@@ -199,10 +202,10 @@ Ext.define('testextjs.controller.AjustementCtr', {
 
     onQtySpecialKey: function (field, e, options) {
         if (field.getValue() !== 0) {
-
             if (e.getKey() === e.ENTER) {
                 var me = this;
                 var produitCmp = me.getVnoproduitCombo();
+                let typeAjustement = me.getTypeAjustement().getValue();
                 var record = produitCmp.findRecord("lgFAMILLEID", produitCmp.getValue());
                 record = record ? record : produitCmp.findRecord("intCIP", produitCmp.getValue());
                 var ajustement = me.getCurrent();
@@ -219,10 +222,10 @@ Ext.define('testextjs.controller.AjustementCtr', {
                         "value": qte,
                         "description": commentaire,
                         "refTwo": record.get('lgFAMILLEID'),
-                        "valueTwo": record.get('intNUMBERAVAILABLE')
+                        "valueTwo": record.get('intNUMBERAVAILABLE'),
+                        "valueFour": typeAjustement
                     };
                     me.addAjustement(params, url, field, produitCmp);
-//                   
                 }
             }
         }
@@ -230,7 +233,6 @@ Ext.define('testextjs.controller.AjustementCtr', {
     refresh: function () {
         var me = this;
         var ajustement = me.getCurrent();
-
         var ajustementId = null;
         if (ajustement) {
             ajustementId = ajustement.lgAJUSTEMENTID;
@@ -268,10 +270,7 @@ Ext.define('testextjs.controller.AjustementCtr', {
                     field.setValue(1);
                     comboxProduit.clearValue();
                     me.refresh();
-
                 }
-
-
             },
             failure: function (response, options) {
                 progress.hide();
@@ -357,7 +356,6 @@ Ext.define('testextjs.controller.AjustementCtr', {
                         }
                     });
                 }
-
                 me.refresh();
 
             },
@@ -369,9 +367,6 @@ Ext.define('testextjs.controller.AjustementCtr', {
             }
 
         });
-
-
-
     },
     onGridEdit: function (editor, e) {
         var params = {};
@@ -398,8 +393,6 @@ Ext.define('testextjs.controller.AjustementCtr', {
                 method: 'DELETE',
                 url: '../api/v1/ajustement/' + current.lgAJUSTEMENTID,
                 success: function (response, options) {
-                    var result = Ext.JSON.decode(response.responseText, true);
-
                 }
 
             });
@@ -446,7 +439,7 @@ Ext.define('testextjs.controller.AjustementCtr', {
                                 if ('yes' == button)
                                 {
                                     me.onPrintPdf(ajustementId);
-                                       me.goBack();
+                                    me.goBack();
                                 } else {
                                     me.goBack();
                                 }
@@ -476,17 +469,11 @@ Ext.define('testextjs.controller.AjustementCtr', {
                 }
 
             });
-
-
-
         }
     },
     doCloture: function () {
         var me = this;
         me.clotureAjustement();
-
     }
-
-
 }
 );

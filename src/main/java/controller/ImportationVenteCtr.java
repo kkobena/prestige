@@ -19,6 +19,7 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 import org.json.JSONObject;
 import rest.service.impl.ImportationVente;
+import rest.service.impl.ImportationVenteDepot;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -35,6 +36,8 @@ public class ImportationVenteCtr extends HttpServlet {
 
     @EJB
     ImportationVente importationVente;
+    @EJB
+    private ImportationVenteDepot importationVenteDepot;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -46,7 +49,7 @@ public class ImportationVenteCtr extends HttpServlet {
 
             if (option.contains("import")) {
                 Part part = request.getPart("fichier");
-                JSONObject json = importationVente.importListVenteFromJsonFile(part.getInputStream(), OTUser);
+                JSONObject json = importationVenteDepot.importListVenteFromJsonFile(part.getInputStream(), OTUser);
                 out.print(json.toString());
             } else if (option.contains("asstock")) {
                 Part part = request.getPart("fichier");

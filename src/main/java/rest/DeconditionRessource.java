@@ -29,17 +29,14 @@ import toolkits.parameters.commonparameter;
 @Produces("application/json")
 @Consumes("application/json")
 public class DeconditionRessource {
-
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
     DeconditionService deconditionService;
-
     @POST
     @Path("vente")
     public Response add(SalesParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();

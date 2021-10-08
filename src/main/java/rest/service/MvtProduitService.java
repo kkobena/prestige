@@ -5,6 +5,8 @@
  */
 package rest.service;
 
+import commonTasks.dto.AjustementDTO;
+import commonTasks.dto.AjustementDetailDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
 import dal.TEmplacement;
@@ -75,7 +77,7 @@ public interface MvtProduitService {
 
     TFamilleStock updateStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em);
 
-    public int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em);
+    int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em);
 
     JSONObject loadetourFournisseur(
             String dtStart,
@@ -87,6 +89,8 @@ public interface MvtProduitService {
 
     JSONObject validerRetourDepot(String retourId, TUser user) throws JSONException;
 
-   
+    List<AjustementDTO> getAllAjustements(SalesStatsParams params);
+
+    List<AjustementDetailDTO> getAllAjustementDetailDTOs(SalesStatsParams params);
 
 }

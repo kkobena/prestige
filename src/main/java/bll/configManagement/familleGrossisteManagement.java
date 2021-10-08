@@ -254,9 +254,9 @@ public class familleGrossisteManagement extends bllBase {
                     .setParameter(3, commonparameter.statut_enable);
             qry.setMaxResults(1);
             OTFamilleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
-           this.getOdataManager().getEm().refresh(OTFamilleGrossiste);
+            this.getOdataManager().getEm().refresh(OTFamilleGrossiste);
         } catch (Exception e) {
-                 e.printStackTrace();
+
         }
 
         return OTFamilleGrossiste;
@@ -482,13 +482,13 @@ public class familleGrossisteManagement extends bllBase {
                     .setParameter(3, commonparameter.statut_enable)
                     .setParameter(4, lg_GROSSISTE_ID)
                     .getResultList();
-            lstTFamilleGrossiste.forEach(a->{
-            this.getOdataManager().getEm().refresh(a);
+            lstTFamilleGrossiste.forEach(a -> {
+                this.getOdataManager().getEm().refresh(a);
             });
         } catch (Exception e) {
             e.printStackTrace();
         }
-      
+
         return lstTFamilleGrossiste;
     }
 

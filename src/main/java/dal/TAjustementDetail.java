@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
@@ -38,6 +37,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TAjustementDetail.findByDtCREATED", query = "SELECT t FROM TAjustementDetail t WHERE t.dtCREATED = :dtCREATED"),
     @NamedQuery(name = "TAjustementDetail.findByDtUPDATED", query = "SELECT t FROM TAjustementDetail t WHERE t.dtUPDATED = :dtUPDATED")})
 public class TAjustementDetail implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -57,18 +57,29 @@ public class TAjustementDetail implements Serializable {
     @Column(name = "dt_UPDATED")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtUPDATED;
-    @JoinColumn(name = "lg_FAMILLE_ID", referencedColumnName = "lg_FAMILLE_ID",nullable = false)
+    @JoinColumn(name = "lg_FAMILLE_ID", referencedColumnName = "lg_FAMILLE_ID", nullable = false)
     @ManyToOne
     private TFamille lgFAMILLEID;
-    @JoinColumn(name = "lg_AJUSTEMENT_ID", referencedColumnName = "lg_AJUSTEMENT_ID",nullable = false)
+    @JoinColumn(name = "lg_AJUSTEMENT_ID", referencedColumnName = "lg_AJUSTEMENT_ID", nullable = false)
     @ManyToOne
     private TAjustement lgAJUSTEMENTID;
+    @ManyToOne
+    @JoinColumn(name = "motif_ajustement_id", referencedColumnName = "id")
+    private MotifAjustement typeAjustement;
 
     public TAjustementDetail() {
     }
 
     public TAjustementDetail(String lgAJUSTEMENTDETAILID) {
         this.lgAJUSTEMENTDETAILID = lgAJUSTEMENTDETAILID;
+    }
+
+    public MotifAjustement getTypeAjustement() {
+        return typeAjustement;
+    }
+
+    public void setTypeAjustement(MotifAjustement typeAjustement) {
+        this.typeAjustement = typeAjustement;
     }
 
     public String getLgAJUSTEMENTDETAILID() {
@@ -167,5 +178,5 @@ public class TAjustementDetail implements Serializable {
     public String toString() {
         return "dal.TAjustementDetail[ lgAJUSTEMENTDETAILID=" + lgAJUSTEMENTDETAILID + " ]";
     }
-    
+
 }

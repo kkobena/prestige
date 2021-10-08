@@ -95,7 +95,7 @@ public class InvoiceServlet extends HttpServlet {
         TTypeMvtCaisse OTypeMvtCaisse;
 
         facManagement = new factureManagement(OdataManager, OTUser);
-        String lg_FACTURE_ID = "", action = "", modeId = null;;
+        String lg_FACTURE_ID = "", action = "", modeId = null;
 
         if (request.getParameter("lg_FACTURE_ID") != null && !"".equals(request.getParameter("lg_FACTURE_ID"))) {
             lg_FACTURE_ID = request.getParameter("lg_FACTURE_ID");
@@ -122,44 +122,32 @@ public class InvoiceServlet extends HttpServlet {
             Map<String, Object> parameters = getParametters(OFacture, OTUser, codeModelFacture, OTiersPayant, OTypeMvtCaisse);
             JasperPrint jasperPrint;
             File destFile;
-            int codeFACT = new Integer(codeModelFacture);
-
+            int codeFACT =  Integer.valueOf(codeModelFacture);
             switch (action) {
-
                 case "exls":
-
                     switch (codeFACT) {
                         case 9:
-
                             jasperPrint = fill(Ojconnexion.getConnection(), parameters, jdom.scr_report_file + "rp_facturerecap.jrxml");
                             inputPdfList.add(jasperPrint);
                             GroupeTierspayantController controller = new GroupeTierspayantController(OdataManager.getEmf());
-
                             parameters.put("P_TOTAL_IN_LETTERS", conversion.GetNumberTowords(facManagement.getAmount(OFacture.getLgFACTUREID())).toUpperCase() + " (" + conversion.AmountFormat(facManagement.getAmount(OFacture.getLgFACTUREID()).intValue()) + " FCFA)");
-
                             jasperPrint = fillJson(parameters, controller.generateInvoices(OFacture.getLgFACTUREID()), jdom.scr_report_file + "rp_groupbycompany.jrxml");
-
                             inputPdfList.add(jasperPrint);
                             destFile = xlsx(jdom.scr_report_pdf + "rp_facture_" + df.format(new Date()) + ".xlsx");
                             exportToxlsx(response, destFile);
-
                             break;
-
                         case 8:
                             jasperPrint = fill(OFacture, parameters, jdom.scr_report_file + "rp_complementaire.jrxml");
                             inputPdfList.add(jasperPrint);
                             destFile = xlsx(jdom.scr_report_pdf + "rp_facture_" + df.format(new Date()) + ".xlsx");
                             exportToxlsx(response, destFile);
-
                             break;
                         case 6:
                             List taux = facManagement.getFacturePercent(lg_FACTURE_ID);
                             for (int i = 0; i < taux.size(); i++) {
                                 int tauxValue = Integer.valueOf(taux.get(i) + "");
-
                                 List<EntityData> entityDatas = facManagement.getFactureReportDataPercent(lg_FACTURE_ID, OTiersPayant.getLgTIERSPAYANTID(), tauxValue);
                                 long P_TOTAL_AMOUNT = 0, P_ADHER_AMOUNT = 0, P_REMISE_AMOUNT = 0, P_ATT_AMOUNT = 0, P_REMISEFORFAITAIRE = 0, P_MONTANTBRUTTP = 0;
-
                                 for (EntityData OtEntityData : entityDatas) {
                                     if (!OtEntityData.getStr_value6().equals("null")) {
                                         P_MONTANTBRUTTP = Double.valueOf(OtEntityData.getStr_value6()).longValue();
@@ -213,7 +201,6 @@ public class InvoiceServlet extends HttpServlet {
                             for (int idx = 0; idx < clientsfacture.length(); idx++) {
                                 try {
                                     JSONObject idCMP = clientsfacture.getJSONObject(idx);
-
                                     parameters.put("LGCMP", idCMP.get("idcmp"));
                                     parameters.put("DATEFACT", dateFact);
                                     parameters.put("P_CODE_FACTURE", "FACTURE N° " + OFacture.getStrCODEFACTURE() + "/" + ((idx + 1) < 10 ? "0" : "") + (idx + 1) + "/" + date.getAnnee(OFacture.getDtDATEFACTURE()));
@@ -222,7 +209,6 @@ public class InvoiceServlet extends HttpServlet {
                                     parameters.put("P_TOTAL_IN_LETTERS", conversion.GetNumberTowords(idCMP.getDouble("Montant")).toUpperCase() + " (" + conversion.AmountFormat(Double.valueOf(idCMP.getDouble("Montant")).intValue()) + " FCFA)");
                                     jasperPrint = fill(Ojconnexion.getConnection(), parameters, jdom.scr_report_file + "rp_facture_Client.jrxml");
                                     inputPdfList.add(jasperPrint);
-
                                 } catch (JSONException ex) {
                                     Logger.getLogger(InvoiceServlet.class.getName()).log(Level.SEVERE, null, ex);
                                 }
@@ -235,14 +221,12 @@ public class InvoiceServlet extends HttpServlet {
                             jasperPrint = fill(Ojconnexion.getConnection(), parameters, jdom.scr_report_file + "rp_facturerecap.jrxml");
                             inputPdfList.add(jasperPrint);
                             List<EntityData> entityDatas = facManagement.getFactureReportData(lg_FACTURE_ID, OTiersPayant.getLgTIERSPAYANTID());
-
                             long P_TOTAL_AMOUNT = 0,
                              P_ADHER_AMOUNT = 0,
                              P_REMISE_AMOUNT = 0,
                              P_ATT_AMOUNT = 0,
                              P_REMISEFORFAITAIRE = 0,
                              P_MONTANTBRUTTP = 0;
-
                             for (EntityData OtEntityData : entityDatas) {
                                 if (!OtEntityData.getStr_value6().equals("null")) {
                                     P_MONTANTBRUTTP = Double.valueOf(OtEntityData.getStr_value6()).longValue();
@@ -668,37 +652,23 @@ public class InvoiceServlet extends HttpServlet {
     }
 
     public File xlsx(String destFile) throws JRException {
-        long start = System.currentTimeMillis();
-
         File mydestFile = new File(destFile);
-
         JRXlsxExporter exporter = new JRXlsxExporter();
-
         exporter.setExporterInput(SimpleExporterInput.getInstance(inputPdfList));
         exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(mydestFile));
         SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
         configuration.setOnePagePerSheet(true);
         exporter.setConfiguration(configuration);
-
         exporter.exportReport();
-
-        System.err.println("XLSX creation time : " + (System.currentTimeMillis() - start));
         return mydestFile;
     }
 
     public File docx(String destFile) throws JRException {
-        long start = System.currentTimeMillis();
-
         File mydestFile = new File(destFile);
-
         JRDocxExporter exporter = new JRDocxExporter();
-
         exporter.setExporterInput(SimpleExporterInput.getInstance(inputPdfList));
         exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(mydestFile));
-
         exporter.exportReport();
-
-        System.err.println("XLSX creation time : " + (System.currentTimeMillis() - start));
         return mydestFile;
     }
 

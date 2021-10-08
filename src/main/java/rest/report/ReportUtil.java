@@ -210,7 +210,6 @@ public class ReportUtil {
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
             JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
-
         } catch (JRException e) {
             e.printStackTrace(System.err);
 
@@ -335,8 +334,7 @@ public class ReportUtil {
             ex.printStackTrace(System.err);
         }
     }
-
-    public void buildReportExcel(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
+public void buildReportExcel(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
         try {
             JasperReport jasperReport = getReport(reportName, path);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
@@ -349,6 +347,28 @@ public class ReportUtil {
             exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(pdfPath));
             SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
             configuration.setOnePagePerSheet(true);
+            exporter.setConfiguration(configuration);
+            exporter.exportReport();
+        } catch (JRException e) {
+            e.printStackTrace(System.err);
+
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+    }
+    public void buildReportExcelSinglePage(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
+        try {
+            JasperReport jasperReport = getReport(reportName, path);
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            /*
+            JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
+             */
+            JRXlsxExporter exporter = new JRXlsxExporter();
+            exporter.setExporterInput(SimpleExporterInput.getInstance(List.of(jasperPrint)));
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(pdfPath));
+            SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+            configuration.setOnePagePerSheet(false);
             exporter.setConfiguration(configuration);
             exporter.exportReport();
         } catch (JRException e) {

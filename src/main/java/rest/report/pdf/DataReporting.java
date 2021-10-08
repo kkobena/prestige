@@ -5,9 +5,12 @@
  */
 package rest.report.pdf;
 
+import commonTasks.dto.AjustementDTO;
+import commonTasks.dto.AjustementDetailDTO;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.DonneesExploitationDTO;
 import commonTasks.dto.FamilleArticleStatDTO;
+import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TOfficine;
 import dal.TUser;
@@ -26,6 +29,7 @@ import rest.service.CommonService;
 import rest.service.DataReporingService;
 import rest.service.DonneesExploitation;
 import rest.service.FicheArticleService;
+import rest.service.MvtProduitService;
 import toolkits.utils.jdom;
 
 /**
@@ -45,7 +49,8 @@ public class DataReporting {
     FicheArticleService ficheArticleService;
     @EJB
     private DonneesExploitation donneesExploitationService;
-
+  @EJB
+  private  MvtProduitService mvtProduitService;
     public String margeProduitsVendus(String dtStart, String dtEnd, String codeFamile, Integer critere, String query, TUser tu, String codeRayon, String codeGrossiste, MargeEnum filtre) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
@@ -274,10 +279,7 @@ public class DataReporting {
         parameters.put("P_H_CLT_INFOS", "CONSOMMATION DE L'ARTICLE\n   " + libelle + "\n CODE CIP :  " + cip + " "
                 + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".pdf";
-//        Comparator<ArticleDTO> comparator = Comparator.comparing(ArticleDTO::getFilterId)
-//                .thenComparing(ArticleDTO::getLibelle);
         List<VenteDetailsDTO> data = ficheArticleService.produitConsomamation(tu, query, dtStart, dtEnd, id);
-//        data.sort(comparator);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "consoarticle_comparaison_" + report_generate_file, data);
         return "/data/reports/pdf/consoarticle_comparaison_" + report_generate_file;
     }
@@ -308,4 +310,15 @@ public class DataReporting {
         return "/data/reports/pdf/rp_compte_exploitation_" + report_generate_file;
     }
 
+     public String ajustements(SalesStatsParams body) throws IOException {
+        TOfficine oTOfficine = commonService.findOfficine();
+        String scr_report_file = "rp_all_ajustements";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, body.getUserId());
+        String P_PERIODE = "PERIODE DU " + body.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " AU " + body.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        parameters.put("P_H_CLT_INFOS", "AJUSTEMENTS " + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".pdf";
+        List<AjustementDetailDTO> data = mvtProduitService.getAllAjustementDetailDTOs(body);
+         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "ajustements_" + report_generate_file, data);
+        return "/data/reports/pdf/ajustements_" + report_generate_file;
+    }
 }

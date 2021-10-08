@@ -114,6 +114,10 @@ public class MvtTransaction implements Serializable {
     @JoinColumn(name = "vente_id", referencedColumnName = "lg_PREENREGISTREMENT_ID", nullable = true)
     @ManyToOne
     private TPreenregistrement preenregistrement;
+    @Column(name = "flag")
+    private Boolean flaged = Boolean.FALSE;
+    @ManyToOne
+    private Flag flag;
 
     public TPreenregistrement getPreenregistrement() {
         return preenregistrement;
@@ -122,8 +126,6 @@ public class MvtTransaction implements Serializable {
     public void setPreenregistrement(TPreenregistrement preenregistrement) {
         this.preenregistrement = preenregistrement;
     }
-    
-    
 
     public String getOrganisme() {
         return organisme;
@@ -401,6 +403,22 @@ public class MvtTransaction implements Serializable {
 
     public void setMontantTvaUg(Integer montantTvaUg) {
         this.montantTvaUg = montantTvaUg;
+    }
+
+    public Boolean getFlaged() {
+        return flaged;
+    }
+
+    public void setFlaged(Boolean flaged) {
+        this.flaged = flaged;
+    }
+
+    public Flag getFlag() {
+        return flag;
+    }
+
+    public void setFlag(Flag flag) {
+        this.flag = flag;
     }
 
 }

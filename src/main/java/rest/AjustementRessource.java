@@ -118,7 +118,8 @@ public class AjustementRessource {
     @GET
     public Response allAjustement(@QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+             @QueryParam(value = "typeFiltre") String typeFiltre
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         
@@ -138,6 +139,7 @@ public class AjustementRessource {
         body.setShowAll(true);
         body.setAll(false);
         body.setUserId(tu);
+        body.setTypeFiltre(typeFiltre);
         try {
             body.setDtEnd(LocalDate.parse(dtEnd));
             body.setDtStart(LocalDate.parse(dtStart));

@@ -28,7 +28,7 @@ import org.json.JSONObject;
 //@Remote
 public interface SuggestionService {
 
-    void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille, EntityManager emg);
+    void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille);
 
     void makeSuggestionAuto(String OTPreenregistrement);
 

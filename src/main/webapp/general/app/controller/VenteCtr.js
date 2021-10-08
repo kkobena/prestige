@@ -323,7 +323,6 @@ Ext.define('testextjs.controller.VenteCtr', {
             ref: 'vnoemplacementField',
             selector: 'doventemanager #contenu [xtype=container] #emplacementId'
         }
-
         , {
             ref: 'commentaire',
             selector: 'doventemanager #contenu #commentaire'
@@ -775,8 +774,6 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
             me.resetTitle(value);
         }
-
-
     },
     closeClientLambdaWindow: function () {
         var me = this;
@@ -841,7 +838,7 @@ Ext.define('testextjs.controller.VenteCtr', {
     onUserSelect: function (cmp) {
         var me = this, clientSearchBox = me.getClientSearchTextField(),
                 typeVente = me.getTypeVenteCombo().getValue();
-        if (typeVente == '1') {
+        if (typeVente === '1') {
             me.getVnoproduitCombo().focus(true, 100);
         } else {
             clientSearchBox.setValue('');
@@ -921,8 +918,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                             } else {
                                 me.showNetPaidAssurance();
                             }
-
-
                         }
                     }
                 } else {
@@ -936,8 +931,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                         me.checkDouchette(combo);
                     }
                 }
-
-
             }
             combo.resumeEvents();
         }, this);
@@ -948,10 +941,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         var me = this;
         if (e.getKey() === e.ENTER) {
             let montantVerse = parseInt(field.getValue());
-            console.log(parseInt(field.getValue()));
-//            if (montantVerse) {
             if (montantVerse >= 0) {
-                console.log("montantVerse ", montantVerse)
                 me.doCloture();
 
             } else {
@@ -1505,11 +1495,11 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.handleMobileMoney();
         } else {
             if (value === '2' || value === '3' || value === '6') {
+                 me.showAndHideInfosStandardClient(true);
                 me.showAndHideCbInfos(value);
                 if (me.getNetAmountToPay()) {
                     me.getMontantRecu().setValue(me.getNetAmountToPay().montantNet);
                 }
-
                 me.getMontantRecu().disable();
 
             } else {
@@ -3132,7 +3122,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     ]
                 });
     },
-   
+
     createAyantDroitForm: function () {
         var me = this, client = me.getClient();
         if (!client) {
@@ -3684,10 +3674,6 @@ Ext.define('testextjs.controller.VenteCtr', {
 
         });
 
-
-
-
-
     },
     doCloture: function () {
         var me = this, typeRegle = me.getVnotypeReglement().getValue(),
@@ -3715,7 +3701,29 @@ Ext.define('testextjs.controller.VenteCtr', {
             } else {
                 if (me.getCaisse()) {
                     if (typeVenteCombo === '1') {
-                        if (typeRegle === '1' || '4') {
+                        if (typeRegle === '1') {
+                            me.onbtncloturerVnoComptant(typeRegle);
+                        } else {
+                            var client = me.getClient();
+                            if (client) {
+                                me.onbtncloturerVnoComptant(typeRegle);
+                            }else{
+                               Ext.MessageBox.show({
+                                        title: 'Message d\'erreur',
+                                        width: 320,
+                                        msg: 'Veuillez ajouter un client à la vente',
+                                        buttons: Ext.MessageBox.OK,
+                                        icon: Ext.MessageBox.ERROR,
+                                        fn: function (buttonId) {
+                                            if (buttonId === "ok") {
+                                                me.showAndHideInfosStandardClient(true);
+                                            }
+                                        }
+                                    }); 
+                            }
+                        }
+                      
+                    /*    if (typeRegle === '1' || '4') {
                             if (typeRegle === '4') {
                                 var client = me.getClient();
                                 if (client) {
@@ -3737,9 +3745,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             } else {
                                 me.onbtncloturerVnoComptant(typeRegle);
                             }
-
-
-                        }
+                        }*/
                     } else {
                         me.onbtncloturerAssurance(typeRegle);
                     }
@@ -4627,25 +4633,25 @@ Ext.define('testextjs.controller.VenteCtr', {
     onbtnModifierAyantDroitInfo: function () {
         var me = this, client = me.getClient();
         if (client) {
-           me.loadAyantDroits(client.get('lgCLIENTID'));
+            me.loadAyantDroits(client.get('lgCLIENTID'));
             /*
-            var ayantDroitWin = Ext.create('testextjs.view.vente.user.AyantDroitGrid');
-            me.getAyantdroiGrid().getStore().load({
-                params: {"clientId": client.get('lgCLIENTID')},
-                callback: function (records, operation, successful) {
-
-                    if (successful) {                   
-                        ayantDroitWin.show();
-                    }
-                }
-
-            }
-
-            );*/
+             var ayantDroitWin = Ext.create('testextjs.view.vente.user.AyantDroitGrid');
+             me.getAyantdroiGrid().getStore().load({
+             params: {"clientId": client.get('lgCLIENTID')},
+             callback: function (records, operation, successful) {
+             
+             if (successful) {                   
+             ayantDroitWin.show();
+             }
+             }
+             
+             }
+             
+             );*/
         }
 
     },
-     onBtnCancelBtnAyantDroit: function () {
+    onBtnCancelBtnAyantDroit: function () {
         var me = this, win = me.getAyantdroitView();
         win.destroy();
     },

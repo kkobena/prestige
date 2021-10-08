@@ -5,6 +5,8 @@
  */
 package commonTasks.dto;
 
+import dal.MotifAjustement;
+import dal.TAjustement;
 import dal.TAjustementDetail;
 import dal.TFamille;
 import dal.TUser;
@@ -24,12 +26,28 @@ public class AjustementDetailDTO implements Serializable {
     private Integer intNUMBERCURRENTSTOCK;
     private Integer intNUMBERAFTERSTOCK, montantTotal, montantVente;
     private Date dateOperation;
-    private String operateur;
+    private String operateur, motifAjustement,commentaire;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
 
     public String getOperateur() {
         return operateur;
+    }
+
+    public String getCommentaire() {
+        return commentaire;
+    }
+
+    public void setCommentaire(String commentaire) {
+        this.commentaire = commentaire;
+    }
+
+    public String getMotifAjustement() {
+        return motifAjustement;
+    }
+
+    public void setMotifAjustement(String motifAustement) {
+        this.motifAjustement = motifAustement;
     }
 
     public void setOperateur(String operateur) {
@@ -172,11 +190,18 @@ public class AjustementDetailDTO implements Serializable {
         this.intNUMBERAFTERSTOCK = ajustementDetail.getIntNUMBERAFTERSTOCK();
         this.montantTotal = ajustementDetail.getIntNUMBER() * famille.getIntPAF();
         this.montantVente = ajustementDetail.getIntNUMBER() * famille.getIntPRICE();
-         this.dtCREATED = dateFormat.format(ajustementDetail.getDtUPDATED());
+        this.dtCREATED = dateFormat.format(ajustementDetail.getDtUPDATED());
         this.HEURE = heureFormat.format(ajustementDetail.getDtUPDATED());
-        TUser tu = ajustementDetail.getLgAJUSTEMENTID().getLgUSERID();
+        TAjustement a= ajustementDetail.getLgAJUSTEMENTID();
+        TUser tu = a.getLgUSERID();
+        this.commentaire=a.getStrCOMMENTAIRE();
+        this.lgAJUSTEMENTID=a.getLgAJUSTEMENTID();
         this.operateur = tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
-        this.dateOperation=ajustementDetail.getDtUPDATED();
+        this.dateOperation = ajustementDetail.getDtUPDATED();
+        MotifAjustement ma = ajustementDetail.getTypeAjustement();
+        if (ma != null) {
+            this.motifAjustement = ma.getLibelle();
+        }
     }
 
 }

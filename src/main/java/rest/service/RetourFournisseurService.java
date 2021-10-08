@@ -5,6 +5,7 @@
  */
 package rest.service;
 
+import commonTasks.dto.ErpAvoir;
 import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.RetourFournisseurDTO;
 import java.util.List;
@@ -28,4 +29,6 @@ public interface RetourFournisseurService {
     void removeItem(String params);
 
     void cloture(RetourFournisseurDTO params);
+    
+      List<ErpAvoir> erpAvoirsFournisseurs(String dtStart, String dtEnd) ;
 }

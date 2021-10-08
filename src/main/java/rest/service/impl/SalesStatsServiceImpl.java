@@ -558,10 +558,16 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             if (params.isOnlyAvoir()) {
                 predicates.add(cb.and(cb.isTrue(st.get(TPreenregistrement_.bISAVOIR))));
                 predicates.add(cb.and(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL))));
+                    predicates.add(cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.completionDate)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"), formatter)),
+                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"), formatter))));
+            
+            }else{
+                    predicates.add(cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"), formatter)),
+                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"), formatter))));
+            
             }
-            Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtStart().toString() + " " + params.gethStart().toString().concat(":00"), formatter)),
-                    java.sql.Timestamp.valueOf(LocalDateTime.parse(params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"), formatter)));
-            predicates.add(btw);
+          
+        
             predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed));
             if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
                 predicates.add(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId()));
@@ -693,7 +699,13 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     @Override
     public JSONObject tvasViewData(Params params) throws JSONException {
         JSONObject json = new JSONObject();
-        List<TvaDTO> datas = tvasRapport(params);
+        List<TvaDTO> datas;
+        if (StringUtils.isNotBlank(params.getRef()) && !params.getRef().equalsIgnoreCase("TOUT")) {
+            datas = tvasRapportVNO(params);
+        } else {
+            datas = tvasRapport(params);
+        }
+
 //        List<TvaDTO> datas = effectivesSaless(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         json.put("total", datas.size());
         json.put("data", new JSONArray(datas));
@@ -711,6 +723,26 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
             query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return Collections.emptyList();
+        }
+
+    }
+
+    private List<HMvtProduit> donneesTvas(LocalDate dtStart, LocalDate dtEnd, boolean checked,
+            String emplacementId, String venteType) {
+        try {
+            TypedQuery<HMvtProduit> query = getEntityManager().createQuery(
+                    "SELECT o FROM HMvtProduit o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.emplacement.lgEMPLACEMENTID=:empl AND o.checked=:checked AND o.typemvtproduit.id IN :categ AND o.pkey IN (SELECT e.lgPREENREGISTREMENTDETAILID FROM TPreenregistrementDetail e WHERE e.lgPREENREGISTREMENTID.strTYPEVENTE=:typeVente)",
+                    HMvtProduit.class);
+            query.setParameter("dtStart", dtStart);
+            query.setParameter("dtEnd", dtEnd);
+            query.setParameter("empl", emplacementId);
+            query.setParameter("checked", checked);
+            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("typeVente", venteType);
             return query.getResultList();
         } catch (Exception e) {
             e.printStackTrace(System.err);
@@ -738,18 +770,81 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     }
 
-    /*  public List<TvaDTO> tvasRapportV2(Params params) {
+    private TvaDTO donneesTvasVO(LocalDate dtStart, LocalDate dtEnd, boolean checked,
+            String emplacementId, String venteType) {
+        try {
+            TypedQuery<TvaDTO> query = getEntityManager().createQuery(
+                    "SELECT new commonTasks.dto.TvaDTO(SUM(o.prixUn*o.qteMvt)) FROM HMvtProduit o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.emplacement.lgEMPLACEMENTID=:empl AND o.checked=:checked AND o.typemvtproduit.id IN :categ AND o.pkey IN (SELECT e.lgPREENREGISTREMENTDETAILID FROM TPreenregistrementDetail e WHERE e.lgPREENREGISTREMENTID.strTYPEVENTE=:typeVente)",
+                    TvaDTO.class);
+            query.setParameter("dtStart", dtStart);
+            query.setParameter("dtEnd", dtEnd);
+            query.setParameter("empl", emplacementId);
+            query.setParameter("checked", checked);
+            query.setParameter("typeVente", venteType);
+            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            return query.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return null;
+        }
 
-    }*/
+    }
 
     @Override
-    @Deprecated
+    public List<TvaDTO> tvasRapportVNO(Params params) {
+        List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), "VNO");
+        List<TvaDTO> datas = new ArrayList<>();
+        try {
+            Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
+            tvamap.forEach((k, v) -> {
+                TvaDTO otva = new TvaDTO();
+                otva.setTaux(k);
+                LongAdder ht = new LongAdder();
+                LongAdder ttc = new LongAdder();
+                LongAdder tva = new LongAdder();
+                v.stream().forEach(l -> {
+                    Integer mttc = l.getPrixUn() * l.getQteMvt();
+                    Double valeurTva = 1 + (Double.valueOf(k) / 100);
+                    Integer htAmont = (int) Math.ceil(mttc / valeurTva);
+                    Integer montantTva = mttc - htAmont;
+                    ht.add(htAmont);
+                    ttc.add(mttc);
+                    tva.add(montantTva);
+                });
+                otva.setMontantHt(ht.longValue());
+                otva.setMontantTtc(ttc.longValue());
+                otva.setMontantTva(tva.longValue());
+                if (k == 0) {
+                    TvaDTO VO = donneesTvasVO(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), "VO");
+                    if (VO != null) {
+                        otva.setMontantTtc(otva.getMontantTtc() + VO.getMontantTtc());
+                        otva.setMontantHt(otva.getMontantHt() + VO.getMontantTtc());
+                    }
+                    TvaDTO ajdust = donneesTvasRattrapage(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+                    if (ajdust != null) {
+                        otva.setMontantTtc(otva.getMontantTtc() + ajdust.getMontantTtc());
+                        otva.setMontantHt(otva.getMontantHt() + ajdust.getMontantTtc());
+                    }
+                }
+                datas.add(otva);
+            });
+            datas.sort(Comparator.comparing(TvaDTO::getTaux));
+            return datas;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
     public List<TvaDTO> tvasRapport(Params params) {
         if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
             return tvasRapport0(params);
         }
         List<TvaDTO> datas = new ArrayList<>();
+
         try {
+
             List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
             tvamap.forEach((k, v) -> {
@@ -846,7 +941,13 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     @Override
     public List<TvaDTO> tvasRapportJournalier(Params params) {
         List<TvaDTO> datas = new ArrayList<>();
-        List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        List<HMvtProduit> details;
+        if (StringUtils.isNotBlank(params.getRef()) && !params.getRef().equalsIgnoreCase("TOUT")) {
+            details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), params.getRef());
+        } else {
+            details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        }
+
         Map<LocalDate, List<HMvtProduit>> datemap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getMvtDate));
         datemap.forEach((key, values) -> {
             Map<Integer, List<HMvtProduit>> tvamap = values.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
@@ -877,11 +978,12 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     }
 
-    @Override
-    public List<TvaDTO> tvasRapport0(Params params) {
+    //@Override
+    public List<TvaDTO> tvasRapport0__(Params params) {
         List<TvaDTO> datas = new ArrayList<>();
         try {
-            long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP);
+            long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
+         
             List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
             LongAdder adder = new LongAdder();
@@ -892,7 +994,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 LongAdder ttc = new LongAdder();
                 LongAdder tva = new LongAdder();
                 v.stream().forEach(l -> {
-                    long mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    long mttc = l.getPrixUn() * (l.getQteMvt() /*- l.getUg()*/);
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
                     long htAmont = (long) Math.ceil(mttc / valeurTva);
                     long montantTva = mttc - htAmont;
@@ -908,20 +1010,25 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 otva.setMontantTva(tva.longValue());
                 datas.add(otva);
             });
-            long mtn = adder.longValue() - montant;
-            ListIterator listIterator = datas.listIterator();
-            while (listIterator.hasNext()) {
-                TvaDTO next = (TvaDTO) listIterator.next();
-                if (next.getTaux() == 0) {
-                    TvaDTO e = new TvaDTO();
-                    e.setTaux(next.getTaux());
-                    e.setMontantHt(next.getMontantHt() - mtn);
-                    e.setMontantTtc(next.getMontantTtc() - mtn);
-                    e.setMontantTva(next.getMontantTva());
-                    listIterator.set(e);
-                }
 
+//            long mtn = adder.longValue() - montant;
+            if (montant != 0) {
+                ListIterator listIterator = datas.listIterator();
+                while (listIterator.hasNext()) {
+                    TvaDTO next = (TvaDTO) listIterator.next();
+                    if (next.getTaux() == 0) {
+                        TvaDTO e = new TvaDTO();
+                        e.setTaux(next.getTaux());
+                        e.setMontantHt(next.getMontantHt() - montant);
+                        e.setMontantTtc(next.getMontantTtc() - montant);
+                        e.setMontantTva(next.getMontantTva());
+                        listIterator.set(e);
+                       
+                    }
+
+                }
             }
+
             return datas;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -980,9 +1087,14 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
 
         List<TvaDTO> datas = new ArrayList<>();
-
+        List<HMvtProduit> details;
         try {
-            List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            if (StringUtils.isNoneBlank(params.getRef())) {
+                details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), params.getRef());
+            } else {
+                details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            }
+
             Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
             tvamap.forEach((k, v) -> {
                 TvaDTO otva = new TvaDTO();
@@ -1016,7 +1128,13 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     @Override
     public List<TvaDTO> tvaRapportJournalier(Params params) {
         List<TvaDTO> datas = new ArrayList<>();
-        List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        List<HMvtProduit> details;
+        if (StringUtils.isNotBlank(params.getRef()) && !params.getRef().equalsIgnoreCase("TOUT")) {
+            details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), params.getRef());
+        } else {
+            details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        }
+
         Map<LocalDate, List<HMvtProduit>> datemap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getMvtDate));
         datemap.forEach((key, values) -> {
             Map<Integer, List<HMvtProduit>> tvamap = values.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
@@ -1541,7 +1659,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             return Collections.emptyList();
         }
     }
-    
+
     @Override
     public List<TvaDTO> tvasDataReport(Params params) {
         if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
@@ -1549,6 +1667,83 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         return donneesTvaV2(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
 
+    }
+
+    private TvaDTO donneesTvasRattrapage(LocalDate dtStart, LocalDate dtEnd, boolean checked,
+            String emplacementId) {
+        try {
+            TypedQuery<TvaDTO> query = getEntityManager().createQuery(
+                    "SELECT new commonTasks.dto.TvaDTO(SUM(o.prixUn*o.qteMvt)) FROM HMvtProduit o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.emplacement.lgEMPLACEMENTID=:empl AND o.checked=:checked AND o.typemvtproduit.id IN :categ AND o.pkey NOT IN (SELECT e.lgPREENREGISTREMENTDETAILID FROM TPreenregistrementDetail e )",
+                    TvaDTO.class);
+            query.setParameter("dtStart", dtStart);
+            query.setParameter("dtEnd", dtEnd);
+            query.setParameter("empl", emplacementId);
+            query.setParameter("checked", checked);
+            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            return query.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return null;
+        }
+
+    }
+    
+    @Override
+       public List<TvaDTO> tvasRapport0(Params params) {
+        List<TvaDTO> datas = new ArrayList<>();
+        try {
+            long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
+         
+            List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
+            LongAdder adder = new LongAdder();
+            tvamap.forEach((k, v) -> {
+                TvaDTO otva = new TvaDTO();
+                otva.setTaux(k);
+                LongAdder ht = new LongAdder();
+                LongAdder ttc = new LongAdder();
+                LongAdder tva = new LongAdder();
+                v.stream().forEach(l -> {
+                    long mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
+                    Double valeurTva = 1 + (Double.valueOf(k) / 100);
+                    long htAmont = (long) Math.ceil(mttc / valeurTva);
+                    long montantTva = mttc - htAmont;
+                    ht.add(htAmont);
+                    ttc.add(mttc);
+                    adder.add(mttc);
+                    tva.add(montantTva);
+
+                });
+
+                otva.setMontantHt(ht.longValue());
+                otva.setMontantTtc(ttc.longValue());
+                otva.setMontantTva(tva.longValue());
+                datas.add(otva);
+            });
+
+//            long mtn = adder.longValue() - montant;
+            if (montant != 0) {
+                ListIterator listIterator = datas.listIterator();
+                while (listIterator.hasNext()) {
+                    TvaDTO next = (TvaDTO) listIterator.next();
+                    if (next.getTaux() == 0) {
+                        TvaDTO e = new TvaDTO();
+                        e.setTaux(next.getTaux());
+                        e.setMontantHt(next.getMontantHt() - montant);
+                        e.setMontantTtc(next.getMontantTtc() - montant);
+                        e.setMontantTva(next.getMontantTva());
+                        listIterator.set(e);
+                       
+                    }
+
+                }
+            }
+
+            return datas;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
     }
 
 }

@@ -192,6 +192,9 @@ public class TPreenregistrement implements Serializable {
     private Integer montantnetug = 0;
     @Column(name = "montanttvaug")
     private Integer montantTvaUg = 0;
+    @Column(name = "completion_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date completionDate=new Date();
 
     public boolean isImported() {
         return imported;
@@ -270,6 +273,14 @@ public class TPreenregistrement implements Serializable {
 
     public Integer getIntREMISEPARA() {
         return intREMISEPARA;
+    }
+
+    public Date getCompletionDate() {
+        return completionDate;
+    }
+
+    public void setCompletionDate(Date completionDate) {
+        this.completionDate = completionDate;
     }
 
     public void setIntREMISEPARA(Integer intREMISEPARA) {

@@ -25,7 +25,7 @@
 
 <%
     dataManager OdataManager = new dataManager();
-    List<TTypeStockFamille> lstTTypeStockFamille = new ArrayList<TTypeStockFamille>();
+    List<TTypeStockFamille> lstTTypeStockFamille = new ArrayList<>();
     TUser OTUser;
     JSONObject json = null;
 %>
@@ -126,9 +126,9 @@
         int_VALUE1 = OSnapshotManager.getQauntityVenteByArticle(OTTypeStockFamille.getLgFAMILLEID().getIntCIP(), date.DateToString(date.getFirstDayofSomeMonth(Integer.parseInt(date.getoMois(dtDEBUT)) - (1 + Integer.parseInt(date.getoMois(dtDEBUT)))), date.formatterMysqlShort), date.DateToString(date.getLastDayofSomeMonth(Integer.parseInt(date.getoMois(dtDEBUT)) - (1 + Integer.parseInt(date.getoMois(dtDEBUT)))), date.formatterMysqlShort), OTTypeStockFamille.getLgFAMILLEID().getLgFAMILLEID(), lg_USER_ID, lg_PREENREGISTREMENT_ID);
         int_VALUE0 = OSnapshotManager.getQauntityVenteByArticle(OTTypeStockFamille.getLgFAMILLEID().getIntCIP(), date.DateToString(date.getFirstDayofSomeMonth(Integer.parseInt(date.getoMois(dtDEBUT)) - (0 + Integer.parseInt(date.getoMois(dtDEBUT)))), date.formatterMysqlShort), date.DateToString(date.getLastDayofSomeMonth(Integer.parseInt(date.getoMois(dtDEBUT)) - (0 + Integer.parseInt(date.getoMois(dtDEBUT)))), date.formatterMysqlShort), OTTypeStockFamille.getLgFAMILLEID().getLgFAMILLEID(), lg_USER_ID, lg_PREENREGISTREMENT_ID);
         
-        totalvente = int_VALUE3 + int_VALUE2 + int_VALUE1 + int_VALUE0;
-        ventemoyenne = totalvente/4;
-        
+        totalvente = int_VALUE3 + int_VALUE2 + int_VALUE1+int_VALUE0 ;
+        ventemoyenne = (int_VALUE3 + int_VALUE2 + int_VALUE1)/3; 
+         
         json.put("int_STOCK_REAPROVISONEMENT", totalvente);
         json.put("int_NUMBER", ventemoyenne);
         json.put("int_NUMBER_SORTIE", totalvente * OTTypeStockFamille.getLgFAMILLEID().getIntPRICE());

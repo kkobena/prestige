@@ -6,6 +6,7 @@
 package rest.service;
 
 import commonTasks.dto.CaisseParamsDTO;
+import commonTasks.dto.FlagDTO;
 import commonTasks.dto.GenericDTO;
 import commonTasks.dto.MvtCaisseDTO;
 import commonTasks.dto.Params;
@@ -145,13 +146,11 @@ Author author = entityManager.find(Author.class, id, properties);
 
     Integer montantCa(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
 
-    public JSONObject save(String dt_start, String dt_end, String lgEmp, int virtualAmount);
-
     MvtTransaction findByVenteId(String venteId);
 
-    public boolean key_Params();
+     boolean key_Params();
 
-    public boolean key_Take_Into_Account();
+     boolean key_Take_Into_Account();
 
     long montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
 
@@ -176,4 +175,7 @@ Author author = entityManager.find(Author.class, id, properties);
 
     Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatasMonthly(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user,
             int ration, int start, int limit, boolean all);
+
+    long montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement, String typeMvtCaisse);
+   
 }

@@ -72,6 +72,7 @@ Ext.define('testextjs.view.vente.user.ClientLambda',
                             emptyText: 'E-mail',
                             name: 'email',
                             height: 30,
+                            hidden:true,
                             vtype: 'email',
                             allowBlank: true,
                             enableKeyEvents: true

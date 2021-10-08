@@ -28,15 +28,8 @@ Ext.define('testextjs.view.Report.uniteGratuite.UniteGratuite', {
     ],
     frame: true,
     initComponent: function () {
-
         var searchstore = Ext.create('testextjs.store.Statistics.Grossistes');
-
-
-
-
         Me = this;
-
-        var itemsPerPage = 20;
         var store = Ext.create('testextjs.store.Statistics.UgStore');
         store.on({
             'load': {
@@ -48,12 +41,9 @@ Ext.define('testextjs.view.Report.uniteGratuite.UniteGratuite', {
 
                     Ext.each(records, function (record, index, records) {
                         if (index > 0) {
-
                             return;
-
                         }
                         Ext.getCmp('TOTALMONTANTUG').setValue(record.get('TOTALAMONT'));
-//                        Ext.getCmp('TOTALQTEUG').setValue(record.get('TOTALQTY'));
                         Ext.getCmp('QTEUGPERIODE').setValue(record.get('TOTALQTYINI'));
                         Ext.getCmp('MONTANTUGPERIODE').setValue(record.get('TOTALAMONTINI'));
 

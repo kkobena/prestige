@@ -22,6 +22,34 @@ Ext.define('testextjs.view.produits.Ajuster', {
         padding: 10
     },
     initComponent: function () {
+        var typeAjustement = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
+            fields:
+                    [
+                        {name: 'id',
+                            type: 'number'
+
+                        },
+                        {name: 'libelle',
+                            type: 'string'
+
+                        }
+                    ],
+            autoLoad: false,
+            pageSize: 9999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/common/type-ajustements',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+
+        });
         var produit = new Ext.data.Store({
             model: 'testextjs.model.caisse.Produit',
             pageSize: 10,
@@ -34,7 +62,7 @@ Ext.define('testextjs.view.produits.Ajuster', {
                     root: 'data',
                     totalProperty: 'total'
                 },
-                 timeout: 2400000
+                timeout: 2400000
             }
         });
 
@@ -107,11 +135,28 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                     }
 
                                 }, {
+                                    xtype: 'combobox',
+                                    flex: 1,
+                                    fieldLabel:'Motif',
+                                    margin: '0 0 0 10',
+                                    labelWidth:50,
+                                    itemId: 'typeAjustement',
+                                    store: typeAjustement,
+                                    pageSize: 999,
+                                    valueField: 'id',
+                                    displayField: 'libelle',
+                                    typeAhead: true,
+                                    queryMode: 'remote',
+                                    minChars: 2,
+                                    emptyText: 'Sélectionnez un motif'
+                                },
+
+                                {
                                     xtype: 'displayfield',
                                     fieldLabel: 'Qté Stock',
                                     labelWidth: 75,
                                     itemId: 'stockField',
-                                     margin: '0 0 0 10',
+                                    margin: '0 0 0 10',
                                     style: 'background-color:#F7F7F7;font-weight:800;',
                                     fieldStyle: "color:blue;font-weight:800;",
                                     flex: 0.7,
@@ -125,7 +170,7 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                     flex: 0.7,
                                     height: 30,
                                     labelWidth: 30,
-                                     margin: '0 0 0 10',
+                                    margin: '0 0 0 10',
                                     emptyText: 'Quantité',
                                     selectOnFocus: true,
                                     enableKeyEvents: true
@@ -166,7 +211,7 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                             itemId: 'btnCloture',
                                             iconCls: 'icon-clear-group',
                                             scope: this
-                                          
+
                                         },
                                         {
                                             text: 'ANNULER',
@@ -184,7 +229,6 @@ Ext.define('testextjs.view.produits.Ajuster', {
                             ],
                             items: [
 
-                              
                                 {
                                     xtype: 'fieldset',
                                     title: '<span style="color:blue;">LISTE DES Produits</span>',
@@ -272,7 +316,7 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                                     format: '0,000.',
                                                     align: 'right'
                                                 },
-                                                 {
+                                                {
                                                     text: 'Valorisation',
                                                     flex: 1,
                                                     xtype: 'numbercolumn',
@@ -281,7 +325,7 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                                     format: '0,000.',
                                                     align: 'right'
                                                 },
-                                                 {
+                                                {
                                                     text: 'Stock.Avant',
                                                     flex: 1,
                                                     xtype: 'numbercolumn',
@@ -290,7 +334,7 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                                     format: '0,000.',
                                                     align: 'right'
                                                 },
-                                                 {
+                                                {
                                                     text: 'Stock.Après',
                                                     flex: 1,
                                                     xtype: 'numbercolumn',
@@ -308,7 +352,7 @@ Ext.define('testextjs.view.produits.Ajuster', {
                                                             icon: 'resources/images/icons/fam/delete.png',
                                                             tooltip: 'Supprimer le produit',
                                                             scope: this
-                                                           
+
                                                         }]
                                                 }],
                                             dockedItems: [
@@ -357,32 +401,32 @@ Ext.define('testextjs.view.produits.Ajuster', {
 
 
                                         }
-                                        
+
                                     ]
                                 }
-,
-   {
-                    xtype: 'fieldset',
-                    title: 'Espace commentaire',
-                    layout: 'hbox',
-                    collapsible: true,
-                    defaultType: 'textfield',
-                    defaults: {
-                        hideLabel: 'true'
-                    },
-                    items: [//
-                        {
-                            xtype: 'textareafield',
-                            grow: true,
-                            itemId: 'commentaire',
-                            fieldLabel: 'Commentaire',
-                            flex: 1,
-                            margin: '0 0 5 0',
-                            emptyText: 'Saisir un commentaire'
-                        }
-                    ]
-                }
-                              
+                                ,
+                                {
+                                    xtype: 'fieldset',
+                                    title: 'Espace commentaire',
+                                    layout: 'hbox',
+                                    collapsible: true,
+                                    defaultType: 'textfield',
+                                    defaults: {
+                                        hideLabel: 'true'
+                                    },
+                                    items: [//
+                                        {
+                                            xtype: 'textareafield',
+                                            grow: true,
+                                            itemId: 'commentaire',
+                                            fieldLabel: 'Commentaire',
+                                            flex: 1,
+                                            margin: '0 0 5 0',
+                                            emptyText: 'Saisir un commentaire'
+                                        }
+                                    ]
+                                }
+
 
                             ]
 

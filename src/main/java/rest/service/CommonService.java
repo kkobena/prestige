@@ -19,6 +19,7 @@ import dal.TOfficine;
 import dal.TPrivilege;
 import dal.TTypeVente;
 import dal.TVille;
+import dal.MotifAjustement;
 import java.util.List;
 import javax.ejb.Local;
 import javax.print.PrintService;
@@ -100,5 +101,8 @@ public interface CommonService {
     JSONObject findDateMiseAJour() throws JSONException;
 
     boolean checkUg();
-      List<TMotifRetour> motifsRetour();
+
+    List<TMotifRetour> motifsRetour();
+    
+     List<MotifAjustement> findAllTypeAjustements();
 }

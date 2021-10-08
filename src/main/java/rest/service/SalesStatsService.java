@@ -103,4 +103,6 @@ public interface SalesStatsService {
     List<VenteDetailsDTO> annulationVentePlus(SalesStatsParams params);
 
     List<TvaDTO> tvasDataReport(Params params);
+
+    List<TvaDTO> tvasRapportVNO(Params params);
 }

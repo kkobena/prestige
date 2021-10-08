@@ -107,32 +107,21 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         emptyText: 'Rech',
                         listeners: {
                             specialKey: function (field, e) {
-
                                 if (e.getKey() === e.ENTER) {
-
                                     var val = field.getValue();
                                     var lg_customer_id = "";
-
-
                                     if (Ext.getCmp('lg_TIERS_PAYANT_ID').getValue() !== null && Ext.getCmp('lg_TIERS_PAYANT_ID').getValue() !== "") {
                                         lg_customer_id = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue();
                                     }
-
-
                                     Ext.getCmp('facturemanagerID').getStore().load({
                                         params: {
                                             search_value: val,
                                             lg_customer_id: lg_customer_id,
                                             dt_fin: Ext.getCmp('datefin').getSubmitValue(),
                                             dt_debut: Ext.getCmp('datedebut').getSubmitValue()
-
-//               
                                         }
                                     });
-
-
                                 }
-
                             }
                         }
                     }, '-',
@@ -143,27 +132,18 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         emptyText: 'Rech Code facture',
                         listeners: {
                             specialKey: function (field, e) {
-
                                 if (e.getKey() === e.ENTER) {
-
-
                                     Ext.getCmp('facturemanagerID').getStore().load({
                                         params: {
                                             CODEGROUPE: field.getValue()
-//               
                                         }
                                     });
-
-
                                 }
-
                             }
                         }
                     }
                     , '-'
-
                             ,
-
                     {
                         xtype: 'combobox',
                         id: 'lg_TIERS_PAYANT_ID',
@@ -197,7 +177,6 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
                             },
                             select: function (cmp) {
-
                                 Me.onRechClick();
                             }
 
@@ -647,20 +626,13 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 lg_customer_id: lg_customer_id,
                 dt_fin: Ext.getCmp('datefin').getSubmitValue(),
                 dt_debut: Ext.getCmp('datedebut').getSubmitValue(),
-
                 'CODEGROUPE': Ext.getCmp('rechecherCode').getValue()
-//               
             }});
-//        }, url_services_data_facturation);
     },
     onExel: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
-
         var lg_FACTURE_ID = rec.get('lg_FACTURE_ID');
-
         window.location = '../invoiceServlet?action=exls&lg_FACTURE_ID=' + lg_FACTURE_ID;
-
-
     },
     onword: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);

@@ -5,9 +5,13 @@
  */
 package rest.report.pdf;
 
+import commonTasks.dto.SalesStatsParams;
+import dal.TPrivilege;
 import dal.TUser;
 import enumeration.MargeEnum;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -16,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import toolkits.parameters.commonparameter;
+import util.DateConverter;
 
 /**
  *
@@ -29,7 +34,7 @@ public class DataReportingServlet extends HttpServlet {
 
     private enum ActionDataReporting {
         MARGE_PRODUITS, UNITES_VENDUES, UNITES_GAMME, UNITES_LABORATOIRES, ARTICLES_NON_VENDUES, ARTICLES_SUR_STOCK,
-        COMPARAISON_STOCK, COMPARAISON_STOCK_DETAIL, COMPTE_EXPLOITATION
+        COMPARAISON_STOCK, COMPARAISON_STOCK_DETAIL, COMPTE_EXPLOITATION, ALL_AJUSTEMENTS
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -161,8 +166,28 @@ public class DataReportingServlet extends HttpServlet {
                 file = dataReporting.produitConsomamation(OTUser, query, dtStart, dtEnd, id, libelle, cip);
                 break;
             case COMPTE_EXPLOITATION:
-                
                 file = dataReporting.donneesCompteExploitation(dtStart, dtEnd, OTUser);
+                break;
+            case ALL_AJUSTEMENTS:
+                query = request.getParameter("query");
+                List<TPrivilege> attribute = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+                boolean canCancel = DateConverter.hasAuthorityByName(attribute, DateConverter.ACTIONDELETEAJUSTEMENT);
+                SalesStatsParams body = new SalesStatsParams();
+                body.setCanCancel(canCancel);
+                body.setShowAll(true);
+                body.setAll(false);
+                body.setUserId(OTUser);
+                body.setQuery(query);
+                try {
+                    body.setTypeFiltre(request.getParameter("typeFiltre"));
+                } catch (Exception e) {
+                }
+                try {
+                    body.setDtEnd(LocalDate.parse(dtEnd));
+                    body.setDtStart(LocalDate.parse(dtStart));
+                } catch (Exception e) {
+                }
+                file = dataReporting.ajustements(body);
                 break;
 
         }

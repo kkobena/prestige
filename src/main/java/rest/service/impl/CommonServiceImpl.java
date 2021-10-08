@@ -46,6 +46,7 @@ import dal.TVille;
 import dal.TVille_;
 import dal.TZoneGeographique;
 import dal.TZoneGeographique_;
+import dal.MotifAjustement;
 import dal.enumeration.Statut;
 import java.awt.print.PrinterJob;
 import java.io.Serializable;
@@ -698,6 +699,12 @@ public class CommonServiceImpl implements Serializable, CommonService {
     @Override
     public List<TMotifRetour> motifsRetour() {
         TypedQuery<TMotifRetour> tq = getEntityManager().createNamedQuery("TMotifRetour.findAll", TMotifRetour.class);
+        return tq.getResultList();
+    }
+
+    @Override
+    public List<MotifAjustement> findAllTypeAjustements() {
+        TypedQuery<MotifAjustement> tq = getEntityManager().createNamedQuery("MotifAjustement.findAll", MotifAjustement.class);
         return tq.getResultList();
     }
 

@@ -7,7 +7,6 @@ package rest.service;
 
 import commonTasks.dto.SalesParams;
 import javax.ejb.Local;
-import javax.ejb.Remote;
 import org.json.JSONException;
 import org.json.JSONObject;
 

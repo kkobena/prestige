@@ -181,7 +181,7 @@ public class Balance {
                 P_REGLEMENT_LABEL = "",
                 P_ACCOMPTE_LABEL = "",
                 P_DIFFERE_LABEL = "",
-                P_TOTAL_CAISSE_LABEL ;
+                P_TOTAL_CAISSE_LABEL;
         long P_SORTIECAISSE_ESPECE = 0,
                 P_SORTIECAISSE_CHEQUES = 0,
                 P_SORTIECAISSE_MOBILE = 0,
@@ -208,7 +208,7 @@ public class Balance {
                 P_FONDCAISSE = 0,
                 P_DIFFERE_CHEQUES = 0,
                 P_DIFFERE_CB = 0,
-                P_TOTAL_GLOBAL_CAISSE, P_TOTAL_GLOBALE_MOBILE ,
+                P_TOTAL_GLOBAL_CAISSE, P_TOTAL_GLOBALE_MOBILE,
                 P_DIFFERE_ESPECE = 0,
                 P_DIFFERE_VIREMENT = 0,
                 P_TOTAL_VIREMENT_GLOBAL,
@@ -309,7 +309,7 @@ public class Balance {
                 LongAdder cb = new LongAdder();
                 LongAdder mobile = new LongAdder();
                 for (MvtTransaction de : transactions) {
-                     String typ = de.getReglement().getLgTYPEREGLEMENTID();
+                    String typ = de.getReglement().getLgTYPEREGLEMENTID();
                     switch (typ) {
                         case DateConverter.MODE_ESP:
                             esp.add(de.getMontantRegle());
@@ -329,7 +329,7 @@ public class Balance {
                             break;
                     }
                 }
-               /* transactions.stream().forEach(de -> {
+                /* transactions.stream().forEach(de -> {
                     String typ = de.getReglement().getLgTYPEREGLEMENTID();
                     switch (typ) {
                         case DateConverter.MODE_ESP:
@@ -473,10 +473,7 @@ public class Balance {
         }
         parameters.put("P_INSTITUTION_ADRESSE", P_INSTITUTION_ADRESSE);
         parameters.put("P_FOOTER_RC", P_FOOTER_RC);
-//        String str_final_file = jdom.scr_report_pdf + "balancevente_caisse" + report_generate_file;
-//        reportUtil.buildReportEmptyDs(parameters, final_report_file, pdfscr_report_pdf);
         reportUtil.buildReportEmptyDs(parameters, scr_report_file, jdom.scr_report_file, pdfscr_report_pdf);
-        // response.sendRedirect(servletRequest.getContextPath() + "/data/reports/pdf/" + "balancevente_caisse" + report_generate_file);
         return "/data/reports/pdf/" + "balancevente_caisse" + report_generate_file;
     }
 
@@ -578,13 +575,20 @@ public class Balance {
 
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<TvaDTO> datas = null;
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".pdf";
+        List<TvaDTO> datas;
+
         if (!parasm.isCheckug()) {
-            datas = salesStatsService.tvasRapport(parasm);
+            if (StringUtils.isNotBlank(parasm.getRef()) && !parasm.getRef().equalsIgnoreCase("TOUT")) {
+                datas = salesStatsService.tvasRapportVNO(parasm);
+            } else {
+                datas = salesStatsService.tvasRapport(parasm);
+            }
         } else {
             datas = salesStatsService.tvaRapport(parasm);
+
         }
+        datas.sort(Comparator.comparing(TvaDTO::getTaux));
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "tvastat_" + report_generate_file, datas);
         return "/data/reports/pdf/tvastat_" + report_generate_file;
     }
@@ -792,7 +796,7 @@ public class Balance {
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<TvaDTO> datas = null;
+        List<TvaDTO> datas;
         if (!parasm.isCheckug()) {
             datas = salesStatsService.tvasRapportJournalier(parasm);
         } else {
@@ -1075,7 +1079,6 @@ public class Balance {
         parameters.put("montantMarge", summary.getMontantCumulMarge());
         parameters.put("pourcentageMarge", summary.getPourcentageCumulMage());
         parameters.put("pourcentageTH", summary.getPourcentageTH());
-
         parameters.put("totalRemiseVO", summary.getTotalRemiseVO());
         parameters.put("totalRemiseVNO", summary.getTotalRemiseVNO());
         parameters.put("totalRemiseVetoVO", summary.getTotalRemiseVetoVO());

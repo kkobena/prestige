@@ -13,7 +13,7 @@ import org.json.JSONObject;
  *
  * @author kkoffi
  */
-//@Local
+
 public interface RetourFourService {
 
     JSONObject creerRetourFournisseur(SalesParams salesParams)throws JSONException;

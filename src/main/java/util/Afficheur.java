@@ -55,7 +55,6 @@ public class Afficheur {
             portId = CommPortIdentifier.getPortIdentifier(jdom.com_port_displayer);
         } catch (NoSuchPortException e) {
             LOG.log(Level.INFO, "--------------->>>> NoSuchPortException {0} --->>> error msg {1} ", new Object[]{jdom.com_port_displayer,e.getLocalizedMessage()});
-              e.printStackTrace(System.err);
         }
         try {
             sPort = (SerialPort) portId.open(jdom.APP_NAME, 3000);

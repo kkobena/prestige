@@ -5,6 +5,7 @@
  */
 package rest.service.impl;
 
+import commonTasks.dto.ErpAvoir;
 import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.RetourFournisseurDTO;
 import dal.TBonLivraison;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import org.apache.commons.lang3.StringUtils;
 import rest.service.RetourFournisseurService;
@@ -171,7 +173,6 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
     }
 
     private TRetourFournisseurDetail newItem(RetourDetailsDTO item, String bonId, String emplacementId) {
-
         TBonLivraisonDetail bonLivraisonDetail = getTBonLivraisonDetailLast(bonId, item.getProduitId());
         if (bonLivraisonDetail == null) {
             return null;
@@ -205,12 +206,19 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         try {
           TypedQuery<TRetourFournisseurDetail> qry = getEntityManager().createQuery("SELECT t FROM TRetourFournisseurDetail t WHERE t.lgRETOURFRSID.lgRETOURFRSID = ?1  AND t.lgFAMILLEID.lgFAMILLEID = ?2", TRetourFournisseurDetail.class).
                 setParameter(1, lgRetourId).setParameter(2, lgFAMILLEID);
-
         return qry.getSingleResult();  
         } catch (Exception e) {
             return null;
         }
-        
-
     }
+
+    @Override
+    public List<ErpAvoir> erpAvoirsFournisseurs(String dtStart, String dtEnd) {
+       return getEntityManager().createQuery("SELECT new commonTasks.dto.ErpAvoir(o) FROM TRetourFournisseurDetail o WHERE o.strSTATUT='enable' AND FUNCTION('DATE',o.dtUPDATED) BETWEEN ?1 AND ?2", ErpAvoir.class)
+                .setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
+                .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
+               .getResultList();
+    }
+    
+    
 }

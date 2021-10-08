@@ -158,6 +158,10 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             iconCls: 'printable',
                             tooltip: 'imprimer',
                             scope: this
+                        }, {
+                            text: 'Exporter en excel',
+                            itemId: 'btnExcel',
+                            scope: this
                         }
                     ]
                 },

@@ -73,33 +73,25 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
             }
 
         });
-        this.cellEditing = new Ext.grid.plugin.CellEditing({
-            clicksToEdit: 1
-        });
-
+       
 
         Ext.apply(this, {
             width: '98%',
             height: valheight,
-            plugins: [this.cellEditing],
             store: store,
             id: 'OGrid',
             columns: [{
                     header: 'lg_COMPTE_CLIENT_ID',
                     dataIndex: 'lg_COMPTE_CLIENT_ID',
                     hidden: true,
-                    flex: 1,
-                    editor: {
-                        allowBlank: false
-                    }
+                    flex: 1
+                   
                 }, {
                     header: 'lg_CLIENT_ID',
                     dataIndex: 'lg_CLIENT_ID',
                     hidden: true,
-                    flex: 1,
-                    editor: {
-                        allowBlank: false
-                    }
+                    flex: 1
+                  
                 }, {
                     header: 'Code Interne',
                     dataIndex: 'str_CODE_INTERNE',
@@ -326,8 +318,9 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                     emptyText: 'Choisir un type client ...',
                     listeners: {
                         select: function (cmp) {
-                            lg_TYPE_CLIENT_ID = cmp.getValue();
+                            lg_TYPE_CLIENT_ID = cmp.getValue();/*
                             Ext.getCmp('OGrid').getStore().getProxy().url = url_services_data_client + "?lg_TYPE_CLIENT_ID=" + lg_TYPE_CLIENT_ID;
+                           */
                             Me_Workflow.onRechClick();
                         }
                     }
@@ -383,58 +376,34 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                 xtype: 'pagingtoolbar',
                 store: store, // same store GridPanel is using
                 dock: 'bottom',
-                displayInfo: true
+                displayInfo: true,
+                 listeners: {
+                    beforechange: function (page, currentPage) {
+                        var myProxy = this.store.getProxy();
+                        myProxy.params = {
+                            search_value: '',
+                            lg_TYPE_CLIENT_ID: ''
+                       
+                        };
+                        var search_value = Ext.getCmp('rechecher').getValue();
+
+                        myProxy.setExtraParam('search_value', search_value);
+                        myProxy.setExtraParam('lg_TYPE_CLIENT_ID', Ext.getCmp('lg_TYPE_CLIENT_FILTER_ID').getValue());
+
+                    }
+
+                }
             }
         });
 
         this.callParent();
-
         this.on('afterlayout', this.loadStore, this, {
             delay: 1,
             single: true
         });
-
-
-        this.on('edit', function (editor, e) {
-
-
-
-            Ext.Ajax.request({
-                url: url_services_transaction_client + 'update',
-                params: {
-                    lg_CLIENT_ID: e.record.data.lg_CLIENT_ID,
-                    str_CODE_INTERNE: e.record.data.str_CODE_INTERNE,
-                    str_LAST_NAME: e.record.data.str_LAST_NAME,
-                    str_FIRST_NAME: e.record.data.str_FIRST_NAME,
-                    str_SEXE: e.record.data.str_SEXE,
-                    dt_NAISSANCE: e.record.data.dt_NAISSANCE,
-                    str_NUMERO_SECURITE_SOCIAL: e.record.data.str_NUMERO_SECURITE_SOCIAL,
-                    str_ADRESSE: e.record.data.str_ADRESSE,
-                    str_CODE_POSTAL: e.record.data.str_CODE_POSTAL,
-                    lg_VILLE_ID: e.record.data.lg_VILLE_ID
-
-                },
-                success: function (response)
-                {
-                    console.log(response.responseText);
-                    e.record.commit();
-                    store.reload();
-                },
-                failure: function (response)
-                {
-                    console.log("Bug " + response.responseText);
-                    alert(response.responseText);
-                }
-            });
-        });
-
     },
-    loadStore: function () {
-        this.getStore().load({
-            callback: this.onStoreLoad
-        });
-    },
-    onStoreLoad: function () {
+     loadStore: function () {
+        this.getStore().load();
     },
     onbtnimport: function () {
         new testextjs.view.configmanagement.famille.action.importOrder({
@@ -448,8 +417,6 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
         var chaine = location.pathname;
         var reg = new RegExp("[/]+", "g");
         var tableau = chaine.split(reg);
-        var sitename = tableau[1];
-
         var linkUrl = url_services_pdf_client + '?search_value=' + Ext.getCmp('rechecher').getValue() + "&lg_TYPE_CLIENT_ID=" + lg_TYPE_CLIENT_ID;
         testextjs.app.getController('App').onGeneratePdfFile(linkUrl);
     },
@@ -462,8 +429,6 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
         window.location = '../MigrationServlet?table_name=TABLE_CLIENT' + "&extension=" + extension;
     },
     onAddClick: function () {
-
-
         new testextjs.view.configmanagement.client.action.addClientLast({
             odatasource: "",
             parentview: this,
@@ -542,7 +507,6 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
     },
     onManageTierPayantClick: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
-
         new testextjs.view.configmanagement.client.action.showclttierspayant({
             obtntext: "Client",
             odatasource: rec.data,
@@ -554,15 +518,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
 
     }, onManageMedecinClick: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
-
-        /*  new testextjs.view.configmanagement.client.action.addmedecin({
-         odatasource: rec.data,
-         parentview: this,
-         mode: "update",
-         titre: "Attribution des Medecins pour le Client [" + rec.get('str_FIRST_LAST_NAME') + "]"
-         });*/
         var rec = grid.getStore().getAt(rowIndex);
-
         new testextjs.view.configmanagement.client.action.addMedecinClient({
             odatasource: rec.data,
             parentview: this,
@@ -570,40 +526,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
             titre: "Attribution des medecins pour le medecin [" + rec.get('str_FIRST_LAST_NAME') + "]"
         });
     },
-    /*onManageMedecinClick: function(grid, rowIndex) {
-     var rec = grid.getStore().getAt(rowIndex);
-     
-     new testextjs.view.configmanagement.client.action.addmedecin({
-     obtntext: "Medecin",
-     odatasource: rec.data,
-     nameintern: "Medecin",
-     parentview: this,
-     mode: "associermedecin",
-     titre: "Gestion des medecins du client [" + rec.get('str_FIRST_LAST_NAME') + "]"
-     });
-     
-     }*/
-    onVenteClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
-        var xtype = "doventecarnetmanager";
-        var alias = 'widget.' + xtype;
-        testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Faire une vente carnet", rec.get('str_FIRST_NAME'), rec.data);
-    },
-    onDiffereClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
-        var xtype = "diffmanager";
-        var alias = 'widget.' + xtype;
-        testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "by_customer", rec.get('str_FIRST_NAME'), rec.data);
-    },
-    onCompteClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
-        new testextjs.view.configmanagement.client.action.infoCompte({
-            odatasource: rec.data,
-            parentview: this,
-            mode: "updateInfoCompte",
-            titre: "Modification du compte du Client  [" + rec.get('str_LAST_NAME') + "]"
-        });
-    },
+ 
     onRechClick: function () {
         var val = Ext.getCmp('rechecher');
         this.getStore().load({
@@ -611,7 +534,7 @@ Ext.define('testextjs.view.configmanagement.client.ClientManager', {
                 search_value: val.getValue(),
                 lg_TYPE_CLIENT_ID: lg_TYPE_CLIENT_ID
             }
-        }, url_services_data_client);
+        });
     },
     onDesableClick: function (grid, rowIndex) {
 

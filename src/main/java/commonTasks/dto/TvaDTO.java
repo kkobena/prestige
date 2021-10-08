@@ -117,4 +117,10 @@ public class TvaDTO implements Serializable {
         this.montantTtc = (long) Math.ceil(montantTtc);
         this.montantTva = this.montantTtc - this.montantHt;
     }
+
+    public TvaDTO(long montantTTC) {
+        this.montantTtc =montantTTC;
+       
+    }
+
 }

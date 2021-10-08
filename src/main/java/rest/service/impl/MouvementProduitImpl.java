@@ -76,11 +76,10 @@ public class MouvementProduitImpl implements MouvementProduitService {
     LogService logService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-      @EJB  NotificationService notificationService;
+    @EJB
+    NotificationService notificationService;
+
     public EntityManager getEmg() {
-        /* dataManager manager = new dataManager();
-        manager.initEntityManager();
-        return manager.getEm();*/
         return em;
     }
 
@@ -121,7 +120,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
     }
 
     @Override
-    public void saveMvtProduit(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked,int ug) {
+    public void saveMvtProduit(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked, int ug) {
         HMvtProduit h = new HMvtProduit();
         h.setUuid(UUID.randomUUID().toString());
         h.setCreatedAt(LocalDateTime.now());
@@ -339,18 +338,18 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 int compare = initStock.compareTo(it.getIntNUMBERAFTERSTOCK());
                 String action = (compare < 0) ? DateConverter.AJUSTEMENT_POSITIF : DateConverter.AJUSTEMENT_NEGATIF;
                 saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), getTypemvtproduitByID(action, emg), familleStock, tUser, emplacement, it.getIntNUMBER(), initStock, emg, 0);
-                suggestionService.makeSuggestionAuto(familleStock, famille, emg);
-                   String desc= "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
+                suggestionService.makeSuggestionAuto(familleStock, famille);
+                String desc = "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
                 logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
                 it.setStrSTATUT(commonparameter.statut_enable);
                 it.setDtUPDATED(new Date());
                 emg.merge(it);
-                 notificationService.save(new Notification() 
-                                    .canal(Canal.EMAIL)
-                                    .typeNotification(TypeNotification.AJUSTEMENT_DE_PRODUIT)
-                                    .message(desc)
-                                    .addUser(tUser)
-                            );
+                notificationService.save(new Notification()
+                        .canal(Canal.EMAIL)
+                        .typeNotification(TypeNotification.AJUSTEMENT_DE_PRODUIT)
+                        .message(desc)
+                        .addUser(tUser)
+                );
 
             });
             ajustement.setStrCOMMENTAIRE(params.getDescription());
@@ -708,7 +707,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
 
             emg.merge(it);
-            suggestionService.makeSuggestionAuto(familleStock, tFamille, emg);
+            suggestionService.makeSuggestionAuto(familleStock, tFamille);
         });
 
     }
@@ -745,7 +744,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
                     valeurTva = codeTva.getIntVALUE();
                 }
                 TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
-                
+
                 Integer qtyDebut = familleStock.getIntNUMBERAVAILABLE();
                 if (tFamille.getBoolDECONDITIONNE() == 1) {
                     if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
@@ -874,7 +873,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
             emg.merge(it);
             updateStockDepot(tu, tFamille, it.getIntQUANTITYSERVED(), depot, emg);
-            suggestionService.makeSuggestionAuto(familleStock, tFamille, emg);
+            suggestionService.makeSuggestionAuto(familleStock, tFamille);
         });
     }
 
@@ -896,10 +895,12 @@ public class MouvementProduitImpl implements MouvementProduitService {
         }
 
     }
+
     @Override
     public JSONObject deconditionner(Params params) throws JSONException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
     private HMvtProduit findByItemVenteId(String idVenteItem) {
         TypedQuery<HMvtProduit> tq = getEmg().createQuery("SELECT o FROM HMvtProduit o WHERE o.pkey=?1 ", HMvtProduit.class);
         tq.setParameter(1, idVenteItem);
@@ -915,6 +916,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             updatefamillenbvente(old.getFamille(), old.getQteMvt(), true, getEmg());
         });
     }
+
     public void saveMvtProduit(String pkey, HMvtProduit old, TUser lgUSERID) {
         HMvtProduit h = new HMvtProduit();
         h.setUuid(UUID.randomUUID().toString());

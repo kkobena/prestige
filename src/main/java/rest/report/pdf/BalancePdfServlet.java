@@ -110,11 +110,11 @@ public class BalancePdfServlet extends HttpServlet {
                 break;
 
             case TVA:
-                file = balance.tvapdf(params);
+                file = balance.tvapdf(params.ref(request.getParameter("typeVente")));
                 break;
 
             case TVA_JOUR:
-                file = balance.tvaJourpdf(params);
+                file = balance.tvaJourpdf(params.ref(request.getParameter("typeVente")));
                 break;
             case REPORT:
                 file = balance.reportGestion(params);

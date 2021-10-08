@@ -101,13 +101,7 @@ public class DatabaseToolkit {
         dailyStockTask.setUserTransaction(userTransaction);
         dailyStockTask.setDataSource(dataSource);
         mes.submit(dailyStockTask);
-        /* Future f = mes.submit(dailyStockTask);
-        while (!f.isDone()) {
-            LOG.info("Running..................");
-            if(f.isDone()){
-                   LOG.info("Is DONE.................."); 
-            }
-        }*/
+      
     }
 
 //    @PostConstruct
@@ -130,7 +124,7 @@ public class DatabaseToolkit {
         } catch (FlywayException e) {
             LOG.log(Level.SEVERE, "ini migration", e);
         }
-        runTask();
+//        runTask();
         createTimer();
         mes.submit(() -> {
             updateStockDailyValue();
@@ -219,7 +213,7 @@ public class DatabaseToolkit {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            LOG.log(Level.INFO, "*******************************>>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
+            LOG.log(Level.INFO, "sendSMS >>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
             userTransaction.begin();
             if (response.getStatus() == 201) {
                 notification.setStatut(Statut.SENT);
@@ -273,34 +267,6 @@ public class DatabaseToolkit {
             return Collections.emptyList();
         }
     }
-
-    public void sendSMS() {
-        try {
-            Client client = ClientBuilder.newClient();
-            SmsParameters sp = SmsParameters.getInstance();
-
-            String address = "57591746";
-
-            if (StringUtils.isEmpty(address)) {
-                address = sp.mobile;
-            }
-            JSONObject jSONObject = new JSONObject();
-            JSONObject outboundSMSMessageRequest = new JSONObject();
-            outboundSMSMessageRequest.put("address", "tel:+225" + address);
-            outboundSMSMessageRequest.put("senderAddress", sp.senderAddress);
-            JSONObject outboundSMSTextMessage = new JSONObject();
-            outboundSMSTextMessage.put("message", "teste ***  ");
-            outboundSMSMessageRequest.put("outboundSMSTextMessage", outboundSMSTextMessage);
-            jSONObject.put("outboundSMSMessageRequest", outboundSMSMessageRequest);
-            WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
-            Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
-                    .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            LOG.log(Level.INFO, "*******************************>>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-        }
-    }
-
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = em.find(TParameters.class, key);

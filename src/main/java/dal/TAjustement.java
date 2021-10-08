@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
@@ -21,6 +20,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -40,6 +40,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "TAjustement.findByDtCREATED", query = "SELECT t FROM TAjustement t WHERE t.dtCREATED = :dtCREATED"),
     @NamedQuery(name = "TAjustement.findByDtUPDATED", query = "SELECT t FROM TAjustement t WHERE t.dtUPDATED = :dtUPDATED")})
 public class TAjustement implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -62,7 +63,7 @@ public class TAjustement implements Serializable {
     @JoinColumn(name = "lg_USER_ID", referencedColumnName = "lg_USER_ID")
     @ManyToOne
     private TUser lgUSERID;
-
+    
     public TAjustement() {
     }
 
@@ -155,9 +156,11 @@ public class TAjustement implements Serializable {
         return true;
     }
 
+  
+
     @Override
     public String toString() {
         return "dal.TAjustement[ lgAJUSTEMENTID=" + lgAJUSTEMENTID + " ]";
     }
-    
+
 }

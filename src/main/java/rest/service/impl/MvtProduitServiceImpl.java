@@ -35,6 +35,8 @@ import dal.TRetourdepot;
 import dal.TRetourdepotdetail;
 import dal.TUser;
 import dal.TUser_;
+import dal.MotifAjustement;
+import dal.MotifAjustement_;
 import dal.Typemvtproduit;
 import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
@@ -332,8 +334,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
             emg.merge(it);
             updateStockDepot(__typemvtproduit, tu, tFamille, it.getIntQUANTITYSERVED(), depot, emg);
-
-            suggestionService.makeSuggestionAuto(familleStock, tFamille, emg);
+            suggestionService.makeSuggestionAuto(familleStock, tFamille);
         });
 
     }
@@ -376,7 +377,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
             emg.merge(it);
-            suggestionService.makeSuggestionAuto(familleStock, tFamille, emg);
+            suggestionService.makeSuggestionAuto(familleStock, tFamille);
         });
 
     }
@@ -835,19 +836,23 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         createSnapshotMvtArticle(tf, familleStock, qtyInit, emplacementId, emg);
     }
 
+    private MotifAjustement getOneTypeAjustement(Integer value) {
+        return getEmg().find(MotifAjustement.class, value);
+    }
+
     @Override
     public JSONObject creerAjustement(Params params) throws JSONException {
         EntityManager emg = this.getEmg();
         JSONObject json = new JSONObject();
         try {
-            String str_NAME = "Ajustement du " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy H:mm"));
+            String desc = "Ajustement du " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy H:mm"));
             TAjustement OTAjustement = new TAjustement();
             OTAjustement.setLgAJUSTEMENTID(UUID.randomUUID().toString());
             OTAjustement.setLgUSERID(params.getOperateur());
-            OTAjustement.setStrNAME(str_NAME);
+            OTAjustement.setStrNAME(desc);
             OTAjustement.setStrCOMMENTAIRE(params.getDescription());
             OTAjustement.setDtCREATED(new Date());
-            OTAjustement.setDtUPDATED(new Date());
+            OTAjustement.setDtUPDATED(OTAjustement.getDtCREATED());
             OTAjustement.setStrSTATUT(commonparameter.statut_is_Process);
             emg.persist(OTAjustement);
             ajusterProduitAjustement(params, OTAjustement, emg);
@@ -891,7 +896,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             OTAjustementDetail.setIntNUMBERCURRENTSTOCK(currentStock);
             OTAjustementDetail.setIntNUMBERAFTERSTOCK(params.getValue() + currentStock);
             OTAjustementDetail.setDtCREATED(new Date());
-            OTAjustementDetail.setDtUPDATED(new Date());
+            OTAjustementDetail.setDtUPDATED(OTAjustementDetail.getDtCREATED());
+            OTAjustementDetail.setTypeAjustement(getOneTypeAjustement(params.getValueFour()));
             OTAjustementDetail.setStrSTATUT(commonparameter.statut_is_Process);
             emg.persist(OTAjustementDetail);
         }
@@ -966,7 +972,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 String _action = (compare < 0) ? DateConverter.AJUSTEMENT_POSITIF : DateConverter.AJUSTEMENT_NEGATIF;
                 saveMvtArticle(commonparameter.str_ACTION_AJUSTEMENT, action, famille, tUser, familleStock, it.getIntNUMBER(), initStock, emplacement, emg);
                 mouvementProduitService.saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), _action, famille, tUser, emplacement, it.getIntNUMBER(), initStock, initStock + it.getIntNUMBER(), emg, 0);
-                suggestionService.makeSuggestionAuto(familleStock, famille, emg);
+                suggestionService.makeSuggestionAuto(familleStock, famille);
                 String desc = "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
                 logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
                 it.setStrSTATUT(commonparameter.statut_enable);
@@ -1088,6 +1094,9 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             if (!params.isShowAll()) {
                 predicates.add(cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID()));
             }
+            if (StringUtils.isNotEmpty(params.getTypeFiltre())) {
+                predicates.add(cb.equal(root.get(TAjustementDetail_.typeAjustement).get(MotifAjustement_.id), Integer.valueOf(params.getTypeFiltre())));
+            }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = emg.createQuery(cq);
             return (Long) q.getSingleResult();
@@ -1095,6 +1104,39 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             LOG.log(Level.SEVERE, null, e);
             return 0;
         }
+    }
+
+    @Override
+    public List<AjustementDTO> getAllAjustements(SalesStatsParams params) {
+        List<Predicate> predicates = new ArrayList<>();
+        CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+        CriteriaQuery<TAjustement> cq = cb.createQuery(TAjustement.class);
+        Root<TAjustementDetail> root = cq.from(TAjustementDetail.class);
+        Join<TAjustementDetail, TAjustement> st = root.join("lgAJUSTEMENTID", JoinType.INNER);
+        cq.select(root.get(TAjustementDetail_.lgAJUSTEMENTID)).distinct(true).orderBy(cb.asc(st.get(TAjustement_.dtUPDATED)));
+        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TAjustement_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
+                java.sql.Date.valueOf(params.getDtEnd()));
+        predicates.add(btw);
+        predicates.add(cb.equal(st.get(TAjustement_.strSTATUT), commonparameter.statut_enable));
+        if (StringUtils.isNotEmpty(params.getTypeFiltre())) {
+            predicates.add(cb.equal(root.get(TAjustementDetail_.typeAjustement).get(MotifAjustement_.id), Integer.valueOf(params.getTypeFiltre())));
+        }
+        if (params.getQuery() != null && !"".equals(params.getQuery())) {
+            Predicate predicate = cb.or(cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%"));
+            predicates.add(predicate);
+        }
+        if (!params.isShowAll()) {
+            predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
+        }
+        cq.where(predicates.toArray(new Predicate[predicates.size()]));
+        Query q = getEmg().createQuery(cq);
+        if (!params.isAll()) {
+            q.setFirstResult(params.getStart());
+            q.setMaxResults(params.getLimit());
+        }
+        List<TAjustement> list = q.getResultList();
+        List<AjustementDTO> data = list.stream().map(v -> new AjustementDTO(v, findAjustementDetailsByParenId(v.getLgAJUSTEMENTID(), getEmg()), params.isCanCancel())).collect(Collectors.toList());
+        return data;
     }
 
     @Override
@@ -1108,33 +1150,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 json.put("data", new JSONArray());
                 return json;
             }
-            List<Predicate> predicates = new ArrayList<>();
-            CriteriaBuilder cb = emg.getCriteriaBuilder();
-            CriteriaQuery<TAjustement> cq = cb.createQuery(TAjustement.class);
-            Root<TAjustementDetail> root = cq.from(TAjustementDetail.class);
-            Join<TAjustementDetail, TAjustement> st = root.join("lgAJUSTEMENTID", JoinType.INNER);
-            cq.select(root.get(TAjustementDetail_.lgAJUSTEMENTID)).distinct(true).orderBy(cb.asc(st.get(TAjustement_.dtUPDATED)));
-            Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TAjustement_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
-                    java.sql.Date.valueOf(params.getDtEnd()));
-            predicates.add(btw);
-            predicates.add(cb.equal(st.get(TAjustement_.strSTATUT), commonparameter.statut_enable));
 
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
-                Predicate predicate = cb.or(cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%"));
-                predicates.add(predicate);
-            }
-            if (!params.isShowAll()) {
-                predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
-            }
-            cq.where(predicates.toArray(new Predicate[predicates.size()]));
-            Query q = emg.createQuery(cq);
-            if (!params.isAll()) {
-                q.setFirstResult(params.getStart());
-                q.setMaxResults(params.getLimit());
-            }
-            List<TAjustement> list = q.getResultList();
-            List<AjustementDTO> data = list.stream().map(v -> new AjustementDTO(v, findAjustementDetailsByParenId(v.getLgAJUSTEMENTID(), emg), params.isCanCancel())).collect(Collectors.toList());
-
+            List<AjustementDTO> data = getAllAjustements(params);
             json.put("total", count);
             json.put("data", new JSONArray(data));
         } catch (Exception e) {
@@ -1277,7 +1294,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                         DateConverter.RETOUR_FOURNISSEUR, tf, params.getOperateur(), empl, d.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
                 saveMvtArticle(commonparameter.str_ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, tf,
                         params.getOperateur(), stock, d.getIntNUMBERRETURN(), sockInit, empl, emg);
-                suggestionService.makeSuggestionAuto(stock, tf, emg);
+                suggestionService.makeSuggestionAuto(stock, tf);
                 String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + fournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + params.getOperateur().getStrFIRSTNAME() + " " + params.getOperateur().getStrLASTNAME();
                 logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
                 notificationService.save(new Notification()
@@ -1470,6 +1487,33 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         getEmg().merge(retourdepot);
     }
 
-  
+    @Override
+    public List<AjustementDetailDTO> getAllAjustementDetailDTOs(SalesStatsParams params) {
+        List<Predicate> predicates = new ArrayList<>();
+        CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+        CriteriaQuery<TAjustementDetail> cq = cb.createQuery(TAjustementDetail.class);
+        Root<TAjustementDetail> root = cq.from(TAjustementDetail.class);
+        Join<TAjustementDetail, TAjustement> st = root.join("lgAJUSTEMENTID", JoinType.INNER);
+        cq.select(root).orderBy(cb.asc(st.get(TAjustement_.dtUPDATED)));
+        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TAjustement_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
+                java.sql.Date.valueOf(params.getDtEnd()));
+        predicates.add(btw);
+        predicates.add(cb.equal(st.get(TAjustement_.strSTATUT), commonparameter.statut_enable));
+        if (StringUtils.isNotEmpty(params.getTypeFiltre())) {
+            predicates.add(cb.equal(root.get(TAjustementDetail_.typeAjustement).get(MotifAjustement_.id), Integer.valueOf(params.getTypeFiltre())));
+        }
+        if (params.getQuery() != null && !"".equals(params.getQuery())) {
+            Predicate predicate = cb.or(cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%"));
+            predicates.add(predicate);
+        }
+        if (!params.isShowAll()) {
+            predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
+        }
+        cq.where(predicates.toArray(new Predicate[predicates.size()]));
+        TypedQuery<TAjustementDetail> q = getEmg().createQuery(cq);
+
+        return q.getResultList().stream().map(AjustementDetailDTO::new).collect(Collectors.toList());
+
+    }
 
 }

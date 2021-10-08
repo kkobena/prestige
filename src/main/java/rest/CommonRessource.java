@@ -19,6 +19,7 @@ import dal.TPrivilege;
 import dal.TTypeVente;
 import dal.TUser;
 import dal.TVille;
+import dal.MotifAjustement;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.EJB;
@@ -352,12 +353,21 @@ public class CommonRessource {
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(checkug, 1)).build();
     }
-    
-    
+
     @GET
     @Path("motifs-retour")
     public Response motifRetour() {
         List<TMotifRetour> data = commonService.motifsRetour();
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
+    }
+
+    @GET
+    @Path("type-ajustements")
+    public Response allTypeAjustement() {
+        List<MotifAjustement> data = commonService.findAllTypeAjustements();
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);

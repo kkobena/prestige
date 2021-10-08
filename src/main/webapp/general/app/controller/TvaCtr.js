@@ -40,6 +40,9 @@ Ext.define('testextjs.controller.TvaCtr', {
         },
         {ref: 'comboRation',
             selector: 'tvastat #comboRation'
+        },
+          {ref: 'typeVente',
+            selector: 'tvastat #typeVente'
         }
 
 
@@ -75,10 +78,14 @@ Ext.define('testextjs.controller.TvaCtr', {
         let dtStart = me.getDtStart().getSubmitValue();
         let dtEnd = me.getDtEnd().getSubmitValue();
         let checkug = me.getCheckUg();
-        let linkUrl = '../BalancePdfServlet?mode=TVA&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug;
+        let typeVente=me.getTypeVente().getValue();
+        if(typeVente==='TOUT'){
+            typeVente='';
+        }
+        let linkUrl = '../BalancePdfServlet?mode=TVA&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug+'&typeVente='+typeVente;
         let comboRation = me.getComboRation().getValue();
         if (comboRation === 'Journalier') {
-            linkUrl = '../BalancePdfServlet?mode=TVA_JOUR&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug;
+            linkUrl = '../BalancePdfServlet?mode=TVA_JOUR&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug+'&typeVente='+typeVente;
         }
         window.open(linkUrl);
     },
@@ -88,13 +95,15 @@ Ext.define('testextjs.controller.TvaCtr', {
         var myProxy = me.getTvaGrid().getStore().getProxy();
         myProxy.params = {
             dtEnd: null,
-            dtStart: null
+            dtStart: null,
+            typeVente:null
 
         };
         if (me.getCheckUg()) {
             myProxy.url = '../api/v2/caisse/tvas';
         }
-
+        let typeVente = me.getTypeVente().getValue();
+        myProxy.setExtraParam('typeVente', typeVente);
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
 
@@ -116,7 +125,8 @@ Ext.define('testextjs.controller.TvaCtr', {
         store.load({
             params: {
                 dtStart: me.getDtStart().getSubmitValue(),
-                dtEnd: me.getDtEnd().getSubmitValue()
+                dtEnd: me.getDtEnd().getSubmitValue(),
+                typeVente: me.getTypeVente().getValue()
 
             }
 

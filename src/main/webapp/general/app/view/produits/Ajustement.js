@@ -19,6 +19,36 @@ Ext.define('testextjs.view.produits.Ajustement', {
 //        align: 'stretch'
     },
     initComponent: function () {
+        var typeAjustement = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
+            fields:
+                    [
+                        {name: 'id',
+                            type: 'number'
+
+                        },
+
+                        {name: 'libelle',
+                            type: 'string'
+
+                        }
+
+                    ],
+            autoLoad: false,
+            pageSize: 9999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/common/type-ajustements',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+
+        });
         var vente = Ext.create('Ext.data.Store', {
             model: 'testextjs.model.caisse.Ajustement',
             autoLoad: false,
@@ -61,6 +91,23 @@ Ext.define('testextjs.view.produits.Ajustement', {
                             enableKeyEvents: true,
                             emptyText: 'Recherche'
                         }, '-',
+                         {
+                            xtype: 'combobox',
+                            flex: 1,
+                            margin: '0 5 0 0',
+                            labelWidth: 0,
+                            itemId: 'typeAjustement',
+                            store: typeAjustement,
+                            pageSize: 999,
+                            valueField: 'id',
+                            displayField: 'libelle',
+                            typeAhead: true,
+                            queryMode: 'remote',
+                            minChars: 2,
+                            emptyText: 'Sélectionnez un motif'
+                        },
+                        
+                         '-',
                         {
                             xtype: 'datefield',
                             fieldLabel: 'Du',
@@ -92,6 +139,13 @@ Ext.define('testextjs.view.produits.Ajustement', {
                             itemId: 'rechercher',
                             scope: this,
                             iconCls: 'searchicon'
+                        }
+                         ,'-', {
+                            text: 'Imprimer',
+                            itemId: 'imprimer',
+                            iconCls: 'printable',
+                            tooltip: 'Imprimer',
+                            scope: this
                         }
                     ]
                 }
@@ -135,6 +189,7 @@ Ext.define('testextjs.view.produits.Ajustement', {
                             sortable: false,
                             menuDisabled: true
                         },
+                           
                         {
                             header: 'Opérateur',
                             dataIndex: 'userFullName',
@@ -171,7 +226,7 @@ Ext.define('testextjs.view.produits.Ajustement', {
                                     menuDisabled: true,
 //                                    scope: me,
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
-                                        this.fireEvent('toItem',view, rowIndex, colIndex, item, e, record, row);
+                                        this.fireEvent('toItem', view, rowIndex, colIndex, item, e, record, row);
                                     }
 
                                 }]
@@ -180,7 +235,7 @@ Ext.define('testextjs.view.produits.Ajustement', {
                             xtype: 'actioncolumn',
                             width: 30,
                             sortable: false,
-                            hidden:true,
+                            hidden: true,
                             menuDisabled: true,
                             items: [
                                 {
@@ -194,7 +249,7 @@ Ext.define('testextjs.view.produits.Ajustement', {
 
                                         }
                                     }
-                                    
+
 
                                 }
 
@@ -212,7 +267,7 @@ Ext.define('testextjs.view.produits.Ajustement', {
                                     tooltip: 'Imprimer une fiche de cet ajustement',
 //                                    scope: this,
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
-                                        this.fireEvent('print',view, rowIndex, colIndex, item, e, record, row);
+                                        this.fireEvent('print', view, rowIndex, colIndex, item, e, record, row);
                                     }
 
 

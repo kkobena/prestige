@@ -5,7 +5,9 @@
  */
 package rest;
 
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -13,7 +15,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import rest.service.ErpService;
+import rest.service.RetourFournisseurService;
 import rest.service.impl.DataExportService;
+import shedule.Reapprovisionnement;
 
 /**
  *
@@ -26,8 +30,14 @@ public class ErpRessource {
 
     @EJB
     private ErpService erpService;
-      @EJB
+    @EJB
+    private RetourFournisseurService retourFournisseurService;
+    @EJB
     private DataExportService dataExportService;
+    @EJB
+    Reapprovisionnement r;
+    @Resource(name = "concurrent/__defaultManagedExecutorService")
+    ManagedExecutorService mes;
 
     @GET
     @Path("valorisation")
@@ -72,16 +82,14 @@ public class ErpRessource {
     ) {
         return Response.ok().entity(erpService.erpFactures(dtStart, dtEnd)).build();
     }
-    
-     @GET
+
+    @GET
     @Path("fournisseurs")
-    public Response fournisseurs(
-          
-    ) {
+    public Response fournisseurs() {
         return Response.ok().entity(erpService.fournisseurs()).build();
     }
-    
-     @GET
+
+    @GET
     @Path("achats-fournisseurs")
     public Response achatsFournisseurs(
             @QueryParam(value = "dtStart") String dtStart,
@@ -89,21 +97,50 @@ public class ErpRessource {
     ) {
         return Response.ok().entity(erpService.achatsFournisseurs(dtStart, dtEnd)).build();
     }
-    
-     @GET
+
+    @GET
     @Path("stock")
-    public Response export(
-           
-    ) {
+    public Response export() {
         return Response.ok().entity(dataExportService.listProduits()).build();
     }
-    
-    
-     @GET
+
+    @GET
     @Path("tierspayants")
-    public Response allTiersPayants(
-          
-    ) {
+    public Response allTiersPayants() {
         return Response.ok().entity(erpService.allTiersPayants()).build();
+    }
+
+    @GET
+    @Path("avoirs-fournisseurs")
+    public Response avoirFournisseurs(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
+    ) {
+        return Response.ok().entity(retourFournisseurService.erpAvoirsFournisseurs(dtStart, dtEnd)).build();
+    }
+
+    @GET
+    @Path("whareouse-vno")
+    public Response venteVNO(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
+    ) {
+        return Response.ok().entity(dataExportService.listVentes(dtStart, dtEnd, "VNO")).build();
+    }
+
+    @GET
+    @Path("whareouse-maxmin")
+    public Response maxmin() {
+        return Response.ok().entity(dataExportService.getMaxAndMinDate()).build();
+    }
+
+    @GET
+    @Path("reap")
+    public Response testReap() {
+        mes.submit(() -> {
+            r.execute();
+        });
+
+        return Response.ok().build();
     }
 }

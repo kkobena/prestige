@@ -58,7 +58,7 @@ import util.DateConverter;
 @TransactionManagement(value = TransactionManagementType.BEAN)
 public class Reapprovisionnement {
 
-//    private static final Logger LOG = Logger.getLogger(Reapprovisionnement.class.getName());
+    private static final Logger LOG = Logger.getLogger(Reapprovisionnement.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @Inject
@@ -127,21 +127,24 @@ public class Reapprovisionnement {
     public List<LocalDate> nombreMoisPleinsConsommation(int nombre) {
         LocalDate now = LocalDate.now();
         List<LocalDate> nombreMois = new ArrayList<>();
-        try {
-            for (int i = 1; i <= nombre; i++) {
+
+        for (int i = 1; i <= nombre; i++) {
+            try {
+                LocalDate no = now.minusMonths(i);
                 TypedQuery<TCalendrier> tq = em.createQuery("SELECT o FROM TCalendrier o WHERE   FUNCTION('MONTH', o.dtDay) =?1 AND  FUNCTION('YEAR', o.dtDay)=?2 AND o.intNUMBERJOUR >=20 ", TCalendrier.class);
-                tq.setParameter(1, now.minusMonths(i).getMonthValue());
-                tq.setParameter(2, now.minusMonths(i).getYear());
+                tq.setParameter(1, no.getMonthValue());
+                tq.setParameter(2, no.getYear());
                 tq.setMaxResults(1);
                 TCalendrier calendrier = tq.getSingleResult();
                 if (calendrier != null) {
                     nombreMois.add(LocalDate.of(calendrier.getDtDay().getYear(), calendrier.getDtDay().getMonth(), 1));
                 }
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
             }
 
-        } catch (Exception e) {
-//            e.printStackTrace(System.err);
         }
+
         return nombreMois;
     }
 
@@ -187,13 +190,12 @@ public class Reapprovisionnement {
         if (q3 != null) {
             Q3 = Integer.valueOf(q3.getStrVALUE().trim());
         }
-
         List<LocalDate> nombreMois = nombreMoisPleinsConsommation(Q3).stream().sorted().collect(Collectors.toList());
-
         if (!nombreMois.isEmpty()) {
             JSONObject json;
             for (int i = start; i <= total; i += limit) {
                 List<TFamille> list = loadArticle(i, limit);
+                
                 try {
                     userTransaction.begin();
                     for (TFamille tf : list) {
@@ -207,9 +209,8 @@ public class Reapprovisionnement {
                                 if (consonDetail > 0) {
                                     conso += consonDetail;
                                 }
-
                             }
-                            json = DateConverter.calculSeuiQteReappro(Q1, Q2, conso, Q3);
+                            json = calculSeuiQteReappro(Q1, Q2, conso, Q3);
                             seuiCalule = json.getInt("seuilReappro");
                             qteCalule = json.getInt("qteReappro");
                         }
@@ -234,7 +235,7 @@ public class Reapprovisionnement {
         }
     }
 
-//    @PostConstruct
+   // @PostConstruct
     public void init() {
         try {
             TParameters semois = em.find(TParameters.class, "SEMOIS");
@@ -259,6 +260,35 @@ public class Reapprovisionnement {
                 em.merge(p);
                 userTransaction.commit();
             }
+        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
+            e.printStackTrace(System.err);
+        }
+    }
+
+    public JSONObject calculSeuiQteReappro(int Q1, int Q2, double Q3, int Q3_parametre) {
+        /*
+      valeur calculee de la consommation du produit sur une semaine
+         */
+        double divente = (Double.valueOf(Q3_parametre) * 4);
+        double Q4 = 0.5;
+        if (divente > 0) {
+            Q4 = (Q3 / divente);
+        }
+        Integer seuilReappro = (int) Math.ceil(Q4 * Q1);
+        Integer qteReappro = (int) Math.ceil(Q4 * Q2);
+        return new JSONObject().put("seuilReappro", seuilReappro).put("qteReappro", qteReappro);
+    }
+
+    public void execute() {
+        try {
+            TParameters p = em.find(TParameters.class, "KEY_DAY_SEUIL_REAPPRO");//derniere date de mise a jour stock reappro
+            calculStockReappro();
+            userTransaction.begin();
+            p.setStrVALUE(LocalDate.now().toString());
+            p.setDtUPDATED(new Date());
+            em.merge(p);
+            userTransaction.commit();
+
         } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
             e.printStackTrace(System.err);
         }

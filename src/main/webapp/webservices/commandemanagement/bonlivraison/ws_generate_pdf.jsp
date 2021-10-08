@@ -34,6 +34,7 @@
 <%
     Translate OTranslate = new Translate();
     dataManager OdataManager = new dataManager();
+     OdataManager.initEntityManager();
     TParameters OTParameters;
     bllBase ObllBase = new bllBase();
     TUser OTUser = null;
@@ -77,7 +78,8 @@
     
 
     OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
-    new logger().OCategory.info("Utilisateur " + OTUser.getStrFIRSTNAME() + " Id " + OTUser.getLgUSERID());
+   
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     jdom Ojdom = new jdom();
     Ojdom.InitRessource();
     Ojdom.LoadRessource();
@@ -106,7 +108,7 @@
     String P_INSTITUTION_ADRESSE = oTOfficine.getStrADRESSSEPOSTALE();
        String P_H_LOGO = jdom.scr_report_file_logo;
 
-    bonLivraisonManagement ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, OTUser);
+    bonLivraisonManagement ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, user);
     TBonLivraison OBonLivraison = ObonLivraisonManagement.FindTBonLivraison(lg_BON_LIVRAISON_ID, str_STATUT);
     new logger().OCategory.info("Bon de livraison " + OBonLivraison.getLgBONLIVRAISONID());
 
@@ -151,7 +153,7 @@ parameters.put("P_TYPE_STOCK", (OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID()
 
     ObllBase.setKey(new date());
     ObllBase.setOTranslate(OTranslate);
-    ObllBase.setOTUser(OTUser);
+    ObllBase.setOTUser(user);
 
     Ojconnexion.CloseConnexion();
 

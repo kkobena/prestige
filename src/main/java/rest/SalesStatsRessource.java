@@ -378,7 +378,7 @@ public class SalesStatsRessource {
 
     @GET
     @Path("tvastat")
-    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "typeVente") String typeVente) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -389,6 +389,7 @@ public class SalesStatsRessource {
         params.setDtEnd(dtEnd);
         params.setDtStart(dtStart);
         params.setOperateur(tu);
+        params.setRef(typeVente);
         JSONObject json = salesService.tvasViewData(params);
         return Response.ok().entity(json.toString()).build();
     }

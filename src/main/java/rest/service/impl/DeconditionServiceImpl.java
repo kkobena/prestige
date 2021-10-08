@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -26,6 +27,7 @@ import javax.persistence.TypedQuery;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.DeconditionService;
+import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -36,9 +38,11 @@ import toolkits.parameters.commonparameter;
 public class DeconditionServiceImpl implements DeconditionService {
 
     private static final Logger LOG = Logger.getLogger(DeconditionServiceImpl.class.getName());
- @PersistenceContext(unitName = "JTA_UNIT")
+    @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-   
+    @EJB
+    private SuggestionService suggestionService;
+
 
     public EntityManager getEntityManager() {
         return em;
@@ -144,15 +148,12 @@ public class DeconditionServiceImpl implements DeconditionService {
                 numberToDecondition++;
                 x += qtyDetail;
             }
-//            getEntityManager().getTransaction().begin();
             OTFamilleStockParent.setIntNUMBERAVAILABLE(OTFamilleStockParent.getIntNUMBERAVAILABLE() - numberToDecondition);
             OTFamilleStockParent.setIntNUMBER(OTFamilleStockParent.getIntNUMBERAVAILABLE());
             OTFamilleStockParent.setDtUPDATED(new Date());
-
             OTFamilleStockChild.setIntNUMBERAVAILABLE(OTFamilleStockChild.getIntNUMBERAVAILABLE() + (numberToDecondition * qtyDetail));
             OTFamilleStockChild.setIntNUMBER(OTFamilleStockChild.getIntNUMBERAVAILABLE());
             OTFamilleStockChild.setDtUPDATED(new Date());
-
             getEntityManager().merge(OTFamilleStockParent);
             getEntityManager().merge(OTFamilleStockChild);
             createDecondtionne(OTFamilleParent, numberToDecondition, params.getUserId());
@@ -181,20 +182,12 @@ public class DeconditionServiceImpl implements DeconditionService {
             } else {
                 createSnapshotMouvementArticle(OTFamilleParent, OTFamilleStockParent.getIntNUMBERAVAILABLE(), stockInit, te);
             }
-//            if (getEntityManager().getTransaction().isActive()) {
-//                getEntityManager().getTransaction().commit();
-//
-//            }
-
             json.put("success", true);
             json.put("msg", "opération effectuée avec success");
+             suggestionService.makeSuggestionAuto(OTFamilleStockParent, OTFamilleParent);
             return json;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-//            if (!getEntityManager().getTransaction().isActive()) {
-//                getEntityManager().getTransaction().rollback();
-//
-//            }
             json.put("success", false);
             json.put("msg", "L'opération a échoué");
             return json;

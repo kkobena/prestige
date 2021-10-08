@@ -209,5 +209,15 @@ public class Params implements Serializable {
     public void setCheckug(boolean checkug) {
         this.checkug = checkug;
     }
-    
+     public Params ref(String ref) {
+        this.ref = ref;
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "Params{" + "ref=" + ref + ", description=" + description + ", refParent=" + refParent + ", refTwo=" + refTwo + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", checkug=" + checkug + '}';
+    }
+     
+     
 }
