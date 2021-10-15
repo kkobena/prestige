@@ -6,3 +6,4 @@ nb-configuration.xml
 /.apt_generated_tests/
 /.generated-sources/
 /.generated-test-sources/
+.pom

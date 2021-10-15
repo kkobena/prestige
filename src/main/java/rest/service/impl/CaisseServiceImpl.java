@@ -1402,24 +1402,25 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-                        montantAchat.add(op.getMontantNet());
+//                        montantAchat.add(op.getMontantNet());
+                         montantAchat.add(op.getMontant());
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
                                 case DateConverter.LABOREXCI:
-                                    montantAchatOne.add(op.getMontantNet());
+                                    montantAchatOne.add(op.getMontant());
                                     break;
                                 case DateConverter.DPCI:
-                                    montantAchatTwo.add(op.getMontantNet());
+                                    montantAchatTwo.add(op.getMontant());
                                     break;
                                 case DateConverter.COPHARMED:
-                                    montantAchatThree.add(op.getMontantNet());
+                                    montantAchatThree.add(op.getMontant());
                                     break;
                                 case DateConverter.TEDIS:
-                                    montantAchatFour.add(op.getMontantNet());
+                                    montantAchatFour.add(op.getMontant());
                                     break;
                                 case DateConverter.AUTRES:
-                                    montantAchatFive.add(op.getMontantNet());
+                                    montantAchatFive.add(op.getMontant());
                                     break;
                                 default:
                                     break;
@@ -4002,7 +4003,7 @@ public class CaisseServiceImpl implements CaisseService {
             int limit, boolean all) throws JSONException {
         TEmplacement emp = user.getLgEMPLACEMENTID();
         JSONObject json = new JSONObject();
-        Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = new HashMap<>();
+        Map<TableauBaordSummary, List<TableauBaordPhDTO>> map;
         if (key_Take_Into_Account() || key_Params()) {
             map = buillTableauBoardDataMonthly(donneestableauboard(dtStart, dtEnd, checked, emp.getLgEMPLACEMENTID(), start, limit, all));
         } else {
@@ -4085,24 +4086,24 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-                        montantAchat.add(op.getMontantNet());
+                        montantAchat.add(op.getMontant());
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
                                 case DateConverter.LABOREXCI:
-                                    montantAchatOne.add(op.getMontantNet());
+                                    montantAchatOne.add(op.getMontant());
                                     break;
                                 case DateConverter.DPCI:
-                                    montantAchatTwo.add(op.getMontantNet());
+                                    montantAchatTwo.add(op.getMontant());
                                     break;
                                 case DateConverter.COPHARMED:
-                                    montantAchatThree.add(op.getMontantNet());
+                                    montantAchatThree.add(op.getMontant());
                                     break;
                                 case DateConverter.TEDIS:
-                                    montantAchatFour.add(op.getMontantNet());
+                                    montantAchatFour.add(op.getMontant());
                                     break;
                                 case DateConverter.AUTRES:
-                                    montantAchatFive.add(op.getMontantNet());
+                                    montantAchatFive.add(op.getMontant());
                                     break;
                                 default:
                                     break;
@@ -4288,24 +4289,24 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-                        montantAchat.add(op.getMontantNet());
+                        montantAchat.add(op.getMontant());
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
                                 case DateConverter.LABOREXCI:
-                                    montantAchatOne.add(op.getMontantNet());
+                                    montantAchatOne.add(op.getMontant());
                                     break;
                                 case DateConverter.DPCI:
-                                    montantAchatTwo.add(op.getMontantNet());
+                                    montantAchatTwo.add(op.getMontant());
                                     break;
                                 case DateConverter.COPHARMED:
-                                    montantAchatThree.add(op.getMontantNet());
+                                    montantAchatThree.add(op.getMontant());
                                     break;
                                 case DateConverter.TEDIS:
-                                    montantAchatFour.add(op.getMontantNet());
+                                    montantAchatFour.add(op.getMontant());
                                     break;
                                 case DateConverter.AUTRES:
-                                    montantAchatFive.add(op.getMontantNet());
+                                    montantAchatFive.add(op.getMontant());
                                     break;
                                 default:
                                     break;
@@ -4746,24 +4747,24 @@ private GenericDTO balanceFormat0(List<MvtTransaction> mvtTransactions) {
                     }
                     break;
                     case ACHAT: {
-                        montantAchat.add(op.getMontantNet());
+                        montantAchat.add(op.getMontant());
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
                             switch (g.getLibelle()) {
                                 case DateConverter.LABOREXCI:
-                                    montantAchatOne.add(op.getMontantNet());
+                                    montantAchatOne.add(op.getMontant());
                                     break;
                                 case DateConverter.DPCI:
-                                    montantAchatTwo.add(op.getMontantNet());
+                                    montantAchatTwo.add(op.getMontant());
                                     break;
                                 case DateConverter.COPHARMED:
-                                    montantAchatThree.add(op.getMontantNet());
+                                    montantAchatThree.add(op.getMontant());
                                     break;
                                 case DateConverter.TEDIS:
-                                    montantAchatFour.add(op.getMontantNet());
+                                    montantAchatFour.add(op.getMontant());
                                     break;
                                 case DateConverter.AUTRES:
-                                    montantAchatFive.add(op.getMontantNet());
+                                    montantAchatFive.add(op.getMontant());
                                     break;
                                 default:
                                     break;
