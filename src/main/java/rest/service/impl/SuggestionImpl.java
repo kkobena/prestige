@@ -354,7 +354,7 @@ public class SuggestionImpl implements SuggestionService {
     @Override
     public void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille) {
         EntityManager emg=getEmg();
-        if (famille.getIntSEUILMIN() != null && famille.getBoolDECONDITIONNE() == 0) {
+        if (famille.getIntSEUILMIN() != null && famille.getBoolDECONDITIONNE() == 0 && famille.getStrSTATUT().equalsIgnoreCase(DateConverter.STATUT_ENABLE)) {
             if (OTFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN()) {
                 int statut = verifierProduitDansLeProcessusDeCommande(famille);
                 if (statut == 0 || statut == 1) {
