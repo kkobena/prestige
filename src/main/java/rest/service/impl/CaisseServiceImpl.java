@@ -1012,6 +1012,10 @@ public class CaisseServiceImpl implements CaisseService {
                         nbreVente = 0;
 
                 for (MvtTransaction mvt : venteVO) {
+                    boolean skip = mvt.getPreenregistrement().getTPreenregistrementCompteClientTiersPayentCollection().stream().allMatch(p -> p.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getToBeExclude());
+                    if (skip) {
+                        continue;
+                    }
                     montantTTC += mvt.getMontant();
                     montantNet += mvt.getMontantNet();
                     montantRemise += mvt.getMontantRemise();
@@ -4522,6 +4526,10 @@ private GenericDTO balanceFormat0(List<MvtTransaction> mvtTransactions) {
                         nbreVente = 0, montantMobilePayment = 0;
 
                 for (MvtTransaction mvt : venteVO) {
+                     boolean skip = mvt.getPreenregistrement().getTPreenregistrementCompteClientTiersPayentCollection().stream().allMatch(p -> p.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getToBeExclude());
+                    if (skip) {
+                        continue;
+                    }
                     montantTTC += mvt.getMontant();
                     montantNet += mvt.getMontantNet();
                     montantRemise += mvt.getMontantRemise();

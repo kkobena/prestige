@@ -102,7 +102,7 @@ public class TTiersPayant implements Serializable {
     private String strNAME;
     @Column(name = "str_FULLNAME", length = 100)
     private String strFULLNAME;
-  
+
     @Column(name = "str_ADRESSE", length = 100)
     private String strADRESSE;
     @Column(name = "str_MOBILE", length = 50)
@@ -199,6 +199,10 @@ public class TTiersPayant implements Serializable {
     private TModelFacture lgMODELFACTUREID;
     @OneToMany(mappedBy = "lgTIERSPAYANTID")
     private Collection<TCompteClientTiersPayant> tCompteClientTiersPayantCollection;
+    @Column(name = "account")
+    private Long account = 0L;
+    @Column(name = "to_be_exclude")
+    private Boolean toBeExclude = Boolean.FALSE;
 
     public TTiersPayant() {
     }
@@ -665,4 +669,21 @@ public class TTiersPayant implements Serializable {
     public void setIntMONTANTFAC(Integer intMONTANTFAC) {
         this.intMONTANTFAC = intMONTANTFAC;
     }
+
+    public Long getAccount() {
+        return account;
+    }
+
+    public void setAccount(Long account) {
+        this.account = account;
+    }
+
+    public Boolean getToBeExclude() {
+        return toBeExclude;
+    }
+
+    public void setToBeExclude(Boolean toBeExclude) {
+        this.toBeExclude = toBeExclude;
+    }
+
 }
