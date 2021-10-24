@@ -390,7 +390,7 @@ public class SalesStatsRessource {
         params.setDtStart(dtStart);
         params.setOperateur(tu);
         params.setRef(typeVente);
-        JSONObject json = salesService.tvasViewData(params);
+        JSONObject json = salesService.tvasViewData2(params);
         return Response.ok().entity(json.toString()).build();
     }
 

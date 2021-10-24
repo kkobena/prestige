@@ -119,8 +119,18 @@ public class TvaDTO implements Serializable {
     }
 
     public TvaDTO(long montantTTC) {
-        this.montantTtc =montantTTC;
-       
+        this.montantTtc = montantTTC;
+
     }
 
+    public TvaDTO(Integer taux, long montantTtc) {
+        this.taux = taux;
+        this.montantTtc = montantTtc;
+    }
+
+    public TvaDTO(Integer taux, long montantTtc, LocalDate date) {
+        this.taux = taux;
+        this.montantTtc = montantTtc;
+        this.localOperation = date;
+    }
 }

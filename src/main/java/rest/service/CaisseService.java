@@ -15,6 +15,7 @@ import commonTasks.dto.ResumeCaisseDTO;
 import commonTasks.dto.SumCaisseDTO;
 import commonTasks.dto.TableauBaordPhDTO;
 import commonTasks.dto.TableauBaordSummary;
+import commonTasks.dto.TvaDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import commonTasks.dto.VisualisationCaisseDTO;
 import dal.MvtTransaction;
@@ -177,5 +178,5 @@ Author author = entityManager.find(Author.class, id, properties);
             int ration, int start, int limit, boolean all);
 
     long montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement, String typeMvtCaisse);
-   
+  
 }

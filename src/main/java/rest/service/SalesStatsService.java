@@ -15,6 +15,7 @@ import commonTasks.dto.VenteDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
+import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
@@ -105,4 +106,19 @@ public interface SalesStatsService {
     List<TvaDTO> tvasDataReport(Params params);
 
     List<TvaDTO> tvasRapportVNO(Params params);
+
+    JSONObject tvasViewData2(Params params) throws JSONException;
+
+    List<TvaDTO> tvasRapport2(Params params);
+
+    List<TvaDTO> donneesTvas2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
+
+    List<TvaDTO> tvasRapportVNO2(Params params);
+
+    List<TvaDTO> tvasRapport20(Params params);
+
+    List<TvaDTO> tvaRapport2(Params params);
+    
+     List<TvaDTO> tvasRapportJournalier2(Params params);
+
 }

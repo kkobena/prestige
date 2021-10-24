@@ -580,12 +580,12 @@ public class Balance {
 
         if (!parasm.isCheckug()) {
             if (StringUtils.isNotBlank(parasm.getRef()) && !parasm.getRef().equalsIgnoreCase("TOUT")) {
-                datas = salesStatsService.tvasRapportVNO(parasm);
+                datas = salesStatsService.tvasRapportVNO2(parasm);
             } else {
-                datas = salesStatsService.tvasRapport(parasm);
+                datas = salesStatsService.tvasRapport2(parasm);
             }
         } else {
-            datas = salesStatsService.tvaRapport(parasm);
+            datas = salesStatsService.tvaRapport2(parasm);
 
         }
         datas.sort(Comparator.comparing(TvaDTO::getTaux));
@@ -796,14 +796,14 @@ public class Balance {
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<TvaDTO> datas;
+      /*  List<TvaDTO> datas;
         if (!parasm.isCheckug()) {
             datas = salesStatsService.tvasRapportJournalier(parasm);
         } else {
             datas = salesStatsService.tvaRapportJournalier(parasm);
-        }
-
-        datas.sort(comparatorTvaDTO);
+        }*/
+        List<TvaDTO> datas = salesStatsService.tvasRapportJournalier2(parasm);
+       // datas.sort(comparatorTvaDTO);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "tvastat_" + report_generate_file, datas);
         return "/data/reports/pdf/tvastat_" + report_generate_file;
     }
