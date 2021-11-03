@@ -8,7 +8,6 @@ ALTER TABLE   `hmvtproduit` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_c
 ALTER TABLE   `laboratoire` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
 ALTER TABLE   `licence` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
 ALTER TABLE   `medecin` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
-ALTER TABLE   `migration` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
 ALTER TABLE   `mvttransaction` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
 ALTER TABLE   `notification` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
 ALTER TABLE   `notification_client` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;
