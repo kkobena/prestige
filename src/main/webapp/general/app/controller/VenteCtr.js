@@ -1491,7 +1491,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.showAndHideInfosStandardClient(true);
             me.getMontantRecu().setReadOnly(false);
             me.getCbContainer().hide();
-        } else if (value == '7' || value === '8' || value === '9') {
+        } else if (value === '7' || value === '8' || value === '9') {
             me.handleMobileMoney();
         } else {
             if (value === '2' || value === '3' || value === '6') {
@@ -2581,7 +2581,6 @@ Ext.define('testextjs.controller.VenteCtr', {
     onNewClientAssurance: function () {
         var me = this;
         var client = me.getClient();
-        console.log(client);
         if (client) {
             const tierspayants = client.get('tiersPayants');
             me.updateAssurerCmp();

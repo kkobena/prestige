@@ -845,7 +845,8 @@ Ext.application({
         'ImportationHistoriqueCtr',
         'FamilleArticleStatVetoCtr',
         'ParaCtr',
-        'CompteExploitationCtr'
+        'CompteExploitationCtr',
+        'TiersPayantExclusCtrl'
     ],
     stores: [
         'Menu'

@@ -23,9 +23,18 @@ public class GenererFactureDTO implements Serializable {
     private TUser operateur;
     private Mode mode;
     String groupTp, typetp, tpid, codegroup,query;
+    private boolean all;
 
     public List<String> getDatas() {
         return datas;
+    }
+
+    public boolean isAll() {
+        return all;
+    }
+
+    public void setAll(boolean all) {
+        this.all = all;
     }
 
     public String getQuery() {
@@ -80,8 +89,9 @@ public class GenererFactureDTO implements Serializable {
         return operateur;
     }
 
-    public void setOperateur(TUser operateur) {
+    public GenererFactureDTO setOperateur(TUser operateur) {
         this.operateur = operateur;
+        return this;
     }
 
     public void setDtStart(LocalDate dtStart) {

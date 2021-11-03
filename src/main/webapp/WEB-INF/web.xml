@@ -66,6 +66,10 @@
         <servlet-name>VericationServlet</servlet-name>
         <servlet-class>controller.VericationServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>TiersPayantExcludServlet</servlet-name>
+        <servlet-class>rest.report.pdf.TiersPayantExcludServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>DownloadFileServlet</servlet-name>
         <url-pattern>/DownloadFileServlet</url-pattern>
@@ -129,6 +133,10 @@
     <servlet-mapping>
         <servlet-name>VericationServlet</servlet-name>
         <url-pattern>/VericationServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>TiersPayantExcludServlet</servlet-name>
+        <url-pattern>/TiersPayantExcludServlet</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>-1</session-timeout>

@@ -162,7 +162,7 @@ Ext.define('testextjs.view.configmanagement.grossiste.GrossisteManager', {
             },
             tbar: [
                 {
-                    text: 'Creer',
+                    text: 'Créer',
                     scope: this,
                     iconCls: 'addicon',
                     handler: this.onAddClick

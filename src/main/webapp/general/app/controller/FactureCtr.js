@@ -517,7 +517,7 @@ Ext.define('testextjs.controller.FactureCtr', {
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
                         width: 320,
-                        msg: "Erreu de génération ",
+                        msg: "Erreur de génération ",
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.ERROR
 

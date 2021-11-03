@@ -6,10 +6,14 @@
 package commonTasks.dto;
 
 import dal.TGroupeTierspayant;
+import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TTiersPayant;
 import dal.TTypeTiersPayant;
+import dal.TUser;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
@@ -24,11 +28,62 @@ public class VenteTiersPayantsDTO implements Serializable {
     private String tiersPayantId;
     private String libelleTiersPayant;
     private String codeTiersPayant;
-    private int nbreDossier;
-    private long montant;
+    private int nbreDossier, taux;
+    private long montant,account;
     private long montantRemise;
     private String typeTiersPayant;
     private String typeTiersPayantId;
+    private String refVente, dateVente, refBon;
+    private String operateur;
+    private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
+    public long getAccount() {
+        return account;
+    }
+
+    public void setAccount(long account) {
+        this.account = account;
+    }
+
+    public int getTaux() {
+        return taux;
+    }
+
+    public void setTaux(int taux) {
+        this.taux = taux;
+    }
+
+    public String getRefVente() {
+        return refVente;
+    }
+
+    public void setRefVente(String refVente) {
+        this.refVente = refVente;
+    }
+
+    public String getDateVente() {
+        return dateVente;
+    }
+
+    public void setDateVente(String dateVente) {
+        this.dateVente = dateVente;
+    }
+
+    public String getRefBon() {
+        return refBon;
+    }
+
+    public void setRefBon(String refBon) {
+        this.refBon = refBon;
+    }
+
+    public String getOperateur() {
+        return operateur;
+    }
+
+    public void setOperateur(String operateur) {
+        this.operateur = operateur;
+    }
 
     public String getLibelleGroupe() {
         return libelleGroupe;
@@ -87,24 +142,23 @@ public class VenteTiersPayantsDTO implements Serializable {
     }
 
     public VenteTiersPayantsDTO(TTiersPayant payant, List<TPreenregistrementCompteClientTiersPayent> clientTiersPayents) {
-      
-            this.tiersPayantId = payant.getLgTIERSPAYANTID();
-            this.codeTiersPayant = payant.getStrCODEORGANISME();
-            this.libelleTiersPayant = payant.getStrFULLNAME();
-            TGroupeTierspayant groupe = payant.getLgGROUPEID();
-            if (groupe != null) {
-                this.groupeId = groupe.getLgGROUPEID();
-                this.libelleGroupe = groupe.getStrLIBELLE();
-            }
-          
-            clientTiersPayents.forEach(e -> {
-                this.nbreDossier++;
-                this.montant += e.getIntPRICE();
-                this.montantRemise += e.getIntPRICERESTE();
-            });
+
+        this.tiersPayantId = payant.getLgTIERSPAYANTID();
+        this.codeTiersPayant = payant.getStrCODEORGANISME();
+        this.libelleTiersPayant = payant.getStrFULLNAME();
+        TGroupeTierspayant groupe = payant.getLgGROUPEID();
+        if (groupe != null) {
+            this.groupeId = groupe.getLgGROUPEID();
+            this.libelleGroupe = groupe.getStrLIBELLE();
         }
 
-   
+        clientTiersPayents.forEach(e -> {
+            this.nbreDossier++;
+            this.montant += e.getIntPRICE();
+            this.montantRemise += e.getIntPRICERESTE();
+        });
+    }
+
     public Integer getGroupeId() {
         return groupeId;
     }
@@ -128,27 +182,45 @@ public class VenteTiersPayantsDTO implements Serializable {
     public void setMontantRemise(long montantRemise) {
         this.montantRemise = montantRemise;
     }
-    
-       public VenteTiersPayantsDTO(TTiersPayant payant, long nbreDossier,long montant,long montantRemise ) {
-      
-            this.tiersPayantId = payant.getLgTIERSPAYANTID();
-            this.codeTiersPayant = payant.getStrCODEORGANISME();
-            this.libelleTiersPayant = payant.getStrFULLNAME();
-            TTypeTiersPayant typeTiersPayant=payant.getLgTYPETIERSPAYANTID();
-            if(typeTiersPayant!=null){
-                this.typeTiersPayant=typeTiersPayant.getStrLIBELLETYPETIERSPAYANT();
-                this.typeTiersPayantId=typeTiersPayant.getLgTYPETIERSPAYANTID();
-            }
-            TGroupeTierspayant groupe = payant.getLgGROUPEID();
-            if (groupe != null) {
-                this.groupeId = groupe.getLgGROUPEID();
-                this.libelleGroupe = groupe.getStrLIBELLE();
-            }
-          
-                this.nbreDossier=(int)nbreDossier;
-                this.montant =montant;
-                this.montantRemise =montantRemise;
-          
+
+    public VenteTiersPayantsDTO(TTiersPayant payant, long nbreDossier, long montant, long montantRemise) {
+
+        this.tiersPayantId = payant.getLgTIERSPAYANTID();
+        this.codeTiersPayant = payant.getStrCODEORGANISME();
+        this.libelleTiersPayant = payant.getStrFULLNAME();
+        TTypeTiersPayant typeTierPayant = payant.getLgTYPETIERSPAYANTID();
+        if (typeTierPayant != null) {
+            this.typeTiersPayant = typeTierPayant.getStrLIBELLETYPETIERSPAYANT();
+            this.typeTiersPayantId = typeTierPayant.getLgTYPETIERSPAYANTID();
         }
+        TGroupeTierspayant groupe = payant.getLgGROUPEID();
+        if (groupe != null) {
+            this.groupeId = groupe.getLgGROUPEID();
+            this.libelleGroupe = groupe.getStrLIBELLE();
+        }
+
+        this.nbreDossier = (int) nbreDossier;
+        this.montant = montant;
+        this.montantRemise = montantRemise;
+
+    }
+
+    public VenteTiersPayantsDTO(TPreenregistrementCompteClientTiersPayent p) {
+        this.montant = p.getIntPRICE();
+        TPreenregistrement pr = p.getLgPREENREGISTREMENTID();
+        TUser user = pr.getLgUSERID();
+        this.operateur = user.getStrFIRSTNAME().concat(" ").concat(user.getStrLASTNAME());
+        this.dateVente = dateFormat.format(pr.getDtUPDATED());
+        this.taux = p.getIntPERCENT();
+        this.refBon = p.getStrREFBON();
+        this.refVente = pr.getStrREF();
+        TTiersPayant payant = p.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID();
+        this.tiersPayantId = payant.getLgTIERSPAYANTID();
+        this.codeTiersPayant = payant.getStrCODEORGANISME();
+        this.libelleTiersPayant = payant.getStrFULLNAME();
+    }
+
+    public VenteTiersPayantsDTO() {
+    }
 
 }

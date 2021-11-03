@@ -29,7 +29,6 @@ import dal.TWarehouse;
 import dal.TWarehouse_;
 import dal.TZoneGeographique_;
 import enumeration.MargeEnum;
-import enumeration.Peremption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -598,7 +597,6 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     public Long comparaisonStock(MargeEnum stockFiltre, MargeEnum filtreSeuil, String query, String codeFamile, String codeRayon, String codeGrossiste,
             String emplacementId, int stock, int seuil) {
         try {
-
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TFamille> root = cq.from(TFamille.class);
