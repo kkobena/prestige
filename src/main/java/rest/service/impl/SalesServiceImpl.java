@@ -155,6 +155,8 @@ public class SalesServiceImpl implements SalesService {
     ClientService clientService;
     @EJB
     NotificationService notificationService;
+     @EJB
+    private TiersPayantExclusService payantExclusService;
     
     public EntityManager getEm() {
         return em;
@@ -611,6 +613,11 @@ public class SalesServiceImpl implements SalesService {
                 action.setStrSTATUT(commonparameter.statut_delete);
                 action.setDtUPDATED(new Date());
                 emg.merge(action);
+                TTiersPayant p= action.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID();
+                if(p.getToBeExclude() || p.getIsDepot()){
+                    payantExclusService.updateTiersPayantAccount(p, (-1)*action.getIntPRICE());
+                }
+               
             });
             TEmplacement emplacement = ooTUser.getLgEMPLACEMENTID();
             final Typemvtproduit typemvtproduit = checked ? findById(DateConverter.ANNULATION_DE_VENTE) : findById(DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
@@ -2078,6 +2085,8 @@ public class SalesServiceImpl implements SalesService {
             if (clotureVenteParams.getMontantRemis() > 0) {
                 afficheurMontantAPayer(clotureVenteParams.getMontantRemis(), " MONNAIE:");
             }
+            
+          
         } catch (Exception e) {
             
             LOG.log(Level.SEVERE, null, e);
@@ -2090,6 +2099,7 @@ public class SalesServiceImpl implements SalesService {
         }
         return json;
     }
+    
     
     private boolean gererOrdoncier() {
         try {
@@ -2392,7 +2402,14 @@ public class SalesServiceImpl implements SalesService {
                         }
                         emg.merge(item);
                         cmparray.add(OTCompteClientTiersPayant);
+                        if(payant.getToBeExclude() || payant.getIsDepot()){
+                        payantExclusService.updateTiersPayantAccount(payant, item.getIntPRICE());    
+                        }
+                         
                     }
+                    
+             
+           
                 });
                 if(StringUtils.isBlank(OTPreenregistrement.getStrREFBON())){
                     cmparray.sort(Comparator.comparing(TCompteClientTiersPayant::getIntPRIORITY));

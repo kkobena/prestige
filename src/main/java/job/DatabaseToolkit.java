@@ -7,6 +7,7 @@ package job;
 
 import dal.Notification;
 import dal.NotificationClient;
+import dal.SmsToken;
 import dal.StockDailyValue;
 import dal.TParameters;
 import dal.enumeration.Canal;
@@ -16,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -28,6 +30,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
@@ -69,6 +72,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.SmsService;
 import shedule.DailyStockTask;
 import util.DateConverter;
 import util.SmsParameters;
@@ -93,6 +97,8 @@ public class DatabaseToolkit {
     private TimerService timerService;
     @Inject
     private UserTransaction userTransaction;
+    @EJB
+    private SmsService smsService;
 
     void runTask() {
         DailyStockTask dailyStockTask = new DailyStockTask();
@@ -101,7 +107,7 @@ public class DatabaseToolkit {
         dailyStockTask.setUserTransaction(userTransaction);
         dailyStockTask.setDataSource(dataSource);
         mes.submit(dailyStockTask);
-      
+
     }
 
     @PostConstruct
@@ -211,7 +217,7 @@ public class DatabaseToolkit {
             outboundSMSMessageRequest.put("outboundSMSTextMessage", outboundSMSTextMessage);
             jSONObject.put("outboundSMSMessageRequest", outboundSMSMessageRequest);
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
-            Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
+            Response response = myResource.request().header("Authorization", "Bearer ".concat(getAccessToken()))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
             LOG.log(Level.INFO, "sendSMS >>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
             userTransaction.begin();
@@ -267,6 +273,7 @@ public class DatabaseToolkit {
             return Collections.emptyList();
         }
     }
+
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = em.find(TParameters.class, key);
@@ -403,5 +410,52 @@ public class DatabaseToolkit {
             return false;
         }
 
+    }
+
+    private SmsToken getSmsToken() {
+        try {
+            return em.find(SmsToken.class, "sms");
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getAccessToken(){
+        try {
+          return getOrupdateSmsToken().getAccessToken();
+        } catch (Exception e) {
+              LOG.log(Level.SEVERE, "===>> getAccessToken", e);
+              return null;
+        }
+    }
+    private SmsToken getOrupdateSmsToken() {
+        SmsToken smsToken = getSmsToken();
+        if (smsToken == null) {
+            JSONObject json = smsService.findAccessToken();
+            if (json.has("success") && json.getBoolean("success")) {
+                smsToken = new SmsToken();
+                smsToken.setId("sms");
+                JSONObject data = json.getJSONObject("data");
+                smsToken.setAccessToken(data.getString("access_token"));
+                smsToken.setExpiresIn(data.getInt("expires_in"));
+                smsToken.setHeader("Basic ZkphT2xKZ3dVMmdnY1JXbUlsYlU5czdqWTh0YnNSeTg6U01FNTVndFlkdjJoNlkwUQ==");
+                smsToken.setCreateDate(LocalDateTime.now());
+                em.persist(smsToken);
+            }
+
+        } else {
+            if (smsToken.getCreateDate().isBefore(LocalDateTime.now().minus(smsToken.getExpiresIn(), ChronoUnit.SECONDS))) {
+                JSONObject json = smsService.findAccessToken();
+                if (json.has("success") && json.getBoolean("success")) {
+                    JSONObject data = json.getJSONObject("data");
+                    smsToken.setAccessToken(data.getString("access_token"));
+                    smsToken.setExpiresIn(data.getInt("expires_in"));
+                     smsToken.setCreateDate(LocalDateTime.now());
+                    em.merge(smsToken);
+                }
+            }
+        }
+        return smsToken;
     }
 }

@@ -9,7 +9,6 @@ import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.ReglementCarnetDTO;
 import commonTasks.dto.TiersPayantExclusDTO;
 import commonTasks.dto.VenteTiersPayantsDTO;
-import dal.TTiersPayant;
 import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
@@ -21,22 +20,13 @@ import org.json.JSONObject;
  * @author koben
  */
 @Local
-public interface TiersPayantExclusService {
+public interface CarnetAsDepotService {
 
     List<TiersPayantExclusDTO> all(int start, int size, String query, boolean all, Boolean exclude);
 
     JSONObject all(int start, int size, String query, Boolean exclude);
 
-    void exclure(GenererFactureDTO datas);
-
-    void exclure(String id);
-
-    void inclure(String id);
-
-    void update(String id, boolean toExclure);
-
     JSONObject fetchVenteByTiersPayant(String tiersPayantId, String dtStart, String dtEnd, int start, int size);
-
 
     List<VenteTiersPayantsDTO> fetchVente(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, int start, int size, boolean all);
 
@@ -52,7 +42,12 @@ public interface TiersPayantExclusService {
 
     String getTiersPayantName(String tiersPayantId);
     
-    
-    void updateTiersPayantAccount(TTiersPayant payant,int montant);
+      void setAsDepot(GenererFactureDTO datas);
+
+    void setAsDepot(String id);
+
+    void unsetAsDepot(String id);
+
+    void update(String id, boolean isDepot);
 
 }

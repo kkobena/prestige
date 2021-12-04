@@ -42,7 +42,7 @@ public class AccountResource {
     @POST
     @Path("auth")
     public Response auth(ManagedUserVM managedUser) {
-        ;
+        
         JSONObject json = new JSONObject();
         TUser tu = userService.connexion(managedUser, request);
         if (tu == null) {

@@ -49,6 +49,7 @@ import rest.service.FamilleArticleService;
 import rest.service.FicheArticleService;
 import rest.service.ProduitService;
 import rest.service.SalesStatsService;
+import rest.service.TvaService;
 import toolkits.utils.jdom;
 import util.DateConverter;
 
@@ -75,6 +76,8 @@ public class Balance {
     FamilleArticleService familleArticleService;
     @EJB
     FicheArticleService ficheArticleService;
+      @EJB
+    private TvaService tvaService;
 
     public String generatepdf(Params parasm) throws IOException {
         TUser tu = parasm.getOperateur();
@@ -582,10 +585,19 @@ public class Balance {
             if (StringUtils.isNotBlank(parasm.getRef()) && !parasm.getRef().equalsIgnoreCase("TOUT")) {
                 datas = salesStatsService.tvasRapportVNO2(parasm);
             } else {
-                datas = salesStatsService.tvasRapport2(parasm);
+                if(!tvaService.isExcludTiersPayantActive()){
+                   datas = salesStatsService.tvasRapport2(parasm);   
+                }else{
+                    datas=  tvaService.tva(dtSt, dtEn, false, null);
+                }
             }
         } else {
-            datas = salesStatsService.tvaRapport2(parasm);
+             if(!tvaService.isExcludTiersPayantActive()){
+                  datas = salesStatsService.tvaRapport2(parasm);  
+                }else{
+                    datas=  tvaService.tva(dtSt, dtEn, false, null);
+                }
+           
 
         }
         datas.sort(Comparator.comparing(TvaDTO::getTaux));

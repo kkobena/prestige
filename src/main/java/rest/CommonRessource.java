@@ -20,6 +20,7 @@ import dal.TTypeVente;
 import dal.TUser;
 import dal.TVille;
 import dal.MotifAjustement;
+import dal.MotifRetourCarnet;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.EJB;
@@ -368,6 +369,16 @@ public class CommonRessource {
     @Path("type-ajustements")
     public Response allTypeAjustement() {
         List<MotifAjustement> data = commonService.findAllTypeAjustements();
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
+    }
+    
+     @GET
+    @Path("motif-retour-carnet")
+    public Response motifRetourcarnet() {
+        List<MotifRetourCarnet> data = commonService.motifRetourCarnets();
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);

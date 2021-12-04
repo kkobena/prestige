@@ -47,6 +47,7 @@ import dal.TVille_;
 import dal.TZoneGeographique;
 import dal.TZoneGeographique_;
 import dal.MotifAjustement;
+import dal.MotifRetourCarnet;
 import dal.enumeration.Statut;
 import java.awt.print.PrinterJob;
 import java.io.Serializable;
@@ -708,4 +709,12 @@ public class CommonServiceImpl implements Serializable, CommonService {
         return tq.getResultList();
     }
 
+    @Override
+    public List<MotifRetourCarnet> motifRetourCarnets() {
+        TypedQuery<MotifRetourCarnet> tq = getEntityManager().createNamedQuery("MotifRetourCarnet.findAll", MotifRetourCarnet.class);
+        return tq.getResultList();
+    }
+
+    
+    
 }

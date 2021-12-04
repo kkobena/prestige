@@ -203,6 +203,8 @@ public class TTiersPayant implements Serializable {
     private Long account = 0L;
     @Column(name = "to_be_exclude")
     private Boolean toBeExclude = Boolean.FALSE;
+    @Column(name = "is_depot",nullable = false)
+    private Boolean isDepot = Boolean.FALSE;
 
     public TTiersPayant() {
     }
@@ -684,6 +686,14 @@ public class TTiersPayant implements Serializable {
 
     public void setToBeExclude(Boolean toBeExclude) {
         this.toBeExclude = toBeExclude;
+    }
+
+    public Boolean getIsDepot() {
+        return isDepot;
+    }
+
+    public void setIsDepot(Boolean isDepot) {
+        this.isDepot = isDepot;
     }
 
 }

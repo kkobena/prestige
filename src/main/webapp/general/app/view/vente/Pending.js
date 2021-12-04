@@ -211,10 +211,6 @@ Ext.define('testextjs.view.vente.Pending', {
                                 }]
                         }
                     ],
-//            selModel: {
-//                selType: 'cellmodel'
-//                selType: 'checkboxmodel',
-//            },
                     bbar: {
                         xtype: 'pagingtoolbar',
                         store: vente,

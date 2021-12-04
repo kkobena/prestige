@@ -5,7 +5,10 @@
  */
 package rest.service.impl;
 
+import dal.SmsToken;
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -14,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SmsService;
@@ -27,17 +30,18 @@ import util.SmsParameters;
  */
 @Stateless
 public class SmsImpl implements SmsService{
-
+ @PersistenceContext(unitName = "JTA_UNIT")
+    private EntityManager em;
      @Override
      public JSONObject findAccessToken() {
         try {
             Client client = ClientBuilder.newClient();
             SmsParameters sp = SmsParameters.getInstance();
             MultivaluedMap<String, String> formdata = new MultivaluedHashMap<>();
-            String auth = "Basic ".concat(new String(Base64.encodeBase64(sp.clientId.concat(":").concat(sp.clientSecret).getBytes())));
+//            String auth = "Basic ".concat(new String(Base64.encodeBase64(sp.clientId.concat(":").concat(sp.clientSecret).getBytes())));
             formdata.add("grant_type", DateConverter.GRANT_TYPE);
             WebTarget myResource = client.target(sp.pathsmsapitokenendpoint);
-            Response response = myResource.request(MediaType.APPLICATION_FORM_URLENCODED).header("Authorization", auth)
+            Response response = myResource.request(MediaType.APPLICATION_JSON).header("Authorization",StringUtils.isNotEmpty(getBasicHeader())?getBasicHeader(): sp.header)
                     .post(Entity.entity(formdata, MediaType.APPLICATION_FORM_URLENCODED), Response.class);
             if (response.getStatus() == 200) {
                 return new JSONObject().put("success", true).put("data", new JSONObject(response.readEntity(String.class)));
@@ -57,5 +61,13 @@ public class SmsImpl implements SmsService{
         return sp.accesstoken;
     }
 
+    private String getBasicHeader(){
+        try {
+           return  em.find(SmsToken.class, "sms").getHeader();
+            
+        } catch (Exception e) {
+            return  "";
+        }
+    }
     
 }

@@ -25,7 +25,6 @@ import org.json.JSONObject;
  * @author DICI
  */
 @Local
-//@Remote
 public interface MouvementProduitService {
 
     void saveMvtProduit(String pkey, Typemvtproduit typemvtproduit,

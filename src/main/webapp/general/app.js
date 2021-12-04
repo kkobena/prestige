@@ -846,7 +846,10 @@ Ext.application({
         'FamilleArticleStatVetoCtr',
         'ParaCtr',
         'CompteExploitationCtr',
-        'TiersPayantExclusCtrl'
+        'TiersPayantExclusCtrl',
+        'GestionCarnetDepotCtr',
+        'DoRetourCarnetCtr',
+        'CarnetRetourCtr'
     ],
     stores: [
         'Menu'

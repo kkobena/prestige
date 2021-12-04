@@ -1,76 +1,76 @@
 /* global Ext */
 
-Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
+Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
     extend: 'Ext.app.Controller',
-    views: ['testextjs.view.Dashboard.TiersPayantExclus'],
+    views: ['testextjs.view.Dashboard.CarnetDepot'],
     refs: [{
-            ref: 'tpexclus',
-            selector: 'tpexclus'
+            ref: 'reglementdepot',
+            selector: 'reglementdepot'
         },
         {
             ref: 'dataPanel',
-            selector: 'tpexclus #dataPanel'
+            selector: 'reglementdepot #dataPanel'
         },
 
         {
             ref: 'query',
-            selector: 'tpexclus #toExcludeGrid #query'
+            selector: 'reglementdepot #carnetGrid #query'
         },
         {
             ref: 'imprimerBtn',
-            selector: 'tpexclus #imprimer'
+            selector: 'reglementdepot #imprimer'
         },
 
         {
-            ref: 'toExcludeGrid',
-            selector: 'tpexclus #toExcludeGrid'
+            ref: 'carnetGrid',
+            selector: 'reglementdepot #carnetGrid'
         },
         {
             ref: 'pagingtoolbar',
-            selector: 'tpexclus #toExcludeGrid pagingtoolbar'
+            selector: 'reglementdepot #carnetGrid pagingtoolbar'
         }
 
         , {
             ref: 'dtStart',
-            selector: 'tpexclus #dataPanel #dtStart'
+            selector: 'reglementdepot #dataPanel #dtStart'
         },
 
         {
             ref: 'dtEnd',
-            selector: 'tpexclus #dataPanel #dtEnd'
+            selector: 'reglementdepot #dataPanel #dtEnd'
         },
         {
             ref: 'tiersPayantsExclus',
-            selector: 'tpexclus #dataPanel #tiersPayantsExclus'
+            selector: 'reglementdepot #dataPanel #tiersPayantsExclus'
         },
         {
             ref: 'venteGrid',
-            selector: 'tpexclus #dataPanel #ventePanel [xtype=gridpanel]'
+            selector: 'reglementdepot #dataPanel #ventePanel [xtype=gridpanel]'
         },
         {
             ref: 'reglementGrid',
-            selector: 'tpexclus #dataPanel #reglementPanel [xtype=gridpanel]'
+            selector: 'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel]'
         },
 
         {
             ref: 'montant',
-            selector: 'tpexclus #dataPanel #ventePanel [xtype=gridpanel] #montant'
+            selector: 'reglementdepot #dataPanel #ventePanel [xtype=gridpanel] #montant'
         },
         {
             ref: 'nbreVente',
-            selector: 'tpexclus #dataPanel #ventePanel [xtype=gridpanel] #nbreVente'
+            selector: 'reglementdepot #dataPanel #ventePanel [xtype=gridpanel] #nbreVente'
         },
         {
             ref: 'montantPayer',
-            selector: 'tpexclus #dataPanel #reglementPanel [xtype=gridpanel] #montantPayer'
+            selector: 'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] #montantPayer'
         },
         {
             ref: 'montantPaye',
-            selector: 'tpexclus #dataPanel #reglementPanel [xtype=gridpanel] #montantPaye'
+            selector: 'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] #montantPaye'
         },
         {
             ref: 'accountReglement',
-            selector: 'tpexclus #dataPanel #reglementPanel [xtype=gridpanel] #accountReglement'
+            selector: 'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] #accountReglement'
         }
 
 
@@ -78,44 +78,44 @@ Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
     ],
     init: function (application) {
         this.control({
-            'tpexclus #toExcludeGrid pagingtoolbar': {
+            'reglementdepot #carnetGrid pagingtoolbar': {
                 beforechange: this.doBeforechange
             },
-            'tpexclus #toExcludeGrid #rechercher': {
+            'reglementdepot #carnetGrid #rechercher': {
                 click: this.doSearch
-            }, 'tpexclus #dataPanel #btnVentePanel': {
+            }, 'reglementdepot #dataPanel #btnVentePanel': {
                 click: this.searchAll
             },
 
-            'tpexclus #toExcludeGrid #query': {
+            'reglementdepot #carnetGrid #query': {
                 specialkey: this.onSpecialKey
             },
-            'tpexclus #dataPanel #imprimer': {
+            'reglementdepot #dataPanel #imprimer': {
                 click: this.onPdfClick
             },
 
-            'tpexclus #toExcludeGrid': {
+            'reglementdepot #carnetGrid': {
                 viewready: this.doInitStore
-            }, 'tpexclus #dataPanel #ventePanel [xtype=gridpanel]': {
+            }, 'reglementdepot #dataPanel #ventePanel [xtype=gridpanel]': {
                 viewready: this.doInitVenteStore
             },
-            'tpexclus #dataPanel #reglementPanel [xtype=gridpanel]': {
+            'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel]': {
                 viewready: this.doInitReglementStore
             },
 
-            'tpexclus #toExcludeGrid [xtype=checkcolumn]': {
+            'reglementdepot #carnetGrid [xtype=checkcolumn]': {
                 checkchange: this.onCheckChange
             },
-            'tpexclus #dataPanel #ventePanel [xtype=gridpanel] pagingtoolbar': {
+            'reglementdepot #dataPanel #ventePanel [xtype=gridpanel] pagingtoolbar': {
                 beforechange: this.doVentechange
             },
-            'tpexclus #dataPanel #reglementPanel [xtype=gridpanel] pagingtoolbar': {
+            'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] pagingtoolbar': {
                 beforechange: this.doReglementchange
             },
-            'tpexclus #dataPanel #tiersPayantsExclus': {
+            'reglementdepot #dataPanel #tiersPayantsExclus': {
                 select: this.onSelectTiersPayant
             },
-            'tpexclus #dataPanel #reglementPanel [xtype=gridpanel] #btnReglement': {
+            'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] #btnReglement': {
                 click: this.reglementForm
             }
         });
@@ -128,17 +128,17 @@ Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
     },
     onCheckChange: function (column, rowIndex, checked) {
         let me = this;
-        let record = me.getToExcludeGrid().getStore().getAt(rowIndex);
+        let record = me.getCarnetGrid().getStore().getAt(rowIndex);
         Ext.Ajax.request({
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
-            url: '../api/v2/tiers-payant/exclure-inclure/' + record.data.id + '/' + checked,
+            url: '../api/v2/carnet-depot/exclure-inclure/' + record.data.id + '/' + checked,
             success: function (response, options) {
-                me.getToExcludeGrid().getStore().reload();
+                me.getCarnetGrid().getStore().reload();
             },
             failure: function (response, options) {
                 Ext.Msg.alert("Message", 'Erreur  : [code erreur : ' + response.status + ' ]');
-                me.getToExcludeGrid().getStore().reload();
+                me.getCarnetGrid().getStore().reload();
             }
         });
     },
@@ -147,9 +147,9 @@ Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
         Ext.Ajax.request({
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
-            url: '../api/v2/tiers-payant/exclure/' + selected.data.id,
+            url: '../api/v2/carnet-depot/exclure/' + selected.data.id,
             success: function (response, options) {
-                me.getToExcludeGrid().getStore().reload();
+                me.getCarnetGrid().getStore().reload();
             },
             failure: function (response, options) {
                 Ext.Msg.alert("Message", 'Erreur  : [code erreur : ' + response.status + ' ]');
@@ -161,9 +161,9 @@ Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
         Ext.Ajax.request({
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
-            url: '../api/v2/tiers-payant/inclure/' + deselected.data.id,
+            url: '../api/v2/carnet-depot/inclure/' + deselected.data.id,
             success: function (response, options) {
-                me.getToExcludeGrid().getStore().reload();
+                me.getCarnetGrid().getStore().reload();
             },
             failure: function (response, options) {
                 Ext.Msg.alert("Message", 'Erreur  : [code erreur : ' + response.status + ' ]');
@@ -189,12 +189,15 @@ Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
         let dtEnd = me.getDtEnd().getSubmitValue();
         var linkUrl = "";
         if (itemId === 'ventePanel') {
-            linkUrl = '../TiersPayantExcludServlet?mode=VENTE&dtStart=' + dtStart +
+            linkUrl = '../TiersPayantDepotServlet?mode=VENTE&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
         } else if (itemId === 'reglementPanel') {
-            linkUrl = '../TiersPayantExcludServlet?mode=REGLEMENTS&dtStart=' + dtStart +
+            linkUrl = '../TiersPayantDepotServlet?mode=REGLEMENTS&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
-        } 
+        } else if (itemId === 'retourPanel') {
+            linkUrl = '../TiersPayantDepotServlet?mode=RETOUR&dtStart=' + dtStart +
+                    '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
+        }
         window.open(linkUrl);
     },
 
@@ -205,7 +208,7 @@ Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
     },
     doBeforechange: function (page, currentPage) {
         var me = this;
-        var myProxy = me.getToExcludeGrid().getStore().getProxy();
+        var myProxy = me.getCarnetGrid().getStore().getProxy();
         myProxy.params = {
             query: ''
         };
@@ -220,7 +223,7 @@ Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
     doSearch: function () {
         var me = this;
         let query = me.getQuery().getValue();
-        me.getToExcludeGrid().getStore().load({
+        me.getCarnetGrid().getStore().load({
             params: {
                 query: query
             }
@@ -250,6 +253,8 @@ Ext.define('testextjs.controller.TiersPayantExclusCtrl', {
             me.doSearchVente();
         } else if (itemId === 'reglementPanel') {
             me.doSearchReglement();
+        } else if (itemId === 'retourPanel') {
+
         }
     },
     doSearchVente: function () {

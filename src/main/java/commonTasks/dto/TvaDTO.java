@@ -6,6 +6,7 @@
 package commonTasks.dto;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 import org.json.JSONPropertyName;
@@ -133,4 +134,10 @@ public class TvaDTO implements Serializable {
         this.montantTtc = montantTtc;
         this.localOperation = date;
     }
+    
+    public TvaDTO(Integer taux, BigDecimal montantTtc) {
+        this.taux = taux;
+        this.montantTtc = montantTtc.longValue();
+    }
+
 }

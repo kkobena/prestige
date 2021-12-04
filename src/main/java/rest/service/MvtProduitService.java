@@ -28,7 +28,6 @@ import org.json.JSONObject;
  * @author Kobena
  */
 @Local
-//@Remote
 public interface MvtProduitService {
 
     void updatefamillenbvente(TFamille famille, int qty, boolean updatable, EntityManager emg);

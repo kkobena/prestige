@@ -205,10 +205,13 @@
     <class>dal.StockDailyValue</class>
     <class>dal.Licence</class>
     <class>dal.MotifAjustement</class>
+    <class>dal.ReglementCarnet</class>
+    <class>dal.SmsToken</class>
+    <class>dal.MotifRetourCarnet</class>
+    <class>dal.RetourCarnet</class>
+    <class>dal.RetourCarnetDetail</class>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
-      <!--      <property name="hibernate.hbm2ddl.auto" value="update"/>
-            <property name="hibernate.show_sql" value="true"/>-->
     </properties>
   </persistence-unit>
   <persistence-unit name="JTA_UNIT" transaction-type="JTA">
@@ -217,7 +220,7 @@
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
       <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
-      <!--<property name="hibernate.hbm2ddl.auto" value="update"/>-->
+<!--      <property name="hibernate.hbm2ddl.auto" value="update"/>-->
       <property name="hibernate.show_sql" value="false"/>
       <property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"/>
     </properties>

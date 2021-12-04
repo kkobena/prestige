@@ -1,12 +1,11 @@
 /* global Ext */
 
-Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
+Ext.define('testextjs.view.Dashboard.CarnetDepot', {
     extend: 'Ext.tab.Panel',
-    xtype: 'tpexclus',
+    xtype: 'reglementdepot',
     frame: false,
     width: '97%',
     height: 670,
-//    fullscreen: true,
     tabPosition: "top",
     initComponent: function () {
         var tierspayant = new Ext.data.Store({
@@ -33,7 +32,7 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
                 },
 
                 {
-                    name: 'toBeExclude',
+                    name: 'depot',
                     type: 'boolean'
                 }
 
@@ -42,7 +41,7 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../api/v2/tiers-payant/list',
+                url: '../api/v2/carnet-depot/list',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -78,7 +77,7 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
             autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url: '../api/v2/tiers-payant/list-exclus',
+                url: '../api/v2/carnet-depot/list-exclus',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -129,7 +128,7 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../api/v2/tiers-payant/ventes',
+                url: '../api/v2/carnet-depot/ventes',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -185,7 +184,7 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../api/v2/tiers-payant/reglements',
+                url: '../api/v2/carnet-depot/reglements',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -201,10 +200,10 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
             items: [
                 {
                     xtype: 'gridpanel',
-                    title: 'Tiers-payants',
+                    title: 'Dépôts',
                     border: false,
                     store: tierspayant,
-                    itemId: 'toExcludeGrid',
+                    itemId: 'carnetGrid',
                     columns:
                             [
                                 {
@@ -216,7 +215,7 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
                                 {
                                     header: 'Code',
                                     dataIndex: 'code',
-                                    flex: 0.4
+                                    flex: 0.2
                                 },
 
                                 {
@@ -238,12 +237,12 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
                                     flex: 0.5
                                 },
                                 {
-                                    header: 'Exclus',
-                                    dataIndex: 'toBeExclude',
-                                    flex: 0.3,
+                                    header: 'gerer comme dépôt ?',
+                                    dataIndex: 'depot',
+                                    flex: 0.7,
                                     renderer: function (v, m, r) {
                                         if (v) {
-                                            m.style = 'background-color:#ff0000;color:#FFF;font-weight:700;';
+                                            m.style = 'background-color:green;color:#FFF;font-weight:700;';
                                             return 'Oui';
                                         } else {
                                             return 'Non';
@@ -254,17 +253,12 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
 
                                 {
                                     xtype: 'checkcolumn',
-                                    dataIndex: 'toBeExclude',
+                                    dataIndex: 'depot',
                                     width: 50
                                 }
                             ],
                     selModel: {
-                        selType: 'cellmodel'/*
-                         selType: 'checkboxmodel',
-                         showHeaderCheckbox: false,
-                         injectCheckbox: 'last',
-                         pruneRemoved: false*/
-
+                        selType: 'cellmodel'
                     },
                     dockedItems: [
                         {xtype: 'toolbar',
@@ -297,7 +291,7 @@ Ext.define('testextjs.view.Dashboard.TiersPayantExclus', {
 
                 {
                     xtype: 'tabpanel',
-                    title: 'DONNEES TIERS-PAYANT',
+                    title: 'DONNEES DEPOTS',
                     frame: false,
                     border: false,
                     scrollable: true,

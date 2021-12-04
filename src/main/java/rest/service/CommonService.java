@@ -20,6 +20,7 @@ import dal.TPrivilege;
 import dal.TTypeVente;
 import dal.TVille;
 import dal.MotifAjustement;
+import dal.MotifRetourCarnet;
 import java.util.List;
 import javax.ejb.Local;
 import javax.print.PrintService;
@@ -103,6 +104,8 @@ public interface CommonService {
     boolean checkUg();
 
     List<TMotifRetour> motifsRetour();
-    
-     List<MotifAjustement> findAllTypeAjustements();
+
+    List<MotifAjustement> findAllTypeAjustements();
+
+    List<MotifRetourCarnet> motifRetourCarnets();
 }

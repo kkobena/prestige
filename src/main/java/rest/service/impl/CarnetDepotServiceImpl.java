@@ -38,16 +38,16 @@ import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import rest.service.TiersPayantExclusService;
+import rest.service.CarnetAsDepotService;
 
 /**
  *
  * @author koben
  */
 @Stateless
-public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
+public class CarnetDepotServiceImpl implements CarnetAsDepotService {
 
-    private static final Logger LOG = Logger.getLogger(TiersPayantExclusServiceImpl.class.getName());
+    private static final Logger LOG = Logger.getLogger(CarnetDepotServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -86,9 +86,9 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         predicates.add(cb.equal(root.get(TTiersPayant_.strSTATUT), "enable"));
         if (exclude != null) {
             if (exclude) {
-                predicates.add(cb.isTrue(root.get(TTiersPayant_.toBeExclude)));
+                predicates.add(cb.isTrue(root.get(TTiersPayant_.isDepot)));
             } else {
-                predicates.add(cb.isFalse(root.get(TTiersPayant_.toBeExclude)));
+                predicates.add(cb.isFalse(root.get(TTiersPayant_.isDepot)));
             }
 
         }
@@ -119,34 +119,34 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
     }
 
     @Override
-    public void exclure(GenererFactureDTO datas) {
+    public void setAsDepot(GenererFactureDTO datas) {
         datas.getDatas().forEach(id -> {
             TTiersPayant payant = getEntityManager().find(TTiersPayant.class, id);
-            payant.setToBeExclude(Boolean.TRUE);
+            payant.setIsDepot(Boolean.TRUE);
             getEntityManager().merge(payant);
         });
     }
 
     @Override
-    public void exclure(String id) {
+    public void setAsDepot(String id) {
         TTiersPayant payant = getEntityManager().find(TTiersPayant.class, id);
-        payant.setToBeExclude(Boolean.TRUE);
+        payant.setIsDepot(Boolean.TRUE);
         getEntityManager().merge(payant);
     }
 
     @Override
-    public void inclure(String id) {
+    public void unsetAsDepot(String id) {
         TTiersPayant payant = getEntityManager().find(TTiersPayant.class, id);
-        payant.setToBeExclude(Boolean.FALSE);
+        payant.setIsDepot(Boolean.FALSE);
         getEntityManager().merge(payant);
     }
 
     @Override
-    public void update(String id, boolean toExclure) {
-        if (toExclure) {
-            exclure(id);
+    public void update(String id, boolean isDepot) {
+        if (isDepot) {
+            setAsDepot(id);
         } else {
-            inclure(id);
+            unsetAsDepot(id);
         }
     }
 
@@ -179,7 +179,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
 
     private List<Predicate> fetchVentePredicat(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, LocalDate dtStart, LocalDate dtEnd, String tiersPayantId) {
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(cb.isTrue(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.toBeExclude)));
+        predicates.add(cb.isTrue(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.isDepot)));
 //        predicates.add(cb.or(cb.isTrue(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.toBeExclude)),cb.isTrue(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.isDepot)))  );
         if (!StringUtils.isEmpty(tiersPayantId)) {
             predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
@@ -188,10 +188,10 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));
         predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT), "is_Closed"));
         predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.intPRICE), 0));
-        predicates.add(cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.dtUPDATED)),
+        Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.dtUPDATED)),
                 java.sql.Date.valueOf(dtStart),
-                java.sql.Date.valueOf(dtEnd)));
-
+                java.sql.Date.valueOf(dtEnd));
+        predicates.add(btw);
         return predicates;
     }
 
@@ -235,21 +235,6 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         }
     }
 
-    private long account(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd) {
-        try {
-            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            cq.select(cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.account))).distinct(true);
-            List<Predicate> predicates = fetchVentePredicat(cb, root, dtStart, dtEnd, tiersPayantId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
-            TypedQuery<Long> q = getEntityManager().createQuery(cq);
-            return q.getSingleResult();
-        } catch (Exception e) {
-
-            return 0;
-        }
-    }
 
     @Override
     public JSONObject reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size) {
@@ -286,7 +271,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
 
     private List<Predicate> reglementsCarnetPredicat(CriteriaBuilder cb, Root<ReglementCarnet> root, LocalDate dtStart, LocalDate dtEnd, String tiersPayantId) {
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(cb.isTrue(root.get(ReglementCarnet_.tiersPayant).get(TTiersPayant_.toBeExclude)));
+        predicates.add(cb.isTrue(root.get(ReglementCarnet_.tiersPayant).get(TTiersPayant_.isDepot)));
         if (!StringUtils.isEmpty(tiersPayantId)) {
             predicates.add(cb.equal(root.get(ReglementCarnet_.tiersPayant).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
         }
@@ -336,9 +321,6 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         JSONObject json = new JSONObject();
 
         TTiersPayant payant = getEntityManager().find(TTiersPayant.class, reglementCarnetDTO.getTiersPayantId());
-        if (reglementCarnetDTO.getMontantPaye() <= 0) {
-            return json.put("success", false).put("msg", "VEUILLEZ SAISIR UN MONTANT");
-        }
         if (payant.getAccount().intValue() < reglementCarnetDTO.getMontantPaye()) {
             return json.put("success", false).put("msg", "VEUILLEZ SAISIR UN MONTANT EGAL OU INFERIEUR AU SOLDE");
         }
@@ -377,17 +359,5 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         }
     }
 
-    @Override
-    public void updateTiersPayantAccount(TTiersPayant payant, int montant) {
-        try {
-            if (payant != null) {
-                payant.setAccount(payant.getAccount() + montant);
-                getEntityManager().merge(payant);
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "updateTiersPayantAccount=====>> ", e);
-
-        }
-    }
 
 }

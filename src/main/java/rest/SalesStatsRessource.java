@@ -46,6 +46,7 @@ import org.json.JSONObject;
 import rest.service.CommonService;
 import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
+import rest.service.TvaService;
 import rest.service.impl.ImportationVente;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -69,6 +70,8 @@ public class SalesStatsRessource {
     GenerateTicketService generateTicketService;
     @EJB
     ImportationVente importationVente;
+    @EJB
+    private TvaService tvaService;
 
     @GET
     @Path("preventes")
@@ -380,18 +383,23 @@ public class SalesStatsRessource {
     @Path("tvastat")
     public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "typeVente") String typeVente) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-        Params params = new Params();
-        params.setDtEnd(dtEnd);
-        params.setDtStart(dtStart);
-        params.setOperateur(tu);
-        params.setRef(typeVente);
-        JSONObject json = salesService.tvasViewData2(params);
-        return Response.ok().entity(json.toString()).build();
+        if (!tvaService.isExcludTiersPayantActive()) {
+            Params params = new Params();
+            params.setDtEnd(dtEnd);
+            params.setDtStart(dtStart);
+            params.setOperateur(tu);
+            params.setRef(typeVente);
+            JSONObject json = salesService.tvasViewData2(params);
+            return Response.ok().entity(json.toString()).build();
+        } else {
+            JSONObject json = tvaService.tvaData(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), false, null);
+            return Response.ok().entity(json.toString()).build();
+        }
+
     }
 
     @PUT
@@ -559,7 +567,7 @@ public class SalesStatsRessource {
     @GET
     @Path("suggerer")
     public Response addVente(
-     @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "hStart") String hStart,
             @QueryParam(value = "hEnd") String hEnd,
@@ -579,7 +587,7 @@ public class SalesStatsRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-         SalesStatsParams body = new SalesStatsParams();
+        SalesStatsParams body = new SalesStatsParams();
         body.setUserId(tu);
         body.setUser(user);
         body.setLimit(limit);
@@ -614,18 +622,17 @@ public class SalesStatsRessource {
         JSONObject json = salesService.articleVendusASuggerer(body);
         return Response.ok().entity(json.toString()).build();
     }
-    
-    
-     @GET
+
+    @GET
     @Path("devis/csv")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response exportToCsv(@QueryParam("id") String venteId,@QueryParam("ref") String ref) {
-         StreamingOutput output = (OutputStream out) -> {
+    public Response exportToCsv(@QueryParam("id") String venteId, @QueryParam("ref") String ref) {
+        StreamingOutput output = (OutputStream out) -> {
             try {
                 List<TPreenregistrementDetail> detailses = salesService.venteDetailByVenteId(venteId);
                 Writer writer = new OutputStreamWriter(out, "UTF-8");
 
-                try (CSVPrinter printer = CSVFormat.EXCEL
+                try ( CSVPrinter printer = CSVFormat.EXCEL
                         .withDelimiter(';').withHeader(ArticleHeader.class).print(writer)) {
 
                     detailses.forEach(f -> {
@@ -642,12 +649,12 @@ public class SalesStatsRessource {
                 throw new WebApplicationException("File Not Found !!");
             }
         };
-        String filename = "devis_"+ref+"_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".csv";
+        String filename = "devis_" + ref + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".csv";
         return Response
                 .ok(output, MediaType.APPLICATION_OCTET_STREAM)
                 .header("content-disposition", "attachment; filename = " + filename)
                 .build();
 
     }
-    
+
 }

@@ -1756,15 +1756,9 @@ public class CaisseServiceImpl implements CaisseService {
             if (getStatutCoffre(idUser, emg) != null) {
                 return json.put("success", false).put("msg", "Cet utilisateur a déjà reçu un fond de caisse");
             }
-//            TTypeMvtCaisse typeMvtCaisse = emg.find(TTypeMvtCaisse.class, DateConverter.MVT_FOND_CAISSE);
-//            emg.getTransaction().begin();
             createCoffreCaisse(user, operateur, amount.doubleValue(), emg);
-//            emg.getTransaction().commit();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-//            if (emg.getTransaction().isActive()) {
-//                emg.getTransaction().rollback();
-//            }
             return json.put("success", false).put("msg", "L'opération a échoué");
         }
         return json.put("success", true).put("msg", "L'opération  effectuée ");
@@ -1878,7 +1872,6 @@ public class CaisseServiceImpl implements CaisseService {
             getEntityManager().merge(oOTCaisse);
             getEntityManager().persist(OTResumeCaisse);
             String Description = "Validation de fond de caisse " + user.getStrLOGIN() + " d'un montant de " + OTCoffreCaisse.getIntAMOUNT().intValue() + " par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-
             TMvtCaisse OTMvtCaisse = addTMvtCaisse(user, typeMvtCaisse, reglement, Description, "1", OTCoffreCaisse.getIntAMOUNT());
             logService.updateItem(user, OTMvtCaisse.getStrREFTICKET(),
                     Description, TypeLog.VALIDATION_DE_FOND_DE_CAISSE, OTCoffreCaisse, getEntityManager());

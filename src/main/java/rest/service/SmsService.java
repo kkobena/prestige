@@ -7,7 +7,6 @@ package rest.service;
 
 import javax.ejb.Local;
 import org.json.JSONObject;
-import util.AccessTokenDTO;
 
 /**
  *
