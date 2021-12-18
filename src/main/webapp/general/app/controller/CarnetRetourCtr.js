@@ -73,26 +73,27 @@ Ext.define('testextjs.controller.CarnetRetourCtr', {
                 specialkey: this.onSpecialKey
             },
 
-            "retourcarnetdepot gridpanel actioncolumn": {
-                toItem: this.toItem,
-                print: this.print
-            },
             'retourcarnetdepot #btnRetour': {
                 click: this.onAddClick
             },
 
             'retourcarnetdepot #imprimer': {
-                click: this.onPdfClick
+                click: this.onPrintPdf
             }
         });
     },
     onPrintPdf: function () {
         var me = this;
-        var data = me.getData();
-        var id = data.id;
-        var url = '../webservices/stockmanagement/ajustementmanagement/ws_generate_pdf.jsp?lg_AJUSTEMENT_ID=' + id;
-        window.open(url);
-        //me.goBack();
+        let tiersPayantId = me.getTiersPayantsExclus().getValue();
+        if (tiersPayantId === null || tiersPayantId === undefined) {
+            tiersPayantId = '';
+        }
+        let dtStart = me.getDtStart().getSubmitValue();
+        let dtEnd = me.getDtEnd().getSubmitValue();
+
+        const linkUrl = '../TiersPayantExcludServlet?mode=RETOUR&dtStart=' + dtStart +
+                '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
+         window.open(linkUrl);
     },
     goBack: function () {
         var xtype = 'retourcarnetdepot';
@@ -105,33 +106,8 @@ Ext.define('testextjs.controller.CarnetRetourCtr', {
         testextjs.app.getController('App').onRedirectTo(xtype, data);
 
     },
-    toItem: function (view, rowIndex, colIndex, item, e, record, row) {
-        var me = this;
-        me.goToItem(record);
-
-    },
-    print: function (view, rowIndex, colIndex, item, e, record, row) {
-        var me = this;
-        me.printTicket(record.get('id'));
-    },
-
-    goToItem: function (rec) {
-        var data = {'record': rec.data, 'isEdit': true};
-        var xtype = "itemAjustement";
-        testextjs.app.getController('App').onRedirectTo(xtype, data);
-    },
-    printTicket: function (id) {
-        var linkUrl = '../webservices/stockmanagement/ajustementmanagement/ws_generate_pdf.jsp?lg_AJUSTEMENT_ID=' + id;
-        Ext.MessageBox.confirm('Message',
-                'Confirmation de l\'impression du detail de cet ajustement',
-                function (btn) {
-                    if (btn == 'yes') {
-                        window.open(linkUrl);
-                        return;
-                    }
-                });
-
-    },
+   
+   
     doBeforechange: function (page, currentPage) {
         var me = this;
         var myProxy = me.getRetourcarnetdepotGrid().getStore().getProxy();
@@ -185,19 +161,5 @@ Ext.define('testextjs.controller.CarnetRetourCtr', {
                 "tiersPayantId": me.getTiersPayantsExclus().getValue()
             }
         });
-    },
-    onPdfClick: function () {
-        var me = this;
-        var dtStart = me.getDtStart().getSubmitValue();
-        var dtEnd = me.getDtEnd().getSubmitValue();
-        var query = me.getQueryField().getValue();
-        var tiersPayantId = me.getTiersPayantsExclus().getValue();
-        if (tiersPayantId === null) {
-            tiersPayantId = '';
-        }
-        var linkUrl = '../DataReportingServlet?mode=ALL_AJUSTEMENTS&dtStart=' + dtStart + '&dtEnd=' + dtEnd
-                + '&typeFiltre=' + tiersPayantId + '&query=' + query;
-        window.open(linkUrl);
     }
-
 });

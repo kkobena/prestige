@@ -105,4 +105,26 @@ public class CarnetDepotRessource {
         JSONObject json = carnetAsDepotService.faireReglement(o.setTiersPayantId(id), tu);
         return Response.ok().entity(json.toString()).build();
     }
+
+    @GET
+    @Path("produits")
+    public Response produits(
+            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "query") String query,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart
+    ) {
+        JSONObject json = carnetAsDepotService.listArticleByTiersPayant(query, tiersPayantId, dtStart, dtEnd);
+        return Response.ok().entity(json.toString()).build();
+
+    }
+
+    @GET
+    @Path("produits-one/{produitId}/{tiersPayantId}")
+    public Response produitsById(
+            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "produitId") String produitId,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart
+    ) {
+        JSONObject json = carnetAsDepotService.articleByTiersPayantByProduitId(produitId, tiersPayantId, dtStart, dtEnd);
+        return Response.ok().entity(json.toString()).build();
+
+    }
 }

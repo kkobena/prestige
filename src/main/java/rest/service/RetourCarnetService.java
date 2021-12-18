@@ -23,7 +23,7 @@ public interface RetourCarnetService {
 
     RetourCarnet createRetourCarnet(RetourCarnetDTO retourCarnetDTO, int qty, Integer motifId, String produitId) throws Exception;
 
-    void updateRetourCarnet(Integer id,String libelle);
+    void updateRetourCarnet(Integer id, String libelle);
 
     Integer addDetailRetour(int qty, String produitId, Integer motifId, Integer idRetour) throws Exception;
 
@@ -31,14 +31,16 @@ public interface RetourCarnetService {
 
     void removeDetailRetour(Integer id);
 
-    List<RetourCarnetDetailDTO> findByRetourCarnetId(Integer retourCarnetId,String query);
+    List<RetourCarnetDetailDTO> findByRetourCarnetId(Integer retourCarnetId, String query);
 
     RetourCarnetDetailDTO retourCarnetSummary(String idTierspayant, LocalDate dtStart, LocalDate dtEnd, String query);
 
     List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit, boolean all);
 
-    JSONObject listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit)  throws JSONException;
+    JSONObject listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit) throws JSONException;
 
-    JSONObject findByRetourCarnetId(Integer retourCarnetId,String query, int start, int limit);
+    JSONObject findByRetourCarnetId(Integer retourCarnetId, String query, int start, int limit);
+
+    List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd);
 
 }

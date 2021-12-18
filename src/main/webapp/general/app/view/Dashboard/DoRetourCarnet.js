@@ -19,6 +19,7 @@ Ext.define('testextjs.view.Dashboard.DoRetourCarnet', {
         padding: 10
     },
     initComponent: function () {
+
         var tierspayantExlus = new Ext.data.Store({
             fields: [
                 {
@@ -84,18 +85,36 @@ Ext.define('testextjs.view.Dashboard.DoRetourCarnet', {
 
         });
         var produit = new Ext.data.Store({
-            model: 'testextjs.model.caisse.Produit',
-            pageSize: 5,
+            fields: [
+                {
+                    name: 'cip',
+                    type: 'string'
+                },
+                {
+                    name: 'name',
+                    type: 'string'
+                },
+                {
+                    name: 'prixAchat',
+                    type: 'number'
+                },
+
+                {
+                    name: 'prix',
+                    type: 'number'
+                }
+            ],
+            pageSize: 9999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../api/v1/vente/search',
+                url: '../api/v2/carnet-depot/produits',
                 reader: {
                     type: 'json',
                     root: 'data',
                     totalProperty: 'total'
-                },
-                timeout: 2400000
+                }
+
             }
         });
 
@@ -175,11 +194,37 @@ Ext.define('testextjs.view.Dashboard.DoRetourCarnet', {
                             defaultType: 'textfield',
                             items: [
                                 {
+                                    xtype: 'datefield',
+                                    fieldLabel: 'Du',
+                                    itemId: 'dtStart',
+                                    labelWidth: 15,
+                                    flex: 0.5,
+                                    submitFormat: 'Y-m-d',
+                                    maxValue: new Date(),
+                                    format: 'd/m/Y',
+                                    value: new Date()
+
+                                }, 
+
+                                {
+                                    xtype: 'datefield',
+                                    fieldLabel: 'Au',
+                                    itemId: 'dtEnd',
+                                    labelWidth: 15,
+                                    flex: 0.5,
+                                    submitFormat: 'Y-m-d',
+                                    maxValue: new Date(),
+                                    format: 'd/m/Y',
+                                    value: new Date()
+
+                                },
+                                {
                                     xtype: 'combobox',
                                     flex: 1,
                                     margin: '0 5 0 0',
                                     fieldLabel: 'Tiers-payants',
                                     labelWidth: 85,
+                                    id: 'tiersPayantsExclus',
                                     itemId: 'tiersPayantsExclus',
                                     store: tierspayantExlus,
                                     pageSize: 5,
@@ -196,22 +241,22 @@ Ext.define('testextjs.view.Dashboard.DoRetourCarnet', {
                                     itemId: 'produit',
                                     labelWidth: 55,
                                     store: produit,
-                                    pageSize: 5,
-                                    valueField: 'lgFAMILLEID',
-                                    displayField: 'strNAME',
+                                    pageSize: 999,
+                                    valueField: 'id',
+                                    displayField: 'name',
                                     typeAhead: false,
                                     flex: 1.5,
                                     queryMode: 'remote',
                                     autoSelect: true,
                                     forceSelection: true,
                                     minChars: 3,
-                                    queryCaching: false,
+                                    queryCaching: true,
                                     emptyText: 'Choisir un article par Nom ou Cip...',
                                     listConfig: {
-                                        loadingText: 'Recherche...',
+
                                         emptyText: 'Pas de données trouvées.',
                                         getInnerTpl: function () {
-                                            return '<tpl for="."><tpl if="intNUMBERAVAILABLE <=0"><span style="color:#17987e;font-weight:bold;"><span style="width:100px;display:inline-block;">{intCIP}</span>{strNAME} <span style="float: right;"><span style="margin-right:10px;">( {intNUMBERAVAILABLE} )</span><span> ( {intPRICE} )</span></span></span><tpl else><span style="font-weight:bold;"><span style="width:100px;display:inline-block;">{intCIP}</span>{strNAME} <span style="float: right; "> <span style="margin-right:10px;">( {intNUMBERAVAILABLE} )</span><span> ( {intPRICE} )</span></span></span></tpl></tpl>';
+                                            return '<tpl for="."><span style="font-weight:bold;"><span style="width:100px;display:inline-block;">{cip}</span>{name} <span style="float: right; "> <span> ( {prix} )</span></span></span></tpl>';
 
                                         }
                                     }
@@ -296,7 +341,7 @@ Ext.define('testextjs.view.Dashboard.DoRetourCarnet', {
 
                                         },
                                         {
-                                            text: 'ANNULER',
+                                            text: 'RETOUR',
                                             itemId: 'btnGoBack',
                                             iconCls: 'icon-clear-group',
                                             scope: this
@@ -390,15 +435,7 @@ Ext.define('testextjs.view.Dashboard.DoRetourCarnet', {
                                                         hideTrigger: true
                                                     }
                                                 },
-                                               /* {
-                                                    text: 'Stock Final',
-                                                    flex: 1,
-                                                    xtype: 'numbercolumn',
-                                                    sortable: true,
-                                                    dataIndex: 'stockFinal',
-                                                    format: '0,000.',
-                                                    align: 'right'
-                                                },*/
+                                              
                                                 {
                                                     text: 'P.U',
                                                     xtype: 'numbercolumn',
@@ -464,9 +501,6 @@ Ext.define('testextjs.view.Dashboard.DoRetourCarnet', {
                                                     ]
                                                 }
                                             ]
-
-
-
                                         }
 
                                     ]

@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONObject;
+import rest.service.dto.ExtraitCompteClientDTO;
 
 /**
  *
@@ -37,7 +38,6 @@ public interface TiersPayantExclusService {
 
     JSONObject fetchVenteByTiersPayant(String tiersPayantId, String dtStart, String dtEnd, int start, int size);
 
-
     List<VenteTiersPayantsDTO> fetchVente(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, int start, int size, boolean all);
 
     TiersPayantExclusDTO fetchVenteSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
@@ -51,8 +51,11 @@ public interface TiersPayantExclusService {
     JSONObject faireReglement(ReglementCarnetDTO reglementCarnetDTO, TUser user);
 
     String getTiersPayantName(String tiersPayantId);
+
+    void updateTiersPayantAccount(TTiersPayant payant, int montant);
+
+    List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
     
-    
-    void updateTiersPayantAccount(TTiersPayant payant,int montant);
+ 
 
 }

@@ -14,7 +14,9 @@ import dal.TUser;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.List;
+import util.DateConverter;
 
 /**
  *
@@ -35,6 +37,7 @@ public class VenteTiersPayantsDTO implements Serializable {
     private String typeTiersPayantId;
     private String refVente, dateVente, refBon;
     private String operateur;
+    private LocalDateTime createdAt;
     private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
     public long getAccount() {
@@ -141,6 +144,14 @@ public class VenteTiersPayantsDTO implements Serializable {
         this.montant = montant;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public VenteTiersPayantsDTO(TTiersPayant payant, List<TPreenregistrementCompteClientTiersPayent> clientTiersPayents) {
 
         this.tiersPayantId = payant.getLgTIERSPAYANTID();
@@ -218,6 +229,7 @@ public class VenteTiersPayantsDTO implements Serializable {
         this.tiersPayantId = payant.getLgTIERSPAYANTID();
         this.codeTiersPayant = payant.getStrCODEORGANISME();
         this.libelleTiersPayant = payant.getStrFULLNAME();
+        this.createdAt=DateConverter.convertDateToLocalDateTime(pr.getDtUPDATED());
     }
 
     public VenteTiersPayantsDTO() {

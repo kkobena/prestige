@@ -14,6 +14,8 @@ import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONObject;
+import rest.service.dto.ExtraitCompteClientDTO;
+import rest.service.dto.ProduitVenduDTO;
 
 /**
  *
@@ -41,8 +43,8 @@ public interface CarnetAsDepotService {
     JSONObject faireReglement(ReglementCarnetDTO reglementCarnetDTO, TUser user);
 
     String getTiersPayantName(String tiersPayantId);
-    
-      void setAsDepot(GenererFactureDTO datas);
+
+    void setAsDepot(GenererFactureDTO datas);
 
     void setAsDepot(String id);
 
@@ -50,4 +52,13 @@ public interface CarnetAsDepotService {
 
     void update(String id, boolean isDepot);
 
+    List<ProduitVenduDTO> listeArticleByTiersPayant(String query, String tierspayantId, String dtStart, String dtEnd);
+
+    JSONObject listArticleByTiersPayant(String query, String tierspayantId, String dtStart, String dtEnd);
+
+    List<ProduitVenduDTO> listeArticleByTiersPayantByProduitId(String produitId, String tierspayantId, String dtStart, String dtEnd);
+
+    JSONObject articleByTiersPayantByProduitId(String produitId, String tierspayantId, String dtStart, String dtEnd);
+
+    List<ExtraitCompteClientDTO> extraitcompteAvecRetour(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) ;
 }

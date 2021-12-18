@@ -39,6 +39,8 @@ public class RetourCarnetDTO implements Serializable {
     private String details = " ";
     private List<RetourCarnetDetailDTO> items = new ArrayList<>();
 
+    private long montant;
+
     public Integer getId() {
         return id;
     }
@@ -130,6 +132,19 @@ public class RetourCarnetDTO implements Serializable {
         this.items = items;
     }
 
+    public long getMontant() {
+        return montant;
+    }
+
+    public void setMontant(long montant) {
+        this.montant = montant;
+    }
+
+    public RetourCarnetDTO montant(long montant) {
+        this.montant = montant;
+        return this;
+    }
+
     public RetourCarnetDTO(RetourCarnet retourCarnet) {
         this.id = retourCarnet.getId();
         this.libelle = retourCarnet.getLibelle();
@@ -159,5 +174,20 @@ public class RetourCarnetDTO implements Serializable {
         items.forEach((tpd) -> {
             this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getProduitCip() + "</span><span style='display:inline-block;width: 25%;'>" + tpd.getProduitLib() + "</span><span style='display:inline-block;width: 10%;'>(" + tpd.getQtyRetour() + ")</span><span style='display:inline-block;width: 15%;'>" + DateConverter.amountFormat(tpd.getPrixUni(), '.') + " F CFA " + "</span></b><br> " + this.details;
         });
+    }
+
+    public RetourCarnetDTO(RetourCarnet retourCarnet, long amount) {
+        this.id = retourCarnet.getId();
+        this.libelle = retourCarnet.getLibelle();
+        TUser userop = retourCarnet.getUser();
+        this.user = userop.getStrFIRSTNAME().concat(" ").concat(userop.getStrLASTNAME());
+        this.createdAt = retourCarnet.getCreatedAt();
+        this.dateOperation = retourCarnet.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyyy HH:mm:ss"));
+        this.status = retourCarnet.getStatus();
+        TTiersPayant payant = retourCarnet.getTierspayant();
+        this.tierspayantName = payant.getStrFULLNAME();
+        this.tierspayantId = payant.getLgTIERSPAYANTID();
+        this.montant = amount;
+
     }
 }

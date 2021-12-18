@@ -120,7 +120,7 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
         retourCarnetDetail.setProduit(famille);
         TFamilleStock familleStock = getFamilleStock(produitId);
         retourCarnetDetail.setStockInit(familleStock.getIntNUMBERAVAILABLE());
-        retourCarnetDetail.setStockFinal(0);
+        retourCarnetDetail.setStockFinal(familleStock.getIntNUMBERAVAILABLE() - qty);
         retourCarnetDetail.setMotifRetourCarnet(getMotifRetourCarnet(motifId));
         getEntityManager().persist(retourCarnetDetail);
 
@@ -315,4 +315,17 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
         return json;
     }
 
+    @Override
+    public List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd) {
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<RetourCarnet> cq = cb.createQuery(RetourCarnet.class);
+        Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
+        cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true).orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
+        List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
+        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
+        return q.getResultList().stream().map(e -> new RetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null)
+        .stream().mapToLong(RetourCarnetDetailDTO::getAmount).reduce(0, Long::sum)
+        )).collect(Collectors.toList());
+    }
 }

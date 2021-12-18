@@ -269,23 +269,8 @@ Ext.define('testextjs.view.Dashboard.RetourCarnet', {
                             dataIndex: 'dateOperation',
                             align: 'center',
                             flex: 1
-                        }/*
-                         ,{
-                         xtype: 'actioncolumn',
-                         width: 30,
-                         sortable: false,
-                         menuDisabled: true,
-                         
-                         items: [{
-                         icon: 'resources/images/icons/fam/page_white_edit.png',
-                         tooltip: 'Voir Details',
-                         menuDisabled: true,
-                         handler: function (view, rowIndex, colIndex, item, e, record, row) {
-                         this.fireEvent('toItem', view, rowIndex, colIndex, item, e, record, row);
-                         }
-                         
-                         }]
-                         }*/
+                        }
+                        
                     ],
 
                     bbar: {

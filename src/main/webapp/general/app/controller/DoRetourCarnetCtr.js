@@ -48,7 +48,8 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
 
         {ref: 'vnostockField',
             selector: 'doRetourCarnet #stockField'
-        }, {ref: 'typeAjustement',
+        },
+        {ref: 'typeAjustement',
             selector: 'doRetourCarnet #motifRetour'
         },
 
@@ -75,6 +76,13 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
         },
         {ref: 'pagingtoolbar',
             selector: 'doRetourCarnet #contenu [xtype=gridpanel] #pagingtoolbar'
+        },
+
+        {ref: 'dtStart',
+            selector: 'doRetourCarnet #dtStart'
+        },
+        {ref: 'dtEnd',
+            selector: 'doRetourCarnet #dtEnd'
         }
 
     ],
@@ -88,6 +96,7 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
                     'doRetourCarnet #qtyField': {
                         specialkey: this.onQtySpecialKey
                     },
+
                     'doRetourCarnet #produit': {
                         afterrender: this.produitCmpAfterRender,
                         select: this.produitSelect,
@@ -131,9 +140,21 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
     onReady: function () {
         var me = this;
         me.current = null;
+        me.getVnoproduitCombo().getStore().on('beforeload', function (store, operation) {
+            operation.params = operation.params || {};
+            operation.params.tiersPayantId = me.getTiersPayantsExclus().getValue();
+            operation.params.dtEnd = me.getDtEnd().getSubmitValue();
+            operation.params.dtStart = me.getDtStart().getSubmitValue();
+
+        });
+
 
     },
-
+    onBeforeload: function (store, operation) {
+        var me = this;
+        operation.params = operation.params || {};
+        operation.params.tiersPayantId = me.getTiersPayantsExclus().getValue();
+    },
     produitCmpAfterRender: function (cmp) {
         cmp.focus();
     },
@@ -143,17 +164,16 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
     },
     onTpSelect: function (cmp, record) {
         var me = this;
+        me.getVnoproduitCombo().clearValue();
         me.getVnoproduitCombo().focus(true, 100);
+         me.getVnoproduitCombo().getStore().load();
     },
 
     produitSelect: function (cmp, record) {
         var me = this;
-        var record = cmp.findRecord("lgFAMILLEID" || "intCIP", cmp.getValue());
+        var record = cmp.findRecord("id" || "cip", cmp.getValue());
         if (record) {
             let motifField = me.getTypeAjustement();
-            let vnostockField = me.getVnostockField();
-            vnostockField.setValue(record.get('intNUMBERAVAILABLE'));
-//            me.getVnoqtyField().focus(true, 100);
             motifField.focus(true, 100);
         }
     },
@@ -166,11 +186,8 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
                 if (combo.getValue() === null || combo.getValue().trim() === "") {
 
                 } else {
-                    var record = combo.findRecord("lgFAMILLEID" || "intCIP", combo.getValue());
+                    var record = combo.findRecord("id" || "cip", combo.getValue());
                     if (record) {
-                        var vnostockField = me.getVnostockField();
-                        vnostockField.setValue(record.get('intNUMBERAVAILABLE'));
-//                        me.getVnoqtyField().focus(true, 100);
                         me.getTypeAjustement().focus(true, 100);
                     } else {
                         me.checkDouchette(combo);
@@ -187,14 +204,10 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
         Ext.Ajax.request({
             method: 'GET',
             headers: {'Content-Type': 'application/json'},
-            url: '../api/v1/vente/findone/' + field.getValue(),
+            url: '../api/v2/carnet-depot/produits-one/' + field.getValue() + '/' + me.getTiersPayantsExclus().getValue(),
             success: function (response, options) {
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    var produit = result.data;
-                    var vnostockField = me.getVnostockField();
-                    vnostockField.setValue(produit.intNUMBERAVAILABLE);
-//                    me.getVnoqtyField().focus(true, 100);
                     me.getTypeAjustement().focus(true, 100);
                 } else {
                     field.focus(true, 100);
@@ -219,8 +232,8 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
 
                 var produitCmp = me.getVnoproduitCombo();
                 let typeAjustement = me.getTypeAjustement().getValue();
-                var record = produitCmp.findRecord("lgFAMILLEID", produitCmp.getValue());
-                record = record ? record : produitCmp.findRecord("intCIP", produitCmp.getValue());
+                var record = produitCmp.findRecord("id", produitCmp.getValue());
+                record = record ? record : produitCmp.findRecord("cip", produitCmp.getValue());
                 var ajustement = me.getCurrent();
                 var ajustementId = null;
                 if (ajustement) {
@@ -234,8 +247,7 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
                         "refParent": ajustementId,
                         "value": qte,
                         "description": commentaire,
-                        "refTwo": record.get('lgFAMILLEID'),
-                        "valueTwo": record.get('intNUMBERAVAILABLE'),
+                        "refTwo": record.get('id'),
                         "valueFour": typeAjustement,
                         "ref": tiersPayantsExclus
                     };
@@ -279,12 +291,12 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
                 progress.hide();
                 var result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    me.getVnostockField().setValue(0);
                     me.current = result.data;
                     field.setValue(1);
                     comboxProduit.clearValue();
                     me.getTypeAjustement().clearValue();
                     me.refresh();
+                    me.getTiersPayantsExclus().setReadOnly(true);
                 }
             },
             failure: function (response, options) {
@@ -443,22 +455,8 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
                     var result = Ext.JSON.decode(response.responseText, true);
                     progress.hide();
                     if (result.success) {
-                        Ext.MessageBox.show({
-                            title: 'Impression',
-                            msg: 'Voulez-vous imprimer ?',
-                            buttons: Ext.MessageBox.YESNO,
-                            fn: function (button) {
-                                if ('yes' == button)
-                                {
-                                    me.onPrintPdf(ajustementId);
-                                    me.goBack();
-                                } else {
-                                    me.goBack();
-                                }
-
-                            },
-                            icon: Ext.MessageBox.QUESTION
-                        });
+                        me.resetAllCmp();
+                        me.getTiersPayantsExclus().setReadOnly(false);
                     } else {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
@@ -486,6 +484,19 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
     doCloture: function () {
         var me = this;
         me.clotureAjustement();
+    },
+    resetAllCmp: function () {
+        var me = this;
+        me.current = null;
+        me.getVnoqtyField().setValue(1);
+        me.getVnoproduitCombo().clearValue();
+        me.getCommentaire().setValue('');
+        me.getTypeAjustement().clearValue();
+        me.getTiersPayantsExclus().clearValue();
+        me.getTiersPayantsExclus().setReadOnly(false);
+        me.getTiersPayantsExclus().focus(true, 50);
+        me.refresh();
+
     }
 }
 );

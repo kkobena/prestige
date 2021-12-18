@@ -8,8 +8,10 @@ package commonTasks.dto;
 import dal.ReglementCarnet;
 import dal.TTiersPayant;
 import dal.TUser;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import org.apache.commons.lang3.StringUtils;
+import util.DateConverter;
 
 /**
  *
@@ -24,7 +26,7 @@ public class ReglementCarnetDTO {
     private Integer montantPaye;
 
     private Integer montantPayer;
-
+    private LocalDateTime created;
     private Integer montantRestant;
     private String userId;
     private String user;
@@ -114,6 +116,14 @@ public class ReglementCarnetDTO {
         this.createdAt = createdAt;
     }
 
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
+    }
+
     public ReglementCarnetDTO() {
     }
 
@@ -132,6 +142,7 @@ public class ReglementCarnetDTO {
         this.createdAt = carnet.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         this.description = carnet.getDescription();
         this.reference = StringUtils.leftPad(carnet.getReference().toString(), 5, '0');
+        this.created = carnet.getCreatedAt();
     }
 
     public ReglementCarnetDTO(Long montantPaye, Long montantPayer) {

@@ -33,10 +33,18 @@ public class RetourCarnetDetailDTO implements Serializable {
 
     private Integer stockFinal;
 
-    private Integer qtyRetour, prixUni;
+    private Integer qtyRetour, prixUni,amount;
 
     public Integer getPrixUni() {
         return prixUni;
+    }
+
+    public Integer getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Integer amount) {
+        this.amount = amount;
     }
 
     public void setPrixUni(Integer prixUni) {
@@ -139,6 +147,7 @@ public class RetourCarnetDetailDTO implements Serializable {
         this.stockFinal = detail.getStockFinal();
         this.qtyRetour = detail.getQtyRetour();
         this.prixUni = detail.getPrixUni();
+        this.amount=detail.getPrixUni()*detail.getQtyRetour();
     }
 
     @Override

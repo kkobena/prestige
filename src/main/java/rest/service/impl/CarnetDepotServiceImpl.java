@@ -22,14 +22,19 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -39,6 +44,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import rest.service.CarnetAsDepotService;
+import rest.service.RetourCarnetService;
+import rest.service.dto.ExtraitCompteClientDTO;
+import rest.service.dto.ProduitVenduDTO;
 
 /**
  *
@@ -50,6 +58,8 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     private static final Logger LOG = Logger.getLogger(CarnetDepotServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private RetourCarnetService retourCarnetService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -235,7 +245,6 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         }
     }
 
-
     @Override
     public JSONObject reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size) {
         ReglementCarnetDTO metaData = reglementsCarnetSummary(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
@@ -359,5 +368,81 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         }
     }
 
+    @Override
+    public JSONObject listArticleByTiersPayant(String query, String tierspayantId, String dtStart, String dtEnd) {
+        List<ProduitVenduDTO> datas = listeArticleByTiersPayant(query, tierspayantId, dtStart, dtEnd);
+        JSONObject json = new JSONObject();
+        json.put("total", datas.size());
+        json.put("data", new JSONArray(datas));
+        return json;
+    }
 
+    @Override
+    public List<ProduitVenduDTO> listeArticleByTiersPayant(String query, String tierspayantId, String dtStart, String dtEnd) {
+        try {
+            if (StringUtils.isEmpty(query)) {
+                query = "%%";
+            } else {
+                query = query + "%";
+            }
+
+            Query q = getEntityManager().createNativeQuery("SELECT prd.int_CIP,prd.str_NAME,prd.int_PRICE,prd.int_PAF,prd.lg_FAMILLE_ID  FROM   t_preenregistrement_detail d,t_famille prd, t_preenregistrement p,t_preenregistrement_compte_client_tiers_payent cpl,t_compte_client_tiers_payant cp,t_tiers_payant tp "
+                    + "WHERE d.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID AND d.lg_FAMILLE_ID=prd.lg_FAMILLE_ID AND p.lg_PREENREGISTREMENT_ID=cpl.lg_PREENREGISTREMENT_ID AND p.int_PRICE >0 AND p.b_IS_CANCEL=0 AND "
+                    + " cpl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND  cp.lg_TIERS_PAYANT_ID=tp.lg_TIERS_PAYANT_ID AND tp.lg_TIERS_PAYANT_ID=?1 AND DATE(p.dt_UPDATED) BETWEEN ?3 AND ?4 "
+                    + "  AND (prd.int_CIP LIKE ?2 OR prd.str_NAME LIKE ?2) ", Tuple.class);
+
+            q.setParameter(1, tierspayantId);
+            q.setParameter(2, query);
+            q.setParameter(3, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
+            q.setParameter(4, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
+            List<Tuple> list = q.getResultList();
+            return list.stream().map(ProduitVenduDTO::new).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "listeArticleByTiersPayant=====>> ", e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public JSONObject articleByTiersPayantByProduitId(String produitId, String tierspayantId, String dtStart, String dtEnd) {
+        List<ProduitVenduDTO> datas = listeArticleByTiersPayantByProduitId(produitId, tierspayantId, dtStart, dtEnd);
+        JSONObject json = new JSONObject();
+        json.put("total", datas.size());
+        json.put("success", datas.size() > 0);
+        json.put("data", new JSONArray(datas));
+        return json;
+    }
+
+    @Override
+    public List<ProduitVenduDTO> listeArticleByTiersPayantByProduitId(String produitId, String tierspayantId, String dtStart, String dtEnd) {
+        try {
+
+            Query q = getEntityManager().createNativeQuery("SELECT prd.int_CIP,prd.str_NAME,prd.int_PRICE,prd.int_PAF,prd.lg_FAMILLE_ID  FROM   t_preenregistrement_detail d,t_famille prd, t_preenregistrement p,t_preenregistrement_compte_client_tiers_payent cpl,t_compte_client_tiers_payant cp,t_tiers_payant tp "
+                    + "WHERE d.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID AND d.lg_FAMILLE_ID=prd.lg_FAMILLE_ID AND p.lg_PREENREGISTREMENT_ID=cpl.lg_PREENREGISTREMENT_ID AND p.int_PRICE >0 AND p.b_IS_CANCEL=0 AND "
+                    + " cpl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND   cp.lg_TIERS_PAYANT_ID=tp.lg_TIERS_PAYANT_ID AND tp.lg_TIERS_PAYANT_ID=?1 AND DATE(p.dt_UPDATED) BETWEEN ?3 AND ?4"
+                    + "  AND prd.lg_FAMILLE_ID =?2  ", Tuple.class);
+
+            q.setParameter(1, tierspayantId);
+            q.setParameter(2, produitId);
+            q.setParameter(3, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
+            q.setParameter(4, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
+            List<Tuple> list = q.getResultList();
+            return list.stream().map(ProduitVenduDTO::new).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "listeArticleByTiersPayantByProduitId=====>> ", e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<ExtraitCompteClientDTO> extraitcompteAvecRetour(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) {
+        List<ExtraitCompteClientDTO> datas = new ArrayList<>();
+        datas.addAll(reglementsCarnet(tiersPayantId, dtStart.toString(), dtEnd.toString(), 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.addAll(fetchVente(tiersPayantId, dtStart, dtEnd, 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.addAll(retourCarnetService.listRetourByTierspayantIdAndPeriode(tiersPayantId, query, dtStart, dtEnd).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getCreatedAt));
+        return datas;
+    }
 }

@@ -7,70 +7,54 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
             ref: 'reglementdepot',
             selector: 'reglementdepot'
         },
-        {
-            ref: 'dataPanel',
-            selector: 'reglementdepot #dataPanel'
-        },
 
-        {
-            ref: 'query',
-            selector: 'reglementdepot #carnetGrid #query'
-        },
         {
             ref: 'imprimerBtn',
             selector: 'reglementdepot #imprimer'
-        },
-
-        {
-            ref: 'carnetGrid',
-            selector: 'reglementdepot #carnetGrid'
-        },
-        {
-            ref: 'pagingtoolbar',
-            selector: 'reglementdepot #carnetGrid pagingtoolbar'
         }
+
 
         , {
             ref: 'dtStart',
-            selector: 'reglementdepot #dataPanel #dtStart'
+            selector: 'reglementdepot #dtStart'
         },
 
         {
             ref: 'dtEnd',
-            selector: 'reglementdepot #dataPanel #dtEnd'
+            selector: 'reglementdepot #dtEnd'
         },
         {
             ref: 'tiersPayantsExclus',
-            selector: 'reglementdepot #dataPanel #tiersPayantsExclus'
+            selector: 'reglementdepot #tiersPayantsExclus'
         },
         {
             ref: 'venteGrid',
-            selector: 'reglementdepot #dataPanel #ventePanel [xtype=gridpanel]'
+            selector: 'reglementdepot #ventePanel [xtype=gridpanel]'
         },
         {
             ref: 'reglementGrid',
-            selector: 'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel]'
+            selector: 'reglementdepot #reglementPanel [xtype=gridpanel]'
         },
 
         {
             ref: 'montant',
-            selector: 'reglementdepot #dataPanel #ventePanel [xtype=gridpanel] #montant'
+            selector: 'reglementdepot #ventePanel [xtype=gridpanel] #montant'
         },
         {
             ref: 'nbreVente',
-            selector: 'reglementdepot #dataPanel #ventePanel [xtype=gridpanel] #nbreVente'
+            selector: 'reglementdepot #ventePanel [xtype=gridpanel] #nbreVente'
         },
         {
             ref: 'montantPayer',
-            selector: 'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] #montantPayer'
+            selector: 'reglementdepot #reglementPanel [xtype=gridpanel] #montantPayer'
         },
         {
             ref: 'montantPaye',
-            selector: 'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] #montantPaye'
+            selector: 'reglementdepot #reglementPanel [xtype=gridpanel] #montantPaye'
         },
         {
             ref: 'accountReglement',
-            selector: 'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] #accountReglement'
+            selector: 'reglementdepot #reglementPanel [xtype=gridpanel] #accountReglement'
         }
 
 
@@ -78,44 +62,29 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
     ],
     init: function (application) {
         this.control({
-            'reglementdepot #carnetGrid pagingtoolbar': {
-                beforechange: this.doBeforechange
-            },
-            'reglementdepot #carnetGrid #rechercher': {
-                click: this.doSearch
-            }, 'reglementdepot #dataPanel #btnVentePanel': {
+            'reglementdepot #btnVentePanel': {
                 click: this.searchAll
             },
 
-            'reglementdepot #carnetGrid #query': {
-                specialkey: this.onSpecialKey
-            },
-            'reglementdepot #dataPanel #imprimer': {
+            'reglementdepot #imprimer': {
                 click: this.onPdfClick
-            },
-
-            'reglementdepot #carnetGrid': {
-                viewready: this.doInitStore
-            }, 'reglementdepot #dataPanel #ventePanel [xtype=gridpanel]': {
+            }, 'reglementdepot #ventePanel [xtype=gridpanel]': {
                 viewready: this.doInitVenteStore
             },
-            'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel]': {
+            'reglementdepot #reglementPanel [xtype=gridpanel]': {
                 viewready: this.doInitReglementStore
             },
 
-            'reglementdepot #carnetGrid [xtype=checkcolumn]': {
-                checkchange: this.onCheckChange
-            },
-            'reglementdepot #dataPanel #ventePanel [xtype=gridpanel] pagingtoolbar': {
+            'reglementdepot #ventePanel [xtype=gridpanel] pagingtoolbar': {
                 beforechange: this.doVentechange
             },
-            'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] pagingtoolbar': {
+            'reglementdepot #reglementPanel [xtype=gridpanel] pagingtoolbar': {
                 beforechange: this.doReglementchange
             },
-            'reglementdepot #dataPanel #tiersPayantsExclus': {
+            'reglementdepot #tiersPayantsExclus': {
                 select: this.onSelectTiersPayant
             },
-            'reglementdepot #dataPanel #reglementPanel [xtype=gridpanel] #btnReglement': {
+            'reglementdepot #reglementPanel [xtype=gridpanel] #btnReglement': {
                 click: this.reglementForm
             }
         });
@@ -126,61 +95,10 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
         let record = cmp.findRecord("id" || "nomComplet", value);
         me.getAccountReglement().setValue(record.get('account'));
     },
-    onCheckChange: function (column, rowIndex, checked) {
-        let me = this;
-        let record = me.getCarnetGrid().getStore().getAt(rowIndex);
-        Ext.Ajax.request({
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            url: '../api/v2/carnet-depot/exclure-inclure/' + record.data.id + '/' + checked,
-            success: function (response, options) {
-                me.getCarnetGrid().getStore().reload();
-            },
-            failure: function (response, options) {
-                Ext.Msg.alert("Message", 'Erreur  : [code erreur : ' + response.status + ' ]');
-                me.getCarnetGrid().getStore().reload();
-            }
-        });
-    },
-    onSelect: function (_this, selected, eOpts) {
-        var me = this;
-        Ext.Ajax.request({
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            url: '../api/v2/carnet-depot/exclure/' + selected.data.id,
-            success: function (response, options) {
-                me.getCarnetGrid().getStore().reload();
-            },
-            failure: function (response, options) {
-                Ext.Msg.alert("Message", 'Erreur  : [code erreur : ' + response.status + ' ]');
-            }
-        });
-    },
-    onDeselect: function (_this, deselected, eOpts) {
-        var me = this;
-        Ext.Ajax.request({
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            url: '../api/v2/carnet-depot/inclure/' + deselected.data.id,
-            success: function (response, options) {
-                me.getCarnetGrid().getStore().reload();
-            },
-            failure: function (response, options) {
-                Ext.Msg.alert("Message", 'Erreur  : [code erreur : ' + response.status + ' ]');
-            }
-        });
-    },
-
-    onSpecialKey: function (field, e, options) {
-        var me = this;
-        if (e.getKey() === e.ENTER) {
-            me.doSearch();
-        }
-    },
 
     onPdfClick: function () {
         let me = this;
-        let itemId = me.getDataPanel().getLayout().getActiveItem().getItemId();
+        let itemId = me.getReglementdepot().getLayout().getActiveItem().getItemId();
         let tiersPayantId = me.getTiersPayantsExclus().getValue();
         if (tiersPayantId === null || tiersPayantId === undefined) {
             tiersPayantId = '';
@@ -189,13 +107,13 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
         let dtEnd = me.getDtEnd().getSubmitValue();
         var linkUrl = "";
         if (itemId === 'ventePanel') {
-            linkUrl = '../TiersPayantDepotServlet?mode=VENTE&dtStart=' + dtStart +
+            linkUrl = '../TiersPayantExcludServlet?mode=RETOUR&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
         } else if (itemId === 'reglementPanel') {
-            linkUrl = '../TiersPayantDepotServlet?mode=REGLEMENTS&dtStart=' + dtStart +
+            linkUrl = '../TiersPayantExcludServlet?mode=RETOUR&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
         } else if (itemId === 'retourPanel') {
-            linkUrl = '../TiersPayantDepotServlet?mode=RETOUR&dtStart=' + dtStart +
+            linkUrl = '../TiersPayantExcludServlet?mode=RETOUR&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
         }
         window.open(linkUrl);
@@ -206,29 +124,7 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
         me.buildSummary(meta);
 
     },
-    doBeforechange: function (page, currentPage) {
-        var me = this;
-        var myProxy = me.getCarnetGrid().getStore().getProxy();
-        myProxy.params = {
-            query: ''
-        };
-        let query = me.getQuery().getValue();
-        myProxy.setExtraParam('query', query);
-    },
 
-    doInitStore: function () {
-        var me = this;
-        me.doSearch();
-    },
-    doSearch: function () {
-        var me = this;
-        let query = me.getQuery().getValue();
-        me.getCarnetGrid().getStore().load({
-            params: {
-                query: query
-            }
-        });
-    },
     buildSummary: function (rec) {
         var me = this;
         me.getMontant().setValue(rec.chiffreAffaire);
@@ -248,7 +144,7 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
     },
     searchAll: function () {
         let me = this;
-        let itemId = me.getDataPanel().getLayout().getActiveItem().getItemId();
+        let itemId = me.getReglementdepot().getLayout().getActiveItem().getItemId();
         if (itemId === 'ventePanel') {
             me.doSearchVente();
         } else if (itemId === 'reglementPanel') {

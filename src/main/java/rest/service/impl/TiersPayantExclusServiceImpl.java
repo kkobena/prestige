@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -39,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import rest.service.TiersPayantExclusService;
+import rest.service.dto.ExtraitCompteClientDTO;
 
 /**
  *
@@ -388,6 +390,15 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
             LOG.log(Level.SEVERE, "updateTiersPayantAccount=====>> ", e);
 
         }
+    }
+
+    @Override
+    public List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd) {
+        List<ExtraitCompteClientDTO> datas = new ArrayList<>();
+        datas.addAll(reglementsCarnet(tiersPayantId, dtStart.toString(), dtEnd.toString(), 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.addAll(fetchVente(tiersPayantId, dtStart, dtEnd, 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getCreatedAt));
+        return datas;
     }
 
 }
