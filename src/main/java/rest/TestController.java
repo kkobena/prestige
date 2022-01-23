@@ -16,10 +16,12 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.json.JSONException;
+import rest.service.MouvementProduitService;
 import rest.service.SalesStatsService;
 import toolkits.parameters.commonparameter;
 
@@ -36,6 +38,8 @@ public class TestController {
     private SalesStatsService salesStatsService;
     @Inject
     private HttpServletRequest servletRequest;
+    @EJB
+    private MouvementProduitService mouvementProduitService;
 
     @GET
     @Path("tva")
@@ -49,5 +53,18 @@ public class TestController {
         params.setRef(typeVente);
         List<TvaDTO> l = salesStatsService.tvasRapport2(params);
         return Response.ok().entity(l).build();
+    }
+
+    @GET
+
+    @Path("vente/{id}")
+    public Response updateVente(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        mouvementProduitService.updateVenteStock2(id);
+        return Response.ok().build();
     }
 }

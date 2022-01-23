@@ -777,7 +777,7 @@ public class CaisseServiceImpl implements CaisseService {
             if (userId != null && !"".equals(userId)) {
                 predicates.add(cb.and(cb.equal(root.get("lgUSERID").get("lgUSERID"), userId)));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TResumeCaisse> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -907,7 +907,7 @@ public class CaisseServiceImpl implements CaisseService {
             predicates.add(cb.isTrue(root.get(MvtTransaction_.checked)));
             predicates.add(cb.notEqual(root.get(MvtTransaction_.typeTransaction), TypeTransaction.ACHAT));
             predicates.add(root.get(MvtTransaction_.tTypeMvtCaisse).get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID).in(Arrays.asList(DateConverter.MVT_FOND_CAISSE, DateConverter.MVT_ENTREE_CAISSE, DateConverter.MVT_SORTIE_CAISSE, DateConverter.MVT_REGLE_TP, DateConverter.MVT_REGLE_DIFF)));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<VisualisationCaisseDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -1309,7 +1309,9 @@ public class CaisseServiceImpl implements CaisseService {
         JSONObject json = new JSONObject();
         Map<TableauBaordSummary, List<TableauBaordPhDTO>> map;
         if (key_Take_Into_Account() || key_Params()) {
-            map = buillTableauBoardData0(donneestableauboard(dtStart, dtEnd, checked, emp.getLgEMPLACEMENTID(), start, limit, all));
+            List<MvtTransaction> l=donneestableauboard(dtStart, dtEnd, checked, emp.getLgEMPLACEMENTID(), start, limit, all);
+           
+            map = buillTableauBoardData0(l);
         } else {
             map = buillTableauBoardData(donneestableauboard(dtStart, dtEnd, checked, emp.getLgEMPLACEMENTID(), start, limit, all));
         }
@@ -2647,7 +2649,7 @@ public class CaisseServiceImpl implements CaisseService {
             predicates.add(cb.equal(root.get(TCashTransaction_.strTASK), DateConverter.ACTION_ANNULATION_VENTE));
             predicates.add(cb.equal(root.get(TCashTransaction_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID), empla));
             predicates.add(cb.and(cb.isTrue(root.get(TCashTransaction_.boolCHECKED))));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TableauBaordPhDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
 
@@ -2676,7 +2678,7 @@ public class CaisseServiceImpl implements CaisseService {
                     java.sql.Date.valueOf(dtEnd));
             predicates.add(cb.and(btw));
             predicates.add(cb.equal(root.get(AnnulationSnapshot_.emplacement).get(TEmplacement_.lgEMPLACEMENTID), empla));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TableauBaordPhDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -2700,7 +2702,7 @@ public class CaisseServiceImpl implements CaisseService {
             predicates.add(cb.equal(root.get(MvtTransaction_.caisse).get(TUser_.lgUSERID), userId));
             predicates.add(cb.equal(root.get(MvtTransaction_.categoryTransaction), CategoryTransaction.DEBIT));
             predicates.add(root.get(MvtTransaction_.typeTransaction).in(TypeTransaction.VENTE_CREDIT, TypeTransaction.VENTE_COMPTANT));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<MvtTransaction> q = getEntityManager().createQuery(cq);
             List<MvtTransaction> list = q.getResultList();
             return list.stream().map(x -> Math.abs(x.getMontantRegle())).reduce(0, Integer::sum);
@@ -2725,7 +2727,7 @@ public class CaisseServiceImpl implements CaisseService {
                 predicates.add(cb.equal(root.get(AnnulationRecette_.caissier).get(TUser_.lgUSERID), userId));
             }
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<AnnulationRecette> q = getEntityManager().createQuery(cq);
             List<AnnulationRecette> list = q.getResultList();
             return list.stream().map(x -> Math.abs(x.getMontantRegle())).reduce(0, Integer::sum);
@@ -2754,7 +2756,7 @@ public class CaisseServiceImpl implements CaisseService {
             if (userId != null && !"".equals(userId)) {
                 predicates.add(cb.and(cb.equal(root.get("lgUSERID").get("lgUSERID"), userId)));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             Integer total = (Integer) q.getSingleResult();
             return total != null ? total - (montantAnnuleGestionCaisse(null, dtStart.atStartOfDay(), dtEnd.atStartOfDay(), true) + montantAnnuleRecette(null, dtStart, dtEnd)) : (-1) * montantAnnuleGestionCaisse(null, dtStart.atStartOfDay(), dtEnd.atStartOfDay(), true) + montantAnnuleRecette(null, dtStart, dtEnd);
@@ -3265,6 +3267,24 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
+    @Override
+    public long montantAccount(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TypeTransaction transaction, String typrReglement, String typeMvtCaisse) {
+      try {
+            TypedQuery<Long> query = getEntityManager().createQuery("SELECT COALESCE(SUM(o.montant),0)- COALESCE(SUM(o.montantAcc),0) AS montant FROM MvtTransaction o WHERE o.mvtDate BETWEEN ?1 AND ?2 AND o.magasin.lgEMPLACEMENTID=?3 AND o.checked=?4 AND o.typeTransaction =?5 AND o.reglement.lgTYPEREGLEMENTID=?6 AND o.tTypeMvtCaisse.lgTYPEMVTCAISSEID=?7 ",
+                    Long.class);
+            query.setParameter(1, dtStart);
+            query.setParameter(2, dtEnd);
+            query.setParameter(3, emplacementId);
+            query.setParameter(4, true);
+            query.setParameter(5, transaction);
+            query.setParameter(6, typrReglement);
+            query.setParameter(7, typeMvtCaisse);
+            return query.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return 0;
+        }}
+
     private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardData0__(List<MvtTransaction> transactions) {
         if (transactions.isEmpty()) {
             return Collections.emptyMap();
@@ -3489,6 +3509,7 @@ public class CaisseServiceImpl implements CaisseService {
                     montantTva += (mvt.getMontantTva() - mvt.getMontantTvaUg());
                     marge += (mvt.getMarge() - mvt.getMargeug());
                     montantDiff += mvt.getMontantRestant();
+                   
                     if (mvt.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
                         nbreVente++;
 
@@ -4417,6 +4438,7 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 private GenericDTO balanceFormat0(List<MvtTransaction> mvtTransactions) {
+  
         List<BalanceDTO> balances = new ArrayList<>();
         GenericDTO generic = new GenericDTO();
         SummaryDTO summary = new SummaryDTO();
@@ -4443,13 +4465,14 @@ private GenericDTO balanceFormat0(List<MvtTransaction> mvtTransactions) {
                         montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0, nbreVente = 0, montantMobilePayment = 0;
 
                 for (MvtTransaction mvt : venteVNO) {
+                   
                     //  montantRemise += mvt.getMontantRemise();
                     int remiseNonPara = 0;
                     if (Math.abs(mvt.getMontantRemise()) > 0) {
                         remiseNonPara = remiseNonPara(mvt.getPkey());
                     }
 
-                    int newAmount = (mvt.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT && mvt.getMontantAcc().compareTo(mvt.getMontant()) == 0) ? mvt.getMontant() : mvt.getMontant() - mvt.getMontantAcc();
+                    int newAmount = (mvt.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT && mvt.getMontantAcc().compareTo(mvt.getMontant()) == 0) ? mvt.getMontant() :  mvt.getMontantAcc();
                     montantRemise += remiseNonPara;
                     montantTTC += (newAmount - mvt.getMontantttcug());
                     long montantNonPara = ((newAmount - remiseNonPara) - mvt.getMontantnetug());
@@ -4705,14 +4728,16 @@ private GenericDTO balanceFormat0(List<MvtTransaction> mvtTransactions) {
             v.forEach(op -> {
                 switch (op.getTypeTransaction()) {
                     case VENTE_COMPTANT: {
-                        int remiseNonPara = 0;
+                        
+                       
+                      int remiseNonPara = 0;
                         if (Math.abs(op.getMontantRemise()) > 0) {
                             remiseNonPara = remiseNonPara(op.getPkey());
                         }
 
 //                    montantRemise += remiseNonPara;
 //                        int remise = remisePara(op.getPkey());
-                        int newAmount = op.getMontantAcc().compareTo(op.getMontant()) == 0 ? op.getMontant() : op.getMontant() - op.getMontantAcc();
+                        int newAmount = op.getMontantAcc().compareTo(op.getMontant()) == 0 ? op.getMontant() :  op.getMontantAcc();
 
                         /*   int montantNet_ = op.getMontantAcc() - remiseNonPara - op.getMontantttcug();
                         int montantTTC_ = op.getMontantAcc() - op.getMontantttcug();*/
@@ -4732,11 +4757,17 @@ private GenericDTO balanceFormat0(List<MvtTransaction> mvtTransactions) {
                         if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
                             nbreVente.increment();
                         }
+                        
+                        
+                        
+                      
                     }
 
                     break;
                     case VENTE_CREDIT: {
-                        montantTTC.add(op.getMontant());
+                         boolean skip = op.getPreenregistrement().getTPreenregistrementCompteClientTiersPayentCollection().stream().allMatch(p -> p.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getToBeExclude());
+                         if(!skip){
+                            montantTTC.add(op.getMontant());
                         montantNet.add(op.getMontantNet());
                         montantRemise.add(op.getMontantRemise());
                         montantEsp.add(op.getMontantRegle());
@@ -4744,7 +4775,9 @@ private GenericDTO balanceFormat0(List<MvtTransaction> mvtTransactions) {
                         montantCredit.add(op.getMontantRestant());
                         if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
                             nbreVente.increment();
-                        }
+                        } 
+                         }
+                        
                     }
                     break;
                     case ACHAT: {

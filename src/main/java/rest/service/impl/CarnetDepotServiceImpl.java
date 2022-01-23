@@ -120,7 +120,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
             cq.select(cb.count(root));
             List<Predicate> predicates = perimePredicatCountAll(cb, root, query, exclude);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {

@@ -1,14 +1,15 @@
 /* global Ext */
 
-Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
+Ext.define('testextjs.view.Dashboard.TierspExclus', {
       extend: 'Ext.panel.Panel',
-    xtype: 'tierpayantasdepot',
+    xtype: 'tierspExclus',
     frame: false,
     width: '97%',
     height: valheight,
-  
+   
     initComponent: function () {
-        var tierspayantCarnet = new Ext.data.Store({
+       
+        var tierspayantExlus =   new Ext.data.Store({
             fields: [
                 {
                     name: 'id',
@@ -32,7 +33,7 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                 },
 
                 {
-                    name: 'depot',
+                    name: 'toBeExclude',
                     type: 'boolean'
                 }
 
@@ -41,7 +42,7 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../api/v2/carnet-depot/list',
+                url: '../api/v2/tiers-payant/list',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -50,16 +51,15 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                 timeout: 2400000
             }
         });
-       
         var me = this;
         Ext.applyIf(me, {
             items: [
-                {
+                 {
                     xtype: 'gridpanel',
-                    title: 'Dépôts carnet',
+                    title: 'Tiers-payants à exclure dans le chiffre d\'affaire',
                     border: false,
-                    store: tierspayantCarnet,
-                    itemId: 'carnetGrid',
+                    store: tierspayantExlus,
+                    itemId: 'toExcludeGrid',
                     columns:
                             [
                                 {
@@ -71,7 +71,7 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                                 {
                                     header: 'Code',
                                     dataIndex: 'code',
-                                    flex: 0.2
+                                    flex: 0.4
                                 },
 
                                 {
@@ -93,12 +93,12 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                                     flex: 0.5
                                 },
                                 {
-                                    header: 'gerer comme dépôt ?',
-                                    dataIndex: 'depot',
-                                    flex: 0.7,
+                                    header: 'Exclus',
+                                    dataIndex: 'toBeExclude',
+                                    flex: 0.3,
                                     renderer: function (v, m, r) {
                                         if (v) {
-                                            m.style = 'background-color:green;color:#FFF;font-weight:700;';
+                                            m.style = 'background-color:#ff0000;color:#FFF;font-weight:700;';
                                             return 'Oui';
                                         } else {
                                             return 'Non';
@@ -109,19 +109,20 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
 
                                 {
                                     xtype: 'checkcolumn',
-                                    dataIndex: 'depot',
+                                    dataIndex: 'toBeExclude',
                                     width: 50
                                 }
                             ],
                     selModel: {
                         selType: 'cellmodel'
+
                     },
                     dockedItems: [
                         {xtype: 'toolbar',
                             dock: 'top',
                             items: [{
                                     xtype: 'textfield',
-                                    itemId: 'queryCarnet',
+                                    itemId: 'query',
                                     width: 350,
                                     emptyText: 'Rech',
                                     enableKeyEvents: true
@@ -129,7 +130,7 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                                 }, {
                                     text: 'rechercher',
                                     tooltip: 'rechercher',
-                                    itemId: 'rechercherCarnet',
+                                    itemId: 'rechercher',
                                     scope: this,
                                     iconCls: 'searchicon'
                                 }]
@@ -137,14 +138,13 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
 
                         {
                             xtype: 'pagingtoolbar',
-                            store: tierspayantCarnet,
+                            store: tierspayantExlus,
                             pageSize: 20,
                             dock: 'bottom',
                             displayInfo: true
 
                         }]
                 }
-           
             ]
         });
         me.callParent(arguments);

@@ -936,4 +936,58 @@ public class MouvementProduitImpl implements MouvementProduitService {
         h.setQteFinale(old.getQteFinale());
         getEmg().persist(h);
     }
+
+    @Override
+    public void saveMvtProduit(String venteId, LocalDateTime dateVente, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, Integer valeurTva, boolean checked) {
+        HMvtProduit h = new HMvtProduit();
+        h.setUuid(UUID.randomUUID().toString());
+        h.setCreatedAt(dateVente);
+        h.setEmplacement(emplacement);
+        h.setLgUSERID(lgUSERID);
+        h.setFamille(famille);
+        h.setMvtDate(dateVente.toLocalDate());
+        h.setValeurTva(valeurTva);
+        h.setTypemvtproduit(getTypemvtproduitByID(DateConverter.VENTE, getEmg()));
+        h.setPrixUn(famille.getIntPRICE());
+        h.setPrixAchat(famille.getIntPAF());
+        h.setQteMvt(qteMvt);
+        h.setQteDebut(qteDebut);
+        h.setChecked(checked);
+        h.setPkey(venteId);
+        h.setQteFinale(qteFinale);
+        getEmg().persist(h);
+    }
+
+    @Override
+    public void updateVenteStock2(String idVente) {
+        EntityManager emg = this.getEmg();
+        try {
+            TPreenregistrement tp = emg.find(TPreenregistrement.class, idVente);
+            List<TPreenregistrementDetail> list = getTPreenregistrementDetail(tp, emg);
+            TUser tu = tp.getLgUSERID();
+            final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
+            final String emplacementId = emplacement.getLgEMPLACEMENTID();
+            final boolean isDepot = !("1".equals(emplacementId));
+            LocalDateTime dateTime = LocalDateTime.parse("2021-12-17 21:00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            list.stream().forEach(it -> {
+                TFamille tFamille = it.getLgFAMILLEID();
+                TCodeTva codeTva = tFamille.getLgCODETVAID();
+                Integer valeurTva = 0;
+                if (codeTva != null) {
+                    valeurTva = codeTva.getIntVALUE();
+                }
+                TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
+                Integer qtyDebut = familleStock.getIntNUMBERAVAILABLE();
+                familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
+                emg.merge(familleStock);
+                saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), dateTime, tFamille, tu, emplacement, it.getIntQUANTITY(), qtyDebut, (qtyDebut - it.getIntQUANTITY()), valeurTva, true);
+                updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
+                emg.merge(it);
+
+            });
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+
+        }
+    }
 }

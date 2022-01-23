@@ -88,7 +88,7 @@
             } catch (Exception e) {
             }
     if (request.getParameter("lg_GROUPE_ID") != null && !"".equals(request.getParameter("lg_GROUPE_ID"))) {
-        lg_GROUPE_ID = new Integer(request.getParameter("lg_GROUPE_ID"));
+        lg_GROUPE_ID =  Integer.valueOf(request.getParameter("lg_GROUPE_ID"));
     }
     if (request.getParameter("CODEFACTURE") != null && !"".equals(request.getParameter("lg_GROUPE_ID"))) {
         CODEFACTURE = request.getParameter("CODEFACTURE");

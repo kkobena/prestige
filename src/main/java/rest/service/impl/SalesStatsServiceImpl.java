@@ -583,7 +583,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
                 predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID()));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -600,6 +600,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
     }
 
+    @Override
     public List<VenteDTO> listeVentesReport(SalesStatsParams params) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -635,7 +636,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
                 predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -687,7 +688,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
                 predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), te.getLgEMPLACEMENTID())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
@@ -716,7 +717,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             String emplacementId) {
         try {
             TypedQuery<HMvtProduit> query = getEntityManager().createQuery(
-                    "SELECT o FROM HMvtProduit o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.emplacement.lgEMPLACEMENTID=:empl AND o.checked=:checked AND o.typemvtproduit.id IN :categ ",
+                    "SELECT o FROM HMvtProduit o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.emplacement.lgEMPLACEMENTID=:empl AND o.checked=:checked AND o.typemvtproduit.id IN :categ GROUP BY o.pkey ",
                     HMvtProduit.class);
             query.setParameter("dtStart", dtStart);
             query.setParameter("dtEnd", dtEnd);
@@ -1066,7 +1067,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 predicates.add(cb.equal(root.get(TPreenregistrement_.medecin).get(Medecin_.id), medecinId));
             }
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
 
             List<TPreenregistrement> list = q.getResultList();
@@ -1675,11 +1676,12 @@ public class SalesStatsServiceImpl implements SalesStatsService {
        public List<TvaDTO> tvasRapport0(Params params) {
         List<TvaDTO> datas = new ArrayList<>();
         try {
-            long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
+            long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
          
             List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
             LongAdder adder = new LongAdder();
+            LongAdder ttt = new LongAdder();
             tvamap.forEach((k, v) -> {
                 TvaDTO otva = new TvaDTO();
                 otva.setTaux(k);
@@ -1687,6 +1689,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 LongAdder ttc = new LongAdder();
                 LongAdder tva = new LongAdder();
                 v.stream().forEach(l -> {
+                    ttt.add(l.getPrixUn() *l.getQteMvt() );
                     long mttc = l.getPrixUn() * (l.getQteMvt() - l.getUg());
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
                     long htAmont = (long) Math.ceil(mttc / valeurTva);
@@ -1721,7 +1724,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
                 }
             }
-
+         
             return datas;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -1858,7 +1861,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             return Collections.emptyList();
         }
     }
-    @Override
+    
+   @Override
    public List<TvaDTO> tvaRapport2(Params params) {
         if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
             return tvasRapport20(params);

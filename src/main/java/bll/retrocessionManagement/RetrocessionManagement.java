@@ -112,9 +112,9 @@ public class RetrocessionManagement extends bllBase {
     //suppression d'une retrocession
     public boolean removeRetrocession(String lg_RETROCESSION_ID) {
         boolean result = false;
-        TRetrocession OTRetrocession = null;
+        TRetrocession OTRetrocession ;
         RetrocessionDetailManagement ORetrocessionDetailManagement = new RetrocessionDetailManagement(this.getOdataManager());
-        List<TRetrocessionDetail> lstTRetrocessionDetail = new ArrayList<TRetrocessionDetail>();
+        List<TRetrocessionDetail> lstTRetrocessionDetail = new ArrayList<>();
         try {
 
             OTRetrocession = this.getOdataManager().getEm().find(TRetrocession.class, lg_RETROCESSION_ID);
@@ -141,7 +141,7 @@ public class RetrocessionManagement extends bllBase {
     public List<TRetrocession> SearchAllOrOneRetrocession(String search_value) {
         List<TRetrocession> lstTRetrocession = null;
         try {
-            if (search_value.equals("") || search_value == null) {
+            if (search_value == null || search_value.equals("")  ) {
                 search_value = "%%";
             }
             new logger().OCategory.info("search_value ----->   " + search_value);

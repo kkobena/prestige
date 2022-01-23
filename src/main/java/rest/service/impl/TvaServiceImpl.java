@@ -69,8 +69,7 @@ public class TvaServiceImpl implements TvaService {
                 .forEach((k, v) -> {
                     TvaDTO o = new TvaDTO();
                     long montantTTC = v.stream().mapToLong(TvaDTO::getMontantTtc).reduce(0, Long::sum);
-                    System.out.println("montantTTC "+montantTTC);
-                     System.out.println("tva  "+k);
+                   
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
                     long htAmont = (long) Math.ceil(montantTTC / valeurTva);
                     long montantTva = montantTTC - htAmont;

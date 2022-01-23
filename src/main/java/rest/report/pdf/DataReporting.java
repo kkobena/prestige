@@ -5,7 +5,6 @@
  */
 package rest.report.pdf;
 
-import commonTasks.dto.AjustementDTO;
 import commonTasks.dto.AjustementDetailDTO;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.DonneesExploitationDTO;

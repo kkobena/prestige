@@ -850,7 +850,8 @@ Ext.application({
         'GestionCarnetDepotCtr',
         'DoRetourCarnetCtr',
         'CarnetRetourCtr',
-        'TierspAsDepotCtrl'
+        'TierspAsDepotCtrl',
+        'TierspExclusCtrl'
     ],
     stores: [
         'Menu'

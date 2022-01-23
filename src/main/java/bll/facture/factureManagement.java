@@ -53,6 +53,8 @@ import dal.TTypeMvtCaisse;
 import dal.TUser;
 import dal.dataManager;
 import dal.enumeration.TypeLog;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.UUID;
 import javax.persistence.TypedQuery;
@@ -109,7 +111,12 @@ public class factureManagement extends bll.bllBase {
             OTFacture.setTiersPayant(str_CUSTOMER);
             OTFacture.setTemplate(Boolean.FALSE);
             OTFacture.setDblMONTANTCMDE(d_montant);
-            OTFacture.setStrCODEFACTURE(CODEFACTURE);
+             boolean numerationFacture=getParametreFacturation();
+            if(numerationFacture){
+                 OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+            }else{
+                OTFacture.setStrCODEFACTURE(CODEFACTURE); 
+            }
             OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
             OTFacture.setDblMONTANTRESTANT(d_montant);
             OTFacture.setDblMONTANTPAYE(0.0);
@@ -156,7 +163,12 @@ public class factureManagement extends bll.bllBase {
             OTFacture.setDtDATEFACTURE(new Date());
             //add nombre dossier
             OTFacture.setDblMONTANTCMDE(d_montant);
-            OTFacture.setStrCODEFACTURE(CODEFACTURE);
+            boolean numerationFacture = getParametreFacturation();
+            if (numerationFacture) {
+                OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+            } else {
+                OTFacture.setStrCODEFACTURE(CODEFACTURE);
+            }
             OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
             OTFacture.setDblMONTANTRESTANT(d_montant);
             OTFacture.setDblMONTANTPAYE(0.0);
@@ -1500,7 +1512,14 @@ public class factureManagement extends bll.bllBase {
         }
 
     }
-
+private boolean getParametreFacturation(){
+    try {
+         TParameters o = this.getOdataManager().getEm().find(TParameters.class, Parameter.KEY_CODE_NUMERARTION_FACTURE);
+         return  Integer.valueOf(o.getStrVALUE()).compareTo(1)==0;
+    } catch (Exception e) {
+        return false;
+    }
+}
     public TFacture createInvoiceItem(Date dt_debut, Date dt_fin, double d_montant, String str_pere, TTypeFacture OTTypeFacture, String str_CODE_COMPTABLE, TTiersPayant str_CUSTOMER, Integer NB_DOSSIER, long montantRemise, long montantFofetaire) {
         try {
             TFacture OTFacture = new TFacture();
@@ -1508,6 +1527,7 @@ public class factureManagement extends bll.bllBase {
                 return null;
             }
             TParameters OParameters = this.getOdataManager().getEm().find(TParameters.class, Parameter.KEY_CODE_FACTURE);
+            boolean numerationFacture=getParametreFacturation();
 
             String CODEFACTURE = OParameters.getStrVALUE();
 
@@ -1528,7 +1548,13 @@ public class factureManagement extends bll.bllBase {
             OTFacture.setTemplate(Boolean.FALSE);
             //add nombre dossier
             OTFacture.setDblMONTANTCMDE((d_montant - montantRemise));
-            OTFacture.setStrCODEFACTURE(CODEFACTURE);
+            
+            if(numerationFacture){
+                 OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+            }else{
+                OTFacture.setStrCODEFACTURE(CODEFACTURE); 
+            }
+           
             OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
             OTFacture.setDblMONTANTRESTANT((d_montant - montantRemise));
             OTFacture.setDblMONTANTPAYE(0.0);
@@ -1645,7 +1671,7 @@ public class factureManagement extends bll.bllBase {
 
             }
 
-            if (list.size() > 0) {
+            if (!list.isEmpty()) {
                 OTTiersPayant = this.getOdataManager().getEm().find(TTiersPayant.class, lg_tiers_payants);
                 montantForfetaire = OTTiersPayant.getDblREMISEFORFETAIRE();
                 if (OTTiersPayant.getDblPOURCENTAGEREMISE() > 0) {

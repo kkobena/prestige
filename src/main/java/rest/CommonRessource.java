@@ -384,4 +384,14 @@ public class CommonRessource {
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
+    
+     @GET
+    @Path("common")
+    public Response gestionParticuliere() throws JSONException {
+        boolean checkug = commonService.findParam(DateConverter.KEY_COMMON_MANAGMENT);
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(checkug, 1)).build();
+    }
 }

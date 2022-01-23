@@ -66,6 +66,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.Flyway;
@@ -97,8 +99,6 @@ public class DatabaseToolkit {
     private TimerService timerService;
     @Inject
     private UserTransaction userTransaction;
-    @EJB
-    private SmsService smsService;
 
     void runTask() {
         DailyStockTask dailyStockTask = new DailyStockTask();
@@ -142,17 +142,15 @@ public class DatabaseToolkit {
     public void manageSms() {
 //        sendSMS();
         if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
-            mes.submit(() -> {
+            List<Notification> notifications = findAllByCanal();
+            for (Notification notification : notifications) {
                 try {
-                    List<Notification> notifications = findAllByCanal();
-                    notifications.forEach(n -> {
-                        sendSMS(n);
-                    });
-                    TimeUnit.SECONDS.sleep(6);
-                } catch (InterruptedException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
+                    sendSMS(notification);
+                } catch (Exception e) {
                 }
-            });
+
+            }
+
         }
 
     }
@@ -196,46 +194,48 @@ public class DatabaseToolkit {
     }
 
     public void sendSMS(Notification notification) {
+        Client client = ClientBuilder.newClient();
+        SmsParameters sp = SmsParameters.getInstance();
+        List<NotificationClient> toClients = findNotificationClients(notification);
+        String address = null;
+        if (!toClients.isEmpty()) { // a revoir pour les envois multiples
+            address = toClients.get(0).getClient().getStrADRESSE();
+        }
+        if (StringUtils.isEmpty(address)) {
+            address = sp.mobile;
+        }
+        JSONObject jSONObject = new JSONObject();
+        JSONObject outboundSMSMessageRequest = new JSONObject();
+        outboundSMSMessageRequest.put("address", "tel:+225" + address);
+        outboundSMSMessageRequest.put("senderAddress", sp.senderAddress);
+        JSONObject outboundSMSTextMessage = new JSONObject();
+        outboundSMSTextMessage.put("message", notification.getMessage());
+        outboundSMSMessageRequest.put("outboundSMSTextMessage", outboundSMSTextMessage);
+        jSONObject.put("outboundSMSMessageRequest", outboundSMSMessageRequest);
+        WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
+        Response response = myResource.request().header("Authorization", "Bearer ".concat(getAccessToken()))
+                .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
+        LOG.log(Level.INFO, "sendSMS >>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
+        if (response.getStatus() == 201) {
+            notification.setStatut(Statut.SENT);
+
+        } else {
+            notification.setNumberAttempt(notification.getNumberAttempt() + 1);
+            if (notification.getNumberAttempt() >= 3) {
+                notification.setModfiedAt(LocalDateTime.now());
+                notification.setStatut(Statut.LOCK);
+            }
+        }
+
+        LOG.log(Level.INFO, "status======{0}", notification.getStatut());
         try {
-            Client client = ClientBuilder.newClient();
-            SmsParameters sp = SmsParameters.getInstance();
-            List<NotificationClient> toClients = findNotificationClients(notification);
-            String address = null;
-            if (!toClients.isEmpty()) { // a revoir pour les envois multiples
-                address = toClients.get(0).getClient().getStrADRESSE();
-            }
-
-            if (StringUtils.isEmpty(address)) {
-                address = sp.mobile;
-            }
-            JSONObject jSONObject = new JSONObject();
-            JSONObject outboundSMSMessageRequest = new JSONObject();
-            outboundSMSMessageRequest.put("address", "tel:+225" + address);
-            outboundSMSMessageRequest.put("senderAddress", sp.senderAddress);
-            JSONObject outboundSMSTextMessage = new JSONObject();
-            outboundSMSTextMessage.put("message", notification.getMessage());
-            outboundSMSMessageRequest.put("outboundSMSTextMessage", outboundSMSTextMessage);
-            jSONObject.put("outboundSMSMessageRequest", outboundSMSMessageRequest);
-            WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
-            Response response = myResource.request().header("Authorization", "Bearer ".concat(getAccessToken()))
-                    .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            LOG.log(Level.INFO, "sendSMS >>> {0} {1} {2}", new Object[]{response.getStatus(), response.readEntity(String.class), address});
             userTransaction.begin();
-            if (response.getStatus() == 201) {
-                notification.setStatut(Statut.SENT);
-
-            } else {
-                notification.setNumberAttempt(notification.getNumberAttempt() + 1);
-                if (notification.getNumberAttempt() >= 3) {
-                    notification.setModfiedAt(LocalDateTime.now());
-                    notification.setStatut(Statut.LOCK);
-                }
-            }
             em.merge(notification);
             userTransaction.commit();
-        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException | JSONException e) {
-            e.printStackTrace(System.err);
+        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+            Logger.getLogger(DatabaseToolkit.class.getName()).log(Level.SEVERE, null, ex);
         }
+
     }
 
     public List<Notification> findByCreatedAtAndStatut() {
@@ -294,17 +294,13 @@ public class DatabaseToolkit {
 
     @Timeout
     public void timeout(Timer timer) {
-        try {
-            if ("sms".equals(timer.getInfo())) {
-                manageSms();
-                TimeUnit.SECONDS.sleep(6);
-            } else if ("email".equals(timer.getInfo())) {
-                TimeUnit.SECONDS.sleep(6);
-                manageEmail();
+        if ("sms".equals(timer.getInfo())) {
 
-            }
-        } catch (InterruptedException ex) {
-            Logger.getLogger(DatabaseToolkit.class.getName()).log(Level.SEVERE, null, ex);
+            manageSms();
+
+        } else if ("email".equals(timer.getInfo())) {
+            manageEmail();
+
         }
     }
 
@@ -421,18 +417,24 @@ public class DatabaseToolkit {
         }
     }
 
-    private String getAccessToken(){
+    private String getAccessToken() {
         try {
-          return getOrupdateSmsToken().getAccessToken();
-        } catch (Exception e) {
-              LOG.log(Level.SEVERE, "===>> getAccessToken", e);
-              return null;
+            if (!em.getTransaction().isActive()) {
+                userTransaction.begin();
+            }
+            SmsToken smsToken = getOrupdateSmsToken();
+            userTransaction.commit();
+            return smsToken.getAccessToken();
+        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
+            LOG.log(Level.SEVERE, "===>> getAccessToken", e);
+            return null;
         }
     }
+
     private SmsToken getOrupdateSmsToken() {
         SmsToken smsToken = getSmsToken();
         if (smsToken == null) {
-            JSONObject json = smsService.findAccessToken();
+            JSONObject json = findAccessToken();
             if (json.has("success") && json.getBoolean("success")) {
                 smsToken = new SmsToken();
                 smsToken.setId("sms");
@@ -441,21 +443,52 @@ public class DatabaseToolkit {
                 smsToken.setExpiresIn(data.getInt("expires_in"));
                 smsToken.setHeader("Basic ZkphT2xKZ3dVMmdnY1JXbUlsYlU5czdqWTh0YnNSeTg6U01FNTVndFlkdjJoNlkwUQ==");
                 smsToken.setCreateDate(LocalDateTime.now());
+
                 em.persist(smsToken);
             }
 
         } else {
             if (smsToken.getCreateDate().isBefore(LocalDateTime.now().minus(smsToken.getExpiresIn(), ChronoUnit.SECONDS))) {
-                JSONObject json = smsService.findAccessToken();
+                JSONObject json = findAccessToken();
                 if (json.has("success") && json.getBoolean("success")) {
                     JSONObject data = json.getJSONObject("data");
                     smsToken.setAccessToken(data.getString("access_token"));
                     smsToken.setExpiresIn(data.getInt("expires_in"));
-                     smsToken.setCreateDate(LocalDateTime.now());
+                    smsToken.setCreateDate(LocalDateTime.now());
                     em.merge(smsToken);
                 }
             }
         }
         return smsToken;
+    }
+
+    public JSONObject findAccessToken() {
+        try {
+            Client client = ClientBuilder.newClient();
+            SmsParameters sp = SmsParameters.getInstance();
+            MultivaluedMap<String, String> formdata = new MultivaluedHashMap<>();
+//            String auth = "Basic ".concat(new String(Base64.encodeBase64(sp.clientId.concat(":").concat(sp.clientSecret).getBytes())));
+            formdata.add("grant_type", DateConverter.GRANT_TYPE);
+            WebTarget myResource = client.target(sp.pathsmsapitokenendpoint);
+            Response response = myResource.request(MediaType.APPLICATION_JSON).header("Authorization", StringUtils.isNotEmpty(getBasicHeader()) ? getBasicHeader() : sp.header)
+                    .post(Entity.entity(formdata, MediaType.APPLICATION_FORM_URLENCODED), Response.class);
+            if (response.getStatus() == 200) {
+                return new JSONObject().put("success", true).put("data", new JSONObject(response.readEntity(String.class)));
+            }
+
+            return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
+        } catch (JSONException e) {
+            e.printStackTrace(System.err);
+            return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
+        }
+    }
+
+    private String getBasicHeader() {
+        try {
+            return em.find(SmsToken.class, "sms").getHeader();
+
+        } catch (Exception e) {
+            return "";
+        }
     }
 }

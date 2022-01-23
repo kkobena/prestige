@@ -56,7 +56,6 @@ public class bllBase {
 
         if (OdataManager.isConected == false) {
             OdataManager.initEntityManager();
-            return;
         }
 
     }

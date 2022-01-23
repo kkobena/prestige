@@ -165,7 +165,7 @@ public class Reapprovisionnement {
             predicates.add(cb.greaterThan(st.get(TPreenregistrement_.intPRICE), 0));
             predicates.add(cb.notEqual(st.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
             predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), DateConverter.OFFICINE));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = em.createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();
 

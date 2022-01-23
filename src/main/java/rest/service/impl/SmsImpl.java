@@ -55,8 +55,8 @@ public class SmsImpl implements SmsService{
     }
 
   
-     @Override
-    public String getAccessToken() {
+   
+    public String getAccessTokend() {
         SmsParameters sp = SmsParameters.getInstance();
         return sp.accesstoken;
     }

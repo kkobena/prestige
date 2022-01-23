@@ -950,7 +950,14 @@ public class GroupeTierspayantController implements Serializable {
         return OFacture;
 
     }
-
+private boolean getParametreFacturation(){
+    try {
+         TParameters o = getEntityManager().find(TParameters.class, Parameter.KEY_CODE_NUMERARTION_FACTURE);
+         return  Integer.valueOf(o.getStrVALUE()).compareTo(1)==0;
+    } catch (Exception e) {
+        return false;
+    }
+}
     public TFacture createInvoiceItem(Date dt_debut, Date dt_fin, double d_montant, String str_pere, TTypeFacture OTTypeFacture, String str_CODE_COMPTABLE, String str_CUSTOMER, Integer NB_DOSSIER, long montantRemise, long montantFofetaire, EntityManager em, TTiersPayant tiersPayant, TUser u) {
         try {
             TFacture OTFacture = new TFacture();
@@ -976,7 +983,13 @@ public class GroupeTierspayantController implements Serializable {
             OTFacture.setDtDATEFACTURE(new Date());
             //add nombre dossier
             OTFacture.setDblMONTANTCMDE((d_montant - montantRemise));
-            OTFacture.setStrCODEFACTURE(CODEFACTURE);
+             boolean numerationFacture=getParametreFacturation();
+            if(numerationFacture){
+                 OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+            }else{
+                OTFacture.setStrCODEFACTURE(CODEFACTURE); 
+            }
+            
             OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
             OTFacture.setDblMONTANTRESTANT((d_montant - montantRemise));
             OTFacture.setDblMONTANTPAYE(0.0);
@@ -1122,7 +1135,13 @@ public class GroupeTierspayantController implements Serializable {
             OTFacture.setDtDATEFACTURE(new Date());
             //add nombre dossier
             OTFacture.setDblMONTANTCMDE((d_montant - montantRemise));
-            OTFacture.setStrCODEFACTURE(CODEFACTURE);
+             boolean numerationFacture=getParametreFacturation();
+            if(numerationFacture){
+                 OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+            }else{
+                OTFacture.setStrCODEFACTURE(CODEFACTURE); 
+            }
+           
             OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
             OTFacture.setDblMONTANTRESTANT((d_montant - montantRemise));
             OTFacture.setDblMONTANTPAYE(0.0);
@@ -7714,7 +7733,9 @@ public class GroupeTierspayantController implements Serializable {
             }
             TParameters OParameters = em.find(TParameters.class, Parameter.KEY_CODE_FACTURE);
             String CODEFACTURE = OParameters.getStrVALUE();
-            OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
+              OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
+             boolean numerationFacture=getParametreFacturation();
+            final String codeFacture=numerationFacture?LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE):CODEFACTURE;
             em.merge(OParameters);
             u.forEach((p) -> {
                 List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1, -1, p.getLgTIERSPAYANTID(), g.getLgGROUPEID(), "");
@@ -7739,14 +7760,14 @@ public class GroupeTierspayantController implements Serializable {
 
                                             factures.add(of);
 
-                                            createGroupeFacture(g, of, CODEFACTURE, em);
+                                            createGroupeFacture(g, of, codeFacture, em);
 
                                         } else if (myCount == (finalTp.size() - 1)) {
 
                                             TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
 
                                             factures.add(of);
-                                            createGroupeFacture(g, of, CODEFACTURE, em);
+                                            createGroupeFacture(g, of, codeFacture, em);
                                         }
 
                                         volatilecount = (myCount - 1);
@@ -7762,7 +7783,7 @@ public class GroupeTierspayantController implements Serializable {
 
                                         factures.add(of);
 
-                                        createGroupeFacture(g, of, CODEFACTURE, em);
+                                        createGroupeFacture(g, of, codeFacture, em);
                                     } catch (ParseException ex) {
 
                                     }
@@ -7777,7 +7798,7 @@ public class GroupeTierspayantController implements Serializable {
                             try {
                                 TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
                                 factures.add(of);
-                                createGroupeFacture(g, of, CODEFACTURE, em);
+                                createGroupeFacture(g, of, codeFacture, em);
                             } catch (ParseException ex) {
 
                             }
@@ -7806,13 +7827,13 @@ public class GroupeTierspayantController implements Serializable {
                                     TFacture of = this.createInvoices(finalTp.subList(virtualCnt, count), dtstart, dtend, p, em, us);
 
                                     factures.add(of);
-                                    createGroupeFacture(g, of, CODEFACTURE, em);
+                                    createGroupeFacture(g, of, codeFacture, em);
 
                                 } else {
                                     TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p, em, us);
 
                                     factures.add(of);
-                                    createGroupeFacture(g, of, CODEFACTURE, em);
+                                    createGroupeFacture(g, of, codeFacture, em);
 
                                 }
                                 virtualCnt += _count;
@@ -7825,7 +7846,7 @@ public class GroupeTierspayantController implements Serializable {
                             TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p, em, us);
 
                             factures.add(of);
-                            createGroupeFacture(g, of, CODEFACTURE, em);
+                            createGroupeFacture(g, of, codeFacture, em);
 
                         }
                         break;
@@ -7836,14 +7857,14 @@ public class GroupeTierspayantController implements Serializable {
                                 TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
 
                                 factures.add(of);
-                                createGroupeFacture(g, of, CODEFACTURE, em);
+                                createGroupeFacture(g, of, codeFacture, em);
                             } catch (Exception e) {
                             }
                         }
                         break;
                 }
             });
-            grfact.put(CODEFACTURE, factures);
+            grfact.put(codeFacture, factures);
             em.getTransaction().commit();
         });
 

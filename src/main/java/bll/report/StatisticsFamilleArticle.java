@@ -357,7 +357,6 @@ public class StatisticsFamilleArticle extends bll.bllBase {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return list;
     }

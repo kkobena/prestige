@@ -14,6 +14,7 @@ import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import dal.TUser;
 import dal.Typemvtproduit;
+import java.time.LocalDateTime;
 import java.util.List;
 import javax.ejb.Local;
 import javax.persistence.EntityManager;
@@ -40,7 +41,7 @@ public interface MouvementProduitService {
             Typemvtproduit typemvtproduit, TFamille famille,
             TUser lgUSERID, TEmplacement emplacement,
             Integer qteMvt, Integer qteDebut, Integer qteFinale,
-            EntityManager emg, Integer valeurTva, boolean checked,int ug);
+            EntityManager emg, Integer valeurTva, boolean checked, int ug);
 
     void saveMvtProduit(String pkey, String typemvtproduit,
             TFamille famille, TUser lgUSERID, TEmplacement emplacement,
@@ -88,4 +89,7 @@ public interface MouvementProduitService {
 
     void updateVenteStock(TUser user, List<TPreenregistrementDetail> list) throws Exception;
 
+    void saveMvtProduit(String venteId, LocalDateTime dateVente, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, Integer valeurTva, boolean checked);
+
+    void updateVenteStock2(String idVente);
 }

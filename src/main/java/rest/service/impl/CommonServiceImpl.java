@@ -698,6 +698,20 @@ public class CommonServiceImpl implements Serializable, CommonService {
     }
 
     @Override
+    public boolean findParam(String key) {
+        try {
+            TParameters tp = getEntityManager().find(TParameters.class, key);
+            if (tp != null) {
+                return Integer.valueOf(tp.getStrVALUE().trim()) == 1;
+            }
+            return false;
+        } catch (Exception e) {
+
+            return false;
+        }
+    }
+
+    @Override
     public List<TMotifRetour> motifsRetour() {
         TypedQuery<TMotifRetour> tq = getEntityManager().createNamedQuery("TMotifRetour.findAll", TMotifRetour.class);
         return tq.getResultList();
@@ -715,6 +729,4 @@ public class CommonServiceImpl implements Serializable, CommonService {
         return tq.getResultList();
     }
 
-    
-    
 }

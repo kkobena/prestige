@@ -108,4 +108,6 @@ public interface CommonService {
     List<MotifAjustement> findAllTypeAjustements();
 
     List<MotifRetourCarnet> motifRetourCarnets();
+
+    boolean findParam(String key);
 }

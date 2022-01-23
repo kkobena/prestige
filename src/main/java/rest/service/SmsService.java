@@ -19,7 +19,7 @@ public interface SmsService {
 
     JSONObject findAccessToken();
 
-    String getAccessToken();
+   
 
  
 }

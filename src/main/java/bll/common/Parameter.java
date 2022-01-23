@@ -173,5 +173,6 @@ public class Parameter {
     public static final String TYPE_VENTE_ASSURANCE = "2";
     public static final String STATUT_ENCOURS_PEREMPTION = "en peremption";
     public static final String STATUT_ENTREE_STOCK = "ENTREE_STOCK";
+    public static final String KEY_CODE_NUMERARTION_FACTURE = "KEY_CODE_NUMERARTION_FACTURE";
 
 }

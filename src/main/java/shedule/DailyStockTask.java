@@ -16,7 +16,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,6 +60,7 @@ public class DailyStockTask implements Runnable {
                     break;
                 }
             }
+             LOG.log(Level.INFO, "canContinuet {0}", canContinue);
             if (canContinue) {
                 LocalDateTime startAt = LocalDateTime.now();
                 LOG.log(Level.INFO, "daily stock snapshot begin at {0}", startAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));

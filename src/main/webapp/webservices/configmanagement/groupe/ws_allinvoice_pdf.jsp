@@ -76,6 +76,7 @@
 
     bllBase obllBase = new bllBase();
     obllBase.checkDatamanager();
+     OTUser=OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     facManagement = new factureManagement(OdataManager, OTUser);
     GroupeTierspayantController controller = new GroupeTierspayantController(OdataManager.getEmf());
     TOfficine oTOfficine = obllBase.getOdataManager().getEm().find(dal.TOfficine.class, "1");

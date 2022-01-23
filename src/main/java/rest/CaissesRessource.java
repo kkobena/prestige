@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import rest.service.CaisseService;
 import rest.service.SalesStatsService;
 import toolkits.parameters.commonparameter;
+import rest.service.TvaDataService;
 
 /**
  *
@@ -39,6 +40,8 @@ public class CaissesRessource {
     private CaisseService caisseService;
     @EJB
     private SalesStatsService salesStatsService;
+    @EJB
+    private TvaDataService dataService;
 
     @GET
     @Path("balancesalecash")
@@ -61,9 +64,8 @@ public class CaissesRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-    @GET
-    @Path("tvas")
-    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+    @Deprecated
+    public Response tvastatDeprecated(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -76,7 +78,8 @@ public class CaissesRessource {
         JSONObject json = salesStatsService.tvasData(params);
         return Response.ok().entity(json.toString()).build();
     }
- @GET
+
+    @GET
     @Path("balanceparas")
     public Response balancepara(
             @QueryParam(value = "dtStart") String dtStart,
@@ -97,4 +100,20 @@ public class CaissesRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    @GET
+    @Path("tvas")
+    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        Params params = new Params();
+        params.setDtEnd(dtEnd);
+        params.setDtStart(dtStart);
+        params.setOperateur(tu);
+        JSONObject json = dataService.statistiqueTvaViewSomeCriteria(params);
+      
+        return Response.ok().entity(json.toString()).build();
+    }
 }

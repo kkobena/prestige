@@ -6,7 +6,6 @@
 package rest.service;
 
 import commonTasks.dto.CaisseParamsDTO;
-import commonTasks.dto.FlagDTO;
 import commonTasks.dto.GenericDTO;
 import commonTasks.dto.MvtCaisseDTO;
 import commonTasks.dto.Params;
@@ -15,7 +14,6 @@ import commonTasks.dto.ResumeCaisseDTO;
 import commonTasks.dto.SumCaisseDTO;
 import commonTasks.dto.TableauBaordPhDTO;
 import commonTasks.dto.TableauBaordSummary;
-import commonTasks.dto.TvaDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import commonTasks.dto.VisualisationCaisseDTO;
 import dal.MvtTransaction;
@@ -149,9 +147,9 @@ Author author = entityManager.find(Author.class, id, properties);
 
     MvtTransaction findByVenteId(String venteId);
 
-     boolean key_Params();
+    boolean key_Params();
 
-     boolean key_Take_Into_Account();
+    boolean key_Take_Into_Account();
 
     long montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement);
 
@@ -178,5 +176,7 @@ Author author = entityManager.find(Author.class, id, properties);
             int ration, int start, int limit, boolean all);
 
     long montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, TypeTransaction transaction, String typrReglement, String typeMvtCaisse);
-  
+
+    long montantAccount(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TypeTransaction transaction, String typrReglement, String typeMvtCaisse);
+
 }
