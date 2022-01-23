@@ -29,6 +29,7 @@ public class GroupefournisseurRepo extends AbstractRepoImpl<Groupefournisseur> {
         super(Groupefournisseur.class);
     }
    public Groupefournisseur saveOrUpdate(Groupefournisseur groupefournisseur) {
+       
         try {
             if (groupefournisseur.getId()==null || groupefournisseur.getId()== 0) {
                 groupefournisseur.setId(null);

@@ -444,7 +444,7 @@ public class ReglementServiceImpl implements ReglementService {
         predicates.add(cb.and(btw));
         predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
         predicates.add(cb.and(cb.greaterThan(root.get(TPreenregistrementCompteClient_.intPRICERESTE), 0)));
-        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<TPreenregistrementCompteClient> q = emg.createQuery(cq);
         return q.getResultList();
 
