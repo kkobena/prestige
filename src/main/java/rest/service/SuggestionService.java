@@ -54,5 +54,7 @@ public interface SuggestionService {
     JSONObject makeSuggestionFromArticleInvendus(List<ArticleDTO> datas, TUser tu) throws JSONException;
 
     JSONObject makeSuggestion(Set<VenteDetailsDTO> datas) throws JSONException;
+    
+    JSONObject findCHDetailStock(String idProduit,String emplacement);
 
 }

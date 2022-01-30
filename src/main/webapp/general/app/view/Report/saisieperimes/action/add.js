@@ -436,7 +436,8 @@ Ext.define('testextjs.view.Report.saisieperimes.action.add', {
                                     width: 30,
                                     sortable: false,
                                     menuDisabled: true,
-                                    items: [{
+                                    items: [
+                                        {
                                             getClass: function (v, meta, rec) {
 
                                                 return 'unpaid';

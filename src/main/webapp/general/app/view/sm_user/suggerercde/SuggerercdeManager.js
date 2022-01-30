@@ -38,7 +38,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         'testextjs.model.Famille',
         'testextjs.controller.LaborexWorkFlow',
         'testextjs.model.Grossiste',
-        'testextjs.model.TSuggestionOrderDetails'
+        'testextjs.model.TSuggestionOrderDetails',
+        'Ext.window.Window'
     ],
     config: {
         odatasource: '',
@@ -250,7 +251,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                         loadingText: 'Recherche...',
                                         emptyText: 'Pas de données trouvées.',
                                         getInnerTpl: function () {
-                                     return '<tpl for="."><tpl if="int_NUMBER_AVAILABLE <=0"><span style="color:#17987e;font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right;"> ( {int_PRICE} )</span></span><tpl else><span style="font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right; "> ( {int_PRICE} )</span></span></tpl></tpl>';
+                                            return '<tpl for="."><tpl if="int_NUMBER_AVAILABLE <=0"><span style="color:#17987e;font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right;"> ( {int_PRICE} )</span></span><tpl else><span style="font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right; "> ( {int_PRICE} )</span></span></tpl></tpl>';
 //                                            return '<span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right; font-weight:600;"> ({int_PRICE})</span><br>';
                                         }
                                     },
@@ -612,7 +613,32 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                  header: 'Q.REASSORT',
                                  dataIndex: 'int_QTE_REASSORT',
                                  flex: 1
-                                 },*/
+                                 },*/ {
+                                    xtype: 'actioncolumn',
+                                    width: 30,
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    items: [
+                                        {
+                                            icon: 'resources/images/icons/fam/cog.png',
+                                            tooltip: 'Qté détail',
+                                            scope: this,
+                                            handler: this.onQtyDetail,
+
+                                            getClass: function (value, metadata, record) {
+                                                if (record.get('bool_DECONDITIONNE_EXIST') === 1) {  //read your condition from the record
+                                                    return 'x-display-hide'; //affiche l'icone
+                                                } else {
+                                                    return 'x-hide-display'; //cache l'icone
+                                                }
+                                            }
+                                        }
+
+
+
+                                    ]
+                                },
+
                                 {
                                     xtype: 'actioncolumn',
                                     width: 30,
@@ -1068,6 +1094,92 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             titre: "Detail sur l'article [" + rec.get('str_FAMILLE_NAME') + "]"
         });
     },
+
+    onQtyDetail: function (grid, rowIndex) {
+          var rec = grid.getStore().getAt(rowIndex);
+       Ext.Ajax.request({
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/suggestion/qty-detail/' + rec.get('lg_FAMILLE_ID'),
+            success: function (response, options) {
+                var result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    var stock = result.stock;
+                    var form = Ext.create('Ext.window.Window',
+                {
+                    autoShow: true,
+                    height: 200,
+                    width: 300,
+                    modal: true,
+                    title: 'STOCK DETAIL',
+                    closeAction: 'hide',
+                    closable: true,
+                    maximizable: false,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+
+                                {
+                                    xtype: 'button',
+                                    iconCls: 'cancelicon',
+                                    handler: function (btn) {
+                                        form.destroy();
+                                    },
+                                    text: 'FERMER'
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [
+                        {
+                            xtype: 'fieldset',
+                            bodyPadding: 50,
+                            defaults: {
+                                anchor: '100%'
+                            },
+                            collapsible: false,
+
+                            items: [
+                                {
+                                    xtype: 'displayfield',
+                                    margin: '40 9 0 0',
+                                    fieldLabel: 'STOCK DETAIL',
+                                    value:stock,
+                                    renderer: function (v) {
+                                        return Ext.util.Format.number(v, '0,000.');
+                                    },
+                                    fieldStyle: "color:blue;font-weight:800;"
+
+
+                                }
+                            ]
+                        }
+
+                    ]
+                });
+                } 
+
+            }
+
+        });   
+        
+        
+      
+      
+    },
+
     onbtndetail: function () {
         new testextjs.view.configmanagement.famille.action.detailArticleOther({
             odatasource: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
@@ -1083,9 +1195,9 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
     onRemoveClick: function (grid, rowIndex) {
-      
+
         var mode = "delete_suggestion_order_detail";
-        
+
 
         var rec = grid.getStore().getAt(rowIndex);
         Ext.Ajax.request({
@@ -1101,7 +1213,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     Ext.MessageBox.alert('Error Message', object.errors);
                     return;
                 }
-               
+
                 if (object.int_TOTAL_ACHAT == 0) {
                     Me_Window.onbtncancel();
                     return;

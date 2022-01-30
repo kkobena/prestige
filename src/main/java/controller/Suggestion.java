@@ -155,6 +155,7 @@ static final Logger LOGGER = Logger.getLogger(Suggestion.class.getName());
                 TFamilleGrossiste OTFamilleGrossiste = findFamilleGrossiste(order.getLgFAMILLEID().getLgFAMILLEID(), order.getLgSUGGESTIONORDERID().getLgGROSSISTEID().getLgGROSSISTEID());
                 json.put("lg_SUGGESTION_ORDER_DETAILS_ID", order.getLgSUGGESTIONORDERDETAILSID());
                 json.put("lg_FAMILLE_ID", order.getLgFAMILLEID().getLgFAMILLEID());
+                 json.put("bool_DECONDITIONNE_EXIST", order.getLgFAMILLEID().getBoolDECONDITIONNEEXIST());
                 json.put("lg_GROSSISTE_ID", order.getLgGROSSISTEID().getLgGROSSISTEID());
                 json.put("str_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE() : order.getLgFAMILLEID().getIntCIP()));
                 json.put("str_FAMILLE_NAME", order.getLgFAMILLEID().getStrDESCRIPTION());
