@@ -630,13 +630,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             type: 'Category',
                             position: 'bottom', // the axe position
                             fields: ['dateOperation'] // the mapping data for this axe
-//                    title: 'Month of the Year'
-                                    /*  ,
-                                     label: {display: 'insideStart',
-                                     font: '10px Arial',
-                                     rotate: {
-                                     degrees: -340
-                                     }}*/
+
                         }],
                     series: [{
                             type: 'column',

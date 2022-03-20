@@ -1170,14 +1170,9 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     ]
                 });
                 } 
-
             }
-
         });   
-        
-        
-      
-      
+       
     },
 
     onbtndetail: function () {

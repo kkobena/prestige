@@ -579,7 +579,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (!StringUtils.isEmpty(query)) {
                 predicates.add(cb.or(cb.like(root.get(TZoneGeographique_.strCODE), query + "%"), cb.like(root.get(TZoneGeographique_.strLIBELLEE), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -600,7 +600,26 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (!StringUtils.isEmpty(query)) {
                 predicates.add(cb.or(cb.like(root.get(TFamillearticle_.strCODEFAMILLE), query + "%"), cb.like(root.get(TFamillearticle_.strLIBELLE), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<ComboDTO> findAllTypeReglement() {
+        try {
+            List<Predicate> predicates = new ArrayList<>();
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<ComboDTO> cq = cb.createQuery(ComboDTO.class);
+            Root<TTypeReglement> root = cq.from(TTypeReglement.class);
+            cq.select(cb.construct(ComboDTO.class, root.get(TTypeReglement_.lgTYPEREGLEMENTID), root.get(TTypeReglement_.strNAME))).orderBy(cb.asc(root.get(TTypeReglement_.strNAME)));
+            predicates.add(cb.equal(root.get(TTypeReglement_.strSTATUT), DateConverter.STATUT_ENABLE));
+           
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -621,7 +640,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (!StringUtils.isEmpty(query)) {
                 predicates.add(cb.or(cb.like(root.get(GammeProduit_.libelle), query + "%"), cb.like(root.get(GammeProduit_.code), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -642,7 +661,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (!StringUtils.isEmpty(query)) {
                 predicates.add(cb.or(cb.like(root.get(Laboratoire_.libelle), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {

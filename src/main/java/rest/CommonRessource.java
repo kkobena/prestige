@@ -374,8 +374,8 @@ public class CommonRessource {
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
-    
-     @GET
+
+    @GET
     @Path("motif-retour-carnet")
     public Response motifRetourcarnet() {
         List<MotifRetourCarnet> data = commonService.motifRetourCarnets();
@@ -384,8 +384,8 @@ public class CommonRessource {
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
-    
-     @GET
+
+    @GET
     @Path("common")
     public Response gestionParticuliere() throws JSONException {
         boolean checkug = commonService.findParam(DateConverter.KEY_COMMON_MANAGMENT);
@@ -393,5 +393,15 @@ public class CommonRessource {
         cc.setMaxAge(86400);
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(checkug, 1)).build();
+    }
+
+    @GET
+    @Path("type-reglements")
+    public Response listeTypeReglements() {
+        List<ComboDTO> data = commonService.findAllTypeReglement();
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 }

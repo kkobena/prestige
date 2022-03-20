@@ -9,8 +9,10 @@ import bll.common.Parameter;
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.DelayedDTO;
 import commonTasks.dto.Params;
+import commonTasks.dto.ReglementCarnetDTO;
 import dal.MvtTransaction;
 import dal.Notification;
+import dal.ReglementCarnet;
 import dal.TCashTransaction;
 import dal.TClient;
 import dal.TClient_;
@@ -26,7 +28,9 @@ import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClient_;
 import dal.TReglement;
 import dal.TResumeCaisse;
+import dal.TTiersPayant;
 import dal.TTypeMvtCaisse;
+import dal.TTypeReglement;
 import dal.TUser;
 import dal.TUser_;
 import dal.enumeration.Canal;
@@ -36,6 +40,7 @@ import dal.enumeration.TypeNotification;
 import dal.enumeration.TypeTransaction;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,6 +48,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -82,6 +88,7 @@ public class ReglementServiceImpl implements ReglementService {
     @EJB
     NotificationService notificationService;
 
+    @Override
     public boolean checkCaisse(TUser ooTUser) {
         try {
             TypedQuery<TResumeCaisse> q = getEmg().createQuery("SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID = ?1  AND t.strSTATUT = ?2 ", TResumeCaisse.class);
@@ -297,6 +304,7 @@ public class ReglementServiceImpl implements ReglementService {
                         clotureVenteParams.getTotalRecap(), clotureVenteParams.getMontantPaye(), clotureVenteParams.getMontantRecu(), Boolean.TRUE, CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
                         modeReglement.getLgTYPEREGLEMENTID(), OTTypeMvtCaisse, getEmg(),
                         clotureVenteParams.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), compteClient.getLgCLIENTID().getLgCLIENTID(), clotureVenteParams.getTotalRecap() - clotureVenteParams.getMontantPaye());
+             
                 listpreenregistrementCompteClient.forEach(a -> {
                     createDossierReglementDetail(a.getLgPREENREGISTREMENTCOMPTECLIENTID(), dossierReglement, a.getIntPRICERESTE());
                     a.setIntPRICERESTE(0);
@@ -319,7 +327,70 @@ public class ReglementServiceImpl implements ReglementService {
         }
         return json;
     }
-
+  @Override
+    public JSONObject faireReglementCarnetDepot(ReglementCarnetDTO reglementCarnetDTO, TUser user) {
+        JSONObject json = new JSONObject();
+        if (!this.checkCaisse(user)) {
+            return json.put("success", false).put("msg", "Votre caisse est fermée");
+      }
+      TTypeMvtCaisse OTTypeMvtCaisse = getEmg().find(TTypeMvtCaisse.class, DateConverter.MVT_REGLE_TP);
+      TTypeReglement typeReglement = getEmg().find(TTypeReglement.class, reglementCarnetDTO.getTypeReglement());
+       TModeReglement modeReglement= findModeReglement(typeReglement.getLgTYPEREGLEMENTID());
+      TTiersPayant payant = getEmg().find(TTiersPayant.class, reglementCarnetDTO.getTiersPayantId());
+        if (payant.getAccount().intValue() < reglementCarnetDTO.getMontantPaye()) {
+            return json.put("success", false).put("msg", "VEUILLEZ SAISIR UN MONTANT EGAL OU INFERIEUR AU SOLDE");
+        }
+        ReglementCarnet carnet = new ReglementCarnet();
+        carnet.setTypeReglement(typeReglement);
+        carnet.setCreatedAt(LocalDateTime.now());
+        carnet.setUser(user);
+        carnet.setTiersPayant(payant);
+        carnet.setDescription(reglementCarnetDTO.getDescription());
+        carnet.setMontantPaye(reglementCarnetDTO.getMontantPaye());
+        carnet.setMontantPayer(payant.getAccount().intValue());
+        carnet.setMontantRestant(carnet.getMontantPayer() - carnet.getMontantPaye());
+        getEmg().persist(carnet);
+        payant.setAccount(payant.getAccount() - carnet.getMontantPaye());
+        carnet.setReference(findLastReference() + 1);
+          TDossierReglement dossierReglement = createDossierReglements(payant.getLgTIERSPAYANTID(),user,
+                        carnet.getMontantPaye(), OTTypeMvtCaisse.getStrNAME(), new Date(),  carnet.getMontantPayer());
+          carnet.setIdDossier(dossierReglement.getLgDOSSIERREGLEMENTID());
+                TReglement reglement = createTReglement(payant.getLgTIERSPAYANTID(), user,
+                        dossierReglement.getLgDOSSIERREGLEMENTID(),"",
+                        "", "", modeReglement, carnet.getMontantPaye(), "", new Date());
+                TMvtCaisse caisse = mvtCaisse(OTTypeMvtCaisse, user,
+                        modeReglement, OTTypeMvtCaisse.getStrCODECOMPTABLE(),
+                        dossierReglement.getLgDOSSIERREGLEMENTID(), reglement,
+                        carnet.getMontantPaye(), dossierReglement.getDtREGLEMENT(), "");
+                addtransactionComptant(OTTypeMvtCaisse, caisse,carnet.getMontantPaye(), null, 0, carnet.getMontantPaye(), reglement, typeReglement.getLgTYPEREGLEMENTID(), user);
+                String Description = "Reglement de   " + dossierReglement.getDblAMOUNT() + " Type de mouvement " + OTTypeMvtCaisse.getStrDESCRIPTION() + " PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+      transactionService.addTransaction(user,
+              user, dossierReglement.getLgDOSSIERREGLEMENTID(),
+              carnet.getMontantPaye(),
+              carnet.getMontantPaye(), carnet.getMontantPaye(), 0, Boolean.TRUE, CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
+              modeReglement.getLgTYPEREGLEMENTID(), OTTypeMvtCaisse, getEmg(),
+              carnet.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), payant.getLgTIERSPAYANTID(), 0);
+      logService.updateItem(user, caisse.getLgMVTCAISSEID(), Description,
+              TypeLog.MVT_DE_CAISSE, caisse, getEmg());
+      notificationService.save(new Notification()
+              .canal(Canal.SMS_EMAIL)
+              .typeNotification(TypeNotification.MVT_DE_CAISSE)
+              .message(Description)
+              .addUser(user));
+      getEmg().persist(carnet);
+        getEmg().merge(payant);
+      return json.put("success", true).put("msg", "Opération effectuée").put("ref", dossierReglement.getLgDOSSIERREGLEMENTID());
+      
+    }
+        private int findLastReference() {
+        try {
+            TypedQuery<Integer> query = getEmg().createQuery("SELECT MAX(o.reference) FROM ReglementCarnet o ", Integer.class);
+            return query.getSingleResult();
+        } catch (Exception e) {
+         
+            return 0;
+        }
+    }
     @Override
     public JSONObject reglerDiffere(ClotureVenteParams clotureVenteParams) throws JSONException {
         System.out.println("clotureVenteParams  " + clotureVenteParams);

@@ -30,7 +30,24 @@ public class RetourDetailsDTO implements Serializable {
     private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
     private String lgRETOURFRSDETAIL, strNAME, intCIP, strLIBELLE, motif, dtCREATED, HEURE,produitId,lgMOTIFRETOUR,lgRETOURFRSID;
     private Integer intNUMBERRETURN = 0, intNUMBERANSWER = 0, qtyMvt = 0,prixPaf=0,intSTOCK,ecart;
+    private String strCOMMENTAIRE,strREFRETOURFRS;
 
+    public String getStrCOMMENTAIRE() {
+        return strCOMMENTAIRE;
+    }
+
+    public void setStrCOMMENTAIRE(String strCOMMENTAIRE) {
+        this.strCOMMENTAIRE = strCOMMENTAIRE;
+    }
+
+    public String getStrREFRETOURFRS() {
+        return strREFRETOURFRS;
+    }
+
+    public void setStrREFRETOURFRS(String strREFRETOURFRS) {
+        this.strREFRETOURFRS = strREFRETOURFRS;
+    }
+    
     public String getOperateur() {
         return operateur;
     }
@@ -42,6 +59,8 @@ public class RetourDetailsDTO implements Serializable {
     public void setProduitId(String produitId) {
         this.produitId = produitId;
     }
+
+  
 
     public Integer getPrixPaf() {
         return prixPaf;
@@ -164,6 +183,8 @@ public class RetourDetailsDTO implements Serializable {
         TFamille tf = d.getLgFAMILLEID();
         TUser tu = f.getLgUSERID();
         this.operateur = tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
+         this.strREFRETOURFRS = f.getStrREFRETOURFRS();
+        this.strCOMMENTAIRE = f.getStrCOMMENTAIRE();
         this.dateOperation = f.getDtUPDATED();
         this.lgRETOURFRSDETAIL = d.getLgRETOURFRSDETAIL();
         this.strNAME = tf.getStrNAME();

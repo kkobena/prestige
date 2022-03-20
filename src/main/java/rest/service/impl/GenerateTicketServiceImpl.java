@@ -26,6 +26,7 @@ import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TPreenregistrementDetail;
+import dal.TTiersPayant;
 import dal.TTypeMvtCaisse;
 import dal.TTypeReglement;
 import dal.TUser;
@@ -414,6 +415,13 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     private TClient findClientById(String id) {
         try {
             return getEntityManager().find(TClient.class, id);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    private TTiersPayant findTiersPayantById(String id) {
+        try {
+            return getEntityManager().find(TTiersPayant.class, id);
         } catch (Exception e) {
             return null;
         }
@@ -1343,7 +1351,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             imp.setEmplacement(emplacement);
             imp.setOfficine(officine);
             imp.setService(printService);
-            imp.setTypeTicket(commonparameter.str_TICKET_REGLEMENT);
+            imp.setTypeTicket(DateConverter.TICKET_REGLEMENT);
             imp.setShowCodeBar(true);
             imp.setOperation(dossierReglement.getDtCREATED());
             imp.setIntBegin(0);
@@ -2044,5 +2052,49 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     public JSONObject generateTicketOnFly(ClotureVenteParams clotureVenteParams) throws JSONException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+ @Override
+    public JSONObject ticketReglementCarnet(String idDossier) throws JSONException {
+        JSONObject json = new JSONObject();
+        List<String> infotiersPayants;
+        try {
+            TDossierReglement dossierReglement = getEntityManager().find(TDossierReglement.class, idDossier);
+            List<TDossierReglementDetail> lstTDossierReglementDetail = getListeDossierReglementDetail(idDossier);
+            int numbretiket = nombreExemplaireTicket();
+            MvtTransaction mvtTransaction = findByPkey(idDossier);
+            TEmplacement emplacement = mvtTransaction.getMagasin();
+            String num = DateConverter.getShortId(10);
+            String fileBarecode = buildLineBarecode(num);
+            PrintService printService = findPrintService();
+            TImprimante imprimante = findImprimanteByName();
+            TOfficine officine = findOfficine();
+            List<String> datas = generateData(lstTDossierReglementDetail, dossierReglement);
+            List<String> infoSellers = generateDataOperateur(mvtTransaction.getUser());
+            ImpressionServiceImpl imp = new ImpressionServiceImpl();
+            imp.setOTImprimante(imprimante);
+            imp.setEmplacement(emplacement);
+            imp.setOfficine(officine);
+            imp.setService(printService);
+            imp.setTypeTicket(DateConverter.TICKET_REGLEMENT_CARNET_DEPOT);
+            imp.setShowCodeBar(true);
+            imp.setOperation(dossierReglement.getDtCREATED());
+            imp.setIntBegin(0);
+      infotiersPayants = generateDataTiersPayant(findTiersPayantById(mvtTransaction.getOrganisme()));
+            imp.setTitle("");
+            imp.buildTicket(datas, infoSellers, infotiersPayants, generateDataSummary(dossierReglement, mvtTransaction), Collections.emptyList(), fileBarecode);
+            for (int i = 0; i < numbretiket; i++) {
+                imp.printTicketVente(1);
+            }
+            json.put("success", true);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            json.put("success", false).put("msg", "Impression n'a pas aboutie");
+        }
+        return json;
+    }
+    
+      public List<String> generateDataTiersPayant(TTiersPayant payant) {
+        List<String> datas = new ArrayList<>();
+        datas.add("Tiers-payant :: " + payant.getStrFULLNAME());
+        return datas;
+    }
 }

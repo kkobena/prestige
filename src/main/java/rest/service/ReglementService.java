@@ -8,6 +8,8 @@ package rest.service;
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.DelayedDTO;
 import commonTasks.dto.Params;
+import commonTasks.dto.ReglementCarnetDTO;
+import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
@@ -37,5 +39,9 @@ public interface ReglementService {
             String emplacementId, String clientId);
 
     JSONObject detailsReglmentDiffere(String refReglement) throws JSONException;
+
+    boolean checkCaisse(TUser user);
+
+    JSONObject faireReglementCarnetDepot(ReglementCarnetDTO reglementCarnetDTO, TUser user);
 
 }

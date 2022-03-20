@@ -86,6 +86,9 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
             },
             'reglementdepot #reglementPanel [xtype=gridpanel] #btnReglement': {
                 click: this.reglementForm
+            },
+            "reglementdepot #reglementPanel [xtype=gridpanel] actioncolumn": {
+                printTicket: this.printTicket
             }
         });
     },
@@ -95,7 +98,10 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
         let record = cmp.findRecord("id" || "nomComplet", value);
         me.getAccountReglement().setValue(record.get('account'));
     },
-
+    printTicket: function (view, rowIndex, colIndex, item, e, rec, row) {
+        var me = this;
+        me.onPrintTicket(rec.get('idDossier'));
+    },
     onPdfClick: function () {
         let me = this;
         let itemId = me.getReglementdepot().getLayout().getActiveItem().getItemId();
@@ -215,10 +221,10 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
                     {
 
                         autoShow: true,
-                        height: 260,
+                        height: 280,
                         width: 500,
                         modal: true,
-                        title: "Nouvel règlement",
+                        title: "Nouveau règlement",
                         closeAction: 'destroy',
                         closable: false,
                         maximizable: false,
@@ -253,6 +259,15 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
                                                         var result = Ext.JSON.decode(response.responseText, true);
                                                         if (result.success) {
                                                             form.destroy();
+                                                            Ext.Msg.confirm("Information", "Voulez-vous imprimer ?",
+                                                                    function (btn) {
+                                                                        if (btn === "yes") {
+//                                  
+                                                                            me.onPrintTicket(result.ref);
+
+                                                                        }
+                                                                    });
+
                                                             me.getReglementGrid().getStore().reload();
                                                         } else {
                                                             Ext.MessageBox.show({
@@ -320,7 +335,38 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
                                                 }
 
                                             },
+                                            {
+                                                xtype: 'combobox',
+                                                labelWidth: 120,
+                                                fieldLabel: 'Type règlement',
+                                                name: 'typeReglement',
+                                                flex: 1,
+                                                height: 30,
+                                                store: Ext.create('Ext.data.Store', {
+                                                    autoLoad: true,
+                                                    pageSize: 999,
 
+                                                    fields: [
+                                                        {name: 'id', type: 'string'},
+                                                        {name: 'libelle', type: 'string'}
+                                                    ],
+                                                    proxy: {
+                                                        type: 'ajax',
+                                                        url: '../api/v1/common/type-reglements',
+                                                        reader: {
+                                                            type: 'json',
+                                                            root: 'data',
+                                                            totalProperty: 'total'
+                                                        }
+                                                    }
+
+                                                }),
+                                                value: '1',
+                                                valueField: 'id',
+                                                displayField: 'libelle',
+                                                typeAhead: true,
+                                                queryMode: 'remote',
+                                                emptyText: 'Choisir un type de reglement...'},
                                             {
                                                 xtype: 'textareafield',
                                                 fieldLabel: 'Description',
@@ -347,5 +393,11 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
 
             });
         }
+    },
+    onPrintTicket: function (id) {
+        Ext.Ajax.request({
+            url: '../api/v1/reglement/ticket-carnet/' + id,
+            method: 'PUT'
+        });
     }
 });

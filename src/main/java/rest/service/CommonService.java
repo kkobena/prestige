@@ -110,4 +110,6 @@ public interface CommonService {
     List<MotifRetourCarnet> motifRetourCarnets();
 
     boolean findParam(String key);
+    
+     List<ComboDTO> findAllTypeReglement();
 }

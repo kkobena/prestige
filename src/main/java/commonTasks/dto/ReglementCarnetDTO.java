@@ -11,7 +11,6 @@ import dal.TUser;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import org.apache.commons.lang3.StringUtils;
-import util.DateConverter;
 
 /**
  *
@@ -34,6 +33,8 @@ public class ReglementCarnetDTO {
     private String tiersPayant;
     private String reference;
     private String createdAt;
+    private String typeReglement;
+    private String idDossier;
 
     public Integer getId() {
         return id;
@@ -65,6 +66,14 @@ public class ReglementCarnetDTO {
 
     public void setMontantPayer(Integer montantPayer) {
         this.montantPayer = montantPayer;
+    }
+
+    public String getTypeReglement() {
+        return typeReglement;
+    }
+
+    public void setTypeReglement(String typeReglement) {
+        this.typeReglement = typeReglement;
     }
 
     public Integer getMontantRestant() {
@@ -143,6 +152,15 @@ public class ReglementCarnetDTO {
         this.description = carnet.getDescription();
         this.reference = StringUtils.leftPad(carnet.getReference().toString(), 5, '0');
         this.created = carnet.getCreatedAt();
+        this.idDossier = carnet.getIdDossier();
+    }
+
+    public String getIdDossier() {
+        return idDossier;
+    }
+
+    public void setIdDossier(String idDossier) {
+        this.idDossier = idDossier;
     }
 
     public ReglementCarnetDTO(Long montantPaye, Long montantPayer) {

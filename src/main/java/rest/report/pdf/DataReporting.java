@@ -9,6 +9,8 @@ import commonTasks.dto.AjustementDetailDTO;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.DonneesExploitationDTO;
 import commonTasks.dto.FamilleArticleStatDTO;
+import commonTasks.dto.RetourDetailsDTO;
+import commonTasks.dto.RetourFournisseurDTO;
 import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TOfficine;
@@ -319,5 +321,27 @@ public class DataReporting {
         List<AjustementDetailDTO> data = mvtProduitService.getAllAjustementDetailDTOs(body);
          reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "ajustements_" + report_generate_file, data);
         return "/data/reports/pdf/ajustements_" + report_generate_file;
+    }
+     
+      public String loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query,TUser tu) throws IOException {
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+        TOfficine oTOfficine = commonService.findOfficine();
+        String scr_report_file = "rp_retour_founisseurs";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        parameters.put("P_H_CLT_INFOS", "RETOURS FOURNISSEUR " + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        List<RetourDetailsDTO> data = mvtProduitService.loadretoursFournisseur(dtStart, dtEnd, fourId, query);
+         
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_retour_founisseurs" + report_generate_file, data);
+        return "/data/reports/pdf/rp_retour_founisseurs" + report_generate_file;
     }
 }

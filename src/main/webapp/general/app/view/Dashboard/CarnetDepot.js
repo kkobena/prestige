@@ -8,49 +8,6 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
     height: 670,
     tabPosition: "top",
     initComponent: function () {
-        var retourtStore = new Ext.data.Store({
-            fields: [
-                {
-                    name: 'id',
-                    type: 'number'
-                },
-                {
-                    name: 'libelle',
-                    type: 'string'
-                },
-                {
-                    name: 'dateOperation',
-                    type: 'string'
-                },
-                {
-                    name: 'tierspayantName',
-                    type: 'string'
-                },
-                {
-                    name: 'user',
-                    type: 'string'
-                },
-
-                {
-                    name: 'details',
-                    type: 'string'
-                }
-
-            ],
-            pageSize: 20,
-            autoLoad: false,
-            proxy: {
-                type: 'ajax',
-                url: '../api/v2/retour-carnet-depot/list',
-                reader: {
-                    type: 'json',
-                    root: 'data',
-                    totalProperty: 'total',
-                    metaProperty: 'metaData'
-                },
-                timeout: 2400000
-            }
-        });
         var tierspayantExlus = new Ext.data.Store({
             fields: [
                 {
@@ -179,7 +136,10 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                     name: 'id',
                     type: 'string'
                 }
-
+                , {
+                    name: 'idDossier',
+                    type: 'string'
+                }
             ],
             pageSize: 18,
             autoLoad: false,
@@ -195,7 +155,6 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                 timeout: 2400000
             }
         });
-
         var me = this;
         Ext.applyIf(me, {
             dockedItems: [
@@ -372,7 +331,6 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                     border: false,
                     itemId: 'reglementPanel',
                     items: [
-
                         {
                             xtype: 'gridpanel',
                             title: '',
@@ -436,7 +394,20 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                                             dataIndex: 'user',
                                             hidden: true,
                                             flex: 1
-                                        }
+                                        },
+                                         {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/fam/printer.png',
+                                    tooltip: 'Réimprimer le ticket',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('printTicket', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+                                }]
+                        }
 
                                     ],
                             selModel: {
@@ -516,9 +487,6 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                         }
                     ]
                 }
-
-
-
             ]
         });
         me.callParent(arguments);

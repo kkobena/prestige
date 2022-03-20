@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -39,6 +40,7 @@ import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import rest.service.ReglementService;
 import rest.service.TiersPayantExclusService;
 import rest.service.dto.ExtraitCompteClientDTO;
 
@@ -52,6 +54,8 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
     private static final Logger LOG = Logger.getLogger(TiersPayantExclusServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private ReglementService reglementService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -344,7 +348,8 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         if (payant.getAccount().intValue() < reglementCarnetDTO.getMontantPaye()) {
             return json.put("success", false).put("msg", "VEUILLEZ SAISIR UN MONTANT EGAL OU INFERIEUR AU SOLDE");
         }
-        ReglementCarnet carnet = new ReglementCarnet();
+        return reglementService.faireReglementCarnetDepot(reglementCarnetDTO, user);
+        /* ReglementCarnet carnet = new ReglementCarnet();
         carnet.setCreatedAt(LocalDateTime.now());
         carnet.setUser(user);
         carnet.setTiersPayant(payant);
@@ -358,7 +363,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         getEntityManager().persist(carnet);
         getEntityManager().merge(payant);
         json.put("success", true);
-        return json;
+        return json;*/
     }
 
     @Override
