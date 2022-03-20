@@ -560,4 +560,14 @@ public final class DateConverter {
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
     }
+    
+       public static LocalDateTime convertDateToLocalDateTimeElseNull(Date dateToConvert) {
+        if (dateToConvert == null) {
+            return  null;
+        }
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
+
 }

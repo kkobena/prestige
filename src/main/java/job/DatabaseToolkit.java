@@ -24,13 +24,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
@@ -74,7 +72,6 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.service.SmsService;
 import shedule.DailyStockTask;
 import util.DateConverter;
 import util.SmsParameters;
@@ -110,7 +107,7 @@ public class DatabaseToolkit {
 
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         if (dataSource == null) {
             LOG.info("no datasource found to execute the db migrations!");

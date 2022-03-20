@@ -15,6 +15,7 @@ import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.DossierReglementDTO;
 
 /**
  *
@@ -43,5 +44,7 @@ public interface ReglementService {
     boolean checkCaisse(TUser user);
 
     JSONObject faireReglementCarnetDepot(ReglementCarnetDTO reglementCarnetDTO, TUser user);
+    
+   List<DossierReglementDTO> listeReglementFactures( String dtStart, String dtEnd,String tiersPayantId);
 
 }

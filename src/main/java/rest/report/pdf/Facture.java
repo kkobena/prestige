@@ -44,12 +44,14 @@ import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringUtils;
 import rest.report.ReportUtil;
 import rest.service.CommonService;
 import rest.service.FacturationService;
 import rest.service.LogService;
 import rest.service.ReglementService;
 import rest.service.SalesStatsService;
+import rest.service.dto.DossierReglementDTO;
 import toolkits.filesmanagers.FilesType.PdfFiles;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
@@ -353,6 +355,30 @@ public class Facture {
         parameters.put("P_H_CLT_INFOS", "LISTE DES ARTICLES ANNULES DU   " + P_PERIODE);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_produits_annules_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_produits_annules_" + report_generate_file;
+    }
+ public String listeReglement(Params params) throws IOException {
+     if(StringUtils.isEmpty(params.getDtStart())){
+         params.setDtStart(LocalDate.now().toString());
+     }
+      if(StringUtils.isEmpty(params.getDtEnd())){
+         params.setDtEnd(LocalDate.now().toString());
+     }
+        TOfficine oTOfficine = commonService.findOfficine();
+        String scr_report_file = "rp_reglement_facture_group";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getOperateur());
+        List<DossierReglementDTO> datas = reglementService.listeReglementFactures(params.getDtStart(),params.getDtEnd(),params.getRef());
+        LocalDate dtEn = LocalDate.parse(params.getDtEnd()), dtSt = LocalDate.parse(params.getDtStart());
+        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        }
+          datas.sort(Comparator.comparing(DossierReglementDTO::getTiersPayantName).thenComparing(DossierReglementDTO::getDateReglement,Comparator.reverseOrder()));
+        parameters.put("P_H_CLT_INFOS", "LISTE DES REGLEMENTS FACTURES  " + P_PERIODE);
+
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_reglement_facture_group_" + report_generate_file, datas);
+        return "/data/reports/pdf/rp_reglement_facture_group_" + report_generate_file;
     }
 
 }

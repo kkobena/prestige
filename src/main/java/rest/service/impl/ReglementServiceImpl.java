@@ -54,11 +54,13 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,6 +68,7 @@ import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.ReglementService;
 import rest.service.TransactionService;
+import rest.service.dto.DossierReglementDTO;
 import util.DateConverter;
 
 /**
@@ -576,6 +579,25 @@ public class ReglementServiceImpl implements ReglementService {
     public JSONObject detailsReglmentDiffere(String refReglement) throws JSONException {
         List<DelayedDTO> list = detailsReglmentDifferes(refReglement);
         return new JSONObject().put("total", list.size()).put("data", new JSONArray(list));
+    }
+
+    
+   
+    @Override
+    public List<DossierReglementDTO> listeReglementFactures(String dtStart, String dtEnd, String tiersPayantId) {
+      
+        if(StringUtils.isNotEmpty(tiersPayantId)){
+      TTiersPayant payant=      getEmg().find(TTiersPayant.class, tiersPayantId);
+             TypedQuery<TDossierReglement> q=getEmg().createQuery("SELECT o FROM TDossierReglement o WHERE FUNCTION('DATE',o.dtREGLEMENT) BETWEEN ?1 AND ?2 AND o.strORGANISMEID=?3", TDossierReglement.class);
+       q.setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
+        q.setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
+           q.setParameter(3, tiersPayantId);
+        return  q.getResultList().stream().map(e->new DossierReglementDTO(e, payant)).collect(Collectors.toList());
+        }
+       TypedQuery<TDossierReglement> q=getEmg().createQuery("SELECT o FROM TDossierReglement o WHERE FUNCTION('DATE',o.dtREGLEMENT) BETWEEN ?1 AND ?2 AND o.lgFACTUREID IS NOT NULL", TDossierReglement.class);
+       q.setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
+        q.setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
+        return  q.getResultList().stream().map(e->new DossierReglementDTO(e, getEmg().find(TTiersPayant.class, e.getStrORGANISMEID()))).collect(Collectors.toList());
     }
 
 }

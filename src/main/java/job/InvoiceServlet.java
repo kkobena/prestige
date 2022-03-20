@@ -771,9 +771,6 @@ public class InvoiceServlet extends HttpServlet {
         try {
             JSONObject json = ReportDataSource.generateJSON(idInvoice);
             JSONObject data = json.getJSONObject("invoice");
-            long start = System.currentTimeMillis();
-
-//            Map<String, Object> params = ReportDataSource.getParametters(idInvoice);
             String TPSHORTNAME = json.getString("TPSHORTNAME");
             String seconLabel = json.getString("seconLabel");
 

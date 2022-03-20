@@ -32,7 +32,7 @@ public class FacturePdfServlet extends HttpServlet {
 
     private enum Action {
         DEVIS, LISTE_DIFFERES, DIFFERE, LOG, VENTE_ANNULEES, FACTURE_PROVISOIRES,
-        ALL_FACTURE_PROVISOIRES, DEVIS_FACTURE,VENTE_ANNULEES_PLUS
+        ALL_FACTURE_PROVISOIRES, DEVIS_FACTURE,VENTE_ANNULEES_PLUS,REGLEMENT_FACTURE_GROUPE
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -45,6 +45,7 @@ public class FacturePdfServlet extends HttpServlet {
         String dtEnd = request.getParameter("dtEnd");
         String query = request.getParameter("query");
         String userId = request.getParameter("userId");
+         String tiersPayantId = request.getParameter("tiersPayantId");
         Params params = new Params();
         params.setOperateur(OTUser);
         String file = "";
@@ -96,6 +97,10 @@ public class FacturePdfServlet extends HttpServlet {
                  List<TPrivilege> LstTPrivilege_ = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
                 file = facture.annulationsPlus(query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), OTUser, LstTPrivilege_);
           
+                break;
+            case REGLEMENT_FACTURE_GROUPE:
+                params.setRef(tiersPayantId);
+                file=facture.listeReglement(params);
                 break;
             default:
                 break;
