@@ -232,7 +232,6 @@ public class CommonRessource {
         List<TTypeVente> data = commonService.typeventeDevis();
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
-//        cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
@@ -242,7 +241,6 @@ public class CommonRessource {
 
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
-//        cc.setPrivate(true);
         JSONObject json = logService.filtres(query);
 
         return Response.ok().cacheControl(cc).entity(json.toString()).build();
@@ -388,7 +386,8 @@ public class CommonRessource {
     @GET
     @Path("common")
     public Response gestionParticuliere() throws JSONException {
-        boolean checkug = commonService.findParam(DateConverter.KEY_COMMON_MANAGMENT);
+        boolean checkug = commonService.isNormalUse();
+        System.out.println("checkug====>>> "+checkug);
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);

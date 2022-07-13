@@ -22,4 +22,6 @@ public interface GestionPerimesService {
     void removePerime(String id);
 
     JSONObject completePerimes(String id,TUser user);
+    
+     JSONObject getPerimesSaisiEnCours(int start, int limit);
 }

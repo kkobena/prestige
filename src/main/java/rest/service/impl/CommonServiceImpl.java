@@ -618,7 +618,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             Root<TTypeReglement> root = cq.from(TTypeReglement.class);
             cq.select(cb.construct(ComboDTO.class, root.get(TTypeReglement_.lgTYPEREGLEMENTID), root.get(TTypeReglement_.strNAME))).orderBy(cb.asc(root.get(TTypeReglement_.strNAME)));
             predicates.add(cb.equal(root.get(TTypeReglement_.strSTATUT), DateConverter.STATUT_ENABLE));
-           
+
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
@@ -728,6 +728,15 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
             return false;
         }
+    }
+
+    @Override
+    public boolean isNormalUse() {
+        boolean takeInAccount = this.findParam(DateConverter.KEY_TAKE_INTO_ACCOUNT);
+        System.out.println("takeInAccount===>> " + takeInAccount);
+        boolean keyParams = this.findParam(DateConverter.KEY_PARAMS);
+        System.out.println("keyParams===>> " + takeInAccount);
+        return takeInAccount || keyParams;
     }
 
     @Override

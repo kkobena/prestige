@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
@@ -47,6 +46,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "TWarehouse.findByStrCODEETIQUETTE", query = "SELECT t FROM TWarehouse t WHERE t.strCODEETIQUETTE = :strCODEETIQUETTE"),
     @NamedQuery(name = "TWarehouse.findByIntNUMBERDELETE", query = "SELECT t FROM TWarehouse t WHERE t.intNUMBERDELETE = :intNUMBERDELETE")})
 public class TWarehouse implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -94,8 +94,28 @@ public class TWarehouse implements Serializable {
     private TFamille lgFAMILLEID;
     @OneToMany(mappedBy = "lgWAREHOUSEID")
     private Collection<TWarehousedetail> tWarehousedetailCollection;
+    @Column(name = "stock_initial")
+    private Integer stockInitial;
+    @Column(name = "stock_final")
+    private Integer stockFinal;
 
     public TWarehouse() {
+    }
+
+    public Integer getStockInitial() {
+        return stockInitial;
+    }
+
+    public void setStockInitial(Integer stockInitial) {
+        this.stockInitial = stockInitial;
+    }
+
+    public Integer getStockFinal() {
+        return stockFinal;
+    }
+
+    public void setStockFinal(Integer stockFinal) {
+        this.stockFinal = stockFinal;
     }
 
     public TWarehouse(String lgWAREHOUSEID) {
@@ -271,5 +291,5 @@ public class TWarehouse implements Serializable {
     public String toString() {
         return "dal.TWarehouse[ lgWAREHOUSEID=" + lgWAREHOUSEID + " ]";
     }
-    
+
 }

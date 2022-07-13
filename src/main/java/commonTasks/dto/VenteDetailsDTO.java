@@ -33,7 +33,7 @@ public class VenteDetailsDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private String lgPREENREGISTREMENTDETAILID = "", lgPREENREGISTREMENTID = "",
             strREF, lgFAMILLEID, strNAME, intCIP, intEAN13, strSTATUT, dtCREATED, HEURE, ticketName, ticketNum;
-    private Integer intPRICEUNITAIR = 0, intQUANTITY = 0, intQUANTITYSERVED = 0, intPRICE = 0, intPRICEREMISE = 0;
+    private Integer intPRICEUNITAIR = 0, intQUANTITY = 0, intQUANTITYSERVED = 0, intPRICE = 0, intPRICEREMISE = 0,stockInitial,stockFinal;
     private String operateur, strRefBon, dateHeure, caissier, caissierId;
     private Date dateOperation;
     private String typeVente, numOrder, medecinId, commentaire, nom;
@@ -51,6 +51,22 @@ public class VenteDetailsDTO implements Serializable {
     private String familleId, libelleFamille;
     private String grossisteId, libelleGrossiste;
     private boolean deconditionne;
+
+    public Integer getStockInitial() {
+        return stockInitial;
+    }
+
+    public void setStockInitial(Integer stockInitial) {
+        this.stockInitial = stockInitial;
+    }
+
+    public Integer getStockFinal() {
+        return stockFinal;
+    }
+
+    public void setStockFinal(Integer stockFinal) {
+        this.stockFinal = stockFinal;
+    }
 
     public boolean isDeconditionne() {
         return deconditionne;
@@ -731,6 +747,8 @@ public class VenteDetailsDTO implements Serializable {
         this.lgFAMILLEID = famille.getLgFAMILLEID();
         this.strNAME = famille.getStrNAME();
         this.intCIP = famille.getIntCIP();
+        this.stockFinal=warehouse.getStockFinal();
+        this.stockInitial=warehouse.getStockInitial();
         this.operateur = warehouse.getLgUSERID().getStrFIRSTNAME() + " " + warehouse.getLgUSERID().getStrLASTNAME();
         try {
             this.dtCREATED = dateFormat.format(warehouse.getDtPEREMPTION());

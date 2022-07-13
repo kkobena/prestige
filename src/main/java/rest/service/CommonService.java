@@ -112,4 +112,5 @@ public interface CommonService {
     boolean findParam(String key);
     
      List<ComboDTO> findAllTypeReglement();
+    boolean isNormalUse();
 }

@@ -107,7 +107,7 @@ public class DatabaseToolkit {
 
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         if (dataSource == null) {
             LOG.info("no datasource found to execute the db migrations!");
@@ -137,13 +137,13 @@ public class DatabaseToolkit {
 
 //    @Schedule(second = "*/30", minute = "*", hour = "*", dayOfMonth = "*", year = "*", persistent = true)
     public void manageSms() {
-//        sendSMS();
         if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
             List<Notification> notifications = findAllByCanal();
             for (Notification notification : notifications) {
                 try {
                     sendSMS(notification);
                 } catch (Exception e) {
+                    LOG.log(Level.SEVERE, "", e);
                 }
 
             }

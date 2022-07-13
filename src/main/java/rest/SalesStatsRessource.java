@@ -455,7 +455,7 @@ public class SalesStatsRessource {
             @QueryParam(value = "nbre") int nbre,
             @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "stock") int stock,
+            @QueryParam(value = "stock")  Integer stock,
             @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
             @QueryParam(value = "stockFiltre") String stockFiltre,
             @QueryParam(value = "rayonId") String rayonId,
@@ -517,10 +517,11 @@ public class SalesStatsRessource {
             @QueryParam(value = "nbre") int nbre,
             @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "stock") int stock,
+            @QueryParam(value = "stock") Integer stock,
             @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
             @QueryParam(value = "stockFiltre") String stockFiltre,
-            @QueryParam(value = "rayonId") String rayonId
+            @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "qteVendu") Integer qteVendu
     ) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
@@ -542,6 +543,7 @@ public class SalesStatsRessource {
         body.setTypeTransaction(typeTransaction);
         body.setStockFiltre(stockFiltre);
         body.setPrixachatFiltre(prixachatFiltre);
+        body.setQteVendu(qteVendu);
         body.setNbre(nbre);
         try {
             body.setDtEnd(LocalDate.parse(dtEnd));
@@ -578,10 +580,11 @@ public class SalesStatsRessource {
             @QueryParam(value = "nbre") int nbre,
             @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "stock") int stock,
+            @QueryParam(value = "stock") Integer stock,
             @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
             @QueryParam(value = "stockFiltre") String stockFiltre,
-            @QueryParam(value = "rayonId") String rayonId
+            @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "qteVendu") Integer qteVendu
     ) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -603,6 +606,7 @@ public class SalesStatsRessource {
         body.setStockFiltre(stockFiltre);
         body.setPrixachatFiltre(prixachatFiltre);
         body.setNbre(nbre);
+        body.setQteVendu(qteVendu);
         try {
             body.setDtEnd(LocalDate.parse(dtEnd));
         } catch (Exception e) {

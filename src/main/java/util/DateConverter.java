@@ -175,7 +175,7 @@ public final class DateConverter {
     public static final String P_BTN_DESACTIVER_TIERS_PAYANT = "P_BTN_DESACTIVER_TIERS_PAYANT";
     public static final String TIERS_PAYANT_CARNET_ID="2";
     public static final String KEY_PRENDRE_EN_COMPTE_FOND_CAISSE= "KEY_PRENDRE_EN_COMPTE_FOND_CAISSE";
-      public static final String KEY_COMMON_MANAGMENT= "KEY_COMMON";
+    public static final String KEY_COMMON_MANAGMENT= "KEY_COMMON";
     /*
     parametre nombre de mois à considerer
      */

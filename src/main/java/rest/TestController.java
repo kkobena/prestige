@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import rest.service.MouvementProduitService;
 import rest.service.SalesStatsService;
+import rest.service.impl.CommonCorrection;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -40,6 +41,8 @@ public class TestController {
     private HttpServletRequest servletRequest;
     @EJB
     private MouvementProduitService mouvementProduitService;
+    @EJB
+    CommonCorrection commonCorrection;
 
     @GET
     @Path("tva")
@@ -66,5 +69,29 @@ public class TestController {
         }
         mouvementProduitService.updateVenteStock2(id);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("correction-marie/produit")
+    public Response updateFamille() throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        int result = commonCorrection.updateFamille();
+        return Response.ok(result).build();
+    }
+
+    @GET
+    @Path("correction-marie/tva-vente")
+    public Response updateVente() throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        int result = commonCorrection.updateVente();
+        return Response.ok(result).build();
     }
 }

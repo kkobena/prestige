@@ -80,15 +80,15 @@ Ext.define('testextjs.controller.TvaCtr', {
         let checkug = me.getCheckUg();
         let typeVente = me.getTypeVente().getValue();
         if (typeVente === 'TOUT') {
-            typeVente = '';
+            typeVente = ''; 
         }
-        let linkUrl = '../TvaServlet?mode=TVA&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug + '&typeVente=' + typeVente;
-        if (!checkug) {
-            linkUrl = '../TvaServlet?mode=TVA_WITH_CRITERIA&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug + '&typeVente=' + typeVente;
+        let linkUrl = '../TvaServlet?mode=TVA&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug + '&ref=' + typeVente;
+        if (checkug) {
+            linkUrl = '../TvaServlet?mode=TVA_WITH_CRITERIA&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug + '&ref=' + typeVente;
         }
         let comboRation = me.getComboRation().getValue();
         if (comboRation === 'Journalier') {
-            linkUrl = '../TvaServlet?mode=TVA_JOUR&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug + '&typeVente=' + typeVente;
+            linkUrl = '../TvaServlet?mode=TVA_JOUR&dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&checkug=' + checkug + '&ref=' + typeVente;
         }
         window.open(linkUrl);
     },
@@ -102,7 +102,7 @@ Ext.define('testextjs.controller.TvaCtr', {
             typeVente: null
 
         };
-        if (!me.getCheckUg()) {
+        if (me.getCheckUg()) {
             //  myProxy.url = '../api/v2/caisse/tvas';
             myProxy.url = '../api/v3/tvas/criterion';
         } else {
@@ -124,7 +124,7 @@ Ext.define('testextjs.controller.TvaCtr', {
     doSearch: function () {
         var me = this;
         let store = me.getTvaGrid().getStore();
-        if (!me.getCheckUg()) {
+        if (me.getCheckUg()) {
             store.getProxy().url = '../api/v3/tvas/criterion';
         } else {
             store.getProxy().url = '../api/v3/tvas';

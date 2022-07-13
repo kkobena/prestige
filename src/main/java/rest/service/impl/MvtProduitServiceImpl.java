@@ -328,7 +328,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             }
 
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
-            mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it.getLgPREENREGISTREMENTDETAILID(),
+            mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it,
                     typemvtproduit, tFamille, tu, emplacement,
                     it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg, it.getValeurTva(), tp.getChecked(), it.getIntUG());
 
@@ -443,7 +443,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
                 }
                 updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
-                mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it.getLgPREENREGISTREMENTDETAILID(),
+                mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it,
                         typemvtproduit, tFamille, tu, emplacement,
                         it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg, it.getValeurTva(), true, it.getIntUG());
                 emg.merge(it);
@@ -494,7 +494,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             }
 
         }
-        mouvementProduitService.saveMvtProduit(OTFamille.getIntPRICE(), familleStock.getLgFAMILLESTOCKID(),
+        mouvementProduitService.saveMvtProduit2(OTFamille.getIntPRICE(), familleStock.getLgFAMILLESTOCKID(),
                 typemvtproduit, OTFamille, ooTUser, OTEmplacement,
                 qty, initStock, initStock - qty, emg, 0, false, 0);
 

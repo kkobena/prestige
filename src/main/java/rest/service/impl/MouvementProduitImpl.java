@@ -120,7 +120,30 @@ public class MouvementProduitImpl implements MouvementProduitService {
     }
 
     @Override
-    public void saveMvtProduit(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked, int ug) {
+    public void saveMvtProduit(Integer prixUn, TPreenregistrementDetail preenregistrementDetail, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked, int ug) {
+        HMvtProduit h = new HMvtProduit();
+        h.setUuid(UUID.randomUUID().toString());
+        h.setCreatedAt(LocalDateTime.now());
+        h.setEmplacement(emplacement);
+        h.setLgUSERID(lgUSERID);
+        h.setFamille(famille);
+        h.setMvtDate(LocalDate.now());
+        h.setTypemvtproduit(typemvtproduit);
+        h.setQteMvt(qteMvt);
+        h.setValeurTva(valeurTva);
+        h.setQteDebut(qteDebut);
+        h.setPrixUn(prixUn);
+        h.setChecked(checked);
+        h.setPrixAchat(famille.getIntPAF());
+        h.setPkey(preenregistrementDetail.getLgPREENREGISTREMENTDETAILID());
+        h.setQteFinale(qteFinale);
+        h.setPreenregistrementDetail(preenregistrementDetail);
+        h.setUg(ug);
+        emg.persist(h);
+    }
+
+    @Override
+    public void saveMvtProduit2(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked, int ug) {
         HMvtProduit h = new HMvtProduit();
         h.setUuid(UUID.randomUUID().toString());
         h.setCreatedAt(LocalDateTime.now());

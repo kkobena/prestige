@@ -39,7 +39,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -294,7 +293,7 @@ public class ErpServiceImpl implements ErpService {
             List<CustomerDTO> customers=new ArrayList<>();
     List<TAyantDroit> ayantDroits=      ayantDroitsByClientId( idClient);
            for (TAyantDroit ayantDroit : ayantDroits) {
-               if(idClient.equals(ayantDroit.getLgAYANTSDROITSID()) || StringUtils.isNotEmpty(numAssure) && !numAssure.equals(ayantDroit.getStrNUMEROSECURITESOCIAL()) || ayantDroit.getStrSTATUT().equalsIgnoreCase("enable")){
+               if(idClient.equals(ayantDroit.getLgAYANTSDROITSID()) || StringUtils.isEmpty(numAssure) || numAssure.equals(ayantDroit.getStrNUMEROSECURITESOCIAL()) || !ayantDroit.getStrSTATUT().equalsIgnoreCase("enable")){
                    continue;
                }
                CustomerDTO o=new CustomerDTO();
@@ -305,6 +304,7 @@ public class ErpServiceImpl implements ErpService {
                o.setLastName(ayantDroit.getStrLASTNAME());
                o.setNumAyantDroit(ayantDroit.getStrNUMEROSECURITESOCIAL());
                o.setSexe(ayantDroit.getStrSEXE());
+                o.setType("ASSURE");
                customers.add(o);
               
            }
@@ -316,14 +316,13 @@ public class ErpServiceImpl implements ErpService {
              List<CustomerDTO> customers=new ArrayList<>();
              LocalDateTime startAt=LocalDateTime.now();
               System.out.println("startAt at "+ startAt.toString());
-             long count=clientsCount();
-             
+//             long count=clientsCount();
+            long count=5000;
              if(count==0) return Collections.emptyList();
+            
              int start=0;int limit=100;
             while (start<count) {                
                List<TClient> clients= clients(start,limit );
-            
-               System.out.println("start ================>"+start);
               for (TClient client : clients) {
                  CustomerDTO o=new CustomerDTO();
                    o.setUniqueId(client.getLgCLIENTID());
@@ -374,7 +373,16 @@ public class ErpServiceImpl implements ErpService {
                 ClientTiersPayantDTO o=new ClientTiersPayantDTO();
                 o.setNum(clientTiersPayant.getStrNUMEROSECURITESOCIAL());
                 o.setTiersPayantName(payant.getStrNAME());
-                o.setPriorite(clientTiersPayant.getIntPRIORITY());
+                int priorite=clientTiersPayant.getIntPRIORITY();
+                if(priorite<0){
+                     priorite=(-1)*clientTiersPayant.getIntPRIORITY();
+                }else if(priorite>0 && priorite<5){
+                    priorite--;
+                }
+                else if(priorite>4){
+                   priorite=3; 
+                }
+                o.setPriorite(priorite);
                 o.setTaux(clientTiersPayant.getIntPOURCENTAGE());
                 if(clientTiersPayant.getDbPLAFONDENCOURS()!=null && clientTiersPayant.getDbPLAFONDENCOURS()>0){
                   o.setPlafondConso(clientTiersPayant.getDbPLAFONDENCOURS().longValue());  

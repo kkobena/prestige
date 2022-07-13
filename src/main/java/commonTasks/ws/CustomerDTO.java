@@ -29,7 +29,9 @@ public class CustomerDTO implements Serializable {
     private int encours;
     private String type;
     private String uniqueId;
-
+    
+    private List<CustomerDTO> ayantDroits = new ArrayList<>();
+    private List<ClientTiersPayantDTO> tiersPayants = new ArrayList<>();
     public String getUniqueId() {
         return uniqueId;
     }
@@ -38,9 +40,7 @@ public class CustomerDTO implements Serializable {
         this.uniqueId = uniqueId;
     }
     
-    
-    private List<CustomerDTO> ayantDroits = new ArrayList<>();
-    private List<ClientTiersPayantDTO> tiersPayants = new ArrayList<>();
+
 
     public CustomerDTO() {
     }
