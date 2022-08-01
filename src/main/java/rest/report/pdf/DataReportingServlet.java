@@ -34,7 +34,7 @@ public class DataReportingServlet extends HttpServlet {
 
     private enum ActionDataReporting {
         MARGE_PRODUITS, UNITES_VENDUES, UNITES_GAMME, UNITES_LABORATOIRES, ARTICLES_NON_VENDUES, ARTICLES_SUR_STOCK,
-        COMPARAISON_STOCK, COMPARAISON_STOCK_DETAIL, COMPTE_EXPLOITATION, ALL_AJUSTEMENTS
+        COMPARAISON_STOCK, COMPARAISON_STOCK_DETAIL, COMPTE_EXPLOITATION, ALL_AJUSTEMENTS, RETOUR_FOURNISSEUR
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -45,17 +45,18 @@ public class DataReportingServlet extends HttpServlet {
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
+        String fourId = request.getParameter("fourId");
         String codeFamile,
                 codeRayon;
         String codeGrossiste;
-        String query;
+        String query = request.getParameter("query");
         String file = "";
         switch (ActionDataReporting.valueOf(action)) {
             case MARGE_PRODUITS:
                 codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
-                query = request.getParameter("query");
+
                 Integer critere = null;
                 if (!StringUtils.isEmpty(request.getParameter("critere"))) {
 
@@ -68,14 +69,14 @@ public class DataReportingServlet extends HttpServlet {
                 codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
-                query = request.getParameter("query");
+
                 file = dataReporting.statsUnintesVendues(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste);
                 break;
             case UNITES_GAMME:
                 codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
-                query = request.getParameter("query");
+
                 String gammeId = request.getParameter("gammeId");
                 file = dataReporting.statsUnintesVenduesparGamme(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste, gammeId);
                 break;
@@ -83,7 +84,7 @@ public class DataReportingServlet extends HttpServlet {
                 codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
-                query = request.getParameter("query");
+
                 String laboratoireId = request.getParameter("laboratoireId");
                 file = dataReporting.statsUnintesVenduesparLaboratoire(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste, laboratoireId);
                 break;
@@ -91,7 +92,7 @@ public class DataReportingServlet extends HttpServlet {
                 codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
-                query = request.getParameter("query");
+
                 Integer stock = 0;
                 if (!StringUtils.isEmpty(request.getParameter("stock"))) {
                     try {
@@ -108,7 +109,7 @@ public class DataReportingServlet extends HttpServlet {
                 codeRayon = request.getParameter("codeRayon");
 
                 codeGrossiste = request.getParameter("codeGrossiste");
-                query = request.getParameter("query");
+
                 Integer nbreMois = 0,
                  nbreConsommation = 3;
                 if (!StringUtils.isEmpty(request.getParameter("nbreMois"))) {
@@ -142,7 +143,7 @@ public class DataReportingServlet extends HttpServlet {
                 } catch (Exception e) {
                 }
                 codeGrossiste = request.getParameter("codeGrossiste");
-                query = request.getParameter("query");
+
                 stock = 0;
                 int seuil = 0;
                 try {
@@ -157,9 +158,7 @@ public class DataReportingServlet extends HttpServlet {
                 break;
 
             case COMPARAISON_STOCK_DETAIL:
-                dtStart = request.getParameter("dtStart");
-                dtEnd = request.getParameter("dtEnd");
-                query = request.getParameter("query");
+
                 String id = request.getParameter("id");
                 String libelle = request.getParameter("libelle");
                 String cip = request.getParameter("cip");
@@ -169,7 +168,7 @@ public class DataReportingServlet extends HttpServlet {
                 file = dataReporting.donneesCompteExploitation(dtStart, dtEnd, OTUser);
                 break;
             case ALL_AJUSTEMENTS:
-                query = request.getParameter("query");
+
                 List<TPrivilege> attribute = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
                 boolean canCancel = DateConverter.hasAuthorityByName(attribute, DateConverter.ACTIONDELETEAJUSTEMENT);
                 SalesStatsParams body = new SalesStatsParams();
@@ -188,6 +187,9 @@ public class DataReportingServlet extends HttpServlet {
                 } catch (Exception e) {
                 }
                 file = dataReporting.ajustements(body);
+                break;
+            case RETOUR_FOURNISSEUR:
+                file = dataReporting.loadretoursFournisseur(dtStart, dtEnd, fourId, query, OTUser);
                 break;
 
         }

@@ -52,7 +52,6 @@ public class TRetourFournisseur implements Serializable {
     @Column(name = "dt_DATE")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtDATE;
-   
     @Column(name = "str_REPONSE_FRS", length = 255)
     private String strREPONSEFRS;
     @Column(name = "str_COMMENTAIRE", length = 50)

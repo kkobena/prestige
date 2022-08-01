@@ -143,4 +143,15 @@ public class ReglementRessource {
         JSONObject json = generateTicketService.ticketReglementDiffere(ref);
         return Response.ok().entity(json.toString()).build();
     }
+     @PUT
+    @Path("ticket-carnet/{id}")
+    public Response print(@PathParam("id") String ref) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        JSONObject json = generateTicketService.ticketReglementCarnet(ref);
+        return Response.ok().entity(json.toString()).build();
+    }
 }

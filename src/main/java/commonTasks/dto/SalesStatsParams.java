@@ -27,10 +27,10 @@ public class SalesStatsParams implements Serializable {
     private int nbre;
     private String produitId;
     private String prixachatFiltre;
-    private int stock;
     private String stockFiltre,typeFiltre;
     private String rayonId;
     private String user;
+    private Integer qteVendu,stock;
 
     public String getTypeFiltre() {
         return typeFiltre;
@@ -56,6 +56,14 @@ public class SalesStatsParams implements Serializable {
 
     public void setUser(String user) {
         this.user = user;
+    }
+
+    public Integer getQteVendu() {
+        return qteVendu;
+    }
+
+    public void setQteVendu(Integer qteVendu) {
+        this.qteVendu = qteVendu;
     }
 
     
@@ -92,13 +100,15 @@ public class SalesStatsParams implements Serializable {
         this.prixachatFiltre = prixachatFiltre;
     }
 
-    public int getStock() {
+    public Integer getStock() {
         return stock;
     }
 
-    public void setStock(int stock) {
+    public void setStock(Integer stock) {
         this.stock = stock;
     }
+
+
 
     public String getStockFiltre() {
         return stockFiltre;

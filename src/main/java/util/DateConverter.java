@@ -120,6 +120,8 @@ public final class DateConverter {
     public static final String MARGE = "MARGE";
     public static final String TICKET_Z = "TICKET_Z";
     public static final String TICKET_VENTE = "VENTE";
+     public static final String TICKET_REGLEMENT = "TICKET_REGLEMENT";
+      public static final String TICKET_REGLEMENT_CARNET_DEPOT = "TICKET_REGLEMENT_CARNET_DEPOT";
     public static final String TICKET_VENTE_DOUBLE = "TICKET_DOUBLE";
     public static final String ACTION_ANNULATION_VENTE = "ANNULE_VENTE";
     public static final String PASSE = "passed";
@@ -173,7 +175,7 @@ public final class DateConverter {
     public static final String P_BTN_DESACTIVER_TIERS_PAYANT = "P_BTN_DESACTIVER_TIERS_PAYANT";
     public static final String TIERS_PAYANT_CARNET_ID="2";
     public static final String KEY_PRENDRE_EN_COMPTE_FOND_CAISSE= "KEY_PRENDRE_EN_COMPTE_FOND_CAISSE";
-      public static final String KEY_COMMON_MANAGMENT= "KEY_COMMON";
+    public static final String KEY_COMMON_MANAGMENT= "KEY_COMMON";
     /*
     parametre nombre de mois à considerer
      */
@@ -558,4 +560,14 @@ public final class DateConverter {
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
     }
+    
+       public static LocalDateTime convertDateToLocalDateTimeElseNull(Date dateToConvert) {
+        if (dateToConvert == null) {
+            return  null;
+        }
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    }
+
 }

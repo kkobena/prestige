@@ -64,6 +64,7 @@ Ext.define('testextjs.view.actions.action', {
     getCa: function () {
         Ext.Ajax.request({
             url: '../custom',
+            method: 'GET',
             params: {
                 action: 'getca',
                 dt_start: Ext.getCmp('dt_action_start').getSubmitValue(),
@@ -96,6 +97,7 @@ Ext.define('testextjs.view.actions.action', {
     appliquer: function () {
         Ext.Ajax.request({
             url: '../custom',
+            method: 'GET',
             params: {
                 action: 'getca',
                 dt_start: Ext.getCmp('dt_action_start').getSubmitValue(),

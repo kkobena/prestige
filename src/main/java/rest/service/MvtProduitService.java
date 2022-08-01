@@ -8,6 +8,8 @@ package rest.service;
 import commonTasks.dto.AjustementDTO;
 import commonTasks.dto.AjustementDetailDTO;
 import commonTasks.dto.Params;
+import commonTasks.dto.RetourDetailsDTO;
+import commonTasks.dto.RetourFournisseurDTO;
 import commonTasks.dto.SalesStatsParams;
 import dal.TEmplacement;
 import dal.TFamille;
@@ -92,4 +94,17 @@ public interface MvtProduitService {
 
     List<AjustementDetailDTO> getAllAjustementDetailDTOs(SalesStatsParams params);
 
+    List<RetourFournisseurDTO> loadretoursFournisseur(
+            String dtStart,
+            String dtEnd,
+            int start,
+            int limit,
+            String fourId,
+            String query, boolean cunRemove);
+
+    List<RetourDetailsDTO> loadretoursFournisseur(
+            String dtStart,
+            String dtEnd,
+            String fourId,
+            String query);
 }

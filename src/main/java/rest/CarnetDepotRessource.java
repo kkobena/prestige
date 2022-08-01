@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CarnetAsDepotService;
+import rest.service.ReglementService;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -39,6 +40,8 @@ public class CarnetDepotRessource {
     private HttpServletRequest servletRequest;
     @EJB
     private CarnetAsDepotService carnetAsDepotService;
+    @EJB
+    private ReglementService reglementService;
 
     @GET
     @Path("list")
@@ -100,9 +103,8 @@ public class CarnetDepotRessource {
     @Path("regler/{tiersPayantId}")
     public Response exclureOrInclureById(@PathParam("tiersPayantId") String id, ReglementCarnetDTO o) {
         HttpSession hs = servletRequest.getSession();
-
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        JSONObject json = carnetAsDepotService.faireReglement(o.setTiersPayantId(id), tu);
+        JSONObject json = reglementService.faireReglementCarnetDepot(o.setTiersPayantId(id), tu);
         return Response.ok().entity(json.toString()).build();
     }
 

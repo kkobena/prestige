@@ -77,12 +77,17 @@ public class SockServlet extends HttpServlet {
                 String user = request.getParameter("user");
                 int stock_ = 0;
                   int nbre =0;
+                  Integer qteVendu = null;
                 try {
                     stock_ = Integer.valueOf(request.getParameter("stock"));
                 } catch (Exception e) {
                 }
                 try {
                  nbre=   Integer.valueOf(request.getParameter("nbre"));
+                } catch (Exception e) {
+                }
+                 try {
+                    qteVendu = Integer.valueOf(request.getParameter("qteVendu"));
                 } catch (Exception e) {
                 }
                 String rayonId = request.getParameter("rayonId");
@@ -105,6 +110,7 @@ public class SockServlet extends HttpServlet {
                 body.setStockFiltre(stockFiltre);
                 body.setPrixachatFiltre(prixachatFiltre);
                 body.setNbre(nbre);
+                body.setQteVendu(qteVendu);
                 try {
                     body.setDtEnd(LocalDate.parse(dtEnd));
                 } catch (Exception e) {
@@ -124,6 +130,7 @@ public class SockServlet extends HttpServlet {
                 }
                 file = stock.articlesVendusRecap(body, action, type);
                 break;
+
             default:
                 break;
         }

@@ -882,7 +882,6 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
     @Override
     public List<VenteDetailsDTO> saisiePerimes(String query, String dtStart, String dtEnd, String codeFamile, String codeRayon, String codeGrossiste,Integer grouby, int start, int limit, boolean all) {
-
         try {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -894,7 +893,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             cq.select(root)
                     .orderBy(cb.desc(root.get(TWarehouse_.dtCREATED)));
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TWarehouse> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);

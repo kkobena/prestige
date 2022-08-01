@@ -40,4 +40,6 @@ public interface TvaDataService {
     List<TvaDTO> tvaVnoData(Params params);
 
     List<TvaDTO> statistiqueTvaVnoGroupByDayTva(Params params);
+    
+      List<TvaDTO> tvaVnoDatas(Params params);
 }

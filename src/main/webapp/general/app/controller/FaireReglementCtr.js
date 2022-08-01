@@ -118,6 +118,10 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
                     'fairereglement #typeReglement': {
                         select: this.typeReglementSelectEvent
                     },
+                    'fairereglement #nature': {
+                        select: this.natureSelectEvent
+                    },
+
                     'fairereglement #montantRecu': {
                         change: this.montantRecuChangeListener,
                         specialkey: this.onMontantRecuVnoKey
@@ -133,14 +137,15 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
         }
 
     },
-    montantRecuChangeListener: function (field, value, options) {
+    monnaiRendue: function (montantRecu) {
         var me = this;
-        var montantRecu = parseInt(field.getValue());
         var vnomontantRemise = me.getMontantRemis();
         var montantPayer = me.getMontantPayer();
+        var nature = me.getNature().getValue();
+        var totalRecap = me.getMontantRestant().getValue();
         var monnais = 0;
         if (montantRecu > 0) {
-            var netTopay = me.getMontantNet().getValue();
+            var netTopay = nature === 2 ? totalRecap : me.getMontantNet().getValue();
             monnais = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
             vnomontantRemise.setValue(monnais);
             if (monnais > 0) {
@@ -154,7 +159,38 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
 
         }
     },
+    montantRecuChangeListener: function (field, value, options) {
+        var me = this;
+        let montantRecu = parseInt(field.getValue());
+        me.monnaiRendue(montantRecu);
+    },
+    montantRecuChangeListener___: function (field, value, options) {
+        var me = this;
+        var montantRecu = parseInt(field.getValue());
+        var vnomontantRemise = me.getMontantRemis();
+        var montantPayer = me.getMontantPayer();
+        var nature = me.getNature().getValue();
+        var totalRecap = me.getMontantRestant().getValue();
+        var monnais = 0;
+        if (montantRecu > 0) {
+            var netTopay = nature === 2 ? totalRecap : me.getMontantNet().getValue();
+            monnais = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
+            vnomontantRemise.setValue(monnais);
+            if (monnais > 0) {
+                montantPayer.setValue(0);
+            } else {
+                montantPayer.setValue(netTopay - montantRecu);
+            }
+        } else if (montantRecu <= 0) {
+            vnomontantRemise.setValue(0);
+            montantPayer.setValue(netTopay);
 
+        }
+    },
+    natureSelectEvent: function (field) {
+        let me = this;
+        me.monnaiRendue(parseInt(me.getMontantRecu().getValue()));
+    },
     onSelect: function (_this, record, index) {
         var me = this;
         var total = 0;
@@ -182,6 +218,7 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
         });
 
     },
+
     typeReglementSelectEvent: function (field) {
         let me = this;
         let value = field.getValue().trim();
@@ -381,12 +418,13 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
         var montantRecu = me.getMontantRecu().getValue();
         var montantRemis = (montantRecu > montantNet) ? montantRecu - montantNet : 0;
         var montantPaye = montantRecu - montantRemis;
+
         if (nature === 2) {
-            if (montantRecu < montantNet) {
+            if (montantRecu < totalRecap) {
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
                     width: 320,
-                    msg: "Veuillez saisir un montant correspondant au total à payer",
+                    msg: "Veuillez saisir un montant correspondant au total à payer; ou choisr l'option règlement partiel",
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.ERROR,
                     fn: function (buttonId) {

@@ -143,4 +143,22 @@ public class ErpRessource {
 
         return Response.ok().build();
     }
+
+    @GET
+    @Path("ws/groupe-tierspayants")
+    public Response allGroupeTiersPayants() {
+        return Response.ok().entity(erpService.allGroupeTiersPayants()).build();
+    }
+    
+      @GET
+    @Path("ws/tierspayants")
+    public Response allWsTiersPayants() {
+        return Response.ok().entity(erpService.allWsTiersPayants()).build();
+    }
+    
+      @GET
+    @Path("ws/clients")
+    public Response allWsClients() {
+        return Response.ok().entity(erpService.allWsClients()).build();
+    }
 }

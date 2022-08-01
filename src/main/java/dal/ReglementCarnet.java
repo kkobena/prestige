@@ -58,7 +58,20 @@ public class ReglementCarnet implements Serializable {
     private LocalDateTime createdAt = LocalDateTime.now();
     @NotNull
     @Column(name = "reference", nullable = false)
-    private Integer reference=0;
+    private Integer reference = 0;
+    @JoinColumn(name = "type_reglement_id", referencedColumnName = "lg_TYPE_REGLEMENT_ID", nullable = false)
+    @ManyToOne
+    private TTypeReglement typeReglement;
+    @Column(name = "id_dossier", length = 50)
+    private String idDossier;
+
+    public String getIdDossier() {
+        return idDossier;
+    }
+
+    public void setIdDossier(String idDossier) {
+        this.idDossier = idDossier;
+    }
 
     public ReglementCarnet() {
     }
@@ -69,6 +82,14 @@ public class ReglementCarnet implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public TTypeReglement getTypeReglement() {
+        return typeReglement;
+    }
+
+    public void setTypeReglement(TTypeReglement typeReglement) {
+        this.typeReglement = typeReglement;
     }
 
     public String getDescription() {

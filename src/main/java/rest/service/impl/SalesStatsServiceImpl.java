@@ -77,6 +77,7 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -1250,8 +1251,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     break;
             }
         }
-        if (!StringUtils.isEmpty(param.getStockFiltre())) {
-            switch (param.getStockFiltre()) {
+        if (!StringUtils.isEmpty(param.getStockFiltre()) && param.getStock()!=null) {
+            switch (param.getStockFiltre() ) {
                 case Parameter.LESS:
                     predicates.add(cb.lessThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
 
@@ -1273,6 +1274,36 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     break;
                 case Parameter.LESSOREQUAL:
                     predicates.add(cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
+
+                    break;
+                default:
+                    break;
+
+            }
+        }
+         if (!StringUtils.isEmpty(param.getStockFiltre()) && param.getQteVendu()!=null) {
+            switch (param.getStockFiltre() ) {
+                case Parameter.LESS:
+                    predicates.add(cb.lessThan(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
+
+                    break;
+                case Parameter.EQUAL:
+                    predicates.add(cb.equal(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
+
+                    break;
+                case Parameter.DIFF:
+                    predicates.add(cb.notEqual(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
+
+                    break;
+                case Parameter.MORE:
+                    predicates.add(cb.greaterThan(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
+
+                    break;
+                case Parameter.MOREOREQUAL:
+                    predicates.add(cb.greaterThanOrEqualTo(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
+                    break;
+                case Parameter.LESSOREQUAL:
+                    predicates.add(cb.lessThanOrEqualTo(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
 
                     break;
                 default:
@@ -1313,7 +1344,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             ))
                     .orderBy(cb.asc(jp.get(TPreenregistrement_.dtUPDATED)));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -1353,7 +1384,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.select(cb.count(root));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
 
@@ -1374,7 +1405,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TFamille, TFamilleStock> st = jf.joinCollection("tFamilleStockCollection", JoinType.INNER);
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
 
@@ -1409,7 +1440,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID))
                     .orderBy(cb.asc(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -1434,7 +1465,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID))
             ).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList().size();
 
@@ -1485,7 +1516,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             ))
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             datas = q.getResultList();
             List<VenteDetailsDTO> details = new ArrayList<>();
@@ -1574,7 +1605,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
             cq.select(root).orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
             List<Predicate> predicates = predicatesVentesAnnulees(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(cq);
             return q.getResultList().stream().map(v -> new VenteDetailsDTO(v, true)).collect(Collectors.toList());
 

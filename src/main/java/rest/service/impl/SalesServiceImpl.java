@@ -175,51 +175,52 @@ public class SalesServiceImpl implements SalesService {
             CategoryTransaction categoryTransaction, TypeTransaction typeTransaction,
             TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse,
             Integer montantPaye, Integer marge, int montantAcc, MontantAPaye data) throws Exception{
-        MvtTransaction _new = new MvtTransaction();
+        MvtTransaction transactionNew = new MvtTransaction();
         int compare = montantNet.compareTo(montantVerse);
-        Integer montantPaid, montantRestant = 0;
+        Integer montantPaid;
+        Integer montantRestant = 0;
         if (compare <= 0) {
             montantPaid = montantNet;
         } else {
             montantPaid = montantVerse;
             montantRestant = montantNet - montantVerse;
         }
-        _new.setUuid(UUID.randomUUID().toString());
-        _new.setUser(ooTUser);
-        _new.setCreatedAt(DateConverter.convertDateToLocalDateTime(tp.getDtUPDATED()));
-        _new.setMvtDate(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()));
-        _new.setPkey(tp.getLgPREENREGISTREMENTID());
-        _new.setAvoidAmount(voidAmount);
-        _new.setMontant(montant);
-        _new.setMagasin(ooTUser.getLgEMPLACEMENTID());
-        _new.setCaisse(ooTUser);
-        _new.setMontantCredit(0);
-        _new.setMontantVerse(montantVerse);
-        _new.setMontantRegle(montantPaid);
-        _new.setMontantNet(montantNet);
-        _new.settTypeMvtCaisse(tTypeMvtCaisse);
-        _new.setReglement(reglement);
-        _new.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
-        _new.setMarge(marge);
-        _new.setReference(tp.getStrREF());
-        _new.setMontantPaye(montantPaye);
-        _new.setMontantRemise(montant - montantNet);
-        _new.setCategoryTransaction(categoryTransaction);
-        _new.setTypeTransaction(typeTransaction);
-        _new.setChecked(checked);
-        _new.setMontantTva(tp.getMontantTva());
-        _new.setMontantAcc(montantAcc);
+        transactionNew.setUuid(UUID.randomUUID().toString());
+        transactionNew.setUser(ooTUser);
+        transactionNew.setCreatedAt(DateConverter.convertDateToLocalDateTime(tp.getDtUPDATED()));
+        transactionNew.setMvtDate(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()));
+        transactionNew.setPkey(tp.getLgPREENREGISTREMENTID());
+        transactionNew.setAvoidAmount(voidAmount);
+        transactionNew.setMontant(montant);
+        transactionNew.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        transactionNew.setCaisse(ooTUser);
+        transactionNew.setMontantCredit(0);
+        transactionNew.setMontantVerse(montantVerse);
+        transactionNew.setMontantRegle(montantPaid);
+        transactionNew.setMontantNet(montantNet);
+        transactionNew.settTypeMvtCaisse(tTypeMvtCaisse);
+        transactionNew.setReglement(reglement);
+        transactionNew.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
+        transactionNew.setMarge(marge);
+        transactionNew.setReference(tp.getStrREF());
+        transactionNew.setMontantPaye(montantPaye);
+        transactionNew.setMontantRemise(montant - montantNet);
+        transactionNew.setCategoryTransaction(categoryTransaction);
+        transactionNew.setTypeTransaction(typeTransaction);
+        transactionNew.setChecked(checked);
+        transactionNew.setMontantTva(tp.getMontantTva());
+        transactionNew.setMontantAcc(montantAcc);
         if (data != null) {
-            _new.setMontantnetug(data.getMontantNetUg());
-            _new.setMontantttcug(data.getMontantTtcUg());
-            _new.setMargeug(data.getMargeUg());
-            _new.setMontantTvaUg(data.getMontantTvaUg());
+            transactionNew.setMontantnetug(data.getMontantNetUg());
+            transactionNew.setMontantttcug(data.getMontantTtcUg());
+            transactionNew.setMargeug(data.getMargeUg());
+            transactionNew.setMontantTvaUg(data.getMontantTvaUg());
         }
         if (tp.getClient() != null) {
-            _new.setOrganisme(tp.getClient().getLgCLIENTID());
+            transactionNew.setOrganisme(tp.getClient().getLgCLIENTID());
         }
-         getEm().persist(_new);
-        return _new;
+         getEm().persist(transactionNew);
+        return transactionNew;
         
     }
     
@@ -628,7 +629,7 @@ public class SalesServiceImpl implements SalesService {
                 TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), emplacement, emg);
                 int initStock = familleStock.getIntNUMBERAVAILABLE();
                 familleStock.setIntUG(familleStock.getIntUG() - _newItem.getIntUG());
-                mouvementProduitService.saveMvtProduit(_newItem.getIntPRICEUNITAIR(), _newItem.getLgPREENREGISTREMENTDETAILID(),
+                mouvementProduitService.saveMvtProduit(_newItem.getIntPRICEUNITAIR(), _newItem,
                         typemvtproduit, OTFamille, ooTUser, emplacement,
                         _newItem.getIntQUANTITY(), initStock, initStock - _newItem.getIntQUANTITY(), emg, _newItem.getValeurTva(), checked, e.getIntUG());
                 
@@ -2798,10 +2799,11 @@ public class SalesServiceImpl implements SalesService {
         
     }
     
+    
     public MontantAPaye calculVoNet(TPreenregistrement OTPreenregistrement, List<TiersPayantParams> tierspayants, EntityManager emg) {
         try {
             ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, emg);
-            Integer RemiseCarnet = 0, montantvente = 0;
+            Integer RemiseCarnet = 0, montantvente ;
             Integer totalTp = 0, totalTaux = 0, montantVariable;
             MontantAPaye montantAPaye;
             List<TiersPayantParams> resultat = new ArrayList<>();
@@ -2900,7 +2902,6 @@ public class SalesServiceImpl implements SalesService {
             Integer remise = 0;
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2") && !famille.getStrCODEREMISE().equals("3")) {
                 TGrilleRemise OTGrilleRemise = grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(), famille, OTRemise.getLgREMISEID());
-                
                 if (OTGrilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * OTGrilleRemise.getDblTAUX()) / 100);
                     if (!x.getBoolACCOUNT()) {
@@ -4330,7 +4331,7 @@ public class SalesServiceImpl implements SalesService {
             _new.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
             _new.setStrNUMEROSECURITESOCIAL(a.getStrNUMEROSECURITESOCIAL());
         });
-//        _new.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
+//        transactionNew.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
        _new.setCompletionDate(new Date());
         getEm().merge(_new);
         return _new;
@@ -4398,7 +4399,7 @@ public class SalesServiceImpl implements SalesService {
                 updateNbreVenteApresAnnulation(OTFamille, ooTUser, _newItem.getIntQUANTITY(), emg);
                 TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), emplacement, emg);
                 int initStock = familleStock.getIntNUMBERAVAILABLE();
-                mouvementProduitService.saveMvtProduit(_newItem.getIntPRICEUNITAIR(), _newItem.getLgPREENREGISTREMENTDETAILID(),
+                mouvementProduitService.saveMvtProduit(_newItem.getIntPRICEUNITAIR(), _newItem,
                         typemvtproduit, OTFamille, ooTUser, emplacement,
                         _newItem.getIntQUANTITY(), initStock, initStock - _newItem.getIntQUANTITY(), emg, _newItem.getValeurTva(), checked, e.getIntUG());
                 

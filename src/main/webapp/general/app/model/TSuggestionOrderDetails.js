@@ -210,6 +210,10 @@ Ext.define('testextjs.model.TSuggestionOrderDetails', {
          {
             name: 'STATUS',
             type: 'int'
+        },
+        {
+            name: 'bool_DECONDITIONNE_EXIST',
+            type: 'int'
         }
         
         //fin code ajouté

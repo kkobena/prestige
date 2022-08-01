@@ -17,6 +17,7 @@ import dal.TPreenregistrementCompteClientTiersPayent_;
 import dal.TPreenregistrement_;
 import dal.TTiersPayant;
 import dal.TTiersPayant_;
+import dal.TTypeMvtCaisse;
 import dal.TUser;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,9 +45,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import rest.service.CarnetAsDepotService;
+import rest.service.ReglementService;
 import rest.service.RetourCarnetService;
 import rest.service.dto.ExtraitCompteClientDTO;
 import rest.service.dto.ProduitVenduDTO;
+import util.DateConverter;
 
 /**
  *
@@ -60,6 +63,8 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     private EntityManager em;
     @EJB
     private RetourCarnetService retourCarnetService;
+    @EJB
+    private ReglementService reglementService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -167,7 +172,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
             cq.select(cb.count(root));
             List<Predicate> predicates = fetchVentePredicat(cb, root, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tiersPayantId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {
@@ -213,7 +218,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
             cq.select(root).orderBy(cb.desc(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.dtUPDATED)));
             List<Predicate> predicates = fetchVentePredicat(cb, root, dtStart, dtEnd, tiersPayantId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -236,7 +241,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
                     cb.count(root)
             ));
             List<Predicate> predicates = fetchVentePredicat(cb, root, dtStart, dtEnd, tiersPayantId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TiersPayantExclusDTO> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {
@@ -265,7 +270,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             Root<ReglementCarnet> root = cq.from(ReglementCarnet.class);
             cq.select(root).orderBy(cb.desc(root.get(ReglementCarnet_.createdAt)));
             List<Predicate> predicates = reglementsCarnetPredicat(cb, root, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tiersPayantId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ReglementCarnet> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -298,7 +303,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             Root<ReglementCarnet> root = cq.from(ReglementCarnet.class);
             cq.select(cb.count(root));
             List<Predicate> predicates = reglementsCarnetPredicat(cb, root, dtStart, dtEnd, tiersPayantId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {
@@ -316,7 +321,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
                     cb.count(root)
             ));
             List<Predicate> predicates = reglementsCarnetPredicat(cb, root, dtStart, dtEnd, tiersPayantId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ReglementCarnetDTO> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {
@@ -328,7 +333,10 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     @Override
     public JSONObject faireReglement(ReglementCarnetDTO reglementCarnetDTO, TUser user) {
         JSONObject json = new JSONObject();
-
+        if (!reglementService.checkCaisse(user)) {
+            return json.put("success", false).put("msg", "Votre caisse est fermée");
+        }
+        TTypeMvtCaisse OTTypeMvtCaisse = getEntityManager().find(TTypeMvtCaisse.class, DateConverter.MVT_REGLE_TP);
         TTiersPayant payant = getEntityManager().find(TTiersPayant.class, reglementCarnetDTO.getTiersPayantId());
         if (payant.getAccount().intValue() < reglementCarnetDTO.getMontantPaye()) {
             return json.put("success", false).put("msg", "VEUILLEZ SAISIR UN MONTANT EGAL OU INFERIEUR AU SOLDE");
@@ -409,7 +417,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         List<ProduitVenduDTO> datas = listeArticleByTiersPayantByProduitId(produitId, tierspayantId, dtStart, dtEnd);
         JSONObject json = new JSONObject();
         json.put("total", datas.size());
-        json.put("success", datas.size() > 0);
+        json.put("success", !datas.isEmpty());
         json.put("data", new JSONArray(datas));
         return json;
     }

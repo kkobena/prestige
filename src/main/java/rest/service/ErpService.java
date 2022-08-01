@@ -13,6 +13,9 @@ import commonTasks.dto.ErpReglementDTO;
 import commonTasks.dto.ErpTiersPayant;
 import commonTasks.dto.ErpTiersPayantDTO;
 import commonTasks.dto.StockDailyValueDTO;
+import commonTasks.ws.CustomerDTO;
+import commonTasks.ws.GroupeTiersPayantDTO;
+import commonTasks.ws.TiersPayantDto;
 import java.util.List;
 
 /**
@@ -36,5 +39,11 @@ public interface ErpService {
     List<ErpAchatFournisseurDTO> achatsFournisseurs(String dtStart, String dtEnd);
 
     List<ErpTiersPayant> allTiersPayants();
+
+    List<GroupeTiersPayantDTO> allGroupeTiersPayants();
+
+    List<TiersPayantDto> allWsTiersPayants();
+
+    List<CustomerDTO> allWsClients();
 
 }

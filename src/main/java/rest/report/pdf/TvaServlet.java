@@ -52,12 +52,14 @@ public class TvaServlet extends HttpServlet {
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
+        String ref=request.getParameter("ref");
         boolean checkug = false;
         try {
             checkug = Boolean.valueOf(request.getParameter("checkug"));
         } catch (Exception e) {
         }
         Params params = new Params();
+        params.setRef(ref);
         params.setOperateur(OTUser);
         String file = "";
         if (dtEnd != null && !"".equals(dtEnd)) {
@@ -77,6 +79,8 @@ public class TvaServlet extends HttpServlet {
             case TVA_JOUR:
                 file = tvaPdfGroupByJour(params);
                 break;
+                default:
+                    break;
         }
         response.sendRedirect(request.getContextPath() + file);
     }
@@ -152,7 +156,8 @@ public class TvaServlet extends HttpServlet {
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".pdf";
         List<TvaDTO> datas;
         if (StringUtils.isNotBlank(parasm.getRef()) && !parasm.getRef().equalsIgnoreCase("TOUT")) {
-            datas = tvaDataService.tvaVnoData(parasm);
+          
+            datas = tvaDataService.tvaVnoDatas(parasm);
         } else {
             datas = tvaDataService.statistiqueTva(parasm);
         }

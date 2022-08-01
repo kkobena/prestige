@@ -328,7 +328,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             }
 
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
-            mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it.getLgPREENREGISTREMENTDETAILID(),
+            mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it,
                     typemvtproduit, tFamille, tu, emplacement,
                     it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg, it.getValeurTva(), tp.getChecked(), it.getIntUG());
 
@@ -443,7 +443,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
                 }
                 updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
-                mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it.getLgPREENREGISTREMENTDETAILID(),
+                mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it,
                         typemvtproduit, tFamille, tu, emplacement,
                         it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg, it.getValeurTva(), true, it.getIntUG());
                 emg.merge(it);
@@ -494,7 +494,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             }
 
         }
-        mouvementProduitService.saveMvtProduit(OTFamille.getIntPRICE(), familleStock.getLgFAMILLESTOCKID(),
+        mouvementProduitService.saveMvtProduit2(OTFamille.getIntPRICE(), familleStock.getLgFAMILLESTOCKID(),
                 typemvtproduit, OTFamille, ooTUser, OTEmplacement,
                 qty, initStock, initStock - qty, emg, 0, false, 0);
 
@@ -1367,6 +1367,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     @Override
     public JSONObject loadetourFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query, boolean cunRemove) throws JSONException {
+        List<RetourFournisseurDTO> data = loadretoursFournisseur(dtStart, dtEnd, start, limit, fourId, query, cunRemove);
+        return new JSONObject().put("total", data.size()).put("results", new JSONArray(data));
+    }
+
+    @Override
+    public List<RetourFournisseurDTO> loadretoursFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query, boolean cunRemove) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEmg().getCriteriaBuilder();
@@ -1386,16 +1392,50 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 Subquery<TRetourFournisseur> sub = cq.subquery(TRetourFournisseur.class);
                 Root<TRetourFournisseurDetail> pr = sub.from(TRetourFournisseurDetail.class);
                 subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
-                sub.select(pr.get(TRetourFournisseurDetail_.lgRETOURFRSID)).where(cb.and(subpr.toArray(new Predicate[subpr.size()])));
+                sub.select(pr.get(TRetourFournisseurDetail_.lgRETOURFRSID)).where(cb.and(subpr.toArray(new Predicate[0])));
                 predicates.add(cb.in(root).value(sub));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TRetourFournisseur> q = getEmg().createQuery(cq);
-            List<RetourFournisseurDTO> l = q.getResultList().stream().map(x -> new RetourFournisseurDTO(x, x.getTRetourFournisseurDetailCollection().stream().map(RetourDetailsDTO::new).collect(Collectors.toList()), cunRemove)).collect(Collectors.toList());
-            return new JSONObject().put("total", l.size()).put("results", new JSONArray(l));
+            return q.getResultList().stream().map(x -> new RetourFournisseurDTO(x, x.getTRetourFournisseurDetailCollection().stream().map(RetourDetailsDTO::new).collect(Collectors.toList()), cunRemove)).collect(Collectors.toList());
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-            return new JSONObject().put("total", 0).put("results", new JSONArray());
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<RetourDetailsDTO> loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query) {
+        try {
+            List<Predicate> predicates = new ArrayList<>();
+            CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+            CriteriaQuery<TRetourFournisseur> cq = cb.createQuery(TRetourFournisseur.class);
+            Root<TRetourFournisseur> root = cq.from(TRetourFournisseur.class);
+            Fetch<TRetourFournisseur, TRetourFournisseurDetail> d = root.fetch("tRetourFournisseurDetailCollection", JoinType.INNER);
+            cq.select(root).distinct(true);
+            predicates.add(cb.equal(root.get(TRetourFournisseur_.strSTATUT), DateConverter.STATUT_ENABLE));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TRetourFournisseur_.dtUPDATED)), java.sql.Date.valueOf(dtStart),
+                    java.sql.Date.valueOf(dtEnd));
+            predicates.add(btw);
+            if (!StringUtils.isEmpty(fourId)) {
+                predicates.add(cb.equal(root.get(TRetourFournisseur_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), fourId));
+            }
+            if (!StringUtils.isEmpty(query)) {
+                List<Predicate> subpr = new ArrayList<>();
+                Subquery<TRetourFournisseur> sub = cq.subquery(TRetourFournisseur.class);
+                Root<TRetourFournisseurDetail> pr = sub.from(TRetourFournisseurDetail.class);
+                subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
+                sub.select(pr.get(TRetourFournisseurDetail_.lgRETOURFRSID)).where(cb.and(subpr.toArray(new Predicate[0])));
+                predicates.add(cb.in(root).value(sub));
+            }
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            TypedQuery<TRetourFournisseur> q = getEmg().createQuery(cq);
+            return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection().stream()).map(RetourDetailsDTO::new).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
         }
     }
 

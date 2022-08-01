@@ -479,6 +479,23 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                                 }
                             }
                         }, '-',
+                          {
+                            xtype: 'textfield',
+                            id: 'qteVendu',
+                            flex: 0.5,
+                            emptyText: 'Qté.Vendue',
+                            listeners: {
+                                'render': function (cmp) {
+                                    cmp.getEl().on('keypress', function (e) {
+                                        if (e.getKey() === e.ENTER) {
+                                            Me.onRechClick();
+                                        }
+                                    });
+                                }
+                            }
+                        }, '-',
+                        
+                        
                         {
                             xtype: 'combobox',
                             fieldLabel: 'Filtre prix achat',
@@ -529,12 +546,12 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                             hStart: '',
                             hEnd: '',
                             user: '',
-                            stock: 0,
-                            user: '',
+                            stock: null,
                             typeTransaction: 'ALL',
                             rayonId: '',
                             prixachatFiltre: '',
-                            stockFiltre: ''
+                            stockFiltre: '',
+                            qteVendu: null
                         };
 
 
@@ -550,17 +567,13 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                         myProxy.setExtraParam('rayonId', Ext.getCmp('rayons').getValue());
                         myProxy.setExtraParam('prixachatFiltre', Ext.getCmp('prixachatFiltre').getValue());
                         myProxy.setExtraParam('stockFiltre', Ext.getCmp('stockFiltre').getValue());
-                        myProxy.setExtraParam('stock', (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0));
+                        myProxy.setExtraParam('stock', (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : null));
+                          myProxy.setExtraParam('qteVendu', (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : null));
+                        
                     }
 
                 }
             }
-
-
-
-
-
-
         });
 
         this.callParent();
@@ -625,9 +638,10 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                 typeTransaction: (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL"),
                 nbre: (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0),
                 prixachatFiltre: Ext.getCmp('prixachatFiltre').getValue(),
-                stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0),
+                stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : null),
                 stockFiltre: Ext.getCmp('stockFiltre').getValue(),
-                rayonId: Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : ""
+                rayonId: Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "",
+                qteVendu: (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : null)
 
             }
         });
@@ -638,9 +652,9 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
         linkUrl += "&hEnd=" + (Ext.getCmp('h_fin').getSubmitValue() != null ? Ext.getCmp('h_fin').getSubmitValue() : "") + "&query=" + Ext.getCmp('rechecher').getValue();
         linkUrl += "&typeTransaction=" + (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL");
         linkUrl += "&nbre=" + (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0) + '&prixachatFiltre=' + Ext.getCmp('prixachatFiltre').getValue();
-        linkUrl += "&stock=" + (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0) + '&stockFiltre=' + (Ext.getCmp('stockFiltre').getValue() != null ? Ext.getCmp('stockFiltre').getValue() : "");
+        linkUrl += "&stock=" + (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : "") + '&stockFiltre=' + (Ext.getCmp('stockFiltre').getValue() != null ? Ext.getCmp('stockFiltre').getValue() : "");
         linkUrl += "&user=" + (Ext.getCmp('lg_USER_ID').getValue() != null ? Ext.getCmp('lg_USER_ID').getValue() : "");
-        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=detail';
+        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=detail&qteVendu='+ (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : "");
 
         window.open(linkUrl);
     },
@@ -652,9 +666,9 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
         linkUrl += "&hEnd=" + (Ext.getCmp('h_fin').getSubmitValue() != null ? Ext.getCmp('h_fin').getSubmitValue() : "") + "&query=" + Ext.getCmp('rechecher').getValue();
         linkUrl += "&typeTransaction=" + (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL");
         linkUrl += "&nbre=" + (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0) + '&prixachatFiltre=' + Ext.getCmp('prixachatFiltre').getValue();
-        linkUrl += "&stock=" + (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0) + '&stockFiltre=' + (Ext.getCmp('stockFiltre').getValue() != null ? Ext.getCmp('stockFiltre').getValue() : "");
+        linkUrl += "&stock=" + (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : "") + '&stockFiltre=' + (Ext.getCmp('stockFiltre').getValue() != null ? Ext.getCmp('stockFiltre').getValue() : "");
         linkUrl += "&user=" + (Ext.getCmp('lg_USER_ID').getValue() != null ? Ext.getCmp('lg_USER_ID').getValue() : "");
-        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=rayon';
+        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=rayon&qteVendu='+ (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : "");
 
         window.open(linkUrl);
     },
@@ -669,10 +683,10 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
             query: Ext.getCmp('rechecher').getValue(),
             typeTransaction: (Ext.getCmp('str_TYPE_TRANSACTION').getValue() !== null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL"),
             nbre: (Ext.getCmp('int_NUMBER').getValue() !== null ? Ext.getCmp('int_NUMBER').getValue() : 0),
-            stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : 0),
+            stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : null),
             stockFiltre: Ext.getCmp('stockFiltre').getValue(),
-            prixachatFiltre: Ext.getCmp('prixachatFiltre').getValue(),
-            rayonId: Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : ""
+            rayonId: Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "",
+             qteVendu: (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : null),
         };
         var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({

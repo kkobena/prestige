@@ -450,8 +450,6 @@ public class ImpressionServiceImpl implements Printable {
                 }
                 break;
             }
-           
-           
             case DateConverter.TICKET_Z: {
                 Font font;
                 for (int i = 0; i < datas.size(); i++) {
@@ -484,6 +482,7 @@ public class ImpressionServiceImpl implements Printable {
                 }
                 break;
             }
+            
             default:
                 for (int i = 0; i < datas.size(); i++) {
                     String[] parts = datas.get(i).split(";");

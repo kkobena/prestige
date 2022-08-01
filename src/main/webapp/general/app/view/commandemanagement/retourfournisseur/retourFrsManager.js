@@ -71,7 +71,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.retourFrsManager
             autoLoad: true,
             proxy: {
                 type: 'ajax',
-//                url: url_services_data_retourfournisseur_list,
                 url: '../api/v1/produit/retours-data',
                 reader: {
                     type: 'json',
@@ -326,12 +325,19 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.retourFrsManager
                             });
                         }
                     }
-                },
+                }, '',
                 {
                     text: 'rechercher',
                     tooltip: 'rechercher',
                     scope: this,
                     handler: this.onRechClick
+                }, '',
+                {
+                    text: 'Imprimer',
+                    iconCls: 'printable',
+                    tooltip: 'imprimer',
+                    scope: this,
+                    handler: this.printLitToPDF
                 }
             ],
             bbar: {
@@ -476,6 +482,19 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.retourFrsManager
                     }
                 });
 
+    },
+    printLitToPDF: function () {
+
+        var query = Ext.getCmp('rechecher').getValue();
+        var dtStart = Ext.getCmp('datedebut').getSubmitValue();
+        var dtEnd = Ext.getCmp('datefin').getSubmitValue();
+        var fourId = Ext.getCmp('lg_GROSSISTE_ID').getValue();
+        if(fourId===null || fourId===undefined ){
+            fourId='';
+        }
+        var linkUrl = '../DataReportingServlet?dtStart=' + dtStart + "&dtEnd=" + dtEnd + "&query=" + query + "&mode=RETOUR_FOURNISSEUR" + "&fourId=" + fourId;
+
+        window.open(linkUrl);
     },
     onRechClick: function () {
 

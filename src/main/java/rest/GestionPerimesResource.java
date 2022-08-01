@@ -6,18 +6,22 @@
 package rest;
 
 import commonTasks.dto.Params;
+import dal.GammeProduit;
 import dal.TUser;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import rest.service.GestionPerimesService;
@@ -80,5 +84,14 @@ public class GestionPerimesResource {
 
         JSONObject json = gestionPerimesService.completePerimes(id, tu);
         return Response.ok(json.toString()).build();
+    }
+
+    @GET
+    @Path("saisie-encours")
+    public Response getPerimesSaisiEnCours(
+            @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit) {
+        JSONObject json = gestionPerimesService.getPerimesSaisiEnCours(start, limit);
+        return Response.ok().entity(json.toString()).build();
     }
 }
