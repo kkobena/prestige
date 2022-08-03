@@ -534,9 +534,7 @@ public class VenteDetailsDTO implements Serializable {
         return bISAVOIR;
     }
 
-//    public boolean isbISAVOIR() {
-//        return bISAVOIR;
-//    }
+
     public void setbISAVOIR(boolean bISAVOIR) {
         this.bISAVOIR = bISAVOIR;
     }
@@ -765,7 +763,6 @@ public class VenteDetailsDTO implements Serializable {
         this.dateHeure = dateFormatHeure.format(warehouse.getDtCREATED());
         this.intPRICEUNITAIR = famille.getIntPRICE();
         this.ticketNum = warehouse.getIntNUMLOT();
-//        TGrossiste g=warehouse.getLgGROSSISTEID();
         TGrossiste g = famille.getLgGROSSISTEID();
         if (g != null) {
             this.grossisteId = g.getLgGROSSISTEID();

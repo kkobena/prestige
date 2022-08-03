@@ -851,7 +851,8 @@ Ext.application({
         'DoRetourCarnetCtr',
         'CarnetRetourCtr',
         'TierspAsDepotCtrl',
-        'TierspExclusCtrl'
+        'TierspExclusCtrl',
+        'SuiviPerimesCtr'
     ],
     stores: [
         'Menu'

@@ -8,6 +8,7 @@ package rest.service;
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
+import commonTasks.dto.SummaryDTO;
 import commonTasks.dto.TicketDTO;
 import commonTasks.dto.TiersPayantParams;
 import commonTasks.dto.TvaDTO;
@@ -118,7 +119,12 @@ public interface SalesStatsService {
     List<TvaDTO> tvasRapport20(Params params);
 
     List<TvaDTO> tvaRapport2(Params params);
-    
-     List<TvaDTO> tvasRapportJournalier2(Params params);
 
+    List<TvaDTO> tvasRapportJournalier2(Params params);
+
+    SummaryDTO summarySales(SalesStatsParams params);
+
+    List<VenteDTO> listVentes(SalesStatsParams params);
+
+    List<VenteDTO> venteAvecRemise(SalesStatsParams params);
 }

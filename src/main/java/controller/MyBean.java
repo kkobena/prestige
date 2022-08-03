@@ -120,7 +120,7 @@ public class MyBean extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             switch (action) {
                 case "tva":
-                    System.out.println("===========================>>> tva "+action);
+                 
                     array = getTvaDatas(dt_start, dt_end);
                     data.put("data", array);
                     data.put("total", array.length());

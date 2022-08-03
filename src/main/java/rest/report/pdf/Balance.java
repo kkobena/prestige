@@ -987,7 +987,7 @@ public class Balance {
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getUserId());
         parameters.put("P_H_CLT_INFOS", "LISTE DES AVOIRS");
         parameters.put("avoir_subreport", jdom.scr_report_file);
-        System.out.println(jdom.scr_report_file);
+      
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".pdf";
         List<VenteDTO> data = salesStatsService.listeVentesReport(params);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "avoirs_" + report_generate_file, data);
@@ -1105,5 +1105,20 @@ public class Balance {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_statfamilleart_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_statfamilleart_" + report_generate_file;
     }
-
+  public String suiviRemise(SalesStatsParams params) {
+        TOfficine oTOfficine = caisseService.findOfficine();
+        String scr_report_file = "rp_suivi_remise";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getUserId());
+        String periode = "PERIODE DU " + params.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (! params.getDtStart().isEqual(params.getDtEnd())) {
+            periode += " AU " + params.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        parameters.put("P_H_CLT_INFOS", "SUIVI  REMISE "+periode);
+        parameters.put("suivi_remise_subreport", jdom.scr_report_file);
+      
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".pdf";
+        List<VenteDTO> data = salesStatsService.venteAvecRemise(params);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "suivi_remise_" + report_generate_file, data);
+        return "/data/reports/pdf/suivi_remise_" + report_generate_file;
+    }
 }

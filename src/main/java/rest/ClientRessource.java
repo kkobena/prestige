@@ -108,9 +108,7 @@ public class ClientRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-    public ClientRessource() {
-
-    }
+   
 
     @GET
     public Response findClients(

@@ -54,7 +54,7 @@ public class BalancePdfServlet extends HttpServlet {
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, TABLEAUOLD, RECAP, TVA_JOUR,
         STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS,
-        BALANCE_PARA, SAISIE_PERIMES,STAT_FAMILLE_ARTICLE_VETO
+        BALANCE_PARA, SAISIE_PERIMES, STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -101,8 +101,8 @@ public class BalancePdfServlet extends HttpServlet {
                 break;
             case TABLEAU:
                 boolean ration = Boolean.valueOf(request.getParameter("ration"));
-                  boolean monthly = Boolean.valueOf(request.getParameter("monthly"));
-                file = balance.tableauBordPharmation(params, ration,monthly);
+                boolean monthly = Boolean.valueOf(request.getParameter("monthly"));
+                file = balance.tableauBordPharmation(params, ration, monthly);
                 break;
             case TABLEAUOLD:
                 boolean _ration = Boolean.valueOf(request.getParameter("ration"));
@@ -167,7 +167,7 @@ public class BalancePdfServlet extends HttpServlet {
                 file = balance.familleArticle(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste);
                 break;
             case STAT_FAMILLE_ARTICLE_VETO:
-                 codeFamile = request.getParameter("codeFamile");
+                codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
                 query = request.getParameter("query");
@@ -198,12 +198,12 @@ public class BalancePdfServlet extends HttpServlet {
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
                 query = request.getParameter("query");
-                Integer groupby=null;
+                Integer groupby = null;
                 try {
-                       groupby =Integer.valueOf(request.getParameter("groupby")) ;
+                    groupby = Integer.valueOf(request.getParameter("groupby"));
                 } catch (Exception e) {
                 }
-                file = balance.saisiePerimes(query, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste,groupby);
+                file = balance.saisiePerimes(query, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste, groupby);
                 break;
             case STAT_PROVIDER_ARTICLE:
                 codeFamile = request.getParameter("codeFamile");
@@ -220,30 +220,13 @@ public class BalancePdfServlet extends HttpServlet {
                 file = balance.statistiqueParRayons(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste);
                 break;
             case UNITES_AVOIRS:
-                dtStart = request.getParameter("dtStart");
-                dtEnd = request.getParameter("dtEnd");
-                String typeVenteId = request.getParameter("typeVenteId"),
-                 hEnd = request.getParameter("hEnd"),
-                 hStart = request.getParameter("hStart");
-                query = request.getParameter("query");
-                SalesStatsParams body = new SalesStatsParams();
-                LstTPrivilege = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-                boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
-                boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
-                boolean canCancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
-                boolean modification = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.P_BT_MODIFICATION_DE_VENTE);
-                body.setCanCancel(canCancel);
-                body.setQuery(query);
-                body.setTypeVenteId(typeVenteId);
-                body.setStatut(commonparameter.statut_is_Closed);
-                body.setAll(true);
-                body.setUserId(OTUser);
+
+                String hEnd = request.getParameter("hEnd");
+                String hStart = request.getParameter("hStart");
+                SalesStatsParams body = buildSalesStatsParams(request, session, OTUser);
                 body.setOnlyAvoir(true);
                 body.setSansBon(false);
-                body.setShowAll(asAuthority);
-                body.setShowAllActivities(allActivitis);
 
-                body.setModification(modification);
                 try {
                     body.sethEnd(LocalTime.parse(hEnd));
                 } catch (Exception e) {
@@ -252,13 +235,19 @@ public class BalancePdfServlet extends HttpServlet {
                     body.sethStart(LocalTime.parse(hStart));
                 } catch (Exception e) {
                 }
-                try {
-                    body.setDtEnd(LocalDate.parse(dtEnd));
-                    body.setDtStart(LocalDate.parse(dtStart));
-                } catch (Exception e) {
-                }
+
                 file = balance.listeVentes(body);
                 break;
+            case SUIVI_REMISE:
+                String tiersPayantId = request.getParameter("tiersPayantId");
+                SalesStatsParams bodySuivi = buildSalesStatsParams(request, session, OTUser);
+                bodySuivi.setTiersPayantId(tiersPayantId);
+                bodySuivi.setDiscountStat(true);
+                bodySuivi.sethStart(LocalTime.of(0, 0, 0));
+                bodySuivi.sethEnd(LocalTime.of(23, 59));
+                file = balance.suiviRemise(bodySuivi);
+                break;
+
             default:
                 break;
         }
@@ -315,4 +304,32 @@ public class BalancePdfServlet extends HttpServlet {
         return "/data/reports/pdf/listecaisses_" + report_generate_file;
     }
 
+    private SalesStatsParams buildSalesStatsParams(HttpServletRequest request, HttpSession session, TUser user) {
+        String dtStart = request.getParameter("dtStart");
+        String dtEnd = request.getParameter("dtEnd");
+        String typeVenteId = request.getParameter("typeVenteId");
+        String query = request.getParameter("query");
+        SalesStatsParams body = new SalesStatsParams();
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+        boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, commonparameter.str_SHOW_VENTE);
+        boolean allActivitis = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
+        boolean canCancel = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
+        boolean modification = DateConverter.hasAuthorityByName(lstTPrivilege, DateConverter.P_BT_MODIFICATION_DE_VENTE);
+        body.setCanCancel(canCancel);
+        body.setQuery(query);
+        body.setTypeVenteId(typeVenteId);
+        body.setStatut(commonparameter.statut_is_Closed);
+        body.setAll(true);
+        body.setUserId(user);
+        body.setShowAll(asAuthority);
+        body.setShowAllActivities(allActivitis);
+        body.setModification(modification);
+
+        try {
+            body.setDtEnd(LocalDate.parse(dtEnd));
+            body.setDtStart(LocalDate.parse(dtStart));
+        } catch (Exception e) {
+        }
+        return body;
+    }
 }

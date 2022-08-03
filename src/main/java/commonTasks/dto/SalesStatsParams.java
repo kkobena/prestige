@@ -22,15 +22,32 @@ public class SalesStatsParams implements Serializable {
     private String query, statut;
     private LocalDate dtStart = LocalDate.now(), dtEnd = dtStart;
     private LocalTime hStart = LocalTime.parse("00:00"), hEnd = LocalTime.parse("23:59");
-    private boolean showAll, showAllActivities, all, canCancel;
-    private boolean depotOnly = false, sansBon = false, onlyAvoir = false, modification, modificationClientTp;
+    private boolean showAll;
+    private boolean showAllActivities;
+    private boolean all;
+    private boolean canCancel;
+    private boolean depotOnly;
+    private boolean sansBon;
+    private boolean onlyAvoir;
+    private boolean modification;
+    private boolean modificationClientTp;
     private int nbre;
     private String produitId;
     private String prixachatFiltre;
-    private String stockFiltre,typeFiltre;
+    private String stockFiltre, typeFiltre;
     private String rayonId;
     private String user;
-    private Integer qteVendu,stock;
+    private Integer qteVendu, stock;
+    private boolean discountStat;
+    private String tiersPayantId;
+
+    public boolean isDiscountStat() {
+        return discountStat;
+    }
+
+    public void setDiscountStat(boolean discountStat) {
+        this.discountStat = discountStat;
+    }
 
     public String getTypeFiltre() {
         return typeFiltre;
@@ -49,7 +66,7 @@ public class SalesStatsParams implements Serializable {
     public void setTypeTransaction(String typeTransaction) {
         this.typeTransaction = typeTransaction;
     }
-    
+
     public String getUser() {
         return user;
     }
@@ -66,8 +83,6 @@ public class SalesStatsParams implements Serializable {
         this.qteVendu = qteVendu;
     }
 
-    
-    
     public boolean isModificationClientTp() {
         return modificationClientTp;
     }
@@ -108,8 +123,6 @@ public class SalesStatsParams implements Serializable {
         this.stock = stock;
     }
 
-
-
     public String getStockFiltre() {
         return stockFiltre;
     }
@@ -124,6 +137,14 @@ public class SalesStatsParams implements Serializable {
 
     public void setRayonId(String rayonId) {
         this.rayonId = rayonId;
+    }
+
+    public String getTiersPayantId() {
+        return tiersPayantId;
+    }
+
+    public void setTiersPayantId(String tiersPayantId) {
+        this.tiersPayantId = tiersPayantId;
     }
 
     public SalesStatsParams(boolean showAll, String typeVenteId, TUser userId, String query, String statut, LocalDate dtStart, LocalDate dtEnd, int start, int limit) {
@@ -310,8 +331,5 @@ public class SalesStatsParams implements Serializable {
         sb.append('}');
         return sb.toString();
     }
-
-
- 
 
 }

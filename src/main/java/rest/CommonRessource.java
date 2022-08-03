@@ -133,9 +133,6 @@ public class CommonRessource {
     public Response remisesclient() {
         List<RemiseDTO> data = commonService.findAllRemise();
         data.add(new RemiseDTO(null, "SANS REMISE"));
-//        CacheControl cc = new CacheControl();
-//        cc.setMaxAge(86400);
-//        cc.setPrivate(true);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
@@ -387,7 +384,6 @@ public class CommonRessource {
     @Path("common")
     public Response gestionParticuliere() throws JSONException {
         boolean checkug = commonService.isNormalUse();
-        System.out.println("checkug====>>> "+checkug);
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);

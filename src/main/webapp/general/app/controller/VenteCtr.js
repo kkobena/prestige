@@ -2902,7 +2902,7 @@ Ext.define('testextjs.controller.VenteCtr', {
     onAssociertpsClick: function () {
         var me = this, grid = me.getTpComplementaireGrid();
         if (grid.getStore().getCount() <= 3) {
-            var win = me.createForm();
+            me.createForm();
         }
     },
     createForm: function () {
@@ -3010,7 +3010,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                                     typeAhead: false,
                                                     allowBlank: false,
                                                     queryMode: 'remote',
-                                                    emptyText: 'Choisir une tierspayant...',
+                                                    emptyText: 'Choisir un tierspayant...',
                                                     listeners: {
                                                         'select': function (cmp) {
                                                             var form = cmp.up('form');
