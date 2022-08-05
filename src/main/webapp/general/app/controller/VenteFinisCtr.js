@@ -44,6 +44,9 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         }, {
             ref: 'typeVente',
             selector: 'ventemanager #typeVente'
+        }, {
+            ref: 'nature',
+            selector: 'ventemanager #nature'
         }
 
 
@@ -62,6 +65,10 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             'ventemanager #typeVente': {
                 select: this.doSearch
             },
+            'ventemanager #nature': {
+                select: this.doSearch
+            },
+            
             'ventemanager gridpanel': {
                 viewready: this.doInitStore
             },
@@ -161,7 +168,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
     },
     buildForm: function (rec, linkUrl) {
         var me = this;
-//        var venteId = rec.get('lgPREENREGISTREMENTID');
         var form = Ext.create('Ext.window.Window',
                 {
                     extend: 'Ext.window.Window',
@@ -355,11 +361,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                 },
                                 failure: function (response)
                                 {
-
-                                    var object = Ext.JSON.decode(response.responseText, false);
-                                    //  alert(object);
-
-                                    console.log("Bug " + response.responseText);
+                                
                                     Ext.MessageBox.alert('Error Message', response.responseText);
                                 }
                             });
@@ -469,7 +471,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             hEnd: null,
             hStart: null,
             onlyAvoir: false,
-            sansBon: false
+            sansBon: false,
+            nature:null
 
         };
         myProxy.setExtraParam('sansBon', false);
@@ -480,6 +483,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         myProxy.setExtraParam('typeVenteId', me.getTypeVente().getValue());
         myProxy.setExtraParam('hStart', me.getHStart().getSubmitValue());
         myProxy.setExtraParam('hEnd', me.getHEnd().getSubmitValue());
+           myProxy.setExtraParam('nature',me.getNature().getValue());
     },
     doInitStore: function () {
         var me = this;
@@ -503,7 +507,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 "hStart": me.getHStart().getSubmitValue(),
                 "hEnd": me.getHEnd().getSubmitValue(),
                 "onlyAvoir": false,
-                "sansBon": false
+                "sansBon": false,
+                "nature": me.getNature().getValue()
             }
         });
     },

@@ -76,8 +76,11 @@ public class SalesStatsRessource {
     @GET
     @Path("preventes")
     public Response getDetails(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
-            @QueryParam(value = "typeVenteId") String typeVenteId, @QueryParam(value = "statut") String statut
+            @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query,
+            @QueryParam(value = "typeVenteId") String typeVenteId, 
+            @QueryParam(value = "statut") String statut,
+             @QueryParam(value = "nature") String nature
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
@@ -93,6 +96,7 @@ public class SalesStatsRessource {
         body.setStart(start);
         body.setQuery(query);
         body.setStatut(statut);
+        body.setNature(nature);
         body.setAll(false);
         body.setTypeVenteId(typeVenteId);
         body.setShowAll(asAuthority);
@@ -268,7 +272,8 @@ public class SalesStatsRessource {
             @QueryParam(value = "hEnd") String hEnd,
             @QueryParam(value = "sansBon") boolean sansBon,
             @QueryParam(value = "onlyAvoir") boolean onlyAvoir,
-            @QueryParam(value = "typeVenteId") String typeVenteId
+            @QueryParam(value = "typeVenteId") String typeVenteId,
+            @QueryParam(value = "nature") String nature
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
@@ -291,6 +296,7 @@ public class SalesStatsRessource {
         body.setStatut(commonparameter.statut_is_Closed);
         body.setAll(false);
         body.setSansBon(sansBon);
+        body.setNature(nature);
         body.setOnlyAvoir(onlyAvoir);
         body.setShowAll(asAuthority);
         body.setShowAllActivities(allActivitis);
@@ -335,7 +341,8 @@ public class SalesStatsRessource {
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "hStart") String hStart,
             @QueryParam(value = "hEnd") String hEnd,
-            @QueryParam(value = "typeVenteId") String typeVenteId
+            @QueryParam(value = "typeVenteId") String typeVenteId,
+           @QueryParam(value = "nature") String nature
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
@@ -354,6 +361,7 @@ public class SalesStatsRessource {
         body.setStart(start);
         body.setQuery(query);
         body.setTypeVenteId(null);
+        body.setNature(nature);
         body.setStatut(commonparameter.statut_is_Closed);
         body.setAll(false);
         body.setSansBon(false);

@@ -40,6 +40,16 @@ public class SalesStatsParams implements Serializable {
     private Integer qteVendu, stock;
     private boolean discountStat;
     private String tiersPayantId;
+       private String nature;
+
+    public String getNature() {
+        return nature;
+    }
+
+    public void setNature(String nature) {
+        this.nature = nature;
+    }
+    
 
     public boolean isDiscountStat() {
         return discountStat;

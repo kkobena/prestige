@@ -32,6 +32,7 @@ import dal.TFamilleStock;
 import dal.TFamilleStock_;
 import dal.TFamille_;
 import dal.TGrossiste_;
+import dal.TNatureVente_;
 import dal.TParameters;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
@@ -1977,6 +1978,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrement, TPreenregistrementCompteClientTiersPayent> stp = st.join(TPreenregistrement_.tPreenregistrementCompteClientTiersPayentCollection, JoinType.INNER);
             predicates.add(cb.equal(stp.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID), params.getTiersPayantId()));
         }
+          if (StringUtils.isNoneEmpty(params.getNature())) {
+              predicates.add(cb.equal(st.get(TPreenregistrement_.lgNATUREVENTEID).get(TNatureVente_.lgNATUREVENTEID), params.getNature())); 
+          }
         return predicates;
     }
     
