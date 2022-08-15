@@ -117,8 +117,8 @@ public class Reapprovisionnement {
 
     public TParameters findParameters(String key) {
         try {
-            TParameters tp = em.find(TParameters.class, key);
-            return tp;
+            return em.find(TParameters.class, key);
+       
         } catch (Exception e) {
             return null;
         }
@@ -140,7 +140,7 @@ public class Reapprovisionnement {
                     nombreMois.add(LocalDate.of(calendrier.getDtDay().getYear(), calendrier.getDtDay().getMonth(), 1));
                 }
             } catch (Exception e) {
-                e.printStackTrace(System.err);
+                LOG.log(Level.SEVERE, null, e);
             }
 
         }
@@ -170,7 +170,7 @@ public class Reapprovisionnement {
             return ((Long) q.getSingleResult()).intValue();
 
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return 0;
         }
     }
@@ -195,7 +195,7 @@ public class Reapprovisionnement {
             JSONObject json;
             for (int i = start; i <= total; i += limit) {
                 List<TFamille> list = loadArticle(i, limit);
-                
+
                 try {
                     userTransaction.begin();
                     for (TFamille tf : list) {
@@ -228,7 +228,7 @@ public class Reapprovisionnement {
                             userTransaction.rollback();
                         }
                     } catch (SystemException ex1) {
-                        Logger.getLogger(Reapprovisionnement.class.getName()).log(Level.SEVERE, null, ex1);
+                        LOG.log(Level.SEVERE, null, ex1);
                     }
                 }
             }
@@ -243,7 +243,7 @@ public class Reapprovisionnement {
                 exec();
             }
         } catch (NumberFormatException e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
 
     }
@@ -261,7 +261,7 @@ public class Reapprovisionnement {
                 userTransaction.commit();
             }
         } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
     }
 
@@ -290,7 +290,7 @@ public class Reapprovisionnement {
             userTransaction.commit();
 
         } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
     }
 }

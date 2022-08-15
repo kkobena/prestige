@@ -179,4 +179,6 @@ Author author = entityManager.find(Author.class, id, properties);
 
     long montantAccount(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TypeTransaction transaction, String typrReglement, String typeMvtCaisse);
 
+    List<MvtTransaction> balanceVenteCaisse(LocalDate dtStart, boolean checked,
+            String emplacementId);
 }

@@ -41,6 +41,7 @@ import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimplePrintServiceExporterConfiguration;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import toolkits.utils.jdom;
 import util.DateConverter;
 
@@ -124,7 +125,7 @@ public class ReportUtil {
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace(System.err);
+                LOG.log(Level.SEVERE, null, e);
             }
         }
     }
@@ -136,10 +137,10 @@ public class ReportUtil {
             JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
 
         } catch (JRException e) {
-            e.printStackTrace(System.err);
+           LOG.log(Level.SEVERE, null, e);
 
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+           LOG.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -150,7 +151,7 @@ public class ReportUtil {
             JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
 
         } catch (JRException e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
         }
     }
@@ -166,20 +167,20 @@ public class ReportUtil {
             parameters.put("P_H_INSTITUTION", P_H_INSTITUTION);
             parameters.put("P_PRINTED_BY", " " + op.getStrFIRSTNAME() + "  " + op.getStrLASTNAME());
             parameters.put("P_AUTRE_DESC", oTOfficine.getStrFIRSTNAME() + " " + oTOfficine.getStrLASTNAME());
-            if (oTOfficine.getStrREGISTRECOMMERCE() != null) {
+            if ( StringUtils.isNotEmpty(oTOfficine.getStrREGISTRECOMMERCE())  ) {
                 P_FOOTER_RC += "RC N° " + oTOfficine.getStrREGISTRECOMMERCE();
             }
-            if (oTOfficine.getStrCOMPTECONTRIBUABLE() != null) {
+            if (StringUtils.isNotEmpty(oTOfficine.getStrCOMPTECONTRIBUABLE()) ) {
                 P_FOOTER_RC += " - CC N° " + oTOfficine.getStrCOMPTECONTRIBUABLE();
             }
-            if (oTOfficine.getStrREGISTREIMPOSITION() != null) {
+            if (StringUtils.isNotEmpty(oTOfficine.getStrREGISTREIMPOSITION()) ) {
                 P_FOOTER_RC += " - Régime d'Imposition " + oTOfficine.getStrREGISTREIMPOSITION();
             }
-            if (oTOfficine.getStrCENTREIMPOSITION() != null) {
+            if (StringUtils.isNotEmpty(oTOfficine.getStrCENTREIMPOSITION())) {
                 P_FOOTER_RC += " - Centre des Impôts: " + oTOfficine.getStrCENTREIMPOSITION();
             }
 
-            if (oTOfficine.getStrPHONE() != null) {
+            if (StringUtils.isNotEmpty(oTOfficine.getStrPHONE())) {
                 String finalphonestring = oTOfficine.getStrPHONE() != null ? "- Tel: " + DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
                 if (!"".equals(oTOfficine.getStrAUTRESPHONES())) {
                     String[] phone = oTOfficine.getStrAUTRESPHONES().split(";");
@@ -189,16 +190,16 @@ public class ReportUtil {
                 }
                 P_INSTITUTION_ADRESSE += " -  " + finalphonestring;
             }
-            if (oTOfficine.getStrCOMPTEBANCAIRE() != null) {
+            if (StringUtils.isNotEmpty(oTOfficine.getStrCOMPTEBANCAIRE())) {
                 P_INSTITUTION_ADRESSE += " - Compte Bancaire: " + oTOfficine.getStrCOMPTEBANCAIRE();
             }
-            if (oTOfficine.getStrNUMCOMPTABLE() != null) {
+            if (StringUtils.isNotEmpty(oTOfficine.getStrNUMCOMPTABLE())) {
                 P_INSTITUTION_ADRESSE += " - CPT N°: " + oTOfficine.getStrNUMCOMPTABLE();
             }
             parameters.put("P_INSTITUTION_ADRESSE", P_INSTITUTION_ADRESSE);
             parameters.put("P_FOOTER_RC", P_FOOTER_RC);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+           LOG.log(Level.SEVERE, null, e);
         }
 
         return parameters;
@@ -211,10 +212,10 @@ public class ReportUtil {
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
             JasperExportManager.exportReportToPdfFile(jasperPrint, pdfPath);
         } catch (JRException e) {
-            e.printStackTrace(System.err);
+           LOG.log(Level.SEVERE, null, e);
 
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -311,10 +312,10 @@ public class ReportUtil {
             exporter.exportReport();
 
         } catch (JRException e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -328,10 +329,10 @@ public class ReportUtil {
             exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(pdfPath));
              exporter.exportReport();
         } catch (JRException e) {
-            e.printStackTrace(System.err);
+          LOG.log(Level.SEVERE, null, e);
 
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+           LOG.log(Level.SEVERE, null, ex);
         }
     }
 public void buildReportExcel(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
@@ -350,10 +351,10 @@ public void buildReportExcel(Map<String, Object> parameters, String reportName, 
             exporter.setConfiguration(configuration);
             exporter.exportReport();
         } catch (JRException e) {
-            e.printStackTrace(System.err);
+          LOG.log(Level.SEVERE, null, e);
 
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
     public void buildReportExcelSinglePage(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
@@ -372,10 +373,10 @@ public void buildReportExcel(Map<String, Object> parameters, String reportName, 
             exporter.setConfiguration(configuration);
             exporter.exportReport();
         } catch (JRException e) {
-            e.printStackTrace(System.err);
+           LOG.log(Level.SEVERE, null, e);
 
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
 }
