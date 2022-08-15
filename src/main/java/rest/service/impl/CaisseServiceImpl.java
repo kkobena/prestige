@@ -4471,6 +4471,7 @@ public class CaisseServiceImpl implements CaisseService {
     
     private int montantFlag(MvtTransaction mvt) {
         if (mvt.getFlaged()) {
+            System.out.println("=======>>>> +mvt "+mvt);
             return mvt.getMontant() - mvt.getMontantAcc();
         }
 //   return mvt.getMontantAcc().compareTo(mvt.getMontant()) == 0 ? mvt.getMontant() :  mvt.getMontantAcc();
@@ -4514,6 +4515,7 @@ public class CaisseServiceImpl implements CaisseService {
                         remiseNonPara = remiseNonPara(mvt.getPkey());
                     }
                     int montantFlag = montantFlag(mvt);
+              
                     //  int newAmount = (mvt.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT && mvt.getMontantAcc().compareTo(mvt.getMontant()) == 0) ? mvt.getMontant() :  mvt.getMontantAcc();
                     int newAmount = montantFlag;
                     montantRemise += remiseNonPara;
@@ -4589,7 +4591,7 @@ public class CaisseServiceImpl implements CaisseService {
                 
                 for (MvtTransaction mvt : venteVO) {
                     boolean skip = mvt.getPreenregistrement().getTPreenregistrementCompteClientTiersPayentCollection().stream().allMatch(p -> p.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getToBeExclude());
-                    
+                    System.out.println("skip ========== > "+skip);
                     if (skip) {
                         continue;
                     }
@@ -5078,6 +5080,7 @@ public class CaisseServiceImpl implements CaisseService {
                         remiseNonPara = remiseNonPara(mvt.getPkey());
                     }
                     int montantFlag = montantFlag(mvt);
+               
                     //  int newAmount = (mvt.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT && mvt.getMontantAcc().compareTo(mvt.getMontant()) == 0) ? mvt.getMontant() :  mvt.getMontantAcc();
                     int newAmount = montantFlag;
                     montantRemise += remiseNonPara;
@@ -5155,6 +5158,10 @@ public class CaisseServiceImpl implements CaisseService {
                     boolean skip = mvt.getPreenregistrement().getTPreenregistrementCompteClientTiersPayentCollection().stream().allMatch(p -> p.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getToBeExclude());
                     
                     if (skip) {
+                        
+                     
+                           System.err.println("=======>>>> +skip "+mvt);
+                  
                         continue;
                     }
                     

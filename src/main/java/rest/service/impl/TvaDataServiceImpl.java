@@ -54,7 +54,7 @@ public class TvaDataServiceImpl implements TvaDataService {
     @Override
     public List<TvaDTO> statistiqueTvaWithSomeCriteria(Params params) {
         long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
-    
+        System.out.println("montant ====>> "+montant);
         List<TvaDTO> tvas = new ArrayList<>();
         List<TvaDTO> datas = findTvaDatas(params);
         for (TvaDTO data : datas) {
@@ -190,7 +190,7 @@ public class TvaDataServiceImpl implements TvaDataService {
         JSONObject json = new JSONObject();
         List<TvaDTO> datas;
         if (!isExcludTiersPayantActive()) {
-
+            System.out.println("isExcludTiersPayantActive >>>>");
             datas = statistiqueTvaWithSomeCriteria(params);
         } else {
             datas = statistiqueTvaWithSomeTiersPayantToExclude(params);
@@ -366,7 +366,7 @@ public class TvaDataServiceImpl implements TvaDataService {
         List<TvaDTO> tvas = new ArrayList<>();
         try {
             Query query = getEntityManager().createNativeQuery("SELECT SUM(p.int_PRICE) AS montantTTC,SUM(p.int_UG*p.int_PRICE_UNITAIR) AS montantUg,p.valeurTva AS valeurTva FROM t_preenregistrement_detail p,t_preenregistrement o,t_user u WHERE o.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID"
-                    + " AND o.b_IS_CANCEL=0 AND o.int_PRICE>0 AND o.lg_TYPE_VENTE_ID <> '5' AND o.str_STATUT='is_Closed' AND DATE(o.dt_UPDATED) BETWEEN ?1 AND ?2 AND o.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?3  GROUP BY p.valeurTva"
+                    + " AND o.b_IS_CANCEL=0  AND o.lg_TYPE_VENTE_ID <> '5' AND o.str_STATUT='is_Closed' AND DATE(o.dt_UPDATED) BETWEEN ?1 AND ?2 AND o.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?3  GROUP BY p.valeurTva"
                     + " ", Tuple.class);
             query.setParameter(1, java.sql.Date.valueOf(params.getDtStart()), TemporalType.DATE);
             query.setParameter(2, java.sql.Date.valueOf(params.getDtEnd()), TemporalType.DATE);
