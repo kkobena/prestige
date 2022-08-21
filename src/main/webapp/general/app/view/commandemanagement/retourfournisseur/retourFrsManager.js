@@ -198,7 +198,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.retourFrsManager
                             scope: this,
                             handler: this.Response,
                             getClass: function (value, metadata, record) {
-                                if (record.get('closed')) {  //read your condition from the record
+                                if (!record.get('closed')) {  //read your condition from the record
                                     return 'x-display-hide'; //affiche l'icone
                                 } else {
                                     return 'x-hide-display'; //cache l'icone
