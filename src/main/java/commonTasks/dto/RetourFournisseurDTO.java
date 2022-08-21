@@ -50,6 +50,15 @@ public class RetourFournisseurDTO implements Serializable {
     private String lgBONLIVRAISONID, strREFLIVRAISON, strLIBELLE;
     private List<RetourDetailsDTO> items = new ArrayList<>();
     private TUser user;
+    private boolean closed;
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public void setClosed(boolean closed) {
+        this.closed = closed;
+    }
 
     public List<RetourDetailsDTO> getItems() {
         return items;
@@ -241,9 +250,15 @@ public class RetourFournisseurDTO implements Serializable {
         this.lgBONLIVRAISONID = bonLivraison.getLgBONLIVRAISONID();
         this.strREFLIVRAISON = bonLivraison.getStrREFLIVRAISON();
         this.strLIBELLE = tg.getStrLIBELLE();
-        details.forEach((tpd) -> {
+        int count = 0;
+        for (RetourDetailsDTO tpd : details) {
             this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getIntCIP() + "</span><span style='display:inline-block;width: 25%;'>" + tpd.getStrNAME() + "</span><span style='display:inline-block;width: 10%;'>(" + tpd.getIntNUMBERRETURN() + ")</span><span style='display:inline-block;width: 15%;'>" + DateConverter.amountFormat(tpd.getPrixPaf(), '.') + " F CFA " + "</span></b><br> " + this.details;
-        });
+            if (tpd.getIntNUMBERRETURN() > tpd.getIntNUMBERANSWER()) {
+                count++;
+            }
+        }
+
+        this.closed = count == 0;
     }
 
     public TUser getUser() {
@@ -286,6 +301,6 @@ public class RetourFournisseurDTO implements Serializable {
         this.lgBONLIVRAISONID = bonLivraison.getLgBONLIVRAISONID();
         this.strREFLIVRAISON = bonLivraison.getStrREFLIVRAISON();
         this.strLIBELLE = tg.getStrLIBELLE();
-       this.items=details;
+        this.items = details;
     }
 }

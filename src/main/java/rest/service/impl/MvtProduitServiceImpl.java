@@ -1378,7 +1378,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             CriteriaBuilder cb = getEmg().getCriteriaBuilder();
             CriteriaQuery<TRetourFournisseur> cq = cb.createQuery(TRetourFournisseur.class);
             Root<TRetourFournisseur> root = cq.from(TRetourFournisseur.class);
-            Fetch<TRetourFournisseur, TRetourFournisseurDetail> d = root.fetch("tRetourFournisseurDetailCollection", JoinType.INNER);
             cq.select(root).distinct(true);
             predicates.add(cb.equal(root.get(TRetourFournisseur_.strSTATUT), DateConverter.STATUT_ENABLE));
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TRetourFournisseur_.dtUPDATED)), java.sql.Date.valueOf(dtStart),

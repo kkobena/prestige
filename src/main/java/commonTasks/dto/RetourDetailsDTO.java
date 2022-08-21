@@ -6,8 +6,10 @@
 package commonTasks.dto;
 
 import dal.HMvtProduit;
+import dal.TBonLivraisonDetail;
 import dal.TDeconditionnement;
 import dal.TFamille;
+import dal.TMotifRetour;
 import dal.TRetourFournisseur;
 import dal.TRetourFournisseurDetail;
 import dal.TUser;
@@ -191,16 +193,18 @@ public class RetourDetailsDTO implements Serializable {
         this.produitId=tf.getLgFAMILLEID();
         this.intCIP = tf.getIntCIP();
         this.strLIBELLE = f.getLgGROSSISTEID().getStrLIBELLE();
-        try {
-              this.motif = d.getLgMOTIFRETOUR().getStrLIBELLE();
-              
-        } catch (Exception e) {
+        TMotifRetour motifRetour=d.getLgMOTIFRETOUR();
+        if(motifRetour!=null){
+             this.motif =motifRetour.getStrLIBELLE();
         }
-       
+    
         this.dtCREATED = dateFormat.format(d.getDtUPDATED());
         this.HEURE = heureFormat.format(d.getDtUPDATED());
         this.intNUMBERANSWER = d.getIntNUMBERANSWER();
-        this.intNUMBERRETURN = d.getIntNUMBERRETURN();
+     
+          this.intNUMBERRETURN = d.getIntNUMBERRETURN();
+        
+      
         this.prixPaf=d.getIntPAF();
         this.intSTOCK=d.getIntSTOCK();
         this.ecart=d.getIntSTOCK()-d.getIntNUMBERRETURN();

@@ -153,6 +153,8 @@ public class TRetourFournisseurDetail implements Serializable {
 
     public TMotifRetour getLgMOTIFRETOUR() {
         return lgMOTIFRETOUR;
+     
+        
     }
 
     public void setLgMOTIFRETOUR(TMotifRetour lgMOTIFRETOUR) {
