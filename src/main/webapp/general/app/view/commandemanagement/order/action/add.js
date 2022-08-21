@@ -55,8 +55,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     layout: 'column',
     initComponent: function () {
         Me_Window = this;
-        var itemsPerPage = 20;
-        var itemsPerPageGrid = 10;
+        var itemsPerPage = 100;
+        var itemsPerPageGrid =9999999;
         famille_id_search = "";
 
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
@@ -954,7 +954,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             odatasource: "",
             parentview: this,
             mode: "create",
-            titre: "Ajouter un nouvel article",
+            titre: "Creer un nouveau produit",
             type: "commande"
         });
     },
@@ -1051,7 +1051,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     Ext.MessageBox.alert('Error Message', object.errors);
                                     return;
                                 }
-
+/*
                                 Ext.MessageBox.confirm('Message',
                                         'Imprimer le bon de commande?',
                                         function (btn) {
@@ -1061,7 +1061,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             }
                                             Me_Window.onbtncancel();
                                         });
-                            },
+                            */},
                             failure: function (response)
                             {
                                 var object = Ext.JSON.decode(response.responseText, false);
