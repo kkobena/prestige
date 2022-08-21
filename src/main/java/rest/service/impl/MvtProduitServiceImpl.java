@@ -1454,13 +1454,36 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                      }
                  }
                 
-                
-               
                 sub.select(pr.get(TRetourFournisseurDetail_.lgRETOURFRSID)).where(cb.and(subpr.toArray(new Predicate[0])));
                 predicates.add(cb.in(root).value(sub));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TRetourFournisseur> q = getEmg().createQuery(cq);
+              if(StringUtils.isNotEmpty(filtre)){
+                     switch (filtre) {
+                         case DateConverter.NOT:
+                            return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection()
+                                    
+                                    .stream())
+                                    .filter((t) -> {
+                                        return t.getIntNUMBERANSWER()==0; 
+                                    })
+                                    .map(RetourDetailsDTO::new).collect(Collectors.toList());
+                    
+                         case DateConverter.WITH:
+                                return q.getResultList().stream()
+                                        
+                                        .flatMap(e -> e.getTRetourFournisseurDetailCollection().stream())
+                                         .filter((t) -> {
+                                        return t.getIntNUMBERANSWER()>0; 
+                                    })
+                                        .map(RetourDetailsDTO::new).collect(Collectors.toList());
+                           
+                         default:
+                                return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection().stream()).map(RetourDetailsDTO::new).collect(Collectors.toList());
+                     
+                     }
+                 }
             return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection().stream()).map(RetourDetailsDTO::new).collect(Collectors.toList());
 
         } catch (Exception e) {
