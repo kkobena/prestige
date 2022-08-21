@@ -7,9 +7,39 @@ function amountformat(val) {
 Ext.define('testextjs.view.Report.statqties.qtygrid', {
     extend: 'Ext.grid.Panel',
     alias: 'widget.statproduct-grid',
-   
+
     initComponent: function () {
         var store = Ext.create('testextjs.store.Statistics.OrderQty');
+        var rayons = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
+            fields:
+                    [
+                        {name: 'id',
+                            type: 'string'
+
+                        },
+
+                        {name: 'libelle',
+                            type: 'string'
+
+                        }
+
+                    ],
+            autoLoad: false,
+            pageSize: 9999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/common/rayons',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+
+        });
         Ext.apply(this, {
 
             id: 'statproductGrid',
@@ -18,9 +48,7 @@ Ext.define('testextjs.view.Report.statqties.qtygrid', {
                 forceFit: true,
                 emptyText: '<h1 style="margin:10px 10px 10px 30%;">Pas de donn&eacute;es</h1>'
             },
-        
-            
-            
+
             columns: [
                 {
                     header: 'id',
@@ -262,182 +290,210 @@ Ext.define('testextjs.view.Report.statqties.qtygrid', {
             },
             dockedItems: [
                 {
-            xtype: 'toolbar',
-            dock: 'top',
-            items: [
-                {
-                    xtype: 'textfield',
-                    id: 'rechQty',
-                    flex: 1,
-                    emptyText: 'Recherche',
-                    listeners: {
-                        specialKey: function (field, e, Familletion) {
-                            if (e.getKey() === e.ENTER) {
-                                var grid = Ext.getCmp('statproductGrid');
+                    xtype: 'toolbar',
+                    dock: 'top',
+                    items: [
+                        {
+                            xtype: 'textfield',
+                            id: 'rechQty',
+                            flex: 1,
+                            emptyText: 'Recherche',
+                            listeners: {
+                                specialKey: function (field, e, Familletion) {
+                                    if (e.getKey() === e.ENTER) {
+                                        var grid = Ext.getCmp('statproductGrid');
 
-                                var dt_end_vente = Ext.getCmp('cmbyears').getValue();
-
-                                grid.getStore().load({
-                                    params: {
-
-                                        year: dt_end_vente,
-                                        search_value: field.getValue()
+                                        var dt_end_vente = Ext.getCmp('cmbyears').getValue();
+                                        let rayonId = Ext.getCmp('rayonsZone').getValue();
+                                        grid.getStore().load({
+                                            params: {
+                                                rayonId: rayonId,
+                                                year: dt_end_vente,
+                                                search_value: field.getValue()
+                                            }
+                                        });
                                     }
-                                });
-                            }
 
-                        }
-                    }
-                }, {
-                    xtype: 'tbseparator'
-                }
-                ,
-                {
-                    xtype: 'combo',
-
-                    emptyText: 'Sélectionnez une année',
-
-                    fieldLabel: 'Année',
-                    labelWidth: 40,
-                    flex: 1.5,
-                    id: 'cmbyears',
-
-                    value: new Date().getFullYear(),
-                    valueField: 'YEAR',
-                    displayField: 'YEAR',
-
-                    store: Ext.create("Ext.data.Store", {
-                        fields: [
-                            {
-                                name: 'id',
-                                type: 'string'
-                            },
-                            {
-                                name: 'YEAR',
-                                type: 'int'
-                            }
-
-
-                        ],
-                        pageSize: 10,
-                        // autoLoad: true,
-                        proxy: {
-                            type: 'ajax',
-                            url: '../webservices/Report/qtyorder/ws_years.jsp',
-                            reader: {
-                                type: 'json',
-                                root: 'data',
-                                totalProperty: 'total'
-                            }
-                        }
-                    }),
-                    listeners: {
-                        select: function () {
-
-                            var grid = Ext.getCmp('statproductGrid');
-
-                            var rechQty = Ext.getCmp('rechQty').getValue();
-
-                            grid.getStore().load({
-                                params: {
-
-                                    year: this.getValue(),
-                                    search_value: rechQty
                                 }
-                            });
+                            }
+                        }, {
+                            xtype: 'tbseparator'
+                        },
+                        {
+                            xtype: 'combobox',
+                            flex: 1,
+                            margin: '0 5 0 0',
+                            labelWidth: 5,
+                            id: 'rayonsZone',
+                            store: rayons,
+                            pageSize: 99999,
+                            valueField: 'id',
+                            displayField: 'libelle',
+                            typeAhead: false,
+                            queryMode: 'remote',
+                            minChars: 2,
+                            emptyText: 'Sélectionnez un emplacement'
+                        }, {
+                            xtype: 'tbseparator'
                         }
-                    }
+                        ,
+                        {
+                            xtype: 'combo',
 
-                }
+                            emptyText: 'Sélectionnez une année',
 
-                , {
-                    xtype: 'tbseparator'
-                },
-                {
-                    // flex: 0.4,
-                    width: 100,
-                    xtype: 'button',
-                    iconCls: 'searchicon',
-                    text: 'Rechercher',
-                    listeners: {
-                        click: function () {
-                            var grid = Ext.getCmp('statproductGrid');
+                            fieldLabel: 'Année',
+                            labelWidth: 40,
+                            flex: 1.5,
+                            id: 'cmbyears',
 
-                            var dt_end_vente = Ext.getCmp('cmbyears').getValue();
-                            var search_value = Ext.getCmp('rechQty').getValue();
+                            value: new Date().getFullYear(),
+                            valueField: 'YEAR',
+                            displayField: 'YEAR',
 
-                            grid.getStore().load({
-                                params: {
+                            store: Ext.create("Ext.data.Store", {
+                                fields: [
+                                    {
+                                        name: 'id',
+                                        type: 'string'
+                                    },
+                                    {
+                                        name: 'YEAR',
+                                        type: 'int'
+                                    }
 
-                                    year: dt_end_vente,
-                                    search_value: search_value
+
+                                ],
+                                pageSize: 10,
+                                // autoLoad: true,
+                                proxy: {
+                                    type: 'ajax',
+                                    url: '../webservices/Report/qtyorder/ws_years.jsp',
+                                    reader: {
+                                        type: 'json',
+                                        root: 'data',
+                                        totalProperty: 'total'
+                                    }
                                 }
-                            });
+                            }),
+                            listeners: {
+                                select: function () {
+
+                                    var grid = Ext.getCmp('statproductGrid');
+
+                                    var rechQty = Ext.getCmp('rechQty').getValue();
+
+                                    grid.getStore().load({
+                                        params: {
+
+                                            year: this.getValue(),
+                                            search_value: rechQty
+                                        }
+                                    });
+                                }
+                            }
+
                         }
-                    }
+
+                        , {
+                            xtype: 'tbseparator'
+                        },
+                        {
+                            // flex: 0.4,
+                            width: 100,
+                            xtype: 'button',
+                            iconCls: 'searchicon',
+                            text: 'Rechercher',
+                            listeners: {
+                                click: function () {
+                                    var grid = Ext.getCmp('statproductGrid');
+
+                                    var dt_end_vente = Ext.getCmp('cmbyears').getValue();
+                                    var search_value = Ext.getCmp('rechQty').getValue();
+                                    let rayonId = Ext.getCmp('rayonsZone').getValue();
+
+                                    grid.getStore().load({
+                                        params: {
+                                            rayonId: rayonId,
+                                            year: dt_end_vente,
+                                            search_value: search_value
+                                        }
+                                    });
+                                }
+                            }
 
 
-                }, {
-                    xtype: 'tbseparator'
-                }
+                        }, {
+                            xtype: 'tbseparator'
+                        }
+                        , {
+                            text: 'Exporter en excel',
+                            itemId: 'btnExcel',
+                            scope: this
+                        }
 
-
-                ,
-                {
-                    width: 100,
-                    xtype: 'button',
-                    text: 'Imprimer',
-                    iconCls: 'printable',
+                        ,
+                        {
+                            width: 100,
+                            xtype: 'button',
+                            text: 'Imprimer',
+                            iconCls: 'printable',
+                            
 //                    glyph: 0xf1c1,
-                    listeners: {
-                        click: function () {
+                            listeners: {
+                                click: function () {
 
+                                    var year = Ext.getCmp('cmbyears').getValue();
+                                    var search_value = Ext.getCmp('rechQty').getValue();
+                                    let rayonId = Ext.getCmp('rayonsZone').getValue();
+                                    if (year === null) {
+                                        year = '';
+                                    }
+                                    if (rayonId === null) {
+                                        rayonId = '';
+                                    }
+
+                                    var linkUrl = "../webservices/Report/qtyorder/ws_generate_pdf.jsp" + "?year=" + year + "&search_value=" + search_value + "&rayonId=" + rayonId;
+                                    window.open(linkUrl);
+
+                                }
+                            }
+
+
+                        }
+
+
+                    ]
+                },
+
+                {
+
+                    xtype: 'pagingtoolbar',
+                    store: store, // same store GridPanel is using
+                    dock: 'bottom',
+                    displayInfo: true,
+                    listeners: {
+                        beforechange: function (page, currentPage) {
+                            var myProxy = this.store.getProxy();
+                            myProxy.params = {
+                                year: '',
+                                search_value: '',
+                                rayonId: ''
+                            };
+                            let rayonId = Ext.getCmp('rayonsZone').getValue();
                             var year = Ext.getCmp('cmbyears').getValue();
                             var search_value = Ext.getCmp('rechQty').getValue();
-                            if (year === null) {
-                                year = '';
-                            }
-
-                            var linkUrl = "../webservices/Report/qtyorder/ws_generate_pdf.jsp" + "?year=" + year + "&search_value=" + search_value;
-                            window.open(linkUrl);
-
+                            myProxy.setExtraParam('rayonId', rayonId);
+                            myProxy.setExtraParam('year', year);
+                            myProxy.setExtraParam('search_value', search_value);
                         }
+
                     }
-
-
-                }
-
-
-            ]
-        },
-                
-                
-                {
-                
-                
-                
-                xtype: 'pagingtoolbar',
-                store: store, // same store GridPanel is using
-                dock: 'bottom',
-                displayInfo: true,
-                listeners: {
-                    beforechange: function (page, currentPage) {
-                        var myProxy = this.store.getProxy();
-                        myProxy.params = {
-                            year: '',
-                            search_value: ''
-                        };
-                        var year = Ext.getCmp('cmbyears').getValue();
-                        var search_value = Ext.getCmp('rechQty').getValue();
-                        myProxy.setExtraParam('year', year);
-                        myProxy.setExtraParam('search_value', search_value);
-                    }
-
-                }
-            }]
+                }]
         });
         this.callParent();
     }
+
 });
 
 

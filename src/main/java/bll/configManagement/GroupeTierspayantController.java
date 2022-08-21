@@ -115,6 +115,7 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Subquery;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -2755,7 +2756,7 @@ private boolean getParametreFacturation(){
         return factures;
     }
 
-    public JSONArray statQty(boolean all, int year, String search, String empl, int start, int limit) {
+    public JSONArray statQty(boolean all, int year, String search, String empl,String rayonId, int start, int limit) {
         JSONArray array = new JSONArray();
         EntityManager em = this.getEntityManager();
         try {
@@ -2763,10 +2764,14 @@ private boolean getParametreFacturation(){
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
+           
             Predicate criteria = cb.conjunction();
             if (!"".equals(search)) {
                 criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"), cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
+            }
+            if(StringUtils.isNotEmpty(rayonId)){
+               Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER); 
+               criteria=cb.and(criteria,cb.equal(prf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), rayonId));
             }
             criteria = cb.and(criteria, cb.equal(pr.get(TPreenregistrement_.bISCANCEL), false));
             criteria = cb.and(criteria, cb.notLike(pr.get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
@@ -2904,18 +2909,22 @@ private boolean getParametreFacturation(){
         return result;
     }
 
-    public int statQty(int year, String search, String empl) {
-        JSONArray array = new JSONArray();
+    public int statQty(int year, String search, String empl,String rayonId) {
+     
         EntityManager em = this.getEntityManager();
         try {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long[]> cq = cb.createQuery(Long[].class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
+        
             Predicate criteria = cb.conjunction();
             if (!"".equals(search)) {
                 criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"), cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
+            }
+             if(StringUtils.isNotEmpty(rayonId)){
+               Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER); 
+               criteria=cb.and(criteria,cb.equal(prf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), rayonId));
             }
             criteria = cb.and(criteria, cb.notLike(pr.get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
             criteria = cb.and(criteria, cb.equal(pr.get(TPreenregistrement_.bISCANCEL), false));
