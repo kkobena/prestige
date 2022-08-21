@@ -487,11 +487,8 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                                             width: 320,
                                             msg: "<span style='color: green;'> " + _result.nbreproduit + "</span> produit(s) pris en compte ; <span style='color:red;'>" + _result.nbrerupture + "</span> produit(s) en rupture",
                                             buttons: Ext.MessageBox.OK,
-                                            icon: Ext.MessageBox.INFO,
-                                            fn: function (buttonId) {
-                                                if (buttonId === "ok") {
-                                                }
-                                            }
+                                            icon: Ext.MessageBox.INFO
+                                           
                                         });
                                     } else {
                                         if (_result.status === 'responseNotFound') {
@@ -506,12 +503,8 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                                                     width: 320,
                                                     msg: "Aucune réponse de la part du client PharmaMl après une minute d'attente",
                                                     buttons: Ext.MessageBox.OK,
-                                                    icon: Ext.MessageBox.WARNING,
-                                                    fn: function (buttonId) {
-                                                        if (buttonId === "ok") {
-
-                                                        }
-                                                    }
+                                                    icon: Ext.MessageBox.WARNING
+                                                    
                                                 });
                                             }
 

@@ -715,6 +715,7 @@ public class retourFournisseurManagement extends bllBase implements Bonlivraison
                     OTBonLivraisonDetail.setIntQTERETURN((OTBonLivraisonDetail.getIntQTERETURN() != null ? OTBonLivraisonDetail.getIntQTERETURN() : 0) + OTRetourFournisseurDetail.getIntNUMBERANSWER());
                     this.getOdataManager().getEm().merge(OTBonLivraisonDetail);
                     dbl_AMOUNT += OTRetourFournisseurDetail.getIntNUMBERANSWER() * OTRetourFournisseurDetail.getIntPAF();
+                    
                 }
             }
             OFournisseur.setStrREPONSEFRS(comment);

@@ -58,7 +58,6 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
 
         Me = this;
         var itemsPerPage = 20;
-//        famille_id_search = "";
         in_total_vente = 0;
         int_total_formated = 0;
         ref = this.getNameintern();

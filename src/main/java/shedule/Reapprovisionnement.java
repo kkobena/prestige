@@ -118,7 +118,7 @@ public class Reapprovisionnement {
     public TParameters findParameters(String key) {
         try {
             return em.find(TParameters.class, key);
-       
+
         } catch (Exception e) {
             return null;
         }
@@ -170,14 +170,15 @@ public class Reapprovisionnement {
             return ((Long) q.getSingleResult()).intValue();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+          
             return 0;
         }
     }
 
     public void calculStockReappro() {
         int start = 0, limit = 10, Q1 = 4, Q2 = 2, Q3 = 3;
-        long total = loadArticleCount();
+//        long total = loadArticleCount();
+        long total = 10;
         TParameters q1 = findParameters(DateConverter.Q1);
         if (q1 != null) {
             Q1 = Integer.valueOf(q1.getStrVALUE().trim());
@@ -191,6 +192,9 @@ public class Reapprovisionnement {
             Q3 = Integer.valueOf(q3.getStrVALUE().trim());
         }
         List<LocalDate> nombreMois = nombreMoisPleinsConsommation(Q3).stream().sorted().collect(Collectors.toList());
+        nombreMois.forEach((t) -> {
+            System.err.println("==>> " + t);
+        });
         if (!nombreMois.isEmpty()) {
             JSONObject json;
             for (int i = start; i <= total; i += limit) {
@@ -199,6 +203,7 @@ public class Reapprovisionnement {
                 try {
                     userTransaction.begin();
                     for (TFamille tf : list) {
+                      
                         int conso = consommationProduits(nombreMois.get(0), LocalDate.of(nombreMois.get(nombreMois.size() - 1).getYear(), nombreMois.get(nombreMois.size() - 1).getMonth(), nombreMois.get(nombreMois.size() - 1).lengthOfMonth()), tf);
                         int seuiCalule = 0;
                         int qteCalule = 0;
@@ -214,6 +219,7 @@ public class Reapprovisionnement {
                             seuiCalule = json.getInt("seuilReappro");
                             qteCalule = json.getInt("qteReappro");
                         }
+                      
                         tf.setIntSEUILMIN(seuiCalule);
                         tf.setIntSTOCKREAPROVISONEMENT(seuiCalule);
                         tf.setIntQTEREAPPROVISIONNEMENT(qteCalule);
@@ -235,7 +241,7 @@ public class Reapprovisionnement {
         }
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         try {
             TParameters semois = em.find(TParameters.class, "SEMOIS");

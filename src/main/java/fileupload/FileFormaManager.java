@@ -276,7 +276,8 @@ public class FileFormaManager extends HttpServlet {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] row = line.split("\t");
-                int ligne = createTOrderDetailVIACSV(em, grossiste, order, row[1], Integer.valueOf(row[3]), Integer.valueOf(row[2]), Integer.valueOf(row[5]), 0);
+                int ligne = createTOrderDetailVIACSV(em, grossiste, order, row[1], Integer.valueOf(row[3]), Integer.valueOf(row[2]), 
+                        Integer.valueOf(row[5]), 0);
                 i += ligne;
                 if (ligne == 0) {
                     items.add(new OrderItem(row[1], Integer.valueOf(row[3]), row[1], Integer.valueOf(row[3]), Double.valueOf(row[5])));

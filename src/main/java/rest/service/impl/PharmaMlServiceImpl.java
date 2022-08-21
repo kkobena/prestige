@@ -131,16 +131,7 @@ public class PharmaMlServiceImpl implements PharmaMlService {
 
     }
 
-    @Override
-    public JSONObject lignesCommande(String commandeId) throws JSONException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<PharmaMLItemDTO> lignesCommandeDto(String commandeId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
+  
     public void buildCommande(String pathPharmaMl, String idRepartiteur, String typeTravail, LocalDate dateLivraisonSouhaitee, int typeCommande, String codeCommande, List<PharmaMLItemDTO> itemDTO, String commentaire, String commandeRef) throws IOException {
         NOMBRE_LIGNE_CODE = 0;
         NOMBRE_LIGNE_CLAIRE = 0;

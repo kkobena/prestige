@@ -5,12 +5,9 @@
  */
 package rest.service;
 
-import commonTasks.dto.PharmaMLItemDTO;
 import dal.TUser;
 import java.time.LocalDate;
-import java.util.List;
 import javax.ejb.Local;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -24,9 +21,6 @@ public interface PharmaMlService {
 
     JSONObject envoiPharmaInfosProduit(String commandeId);
 
-    JSONObject lignesCommande(String commandeId) throws JSONException;
-
-    List<PharmaMLItemDTO> lignesCommandeDto(String commandeId);
 
     JSONObject lignesCommandeRetour(String commandeRef, String orderId);
 

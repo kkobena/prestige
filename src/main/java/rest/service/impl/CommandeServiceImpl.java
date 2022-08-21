@@ -862,8 +862,8 @@ public class CommandeServiceImpl implements CommandeService {
                     if (item == null) {
                         continue;
                     }
-                    int qtyCommande = Integer.valueOf(cSVRecord.get(1));
-                    int qtyResponse = Integer.valueOf(cSVRecord.get(3));
+                    int qtyCommande = Integer.parseInt(cSVRecord.get(1));
+                    int qtyResponse = Integer.parseInt(cSVRecord.get(3));
                     int qty = qtyCommande - qtyResponse;
                     if (qtyResponse > 0) {
                         updateOrderItemQtyFromResponse(item, qtyResponse, grossiste);

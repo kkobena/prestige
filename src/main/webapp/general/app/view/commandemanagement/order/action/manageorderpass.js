@@ -360,23 +360,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                 INFORMATION,
                                 str_GROSSISTE_TELEPHONE,
                                 str_GROSSISTE_MOBILE,
-                                /*{
-                                 text: 'Exporter',
-                                 id: 'BTN_EXPORT',
-                                 margins: '0 30 0 0',
-                                 xtype: 'button',
-                                 handler: this.onbtnexport,
-                                 hidden: true
-                                 },
-                                 {
-                                 //xtype: 'filefield',
-                                 id: 'form-file',
-                                 name: 'photo-path',
-                                 buttonText: 'Importer',
-                                 buttonConfig: {
-                                 iconCls: 'upload-icon'
-                                 }
-                                 },*/
+                               
                                 {
                                     xtype: 'container',
                                     layout: 'hbox',
@@ -391,39 +375,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                             handler: this.onbtnexport,
                                             hidden: true
                                         }
-                                    /*    {
-                                            xtype: 'filefield',
-
-                                        id: 'form-file',
-                                            name: 'photo-path',
-                                            buttonText: 'Importer',
-                                            handler: this.onbtnimport,
-                                            buttonConfig: {
-                                                iconCls: 'upload-icon'
-                                            },
-                                            buttonOnly: true,
-                                            hideLabel: true,
-                                            listeners: {
-                                                'change': function (fb, v) {
-                                                    var el = Ext.get('fi-button-msg');
-                                                    el.update('<b>Selected:</b> ' + v);
-                                                    if (!el.isVisible()) {
-                                                        el.slideIn('t', {
-                                                            duration: 200,
-                                                            easing: 'easeIn',
-                                                            listeners: {
-                                                                afteranimate: function () {
-                                                                    el.highlight();
-                                                                    el.setWidth(null);
-                                                                }
-                                                            }
-                                                        });
-                                                    } else {
-                                                        el.highlight();
-                                                    }
-                                                }
-                                            }
-                                        }  */
+                                    
                                     ]
                                 },
                                 URL,
@@ -551,52 +503,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                  
                     if (btn === 'yes') {
                         testextjs.app.getController('App').ShowWaitingProcess();
-                       /* if(commandetype==="02"){
-                           Ext.Ajax.request({
-                            url: '../webservices/commandemanagement/order/ws_pharma_ml.jsp',
-                            params: {
-                                lg_ORDER_ID: rec.get('lg_ORDER_ID'),
-                                lg_GROSSISTE_ID: rec.get('lg_GROSSISTE_ID')
-                               
-                            },
-                            timeout: 2400000,
-                            success: function (response)
-                            {
-                                testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success === 0) {
-                                    Ext.MessageBox.alert('Error Message', object.errors);
-                                    return;
-                                }
-
-                                oGridParent.getStore().reload();
-                                
-                                Ext.MessageBox.confirm('Message',
-                                        'Imprimer le bon de commande?',
-                                        function (btn) {
-                                            if (btn === 'yes') {
-                                                Me.onPdfClick(rec.get('lg_ORDER_ID'));
-                                                return;
-                                            }
-                                        });
-                            },
-                            
-                            failure: function (response)
-                            {
-                                testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                console.log("Bug " + response.responseText);
-                                Ext.MessageBox.alert('Error Message', response.responseText);
-                            }
-                        });  
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                        }else{*/
+                      
                         Ext.Ajax.request({
                             url: url_services_transaction_order + 'passeorder',
                             params: {

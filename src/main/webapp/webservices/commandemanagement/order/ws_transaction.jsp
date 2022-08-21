@@ -48,7 +48,7 @@
 %>
 
 
-<%    List<TOrderDetail> lstTOrderDetail = new ArrayList<TOrderDetail>();
+<%    List<TOrderDetail> lstTOrderDetail = new ArrayList<>();
     int PRIX_ACHAT_TOTAL = 0, PRIX_VENTE_TOTAL = 0, total_lineproduct = 0;
 
     String SUGG_ORDER = "COMMANDE", ID_SUGG_ORDER = "", str_STATUT = commonparameter.statut_is_Process,

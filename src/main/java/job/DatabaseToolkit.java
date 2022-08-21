@@ -242,7 +242,7 @@ public class DatabaseToolkit {
             q.setParameter("statut", Statut.NOT_SEND);
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, "---->>>>  ", e);
             return Collections.emptyList();
         }
     }
@@ -253,7 +253,7 @@ public class DatabaseToolkit {
             q.setParameter("statut", statut);
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, "---->>>>  ", e);
             return Collections.emptyList();
         }
     }
@@ -266,7 +266,7 @@ public class DatabaseToolkit {
             q.setParameter("canaux", EnumSet.of(Canal.SMS));
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, "---->>>>  ", e);
             return Collections.emptyList();
         }
     }
@@ -307,7 +307,7 @@ public class DatabaseToolkit {
             q.setParameter("notificationId", n.getId());
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, "---->>>>  ", e);
             return Collections.emptyList();
         }
     }
@@ -475,7 +475,7 @@ public class DatabaseToolkit {
 
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
         } catch (JSONException e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, "---->>>>  ", e);
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
         }
     }
