@@ -378,7 +378,8 @@ public class ProduitRessource {
             @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit,
             @QueryParam(value = "fourId") String fourId,
-            @QueryParam(value = "query") String query
+            @QueryParam(value = "query") String query,
+             @QueryParam(value = "filtre") String filtre
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -393,7 +394,7 @@ public class ProduitRessource {
         }
         List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.ACTION_DELETE_RETOUR);
-        JSONObject json = mvtProduitService.loadetourFournisseur(dtStart, dtEnd, start, limit, fourId, query, asAuthority);
+        JSONObject json = mvtProduitService.loadetourFournisseur(dtStart, dtEnd, start, limit, fourId, query, asAuthority,filtre);
         return Response.ok().entity(json.toString()).build();
     }
 

@@ -1366,13 +1366,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public JSONObject loadetourFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query, boolean cunRemove) throws JSONException {
-        List<RetourFournisseurDTO> data = loadretoursFournisseur(dtStart, dtEnd, start, limit, fourId, query, cunRemove);
+    public JSONObject loadetourFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query, boolean cunRemove, String filtre) throws JSONException {
+        List<RetourFournisseurDTO> data = loadretoursFournisseur(dtStart, dtEnd, start, limit, fourId, query, cunRemove,filtre);
         return new JSONObject().put("total", data.size()).put("results", new JSONArray(data));
     }
 
     @Override
-    public List<RetourFournisseurDTO> loadretoursFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query, boolean cunRemove) {
+    public List<RetourFournisseurDTO> loadretoursFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query, boolean cunRemove, String filtre) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEmg().getCriteriaBuilder();
@@ -1386,11 +1386,25 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             if (!StringUtils.isEmpty(fourId)) {
                 predicates.add(cb.equal(root.get(TRetourFournisseur_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), fourId));
             }
-            if (!StringUtils.isEmpty(query)) {
+            if (StringUtils.isNotEmpty(query) || (StringUtils.isNotEmpty(filtre) && !filtre.equals(DateConverter.ALL))) {
                 List<Predicate> subpr = new ArrayList<>();
                 Subquery<TRetourFournisseur> sub = cq.subquery(TRetourFournisseur.class);
                 Root<TRetourFournisseurDetail> pr = sub.from(TRetourFournisseurDetail.class);
-                subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
+                if(StringUtils.isNotEmpty(query)){
+                    subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%"))); 
+                }
+                 if(StringUtils.isNotEmpty(filtre)){
+                     switch (filtre) {
+                         case DateConverter.NOT:
+                             subpr.add(cb.equal(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0));
+                             break;
+                         case DateConverter.WITH:
+                              subpr.add(cb.greaterThan(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0)); 
+                             break;
+                         default:
+                          break;
+                     }
+                 }
                 sub.select(pr.get(TRetourFournisseurDetail_.lgRETOURFRSID)).where(cb.and(subpr.toArray(new Predicate[0])));
                 predicates.add(cb.in(root).value(sub));
             }
@@ -1405,13 +1419,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public List<RetourDetailsDTO> loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query) {
+    public List<RetourDetailsDTO> loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query,String filtre) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEmg().getCriteriaBuilder();
             CriteriaQuery<TRetourFournisseur> cq = cb.createQuery(TRetourFournisseur.class);
             Root<TRetourFournisseur> root = cq.from(TRetourFournisseur.class);
-            Fetch<TRetourFournisseur, TRetourFournisseurDetail> d = root.fetch("tRetourFournisseurDetailCollection", JoinType.INNER);
+         
             cq.select(root).distinct(true);
             predicates.add(cb.equal(root.get(TRetourFournisseur_.strSTATUT), DateConverter.STATUT_ENABLE));
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TRetourFournisseur_.dtUPDATED)), java.sql.Date.valueOf(dtStart),
@@ -1420,11 +1434,28 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             if (!StringUtils.isEmpty(fourId)) {
                 predicates.add(cb.equal(root.get(TRetourFournisseur_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), fourId));
             }
-            if (!StringUtils.isEmpty(query)) {
+            if (!StringUtils.isEmpty(query) || (StringUtils.isNotEmpty(filtre) && !filtre.equals(DateConverter.ALL))) {
                 List<Predicate> subpr = new ArrayList<>();
                 Subquery<TRetourFournisseur> sub = cq.subquery(TRetourFournisseur.class);
                 Root<TRetourFournisseurDetail> pr = sub.from(TRetourFournisseurDetail.class);
-                subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
+                if(StringUtils.isNotEmpty(query)){
+                  subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
+                }
+                 if(StringUtils.isNotEmpty(filtre)){
+                     switch (filtre) {
+                         case DateConverter.NOT:
+                             subpr.add(cb.equal(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0));
+                             break;
+                         case DateConverter.WITH:
+                              subpr.add(cb.greaterThan(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0)); 
+                             break;
+                         default:
+                          break;
+                     }
+                 }
+                
+                
+               
                 sub.select(pr.get(TRetourFournisseurDetail_.lgRETOURFRSID)).where(cb.and(subpr.toArray(new Predicate[0])));
                 predicates.add(cb.in(root).value(sub));
             }

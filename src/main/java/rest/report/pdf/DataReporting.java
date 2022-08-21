@@ -323,7 +323,7 @@ public class DataReporting {
         return "/data/reports/pdf/ajustements_" + report_generate_file;
     }
      
-      public String loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query,TUser tu) throws IOException {
+      public String loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query,TUser tu,String filtre) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -339,7 +339,7 @@ public class DataReporting {
         }
         parameters.put("P_H_CLT_INFOS", "RETOURS FOURNISSEUR " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<RetourDetailsDTO> data = mvtProduitService.loadretoursFournisseur(dtStart, dtEnd, fourId, query);
+        List<RetourDetailsDTO> data = mvtProduitService.loadretoursFournisseur(dtStart, dtEnd, fourId, query,filtre);
          
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_retour_founisseurs" + report_generate_file, data);
         return "/data/reports/pdf/rp_retour_founisseurs" + report_generate_file;
