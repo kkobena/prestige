@@ -44,7 +44,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "TBonLivraison.findByDtUPDATED", query = "SELECT t FROM TBonLivraison t WHERE t.dtUPDATED = :dtUPDATED"),
     @NamedQuery(name = "TBonLivraison.findByStrSTATUTFACTURE", query = "SELECT t FROM TBonLivraison t WHERE t.strSTATUTFACTURE = :strSTATUTFACTURE"),
     @NamedQuery(name = "TBonLivraison.findByBlSELECTED", query = "SELECT t FROM TBonLivraison t WHERE t.blSELECTED = :blSELECTED")})
-public class TBonLivraison implements Serializable {
+public class TBonLivraison implements Serializable,Cloneable {
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -283,6 +283,11 @@ public class TBonLivraison implements Serializable {
     @Override
     public String toString() {
         return "dal.TBonLivraison[ lgBONLIVRAISONID=" + lgBONLIVRAISONID + " ]";
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone(); 
     }
     
 }

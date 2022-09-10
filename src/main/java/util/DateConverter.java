@@ -371,8 +371,8 @@ public final class DateConverter {
 
     public static String convertionChiffeLettres(Integer num) {
         RuleBasedNumberFormat formatter = new RuleBasedNumberFormat(Locale.FRANCE, RuleBasedNumberFormat.SPELLOUT);
-        String result = formatter.format(num);
-        return result;
+       return formatter.format(num);
+      
 
     }
 

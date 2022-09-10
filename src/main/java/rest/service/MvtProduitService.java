@@ -11,12 +11,15 @@ import commonTasks.dto.Params;
 import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.RetourFournisseurDTO;
 import commonTasks.dto.SalesStatsParams;
+import dal.TBonLivraisonDetail;
 import dal.TEmplacement;
 import dal.TFamille;
 import dal.TFamilleStock;
+import dal.TMotifRetour;
 import dal.TMouvement;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
+import dal.TRetourFournisseur;
 import dal.TUser;
 import java.util.List;
 import java.util.Optional;
@@ -107,4 +110,8 @@ public interface MvtProduitService {
             String dtEnd,
             String fourId,
             String query,String filtre);
+    
+    
+    void validerFullBlRetourFournisseur(TRetourFournisseur  fournisseur) ;
+      void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur,TMotifRetour motifRetour,List<TBonLivraisonDetail> bonLivraisonDetails);
 }

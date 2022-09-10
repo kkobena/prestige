@@ -37,6 +37,8 @@ import dal.TUser;
 import dal.TUser_;
 import dal.MotifAjustement;
 import dal.MotifAjustement_;
+import dal.TBonLivraisonDetail;
+import dal.TMotifRetour;
 import dal.Typemvtproduit;
 import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
@@ -48,8 +50,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.logging.Level;
@@ -64,7 +68,6 @@ import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
@@ -528,7 +531,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             query.setMaxResults(1);
             familleStock = query.getSingleResult();
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
+            e.printStackTrace(System.err);
         }
         return familleStock;
     }
@@ -1602,11 +1605,117 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         if (!params.isShowAll()) {
             predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
         }
-        cq.where(predicates.toArray(new Predicate[predicates.size()]));
+        cq.where(predicates.toArray(new Predicate[0]));
         TypedQuery<TAjustementDetail> q = getEmg().createQuery(cq);
 
         return q.getResultList().stream().map(AjustementDetailDTO::new).collect(Collectors.toList());
 
     }
+ @Override
+    public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur)  {
+       
+        EntityManager emg = this.getEmg();
+            List<TRetourFournisseurDetail> details = new ArrayList<>(retourFournisseur.getTRetourFournisseurDetailCollection()) ;
+            DoubleAdder amount = new DoubleAdder();
+            TUser user=retourFournisseur.getLgUSERID();
+            final TEmplacement empl = user.getLgEMPLACEMENTID();
+            final String emplecementId = empl.getLgEMPLACEMENTID();
+            details.forEach(d -> {
+                TFamille tf = d.getLgFAMILLEID();
+                TFamilleStock stock = findByProduitId(tf.getLgFAMILLEID(), emplecementId, emg);
+                int sockInit = stock.getIntNUMBERAVAILABLE();
+                int finalQty = sockInit - d.getIntNUMBERRETURN();
+                amount.add(d.getIntNUMBERRETURN() * d.getIntPAF());
+                d.setStrSTATUT(DateConverter.STATUT_ENABLE);
+                stock.setIntNUMBERAVAILABLE(finalQty);
+                stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
+                stock.setDtUPDATED(new Date());
+                emg.merge(stock);
+                emg.persist(d);
+                mouvementProduitService.saveMvtProduit(0, d.getIntPAF(), d.getLgRETOURFRSDETAIL(),
+                        DateConverter.RETOUR_FOURNISSEUR, tf, user, empl, d.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
+                saveMvtArticle(commonparameter.str_ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, tf,
+                        user, stock, d.getIntNUMBERRETURN(), sockInit, empl, emg);
+                suggestionService.makeSuggestionAuto(stock, tf);
+                String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+                logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
+                notificationService.save(new Notification()
+                        .canal(Canal.SMS)
+                        .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
+                        .message(desc)
+                        .addUser(user)
+                );
+            });
+   
+            retourFournisseur.setDlAMOUNT(amount.doubleValue());
+       
+            emg.persist(retourFournisseur);
 
+
+     
+
+    }
+
+
+ @Override
+    public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur,TMotifRetour motifRetour,List<TBonLivraisonDetail> bonLivraisonDetails)  {
+       
+        EntityManager emg = this.getEmg();
+         Set<TRetourFournisseurDetail>retourFournisseurDetails=new HashSet<>();
+            DoubleAdder amount = new DoubleAdder();
+            TUser user=retourFournisseur.getLgUSERID();
+            final TEmplacement empl = user.getLgEMPLACEMENTID();
+            final String emplecementId = empl.getLgEMPLACEMENTID();
+            for (TBonLivraisonDetail bonLivraisonDetail : bonLivraisonDetails) {
+                bonLivraisonDetail.setIntQTERETURN(bonLivraisonDetail.getIntQTERECUE());
+                TFamille tf = bonLivraisonDetail.getLgFAMILLEID();
+                TFamilleStock stock = findByProduitId(tf.getLgFAMILLEID(), emplecementId, emg);
+                int sockInit = stock.getIntNUMBERAVAILABLE();
+                int finalQty = sockInit - bonLivraisonDetail.getIntQTERECUE();
+                amount.add(bonLivraisonDetail.getIntQTERECUE() * bonLivraisonDetail.getIntPAF());
+                stock.setIntNUMBERAVAILABLE(finalQty);
+                stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
+                stock.setDtUPDATED(new Date());
+                TRetourFournisseurDetail retourFournisseurDetail= createRetourDetail( bonLivraisonDetail, sockInit, motifRetour,  retourFournisseur);
+               retourFournisseurDetails.add(retourFournisseurDetail);
+                emg.merge(stock);
+//                emg.persist(retourFournisseurDetail);
+                mouvementProduitService.saveMvtProduit(0, retourFournisseurDetail.getIntPAF(), retourFournisseurDetail.getLgRETOURFRSDETAIL(),
+                        DateConverter.RETOUR_FOURNISSEUR, tf, user, empl, retourFournisseurDetail.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
+                saveMvtArticle(commonparameter.str_ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, tf,
+                        user, stock, retourFournisseurDetail.getIntNUMBERRETURN(), sockInit, empl, emg);
+                suggestionService.makeSuggestionAuto(stock, tf);
+                String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + retourFournisseurDetail.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+                logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
+                notificationService.save(new Notification()
+                        .canal(Canal.SMS)
+                        .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
+                        .message(desc)
+                        .addUser(user)
+                );
+                this.getEmg().merge(bonLivraisonDetail);
+            }
+   
+            retourFournisseur.setDlAMOUNT(amount.doubleValue());
+       
+            emg.persist(retourFournisseur);
+            retourFournisseurDetails.forEach(this.getEmg()::persist);
+    }
+   private TRetourFournisseurDetail createRetourDetail(TBonLivraisonDetail bonLivraisonDetail,int sockInit,TMotifRetour motifRetour, TRetourFournisseur retourFournisseur) {
+       TFamille famille=bonLivraisonDetail.getLgFAMILLEID();
+        TRetourFournisseurDetail oTRetourFournisseurDetail = new TRetourFournisseurDetail(UUID.randomUUID().toString());
+        oTRetourFournisseurDetail.setLgRETOURFRSID(retourFournisseur);
+        oTRetourFournisseurDetail.setIntNUMBERRETURN(bonLivraisonDetail.getIntQTERECUE());
+        oTRetourFournisseurDetail.setIntNUMBERANSWER(oTRetourFournisseurDetail.getIntNUMBERRETURN());
+        oTRetourFournisseurDetail.setIntPAF(bonLivraisonDetail.getIntPAF());
+        oTRetourFournisseurDetail.setBonLivraisonDetail(bonLivraisonDetail);
+        oTRetourFournisseurDetail.setDtCREATED(retourFournisseur.getDtCREATED());
+        oTRetourFournisseurDetail.setDtUPDATED(oTRetourFournisseurDetail.getDtCREATED());
+        oTRetourFournisseurDetail.setStrSTATUT(DateConverter.STATUT_PROCESS);
+        oTRetourFournisseurDetail.setLgFAMILLEID(famille);
+        oTRetourFournisseurDetail.setIntSTOCK(sockInit);
+        oTRetourFournisseurDetail.setLgMOTIFRETOUR(motifRetour);
+        return oTRetourFournisseurDetail;
+       
+    }
 }

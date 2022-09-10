@@ -16,16 +16,22 @@ import dal.TGrossiste;
 import dal.TMotifRetour;
 import dal.TRetourFournisseur;
 import dal.TRetourFournisseurDetail;
+import dal.TUser;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import org.apache.commons.lang3.StringUtils;
+import rest.service.MvtProduitService;
 import rest.service.RetourFournisseurService;
 import util.DateConverter;
 
@@ -38,6 +44,8 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private MvtProduitService mvtProduitService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -55,24 +63,8 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         if (item == null) {
             return null;
         }
-        TRetourFournisseur fournisseur = new TRetourFournisseur(UUID.randomUUID().toString());
-        fournisseur.setDtCREATED(new Date());
-        fournisseur.setDtDATE(new Date());
-        fournisseur.setLgUSERID(params.getUser());
-        fournisseur.setDtUPDATED(new Date());
-        fournisseur.setDlAMOUNT(0.0);
-        fournisseur.setStrREFRETOURFRS(DateConverter.getShortId(8));
-        fournisseur.setStrCOMMENTAIRE(params.getStrCOMMENTAIRE());
-        if (StringUtils.isEmpty(params.getStrREPONSEFRS())) {
-            fournisseur.setStrREPONSEFRS("");
-        } else {
-            fournisseur.setStrREPONSEFRS(params.getStrREPONSEFRS());
-        }
         TBonLivraison bonLivraison = getTBonLivraison(params.getLgBONLIVRAISONID());
-        TGrossiste grossite = bonLivraison.getLgORDERID().getLgGROSSISTEID();
-        fournisseur.setLgBONLIVRAISONID(bonLivraison);
-        fournisseur.setLgGROSSISTEID(grossite);
-        fournisseur.setStrSTATUT(DateConverter.STATUT_PROCESS);
+        TRetourFournisseur fournisseur = createRetourFournisseur(params.getUser(), params.getStrCOMMENTAIRE(), params.getStrREPONSEFRS(), bonLivraison);
         getEntityManager().persist(fournisseur);
         item.setLgRETOURFRSID(fournisseur);
         getEntityManager().persist(item);
@@ -186,7 +178,7 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         oTRetourFournisseurDetail.setIntPAF(bonLivraisonDetail.getIntPAF());
         oTRetourFournisseurDetail.setBonLivraisonDetail(bonLivraisonDetail);
         oTRetourFournisseurDetail.setDtCREATED(new Date());
-        oTRetourFournisseurDetail.setDtUPDATED(new Date());
+        oTRetourFournisseurDetail.setDtUPDATED(oTRetourFournisseurDetail.getDtCREATED());
         oTRetourFournisseurDetail.setStrSTATUT(DateConverter.STATUT_PROCESS);
         oTRetourFournisseurDetail.setLgFAMILLEID(getFamille(item.getProduitId()));
         oTRetourFournisseurDetail.setIntSTOCK(getFamilleStock(item.getProduitId(), emplacementId).getIntNUMBERAVAILABLE());
@@ -204,9 +196,9 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
 
     private TRetourFournisseurDetail getRetourFournisseurDetail(String lgRetourId, String lgFAMILLEID) {
         try {
-          TypedQuery<TRetourFournisseurDetail> qry = getEntityManager().createQuery("SELECT t FROM TRetourFournisseurDetail t WHERE t.lgRETOURFRSID.lgRETOURFRSID = ?1  AND t.lgFAMILLEID.lgFAMILLEID = ?2", TRetourFournisseurDetail.class).
-                setParameter(1, lgRetourId).setParameter(2, lgFAMILLEID);
-        return qry.getSingleResult();  
+            TypedQuery<TRetourFournisseurDetail> qry = getEntityManager().createQuery("SELECT t FROM TRetourFournisseurDetail t WHERE t.lgRETOURFRSID.lgRETOURFRSID = ?1  AND t.lgFAMILLEID.lgFAMILLEID = ?2", TRetourFournisseurDetail.class).
+                    setParameter(1, lgRetourId).setParameter(2, lgFAMILLEID);
+            return qry.getSingleResult();
         } catch (Exception e) {
             return null;
         }
@@ -214,11 +206,86 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
 
     @Override
     public List<ErpAvoir> erpAvoirsFournisseurs(String dtStart, String dtEnd) {
-       return getEntityManager().createQuery("SELECT new commonTasks.dto.ErpAvoir(o) FROM TRetourFournisseurDetail o WHERE o.strSTATUT='enable' AND FUNCTION('DATE',o.dtUPDATED) BETWEEN ?1 AND ?2", ErpAvoir.class)
+        return getEntityManager().createQuery("SELECT new commonTasks.dto.ErpAvoir(o) FROM TRetourFournisseurDetail o WHERE o.strSTATUT='enable' AND FUNCTION('DATE',o.dtUPDATED) BETWEEN ?1 AND ?2", ErpAvoir.class)
                 .setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
                 .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
-               .getResultList();
+                .getResultList();
     }
-    
-    
+
+    @Override
+    public void returnFullBonLivraison(String bonId, String motifId, TUser user) throws CloneNotSupportedException {
+
+        TBonLivraison bonLivraison = this.getEntityManager().find(TBonLivraison.class, bonId);
+        TRetourFournisseur retourFournisseur = createRetourFournisseur(user, "", null, bonLivraison);
+        retourFournisseur.setStrSTATUT(DateConverter.STATUT_ENABLE);
+        TMotifRetour motifRetour = getFromId(motifId);
+        ArrayList<TBonLivraisonDetail> bonLivraisonDetails = new ArrayList<>(bonLivraison.getTBonLivraisonDetailCollection());
+        cloneBl(bonLivraison, user, bonLivraisonDetails);
+        retourFournisseur.setLgBONLIVRAISONID(bonLivraison);
+        mvtProduitService.validerFullBlRetourFournisseur(retourFournisseur,
+                motifRetour, bonLivraisonDetails);
+      
+        this.getEntityManager().merge(bonLivraison);
+
+    }
+
+    private void cloneBl(TBonLivraison bonLivraison, TUser user, ArrayList<TBonLivraisonDetail> bonLivraisonDetails) throws CloneNotSupportedException {
+        bonLivraison.setDtUPDATED(new Date());
+        bonLivraison.setSTATUS(DateConverter.STATUT_DELETE);
+        TBonLivraison cloneBl = (TBonLivraison) bonLivraison.clone();
+        cloneBl.setTBonLivraisonDetailCollection(new ArrayList<>());
+        cloneBl.setTRetourFournisseurCollection(new ArrayList<>());
+        cloneBl.setLgBONLIVRAISONID(UUID.randomUUID().toString());
+        cloneBl.setDtCREATED(new Date());
+        cloneBl.setDtUPDATED(cloneBl.getDtCREATED());
+        cloneBl.setLgUSERID(user);
+        cloneBl.setIntHTTC(cloneBl.getIntHTTC() * (-1));
+        cloneBl.setIntMHT(cloneBl.getIntMHT() * (-1));
+        cloneBl.setIntTVA(cloneBl.getIntTVA() * (-1));
+        cloneTBonLivraisonDetails(cloneBl, bonLivraisonDetails);
+        this.getEntityManager().merge(bonLivraison);
+
+    }
+    private final Function<TBonLivraisonDetail, TBonLivraisonDetail> cloneTBonLivraisonDetail = (bonLivraisonDetail) -> {
+        TBonLivraisonDetail copy = (TBonLivraisonDetail) bonLivraisonDetail.clone();
+        copy.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
+        copy.setDtCREATED(new Date());
+        copy.setDtUPDATED(bonLivraisonDetail.getDtCREATED());
+        copy.setLgBONLIVRAISONID(new TBonLivraison());
+        return copy;
+    };
+
+    private void cloneTBonLivraisonDetails(TBonLivraison cloneBl, ArrayList<TBonLivraisonDetail> bonLivraisonDetails) {
+
+        bonLivraisonDetails.stream().map(this.cloneTBonLivraisonDetail).forEach(bonLivraisonDetail -> {
+            bonLivraisonDetail.setLgBONLIVRAISONID(cloneBl);
+            cloneBl.getTBonLivraisonDetailCollection().add(bonLivraisonDetail);
+        });
+        this.getEntityManager().persist(cloneBl);
+        cloneBl.getTBonLivraisonDetailCollection().stream().forEach(this.getEntityManager()::persist);
+    }
+
+    private TRetourFournisseur createRetourFournisseur(TUser tUser, String comment, String response, TBonLivraison bonLivraison) {
+        TRetourFournisseur retourFournisseur = new TRetourFournisseur(UUID.randomUUID().toString());
+        retourFournisseur.setDtCREATED(new Date());
+        retourFournisseur.setDtDATE(new Date());
+        retourFournisseur.setLgUSERID(tUser);
+        retourFournisseur.setDtUPDATED(new Date());
+        retourFournisseur.setDlAMOUNT(0.0);
+        retourFournisseur.setStrREFRETOURFRS(DateConverter.getShortId(8));
+        retourFournisseur.setStrCOMMENTAIRE(comment);
+        if (StringUtils.isEmpty(response)) {
+            retourFournisseur.setStrREPONSEFRS("");
+        } else {
+            retourFournisseur.setStrREPONSEFRS(response);
+        }
+
+        TGrossiste grossite = bonLivraison.getLgORDERID().getLgGROSSISTEID();
+        retourFournisseur.setLgBONLIVRAISONID(bonLivraison);
+        retourFournisseur.setLgGROSSISTEID(grossite);
+        retourFournisseur.setStrSTATUT(DateConverter.STATUT_PROCESS);
+        return retourFournisseur;
+    }
+
+  
 }

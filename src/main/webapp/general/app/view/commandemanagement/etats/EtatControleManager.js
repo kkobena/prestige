@@ -198,6 +198,29 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                     }
 
                 },
+                
+                    {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                             icon: 'resources/images/icons/fam/delete.gif',
+                            tooltip: 'RETOUR COMPLET DU BL',
+                            scope: this,
+                            getClass: function (value, metadata, record) {
+                            if (record.get('RETURN_FULL_BL')) {
+                                            return 'x-display-hide';
+                                        }
+
+                                        return 'x-hide-display';
+                            },
+
+                            handler: this.retourCompletBL
+                        }]
+                },
+                
+                
                 {
                     xtype: 'actioncolumn',
                     width: 30,
@@ -539,5 +562,215 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
             mode: "update",
             titre: "Mise &agrave; jour des informations du Bon de livraison N&deg;" + rec.get('str_BL_REF')
         });
+    },
+    retourCompletBL:function (view, rowIndex, colIndex, item, e, record, row) {
+         var storetypemotif = new Ext.data.Store({
+            idProperty: 'lgMOTIFRETOUR',
+            fields: [
+                {name: 'lgMOTIFRETOUR',
+                    type: 'string'
+
+                },
+                {name: 'strLIBELLE',
+                    type: 'string'
+
+                }
+            ],
+            pageSize: 999,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/common/motifs-retour',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+            }
+
+        });
+        
+        
+        
+         var win = Ext.create('Ext.window.Window',
+                {
+                    extend: 'Ext.window.Window',
+                    autoShow: true,
+                    height: 220,
+                    width: '55%',
+                    modal: true,
+                    title: 'RETOUR COMPLET DE BON DE LIVRAISON',
+                    closeAction: 'hide',
+                    closable: true,
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    },
+                    items: [
+                        {
+                            xtype: 'form',
+                            bodyPadding: 5,
+                            modelValidation: true,
+                            layout: {
+                                type: 'vbox',
+                                align: 'stretch'
+                            },
+                            items: [
+                                {
+                                   xtype: 'fieldset',
+                                    layout: {
+        type: 'hbox',
+        align: 'stretch'
+    },
+                                    title: 'Information sur le bl', 
+                                          items: [
+                                              {
+                                                xtype: 'displayfield',   
+                                                fieldLabel: 'Numéro BL',
+                                                value: record.get('str_BL_REF'),
+                                                labelWidth: 70,
+                                               margin: '0 10 0 0',
+                                              
+                                                            fieldStyle: "color:green;font-weight: bold;font-size: 1.2em"
+                                          },
+                                            {
+                                                xtype: 'displayfield',   
+                                                fieldLabel: 'MONATNT TTC',
+                                                value: record.get('int_BL_PRICE'),
+                                                margin: '0 10 0 0',
+                                                 renderer: function (v) {
+                                                                return Ext.util.Format.number(v, '0,000.') ;
+                                                            },
+                                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
+                                          },
+                                           {
+                                                xtype: 'displayfield',   
+                                                fieldLabel: 'MONATNT HT',
+                                                 margin: '0 10 0 0',
+                                                value: record.get('int_ORDER_PRICE'),
+                                                  renderer: function (v) {
+                                                                return Ext.util.Format.number(v, '0,000.') ;
+                                                            },
+                                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
+                                          },
+                                          {
+                                                xtype: 'displayfield',   
+                                                fieldLabel: 'MONATNT TVA',
+                                                value: record.get('int_TVA'),
+                                                  renderer: function (v) {
+                                                                return Ext.util.Format.number(v, '0,000.') ;
+                                                            },
+                                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
+                                          }
+                                      
+                            ]
+                                    
+                                },
+
+                                {
+                                    xtype: 'fieldset',
+                                    title: 'MOTIF DU RETOUR',
+                                    layout: 'form',
+                                    defaults: {
+                                        anchor: '100%',
+                                        xtype: 'textfield',
+                                        msgTarget: 'side',
+                                        labelAlign: 'right',
+                                        labelWidth: 115
+                                    },
+                                    items: [
+                                       {
+                                            xtype: 'combobox',
+                                            fieldLabel: 'Motif',
+                                            name: 'lgMOTIFRETOUR',
+                                            store: storetypemotif,
+                                            valueField: 'lgMOTIFRETOUR',
+                                            displayField: 'strLIBELLE',
+                                            typeAhead: true,
+                                            pageSize: 20,
+                                            queryMode: 'remote',
+                                            flex: 1,
+                                            emptyText: 'Choisir un Motif...',
+                                             allowBlank: false,
+                                            listeners: {
+                                                select: function (cmp) {
+
+                                                   
+                                                }
+
+                                            }
+                                        }
+                                       
+                                        
+
+                                    ]
+                                }
+
+                            ],
+                            dockedItems: [
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'bottom',
+                                    ui: 'footer',
+                                    layout: {
+                                        pack: 'end',
+                                        type: 'hbox'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'button',
+                                            text: 'Enregistrer',
+                                            handler: function (btn) {
+                                                var formulaire = btn.up('form');
+                                                 if (formulaire.isValid()) {
+            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            Ext.Ajax.request({
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                url: '../api/v1/retourfournisseur/full-bl/' + record.get('lg_BON_LIVRAISON_ID'),
+                params: Ext.JSON.encode(formulaire.getValues()),
+                success: function (response, options) {
+                    progress.hide();
+                    var result = Ext.JSON.decode(response.responseText, true);
+                    if (result.success) {
+                        win.destroy();
+                       Me.onRechClick();
+                    } else {
+                        Ext.MessageBox.show({
+                            title: 'Message d\'erreur',
+                            width: 320,
+                            msg: result.msg,
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBox.ERROR
+
+                        });
+                    }
+
+                },
+                failure: function (response, options) {
+                    progress.hide();
+                    Ext.Msg.alert("Message", 'Erreur du système ' + response.status);
+                }
+
+            });
+        }
+                                            }
+                                        },
+                                        {
+                                            xtype: 'button',
+                                            text: 'Annuler',
+                                            handler: function (btn) {
+                                                win.destroy();
+                                            }
+
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+
+                });
     }
+    
 });

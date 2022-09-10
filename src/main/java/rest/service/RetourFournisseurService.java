@@ -8,6 +8,7 @@ package rest.service;
 import commonTasks.dto.ErpAvoir;
 import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.RetourFournisseurDTO;
+import dal.TUser;
 import java.util.List;
 import javax.ejb.Local;
 
@@ -31,4 +32,6 @@ public interface RetourFournisseurService {
     void cloture(RetourFournisseurDTO params);
     
       List<ErpAvoir> erpAvoirsFournisseurs(String dtStart, String dtEnd) ;
+      
+      void returnFullBonLivraison(String bonId, String motifId,TUser user) throws CloneNotSupportedException;
 }

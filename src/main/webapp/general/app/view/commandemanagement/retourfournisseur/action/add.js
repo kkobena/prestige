@@ -77,7 +77,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.action.add', {
                 tiemout: 180000
             }
         });
-        // storetypemotif
+        
         var storetypemotif = new Ext.data.Store({
             idProperty: 'lgMOTIFRETOUR',
             fields: [

@@ -1824,83 +1824,15 @@ public class WarehouseManager extends bll.bllBase {
         return lstTWarehouse;
     }
 
-    //fin liste des entrées en stock d'un produit
-//    //destocker stock rayon retour fournisseur //a decommenter en cas de probleme
-//    public boolean destockRayonByRetourFournisseur(TFamille OTFamille, String str_REF_LIVRAISON, int int_QUANTITY, String lg_GROSSISTE_ID) {
-//        boolean result = false;
-//        String lg_TYPE_STOCK_ID = "1";
-//        List<TWarehousedetail> lstTWarehousedetail = new ArrayList<TWarehousedetail>();
-//        int int_QUANTITY_TEMP = 0;
-//        try {
-//            if (OTFamille != null) {
-//                new logger().OCategory.info("Famille " + OTFamille.getStrNAME());
-//
-//                TFamilleStock OTFamilleStock = new tellerManagement(this.getOdataManager()).getTProductItemStock(OTFamille.getLgFAMILLEID());
-//                new logger().OCategory.info("Ancienne quantité " + OTFamilleStock.getIntNUMBERAVAILABLE());
-//
-//                lstTWarehousedetail = this.listeTWarehousedetail(OTFamille.getLgFAMILLEID(), str_REF_LIVRAISON);
-//                int qte = lstTWarehousedetail.size();
-//                int qteToDestock = 0;
-//                if (qte < int_QUANTITY) {
-//                    this.buildErrorTraceMessage("Désolé! La quantité restante de ce produit liés à la livraison est inférieure à celle à retourner");
-//                } else {
-//                    if (qte > int_QUANTITY) {
-//                        qteToDestock = int_QUANTITY;
-//                    } else {
-//                        qteToDestock = qte;
-//                    }
-////                    for (int i = 0; i < qte; i++) {
-//                    for (int i = 0; i < qteToDestock; i++) {
-//                        this.deleteProductItemInWarehouseDetail(lstTWarehousedetail.get(i).getLgWAREHOUSEDETAILID());
-//                        int_QUANTITY_TEMP++;
-//                    }
-//                    new logger().OCategory.info("int_QUANTITY_TEMP " + int_QUANTITY_TEMP);
-//                    if (int_QUANTITY_TEMP > 0) {
-//                        TTypeStockFamille OTTypeStockFamille = new StockManager(this.getOdataManager(), this.getOTUser()).getTTypeStockFamilleByTypestock(lg_TYPE_STOCK_ID, OTFamille.getLgFAMILLEID());
-//                        OTFamilleStock.setIntNUMBERAVAILABLE(OTFamilleStock.getIntNUMBERAVAILABLE() - int_QUANTITY_TEMP);
-//                        OTFamilleStock.setIntNUMBER(OTFamilleStock.getIntNUMBERAVAILABLE());
-//                        new logger().OCategory.info("Nouvelle quantité " + OTFamilleStock.getIntNUMBERAVAILABLE());
-//                        OTFamilleStock.setDtUPDATED(new Date());
-//                        this.persiste(OTFamilleStock);
-//                        OTTypeStockFamille.setIntNUMBER(OTTypeStockFamille.getIntNUMBER() - int_QUANTITY_TEMP);
-//                        OTTypeStockFamille.setDtUPDATED(new Date());
-//                        this.persiste(OTTypeStockFamille);
-//                        if (int_QUANTITY == int_QUANTITY_TEMP) {
-//                            this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-//
-//                        } else {
-//                            this.buildSuccesTraceMessage("Nombre de produits pris en compte: " + int_QUANTITY_TEMP);
-//                        }
-//                        try {
-//                            if (new SnapshotManager(this.getOdataManager(), this.getOTUser()).SaveMouvementFamille(OTFamille, lg_GROSSISTE_ID, commonparameter.REMOVE, commonparameter.str_ACTION_RETOURFOURNISSEUR, int_QUANTITY_TEMP) != null) {
-//                                result = true;
-//
-//                            }
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//
-//                    } else {
-//                        this.buildErrorTraceMessage("Désolé! Problème sur la quantité à déstocker");
-//                    }
-//                }
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return result;
-//    }
+    
 //    //fin destocker stock rayon retour fournisseur
     //quantité restante d'un produit livré
     public int getTWarehousedetailRemain(String str_REF_LIVRAISON, String lg_FAMILLE_ID) {
-        List<TWarehousedetail> lstProduct = new ArrayList<TWarehousedetail>();
+        List<TWarehousedetail> lstProduct = new ArrayList<>();
         int result = 0;
         try {
             lstProduct = this.getOdataManager().getEm().createQuery("SELECT t FROM TWarehousedetail t WHERE t.lgWAREHOUSEID.strREFLIVRAISON = ?1 AND t.lgFAMILLEID.lgFAMILLEID = ?2 ORDER BY t.dtPEREMPTION ASC")
                     .setParameter(1, str_REF_LIVRAISON).setParameter(2, lg_FAMILLE_ID).getResultList();
-            /*for (TWarehousedetail OTWarehousedetail : lstProduct) { // a decommenter en cas de probleme
-             result++;
-             }*/
             result = lstProduct.size();
         } catch (Exception e) {
             e.printStackTrace();
@@ -1908,58 +1840,14 @@ public class WarehouseManager extends bll.bllBase {
         new logger().OCategory.info("result " + result);
         return result;
     }
-    //fin quantité restante d'un produit livré
-
-    //liste des etats de controle d'achat
-    /*  public List<EntityData> listeEtatControleAchat(String search_value, String dtDEBUT, String dtFIN, String lg_GROSSISTE_ID) { // a decommenter en cas de probleme 03/11/2016
-
-     List<EntityData> lstEntityData = new ArrayList<EntityData>();
-
-     try {
-
-     if (search_value.equalsIgnoreCase("") || search_value == null) {
-     search_value = "%%";
-     }
-
-     jconnexion Ojconnexion = new jconnexion();
-     Ojconnexion.initConnexion();
-     Ojconnexion.OpenConnexion();
-     String qry = "SELECT t_bon_livraison.str_REF_LIVRAISON, t_bon_livraison.dt_DATE_LIVRAISON, t_bon_livraison.int_MHT, t_bon_livraison.int_TVA, t_bon_livraison.int_HTTC, t_order.str_REF_ORDER, t_grossiste.str_LIBELLE, t_bon_livraison.dt_UPDATED, t_user.str_FIRST_NAME, t_user.str_LAST_NAME, t_bon_livraison.lg_BON_LIVRAISON_ID FROM t_bon_livraison INNER JOIN t_order ON (t_bon_livraison.lg_ORDER_ID = t_order.lg_ORDER_ID) INNER JOIN t_grossiste ON (t_order.lg_GROSSISTE_ID = t_grossiste.lg_GROSSISTE_ID) INNER JOIN t_user ON (t_bon_livraison.lg_USER_ID = t_user.lg_USER_ID) WHERE t_order.lg_GROSSISTE_ID LIKE '" + lg_GROSSISTE_ID + "' AND (t_bon_livraison.dt_DATE_LIVRAISON > '" + dtDEBUT + "' AND t_bon_livraison.dt_DATE_LIVRAISON <= '" + dtFIN + "') AND (t_bon_livraison.str_REF_LIVRAISON LIKE '" + search_value + "%' OR t_order.str_REF_ORDER LIKE '" + search_value + "%') AND t_bon_livraison.str_STATUT = '" + commonparameter.statut_is_Closed + "'  ORDER BY t_grossiste.str_LIBELLE ASC, t_bon_livraison.dt_DATE_LIVRAISON DESC";
-     new logger().OCategory.info(qry);
-     Ojconnexion.set_Request(qry);
-     ResultSetMetaData rsmddatas = Ojconnexion.get_resultat().getMetaData();
-     while (Ojconnexion.get_resultat().next()) {
-     EntityData OEntityData = new EntityData();
-     OEntityData.setStr_value1(Ojconnexion.get_resultat().getString("str_REF_ORDER"));
-     OEntityData.setStr_value2(Ojconnexion.get_resultat().getString("str_REF_LIVRAISON"));
-     OEntityData.setStr_value3(Ojconnexion.get_resultat().getString("int_MHT"));
-     OEntityData.setStr_value4(Ojconnexion.get_resultat().getString("int_HTTC"));
-     OEntityData.setStr_value5(Ojconnexion.get_resultat().getString("dt_DATE_LIVRAISON"));
-     OEntityData.setStr_value6(Ojconnexion.get_resultat().getString("int_TVA"));
-     OEntityData.setStr_value7(Ojconnexion.get_resultat().getString("dt_UPDATED"));
-     OEntityData.setStr_value8(Ojconnexion.get_resultat().getString("lg_BON_LIVRAISON_ID"));
-     OEntityData.setStr_value11(Ojconnexion.get_resultat().getString("str_LIBELLE"));
-     OEntityData.setStr_value12(Ojconnexion.get_resultat().getString("str_FIRST_NAME") + " " + Ojconnexion.get_resultat().getString("str_LAST_NAME"));
-     lstEntityData.add(OEntityData);
-
-     }
-     Ojconnexion.CloseConnexion();
-
-     } catch (Exception e) {
-     e.printStackTrace();
-     this.setMessage(commonparameter.PROCESS_FAILED);
-     }
-     new logger().OCategory.info("lstEntityData " + lstEntityData.size());
-     return lstEntityData;
-     }
-     */
+    
     public List<Object[]> listeEtatControleAchat(String search_value, String dtDEBUT, String dtFIN, String lg_GROSSISTE_ID) {
 
-        List<Object[]> lstEntityData = new ArrayList<Object[]>();
+        List<Object[]> lstEntityData = new ArrayList<>();
 
         try {
 
-            String qry = "SELECT t_bon_livraison.str_REF_LIVRAISON, t_bon_livraison.dt_DATE_LIVRAISON, t_bon_livraison.int_MHT, t_bon_livraison.int_TVA, t_bon_livraison.int_HTTC, t_order.str_REF_ORDER, t_grossiste.str_LIBELLE, t_bon_livraison.dt_UPDATED, t_user.str_FIRST_NAME, t_user.str_LAST_NAME, t_bon_livraison.lg_BON_LIVRAISON_ID, (SELECT CASE WHEN SUM(bld.int_QTE_RETURN * bld.int_PAF) IS NOT NULL THEN SUM(bld.int_QTE_RETURN * bld.int_PAF) ELSE 0 END FROM t_bon_livraison_detail bld WHERE bld.lg_BON_LIVRAISON_ID = t_bon_livraison.lg_BON_LIVRAISON_ID ) AS MONTANT_AVOIR FROM t_bon_livraison INNER JOIN t_order ON (t_bon_livraison.lg_ORDER_ID = t_order.lg_ORDER_ID) INNER JOIN t_grossiste ON (t_order.lg_GROSSISTE_ID = t_grossiste.lg_GROSSISTE_ID) INNER JOIN t_user ON (t_bon_livraison.lg_USER_ID = t_user.lg_USER_ID) WHERE t_order.lg_GROSSISTE_ID LIKE '" + lg_GROSSISTE_ID + "' AND (DATE(t_bon_livraison.dt_DATE_LIVRAISON) >= '" + dtDEBUT + "' AND DATE(t_bon_livraison.dt_DATE_LIVRAISON) <= '" + dtFIN + "') AND (t_bon_livraison.str_REF_LIVRAISON LIKE '" + search_value + "%' OR t_order.str_REF_ORDER LIKE '" + search_value + "%') AND t_bon_livraison.str_STATUT = '" + commonparameter.statut_is_Closed + "'  ORDER BY t_grossiste.str_LIBELLE ASC, t_bon_livraison.dt_DATE_LIVRAISON DESC";
+            String qry = "SELECT t_bon_livraison.str_REF_LIVRAISON, t_bon_livraison.dt_DATE_LIVRAISON, t_bon_livraison.int_MHT, t_bon_livraison.int_TVA, t_bon_livraison.int_HTTC, t_order.str_REF_ORDER, t_grossiste.str_LIBELLE, t_bon_livraison.dt_UPDATED, t_user.str_FIRST_NAME, t_user.str_LAST_NAME, t_bon_livraison.lg_BON_LIVRAISON_ID, (SELECT CASE WHEN SUM(bld.int_QTE_RETURN * bld.int_PAF) IS NOT NULL THEN SUM(bld.int_QTE_RETURN * bld.int_PAF) ELSE 0 END FROM t_bon_livraison_detail bld WHERE bld.lg_BON_LIVRAISON_ID = t_bon_livraison.lg_BON_LIVRAISON_ID ) AS MONTANT_AVOIR FROM t_bon_livraison INNER JOIN t_order ON (t_bon_livraison.lg_ORDER_ID = t_order.lg_ORDER_ID) INNER JOIN t_grossiste ON (t_order.lg_GROSSISTE_ID = t_grossiste.lg_GROSSISTE_ID) INNER JOIN t_user ON (t_bon_livraison.lg_USER_ID = t_user.lg_USER_ID) WHERE t_order.lg_GROSSISTE_ID LIKE '" + lg_GROSSISTE_ID + "' AND (DATE(t_bon_livraison.dt_DATE_LIVRAISON) >= '" + dtDEBUT + "' AND DATE(t_bon_livraison.dt_DATE_LIVRAISON) <= '" + dtFIN + "') AND (t_bon_livraison.str_REF_LIVRAISON LIKE '" + search_value + "%' OR t_order.str_REF_ORDER LIKE '" + search_value + "%') AND (t_bon_livraison.str_STATUT = '" + commonparameter.statut_is_Closed + "' OR t_bon_livraison.str_STATUT = '" + DateConverter.STATUT_DELETE + "')  ORDER BY t_grossiste.str_LIBELLE ASC, t_bon_livraison.dt_DATE_LIVRAISON DESC";
             new logger().OCategory.info(qry);
             lstEntityData = this.getOdataManager().getEm().createNativeQuery(qry).getResultList();
 
@@ -1976,7 +1864,7 @@ public class WarehouseManager extends bll.bllBase {
 
         try {
 
-            String qry = "SELECT t_bon_livraison.str_REF_LIVRAISON, t_bon_livraison.dt_DATE_LIVRAISON, t_bon_livraison.int_MHT, t_bon_livraison.int_TVA, t_bon_livraison.int_HTTC, t_order.str_REF_ORDER, t_grossiste.str_LIBELLE, t_bon_livraison.dt_UPDATED, t_user.str_FIRST_NAME, t_user.str_LAST_NAME, t_bon_livraison.lg_BON_LIVRAISON_ID, (SELECT CASE WHEN SUM(bld.int_QTE_RETURN * bld.int_PAF) IS NOT NULL THEN SUM(bld.int_QTE_RETURN * bld.int_PAF) ELSE 0 END FROM t_bon_livraison_detail bld WHERE bld.lg_BON_LIVRAISON_ID = t_bon_livraison.lg_BON_LIVRAISON_ID ) AS MONTANT_AVOIR,t_grossiste.lg_GROSSISTE_ID FROM t_bon_livraison INNER JOIN t_order ON (t_bon_livraison.lg_ORDER_ID = t_order.lg_ORDER_ID) INNER JOIN t_grossiste ON (t_order.lg_GROSSISTE_ID = t_grossiste.lg_GROSSISTE_ID) INNER JOIN t_user ON (t_bon_livraison.lg_USER_ID = t_user.lg_USER_ID) WHERE t_order.lg_GROSSISTE_ID LIKE '" + lg_GROSSISTE_ID + "' AND (DATE(t_bon_livraison.dt_DATE_LIVRAISON) >= '" + dtDEBUT + "' AND DATE(t_bon_livraison.dt_DATE_LIVRAISON) <= '" + dtFIN + "') AND (t_bon_livraison.str_REF_LIVRAISON LIKE '" + search_value + "%' OR t_order.str_REF_ORDER LIKE '" + search_value + "%'  OR `t_bon_livraison`.`lg_BON_LIVRAISON_ID` IN (SELECT tb.`lg_BON_LIVRAISON_ID` FROM `t_bon_livraison_detail` tb,`t_famille` f WHERE f.`lg_FAMILLE_ID`=`tb`.`lg_FAMILLE_ID` AND (f.`str_NAME` LIKE '%" + search_value + "%' OR f.`int_CIP` LIKE '%" + search_value + "%' )))  AND t_bon_livraison.str_STATUT = '" + commonparameter.statut_is_Closed + "'  ORDER BY t_grossiste.str_LIBELLE ASC, t_bon_livraison.dt_DATE_LIVRAISON DESC LIMIT " + start + "," + limit;
+            String qry = "SELECT t_bon_livraison.str_REF_LIVRAISON, t_bon_livraison.dt_DATE_LIVRAISON, t_bon_livraison.int_MHT, t_bon_livraison.int_TVA, t_bon_livraison.int_HTTC, t_order.str_REF_ORDER, t_grossiste.str_LIBELLE, t_bon_livraison.dt_UPDATED, t_user.str_FIRST_NAME, t_user.str_LAST_NAME, t_bon_livraison.lg_BON_LIVRAISON_ID, (SELECT CASE WHEN SUM(bld.int_QTE_RETURN * bld.int_PAF) IS NOT NULL THEN SUM(bld.int_QTE_RETURN * bld.int_PAF) ELSE 0 END FROM t_bon_livraison_detail bld WHERE bld.lg_BON_LIVRAISON_ID = t_bon_livraison.lg_BON_LIVRAISON_ID ) AS MONTANT_AVOIR,t_grossiste.lg_GROSSISTE_ID,t_bon_livraison.str_STATUT FROM t_bon_livraison INNER JOIN t_order ON (t_bon_livraison.lg_ORDER_ID = t_order.lg_ORDER_ID) INNER JOIN t_grossiste ON (t_order.lg_GROSSISTE_ID = t_grossiste.lg_GROSSISTE_ID) INNER JOIN t_user ON (t_bon_livraison.lg_USER_ID = t_user.lg_USER_ID) WHERE t_order.lg_GROSSISTE_ID LIKE '" + lg_GROSSISTE_ID + "' AND (DATE(t_bon_livraison.dt_DATE_LIVRAISON) >= '" + dtDEBUT + "' AND DATE(t_bon_livraison.dt_DATE_LIVRAISON) <= '" + dtFIN + "') AND (t_bon_livraison.str_REF_LIVRAISON LIKE '" + search_value + "%' OR t_order.str_REF_ORDER LIKE '" + search_value + "%'  OR `t_bon_livraison`.`lg_BON_LIVRAISON_ID` IN (SELECT tb.`lg_BON_LIVRAISON_ID` FROM `t_bon_livraison_detail` tb,`t_famille` f WHERE f.`lg_FAMILLE_ID`=`tb`.`lg_FAMILLE_ID` AND (f.`str_NAME` LIKE '%" + search_value + "%' OR f.`int_CIP` LIKE '%" + search_value + "%' )))  AND (t_bon_livraison.str_STATUT = '" + commonparameter.statut_is_Closed + "' OR t_bon_livraison.str_STATUT = '" + DateConverter.STATUT_DELETE + "')  ORDER BY t_grossiste.str_LIBELLE ASC, t_bon_livraison.dt_DATE_LIVRAISON DESC LIMIT " + start + "," + limit;
 
             new logger().OCategory.info(qry);
             lstEntityData = this.getOdataManager().getEm().createNativeQuery(qry).getResultList();
@@ -2055,7 +1943,7 @@ public class WarehouseManager extends bll.bllBase {
     //liste de l'evolution du stock d'un article
     public List<TMouvementSnapshot> listTMouvementSnapshot(String search_value, String lg_FAMILLE_ID, Date dtDEBUT, Date dateMaxPerime, String lg_GROSSISTE_ID, String lg_FABRIQUANT_ID, String lg_FAMILLEARTICLE_ID, String lg_ZONE_GEO_ID) {
 
-        List<TMouvementSnapshot> lstTMouvementSnapshot = new ArrayList<TMouvementSnapshot>();
+        List<TMouvementSnapshot> lstTMouvementSnapshot = new ArrayList<>();
 
         try {
 

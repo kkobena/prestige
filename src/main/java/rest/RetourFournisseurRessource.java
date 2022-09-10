@@ -17,6 +17,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -122,5 +123,21 @@ public class RetourFournisseurRessource {
         retourFournisseurService.removeItem(id);
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
 
+    }
+    
+     @PUT
+    @Path("full-bl/{id}")
+    public Response returnFullBonLivraison( @PathParam("id") String id,
+            RetourDetailsDTO params
+    ) throws CloneNotSupportedException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+
+        retourFournisseurService.returnFullBonLivraison(id,params.getLgMOTIFRETOUR(),tu);
+       
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
 }

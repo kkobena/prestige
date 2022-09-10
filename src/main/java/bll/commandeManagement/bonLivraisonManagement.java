@@ -95,7 +95,7 @@ public class bonLivraisonManagement extends bllBase implements Bonlivraisonmanag
 
     public List<TFamille> findFamilleBLDetail(String lg_BON_LIVRAISON_ID) {
 
-        List<TFamille> lstTFamille = new ArrayList<TFamille>();
+        List<TFamille> lstTFamille = new ArrayList<>();
 
         try {
 

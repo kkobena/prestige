@@ -7,6 +7,8 @@ package dal;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -47,7 +49,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TBonLivraisonDetail.findByIntQTERETURN", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTERETURN = :intQTERETURN"),
     @NamedQuery(name = "TBonLivraisonDetail.findByIntINITSTOCK", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intINITSTOCK = :intINITSTOCK")})
 
-public class TBonLivraisonDetail implements Serializable {
+public class TBonLivraisonDetail implements Serializable,Cloneable  {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -320,6 +322,16 @@ public class TBonLivraisonDetail implements Serializable {
 
     public void setPrixUni(Integer prixUni) {
         this.prixUni = prixUni;
+    }
+
+    @Override
+    public Object clone()  {
+        try { 
+            return super.clone();
+        } catch (CloneNotSupportedException ex) {
+            Logger.getLogger(TBonLivraisonDetail.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     
