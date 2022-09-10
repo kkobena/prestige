@@ -147,8 +147,8 @@ public final class DateConverter {
     public static final int TYPE_FACTURE_UNIQUE = 0;
     public static final String TOUT = "TOUT";
     public static final String ALL = "ALL";
-    public static String ACTION_RETOURFOURNISSEUR = "RETOURFOURNISSEUR";
-    public static String ACTION_ENTREE_RETOUR_DEPOT = "ENTREESTOCK";
+    public static final String ACTION_RETOURFOURNISSEUR = "RETOURFOURNISSEUR";
+    public static final String ACTION_ENTREE_RETOUR_DEPOT = "ENTREESTOCK";
     public static final String KEY_PARAMS = "KEY_PARAMS";
     public static final String KEY_TAKE_INTO_ACCOUNT = "KEY_TAKE_INTO_ACCOUNT";
     public static final String KEY_NOMBRE_TICKETS_VNO = "KEY_NOMBRE_TICKETS_VNO";
@@ -178,6 +178,8 @@ public final class DateConverter {
     public static final String KEY_COMMON_MANAGMENT = "KEY_COMMON";
     public static final String NOT = "NOT";
     public static final String WITH = "WITH";
+      public static final String KEY_NOMBRE_TICKET_OTHER_ESPECE = "KEY_NOMBRE_TICKET_OTHER_ESPECE";
+    public static final String TYPE_REGLEMENT_ESPECE = "1";
     /*
     parametre nombre de mois à considerer
      */

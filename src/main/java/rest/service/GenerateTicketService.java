@@ -23,7 +23,7 @@ import org.json.JSONObject;
  * @author Kobena
  */
 @Local
-//@Remote
+
 public interface GenerateTicketService {
 
     JSONObject lunchPrinterForTicket(String idVente) throws JSONException;
@@ -75,9 +75,7 @@ public interface GenerateTicketService {
     JSONObject generateticket10(String venteId);
 
     void printReceintWithJasper(String venteId);
-
-    JSONObject generateTicketOnFly(ClotureVenteParams clotureVenteParams) throws JSONException;
-
+    
     JSONObject generateTicketOnFly(String venteId) throws JSONException;
 
     JSONObject generateVoTicketOnFly(ClotureVenteParams clotureVenteParams);
