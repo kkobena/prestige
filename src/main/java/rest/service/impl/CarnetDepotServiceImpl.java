@@ -9,9 +9,12 @@ import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.ReglementCarnetDTO;
 import commonTasks.dto.TiersPayantExclusDTO;
 import commonTasks.dto.VenteTiersPayantsDTO;
+import dal.MvtTransaction;
 import dal.ReglementCarnet;
 import dal.ReglementCarnet_;
 import dal.TCompteClientTiersPayant_;
+import dal.TParameters;
+import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TPreenregistrementCompteClientTiersPayent_;
 import dal.TPreenregistrement_;
@@ -19,6 +22,11 @@ import dal.TTiersPayant;
 import dal.TTiersPayant_;
 import dal.TTypeMvtCaisse;
 import dal.TUser;
+import dal.VenteExclus;
+import dal.VenteExclus_;
+import dal.enumeration.Statut;
+import dal.enumeration.TypeTiersPayant;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +34,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -47,8 +56,10 @@ import org.json.JSONObject;
 import rest.service.CarnetAsDepotService;
 import rest.service.ReglementService;
 import rest.service.RetourCarnetService;
+import rest.service.dto.DepotProduitVendusDTO;
 import rest.service.dto.ExtraitCompteClientDTO;
 import rest.service.dto.ProduitVenduDTO;
+
 import util.DateConverter;
 
 /**
@@ -77,8 +88,8 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             CriteriaQuery<TTiersPayant> cq = cb.createQuery(TTiersPayant.class);
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
             cq.select(root).orderBy(cb.asc(root.get(TTiersPayant_.strNAME)));
-            List<Predicate> predicates = perimePredicatCountAll(cb, root, query, exclude);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            List<Predicate> predicates = depotPredicatCountAll(cb, root, query, exclude);
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TTiersPayant> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -91,7 +102,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         }
     }
 
-    private List<Predicate> perimePredicatCountAll(CriteriaBuilder cb, Root<TTiersPayant> root, String query, Boolean exclude) {
+    private List<Predicate> depotPredicatCountAll(CriteriaBuilder cb, Root<TTiersPayant> root, String query, Boolean exclude) {
         List<Predicate> predicates = new ArrayList<>();
         if (!StringUtils.isEmpty(query)) {
             predicates.add(cb.or(cb.like(root.get(TTiersPayant_.strNAME), query + "%"),
@@ -101,6 +112,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         predicates.add(cb.equal(root.get(TTiersPayant_.strSTATUT), "enable"));
         if (exclude != null) {
             if (exclude) {
+
                 predicates.add(cb.isTrue(root.get(TTiersPayant_.isDepot)));
             } else {
                 predicates.add(cb.isFalse(root.get(TTiersPayant_.isDepot)));
@@ -114,8 +126,8 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     public JSONObject all(int start, int size, String query, Boolean exclude) {
         long count = countAll(query, exclude);
         List<TiersPayantExclusDTO> data = all(start, size, query, false, exclude);
-        JSONObject json = new JSONObject().put("total", count).put("data", data);
-        return json;
+        return new JSONObject().put("total", count).put("data", data);
+
     }
 
     private long countAll(String query, Boolean exclude) {
@@ -124,7 +136,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
             cq.select(cb.count(root));
-            List<Predicate> predicates = perimePredicatCountAll(cb, root, query, exclude);
+            List<Predicate> predicates = depotPredicatCountAll(cb, root, query, exclude);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
@@ -165,6 +177,37 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         }
     }
 
+    @Override
+    public void create(TPreenregistrement preenregistrement, MvtTransaction mvtTransaction, TTiersPayant payant) {
+        Objects.requireNonNull(preenregistrement);
+        Objects.requireNonNull(mvtTransaction);
+        if (payant != null && (payant.getToBeExclude() || payant.getIsDepot())) {
+            VenteExclus venteExclus = new VenteExclus();
+            venteExclus.setMvtDate(LocalDate.now());
+            venteExclus.setModifiedAt(LocalDateTime.now());
+            venteExclus.setCreatedAt(venteExclus.getModifiedAt());
+            venteExclus.setClient(preenregistrement.getClient());
+            venteExclus.setTiersPayant(payant);
+            venteExclus.setMontantClient(preenregistrement.getIntCUSTPART() != null ? preenregistrement.getIntCUSTPART() : 0);
+            venteExclus.setMontantPaye(mvtTransaction.getMontantPaye() != null ? mvtTransaction.getMontantPaye() : 0);
+            venteExclus.setMontantRegle(mvtTransaction.getMontantRegle() != null ? mvtTransaction.getMontantRegle() : 0);
+            venteExclus.setTypeReglement(mvtTransaction.getReglement());
+            venteExclus.setMontantTiersPayant(mvtTransaction.getMontantCredit());
+            venteExclus.setMontantRemise(preenregistrement.getIntPRICEREMISE() != null ? preenregistrement.getIntPRICEREMISE() : 0);
+            venteExclus.setMontantVente(preenregistrement.getIntPRICE());
+            venteExclus.setMvtTransactionKey(mvtTransaction.getUuid());
+            venteExclus.setPreenregistrement(preenregistrement);
+            if (payant.getToBeExclude() && !payant.getIsDepot()) {
+                venteExclus.setTypeTiersPayant(TypeTiersPayant.TIERS_PAYANT_EXCLUS);
+            } else {
+
+                venteExclus.setTypeTiersPayant(TypeTiersPayant.CARNET_AS_DEPOT);
+            }
+            this.getEntityManager().persist(venteExclus);
+        }
+
+    }
+
     private long countFetchVenteByTiersPayant(String tiersPayantId, String dtStart, String dtEnd) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -195,7 +238,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     private List<Predicate> fetchVentePredicat(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, LocalDate dtStart, LocalDate dtEnd, String tiersPayantId) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isTrue(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.isDepot)));
-//        predicates.add(cb.or(cb.isTrue(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.toBeExclude)),cb.isTrue(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.isDepot)))  );
+
         if (!StringUtils.isEmpty(tiersPayantId)) {
             predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
         }
@@ -453,4 +496,247 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getCreatedAt));
         return datas;
     }
+
+    @Override
+    public void setToExcludeOrNot(String id, boolean isDepot) {
+        if (isDepot) {
+            setAsExclude(id);
+        } else {
+            unsetAsExclude(id);
+        }
+    }
+
+    private void setAsExclude(String id) {
+        TTiersPayant payant = getEntityManager().find(TTiersPayant.class, id);
+        payant.setToBeExclude(Boolean.TRUE);
+        getEntityManager().merge(payant);
+    }
+
+    private void unsetAsExclude(String id) {
+        TTiersPayant payant = getEntityManager().find(TTiersPayant.class, id);
+        payant.setToBeExclude(Boolean.FALSE);
+        getEntityManager().merge(payant);
+    }
+
+    @Override
+    public void updateOldData() {
+        TParameters parameters = findOldDataParameter();
+        if (parameters != null) {
+            boolean siAlReadyUpdated = Boolean.parseBoolean(parameters.getStrVALUE());
+            if (!siAlReadyUpdated) {
+                getOldDataToExlude().forEach((t) -> {
+                    TPreenregistrement preenregistrement = t.getLgPREENREGISTREMENTID();
+                    TTiersPayant payant = t.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID();
+                    updateOldData(preenregistrement, findByVenteId(preenregistrement.getLgPREENREGISTREMENTID()), payant);
+                    findByTiersPayantId(payant.getLgTIERSPAYANTID()).forEach((reglementCarnet) -> {
+                        reglementCarnet.setTypeTiersPayant(TypeTiersPayant.TIERS_PAYANT_EXCLUS);
+                        this.getEntityManager().merge(reglementCarnet);
+                    });
+                });
+                getOldDepot().forEach((t) -> {
+                    TPreenregistrement preenregistrement = t.getLgPREENREGISTREMENTID();
+                    TTiersPayant payant = t.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID();
+                    updateOldData(preenregistrement, findByVenteId(preenregistrement.getLgPREENREGISTREMENTID()), payant);
+                    findByTiersPayantId(payant.getLgTIERSPAYANTID()).forEach((reglementCarnet) -> {
+                        reglementCarnet.setTypeTiersPayant(TypeTiersPayant.CARNET_AS_DEPOT);
+                        this.getEntityManager().merge(reglementCarnet);
+                    });
+                });
+                parameters.setStrVALUE(Boolean.TRUE.toString());
+                this.getEntityManager().merge(parameters);
+            }
+        }
+
+    }
+
+    private List<TPreenregistrementCompteClientTiersPayent> getOldDataToExlude() {
+        try {
+            return this.getEntityManager().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o  WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.toBeExclude =TRUE AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE>0 AND o.lgPREENREGISTREMENTID.strSTATUT='is_Closed'  ", TPreenregistrementCompteClientTiersPayent.class).getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    private List<TPreenregistrementCompteClientTiersPayent> getOldDepot() {
+        try {
+            return this.getEntityManager().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o  WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.isDepot=TRUE AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE>0 AND o.lgPREENREGISTREMENTID.strSTATUT='is_Closed' ", TPreenregistrementCompteClientTiersPayent.class).getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    private MvtTransaction findByVenteId(String venetId) {
+        try {
+
+            TypedQuery<MvtTransaction> q = this.getEntityManager().createQuery("SELECT o FROM MvtTransaction o  WHERE o.pkey=?1", MvtTransaction.class);
+            q.setParameter(1, venetId);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private List<ReglementCarnet> findByTiersPayantId(String tpId) {
+        try {
+            return this.getEntityManager().createQuery("SELECT o FROM ReglementCarnet o  WHERE o.tiersPayant.lgTIERSPAYANTID=?1",
+                    ReglementCarnet.class).setParameter(1, tpId).getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    private TParameters findOldDataParameter() {
+        try {
+            return this.getEntityManager().find(TParameters.class, "OLD_DATA_CARNET_DEPOT");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void updateOldData(TPreenregistrement preenregistrement, MvtTransaction mvtTransaction, TTiersPayant payant) {
+
+        VenteExclus venteExclus = new VenteExclus();
+        venteExclus.setMvtDate(DateConverter.convertDateToLocalDate(preenregistrement.getDtUPDATED()));
+        venteExclus.setModifiedAt(DateConverter.convertDateToLocalDateTime(preenregistrement.getDtUPDATED()));
+        venteExclus.setCreatedAt(DateConverter.convertDateToLocalDateTime(preenregistrement.getDtCREATED()));
+        venteExclus.setClient(preenregistrement.getClient());
+        venteExclus.setTiersPayant(payant);
+        venteExclus.setMontantClient(preenregistrement.getIntCUSTPART() != null ? preenregistrement.getIntCUSTPART() : 0);
+        venteExclus.setMontantPaye(mvtTransaction.getMontantPaye() != null ? mvtTransaction.getMontantPaye() : 0);
+        venteExclus.setMontantRegle(mvtTransaction.getMontantRegle() != null ? mvtTransaction.getMontantRegle() : 0);
+        venteExclus.setTypeReglement(mvtTransaction.getReglement());
+        venteExclus.setMontantTiersPayant(mvtTransaction.getMontantCredit());
+        venteExclus.setMontantRemise(preenregistrement.getIntPRICEREMISE() != null ? preenregistrement.getIntPRICEREMISE() : 0);
+        venteExclus.setMontantVente(preenregistrement.getIntPRICE());
+        venteExclus.setMvtTransactionKey(mvtTransaction.getUuid());
+        venteExclus.setPreenregistrement(preenregistrement);
+        if (payant.getToBeExclude() && !payant.getIsDepot()) {
+            venteExclus.setTypeTiersPayant(TypeTiersPayant.TIERS_PAYANT_EXCLUS);
+        } else {
+            venteExclus.setTypeTiersPayant(TypeTiersPayant.CARNET_AS_DEPOT);
+        }
+        this.getEntityManager().persist(venteExclus);
+
+    }
+
+    private String closeWhereTp(String tiersPayantId) {
+
+        if (StringUtils.isNotEmpty(tiersPayantId)) {
+            return " AND  v.tiersPayant_id = ?3 ";
+        }
+        return "";
+    }
+
+    private String closeWhereSearch(String query, String tiersPayantId) {
+
+        if (StringUtils.isNotEmpty(query) && StringUtils.isNotEmpty(tiersPayantId)) {
+            return " AND (  f.str_NAME LIKE ?4 OR f.int_CIP LIKE ?4  OR p.str_FULLNAME LIKE ?4) ";
+        } else if (StringUtils.isNotEmpty(query)) {
+            return " AND (  f.str_NAME LIKE ?3 OR f.int_CIP LIKE ?3  OR p.str_FULLNAME LIKE ?3) ";
+        }
+        return "";
+    }
+
+    private void updateQueryParam(Query q, String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) {
+        q.setParameter(1, dtStart);
+        q.setParameter(2, dtEnd);
+        if (StringUtils.isNotEmpty(tiersPayantId)) {
+            q.setParameter(3, tiersPayantId);
+        }
+        if (StringUtils.isNotEmpty(query) && StringUtils.isNotEmpty(tiersPayantId)) {
+            q.setParameter(4, query + "%");
+        }
+        if (StringUtils.isNotEmpty(query) && StringUtils.isEmpty(tiersPayantId)) {
+            q.setParameter(3, query + "%");
+        }
+    }
+
+    @Override
+    public List<DepotProduitVendusDTO> produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query, int start, int size, boolean all) {
+        String sqlQuery = "SELECT SUM(d.int_QUANTITY) AS quantite,SUM(d.int_PRICE) AS montantVente,SUM(d.int_QUANTITY*f.int_PAF) AS montantAchat,  f.int_PAF AS prixAchat,f.int_PRICE AS prixUni ,f.int_CIP AS codeCip,f.str_NAME AS produitName ,f.lg_FAMILLE_ID AS produitId,f.int_EAN13 AS codeEan FROM  t_preenregistrement_detail d ,t_famille f, vente_exclu v,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.preenregistrement_id AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.`status`='IS_CLOSE' AND v.tiersPayant_id=p.lg_TIERS_PAYANT_ID AND v.type_tiers_payant='CARNET_AS_DEPOT'  AND v.mvtDate BETWEEN ?1 AND ?2 ";
+        sqlQuery += closeWhereTp(tiersPayantId);
+        sqlQuery += closeWhereSearch(query, tiersPayantId);
+        sqlQuery += "  GROUP BY f.lg_FAMILLE_ID";
+
+        try {
+            Query q = getEntityManager().createNativeQuery(sqlQuery, Tuple.class);
+            updateQueryParam(q, tiersPayantId, dtStart, dtEnd, query);
+            if (!all) {
+                q.setFirstResult(start);
+                q.setMaxResults(size);
+            }
+            List<Tuple> list = q.getResultList();
+        return list.stream().map(t -> DepotProduitVendusDTO.builder()
+                    .codeCip(t.get("codeCip", String.class))
+                    .produitName(t.get("produitName", String.class))
+                    .produitId(t.get("produitId", String.class))
+                    .prixAchat(t.get("prixAchat", Integer.class))
+                    .prixUni(t.get("prixUni", Integer.class))
+                    .montantAchat(t.get("montantAchat", BigDecimal.class).longValue())
+                    .montantVente(t.get("montantVente", BigDecimal.class).longValue())
+                    .quantite(t.get("quantite", BigDecimal.class).longValue())
+                    .build()).sorted(Comparator.comparing(DepotProduitVendusDTO::getCodeCip)).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
+    @Override
+    public JSONObject produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query, int start, int size) {
+        JSONObject json = new JSONObject();
+        List<DepotProduitVendusDTO> data = produitVenduParDepot(tiersPayantId, dtStart, dtEnd, query, start, size, false);
+        DepotProduitVendusDTO metaData = produitVenduParDepotSummary(tiersPayantId, dtStart, dtEnd, query);
+        json.put("metaData", new JSONObject(metaData));
+        json.put("total", produitVenduParDepotCount(tiersPayantId, dtStart, dtEnd, query));
+        json.put("data", new JSONArray(data));
+        return json;
+    }
+
+    private int produitVenduParDepotCount(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) {
+        String sqlQuery = "SELECT SUM(d.lg_FAMILLE_ID) AS produitId FROM  t_preenregistrement_detail d ,t_famille f, vente_exclu v,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.preenregistrement_id AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.`status`='IS_CLOSE' AND v.tiersPayant_id=p.lg_TIERS_PAYANT_ID AND v.type_tiers_payant='CARNET_AS_DEPOT'  AND v.mvtDate BETWEEN ?1 AND ?2 ";
+        sqlQuery += closeWhereTp(tiersPayantId);
+        sqlQuery += closeWhereSearch(query, tiersPayantId);
+        sqlQuery += "  GROUP BY f.lg_FAMILLE_ID";
+
+        try {
+            Query q = getEntityManager().createNativeQuery(sqlQuery, Tuple.class);
+            updateQueryParam(q, tiersPayantId, dtStart, dtEnd, query);
+
+            return q.getResultList().size();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public DepotProduitVendusDTO produitVenduParDepotSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) {
+        String sqlQuery = "SELECT SUM(d.int_PRICE) AS montantVente,SUM(d.int_QUANTITY*f.int_PAF) AS montantAchat FROM  t_preenregistrement_detail d ,t_famille f, vente_exclu v,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.preenregistrement_id AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.`status`='IS_CLOSE' AND v.tiersPayant_id=p.lg_TIERS_PAYANT_ID AND v.type_tiers_payant='CARNET_AS_DEPOT'  AND v.mvtDate BETWEEN ?1 AND ?2 ";
+        sqlQuery += closeWhereTp(tiersPayantId);
+        sqlQuery += closeWhereSearch(query, tiersPayantId);
+
+        try {
+            Query q = getEntityManager().createNativeQuery(sqlQuery, Tuple.class);
+            updateQueryParam(q, tiersPayantId, dtStart, dtEnd, query);
+
+            Tuple summary = (Tuple) q.getSingleResult();
+         return DepotProduitVendusDTO.builder()
+                    .montantAchat(summary.get("montantAchat", BigDecimal.class).longValue())
+                    .montantVente(summary.get("montantVente", BigDecimal.class).longValue())
+                    .build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return DepotProduitVendusDTO.builder().build();
+    }
+
 }

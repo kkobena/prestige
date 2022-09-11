@@ -26,6 +26,7 @@ import rest.report.ReportUtil;
 import rest.service.CaisseService;
 import rest.service.CarnetAsDepotService;
 import rest.service.TiersPayantExclusService;
+import rest.service.dto.DepotProduitVendusDTO;
 import rest.service.dto.ExtraitCompteClientDTO;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
@@ -46,7 +47,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
     private CarnetAsDepotService carnetAsDepotService;
 
     private enum Action {
-        VENTE, REGLEMENTS, RETOUR
+        VENTE, REGLEMENTS, RETOUR,PRODUITS
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -85,6 +86,9 @@ public class TiersPayantExcludServlet extends HttpServlet {
                 } else {
                     file = retourCarnetMonthly(tiersPayantId, query, dtStart, dtEnd, OTUser);
                 }
+                break;
+            case PRODUITS:
+                file=produitVenduDepot(tiersPayantId, dtStart, dtEnd, OTUser, null);
                 break;
         }
         response.sendRedirect(request.getContextPath() + file);
@@ -126,7 +130,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
         }
 
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
@@ -157,7 +161,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
         }
 
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
@@ -188,7 +192,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
         }
 
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
@@ -219,7 +223,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
         }
 
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
@@ -250,16 +254,46 @@ public class TiersPayantExcludServlet extends HttpServlet {
         }
 
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
+       
         List<ExtraitCompteClientDTO> datas = tiersPayantExclusService.extraitcompte(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_vente_" + report_generate_file, datas);
         return "/data/reports/pdf/extrait_compte_vente_" + report_generate_file;
     }
+  public String produitVenduDepot(String tiersPayantId, String dtStart, String dtEnd, TUser tu,String query) throws IOException {
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
 
+        TOfficine oTOfficine = caisseService.findOfficine();
+        String P_H_CLT_INFOS = "PRODUITS VENDUTS AU DEPOT ";
+        String tiersPayant = " ";
+        String scr_report_file = "rp_produits_vendus_au_depot";
+        if (StringUtils.isEmpty(tiersPayantId)) {
+           
+        } else {
+            tiersPayant = tiersPayantExclusService.getTiersPayantName(tiersPayantId) + " ";
+        }
+
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
+        List<DepotProduitVendusDTO> datas = carnetAsDepotService.produitVenduParDepot(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd),query,0,0,true);
+      
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_produits_vendus_au_depot_" + report_generate_file, datas);
+        return "/data/reports/pdf/rp_produits_vendus_au_depot_" + report_generate_file;
+    }
 }

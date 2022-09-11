@@ -5,15 +5,19 @@
  */
 package dal;
 
+import dal.enumeration.TypeTiersPayant;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -24,7 +28,10 @@ import javax.validation.constraints.NotNull;
  * @author koben
  */
 @Entity
-@Table(name = "reglement_carnet")
+@Table(name = "reglement_carnet", indexes = {
+    @Index(name = "reglement_carnet_type_tiers_payant", columnList = "type_tiers_payant")
+
+})
 public class ReglementCarnet implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -64,6 +71,10 @@ public class ReglementCarnet implements Serializable {
     private TTypeReglement typeReglement;
     @Column(name = "id_dossier", length = 50)
     private String idDossier;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_tiers_payant", nullable = false, length = 30)
+    private TypeTiersPayant typeTiersPayant = TypeTiersPayant.CARNET_AS_DEPOT;
 
     public String getIdDossier() {
         return idDossier;
@@ -71,6 +82,14 @@ public class ReglementCarnet implements Serializable {
 
     public void setIdDossier(String idDossier) {
         this.idDossier = idDossier;
+    }
+
+    public TypeTiersPayant getTypeTiersPayant() {
+        return typeTiersPayant;
+    }
+
+    public void setTypeTiersPayant(TypeTiersPayant typeTiersPayant) {
+        this.typeTiersPayant = typeTiersPayant;
     }
 
     public ReglementCarnet() {

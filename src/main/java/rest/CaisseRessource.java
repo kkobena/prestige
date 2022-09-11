@@ -55,10 +55,6 @@ public class CaisseRessource {
     @EJB
     GenerateTicketService generateTicketService;
 
-    public CaisseRessource() {
-
-    }
-
     @GET
     @Path("listecaisse")
     public Response geListeCaisse(
@@ -124,7 +120,7 @@ public class CaisseRessource {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        JSONObject json = caisseService.balanceVenteCaisse(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject json = caisseService.balanceVenteCaisse(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), true);
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -199,7 +195,7 @@ public class CaisseRessource {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        JSONObject json ;
+        JSONObject json;
         if (monthly) {
             json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
         } else {
@@ -376,6 +372,27 @@ public class CaisseRessource {
         } catch (Exception e) {
         }
         JSONObject json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("balancesalecash/carnet")
+    public Response balanceCaisseCarnet(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
+    ) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+        }
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+        JSONObject json = caisseService.balanceVenteCaisse(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), false);
         return Response.ok().entity(json.toString()).build();
     }
 }

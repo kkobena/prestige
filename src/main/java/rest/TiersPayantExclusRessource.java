@@ -23,7 +23,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.service.ReglementService;
 import rest.service.TiersPayantExclusService;
 import toolkits.parameters.commonparameter;
 
@@ -46,7 +45,7 @@ public class TiersPayantExclusRessource {
       public Response fetchAll(
             @QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
-        JSONObject json = tiersPayantExclusService.all(start, limit, query, null);
+        JSONObject json = tiersPayantExclusService.allTiersPayant(start, limit, query);
         return Response.ok().entity(json.toString()).build();
 
     }
@@ -70,7 +69,7 @@ public class TiersPayantExclusRessource {
     public Response fetchExclud(
             @QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
-        JSONObject json = tiersPayantExclusService.all(start, limit, query, true);
+        JSONObject json = tiersPayantExclusService.all(start, limit, query);
         return Response.ok().entity(json.toString()).build();
 
     }

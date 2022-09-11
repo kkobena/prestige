@@ -37,6 +37,7 @@ import dal.enumeration.Canal;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
+import dal.enumeration.TypeTiersPayant;
 import dal.enumeration.TypeTransaction;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -48,7 +49,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -348,6 +348,9 @@ public class ReglementServiceImpl implements ReglementService {
         carnet.setCreatedAt(LocalDateTime.now());
         carnet.setUser(user);
         carnet.setTiersPayant(payant);
+        if(!payant.getIsDepot()){
+            carnet.setTypeTiersPayant(TypeTiersPayant.TIERS_PAYANT_EXCLUS);
+        }
         carnet.setDescription(reglementCarnetDTO.getDescription());
         carnet.setMontantPaye(reglementCarnetDTO.getMontantPaye());
         carnet.setMontantPayer(payant.getAccount().intValue());
@@ -396,7 +399,7 @@ public class ReglementServiceImpl implements ReglementService {
     }
     @Override
     public JSONObject reglerDiffere(ClotureVenteParams clotureVenteParams) throws JSONException {
-        System.out.println("clotureVenteParams  " + clotureVenteParams);
+     
         JSONObject json = new JSONObject();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try {

@@ -79,7 +79,7 @@ public class Balance {
       @EJB
     private TvaService tvaService;
 
-    public String generatepdf(Params parasm) throws IOException {
+    public String generatepdf(Params parasm,boolean  exludeSome) throws IOException {
         TUser tu = parasm.getOperateur();
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_balancevente_caissev2";
@@ -99,9 +99,9 @@ public class Balance {
         BalanceDTO vno = new BalanceDTO();
         GenericDTO generic;
         if (!parasm.isCheckug()) {
-            generic = caisseService.balanceVenteCaisseReport(dtSt, dtEn, true, empl.getLgEMPLACEMENTID());
+            generic = caisseService.balanceVenteCaisseReport(dtSt, dtEn, true, empl.getLgEMPLACEMENTID(),exludeSome);
         } else {
-            generic = caisseService.balanceVenteCaisseReportVersion2(dtSt, dtEn, true, empl.getLgEMPLACEMENTID());
+            generic = caisseService.balanceVenteCaisseReportVersion2(dtSt, dtEn, true, empl.getLgEMPLACEMENTID(),exludeSome);
         }
         List<VisualisationCaisseDTO> findAllMvtCaisse = caisseService.findAllMvtCaisse(dtSt, dtEn, true, empl.getLgEMPLACEMENTID());
         SummaryDTO summary = generic.getSummary();

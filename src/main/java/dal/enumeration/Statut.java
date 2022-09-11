@@ -28,5 +28,5 @@ public enum Statut {
     SENT, 
     NOT_SEND,
     LOCK
-    ;
+    
 }

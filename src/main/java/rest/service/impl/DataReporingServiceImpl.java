@@ -289,7 +289,7 @@ public class DataReporingServiceImpl implements DataReporingService {
                     .orderBy(cb.asc(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.laboratoire).get(Laboratoire_.libelle)));
 
             List<Predicate> predicates = unitesVenduePredicatsGamme(cb, root, join, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste, laboratoireId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             Long count = 0l;
             if (!all) {
@@ -412,7 +412,7 @@ public class DataReporingServiceImpl implements DataReporingService {
         Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
         cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)));
         List<Predicate> predicates = unitesVenduePredicatsLaboratoires(cb, root, join, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamille, u, codeRayon, codeGrossiste, laboratoireId);
-        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
         Query q = getEntityManager().createQuery(cq);
         return (Long) q.getSingleResult();
     }
@@ -657,10 +657,10 @@ public class DataReporingServiceImpl implements DataReporingService {
             Root<TPreenregistrementDetail> subroot = sub.from(TPreenregistrementDetail.class);
             sub.select(subroot.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID));
             List<Predicate> predicatesSubQuery = statsArticlesInvendusSubQueryPredicats(cb, subroot, dtStart, dtEnd, empId);
-            sub.where(predicatesSubQuery.toArray(new Predicate[predicatesSubQuery.size()]));
+            sub.where(predicatesSubQuery.toArray(new Predicate[0]));
             List<Predicate> predicates = statsArticlesInvendusPredicats(cb, root, fa, query, codeFamile, codeRayon, codeGrossiste, empId, stockFiltre, stock);
             predicates.add(cb.not(cb.in(root.get(TFamille_.lgFAMILLEID)).value(sub)));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return (q.getSingleResult() != null ? (Long) q.getSingleResult() : 0);
 

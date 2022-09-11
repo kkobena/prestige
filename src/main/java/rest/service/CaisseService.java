@@ -84,9 +84,9 @@ Author author = entityManager.find(Author.class, id, properties);
 
     SumCaisseDTO cumul(CaisseParamsDTO caisseParams, boolean all);
 
-    GenericDTO balanceVenteCaisseReport(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
+    GenericDTO balanceVenteCaisseReport(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,Boolean excludeSome);
 
-    JSONObject balanceVenteCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
+    JSONObject balanceVenteCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,Boolean excludeSome)
             throws JSONException;
 
     List<VisualisationCaisseDTO> findAllMvtCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
@@ -157,10 +157,10 @@ Author author = entityManager.find(Author.class, id, properties);
 
     JSONObject venteUg(LocalDate dtStart, LocalDate dtEnd, String query);
 
-    JSONObject balanceVenteCaisseVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId)
+    JSONObject balanceVenteCaisseVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,Boolean excludeSome)
             throws JSONException;
 
-    GenericDTO balanceVenteCaisseReportVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
+    GenericDTO balanceVenteCaisseReportVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,Boolean excludeSome);
 
     List<VenteDetailsDTO> venteUgDTO(LocalDate dtStart, LocalDate dtEnd, String query);
 

@@ -5,7 +5,9 @@ Ext.define('testextjs.view.Dashboard.TierspExclus', {
     xtype: 'tierspExclus',
     frame: false,
     width: '97%',
-    height: valheight,
+    height: 'auto',
+    minHeight: 570,
+    fullscreen: true,
    
     initComponent: function () {
        
@@ -71,7 +73,8 @@ Ext.define('testextjs.view.Dashboard.TierspExclus', {
                                 {
                                     header: 'Code',
                                     dataIndex: 'code',
-                                    flex: 0.4
+                                    flex: 0.4,
+                                      hidden: true
                                 },
 
                                 {
@@ -98,7 +101,7 @@ Ext.define('testextjs.view.Dashboard.TierspExclus', {
                                     flex: 0.3,
                                     renderer: function (v, m, r) {
                                         if (v) {
-                                            m.style = 'background-color:#ff0000;color:#FFF;font-weight:700;';
+                                            m.style = 'background-color:green;color:#FFF;font-weight:700;';
                                             return 'Oui';
                                         } else {
                                             return 'Non';

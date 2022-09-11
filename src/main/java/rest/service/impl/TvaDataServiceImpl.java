@@ -1,13 +1,8 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package rest.service.impl;
 
 import commonTasks.dto.Params;
 import commonTasks.dto.TvaDTO;
-import dal.Flag;
-import dal.MvtTransaction;
 import dal.TParameters;
 import dal.enumeration.TypeTransaction;
 import java.math.BigDecimal;
@@ -303,7 +298,7 @@ public class TvaDataServiceImpl implements TvaDataService {
     private List<TvaDTO> tvaVoData(Params params, boolean toBeExclude) {
         try {
             List<Tuple> list = getEntityManager().createNativeQuery("SELECT SUM(d.int_PRICE) AS montantTTC,d.valeurTva  FROM  t_preenregistrement_detail d,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID "
-                    + "  AND p.str_TYPE_VENTE='VO' AND p.b_IS_CANCEL=0 AND p.int_PRICE >0 AND p.lg_TYPE_VENTE_ID <>'5' AND p.str_STATUT='is_Closed' "
+                    + "  AND p.str_TYPE_VENTE='VO' AND p.b_IS_CANCEL=0 AND p.int_PRICE >0 AND p.lg_TYPE_VENTE_ID <>'5' AND p.str_STATUT='is_Closed' AND p.lg_PREENREGISTREMENT_ID NOT IN (SELECT v.preenregistrement_id FROM  vente_exclu v)"
                     + "  AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2 GROUP BY d.valeurTva ", Tuple.class)
                     .setParameter(1, java.sql.Date.valueOf(params.getDtStart()), TemporalType.DATE)
                     .setParameter(1, java.sql.Date.valueOf(params.getDtEnd()), TemporalType.DATE)
@@ -366,7 +361,7 @@ public class TvaDataServiceImpl implements TvaDataService {
         List<TvaDTO> tvas = new ArrayList<>();
         try {
             Query query = getEntityManager().createNativeQuery("SELECT SUM(p.int_PRICE) AS montantTTC,SUM(p.int_UG*p.int_PRICE_UNITAIR) AS montantUg,p.valeurTva AS valeurTva FROM t_preenregistrement_detail p,t_preenregistrement o,t_user u WHERE o.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID"
-                    + " AND o.b_IS_CANCEL=0  AND o.lg_TYPE_VENTE_ID <> '5' AND o.str_STATUT='is_Closed' AND DATE(o.dt_UPDATED) BETWEEN ?1 AND ?2 AND o.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?3  GROUP BY p.valeurTva"
+                    + " AND o.b_IS_CANCEL=0  AND o.lg_TYPE_VENTE_ID <> '5' AND o.str_STATUT='is_Closed' AND DATE(o.dt_UPDATED) BETWEEN ?1 AND ?2 AND o.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?3 AND o.lg_PREENREGISTREMENT_ID NOT IN (SELECT v.preenregistrement_id FROM  vente_exclu v)  GROUP BY p.valeurTva"
                     + " ", Tuple.class);
             query.setParameter(1, java.sql.Date.valueOf(params.getDtStart()), TemporalType.DATE);
             query.setParameter(2, java.sql.Date.valueOf(params.getDtEnd()), TemporalType.DATE);
@@ -389,7 +384,7 @@ public class TvaDataServiceImpl implements TvaDataService {
         List<TvaDTO> tvas = new ArrayList<>();
         try {
             Query query = getEntityManager().createNativeQuery("SELECT SUM(p.int_PRICE) AS montantTTC,SUM(p.int_UG*p.int_PRICE_UNITAIR) AS montantUg,p.valeurTva AS valeurTva,DATE(o.dt_UPDATED) AS dateOperation FROM t_preenregistrement_detail p,t_preenregistrement o,t_user u WHERE o.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID"
-                    + " AND o.b_IS_CANCEL=0 AND o.int_PRICE>0 AND o.lg_TYPE_VENTE_ID <> '5' AND o.str_STATUT='is_Closed' AND DATE(o.dt_UPDATED) BETWEEN ?1 AND ?2 AND o.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?3  GROUP BY p.valeurTva ,DATE(o.dt_UPDATED)"
+                    + " AND o.b_IS_CANCEL=0 AND o.int_PRICE>0 AND o.lg_TYPE_VENTE_ID <> '5' AND o.str_STATUT='is_Closed' AND DATE(o.dt_UPDATED) BETWEEN ?1 AND ?2 AND o.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?3 AND o.lg_PREENREGISTREMENT_ID NOT IN (SELECT v.preenregistrement_id FROM  vente_exclu v)  GROUP BY p.valeurTva ,DATE(o.dt_UPDATED)"
                     + " ", Tuple.class);
             query.setParameter(1, java.sql.Date.valueOf(params.getDtStart()), TemporalType.DATE);
             query.setParameter(2, java.sql.Date.valueOf(params.getDtEnd()), TemporalType.DATE);

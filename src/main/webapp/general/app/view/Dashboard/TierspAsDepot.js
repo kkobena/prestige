@@ -5,7 +5,9 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
     xtype: 'tierpayantasdepot',
     frame: false,
     width: '97%',
-    height: valheight,
+  height: 'auto',
+    minHeight: 570,
+    fullscreen: true,
   
     initComponent: function () {
         var tierspayantCarnet = new Ext.data.Store({
@@ -33,6 +35,10 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
 
                 {
                     name: 'depot',
+                    type: 'boolean'
+                },
+                {
+                    name: 'toBeExclude',
                     type: 'boolean'
                 }
 
@@ -71,6 +77,7 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                                 {
                                     header: 'Code',
                                     dataIndex: 'code',
+                                      hidden: true,
                                     flex: 0.2
                                 },
 
@@ -111,6 +118,28 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                                     xtype: 'checkcolumn',
                                     dataIndex: 'depot',
                                     width: 50
+                                },
+                                
+                                {
+                                    header: 'exclure du CA ?',
+                                    dataIndex: 'toBeExclude',
+                                    flex: 0.7,
+                                      hidden: true,
+                                    renderer: function (v, m, r) {
+                                        if (v) {
+                                            m.style = 'background-color:blue;color:#FFF;font-weight:700;';
+                                            return 'Oui';
+                                        } else {
+                                            return 'Non';
+                                        }
+
+                                    }
+                                },
+
+                                {
+                                    xtype: 'checkcolumn',
+                                    dataIndex: 'toBeExclude',
+                                    width: 50
                                 }
                             ],
                     selModel: {
@@ -134,7 +163,6 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                                     iconCls: 'searchicon'
                                 }]
                         },
-
                         {
                             xtype: 'pagingtoolbar',
                             store: tierspayantCarnet,

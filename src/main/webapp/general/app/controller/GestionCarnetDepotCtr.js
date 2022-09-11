@@ -35,7 +35,10 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
             ref: 'reglementGrid',
             selector: 'reglementdepot #reglementPanel [xtype=gridpanel]'
         },
-
+{
+            ref: 'produitGrid',
+            selector: 'reglementdepot #produitsPanel [xtype=gridpanel]'
+        },
         {
             ref: 'montant',
             selector: 'reglementdepot #ventePanel [xtype=gridpanel] #montant'
@@ -55,6 +58,15 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
         {
             ref: 'accountReglement',
             selector: 'reglementdepot #reglementPanel [xtype=gridpanel] #accountReglement'
+        },
+        
+         {
+            ref: 'montantAchat',
+            selector: 'reglementdepot #produitsPanel [xtype=gridpanel] #montantAchat'
+        },
+        {
+            ref: 'montantVente',
+            selector: 'reglementdepot #produitsPanel [xtype=gridpanel] #montantVente'
         }
 
 
@@ -89,7 +101,15 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
             },
             "reglementdepot #reglementPanel [xtype=gridpanel] actioncolumn": {
                 printTicket: this.printTicket
+            }, 'reglementdepot #produitsPanel [xtype=gridpanel] pagingtoolbar': {
+                beforechange: this.doProduitchange
+            },
+             'reglementdepot #produitsPanel [xtype=gridpanel]': {
+                viewready: this.doInitProduitStore
             }
+
+            
+            
         });
     },
     onSelectTiersPayant: function (cmp) {
@@ -120,6 +140,9 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
         } else if (itemId === 'retourPanel') {
             linkUrl = '../TiersPayantExcludServlet?mode=RETOUR&dtStart=' + dtStart +
+                    '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
+        }else if(itemId==='produitsPanel'){
+               linkUrl = '../TiersPayantExcludServlet?mode=PRODUITS&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
         }
         window.open(linkUrl);
@@ -155,8 +178,8 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
             me.doSearchVente();
         } else if (itemId === 'reglementPanel') {
             me.doSearchReglement();
-        } else if (itemId === 'retourPanel') {
-
+        } else if (itemId === 'produitsPanel') {
+me.doSearchProduits();
         }
     },
     doSearchVente: function () {
@@ -184,12 +207,21 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
         me.buildReglementSummary(meta);
 
     },
-    buildReglementSummary: function (rec) {
+     doProduitMetachange: function (store, meta) {
+        var me = this;
+        me.buildProduitSummary(meta);
+
+    },
+     buildProduitSummary: function (rec) {
+        var me = this;
+        me.getMontantVente().setValue(rec.montantVente  );
+        me.getMontantAchat().setValue(rec.montantAchat);
+    },
+ buildReglementSummary: function (rec) {
         var me = this;
         me.getMontantPaye().setValue(rec.montantPaye);
         me.getMontantPayer().setValue(rec.montantPayer);
     },
-
     doSearchReglement: function () {
         var me = this;
         me.getReglementGrid().getStore().load({
@@ -212,6 +244,35 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
 
+    },
+    
+    doProduitchange: function (page, currentPage) {
+        var me = this;
+        var myProxy = me.getProduitGrid().getStore().getProxy();
+        myProxy.params = {
+            dtEnd: null,
+            dtStart: null,
+            tiersPayantId: null
+        };
+        myProxy.setExtraParam('tiersPayantId', me.getTiersPayantsExclus().getValue());
+        myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
+        myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
+
+    },
+     doSearchProduits: function () {
+        var me = this;
+        me.getProduitGrid().getStore().load({
+            params: {
+                dtEnd: me.getDtEnd().getSubmitValue(),
+                dtStart: me.getDtStart().getSubmitValue(),
+                tiersPayantId: me.getTiersPayantsExclus().getValue()
+            }
+        });
+    },
+       doInitProduitStore: function () {
+        var me = this;
+        me.getProduitGrid().getStore().addListener('metachange', this.doProduitMetachange, this);
+        me.doSearchProduits();
     },
     reglementForm: function () {
         var me = this;

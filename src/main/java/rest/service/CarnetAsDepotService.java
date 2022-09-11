@@ -9,11 +9,15 @@ import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.ReglementCarnetDTO;
 import commonTasks.dto.TiersPayantExclusDTO;
 import commonTasks.dto.VenteTiersPayantsDTO;
+import dal.MvtTransaction;
+import dal.TPreenregistrement;
+import dal.TTiersPayant;
 import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONObject;
+import rest.service.dto.DepotProduitVendusDTO;
 import rest.service.dto.ExtraitCompteClientDTO;
 import rest.service.dto.ProduitVenduDTO;
 
@@ -60,5 +64,16 @@ public interface CarnetAsDepotService {
 
     JSONObject articleByTiersPayantByProduitId(String produitId, String tierspayantId, String dtStart, String dtEnd);
 
-    List<ExtraitCompteClientDTO> extraitcompteAvecRetour(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) ;
+    List<ExtraitCompteClientDTO> extraitcompteAvecRetour(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query);
+
+    void setToExcludeOrNot(String id, boolean isDepot);
+
+    void create(TPreenregistrement preenregistrement, MvtTransaction mvtTransaction, TTiersPayant payant);
+    
+  void updateOldData() ;
+  
+  List<DepotProduitVendusDTO> produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query,int start, int size,boolean all) ;
+  
+  JSONObject produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query,int start, int size) ;
+  DepotProduitVendusDTO produitVenduParDepotSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) ;
 }

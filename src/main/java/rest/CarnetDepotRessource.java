@@ -8,6 +8,7 @@ package rest;
 import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.ReglementCarnetDTO;
 import dal.TUser;
+import java.time.LocalDate;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -64,6 +65,13 @@ public class CarnetDepotRessource {
     @Path("exclure-inclure/{id}/{isDepot}")
     public Response exclureOrInclureById(@PathParam("id") String id, @PathParam("isDepot") boolean isDepot) {
         carnetAsDepotService.update(id, isDepot);
+        return Response.ok().build();
+    }
+
+    @PUT
+    @Path("to-be-exclude/{id}/{isExlude}")
+    public Response toBeExclude(@PathParam("id") String id, @PathParam("isExlude") boolean isExlude) {
+        carnetAsDepotService.setToExcludeOrNot(id, isExlude);
         return Response.ok().build();
     }
 
@@ -127,6 +135,27 @@ public class CarnetDepotRessource {
     ) {
         JSONObject json = carnetAsDepotService.articleByTiersPayantByProduitId(produitId, tiersPayantId, dtStart, dtEnd);
         return Response.ok().entity(json.toString()).build();
+
+    }
+
+    @GET
+    @Path("produits-carnet-as-depot")
+    public Response produitVenduParDepot(
+            @QueryParam(value = "tiersPayantId") String tiersPayantId, 
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit
+    ) {
+        JSONObject json = carnetAsDepotService.produitVenduParDepot(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null, start, limit);
+        return Response.ok().entity(json.toString()).build();
+
+    }
+
+    @GET
+    @Path("update-old")
+    public Response updateOldData() {
+        carnetAsDepotService.updateOldData();
+
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
 
     }
 }

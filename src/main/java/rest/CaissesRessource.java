@@ -60,7 +60,7 @@ public class CaissesRessource {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        JSONObject json = caisseService.balanceVenteCaisseVersion2(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject json = caisseService.balanceVenteCaisseVersion2(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(),true);
         return Response.ok().entity(json.toString()).build();
     }
 

@@ -11,11 +11,13 @@ import commonTasks.dto.TiersPayantExclusDTO;
 import commonTasks.dto.VenteTiersPayantsDTO;
 import dal.TTiersPayant;
 import dal.TUser;
+import dal.enumeration.TypeTiersPayant;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONObject;
 import rest.service.dto.ExtraitCompteClientDTO;
+import rest.service.dto.VenteExclusDTO;
 
 /**
  *
@@ -24,9 +26,9 @@ import rest.service.dto.ExtraitCompteClientDTO;
 @Local
 public interface TiersPayantExclusService {
 
-    List<TiersPayantExclusDTO> all(int start, int size, String query, boolean all, Boolean exclude);
+    List<TiersPayantExclusDTO> all(int start, int size, String query, boolean all);
 
-    JSONObject all(int start, int size, String query, Boolean exclude);
+    JSONObject all(int start, int size, String query);
 
     void exclure(GenererFactureDTO datas);
 
@@ -55,7 +57,9 @@ public interface TiersPayantExclusService {
     void updateTiersPayantAccount(TTiersPayant payant, int montant);
 
     List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
-    
- 
+
+    List<VenteExclusDTO> fetchVenteExclus(String tiersPayantId, LocalDate from, LocalDate to, TypeTiersPayant typeTiersPayant, int start, int size, boolean all);
+
+JSONObject allTiersPayant(int start, int size, String query);
 
 }

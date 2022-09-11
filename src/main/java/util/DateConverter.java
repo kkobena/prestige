@@ -162,7 +162,7 @@ public final class DateConverter {
     public static final String MODE_ORANGE = "10";
     public static final String TYPE_REGLEMENT_ORANGE = "7";
     public static final String MODE_MTN = "9";
-    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+   
     public static final String KEY_HEURE_EMAIL = "KEY_HEURE_EMAIL";
     public static final String CLIENT_ASSURANCE = "1";
     public static final String CLIENT_CARNET = "2";
@@ -178,7 +178,7 @@ public final class DateConverter {
     public static final String KEY_COMMON_MANAGMENT = "KEY_COMMON";
     public static final String NOT = "NOT";
     public static final String WITH = "WITH";
-      public static final String KEY_NOMBRE_TICKET_OTHER_ESPECE = "KEY_NOMBRE_TICKET_OTHER_ESPECE";
+    public static final String KEY_NOMBRE_TICKET_OTHER_ESPECE = "KEY_NOMBRE_TICKET_OTHER_ESPECE";
     public static final String TYPE_REGLEMENT_ESPECE = "1";
     /*
     parametre nombre de mois à considerer
@@ -373,8 +373,7 @@ public final class DateConverter {
 
     public static String convertionChiffeLettres(Integer num) {
         RuleBasedNumberFormat formatter = new RuleBasedNumberFormat(Locale.FRANCE, RuleBasedNumberFormat.SPELLOUT);
-       return formatter.format(num);
-      
+        return formatter.format(num);
 
     }
 
@@ -528,7 +527,7 @@ public final class DateConverter {
 
     public static Date dateFromString(String dateFromString) {
         try {
-            return DATE_FORMAT.parse(dateFromString);
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").parse(dateFromString);
         } catch (ParseException ex) {
             Logger.getLogger(DateConverter.class.getName()).log(Level.SEVERE, null, ex);
         }

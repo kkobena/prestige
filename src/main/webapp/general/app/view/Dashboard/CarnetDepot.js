@@ -155,6 +155,62 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                 timeout: 2400000
             }
         });
+        
+        
+           var produits = new Ext.data.Store({
+            fields: [
+                {
+                    name: 'codeCip',
+                    type: 'string'
+                },
+                {
+                    name: 'produitName',
+                    type: 'string'
+                },
+                {
+                    name: 'tiersPayantName',
+                    type: 'string'
+                },
+               
+                {
+                    name: 'montantVente',
+                    type: 'number'
+                },
+             
+                
+                {
+                    name: 'montantAchat',
+                    type: 'number'
+                }
+                , {
+                    name: 'prixUni',
+                    type: 'number'
+                }, {
+                    name: 'quantite',
+                    type: 'number'
+                }, {
+                    name: 'prixAchat',
+                    type: 'number'
+                }
+
+            ],
+            pageSize: 15,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v2/carnet-depot/produits-carnet-as-depot',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total',
+                    metaProperty: 'metaData'
+                },
+                timeout: 2400000
+            }
+        });
+        
+        
+        
         var me = this;
         Ext.applyIf(me, {
             dockedItems: [
@@ -472,6 +528,135 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                                             fieldLabel: 'Nombre de versement',
                                             labelWidth: 150,
                                             itemId: 'montantPayer',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            fieldStyle: "color:blue;font-weight:800;",
+                                            value: 0
+
+                                        }
+
+                                    ]
+                                }
+
+                            ]
+                        }
+                    ]
+                },
+                
+                
+                 {
+                    xtype: 'panel',
+                    title: 'PRODUITS',
+                    border: false,
+                    itemId: 'produitsPanel',
+                    items: [
+                        {
+                            xtype: 'gridpanel',
+                            title: '',
+                            border: false,
+                            store: produits,
+                            scrollable: true,
+                            columns:
+                                    [
+                                      
+
+                                        {
+                                            header: 'Cip',
+                                            dataIndex: 'codeCip',
+                                            flex: 1
+                                        },
+
+                                        {
+                                            header: 'Description',
+                                            dataIndex: 'produitName',
+                                            flex: 1
+                                        }
+                                       , {
+                                            header: 'Quantité',
+                                            dataIndex: 'quantite',
+                                            align: 'right',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            flex: 0.5
+
+                                        },
+                                        {
+                                            header: 'Prix Achat',
+                                            dataIndex: 'prixAchat',
+                                            align: 'right',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            flex: 0.5
+                                        },
+                                         {
+                                            header: 'Prix U',
+                                            dataIndex: 'prixUni',
+                                            align: 'right',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            flex: 0.5
+                                        },
+
+                                        {
+                                            header: 'Montant Achat',
+                                            dataIndex: 'montantAchat',
+                                            align: 'right',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            flex: 0.5
+                                        },
+                                      {
+                                            header: 'Montant Vente',
+                                            dataIndex: 'montantVente',
+                                            align: 'right',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            flex: 0.5
+                                        }
+
+                                    ],
+                            selModel: {
+                                selType: 'cellmodel'
+
+                            },
+                            dockedItems: [
+                                {
+                                    xtype: 'pagingtoolbar',
+                                    store: produits,
+                                    pageSize: 15,
+                                    dock: 'bottom',
+                                    displayInfo: true
+
+                                },
+                              
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'bottom',
+                                    items: [
+                                        {
+                                            xtype: 'displayfield',
+                                            flex: 1,
+                                            fieldLabel: 'Total Vente',
+                                            labelWidth: 100,
+                                            itemId: 'montantVente',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            fieldStyle: "color:blue;font-weight:800;",
+                                            value: 0
+
+                                        }, {
+                                            xtype: 'displayfield',
+                                            flex: 1,
+                                            fieldLabel: 'Total Achat',
+                                            labelWidth: 100,
+                                            itemId: 'montantAchat',
                                             renderer: function (v) {
                                                 return Ext.util.Format.number(v, '0,000.');
                                             },

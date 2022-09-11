@@ -54,7 +54,7 @@ public class BalancePdfServlet extends HttpServlet {
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, TABLEAUOLD, RECAP, TVA_JOUR,
         STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS,
-        BALANCE_PARA, SAISIE_PERIMES, STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE
+        BALANCE_PARA, SAISIE_PERIMES, STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE,BALANCE_CARNET
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -85,8 +85,11 @@ public class BalancePdfServlet extends HttpServlet {
         }
         params.setCheckug(checkug);
         switch (Action.valueOf(action)) {
+              case BALANCE_CARNET:
+                file = balance.generatepdf(params,false);
+                break;
             case BALANCE:
-                file = balance.generatepdf(params);
+                file = balance.generatepdf(params,true);
                 break;
             case BALANCE_PARA:
                 file = balance.tbalancePara(params);

@@ -51,12 +51,19 @@ Ext.define('testextjs.controller.TierspAsDepotCtrl', {
     },
 
     onCheckChange: function (column, rowIndex, checked) {
+       
         let me = this;
-        let record = me.getCarnetGrid().getStore().getAt(rowIndex);
+         let record = me.getCarnetGrid().getStore().getAt(rowIndex);
+        
+        let url='../api/v2/carnet-depot/exclure-inclure/' + record.data.id + '/' + checked;
+        if(column.dataIndex==='toBeExclude'){
+          url='../api/v2/carnet-depot/to-be-exclude/' + record.data.id + '/' + checked;  
+        }
+       
         Ext.Ajax.request({
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
-            url: '../api/v2/carnet-depot/exclure-inclure/' + record.data.id + '/' + checked,
+            url: url,
             success: function (response, options) {
                 me.getCarnetGrid().getStore().reload();
             },

@@ -322,7 +322,7 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
         Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
         cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true).orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
         List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
-        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
         return q.getResultList().stream().map(e -> new RetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null)
         .stream().mapToLong(RetourCarnetDetailDTO::getAmount).reduce(0, Long::sum)

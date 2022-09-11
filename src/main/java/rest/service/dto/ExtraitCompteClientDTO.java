@@ -9,7 +9,6 @@ import commonTasks.dto.ReglementCarnetDTO;
 import commonTasks.dto.VenteTiersPayantsDTO;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.MonthDay;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -110,6 +109,7 @@ public class ExtraitCompteClientDTO implements Serializable {
     }
 
     public ExtraitCompteClientDTO(VenteTiersPayantsDTO dto) {
+      
         this.libelle = "ACHAT A CREDIT";
         this.user = dto.getOperateur();
         this.createdAt = dto.getCreatedAt();
