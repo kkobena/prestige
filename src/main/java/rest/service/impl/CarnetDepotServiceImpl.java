@@ -649,7 +649,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
 
     @Override
     public List<DepotProduitVendusDTO> produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query, int start, int size, boolean all) {
-        String sqlQuery = "SELECT SUM(d.int_QUANTITY) AS quantite,SUM(d.int_PRICE) AS montantVente,SUM(d.int_QUANTITY*f.int_PAF) AS montantAchat,  f.int_PAF AS prixAchat,f.int_PRICE AS prixUni ,f.int_CIP AS codeCip,f.str_NAME AS produitName ,f.lg_FAMILLE_ID AS produitId,f.int_EAN13 AS codeEan FROM  t_preenregistrement_detail d ,t_famille f, vente_exclu v,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.preenregistrement_id AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.`status`='IS_CLOSE' AND v.tiersPayant_id=p.lg_TIERS_PAYANT_ID AND v.type_tiers_payant='CARNET_AS_DEPOT'  AND v.mvtDate BETWEEN ?1 AND ?2 ";
+        String sqlQuery = "SELECT SUM(d.int_QUANTITY) AS quantite,SUM(d.int_PRICE) AS montantVente,SUM(d.int_QUANTITY*f.int_PAF) AS montantAchat,  f.int_PAF AS prixAchat,f.int_PRICE AS prixUni ,f.int_CIP AS codeCip,f.str_NAME AS produitName ,f.lg_FAMILLE_ID AS produitId,f.int_EAN13 AS codeEan FROM  t_preenregistrement_detail d ,t_famille f, t_preenregistrement v,t_preenregistrement_compte_client_tiers_payent cpl,t_compte_client_tiers_payant cp,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.lg_PREENREGISTREMENT_ID AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.str_STATUT ='is_Closed' AND v.lg_PREENREGISTREMENT_ID=cpl.lg_PREENREGISTREMENT_ID AND cpl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND p.lg_TIERS_PAYANT_ID=cp.lg_TIERS_PAYANT_ID AND DATE( v.dt_UPDATED) BETWEEN ?1 AND ?2 ";
         sqlQuery += closeWhereTp(tiersPayantId);
         sqlQuery += closeWhereSearch(query, tiersPayantId);
         sqlQuery += "  GROUP BY f.lg_FAMILLE_ID";
@@ -691,7 +691,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     }
 
     private int produitVenduParDepotCount(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) {
-        String sqlQuery = "SELECT SUM(d.lg_FAMILLE_ID) AS produitId FROM  t_preenregistrement_detail d ,t_famille f, vente_exclu v,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.preenregistrement_id AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.`status`='IS_CLOSE' AND v.tiersPayant_id=p.lg_TIERS_PAYANT_ID AND v.type_tiers_payant='CARNET_AS_DEPOT'  AND v.mvtDate BETWEEN ?1 AND ?2 ";
+        String sqlQuery = "SELECT COUNT(d.lg_FAMILLE_ID) AS produitId FROM  t_preenregistrement_detail d ,t_famille f, t_preenregistrement v,t_preenregistrement_compte_client_tiers_payent cpl,t_compte_client_tiers_payant cp,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.lg_PREENREGISTREMENT_ID AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.str_STATUT ='is_Closed' AND v.lg_PREENREGISTREMENT_ID=cpl.lg_PREENREGISTREMENT_ID AND cpl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND p.lg_TIERS_PAYANT_ID=cp.lg_TIERS_PAYANT_ID AND DATE( v.dt_UPDATED) BETWEEN ?1 AND ?2 ";
         sqlQuery += closeWhereTp(tiersPayantId);
         sqlQuery += closeWhereSearch(query, tiersPayantId);
         sqlQuery += "  GROUP BY f.lg_FAMILLE_ID";
@@ -710,7 +710,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
 
     @Override
     public DepotProduitVendusDTO produitVenduParDepotSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) {
-        String sqlQuery = "SELECT SUM(d.int_PRICE) AS montantVente,SUM(d.int_QUANTITY*f.int_PAF) AS montantAchat FROM  t_preenregistrement_detail d ,t_famille f, vente_exclu v,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.preenregistrement_id AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.`status`='IS_CLOSE' AND v.tiersPayant_id=p.lg_TIERS_PAYANT_ID AND v.type_tiers_payant='CARNET_AS_DEPOT'  AND v.mvtDate BETWEEN ?1 AND ?2 ";
+        String sqlQuery = "SELECT SUM(d.int_PRICE) AS montantVente,SUM(d.int_QUANTITY*f.int_PAF) AS montantAchat FROM  t_preenregistrement_detail d ,t_famille f, t_preenregistrement v,t_preenregistrement_compte_client_tiers_payent cpl,t_compte_client_tiers_payant cp,t_tiers_payant p WHERE d.lg_PREENREGISTREMENT_ID=v.lg_PREENREGISTREMENT_ID AND d.lg_FAMILLE_ID=f.lg_FAMILLE_ID AND v.str_STATUT ='is_Closed' AND v.lg_PREENREGISTREMENT_ID=cpl.lg_PREENREGISTREMENT_ID AND cpl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND p.lg_TIERS_PAYANT_ID=cp.lg_TIERS_PAYANT_ID AND DATE( v.dt_UPDATED)BETWEEN ?1 AND ?2 ";
         sqlQuery += closeWhereTp(tiersPayantId);
         sqlQuery += closeWhereSearch(query, tiersPayantId);
 
