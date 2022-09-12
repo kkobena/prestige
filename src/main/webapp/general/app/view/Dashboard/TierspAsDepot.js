@@ -124,7 +124,7 @@ Ext.define('testextjs.view.Dashboard.TierspAsDepot', {
                                     header: 'exclure du CA ?',
                                     dataIndex: 'toBeExclude',
                                     flex: 0.7,
-                                      hidden: true,
+                                     
                                     renderer: function (v, m, r) {
                                         if (v) {
                                             m.style = 'background-color:blue;color:#FFF;font-weight:700;';

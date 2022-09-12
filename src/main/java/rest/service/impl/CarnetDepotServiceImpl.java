@@ -23,8 +23,6 @@ import dal.TTiersPayant_;
 import dal.TTypeMvtCaisse;
 import dal.TUser;
 import dal.VenteExclus;
-import dal.VenteExclus_;
-import dal.enumeration.Statut;
 import dal.enumeration.TypeTiersPayant;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -181,7 +179,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     public void create(TPreenregistrement preenregistrement, MvtTransaction mvtTransaction, TTiersPayant payant) {
         Objects.requireNonNull(preenregistrement);
         Objects.requireNonNull(mvtTransaction);
-        if (payant != null && (payant.getToBeExclude() || payant.getIsDepot())) {
+        if (payant != null && payant.getToBeExclude()) {
             VenteExclus venteExclus = new VenteExclus();
             venteExclus.setMvtDate(LocalDate.now());
             venteExclus.setModifiedAt(LocalDateTime.now());
@@ -197,12 +195,8 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             venteExclus.setMontantVente(preenregistrement.getIntPRICE());
             venteExclus.setMvtTransactionKey(mvtTransaction.getUuid());
             venteExclus.setPreenregistrement(preenregistrement);
-            if (payant.getToBeExclude() && !payant.getIsDepot()) {
-                venteExclus.setTypeTiersPayant(TypeTiersPayant.TIERS_PAYANT_EXCLUS);
-            } else {
+            venteExclus.setTypeTiersPayant(TypeTiersPayant.TIERS_PAYANT_EXCLUS);
 
-                venteExclus.setTypeTiersPayant(TypeTiersPayant.CARNET_AS_DEPOT);
-            }
             this.getEntityManager().persist(venteExclus);
         }
 
@@ -599,28 +593,25 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     }
 
     private void updateOldData(TPreenregistrement preenregistrement, MvtTransaction mvtTransaction, TTiersPayant payant) {
-
-        VenteExclus venteExclus = new VenteExclus();
-        venteExclus.setMvtDate(DateConverter.convertDateToLocalDate(preenregistrement.getDtUPDATED()));
-        venteExclus.setModifiedAt(DateConverter.convertDateToLocalDateTime(preenregistrement.getDtUPDATED()));
-        venteExclus.setCreatedAt(DateConverter.convertDateToLocalDateTime(preenregistrement.getDtCREATED()));
-        venteExclus.setClient(preenregistrement.getClient());
-        venteExclus.setTiersPayant(payant);
-        venteExclus.setMontantClient(preenregistrement.getIntCUSTPART() != null ? preenregistrement.getIntCUSTPART() : 0);
-        venteExclus.setMontantPaye(mvtTransaction.getMontantPaye() != null ? mvtTransaction.getMontantPaye() : 0);
-        venteExclus.setMontantRegle(mvtTransaction.getMontantRegle() != null ? mvtTransaction.getMontantRegle() : 0);
-        venteExclus.setTypeReglement(mvtTransaction.getReglement());
-        venteExclus.setMontantTiersPayant(mvtTransaction.getMontantCredit());
-        venteExclus.setMontantRemise(preenregistrement.getIntPRICEREMISE() != null ? preenregistrement.getIntPRICEREMISE() : 0);
-        venteExclus.setMontantVente(preenregistrement.getIntPRICE());
-        venteExclus.setMvtTransactionKey(mvtTransaction.getUuid());
-        venteExclus.setPreenregistrement(preenregistrement);
-        if (payant.getToBeExclude() && !payant.getIsDepot()) {
+        if (payant.getToBeExclude()) {
+            VenteExclus venteExclus = new VenteExclus();
+            venteExclus.setMvtDate(DateConverter.convertDateToLocalDate(preenregistrement.getDtUPDATED()));
+            venteExclus.setModifiedAt(DateConverter.convertDateToLocalDateTime(preenregistrement.getDtUPDATED()));
+            venteExclus.setCreatedAt(DateConverter.convertDateToLocalDateTime(preenregistrement.getDtCREATED()));
+            venteExclus.setClient(preenregistrement.getClient());
+            venteExclus.setTiersPayant(payant);
+            venteExclus.setMontantClient(preenregistrement.getIntCUSTPART() != null ? preenregistrement.getIntCUSTPART() : 0);
+            venteExclus.setMontantPaye(mvtTransaction.getMontantPaye() != null ? mvtTransaction.getMontantPaye() : 0);
+            venteExclus.setMontantRegle(mvtTransaction.getMontantRegle() != null ? mvtTransaction.getMontantRegle() : 0);
+            venteExclus.setTypeReglement(mvtTransaction.getReglement());
+            venteExclus.setMontantTiersPayant(mvtTransaction.getMontantCredit());
+            venteExclus.setMontantRemise(preenregistrement.getIntPRICEREMISE() != null ? preenregistrement.getIntPRICEREMISE() : 0);
+            venteExclus.setMontantVente(preenregistrement.getIntPRICE());
+            venteExclus.setMvtTransactionKey(mvtTransaction.getUuid());
+            venteExclus.setPreenregistrement(preenregistrement);
             venteExclus.setTypeTiersPayant(TypeTiersPayant.TIERS_PAYANT_EXCLUS);
-        } else {
-            venteExclus.setTypeTiersPayant(TypeTiersPayant.CARNET_AS_DEPOT);
+            this.getEntityManager().persist(venteExclus);
         }
-        this.getEntityManager().persist(venteExclus);
 
     }
 
@@ -671,7 +662,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
                 q.setMaxResults(size);
             }
             List<Tuple> list = q.getResultList();
-        return list.stream().map(t -> DepotProduitVendusDTO.builder()
+            return list.stream().map(t -> DepotProduitVendusDTO.builder()
                     .codeCip(t.get("codeCip", String.class))
                     .produitName(t.get("produitName", String.class))
                     .produitId(t.get("produitId", String.class))
@@ -728,7 +719,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             updateQueryParam(q, tiersPayantId, dtStart, dtEnd, query);
 
             Tuple summary = (Tuple) q.getSingleResult();
-         return DepotProduitVendusDTO.builder()
+            return DepotProduitVendusDTO.builder()
                     .montantAchat(summary.get("montantAchat", BigDecimal.class).longValue())
                     .montantVente(summary.get("montantVente", BigDecimal.class).longValue())
                     .build();

@@ -9,15 +9,8 @@ import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.ReglementCarnetDTO;
 import commonTasks.dto.TiersPayantExclusDTO;
 import commonTasks.dto.VenteTiersPayantsDTO;
-import dal.MvtTransaction;
 import dal.ReglementCarnet;
 import dal.ReglementCarnet_;
-import dal.TCompteClientTiersPayant_;
-import dal.TParameters;
-import dal.TPreenregistrement;
-import dal.TPreenregistrementCompteClientTiersPayent;
-import dal.TPreenregistrementCompteClientTiersPayent_;
-import dal.TPreenregistrement_;
 import dal.TTiersPayant;
 import dal.TTiersPayant_;
 import dal.TUser;
@@ -41,8 +34,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
@@ -432,7 +423,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
                     cb.like(root.get(TTiersPayant_.strFULLNAME), query + "%")));
         }
         predicates.add(cb.equal(root.get(TTiersPayant_.strSTATUT), DateConverter.STATUT_ENABLE));
-        predicates.add(cb.isFalse(root.get(TTiersPayant_.isDepot)));
+       
         return predicates;
     }
 }
