@@ -618,7 +618,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     private String closeWhereTp(String tiersPayantId) {
 
         if (StringUtils.isNotEmpty(tiersPayantId)) {
-            return " AND  v.tiersPayant_id = ?3 ";
+            return " AND  p.lg_TIERS_PAYANT_ID = ?3 ";
         }
         return "";
     }
@@ -653,7 +653,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         sqlQuery += closeWhereTp(tiersPayantId);
         sqlQuery += closeWhereSearch(query, tiersPayantId);
         sqlQuery += "  GROUP BY f.lg_FAMILLE_ID";
-
+        System.out.println("sqlQuery===="+sqlQuery);
         try {
             Query q = getEntityManager().createNativeQuery(sqlQuery, Tuple.class);
             updateQueryParam(q, tiersPayantId, dtStart, dtEnd, query);
