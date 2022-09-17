@@ -424,6 +424,7 @@ public class FileFormaManager extends HttpServlet {
                         if (isFirstLigne < 0) {
                             continue;
                         }
+                        System.out.println("isFirstLigne "+isFirstLigne);
                         int qty = Integer.parseInt(cSVRecord.get(1));
                         int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(0), qty, null);
                         i += ligne;

@@ -26,12 +26,11 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
     resizable: false,
     initComponent: function () {
         var _this = this;
-       
         storetype = new Ext.data.Store({
             fields: ['name', 'value'],
             data: [{name: 'LABOREX', value: 'Laborex'}, {name: 'COPHARMED', value: 'Copharmed'}, {name: 'TEDIS', value: 'Tedis'},{name: 'DPCI', value: 'DPCI'}
-            ,{name: 'MODEL CIP-QTE', value: 'CIP_QTE'}
-            ,{name: 'MODEL CIP_QTE_PRIX_ACHAT', value: 'CIP_QTE_CIP_QTER_PA'}
+            ,{name: 'CIP_QTE', value: 'MODEL CIP-QTE'}
+            ,{name: 'CIP_QTE_CIP_QTER_PA', value: 'MODEL CIP_QTE_PRIX_ACHAT'}
             ]
         });
         ImportXLSStore = new Ext.data.Store({
