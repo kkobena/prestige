@@ -2125,7 +2125,7 @@ public class CaisseServiceImpl implements CaisseService {
                 predicates.add(cb.and(cb.equal(root.get(MvtTransaction_.caisse).get(TUser_.lgUSERID), caisseParams.getUtilisateurId())));
             }
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<MvtTransaction> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(caisseParams.getStart());

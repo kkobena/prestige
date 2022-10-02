@@ -451,6 +451,13 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.reglementGrou
                                     dataIndex: 'str_PERIODE'
 
                                 }, {
+                                    text: 'Num.Facture',
+                                    dataIndex: 'str_CODE_FACTURE',
+                                    flex: 0.8
+                                }
+                                ,
+
+                                {
                                     header: 'Nbre.Dossiers',
                                     dataIndex: 'int_NB_DOSSIER',
                                     flex: 0.8,
