@@ -127,7 +127,7 @@ public class factureManagement extends bll.bllBase {
             OTFacture.setStrSTATUT(commonparameter.statut_enable);
             if (this.persiste(OTFacture)) {
 //            UpdateSquencier(str_CUSTOMER);
-                OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
+                OParameters.setStrVALUE((Integer.parseInt(CODEFACTURE) + 1) + "");
                 this.merge(OParameters);
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             }
@@ -1761,7 +1761,7 @@ public class factureManagement extends bll.bllBase {
                     case 3:
                         list.stream().collect(Collectors.groupingBy(TPreenregistrementCompteClientTiersPayent::getIntPERCENT))
                                 .forEach((k, values) -> {
-                                    TFacture of = this.createInvoices(list, dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                                    TFacture of = this.createInvoices(values, dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
                                     factures.add(of);
 
                                 });
@@ -1836,11 +1836,11 @@ public class factureManagement extends bll.bllBase {
                     }
                 }
                 OFacture.setIntNBDOSSIER(list.size());
-                OFacture.setDblMONTANTBrut(new BigDecimal(totalBrut));
+                OFacture.setDblMONTANTBrut( BigDecimal.valueOf(totalBrut));
                 OFacture.setDblMONTANTCMDE((totalBrut - montantForfetaire) - totalRemise);
                 OFacture.setDblMONTANTRESTANT((totalBrut - montantForfetaire) - totalRemise);
-                OFacture.setDblMONTANTFOFETAIRE(new BigDecimal(montantForfetaire));
-                OFacture.setDblMONTANTREMISE(new BigDecimal(totalRemise));
+                OFacture.setDblMONTANTFOFETAIRE(BigDecimal.valueOf(montantForfetaire));
+                OFacture.setDblMONTANTREMISE(BigDecimal.valueOf(totalRemise));
                 OFacture.setMontantRemiseVente(remiseVente);
                 OFacture.setMontantTvaVente(montantTva);
                 OFacture.setMontantVente(montantvente);
