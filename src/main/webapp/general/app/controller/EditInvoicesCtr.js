@@ -1,101 +1,101 @@
 /* global Ext */
 
-Ext.define('testextjs.controller.FactureCtr', {
+Ext.define('testextjs.controller.EditInvoicesCtr', {
     extend: 'Ext.app.Controller',
-    views: ['testextjs.view.facturation.EditerFactureProvisoire'],
+    views: ['testextjs.view.facturation.EditInvoice'],
     config: {
         tout: null
     },
     refs: [{
-            ref: 'oneditfacture',
-            selector: 'oneditfacture'
+            ref: 'oneditinvoice',
+            selector: 'oneditinvoice'
         },
         {
             ref: 'modeSelection',
-            selector: 'oneditfacture #modeSelection'
+            selector: 'oneditinvoice #modeSelection'
         }
         , {
             ref: 'dtStart',
-            selector: 'oneditfacture #dtStart'
+            selector: 'oneditinvoice #dtStart'
         },
         {
             ref: 'dtEnd',
-            selector: 'oneditfacture #dtEnd'
+            selector: 'oneditinvoice #dtEnd'
         },
         {
             ref: 'datacmp',
-            selector: 'oneditfacture #datacmp'
+            selector: 'oneditinvoice #datacmp'
         },
         {
             ref: 'bonscmp',
-            selector: 'oneditfacture #bonscmp'
+            selector: 'oneditinvoice #bonscmp'
         },
         {ref: 'btnedit',
-            selector: 'oneditfacture #btnedit'
+            selector: 'oneditinvoice #btnedit'
 
         },
         {ref: 'btncancel',
-            selector: 'oneditfacture #btncancel'
+            selector: 'oneditinvoice #btncancel'
 
         },
         {ref: 'query',
-            selector: 'oneditfacture #query'
+            selector: 'oneditinvoice #query'
 
         },
         {
             ref: 'groupTp',
-            selector: 'oneditfacture #groupTp'
+            selector: 'oneditinvoice #groupTp'
         }
 
 
         , {
             ref: 'btnSearch',
-            selector: 'oneditfacture #btnSearch'
+            selector: 'oneditinvoice #btnSearch'
         }, {
             ref: 'tpayant',
-            selector: 'oneditfacture #tpayant'
+            selector: 'oneditinvoice #tpayant'
         }, {
             ref: 'typeTp',
-            selector: 'oneditfacture #typeTp'
+            selector: 'oneditinvoice #typeTp'
         }
         , {
             ref: 'codeGroup',
-            selector: 'oneditfacture #codeGroup'
+            selector: 'oneditinvoice #codeGroup'
         }, {
             ref: 'one',
-            selector: 'oneditfacture #one'
+            selector: 'oneditinvoice #one'
         }
         , {
             ref: 'dataselectmode',
-            selector: 'oneditfacture #dataselectmode'
+            selector: 'oneditinvoice #dataselectmode'
         }
 
 
     ],
     init: function (application) {
         this.control({
-            'oneditfacture #datacmp pagingtoolbar': {
+            'oneditinvoice #datacmp pagingtoolbar': {
                 beforechange: this.doBeforechange
             },
-            'oneditfacture #dataselectmode pagingtoolbar': {
+            'oneditinvoice #dataselectmode pagingtoolbar': {
                 beforechange: this.doBeforechangeSelect
             },
-            'oneditfacture #bonscmp pagingtoolbar': {
+            'oneditinvoice #bonscmp pagingtoolbar': {
                 beforechange: this.doBeforechangeGrid
             },
-            'oneditfacture #btnSearch': {
+            'oneditinvoice #btnSearch': {
                 click: this.doSearch
             },
-            'oneditfacture #modeSelection': {
+            'oneditinvoice #modeSelection': {
                 select: this.onFilterMode
             },
-            'oneditfacture #btnedit': {
+            'oneditinvoice #btnedit': {
                 click: this.onGenerate
             },
-            'oneditfacture #btncancel': {
+            'oneditinvoice #btncancel': {
                 click: this.onCancel
             },
-            'oneditfacture #query': {
+            'oneditinvoice #query': {
                 specialkey: this.onSpecialKey
             }
 //                   
@@ -450,9 +450,11 @@ Ext.define('testextjs.controller.FactureCtr', {
         var selects = [];
         switch (mode) {
             case 'BONS':
+          
                 var bn = me.getBonscmp();
                 all = me.isAll(bn);
                 if (!all) {
+                 
                     selects = bn.getSelectionModel().getSelection().map(function (e) {
                         return e.data.id;
                     });
@@ -460,11 +462,12 @@ Ext.define('testextjs.controller.FactureCtr', {
 
                 break;
             case 'SELECT':
-              
+         
                 selects = [];
                 var _cmp = me.getDataselectmode();
                 all = me.isAll(_cmp);
                 if (!all) {
+                 
                     selects = _cmp.getSelectionModel().getSelection().map(function (e) {
                         return e.data.id;
                     });

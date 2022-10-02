@@ -5,6 +5,7 @@
  */
 package rest.service.impl;
 
+import bll.common.Parameter;
 import commonTasks.dto.CodeFactureDTO;
 import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.Mode;
@@ -88,20 +89,20 @@ public class GenererFactureServiceImpl implements GenererFactureService {
             userTransaction.commit();
             return l;
         } catch (NotSupportedException | SystemException e) {
-            e.printStackTrace(System.err);
             LOG.log(Level.SEVERE, null, e);
+
             try {
                 if (userTransaction.getStatus() == Status.STATUS_ACTIVE
                         || userTransaction.getStatus() == Status.STATUS_MARKED_ROLLBACK) {
                     userTransaction.rollback();
                 }
             } catch (SystemException ex) {
-                ex.printStackTrace(System.err);
+
                 LOG.log(Level.SEVERE, null, ex);
             }
 
         } catch (RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
-            ex.printStackTrace(System.err);
+
             LOG.log(Level.SEVERE, null, ex);
         }
 
@@ -119,7 +120,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
 
             return q.getResultList();
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, ex);
             return Collections.emptyList();
         }
     }
@@ -166,7 +167,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
                 montantTvavente += p.getMontantTva();
                 montantVente += p.getIntPRICE();
                 totalBrut += tp.getIntPRICE();
-                if (hasDiscount && p.getIntPRICEREMISE()==0) {
+                if (hasDiscount && p.getIntPRICEREMISE() == 0) {
                     montantRemiseDetails = (tp.getIntPRICE() * tauxRemise);
                     totalRemise += Math.round(montantRemiseDetails);
                     montantNetDetails = Math.round((tp.getIntPRICE() - montantRemiseDetails));
@@ -180,18 +181,18 @@ public class GenererFactureServiceImpl implements GenererFactureService {
                 getEntityManager().persist(detail);
             }
             tf.setTFactureDetailCollection(tFactureDetailCollection);
-            tf.setDblMONTANTBrut(new BigDecimal(totalBrut));
+            tf.setDblMONTANTBrut(BigDecimal.valueOf(totalBrut));
             tf.setDblMONTANTCMDE((totalBrut - montantForfetaire) - totalRemise);
             tf.setDblMONTANTRESTANT((totalBrut - montantForfetaire) - totalRemise);
-            tf.setDblMONTANTFOFETAIRE(new BigDecimal(montantForfetaire));
-            tf.setDblMONTANTREMISE(new BigDecimal(totalRemise));
+            tf.setDblMONTANTFOFETAIRE(BigDecimal.valueOf(montantForfetaire));
+            tf.setDblMONTANTREMISE(BigDecimal.valueOf(totalRemise));
             tf.setMontantRemiseVente(remiseVente);
             tf.setMontantTvaVente(montantTvavente);
             tf.setMontantVente(montantVente);
             getEntityManager().persist(tf);
             return new CodeFactureDTO(tf.getLgFACTUREID());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
 
@@ -207,7 +208,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
         return list;
     }
@@ -224,7 +225,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
             q.setParameter(6, DateConverter.STATUT_IS_CLOSED);
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
         return list;
     }
@@ -239,7 +240,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
         return list;
     }
@@ -270,56 +271,60 @@ public class GenererFactureServiceImpl implements GenererFactureService {
     private List<TPreenregistrementCompteClientTiersPayent> provisoirespartp(Mode mode, String groupTp, String typetp, String tpid, String codegroup, String dtStart, String dtEnd) {
         try {
 
-            List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb.createQuery(TPreenregistrementCompteClientTiersPayent.class);
             Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
             Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root.join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
             cq.select(root).orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.dtUPDATED)));
-            predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL)));
-            predicates.add(cb.greaterThan(st.get(TPreenregistrement_.intPRICE), 0));
-            Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(dtStart),
-                    java.sql.Date.valueOf(dtEnd));
-            predicates.add(btw);
-            predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-            predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-            predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUTFACTURE), DateConverter.STATUT_FACTURE_UNPAID));
-            switch (mode) {
-                case TYPETP:
-                    if (typetp != null && !typetp.isEmpty()) {
-                        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                                get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typetp));
-                    }
-                    break;
-                case TP:
-                    if (tpid != null && !tpid.isEmpty()) {
-                        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                                get(TTiersPayant_.lgTIERSPAYANTID), tpid));
-                    }
-                    break;
-                case GROUP:
-                    if (typetp != null && !typetp.isEmpty()) {
-                        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                                get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupTp)));
-                    }
-                    break;
-                case CODE_GROUP:
-                    if (codegroup != null && !codegroup.isEmpty()) {
-                        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                                get(TTiersPayant_.strCODEREGROUPEMENT), codegroup));
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            List<Predicate> predicates = provisoirespartpPredicates(cb, root, st, mode, groupTp, typetp, tpid, codegroup, dtStart, dtEnd);
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
+    }
+
+    private List<Predicate> provisoirespartpPredicates(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st, Mode mode, String groupTp, String typetp, String tpid, String codegroup, String dtStart, String dtEnd) {
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL)));
+        predicates.add(cb.greaterThan(st.get(TPreenregistrement_.intPRICE), 0));
+        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(dtStart),
+                java.sql.Date.valueOf(dtEnd));
+        predicates.add(btw);
+        predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUTFACTURE), DateConverter.STATUT_FACTURE_UNPAID));
+        switch (mode) {
+            case TYPETP:
+                if (typetp != null && !typetp.isEmpty()) {
+                    predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
+                            get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typetp));
+                }
+                break;
+            case TP:
+                if (tpid != null && !tpid.isEmpty()) {
+                    predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
+                            get(TTiersPayant_.lgTIERSPAYANTID), tpid));
+                }
+                break;
+            case GROUP:
+                if (typetp != null && !typetp.isEmpty()) {
+                    predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
+                            get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupTp)));
+                }
+                break;
+            case CODE_GROUP:
+                if (codegroup != null && !codegroup.isEmpty()) {
+                    predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
+                            get(TTiersPayant_.strCODEREGROUPEMENT), codegroup));
+                }
+                break;
+            default:
+                break;
+        }
+        return predicates;
     }
 
     public TFacture createInvoiceItem(int datasSize, Date dt_debut, Date dt_fin, double d_montant, String groupeFactureId, TTypeFacture OTTypeFacture, String str_CODE_COMPTABLE, TTiersPayant payant, boolean template, int factureGroupe, String codeFacture) {
@@ -335,11 +340,11 @@ public class GenererFactureServiceImpl implements GenererFactureService {
         OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
         OTFacture.setDblMONTANTPAYE(0.0);
         OTFacture.setDblMONTANTBrut(new BigDecimal(0));
-        OTFacture.setDblMONTANTFOFETAIRE(new BigDecimal(0));
-        OTFacture.setDblMONTANTREMISE(new BigDecimal(0));
+        OTFacture.setDblMONTANTFOFETAIRE(OTFacture.getDblMONTANTBrut());
+        OTFacture.setDblMONTANTREMISE(OTFacture.getDblMONTANTBrut());
         OTFacture.setIntNBDOSSIER(datasSize);
-        OTFacture.setDtCREATED(new Date());
-        OTFacture.setDtUPDATED(new Date());
+        OTFacture.setDtCREATED(OTFacture.getDtDATEFACTURE());
+        OTFacture.setDtUPDATED(OTFacture.getDtDATEFACTURE());
         OTFacture.setTiersPayant(payant);
         OTFacture.setStrSTATUT(DateConverter.STATUT_ENABLE);
         OTFacture.setTemplate(template);
@@ -355,7 +360,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
         getEntityManager().merge(payent);
     }
 
-    private TFactureDetail invoiceDetail(TFacture OTFacture, TPreenregistrementCompteClientTiersPayent payent, Double Montant, double montantRemise) throws Exception {
+    private TFactureDetail invoiceDetail(TFacture OTFacture, TPreenregistrementCompteClientTiersPayent payent, Double Montant, double montantRemise) {
         TFactureDetail OTFactureDetail = new TFactureDetail();
         TPreenregistrement preenregistrement = payent.getLgPREENREGISTREMENTID();
         OTFactureDetail.setLgFACTUREDETAILID(UUID.randomUUID().toString());
@@ -377,11 +382,11 @@ public class GenererFactureServiceImpl implements GenererFactureService {
         OTFactureDetail.setDblMONTANTBrut(new BigDecimal(payent.getIntPRICE()));
         OTFactureDetail.setDblMONTANTPAYE(0.0);
         OTFactureDetail.setPKey(preenregistrement.getLgPREENREGISTREMENTID());
-        OTFactureDetail.setDblMONTANTREMISE(new BigDecimal(montantRemise));
+        OTFactureDetail.setDblMONTANTREMISE(BigDecimal.valueOf(montantRemise));
         OTFactureDetail.setDblMONTANTRESTANT(Montant);
         OTFactureDetail.setStrSTATUT(DateConverter.STATUT_ENABLE);
         OTFactureDetail.setDtCREATED(new Date());
-        OTFactureDetail.setDtUPDATED(new Date());
+        OTFactureDetail.setDtUPDATED(OTFactureDetail.getDtCREATED());
         OTFactureDetail.setAyantDroit(preenregistrement.getAyantDroit());
         OTFactureDetail.setClient(preenregistrement.getClient());
         OTFactureDetail.setStrFIRSTNAMECUSTOMER(preenregistrement.getStrFIRSTNAMECUSTOMER());
@@ -483,7 +488,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
                 montantTvavente += p.getMontantTva();
                 montantVente += p.getIntPRICE();
                 totalBrut += tp.getIntPRICE();
-                 if (hasDiscount && p.getIntPRICEREMISE()==0) {
+                if (hasDiscount && p.getIntPRICEREMISE() == 0) {
                     montantRemiseDetails = (tp.getIntPRICE() * tauxRemise);
                     totalRemise += Math.round(montantRemiseDetails);
                     montantNetDetails = Math.round((tp.getIntPRICE() - montantRemiseDetails));
@@ -497,18 +502,18 @@ public class GenererFactureServiceImpl implements GenererFactureService {
                 getEntityManager().persist(detail);
             }
             tf.setTFactureDetailCollection(tFactureDetailCollection);
-            tf.setDblMONTANTBrut(new BigDecimal(totalBrut));
+            tf.setDblMONTANTBrut(BigDecimal.valueOf(totalBrut));
             tf.setDblMONTANTCMDE((totalBrut - montantForfetaire) - totalRemise);
             tf.setDblMONTANTRESTANT((totalBrut - montantForfetaire) - totalRemise);
-            tf.setDblMONTANTFOFETAIRE(new BigDecimal(montantForfetaire));
-            tf.setDblMONTANTREMISE(new BigDecimal(totalRemise));
+            tf.setDblMONTANTFOFETAIRE(BigDecimal.valueOf(montantForfetaire));
+            tf.setDblMONTANTREMISE(BigDecimal.valueOf(totalRemise));
             tf.setMontantRemiseVente(remiseVente);
             tf.setMontantTvaVente(montantTvavente);
             tf.setMontantVente(montantVente);
             getEntityManager().persist(tf);
             return tf;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
 
@@ -525,12 +530,12 @@ public class GenererFactureServiceImpl implements GenererFactureService {
         OTFacture.setLgTYPEFACTUREID(OTTypeFacture);
         OTFacture.setDtFINFACTURE(dt_fin);
         OTFacture.setStrCUSTOMER(groupeTierspayant.getLgGROUPEID().toString());
-        OTFacture.setDtDATEFACTURE(new Date());
         OTFacture.setStrCODEFACTURE(codeFacture);
         OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
         OTFacture.setDblMONTANTPAYE(0.0);
         OTFacture.setDtCREATED(new Date());
-        OTFacture.setDtUPDATED(new Date());
+        OTFacture.setDtUPDATED(OTFacture.getDtCREATED());
+        OTFacture.setDtDATEFACTURE(OTFacture.getDtCREATED());
         OTFacture.setStrSTATUT(DateConverter.STATUT_ENABLE);
         OTFacture.setTemplate(template);
         OTFacture.setTypeFacture(1);
@@ -568,7 +573,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
         String groupeFactureId = null;
         TParameters paramsCodeFacture = retrieveLastCodeFacture();
         String lastCodeFacture = paramsCodeFacture.getStrVALUE();
-        int codeFacture = Integer.valueOf(lastCodeFacture);
+        int codeFacture = Integer.parseInt(lastCodeFacture);
         int codeFactureLst = codeFacture;
         TFacture groupeFacture = null;
         if (!StringUtils.isEmpty(groupId)) {
@@ -582,7 +587,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
 
         }
 
-        LinkedHashSet l = new LinkedHashSet<>();
+        LinkedHashSet<CodeFactureDTO> l = new LinkedHashSet<>();
         try {
             Double dblMONTANTRESTANT = 0.0;
             BigDecimal dblMONTANTFOFETAIRE = new BigDecimal(BigInteger.ZERO);
@@ -629,7 +634,7 @@ public class GenererFactureServiceImpl implements GenererFactureService {
             userTransaction.commit();
             return l;
         } catch (NotSupportedException | SystemException e) {
-            e.printStackTrace(System.err);
+
             LOG.log(Level.SEVERE, null, e);
             try {
                 if (userTransaction.getStatus() == Status.STATUS_ACTIVE
@@ -637,15 +642,83 @@ public class GenererFactureServiceImpl implements GenererFactureService {
                     userTransaction.rollback();
                 }
             } catch (SystemException ex) {
-                ex.printStackTrace(System.err);
+
                 LOG.log(Level.SEVERE, null, ex);
             }
 
         } catch (RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
-            ex.printStackTrace(System.err);
+
             LOG.log(Level.SEVERE, null, ex);
         }
 
         return l;
+    }
+
+    private boolean getParametreFacturation() {
+        try {
+            TParameters o = getEntityManager().find(TParameters.class, Parameter.KEY_CODE_NUMERARTION_FACTURE);
+            return Integer.valueOf(o.getStrVALUE()).compareTo(1) == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private CodeFactureDTO genererFacture(String groupId, TTiersPayant OTTiersPayant, List<TPreenregistrementCompteClientTiersPayent> data, Date dtdebut,
+            Date dtfin, TTypeFacture OTTypeFacture, TTypeMvtCaisse OTTypeMvtCaisse, String codeFacture) {
+        double montantForfetaire = OTTiersPayant.getDblREMISEFORFETAIRE();
+        double tauxRemise = 0;
+        double totalRemise = 0;
+        double totalBrut = 0;
+        double montantNetDetails, montantRemiseDetails;
+        boolean hasDiscount = false;
+        Integer remiseVente = 0, montantTvavente = 0, montantVente = 0;
+        try {
+            Collection<TFactureDetail> tFactureDetailCollection = new ArrayList<>(data.size());
+            if (OTTiersPayant.getDblPOURCENTAGEREMISE() > 0) {
+                hasDiscount = true;
+                tauxRemise = (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100);
+            }
+            TFacture tf = createInvoiceItem(data.size(), dtdebut, dtfin, 0, groupId, OTTypeFacture, OTTypeMvtCaisse.getStrCODECOMPTABLE(), OTTiersPayant, false, 0, codeFacture);
+            for (TPreenregistrementCompteClientTiersPayent tp : data) {
+                TPreenregistrement p = tp.getLgPREENREGISTREMENTID();
+                remiseVente += p.getIntPRICEREMISE();
+                montantTvavente += p.getMontantTva();
+                montantVente += p.getIntPRICE();
+                totalBrut += tp.getIntPRICE();
+                if (hasDiscount && p.getIntPRICEREMISE() == 0) {
+                    montantRemiseDetails = (tp.getIntPRICE() * tauxRemise);
+                    totalRemise += Math.round(montantRemiseDetails);
+                    montantNetDetails = Math.round((tp.getIntPRICE() - montantRemiseDetails));
+                } else {
+                    montantRemiseDetails = 0;
+                    montantNetDetails = tp.getIntPRICE();
+                }
+
+                TFactureDetail detail = invoiceDetail(tf, tp, montantNetDetails, montantRemiseDetails);
+                tFactureDetailCollection.add(detail);
+                getEntityManager().persist(detail);
+                tp.setStrSTATUTFACTURE(DateConverter.CHARGED);
+                getEntityManager().merge(tp);
+            }
+            tf.setTFactureDetailCollection(tFactureDetailCollection);
+            tf.setDblMONTANTBrut(BigDecimal.valueOf(totalBrut));
+            tf.setDblMONTANTCMDE((totalBrut - montantForfetaire) - totalRemise);
+            tf.setDblMONTANTRESTANT((totalBrut - montantForfetaire) - totalRemise);
+            tf.setDblMONTANTFOFETAIRE(BigDecimal.valueOf(montantForfetaire));
+            tf.setDblMONTANTREMISE(BigDecimal.valueOf(totalRemise));
+            tf.setMontantRemiseVente(remiseVente);
+            tf.setMontantTvaVente(montantTvavente);
+            tf.setMontantVente(montantVente);
+            getEntityManager().persist(tf);
+            
+             String description = "Génération de la facture numéro : " + tf.getStrCODEFACTURE() + " période du " + DateConverter.convertDateToDD_MM_YYYY(tf.getDtDEBUTFACTURE()) + " Au " + DateConverter.convertDateToDD_MM_YYYY(tf.getDtFINFACTURE()) + " tiers-payant: " + OTTiersPayant.getStrFULLNAME() + " ";
+//                updateItem(this.getOTUser(), "", description, TypeLog.GENERATION_DE_FACTURE, OFacture, this.getOdataManager().getEm());
+//                updateInvoicePlafond(OFacture, OTTiersPayant);
+            return new CodeFactureDTO(tf.getLgFACTUREID());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return null;
+        }
+
     }
 }

@@ -203,8 +203,18 @@ public class TTiersPayant implements Serializable {
     private Long account = 0L;
     @Column(name = "to_be_exclude")
     private Boolean toBeExclude = Boolean.FALSE;
-    @Column(name = "is_depot",nullable = false)
+    @Column(name = "is_depot", nullable = false)
     private Boolean isDepot = Boolean.FALSE;
+    @Column(name = "grouping_by_taux", nullable = false)
+    private Boolean groupingByTaux = Boolean.FALSE;
+
+    public Boolean getGroupingByTaux() {
+        return groupingByTaux;
+    }
+
+    public void setGroupingByTaux(Boolean groupingByTaux) {
+        this.groupingByTaux = groupingByTaux;
+    }
 
     public TTiersPayant() {
     }

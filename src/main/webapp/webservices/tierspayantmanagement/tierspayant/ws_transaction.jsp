@@ -50,6 +50,7 @@
 
     double dbl_QUOTA_CONSO_MENSUELLE = 0.00, dbl_CAUTION = 0.00;
     boolean b_IsAbsolute = false;
+    boolean groupingByTaux=false;
 
 %>
 <%    TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
@@ -62,6 +63,10 @@
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
 
     ObllBase.setDetailmessage("PAS D'ACTION");
+    
+     if (request.getParameter("groupingByTaux") != null && !"".equals(request.getParameter("groupingByTaux"))) {
+        groupingByTaux = Boolean.valueOf(request.getParameter("groupingByTaux"));
+    }
     if (request.getParameter("nbrbons") != null && !"".equals(request.getParameter("nbrbons"))) {
         nbrbons =  Integer.valueOf(request.getParameter("nbrbons"));
     }
@@ -278,14 +283,14 @@
         if (request.getParameter("mode").toString().equals("create")) {
 
             //tierspayantManagement OtierspayantManagement = new tierspayantManagement(OdataManager);
-            OtierspayantManagement.create(str_CODE_ORGANISME, str_NAME, str_FULLNAME, str_ADRESSE, str_MOBILE, str_TELEPHONE, str_MAIL, dbl_PLAFOND_CREDIT, dbl_TAUX_REMBOURSEMENT, str_NUMERO_CAISSE_OFFICIEL, str_CENTRE_PAYEUR, str_CODE_REGROUPEMENT, dbl_SEUIL_MINIMUM, bool_INTERDICTION, str_CODE_COMPTABLE, bool_PRENUM_FACT_SUBROGATOIRE, int_NUMERO_DECOMPTE, str_CODE_PAIEMENT, dt_DELAI_PAIEMENT, dbl_POURCENTAGE_REMISE, dbl_REMISE_FORFETAIRE, str_CODE_EDIT_BORDEREAU, int_NBRE_EXEMPLAIRE_BORD, int_PERIODICITE_EDIT_BORD, int_DATE_DERNIERE_EDITION, str_NUMERO_IDF_ORGANISME, dbl_MONTANT_F_CLIENT, dbl_BASE_REMISE, str_CODE_DOC_COMPTOIRE, bool_ENABLED, lg_VILLE_ID, lg_TYPE_TIERS_PAYANT_ID, lg_TYPE_CONTRAT_ID, lg_REGIMECAISSE_ID, lg_RISQUE_ID, dbl_CAUTION, dbl_QUOTA_CONSO_MENSUELLE, dbl_SOLDE, bool_IsACCOUNT, OTSequencier, str_REGISTRE_COMMERCE, str_CODE_OFFICINE, str_COMPTE_CONTRIBUABLE, b_IsAbsolute, lg_GROUPE_ID,nbrbons, montantFact);
+            OtierspayantManagement.create(str_CODE_ORGANISME, str_NAME, str_FULLNAME, str_ADRESSE, str_MOBILE, str_TELEPHONE, str_MAIL, dbl_PLAFOND_CREDIT, dbl_TAUX_REMBOURSEMENT, str_NUMERO_CAISSE_OFFICIEL, str_CENTRE_PAYEUR, str_CODE_REGROUPEMENT, dbl_SEUIL_MINIMUM, bool_INTERDICTION, str_CODE_COMPTABLE, bool_PRENUM_FACT_SUBROGATOIRE, int_NUMERO_DECOMPTE, str_CODE_PAIEMENT, dt_DELAI_PAIEMENT, dbl_POURCENTAGE_REMISE, dbl_REMISE_FORFETAIRE, str_CODE_EDIT_BORDEREAU, int_NBRE_EXEMPLAIRE_BORD, int_PERIODICITE_EDIT_BORD, int_DATE_DERNIERE_EDITION, str_NUMERO_IDF_ORGANISME, dbl_MONTANT_F_CLIENT, dbl_BASE_REMISE, str_CODE_DOC_COMPTOIRE, bool_ENABLED, lg_VILLE_ID, lg_TYPE_TIERS_PAYANT_ID, lg_TYPE_CONTRAT_ID, lg_REGIMECAISSE_ID, lg_RISQUE_ID, dbl_CAUTION, dbl_QUOTA_CONSO_MENSUELLE, dbl_SOLDE, bool_IsACCOUNT, OTSequencier, str_REGISTRE_COMMERCE, str_CODE_OFFICINE, str_COMPTE_CONTRIBUABLE, b_IsAbsolute, lg_GROUPE_ID,nbrbons, montantFact,groupingByTaux);
             ObllBase.setDetailmessage(OtierspayantManagement.getDetailmessage());
             ObllBase.setMessage(OtierspayantManagement.getMessage());
             //  new logger().oCategory.info("creation OTTiersPayant " + OTTiersPayant.getStrNAME());
 
         } else if (request.getParameter("mode").toString().equals("update")) {
 
-            OtierspayantManagement.update(lg_TIERS_PAYANT_ID, str_CODE_ORGANISME, str_NAME, str_FULLNAME, str_ADRESSE, str_MOBILE, str_TELEPHONE, str_MAIL, dbl_PLAFOND_CREDIT, dbl_TAUX_REMBOURSEMENT, str_NUMERO_CAISSE_OFFICIEL, str_CENTRE_PAYEUR, str_CODE_REGROUPEMENT, dbl_SEUIL_MINIMUM, bool_INTERDICTION, str_CODE_COMPTABLE, bool_PRENUM_FACT_SUBROGATOIRE, int_NUMERO_DECOMPTE, str_CODE_PAIEMENT, dt_DELAI_PAIEMENT, dbl_POURCENTAGE_REMISE, dbl_REMISE_FORFETAIRE, str_CODE_EDIT_BORDEREAU, int_NBRE_EXEMPLAIRE_BORD, int_PERIODICITE_EDIT_BORD, int_DATE_DERNIERE_EDITION, str_NUMERO_IDF_ORGANISME, dbl_MONTANT_F_CLIENT, dbl_BASE_REMISE, str_CODE_DOC_COMPTOIRE, bool_ENABLED, lg_VILLE_ID, lg_TYPE_TIERS_PAYANT_ID, lg_TYPE_CONTRAT_ID, lg_REGIMECAISSE_ID, lg_RISQUE_ID, str_CODE_OFFICINE, str_REGISTRE_COMMERCE, str_COMPTE_CONTRIBUABLE, dbl_QUOTA_CONSO_MENSUELLE, b_IsAbsolute, lg_GROUPE_ID,nbrbons,montantFact); 
+            OtierspayantManagement.update(lg_TIERS_PAYANT_ID, str_CODE_ORGANISME, str_NAME, str_FULLNAME, str_ADRESSE, str_MOBILE, str_TELEPHONE, str_MAIL, dbl_PLAFOND_CREDIT, dbl_TAUX_REMBOURSEMENT, str_NUMERO_CAISSE_OFFICIEL, str_CENTRE_PAYEUR, str_CODE_REGROUPEMENT, dbl_SEUIL_MINIMUM, bool_INTERDICTION, str_CODE_COMPTABLE, bool_PRENUM_FACT_SUBROGATOIRE, int_NUMERO_DECOMPTE, str_CODE_PAIEMENT, dt_DELAI_PAIEMENT, dbl_POURCENTAGE_REMISE, dbl_REMISE_FORFETAIRE, str_CODE_EDIT_BORDEREAU, int_NBRE_EXEMPLAIRE_BORD, int_PERIODICITE_EDIT_BORD, int_DATE_DERNIERE_EDITION, str_NUMERO_IDF_ORGANISME, dbl_MONTANT_F_CLIENT, dbl_BASE_REMISE, str_CODE_DOC_COMPTOIRE, bool_ENABLED, lg_VILLE_ID, lg_TYPE_TIERS_PAYANT_ID, lg_TYPE_CONTRAT_ID, lg_REGIMECAISSE_ID, lg_RISQUE_ID, str_CODE_OFFICINE, str_REGISTRE_COMMERCE, str_COMPTE_CONTRIBUABLE, dbl_QUOTA_CONSO_MENSUELLE, b_IsAbsolute, lg_GROUPE_ID,nbrbons,montantFact,groupingByTaux); 
             ObllBase.setDetailmessage(OtierspayantManagement.getDetailmessage());
             ObllBase.setMessage(OtierspayantManagement.getMessage());
 

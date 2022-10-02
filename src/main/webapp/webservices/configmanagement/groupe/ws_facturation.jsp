@@ -31,8 +31,7 @@
        TUser user=OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     int lg_GROUPE_ID = 0, MODE_SELECTION = 0;
     String  dt_start = date.formatterMysqlShort.format(new Date()), dt_end = dt_start;
-    boolean isOK = false;
-    JSONArray tierspayantarray = new JSONArray();
+   
     JSONArray listProductSelected = new JSONArray();
     JSONArray unselectedrecords = new JSONArray();
     if (request.getParameter("listProductSelected") != null && !"".equals(request.getParameter("listProductSelected"))) {

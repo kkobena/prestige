@@ -202,7 +202,8 @@ Ext.define('testextjs.model.TiersPayant', {
         {
             name: 'int_NUMBER_CLIENT',
             type: 'int'
-        }, {name: 'BTNDELETE', type: 'boolean'},
+        }, {name: 'BTNDELETE', type: 'boolean'}
+        ,{name:'groupingByTaux',type: 'boolean'},
         {
             name: 'str_CODE_OFFICINE',
             type: 'string'

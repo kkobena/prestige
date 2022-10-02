@@ -56,7 +56,9 @@ import dal.enumeration.TypeLog;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.persistence.TypedQuery;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.date;
@@ -94,7 +96,7 @@ public class factureManagement extends bll.bllBase {
                 return null;
             }
             String CODEFACTURE = OParameters.getStrVALUE();
-          
+
             OTFacture.setLgFACTUREID(new date().getComplexId());
             OTFacture.setDtDEBUTFACTURE(dt_debut);
 
@@ -111,11 +113,11 @@ public class factureManagement extends bll.bllBase {
             OTFacture.setTiersPayant(str_CUSTOMER);
             OTFacture.setTemplate(Boolean.FALSE);
             OTFacture.setDblMONTANTCMDE(d_montant);
-             boolean numerationFacture=getParametreFacturation();
-            if(numerationFacture){
-                 OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
-            }else{
-                OTFacture.setStrCODEFACTURE(CODEFACTURE); 
+            boolean numerationFacture = getParametreFacturation();
+            if (numerationFacture) {
+                OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+            } else {
+                OTFacture.setStrCODEFACTURE(CODEFACTURE);
             }
             OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
             OTFacture.setDblMONTANTRESTANT(d_montant);
@@ -177,7 +179,7 @@ public class factureManagement extends bll.bllBase {
             OTFacture.setStrSTATUT(commonparameter.statut_enable);
             if (this.persiste(OTFacture)) {
 //            UpdateSquencier(str_CUSTOMER);
-                OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
+                OParameters.setStrVALUE((Integer.parseInt(CODEFACTURE) + 1) + "");
                 this.merge(OParameters);
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             }
@@ -1434,7 +1436,7 @@ public class factureManagement extends bll.bllBase {
     }
 
     public List getFacturePercent(String lg_FACTURE_ID) {
-        JSONArray array = new JSONArray();
+
         List list = null;
         String query = "SELECT DISTINCT pr.`int_PERCENT` FROM `t_preenregistrement` p, `t_preenregistrement_compte_client_tiers_payent` pr,t_facture fa,\n"
                 + "`t_facture_detail` f,`t_client` c,`t_compte_client` cp,`t_compte_client_tiers_payant` ctp WHERE p.`lg_PREENREGISTREMENT_ID` = pr.`lg_PREENREGISTREMENT_ID` AND\n"
@@ -1485,10 +1487,10 @@ public class factureManagement extends bll.bllBase {
             OTFactureDetail.setStrREFDESCRIPTION(str_ref_description);
             OTFactureDetail.setStrCATEGORYCLIENT(str_CATEGORY);
             OTFactureDetail.setDblMONTANT(Montant);
-            OTFactureDetail.setDblMONTANTBrut(new BigDecimal(montantBrut));
+            OTFactureDetail.setDblMONTANTBrut(BigDecimal.valueOf(montantBrut));
             OTFactureDetail.setDblMONTANTPAYE(0.0);
             OTFactureDetail.setPKey(str_PKEY_PREENREGISTREMENT);
-            OTFactureDetail.setDblMONTANTREMISE(new BigDecimal(montantRemise));
+            OTFactureDetail.setDblMONTANTREMISE(BigDecimal.valueOf(montantRemise));
             OTFactureDetail.setDblMONTANTRESTANT(Montant);
             OTFactureDetail.setStrSTATUT(commonparameter.statut_enable);
             OTFactureDetail.setDtCREATED(new Date());
@@ -1512,14 +1514,16 @@ public class factureManagement extends bll.bllBase {
         }
 
     }
-private boolean getParametreFacturation(){
-    try {
-         TParameters o = this.getOdataManager().getEm().find(TParameters.class, Parameter.KEY_CODE_NUMERARTION_FACTURE);
-         return  Integer.valueOf(o.getStrVALUE()).compareTo(1)==0;
-    } catch (Exception e) {
-        return false;
+
+    private boolean getParametreFacturation() {
+        try {
+            TParameters o = this.getOdataManager().getEm().find(TParameters.class, Parameter.KEY_CODE_NUMERARTION_FACTURE);
+            return Integer.valueOf(o.getStrVALUE()).compareTo(1) == 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
-}
+
     public TFacture createInvoiceItem(Date dt_debut, Date dt_fin, double d_montant, String str_pere, TTypeFacture OTTypeFacture, String str_CODE_COMPTABLE, TTiersPayant str_CUSTOMER, Integer NB_DOSSIER, long montantRemise, long montantFofetaire) {
         try {
             TFacture OTFacture = new TFacture();
@@ -1527,7 +1531,7 @@ private boolean getParametreFacturation(){
                 return null;
             }
             TParameters OParameters = this.getOdataManager().getEm().find(TParameters.class, Parameter.KEY_CODE_FACTURE);
-            boolean numerationFacture=getParametreFacturation();
+            boolean numerationFacture = getParametreFacturation();
 
             String CODEFACTURE = OParameters.getStrVALUE();
 
@@ -1548,13 +1552,13 @@ private boolean getParametreFacturation(){
             OTFacture.setTemplate(Boolean.FALSE);
             //add nombre dossier
             OTFacture.setDblMONTANTCMDE((d_montant - montantRemise));
-            
-            if(numerationFacture){
-                 OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
-            }else{
-                OTFacture.setStrCODEFACTURE(CODEFACTURE); 
+
+            if (numerationFacture) {
+                OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+            } else {
+                OTFacture.setStrCODEFACTURE(CODEFACTURE);
             }
-           
+
             OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
             OTFacture.setDblMONTANTRESTANT((d_montant - montantRemise));
             OTFacture.setDblMONTANTPAYE(0.0);
@@ -1565,7 +1569,7 @@ private boolean getParametreFacturation(){
             OTFacture.setDtCREATED(new Date());
             OTFacture.setStrSTATUT(commonparameter.statut_enable);
             this.getOdataManager().getEm().persist(OTFacture);
-            OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
+            OParameters.setStrVALUE((Integer.parseInt(CODEFACTURE) + 1) + "");
             this.getOdataManager().getEm().merge(OParameters);
             String description = "Génération de la facture numéro : " + OTFacture.getStrCODEFACTURE() + " période du " + DateConverter.convertDateToDD_MM_YYYY(OTFacture.getDtDEBUTFACTURE()) + " Au " + DateConverter.convertDateToDD_MM_YYYY(OTFacture.getDtFINFACTURE()) + " tiers-payant: " + OTFacture.getTiersPayant().getStrFULLNAME() + " ";
             updateItem(this.getOTUser(), "", description, TypeLog.GENERATION_DE_FACTURE, OTFacture, this.getOdataManager().getEm());
@@ -1602,15 +1606,18 @@ private boolean getParametreFacturation(){
     }
 
     private int getCase(TTiersPayant p) {
-        int i = 0;
+
         if (p.getIntNBREBONS() > 0 && p.getIntMONTANTFAC() > 0) {
-            i = 1;
+            return 1;
         } else if (p.getIntNBREBONS() > 0 && p.getIntMONTANTFAC() <= 0) {
-            i = 2;
+            return 2;
         } else if (p.getIntNBREBONS() <= 0 && p.getIntMONTANTFAC() > 0) {
-            i = 1;
+            return 1;
+        } else if (Boolean.TRUE.equals(p.getGroupingByTaux())) {
+            return 3;
         }
-        return i;
+
+        return 0;
     }
 
     public TGroupeFactures getGroupeFacturesByFacture(String facture) {
@@ -1660,10 +1667,10 @@ private boolean getParametreFacturation(){
 
         LinkedList<TFacture> factures = new LinkedList<>();
 
-        TTiersPayant OTTiersPayant;
+        final TTiersPayant OTTiersPayant = this.getOdataManager().getEm().find(TTiersPayant.class, lg_tiers_payants);
 
-        double TauxRemise = 0;
-        double montantForfetaire = 0;
+        final double tauxRemise = OTTiersPayant.getDblPOURCENTAGEREMISE() != null ? (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100) : 0;
+        final double montantForfetaire = OTTiersPayant.getDblREMISEFORFETAIRE();
 
         try {
             if (!this.getOdataManager().getEm().getTransaction().isActive()) {
@@ -1672,11 +1679,6 @@ private boolean getParametreFacturation(){
             }
 
             if (!list.isEmpty()) {
-                OTTiersPayant = this.getOdataManager().getEm().find(TTiersPayant.class, lg_tiers_payants);
-                montantForfetaire = OTTiersPayant.getDblREMISEFORFETAIRE();
-                if (OTTiersPayant.getDblPOURCENTAGEREMISE() > 0) {
-                    TauxRemise = (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100);
-                }
                 TTypeFacture OTTypeFacture = this.getOdataManager().getEm().find(TTypeFacture.class, commonparameter.KEY_TYPE_FACTURE_TIERSPAYANT);
                 TTypeMvtCaisse OTTypeMvtCaisse = this.getOdataManager().getEm().find(TTypeMvtCaisse.class, commonparameter.KEY_TYPE_FACTURE_TIERSPAYANT);
                 switch (getCase(OTTiersPayant)) {
@@ -1692,10 +1694,10 @@ private boolean getParametreFacturation(){
                             for (TPreenregistrementCompteClientTiersPayent op : list) {
                                 if (virtualAmont > OTTiersPayant.getIntMONTANTFAC()) {
                                     if (myCount < list.size()) {
-                                        TFacture of = this.createInvoices(list.subList(volatilecount, myCount - 1), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, TauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                                        TFacture of = this.createInvoices(list.subList(volatilecount, myCount - 1), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
                                         factures.add(of);
                                     } else if (myCount == (list.size() - 1)) {
-                                        TFacture of = this.createInvoices(list.subList(volatilecount, list.size()), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, TauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                                        TFacture of = this.createInvoices(list.subList(volatilecount, list.size()), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
                                         factures.add(of);
 
                                     }
@@ -1705,7 +1707,7 @@ private boolean getParametreFacturation(){
 
                                 } else if ((virtualAmont <= OTTiersPayant.getIntMONTANTFAC()) && (myCount == (list.size() - 1))) {
 
-                                    TFacture of = this.createInvoices(list.subList(volatilecount, list.size()), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, TauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                                    TFacture of = this.createInvoices(list.subList(volatilecount, list.size()), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
                                     factures.add(of);
 
                                 }
@@ -1716,7 +1718,7 @@ private boolean getParametreFacturation(){
 
                         } else {
 
-                            TFacture of = this.createInvoices(list, dt_debut, dt_fin, OTTiersPayant, montantForfetaire, TauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                            TFacture of = this.createInvoices(list, dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
 
                             factures.add(of);
 
@@ -1734,12 +1736,12 @@ private boolean getParametreFacturation(){
 
                                 if (count < list.size()) {
 
-                                    TFacture of = this.createInvoices(list.subList(virtualCnt, count), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, TauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                                    TFacture of = this.createInvoices(list.subList(virtualCnt, count), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
                                     factures.add(of);
 
                                 } else {
 
-                                    TFacture of = this.createInvoices(list.subList(virtualCnt, list.size()), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, TauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                                    TFacture of = this.createInvoices(list.subList(virtualCnt, list.size()), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
                                     factures.add(of);
 
                                 }
@@ -1750,14 +1752,23 @@ private boolean getParametreFacturation(){
 
                         } else {
 
-                            TFacture of = this.createInvoices(list.subList(virtualCnt, list.size()), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, TauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                            TFacture of = this.createInvoices(list.subList(virtualCnt, list.size()), dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
                             factures.add(of);
 
                         }
 
                         break;
+                    case 3:
+                        list.stream().collect(Collectors.groupingBy(TPreenregistrementCompteClientTiersPayent::getIntPERCENT))
+                                .forEach((k, values) -> {
+                                    TFacture of = this.createInvoices(list, dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                                    factures.add(of);
+
+                                });
+
+                        break;
                     default:
-                        TFacture of = this.createInvoices(list, dt_debut, dt_fin, OTTiersPayant, montantForfetaire, TauxRemise, OTTypeFacture, OTTypeMvtCaisse);
+                        TFacture of = this.createInvoices(list, dt_debut, dt_fin, OTTiersPayant, montantForfetaire, tauxRemise, OTTypeFacture, OTTypeMvtCaisse);
                         factures.add(of);
                         break;
 

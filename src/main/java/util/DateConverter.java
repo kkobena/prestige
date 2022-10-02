@@ -162,7 +162,7 @@ public final class DateConverter {
     public static final String MODE_ORANGE = "10";
     public static final String TYPE_REGLEMENT_ORANGE = "7";
     public static final String MODE_MTN = "9";
-   
+
     public static final String KEY_HEURE_EMAIL = "KEY_HEURE_EMAIL";
     public static final String CLIENT_ASSURANCE = "1";
     public static final String CLIENT_CARNET = "2";
@@ -180,6 +180,7 @@ public final class DateConverter {
     public static final String WITH = "WITH";
     public static final String KEY_NOMBRE_TICKET_OTHER_ESPECE = "KEY_NOMBRE_TICKET_OTHER_ESPECE";
     public static final String TYPE_REGLEMENT_ESPECE = "1";
+    public static final String CHARGED = "charged";
     /*
     parametre nombre de mois à considerer
      */

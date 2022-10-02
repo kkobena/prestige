@@ -38,7 +38,7 @@ public class FacturationRessouce {
     private HttpServletRequest servletRequest;
     @EJB
     FacturationService facturationService;
-     @Inject
+    @Inject
     @Facturation
     GenererFactureService genererFactureService;
 
@@ -76,7 +76,8 @@ public class FacturationRessouce {
     @Path("provisoires")
     public Response provisoires(
             @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
+            @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query,
             @QueryParam(value = "tpid") String tpid,
             @QueryParam(value = "codegroup") String codegroup,
             @QueryParam(value = "typetp") String typetp,
@@ -100,7 +101,7 @@ public class FacturationRessouce {
             @QueryParam(value = "typetp") String typetp,
             @QueryParam(value = "groupTp") String groupTp
     ) throws JSONException {
-        JSONObject jsono = facturationService.provisoires10(groupTp, typetp, tpid, codegroup, start, limit);
+        JSONObject jsono = facturationService.provisoires10(groupTp, typetp, tpid, codegroup, true, start, limit);
 
         return Response.ok().entity(jsono.toString()).build();
     }
@@ -118,7 +119,7 @@ public class FacturationRessouce {
 
     @DELETE
     @Path("{id}")
-    public Response delete(@PathParam("id") String id) throws Exception {
+    public Response delete(@PathParam("id") String id)  {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -126,5 +127,23 @@ public class FacturationRessouce {
         }
         facturationService.removeFacture(id);
         return Response.ok().build();
+    }
+    
+    
+     @GET
+    @Path("invoices")
+    public Response invoices(
+            @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, 
+            @QueryParam(value = "query") String query,
+            @QueryParam(value = "tpid") String tpid,
+            @QueryParam(value = "codegroup") String codegroup,
+            @QueryParam(value = "typetp") String typetp,
+            @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "groupTp") String groupTp,
+            @QueryParam(value = "mode") Mode mode
+    ) throws JSONException {
+       return provisoires(start, limit, query, tpid, codegroup, typetp, dtEnd, dtStart, groupTp, mode);
     }
 }

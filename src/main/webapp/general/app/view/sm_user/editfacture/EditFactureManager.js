@@ -32,7 +32,8 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         'Ext.JSON.*',
         'testextjs.model.Facture',
         'testextjs.view.sm_user.editfacture.action.add',
-        'Ext.ux.ProgressBarPager'
+        'Ext.ux.ProgressBarPager',
+        'testextjs.view.facturation.EditInvoice'
 
     ],
     title: 'Gestion des facturations ',
@@ -514,6 +515,9 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
     onAddCreate: function () {
         var xtype = "addeditfacture";
+//        var xtype = "oneditinvoice";
+        
+        
         var alias = 'widget.' + xtype;
         //A DECOMMENTER EN CAS DE PROBLEME
         testextjs.app.getController('App').onLoadNewComponent(xtype, "Cr&eacute;er une facture", "0");

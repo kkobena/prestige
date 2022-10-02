@@ -224,7 +224,7 @@
         json.put("lg_REGIMECAISSE_ID", (lstTTiersPayant.get(i).getLgREGIMECAISSEID() != null ? lstTTiersPayant.get(i).getLgREGIMECAISSEID().getStrCODEREGIMECAISSE() : ""));
         json.put("str_CODE_OFFICINE", lstTTiersPayant.get(i).getStrCODEOFFICINE() != null ? lstTTiersPayant.get(i).getStrCODEOFFICINE() : "");
         json.put("str_REGISTRE_COMMERCE", lstTTiersPayant.get(i).getStrREGISTRECOMMERCE() != null ? lstTTiersPayant.get(i).getStrREGISTRECOMMERCE() : "");
-
+ json.put("groupingByTaux", lstTTiersPayant.get(i).getGroupingByTaux());
         json.put("str_STATUT", lstTTiersPayant.get(i).getStrSTATUT());
          json.put("b_IsAbsolute", lstTTiersPayant.get(i).getBIsAbsolute());
          json.put("db_CONSOMMATION_MENSUELLE", lstTTiersPayant.get(i).getDbCONSOMMATIONMENSUELLE());

@@ -89,7 +89,7 @@ public class Tierspayant extends HttpServlet {
         OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
         List<TPrivilege> privileges = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         String search_value = "", lg_TYPE_TIERS_PAYANT_ID = "";
-        try (PrintWriter out = response.getWriter()) {
+        try ( PrintWriter out = response.getWriter()) {
             if (request.getParameter("search_value") != null) {
                 search_value = request.getParameter("search_value");
 
@@ -195,7 +195,7 @@ public class Tierspayant extends HttpServlet {
                 json.put("lg_REGIMECAISSE_ID", (tTiersPayant.getLgREGIMECAISSEID() != null ? tTiersPayant.getLgREGIMECAISSEID().getStrCODEREGIMECAISSE() : ""));
                 json.put("str_CODE_OFFICINE", tTiersPayant.getStrCODEOFFICINE() != null ? tTiersPayant.getStrCODEOFFICINE() : "");
                 json.put("str_REGISTRE_COMMERCE", tTiersPayant.getStrREGISTRECOMMERCE() != null ? tTiersPayant.getStrREGISTRECOMMERCE() : "");
-
+                json.put("groupingByTaux", tTiersPayant.getGroupingByTaux());
                 json.put("str_STATUT", tTiersPayant.getStrSTATUT());
                 json.put("b_IsAbsolute", tTiersPayant.getBIsAbsolute());
                 json.put("db_CONSOMMATION_MENSUELLE", getAccount(tTiersPayant.getLgTIERSPAYANTID()));
@@ -292,7 +292,7 @@ public class Tierspayant extends HttpServlet {
 
     private List<TTiersPayant> ShowAllOrOneTierspayant(String search_value, String lg_TYPE_TIERS_PAYANT_ID, int start, int limit) {
         List<TTiersPayant> list = new ArrayList<>();
-   
+
         try {
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -327,8 +327,6 @@ public class Tierspayant extends HttpServlet {
 
     private int ShowAllOrOneTierspayant(String search_value, String lg_TYPE_TIERS_PAYANT_ID) {
 
-    
-
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         Root<TTiersPayant> root = cq.from(TTiersPayant.class);
@@ -353,7 +351,7 @@ public class Tierspayant extends HttpServlet {
 
     private TCompteClient getTCompteClient(String P_KEY) {
         TCompteClient OTCompteClient = null;
-        
+
         try {
             OTCompteClient = em.createQuery("SELECT t FROM TCompteClient t WHERE t.pKey = ?1 AND t.strSTATUT = ?2", TCompteClient.class).
                     setParameter(1, P_KEY).

@@ -67,7 +67,9 @@ public class tierspayantManagement extends bllBase {
             int int_PERIODICITE_EDIT_BORD, int int_DATE_DERNIERE_EDITION, String str_NUMERO_IDF_ORGANISME,
             double dbl_MONTANT_F_CLIENT, double dbl_BASE_REMISE, String str_CODE_DOC_COMPTOIRE, boolean bool_ENABLED,
             String lg_VILLE_ID, String lg_TYPE_TIERS_PAYANT_ID, String lg_TYPE_CONTRAT_ID, String lg_REGIMECAISSE_ID,
-            String lg_RISQUE_ID, double dbl_CAUTION, double dbl_QUOTA_CONSO_MENSUELLE, int dbl_SOLDE, boolean bool_IsACCOUNT, TSequencier OTSequencier, String str_REGISTRE_COMMERCE, String str_CODE_OFFICINE, String str_COMPTE_CONTRIBUABLE, boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons, Integer montantFact) {
+            String lg_RISQUE_ID, double dbl_CAUTION, double dbl_QUOTA_CONSO_MENSUELLE, int dbl_SOLDE, boolean bool_IsACCOUNT,
+            TSequencier OTSequencier, String str_REGISTRE_COMMERCE, String str_CODE_OFFICINE, String str_COMPTE_CONTRIBUABLE,
+            boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons, Integer montantFact, boolean groupingByTaux) {
         boolean result = false;
         String str_PHOTO = "default.png";
         try {
@@ -113,7 +115,7 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setBoolPRENUMFACTSUBROGATOIRE(bool_PRENUM_FACT_SUBROGATOIRE);
             OTTiersPayant.setIntNUMERODECOMPTE(int_NUMERO_DECOMPTE);
             OTTiersPayant.setStrCODEPAIEMENT(str_CODE_PAIEMENT);
-//            OTTiersPayant.setDtDELAIPAIEMENT(dt_DELAI_PAIEMENT);
+            OTTiersPayant.setGroupingByTaux(groupingByTaux);
             OTTiersPayant.setDblPOURCENTAGEREMISE(dbl_POURCENTAGE_REMISE);
             OTTiersPayant.setDblREMISEFORFETAIRE(dbl_REMISE_FORFETAIRE);
             OTTiersPayant.setStrCODEEDITBORDEREAU(str_CODE_EDIT_BORDEREAU);
@@ -197,7 +199,9 @@ public class tierspayantManagement extends bllBase {
             int int_PERIODICITE_EDIT_BORD, int int_DATE_DERNIERE_EDITION, String str_NUMERO_IDF_ORGANISME,
             double dbl_MONTANT_F_CLIENT, double dbl_BASE_REMISE, String str_CODE_DOC_COMPTOIRE, boolean bool_ENABLED,
             String lg_VILLE_ID, String lg_TYPE_TIERS_PAYANT_ID, String lg_TYPE_CONTRAT_ID, String lg_REGIMECAISSE_ID,
-            String lg_RISQUE_ID, String str_CODE_OFFICINE, String str_REGISTRE_COMMERCE, String str_COMPTE_CONTRIBUABLE, double dbl_QUOTA_CONSO_MENSUELLE, boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons, Integer montantFact) {
+            String lg_RISQUE_ID, String str_CODE_OFFICINE, String str_REGISTRE_COMMERCE, String str_COMPTE_CONTRIBUABLE,
+            double dbl_QUOTA_CONSO_MENSUELLE, boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons,
+            Integer montantFact, boolean groupingByTaux) {
         TTiersPayant OTTiersPayant = null, OTTiersPayantOld = null;
         TCompteClient OTCompteClient = null;
         try {
@@ -309,7 +313,7 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setDblBASEREMISE(dbl_BASE_REMISE);
             OTTiersPayant.setStrCODEDOCCOMPTOIRE(str_CODE_DOC_COMPTOIRE);
             OTTiersPayant.setBoolENABLED(bool_ENABLED);
-
+            OTTiersPayant.setGroupingByTaux(groupingByTaux);
             OTTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTTiersPayant.setDtUPDATED(new Date());
 
@@ -751,7 +755,6 @@ public class tierspayantManagement extends bllBase {
             TCompteClientTiersPayant OTCompteClientTiersPayant = this.getOdataManager().getEm().find(TCompteClientTiersPayant.class, lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
             new logger().OCategory.info("Dans updateComptecltTierspayant lg_COMPTE_CLIENT_TIERS_PAYANT_ID  " + OTCompteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID());
 
-           
             if (modeupdate) {
                 if (db_PLAFOND_ENCOURS != null) {
                     if (OTCompteClientTiersPayant.getDbCONSOMMATIONMENSUELLE() > db_PLAFOND_ENCOURS && db_PLAFOND_ENCOURS > 0) {
@@ -800,7 +803,7 @@ public class tierspayantManagement extends bllBase {
                 result = true;
             }
             OTCompteClientTiersPayant.setLgTIERSPAYANTID(OTTiersPayant);
-          
+
             if (result) {
                 this.merge(OTCompteClientTiersPayant);
                 if (OTCompteClientTiersPayant.getIntPRIORITY() == 1) {
@@ -1621,19 +1624,10 @@ public class tierspayantManagement extends bllBase {
                         tabString[4].trim(), tabString[4].trim(),
                         "", 0, 0, "", "", "", 0, false, "46700000000", false, 0, "", 0, 0, 0, "1", Integer.parseInt(tabString[5].trim()),
                         0, 0, "", 0, 0, "", false, "1", (tabString[6].trim().equalsIgnoreCase("X") ? "2" : "1"),
-                        "", "", "55181642844215217016", 0, 0, 0, false, OfactureManagement.CreateSequencier(), "", "", "", false, "", -1, -1)) {
+                        "", "", "55181642844215217016", 0, 0, 0, false, OfactureManagement.CreateSequencier(), "", "", "", false, "", -1, -1, false)) {
                     count++;
                 }
 
-                /* // a decommenter en cas de probleme
-                 if(this.create(tabString[0].replaceAll("\\s+", ""), tabString[1], tabString[2], tabString[3], 
-                 tabString[4], tabString[4],
-                 "", 0, 0, "", "", "", 0, false, "46700000000", false, 0, "", 0, 0, 0, "1", Integer.parseInt(tabString[5].replaceAll("\\s+", "")),
-                 0, 0, "", 0, 0, "", false, "1", (tabString[6].replaceAll("\\s+", "").equalsIgnoreCase("X") ? "2" : "1"), 
-                 "", "", "55181642844215217016", 0, 0, 0, false, OfactureManagement.CreateSequencier())) {
-                 count++;
-                 }
-                 */
             }
             if (count == lstData.size()) {
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
@@ -1654,8 +1648,8 @@ public class tierspayantManagement extends bllBase {
 
     //generation des données à exporter
     public List<String> generateDataToExport() {
-        List<String> lst = new ArrayList<String>();
-        List<TTiersPayant> lstTTiersPayant = new ArrayList<TTiersPayant>();
+        List<String> lst = new ArrayList<>();
+        List<TTiersPayant> lstTTiersPayant = new ArrayList<>();
         String row = "";
 
         try {
@@ -1865,7 +1859,8 @@ public class tierspayantManagement extends bllBase {
         return typedQuery.getSingleResult();
 
     }
-public List<TPreenregistrementCompteClientTiersPayent> getComptClientTierspayantVente(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
+
+    public List<TPreenregistrementCompteClientTiersPayent> getComptClientTierspayantVente(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
 
         TypedQuery<TPreenregistrementCompteClientTiersPayent> typedQuery = null;
         try {
@@ -1877,8 +1872,8 @@ public List<TPreenregistrementCompteClientTiersPayent> getComptClientTierspayant
         return typedQuery.getResultList();
 
     }
-  
-public List<TSnapshotPreenregistrementCompteClientTiersPayent> getCompteClientTiersPayents(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
+
+    public List<TSnapshotPreenregistrementCompteClientTiersPayent> getCompteClientTiersPayents(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
 
         TypedQuery<TSnapshotPreenregistrementCompteClientTiersPayent> typedQuery = null;
         try {
@@ -1890,11 +1885,8 @@ public List<TSnapshotPreenregistrementCompteClientTiersPayent> getCompteClientTi
         return typedQuery.getResultList();
 
     }
-  
 
-
-
-public void deleteComptecltTierspayant(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
+    public void deleteComptecltTierspayant(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
         TCompteClientTiersPayant OClientTiersPayant = null;
         System.out.println("lg_COMPTE_CLIENT_TIERS_PAYANT_ID ---------------------------------" + lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
 

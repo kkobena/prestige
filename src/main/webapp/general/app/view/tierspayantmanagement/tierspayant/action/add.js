@@ -347,6 +347,25 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
 
 
                             ]
+                        },
+                        
+                        {
+                            xtype: 'container',
+                            layout: 'hbox',
+                            defaultType: 'textfield',
+                            margin: '0 0 5 0',
+                            items: [
+
+                              
+                                {
+                                    
+                                    xtype: 'checkbox',
+                                    fieldLabel: 'Grouper les factures par taux',
+                                    name: 'groupingByTaux',
+                                    id: 'groupingByTaux'
+                                }
+
+                            ]
                         }
 
 
@@ -856,6 +875,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             Ext.getCmp('lg_GROUPE_ID').setValue(this.getOdatasource().lgGROUPEID);
             Ext.getCmp('montantFact').setValue(this.getOdatasource().montantFact);
             Ext.getCmp('nbrbons').setValue(this.getOdatasource().nbrbons);
+              Ext.getCmp('groupingByTaux').setValue(this.getOdatasource().groupingByTaux);
 
 
             Ext.getCmp('dbl_CAUTION').disable();
@@ -894,16 +914,15 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                 formulaire = fenetre.down('form');
         var dbl_QUOTA_CONSO_MENSUELLE = 0;
         if (Ext.getCmp('bool_IsACCOUNT').getValue()) {
-            //alert("Ok "+Ext.getCmp('bool_IsACCOUNT').getValue());
+          
             dbl_QUOTA_CONSO_MENSUELLE = Ext.getCmp('int_ACCOUNT').getValue();
         } else {
             dbl_QUOTA_CONSO_MENSUELLE = Ext.getCmp('dbl_QUOTA_CONSO_MENSUELLE').getValue();
-            //alert("Non "+Ext.getCmp('bool_IsACCOUNT').getValue());
+            
         }
 
 
-        /*alert("dbl_QUOTA_CONSO_MENSUELLE "+Ext.getCmp('bool_IsACCOUNT').getValue());
-         return;*/
+      
         if (formulaire.isValid()) {
 
             if (Ext.getCmp('lg_TYPE_TIERS_PAYANT_ID_ADD').getValue() == "1" && Ext.getCmp('bool_IsACCOUNT').getValue() == "true") {
@@ -978,7 +997,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                     b_IsAbsolute: Ext.getCmp('b_IsAbsolute').getValue(),
                     lg_GROUPE_ID: lg_GROUPE_ID,
                     montantFact: Ext.getCmp('montantFact').getValue(),
-                    nbrbons: Ext.getCmp('nbrbons').getValue()
+                    nbrbons: Ext.getCmp('nbrbons').getValue(),
+                    groupingByTaux:  Ext.getCmp('groupingByTaux').getValue()
 
                 },
                 success: function (response)
@@ -1000,7 +1020,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                 {
                     testextjs.app.getController('App').StopWaitingProcess();
                     var object = Ext.JSON.decode(response.responseText, false);
-                    console.log("Bug " + response.responseText);
+                   
                     Ext.MessageBox.alert('Error Message', response.responseText);
 
                 }
