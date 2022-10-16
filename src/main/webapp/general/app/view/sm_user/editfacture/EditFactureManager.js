@@ -32,8 +32,8 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         'Ext.JSON.*',
         'testextjs.model.Facture',
         'testextjs.view.sm_user.editfacture.action.add',
-        'Ext.ux.ProgressBarPager',
-        'testextjs.view.facturation.EditInvoice'
+        'Ext.ux.ProgressBarPager'
+       
 
     ],
     title: 'Gestion des facturations ',

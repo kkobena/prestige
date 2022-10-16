@@ -853,8 +853,8 @@ Ext.application({
         'TierspAsDepotCtrl',
         'TierspExclusCtrl',
         'SuiviPerimesCtr',
-        'BalanceVenteCarnetCtr',
-        'EditInvoicesCtr'
+        'BalanceVenteCarnetCtr'
+        
     ],
     stores: [
         'Menu'
