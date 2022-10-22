@@ -15,6 +15,7 @@ var myAppController;
 var groupeStore, groupesStore;
 var factureStore;
 var searchstore;
+
 function amountformat(val) {
     return Ext.util.Format.number(val, '0,000.');
 }
@@ -33,23 +34,27 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
         'testextjs.model.Facture',
         'testextjs.view.sm_user.editfacture.action.add',
         'Ext.ux.ProgressBarPager'
-       
-
     ],
     title: 'Gestion des facturations ',
     frame: true,
     width: "98%",
     height: 580,
+    listeners:{
+        render:function(grid){
+               this.onRechClick();
+        }
+    },
     initComponent: function () {
-
+        console.log('on initComponent ');
         Me = this;
         var _this = this;
+      
         myAppController = Ext.create('testextjs.controller.App', {});
         var itemsPerPage = 20;
         factureStore = new Ext.data.Store({
             model: 'testextjs.model.Facture',
             pageSize: itemsPerPage,
-            autoLoad: true,
+            autoLoad: false,
             proxy: {
                 type: 'ajax',
                 url: url_services_data_facturation,
@@ -105,23 +110,12 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         xtype: 'textfield',
                         id: 'rechecherFacture',
                         width: 150,
+                        value:  sessionStorage.getItem('searchQuery') || '',
                         emptyText: 'Rech',
                         listeners: {
                             specialKey: function (field, e) {
                                 if (e.getKey() === e.ENTER) {
-                                    var val = field.getValue();
-                                    var lg_customer_id = "";
-                                    if (Ext.getCmp('lg_TIERS_PAYANT_ID').getValue() !== null && Ext.getCmp('lg_TIERS_PAYANT_ID').getValue() !== "") {
-                                        lg_customer_id = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue();
-                                    }
-                                    Ext.getCmp('facturemanagerID').getStore().load({
-                                        params: {
-                                            search_value: val,
-                                            lg_customer_id: lg_customer_id,
-                                            dt_fin: Ext.getCmp('datefin').getSubmitValue(),
-                                            dt_debut: Ext.getCmp('datedebut').getSubmitValue()
-                                        }
-                                    });
+                                     Me.onRechClick();
                                 }
                             }
                         }
@@ -130,6 +124,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         xtype: 'textfield',
                         id: 'rechecherCode',
                         width: 150,
+                        value:sessionStorage.getItem('codeGroupe') || '',
                         emptyText: 'Rech Code facture',
                         listeners: {
                             specialKey: function (field, e) {
@@ -139,6 +134,10 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                                             CODEGROUPE: field.getValue()
                                         }
                                     });
+                                    
+       sessionStorage.setItem('codeGroupe',field.getValue());
+                 
+                                    
                                 }
                             }
                         }
@@ -157,6 +156,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         queryMode: 'remote',
                         enableKeyEvents: true,
                         emptyText: 'Selectionner tiers payant...',
+                            value:  sessionStorage.getItem('customer') || null,
                         listConfig: {
                             loadingText: 'Recherche...',
                             emptyText: 'Pas de donn&eacute;es trouv&eacute;es.',
@@ -191,6 +191,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         submitFormat: 'Y-m-d',
                         maxValue: new Date(),
                         format: 'd/m/Y',
+                         value:  sessionStorage.getItem('dateStart') || null,
                         listeners: {
                             'change': function (me) {
 
@@ -209,6 +210,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         submitFormat: 'Y-m-d',
                         flex: 1,
                         format: 'd/m/Y',
+                          value:  sessionStorage.getItem('datefin') || null,
                         listeners: {
                             'change': function (me) {
                                 valdatefin = me.getSubmitValue();
@@ -261,12 +263,13 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 emptyMsg: "Pas de donnée à afficher",
                 listeners: {
                     beforechange: function (page, currentPage) {
+                          console.log('on beforechange ');
                         var myProxy = this.store.getProxy();
                         myProxy.params = {
-                            search_value: '',
-                            dt_fin: '',
-                            dt_debut: '',
-                            lg_customer_id: '',
+                            search_value:  '',
+                            dt_fin:  '',
+                            dt_debut:  '',
+                            lg_customer_id:  '',
                             CODEGROUPE: ''
                         };
                         var val = Ext.getCmp('rechecherFacture').getValue();
@@ -632,6 +635,13 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                 dt_debut: Ext.getCmp('datedebut').getSubmitValue(),
                 'CODEGROUPE': Ext.getCmp('rechecherCode').getValue()
             }});
+        
+        sessionStorage.setItem('customer',lg_customer_id);
+         sessionStorage.setItem('searchQuery',val);
+             sessionStorage.setItem('datefin',Ext.getCmp('datefin').getSubmitValue());
+               sessionStorage.setItem('dateStart',Ext.getCmp('datedebut').getSubmitValue());
+        sessionStorage.setItem('codeGroupe',Ext.getCmp('rechecherCode').getValue());
+     
     },
     onExel: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
