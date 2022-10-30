@@ -202,7 +202,7 @@ Ext.define('testextjs.view.Dashboard.DoRetourCarnet', {
                                     submitFormat: 'Y-m-d',
                                     maxValue: new Date(),
                                     format: 'd/m/Y',
-                                    value: new Date()
+                                    value:'2015-01-01'
 
                                 }, 
 

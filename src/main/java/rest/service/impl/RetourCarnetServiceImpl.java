@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -251,7 +252,7 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
         Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
         cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true).orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
         List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
-        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
         if (!all) {
             q.setFirstResult(start);
@@ -267,7 +268,7 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
             Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
             cq.select(cb.count(root.get(RetourCarnetDetail_.retourCarnet))).distinct(true);
             List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {
@@ -286,7 +287,7 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
                     cb.sum(cb.prod(root.get(RetourCarnetDetail_.qtyRetour), root.get(RetourCarnetDetail_.prixUni)))
             ));
             List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<RetourCarnetDetailDTO> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {
@@ -325,7 +326,24 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
         cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
         return q.getResultList().stream().map(e -> new RetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null)
-        .stream().mapToLong(RetourCarnetDetailDTO::getAmount).reduce(0, Long::sum)
+                .stream().mapToLong(RetourCarnetDetailDTO::getAmount).reduce(0, Long::sum)
         )).collect(Collectors.toList());
     }
+
+    @Override
+    public List<RetourCarnetDTO> fetchRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd) {
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<RetourCarnet> cq = cb.createQuery(RetourCarnet.class);
+        Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
+        cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true).orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
+        List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
+
+        return q.getResultList().stream().sorted(comparatorTiersPayant.thenComparing(comparatorDate)).map(e -> RetourCarnetDTO.buildRetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null))).collect(Collectors.toList());
+    }
+    private final Comparator<RetourCarnet> comparatorTiersPayant = (RetourCarnet e1, RetourCarnet e2) -> {
+        return e1.getTierspayant().getStrNAME().compareTo(e2.getTierspayant().getStrNAME());
+    };
+    private final Comparator<RetourCarnet> comparatorDate = Comparator.comparing(RetourCarnet::getCreatedAt);
 }

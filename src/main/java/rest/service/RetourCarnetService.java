@@ -43,4 +43,6 @@ public interface RetourCarnetService {
 
     List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd);
 
+    List<RetourCarnetDTO> fetchRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd);
+
 }

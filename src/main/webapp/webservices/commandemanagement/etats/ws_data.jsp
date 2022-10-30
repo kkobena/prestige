@@ -90,7 +90,7 @@
         json = new JSONObject();
         OObject = lstEntityData.get(i);
         boolean status= asAuthority;
-        
+   
         if( OObject[13].toString().equals(DateConverter.STATUT_DELETE) || Integer.parseInt(OObject[4].toString()) <0){
         status=false;
     }

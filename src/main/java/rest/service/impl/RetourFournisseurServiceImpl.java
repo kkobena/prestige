@@ -232,6 +232,7 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
     private void cloneBl(TBonLivraison bonLivraison, TUser user, ArrayList<TBonLivraisonDetail> bonLivraisonDetails) throws CloneNotSupportedException {
         bonLivraison.setDtUPDATED(new Date());
         bonLivraison.setSTATUS(DateConverter.STATUT_DELETE);
+          bonLivraison.setStrSTATUT(DateConverter.STATUT_DELETE);
         TBonLivraison cloneBl = (TBonLivraison) bonLivraison.clone();
         cloneBl.setTBonLivraisonDetailCollection(new ArrayList<>());
         cloneBl.setTRetourFournisseurCollection(new ArrayList<>());

@@ -91,8 +91,9 @@ Ext.define('testextjs.controller.CarnetRetourCtr', {
         let dtStart = me.getDtStart().getSubmitValue();
         let dtEnd = me.getDtEnd().getSubmitValue();
 
-        const linkUrl = '../TiersPayantExcludServlet?mode=RETOUR&dtStart=' + dtStart +
+        const linkUrl = '../TiersPayantExcludServlet?mode=RETOUR_CARNET_DEPOT&dtStart=' + dtStart +
                 '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
+        
          window.open(linkUrl);
     },
     goBack: function () {

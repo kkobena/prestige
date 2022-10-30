@@ -1661,7 +1661,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur,TMotifRetour motifRetour,List<TBonLivraisonDetail> bonLivraisonDetails)  {
        
         EntityManager emg = this.getEmg();
-         Set<TRetourFournisseurDetail>retourFournisseurDetails=new HashSet<>();
+         Set<TRetourFournisseurDetail> retourFournisseurDetails=new HashSet<>();
             DoubleAdder amount = new DoubleAdder();
             TUser user=retourFournisseur.getLgUSERID();
             final TEmplacement empl = user.getLgEMPLACEMENTID();
