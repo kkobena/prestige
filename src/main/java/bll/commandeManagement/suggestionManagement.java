@@ -1979,4 +1979,12 @@ public class suggestionManagement extends bllBase {
         this.getOdataManager().getEm().persist(eventLog);
     }
 
+    public boolean updateProduitSeuil(String produitId, Integer qteSeuil) {
+        TFamille famille = this.getOdataManager().getEm().find(TFamille.class, produitId);
+        famille.setIntSEUILMIN(qteSeuil);
+        this.merge(famille);
+
+        return true;
+    }
+
 }

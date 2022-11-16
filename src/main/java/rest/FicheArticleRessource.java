@@ -61,7 +61,7 @@ public class FicheArticleRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-       
+
         JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
         return Response.ok().entity(jsono.toString()).build();
     }
@@ -186,8 +186,8 @@ public class FicheArticleRessource {
     @Path("account")
     public Response getProducts(
             @QueryParam(value = "query") String query,
-              @QueryParam(value = "rayon") String rayon,
-                @QueryParam(value = "filtre") String filtre,
+            @QueryParam(value = "rayon") String rayon,
+            @QueryParam(value = "filtre") String filtre,
             @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit
     ) throws JSONException {
@@ -197,11 +197,10 @@ public class FicheArticleRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
         }
-        JSONObject json = ficheArticleService.produitAccounts(query,rayon,filtre,tu, start, limit);
+        JSONObject json = ficheArticleService.produitAccounts(query, rayon, filtre, tu, start, limit);
         return Response.ok().entity(json.toString()).build();
     }
-    
-    
+
     @GET
     @Path("saisieperimes")
     public Response saisiePerimes(
@@ -211,7 +210,7 @@ public class FicheArticleRessource {
             @QueryParam(value = "codeGrossiste") String codeGrossiste,
             @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd,
-             @QueryParam(value = "start") int start,
+            @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
@@ -224,4 +223,5 @@ public class FicheArticleRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
 
+   
 }

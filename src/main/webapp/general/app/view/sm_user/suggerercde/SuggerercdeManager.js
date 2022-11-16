@@ -199,7 +199,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                                 Me_Window.onchangeGrossiste();
                                             }
 
-                                            if (titre == "Ajouter detail commande") {
+                                            if (titre === "Ajouter detail commande") {
                                                 Me_Window.onIsGrossisteExist(value);
                                             }
                                         }
@@ -257,10 +257,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     },
                                     listeners: {
                                         select: function (cmp) {
-                                            //   LaborexWorkFlow.DoAjaxGetStockArticle(Ext.getCmp('str_NAME').getValue());
-
                                             var value = cmp.getValue();
-//                                                    alert("value"+value);
                                             var record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
 
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
@@ -304,7 +301,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     listeners: {
                                         specialKey: function (field, e) {
                                             if (e.getKey() === e.ENTER) {
-                                                if (Ext.getCmp('str_NAME').getValue() != "") {
+                                                if (Ext.getCmp('str_NAME').getValue() !== "") {
                                                     Me_Window.onEdit();
                                                 } else {
                                                     Ext.MessageBox.alert('Error Message', 'Verifiez votre selection svp');
@@ -512,6 +509,14 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
 
                                         return amountformat(v);
+                                    },
+                                    flex: 1,
+                                    editor: {
+                                        xtype: 'numberfield',
+                                        minValue: 1,
+                                        selectOnFocus: true,
+                                        allowBlank: false,
+                                        regex: /[0-9.]/
                                     }
                                 },
                                 {
@@ -738,7 +743,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             delay: 1,
             single: true
         });
-        if (titre == "Suggerer une commande") {
+        if (titre === "Suggerer une commande") {
             var OgridpanelSuggestionID = Ext.getCmp('gridpanelSuggestionID');
             Ext.getCmp('lg_GROSSISTE_ID').setValue(this.getOdatasource().lg_GROSSISTE_ID);
             Ext.getCmp('btn_print').show();
@@ -758,49 +763,72 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         }
 
         Ext.getCmp('gridpanelSuggestionID').on('edit', function (editor, e) {
+            var OGrid = Ext.getCmp('gridpanelSuggestionID');
+            if (e.field !== 'int_SEUIL') {
+                const qte = Number(e.record.data.int_NUMBER);
 
+                Ext.Ajax.request({
+                    url: url_services_transaction_suggerercde + 'update',
 
-            var qte = Number(e.record.data.int_NUMBER);
-            Ext.Ajax.request({
-                url: url_services_transaction_suggerercde + 'update',
-                params: {
-                    lg_SUGGESTION_ORDER_DETAILS_ID: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
-                    lg_SUGGESTION_ORDER_ID: ref,
-                    str_STATUT: e.record.data.str_STATUT,
-                    lg_FAMILLE_ID: e.record.data.lg_FAMILLE_ID,
-                    lg_GROSSISTE_ID: Ext.getCmp('lg_GROSSISTE_ID').getValue(),
-                    int_NUMBER: qte,
-                    int_PRIX_REFERENCE: e.record.data.int_PRIX_REFERENCE,
-                    int_PAF: e.record.data.int_PAF_SUGG,
-                    lg_FAMILLE_PRIX_ACHAT: e.record.data.lg_FAMILLE_PRIX_ACHAT,
-                    lg_FAMILLE_PRIX_VENTE: e.record.data.lg_FAMILLE_PRIX_VENTE
-                },
-                success: function (response)
-                {
-                    var object = Ext.JSON.decode(response.responseText, false);
-                    if (object.success == "0") {
-                        Ext.MessageBox.alert('Error Message', object.errors);
-                        return;
+                    params: {
+                        lg_SUGGESTION_ORDER_DETAILS_ID: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
+                        lg_SUGGESTION_ORDER_ID: ref,
+                        str_STATUT: e.record.data.str_STATUT,
+                        lg_FAMILLE_ID: e.record.data.lg_FAMILLE_ID,
+                        lg_GROSSISTE_ID: Ext.getCmp('lg_GROSSISTE_ID').getValue(),
+                        int_NUMBER: qte,
+                        int_PRIX_REFERENCE: e.record.data.int_PRIX_REFERENCE,
+                        int_PAF: e.record.data.int_PAF_SUGG,
+                        lg_FAMILLE_PRIX_ACHAT: e.record.data.lg_FAMILLE_PRIX_ACHAT,
+                        lg_FAMILLE_PRIX_VENTE: e.record.data.lg_FAMILLE_PRIX_VENTE
+                    },
+                    success: function (response)
+                    {
+                        var object = Ext.JSON.decode(response.responseText, false);
+                        if (object.success == "0") {
+                            Ext.MessageBox.alert('Error Message', object.errors);
+                            return;
+                        }
+
+                        e.record.commit();
+                        int_montant_achat = Ext.util.Format.number(object.int_TOTAL_ACHAT, '0,000.');
+                        int_montant_vente = Ext.util.Format.number(object.int_TOTAL_VENTE, '0,000.');
+                        Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
+                        Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
+
+                        OGrid.getStore().reload();
+                        Ext.getCmp('str_NAME').setValue("");
+
+                    },
+                    failure: function (response)
+                    {
+                        console.log("Bug " + response.responseText);
+                        Ext.MessageBox.alert('Error Message', response.responseText);
                     }
+                });
+            } else if (e.field === 'int_SEUIL') {
+                const qtySeuil = Number(e.record.data.int_SEUIL);
+                Ext.Ajax.request({
+                url: '../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=QTY_SEUIL',
+                      params: {
+                          produitId:e.record.data.lg_FAMILLE_ID,
+                          qtySeuil
+                      },
+                    success: function (response)
+                    {
+                      e.record.commit();
+                        OGrid.getStore().load();
 
-                    e.record.commit();
-                    var OGrid = Ext.getCmp('gridpanelSuggestionID');
 
-                    int_montant_achat = Ext.util.Format.number(object.int_TOTAL_ACHAT, '0,000.');
-                    int_montant_vente = Ext.util.Format.number(object.int_TOTAL_VENTE, '0,000.');
-                    Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
-                    Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
+                    },
+                    failure: function (response)
+                    {
+                        console.log("Bug " + response.responseText);
+                        Ext.MessageBox.alert('Error Message', response.responseText);
+                    }
+                });
+            }
 
-                    OGrid.getStore().reload();
-                    Ext.getCmp('str_NAME').setValue("");
-
-                },
-                failure: function (response)
-                {
-                    console.log("Bug " + response.responseText);
-                    Ext.MessageBox.alert('Error Message', response.responseText);
-                }
-            });
         });
 
 
@@ -1096,8 +1124,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     },
 
     onQtyDetail: function (grid, rowIndex) {
-          var rec = grid.getStore().getAt(rowIndex);
-       Ext.Ajax.request({
+        var rec = grid.getStore().getAt(rowIndex);
+        Ext.Ajax.request({
             method: 'GET',
             headers: {'Content-Type': 'application/json'},
             url: '../api/v1/suggestion/qty-detail/' + rec.get('lg_FAMILLE_ID'),
@@ -1106,73 +1134,73 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 if (result.success) {
                     var stock = result.stock;
                     var form = Ext.create('Ext.window.Window',
-                {
-                    autoShow: true,
-                    height: 200,
-                    width: 300,
-                    modal: true,
-                    title: 'STOCK DETAIL',
-                    closeAction: 'hide',
-                    closable: true,
-                    maximizable: false,
-                    layout: {
-                        type: 'fit'
+                            {
+                                autoShow: true,
+                                height: 200,
+                                width: 300,
+                                modal: true,
+                                title: 'STOCK DETAIL',
+                                closeAction: 'hide',
+                                closable: true,
+                                maximizable: false,
+                                layout: {
+                                    type: 'fit'
 
-                    },
-                    dockedItems: [
-                        {
-                            xtype: 'toolbar',
-                            dock: 'bottom',
-                            ui: 'footer',
-                            layout: {
-                                pack: 'end',
-                                type: 'hbox'
-                            },
-                            items: [
+                                },
+                                dockedItems: [
+                                    {
+                                        xtype: 'toolbar',
+                                        dock: 'bottom',
+                                        ui: 'footer',
+                                        layout: {
+                                            pack: 'end',
+                                            type: 'hbox'
+                                        },
+                                        items: [
 
-                                {
-                                    xtype: 'button',
-                                    iconCls: 'cancelicon',
-                                    handler: function (btn) {
-                                        form.destroy();
-                                    },
-                                    text: 'FERMER'
+                                            {
+                                                xtype: 'button',
+                                                iconCls: 'cancelicon',
+                                                handler: function (btn) {
+                                                    form.destroy();
+                                                },
+                                                text: 'FERMER'
 
-                                }
-                            ]
-                        }
-                    ],
-                    items: [
-                        {
-                            xtype: 'fieldset',
-                            bodyPadding: 50,
-                            defaults: {
-                                anchor: '100%'
-                            },
-                            collapsible: false,
+                                            }
+                                        ]
+                                    }
+                                ],
+                                items: [
+                                    {
+                                        xtype: 'fieldset',
+                                        bodyPadding: 50,
+                                        defaults: {
+                                            anchor: '100%'
+                                        },
+                                        collapsible: false,
 
-                            items: [
-                                {
-                                    xtype: 'displayfield',
-                                    margin: '40 9 0 0',
-                                    fieldLabel: 'STOCK DETAIL',
-                                    value:stock,
-                                    renderer: function (v) {
-                                        return Ext.util.Format.number(v, '0,000.');
-                                    },
-                                    fieldStyle: "color:blue;font-weight:800;"
+                                        items: [
+                                            {
+                                                xtype: 'displayfield',
+                                                margin: '40 9 0 0',
+                                                fieldLabel: 'STOCK DETAIL',
+                                                value: stock,
+                                                renderer: function (v) {
+                                                    return Ext.util.Format.number(v, '0,000.');
+                                                },
+                                                fieldStyle: "color:blue;font-weight:800;"
 
 
-                                }
-                            ]
-                        }
+                                            }
+                                        ]
+                                    }
 
-                    ]
-                });
-                } 
+                                ]
+                            });
+                }
             }
-        });   
-       
+        });
+
     },
 
     onbtndetail: function () {

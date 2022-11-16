@@ -65,17 +65,10 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
             }
 
         });
-
-
-        this.cellEditing = new Ext.grid.plugin.CellEditing({
-            clicksToEdit: 1
-        });
-
-
         Ext.apply(this, {
             width: '98%',
             height: 580,
-            plugins: [this.cellEditing],
+          
             store: store,
             id: 'GridSuiviStockVenteID',
             columns: [{
@@ -99,9 +92,16 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
                     flex: 0.5
                 },
                 {
-                    header: 'Article',
+                    header: 'Designation',
                     dataIndex: 'str_NAME',
                     flex: 1.5
+                },
+                
+                {
+                    header: 'Stock',
+                      renderer: amountformat,
+                    dataIndex: 'int_STOCK',
+                    flex: 0.5
                 },
                 {
                     header: 'Moyenne',

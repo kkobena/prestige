@@ -432,7 +432,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             Join<TFamilleStock, TFamille> stock = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
             cq.select(cb.count(root));
             List<Predicate> predicates = produitAccounts(cb, root, stock, query, rayon, filtre, u);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return q.getSingleResult() != null ? (Long) q.getSingleResult() : 0;
 
@@ -830,8 +830,10 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     public boolean updateProduitAccount(String id, boolean account) {
         TFamille famille = getEntityManager().find(TFamille.class, id);
         famille.setBoolACCOUNT(!account);
+        getEntityManager().merge(famille);
         return true;
     }
+    
 
     @Override
     public JSONObject saisiePerimes(String query, String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {

@@ -241,7 +241,7 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                             flex: 0.5,
                             labelWidth: 20,
                             maxValue: new Date(),
-                            value: new Date(),
+                            value: '01/01/2015',
                             format: 'd/m/Y'
 
                         }, {

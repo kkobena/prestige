@@ -50,6 +50,8 @@ public interface FicheArticleService {
     JSONObject produitConsomamation(TUser u, String query, String dtStart, String dtEnd, String id, int start, int limit) throws JSONException;
 
     boolean updateProduitAccount(String id, boolean account);
+    
+
 
     JSONObject produitAccounts(String query, String rayon, String filtre, TUser u, int start, int limit) throws JSONException;
 

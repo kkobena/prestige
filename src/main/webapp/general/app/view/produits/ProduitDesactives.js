@@ -48,6 +48,9 @@ Ext.define('testextjs.view.produits.ProduitDesactives', {
                         }, {
                             name: 'intNUMBER',
                             type: 'number'
+                        }, {
+                            name: 'dt_UPDATED',
+                            type: 'date'
                         }
                     ],
             pageSize: 15,
@@ -151,7 +154,19 @@ Ext.define('testextjs.view.produits.ProduitDesactives', {
                             format: '0,000.'
 
                         },
+                        
+                        {
+                            header: "date",
+                            xtype: 'numbercolumn',
+                             align: 'right',
+                            sortable: false,
+                            menuDisabled: true,
+                            dataIndex: 'dt_UPDATED',
+                            flex: 0.6,
+                            format: '0,000.'
 
+                        },
+                        
                         {
                             xtype: 'actioncolumn',
                             width: 30,

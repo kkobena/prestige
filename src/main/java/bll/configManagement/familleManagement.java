@@ -943,7 +943,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         String lg_EMPLACEMENT_ID = "";
         privilege Oprivilege = new privilege(this.getOdataManager(), this.getOTUser());
         try {
-            if (search_value.equalsIgnoreCase("") || search_value == null) {
+            if ( search_value == null || search_value.equalsIgnoreCase("")) {
                 search_value = "%%";
             }
             if (Oprivilege.isColonneStockMachineIsAuthorize(Parameter.P_SHOW_ALL_ACTIVITY_ADMIN)) {

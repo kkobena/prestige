@@ -240,6 +240,7 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
                                     handler: function (grid, rowIndex) {
                                         var rec = grid.getStore().getAt(rowIndex);
                                         if (rec.get('STATUT') === "paid") {
+                                            Ext.MessageBox.alert('INFO', 'Deja subi un reglement');
                                             return;
                                         }
                                         testextjs.app.getController('App').ShowWaitingProcess();

@@ -122,7 +122,7 @@
     }
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
- TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
     ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
@@ -327,6 +327,10 @@
             ObllBase.setMessage(OsuggestionManagement.getMessage());
             ObllBase.setDetailmessage(OsuggestionManagement.getDetailmessage());
 
+        } else if (request.getParameter("mode").equals("QTY_SEUIL")) {
+            String produitId = request.getParameter("produitId");
+            Integer qtySeuil = Integer.parseInt(request.getParameter("qtySeuil"));
+            OsuggestionManagement.updateProduitSeuil(produitId, qtySeuil);
         }
 
     }

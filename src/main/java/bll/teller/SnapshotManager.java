@@ -59,6 +59,7 @@ import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -911,6 +912,7 @@ public class SnapshotManager extends bll.bllBase {
 
     public int getQauntityVenteByArticle(String search_value, String dtDEBUT, String dtFin,
             String lg_FAMILLE_ID, String lg_USER_ID, String lg_PREENREGISTREMENT_ID) {
+      
         int result = 0;
         List<Object[]> lstTPreenregistrementDetail = new ArrayList<>();
         try {
@@ -2599,5 +2601,17 @@ public class SnapshotManager extends bll.bllBase {
         }
         return OTMouvementSnapshot;
     }
-
+    public int getStockProduitByIdProduitAndEmplacement(String produitId) {
+        try {
+         String    emplacementId = this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+            TypedQuery<TFamilleStock> query = this.getOdataManager().getEm().createQuery("SELECT o  FROM  TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2 ", TFamilleStock.class);
+            query.setMaxResults(1);
+            query.setParameter(1, produitId);
+            query.setParameter(2, emplacementId);
+            return query.getSingleResult().getIntNUMBERAVAILABLE();
+        } catch (Exception e) {
+         
+            return 0;
+        }
+    }
 }
