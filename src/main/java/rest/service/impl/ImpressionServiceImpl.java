@@ -28,6 +28,7 @@ import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Chromaticity;
 import javax.print.attribute.standard.Copies;
+import javax.print.attribute.standard.MultipleDocumentHandling;
 import javax.swing.ImageIcon;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
@@ -308,6 +309,7 @@ public class ImpressionServiceImpl implements Printable {
     }
 
     public void printTicketVente(int copies) throws PrinterException {
+         
         PrinterJob printerjob = findPrinterJob();
         TImprimante OImprimante = this.getOTImprimante();
         if (OImprimante != null) {
@@ -326,7 +328,11 @@ public class ImpressionServiceImpl implements Printable {
             // paper.setImageableArea(20, -70, paper.getWidth(), paper.getHeight()); //definition des marges de la feuille
             pageFormat.setPaper(paper);
             pageFormat.setOrientation(PageFormat.PORTRAIT); //orientation de la page
-
+           
+            if(copies>1){
+               OPrintRequestAttributeSet.add(MultipleDocumentHandling.SEPARATE_DOCUMENTS_UNCOLLATED_COPIES);
+//                OPrintRequestAttributeSet.add(MultipleDocumentHandling.SEPARATE_DOCUMENTS_COLLATED_COPIES);
+            }
             OPrintRequestAttributeSet.add(new Copies(copies)); //nombre de copie a imprimer
             OPrintRequestAttributeSet.add(Chromaticity.COLOR); //insiste sur la netteté de la couleur du texte
 
