@@ -425,8 +425,7 @@ public class FactureDataExport extends HttpServlet {
                 Row parentDataRow = sheet.createRow((short) count);
 
                 JSONObject o = (JSONObject) parentData.getJSONObject(i);
-
-                int countchild = count + 1;
+          
                 JSONArray headerdatavalue = o.getJSONArray("headerdatavalue");
 
                 for (int q = 0; q < headerdatavalue.length(); q++) {

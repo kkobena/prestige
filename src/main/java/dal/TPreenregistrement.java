@@ -194,7 +194,9 @@ public class TPreenregistrement implements Serializable {
     private Integer montantTvaUg = 0;
     @Column(name = "completion_date")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date completionDate=new Date();
+    private Date completionDate = new Date();
+    @Column(name = "cmu_amount")
+    private Integer cmuAmount = 0;
 
     public boolean isImported() {
         return imported;
@@ -269,6 +271,14 @@ public class TPreenregistrement implements Serializable {
     }
 
     public TPreenregistrement() {
+    }
+
+    public Integer getCmuAmount() {
+        return cmuAmount;
+    }
+
+    public void setCmuAmount(Integer cmuAmount) {
+        this.cmuAmount = cmuAmount;
     }
 
     public Integer getIntREMISEPARA() {

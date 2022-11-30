@@ -8,6 +8,7 @@ package dal;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -94,10 +95,10 @@ public class TFamille implements Serializable {
     private String strSTATUT;
     @Column(name = "dt_CREATED")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date dtCREATED=new Date();
+    private Date dtCREATED = new Date();
     @Column(name = "dt_UPDATED")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date dtUPDATED=new Date();
+    private Date dtUPDATED = new Date();
     @Column(name = "int_SEUIL_MIN")
     private Integer intSEUILMIN;
     @Column(name = "int_STOCK_REAPROVISONEMENT")
@@ -292,10 +293,19 @@ public class TFamille implements Serializable {
     private GammeProduit gamme;
     @Column(name = "is_scheduled")
     private boolean scheduled = false;
-   
+    @Column(name = "cmu_price")
+    private Integer cmuPrice;
 
     public int getVersion() {
         return version;
+    }
+
+    public Integer getCmuPrice() {
+        return cmuPrice;
+    }
+
+    public void setCmuPrice(Integer cmuPrice) {
+        this.cmuPrice = cmuPrice;
     }
 
     public GammeProduit getGamme() {
@@ -1256,6 +1266,10 @@ public class TFamille implements Serializable {
 
     public void setBoolACCOUNT(Boolean boolACCOUNT) {
         this.boolACCOUNT = boolACCOUNT;
+    }
+
+    public Optional<Integer> cmuPrice() {
+        return this.cmuPrice != null ? Optional.of(this.cmuPrice) : Optional.of(0);
     }
 
 }

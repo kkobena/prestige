@@ -27,8 +27,6 @@ public interface SalesService {
 
     JSONObject annulerVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID);
 
-    boolean updateSnapshotVenteSociete(String lg_PREENREGISTREMENT_ID, String lg_COMPTE_CLIENT_ID);
-
     JSONObject createPreVente(SalesParams salesParams);
 
     JSONObject createPreVenteVo(SalesParams salesParams);

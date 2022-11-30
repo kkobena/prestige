@@ -361,8 +361,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     name: 'int_PAT',
                                     id: 'int_PAT',
                                     selectOnFocus: true,
-                                    hidden: true,
-//                                    allowBlank: false
+                                    hidden: true
                                 },
                                 {
                                     fieldLabel: 'Prix Achat Facture',
@@ -373,7 +372,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     emptyText: 'PRIX ACHAT FACTURE',
                                     name: 'int_PAF',
                                     id: 'int_PAF',
-//                                    disabled: true,
                                     allowBlank: false
                                 }
 
@@ -467,8 +465,17 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     queryMode: 'remote',
 //                                    allowBlank: false,
                                     emptyText: 'Choisir un frabriquant...'
-
-
+                                },
+                                 {
+                                    xtype: 'displayfield',
+                                    fieldLabel: 'Stock',
+                                    labelWidth: 110,
+                                    hidden: true,
+                                    name: 'int_NUMBER_AVAILABLE',
+                                    id: 'int_NUMBER_AVAILABLE',
+                                    fieldStyle: "color:blue;font-weight:bold;",
+                                    margin: '0 12 0 0',
+                                    value: 0
                                 }
 
 
@@ -495,7 +502,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     xtype: 'combobox',
                                     fieldLabel: 'Code TVA',
                                     name: 'lg_CODE_TVA_ID',
-                                    width: 400,
+                                    width: 350,
+                                    labelWidth: 110,
                                     id: 'lg_CODE_TVA_ID',
                                     store: store_codetva,
                                     valueField: 'lg_CODE_TVA_ID',
@@ -509,7 +517,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     xtype: 'combobox',
                                     fieldLabel: 'Grossiste',
                                     name: 'lg_GROSSISTE_ID',
-                                    width: 400,
+                                    width: 350,
+                                    labelWidth: 100,
                                     id: 'lg_GROSSISTE_ID',
                                     store: store_grossiste_famille,
                                     valueField: 'lg_GROSSISTE_ID',
@@ -522,6 +531,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                 {
                                     fieldLabel: 'Code EAN 13',
                                     xtype: 'textfield',
+                                    labelWidth: 110,
                                     maskRe: /[0-9.]/,
                                     width: 350,
                                     // maxValue: 13,
@@ -529,16 +539,16 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     name: 'int_EAN13',
                                     id: 'int_EAN13'
                                 },
-                                {
-                                    xtype: 'displayfield',
-                                    fieldLabel: 'Stock',
+                               
+                                 {
+                                    xtype: 'numberfield',
+                                    fieldLabel: 'Prix CMU',
                                     labelWidth: 110,
-                                    hidden: true,
-                                    name: 'int_NUMBER_AVAILABLE',
-                                    id: 'int_NUMBER_AVAILABLE',
-                                    fieldStyle: "color:blue;font-weight:bold;",
-                                    margin: '0 12 0 0',
-                                    value: 0
+                                    name: 'cmu_price',
+                                    id: 'cmu_price',
+                                      width: 400,
+                                    margin: '0 0 0 0'
+                                 
                                 }
                             ]
                         }]
@@ -622,7 +632,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     displayField: 'str_CODE_REMISE',
                                     width: 400,
                                     value: 0,
-
                                     typeAhead: true,
                                     queryMode: 'local',
                                     emptyText: 'Choisir une Remise...'
@@ -647,9 +656,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                     layout: 'vbox',
                     // title: 'Infos.Produit',
                     defaultType: 'textfield',
-//                    defaults: {
-//                        anchor: '100%'
-//                    },
                     items: [
                         {
                             xtype: 'container',
@@ -967,7 +973,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
         });
 
         if (Omode === "update" && bool_DECONDITIONNE == "1") {
-//            alert("bool_DECONDITIONNE "+bool_DECONDITIONNE);
             Ext.getCmp("associate").hide();
         }
 
@@ -1025,12 +1030,9 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             Ext.getCmp('int_QTEDETAIL').show();
         }
 
-        // alert("int_NUMBERDETAIL "+this.getOdatasource().int_NUMBERDETAIL);
-
+       
 
         if (Omode === "update" || Omode === "decondition") {
-
-
             if (this.getOdatasource().P_UPDATE_PAF == false) {
                 Ext.getCmp('int_PAF').disable();
             }
@@ -1052,7 +1054,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
 
             ref = this.getOdatasource().lg_FAMILLE_ID;
             Ext.getCmp('int_NUMBER_AVAILABLE').setValue(this.getOdatasource().int_NUMBER_AVAILABLE);
-//            Ext.getCmp('int_NUMBER_AVAILABLE').disable();
+               Ext.getCmp('cmu_price').setValue(this.getOdatasource().cmu_price);
+         
             Ext.getCmp('int_NUMBER_AVAILABLE').show();
             Ext.getCmp('lg_CODE_GESTION_ID').setValue(this.getOdatasource().lg_CODE_GESTION_ID);
             Ext.getCmp('lg_GROSSISTE_ID').setValue(this.getOdatasource().lg_GROSSISTE_ID);
@@ -1083,8 +1086,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             Ext.getCmp('int_EAN13').setValue(this.getOdatasource().int_EAN13);
             Ext.getCmp('bool_RESERVE').setValue(this.getOdatasource().bool_RESERVE);
             Ext.getCmp('dt_Peremtion_new').setValue(this.getOdatasource().dt_Peremtion);
-            ;
-            //alert(this.getOdatasource().bool_RESERVE);
+          
             if (this.getOdatasource().bool_RESERVE == "true") {
                 Ext.getCmp('int_SEUIL_RESERVE').setValue(this.getOdatasource().int_SEUIL_RESERVE);
                 Ext.getCmp('int_RESERVE').setValue(this.getOdatasource().int_STOCK_RESERVE);
@@ -1111,7 +1113,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                         if (rec.id == laboratoireId) {
                             Ext.getCmp('laboratoireId').setValue(rec.id);
                             combobox.setDisplayField(rec.libelle);
-                            return;
+                            
                         }
                     });
 
@@ -1183,7 +1185,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 return;
             }
 
-            //alert("ref  " + ref);
+           
 
             var int_PRICE_TIPS = 0, int_TAUX_MARQUE = 0, str_CODE_REMISE = 0, int_PRICE = 0;
             if (Ext.getCmp('int_PRICE_TIPS').getValue() == "" || Ext.getCmp('int_PRICE_TIPS').getValue() == null) {
@@ -1207,11 +1209,10 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 int_PRICE = Ext.getCmp('int_PRICE').getValue();
             }
 
-//            alert("internal_url:"+internal_url);
+
 
             var str_DESCRIPTION = Ext.getCmp('str_DESCRIPTION').getValue();
 
-            console.log(Ext.getCmp('laboratoireId').getValue(), Ext.getCmp('gammeId').getValue());
             testextjs.app.getController('App').ShowWaitingProcess();
             Ext.Ajax.request({
                 url: internal_url,
@@ -1246,7 +1247,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                     bool_RESERVE: Ext.getCmp('bool_RESERVE').getValue(),
                     laboratoireId: Ext.getCmp('laboratoireId').getValue(),
                     gammeId: Ext.getCmp('gammeId').getValue(),
-                    bool_DECONDITIONNE: int_DECONDITIONNE
+                    bool_DECONDITIONNE: int_DECONDITIONNE,
+                    cmu_price: Ext.getCmp('cmu_price').getValue()
 
                 },
                 success: function (response)
@@ -1262,7 +1264,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                             buttons: Ext.MessageBox.OK,
                             icon: Ext.MessageBox.WARNING
                         });
-                        return;
+                      
                     } else {
                         win.close();
                         Ext.MessageBox.alert('Confirmation', object.errors, function () {
@@ -1270,9 +1272,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                 if (type == "famillemanager") {
                                     Me_Workflow = Oview;
                                     Me_Workflow.onRechClick();
-                                    //   Oview.getStore().reload(); a decommenter en cas de probleme
-
-
                                 } else if (type == "commande") {
                                     Ext.getCmp('lgFAMILLEID').setValue(str_DESCRIPTION);
                                     Ext.getCmp('lgFAMILLEID').getStore().reload();
@@ -1290,8 +1289,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 failure: function (response)
                 {
                     testextjs.app.getController('App').StopWaitingProcess();
-                    var object = Ext.JSON.decode(response.responseText, false);
-                    console.log("Bug " + response.responseText);
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
                         width: 320,
@@ -1312,9 +1309,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 icon: Ext.MessageBox.WARNING
             });
         }
-
-
-        //this.up('window').close();
     },
     onRemoveClick: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
@@ -1322,8 +1316,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 function (btn) {
                     if (btn === 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
-//                        alert('lg_FAMILLE_DCI_ID : ' + rec.get('lg_FAMILLE_DCI_ID'));
-//                        return;
                         Ext.Ajax.request({
                             url: url_services_transaction_dci_famille + 'delete',
                             params: {
@@ -1344,9 +1336,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                             {
 
                                 var object = Ext.JSON.decode(response.responseText, false);
-                                //  alert(object);
-
-                                console.log("Bug " + response.responseText);
+                           
                                 Ext.MessageBox.alert('Error Message', response.responseText);
                             }
                         });

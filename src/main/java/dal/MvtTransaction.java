@@ -118,6 +118,16 @@ public class MvtTransaction implements Serializable {
     private Boolean flaged = Boolean.FALSE;
     @ManyToOne
     private Flag flag;
+    @Column(name = "cmu_amount")
+    private Integer cmuAmount = 0;
+
+    public Integer getCmuAmount() {
+        return cmuAmount;
+    }
+
+    public void setCmuAmount(Integer cmuAmount) {
+        this.cmuAmount = cmuAmount;
+    }
 
     public TPreenregistrement getPreenregistrement() {
         return preenregistrement;

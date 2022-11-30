@@ -180,6 +180,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             String _id = id;
             MvtTransaction mvtTransaction = findByPkey(_id);
          copies=   nbreDeCopiesOranges( mvtTransaction,  copies);
+         copies=5;
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
@@ -2066,7 +2067,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     private Optional<Integer> findOrangeNumberOfTicket() {
         try {
-            return Optional.ofNullable(Integer.parseInt(this.getEntityManager().find(TParameters.class, DateConverter.KEY_NOMBRE_TICKET_OTHER_ESPECE).getStrVALUE()));
+            return Optional.ofNullable(Integer.valueOf(this.getEntityManager().find(TParameters.class, DateConverter.KEY_NOMBRE_TICKET_OTHER_ESPECE).getStrVALUE()));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Optional.empty();

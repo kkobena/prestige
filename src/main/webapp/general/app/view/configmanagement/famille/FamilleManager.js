@@ -141,7 +141,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 {
                     header: 'CIP',
                     dataIndex: 'int_CIP',
-                    flex: 0.7,
+                    flex: 0.6,
                     renderer: function (v, m, r) {
                         var Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
@@ -157,7 +157,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 {
                     header: 'Designation',
                     dataIndex: 'str_DESCRIPTION',
-                    flex: 2.5,
+                    flex: 2,
                     renderer: function (v, m, r) {
 
                         var Stock = r.data.int_NUMBER_AVAILABLE;
@@ -189,6 +189,25 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         return amountformat(v);
                     }
                 },
+                {
+                    header: 'P.CMU',
+                    dataIndex: 'cmu_price',
+                    align: 'right',
+                    flex: 0.5,
+                    renderer: function (v, m, r) {
+                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        if (Stock == 0) {
+                            m.style = 'background-color:#B0F2B6;font-weight:800;';
+                        } else if (Stock > 0) {
+                            m.style = 'font-weight:800;';
+                        } else if (Stock < 0) {
+                            m.style = 'background-color:#F5BCA9;font-weight:800;';
+                        }
+                        return amountformat(v);
+                    }
+                },
+                
+                
                 {
                     header: 'P.A F',
                     dataIndex: 'int_PAF',
@@ -304,8 +323,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 failure: function (response)
                                 {
 
-                                    var object = Ext.JSON.decode(response.responseText, false);
-
+                                  
                                     Ext.MessageBox.alert('Error Message', response.responseText);
 
                                 }

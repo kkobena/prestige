@@ -43,7 +43,7 @@ public class JobCalendar {
         return em;
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         exec();
         removeFacture();

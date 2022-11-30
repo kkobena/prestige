@@ -96,7 +96,6 @@ import util.DateConverter;
 public class familleManagement extends bllBase implements Famillemanagerinterface {
 
     Object Otable = TFamille.class;
-   
 
     public familleManagement(dataManager OdataManager) {
         this.setOdataManager(OdataManager);
@@ -108,8 +107,6 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         this.setOdataManager(OdataManager);
         this.checkDatamanager();
     }
-
-  
 
     public TFamille create(String str_NAME, String str_DESCRIPTION, int int_PRICE, int int_PRICE_TIPS,
             int int_TAUX_MARQUE, int int_PAF, int int_PAT, int int_S, String int_T, String int_CIP,
@@ -943,7 +940,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         String lg_EMPLACEMENT_ID = "";
         privilege Oprivilege = new privilege(this.getOdataManager(), this.getOTUser());
         try {
-            if ( search_value == null || search_value.equalsIgnoreCase("")) {
+            if (search_value == null || search_value.equalsIgnoreCase("")) {
                 search_value = "%%";
             }
             if (Oprivilege.isColonneStockMachineIsAuthorize(Parameter.P_SHOW_ALL_ACTIVITY_ADMIN)) {
@@ -2342,16 +2339,26 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les differentes colonnes
                 OTFamille = this.getTFamille(tabString[1].trim());
                 if (OTFamille != null) {
-                    if (this.update(OTFamille.getLgFAMILLEID(), tabString[2].trim(), "", "", "", tabString[2].trim(), Integer.parseInt(tabString[3].trim()), Integer.parseInt(tabString[4].trim()), 0, Integer.parseInt(tabString[5].trim()), Integer.parseInt(tabString[6].trim()), OTFamille.getIntS(), tabString[16].trim(), tabString[1].trim(), tabString[12].trim(), tabString[13].trim(), tabString[14].trim(), tabString[8].trim(), (OTFamille.getLgCODEGESTIONID() != null ? OTFamille.getLgCODEGESTIONID().getLgCODEGESTIONID() : ""), tabString[10].trim(), OTFamille.getStrCODETAUXREMBOURSEMENT(), tabString[15].trim(), OTFamille.getIntNUMBERDETAIL(), 0, tabString[9].trim(), "", tabString[17].trim(), OTFamille.getBoolRESERVE(), OTFamille.getIntSEUILRESERVE(), OTFamille.getIntSTOCKREAPROVISONEMENT(), OTFamille.getIntQTEREAPPROVISIONNEMENT(), "", "", "")) {
+                    if (this.update(OTFamille.getLgFAMILLEID(), tabString[2].trim(), "", "", "", tabString[2].trim(),
+                            Integer.parseInt(tabString[3].trim()), 
+                            Integer.parseInt(tabString[4].trim()), 0,
+                            Integer.parseInt(tabString[5].trim()), Integer.parseInt(tabString[6].trim()),
+                            OTFamille.getIntS(), tabString[16].trim(), tabString[1].trim(), tabString[12].trim(),
+                            tabString[13].trim(), tabString[14].trim(), tabString[8].trim(),
+                            (OTFamille.getLgCODEGESTIONID() != null ? OTFamille.getLgCODEGESTIONID().getLgCODEGESTIONID() : ""), 
+                            tabString[10].trim(), OTFamille.getStrCODETAUXREMBOURSEMENT(), tabString[15].trim(), 
+                            OTFamille.getIntNUMBERDETAIL(), 0, tabString[9].trim(), "", tabString[17].trim(),
+                            OTFamille.getBoolRESERVE(), OTFamille.getIntSEUILRESERVE(), 
+                            OTFamille.getIntSTOCKREAPROVISONEMENT(), OTFamille.getIntQTEREAPPROVISIONNEMENT(), "", "", "",null)) {
                         count++;
                         if (updateStock) {
                             OTFamilleStock = OtellerManagement.getTProductItemStock(OTFamille.getLgFAMILLEID());
                             OTTypeStockFamille = OStockManager.getTTypeStockFamilleByTypestock("1", OTFamille.getLgFAMILLEID());
                             if (OTFamilleStock != null && OTTypeStockFamille != null) {
-                                OTFamilleStock.setIntNUMBERAVAILABLE(Integer.parseInt(tabString[19].trim()));
+                                OTFamilleStock.setIntNUMBERAVAILABLE(Integer.valueOf(tabString[19].trim()));
                                 OTFamilleStock.setIntNUMBER(OTFamilleStock.getIntNUMBERAVAILABLE());
                                 OTFamilleStock.setDtUPDATED(new Date());
-                                OTTypeStockFamille.setIntNUMBER(Integer.parseInt(tabString[19].trim()));
+                                OTTypeStockFamille.setIntNUMBER(Integer.valueOf(tabString[19].trim()));
                                 OTTypeStockFamille.setDtUPDATED(new Date());
                                 this.persiste(OTTypeStockFamille);
                             }
@@ -2429,15 +2436,15 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             tabString[6].trim(), OTFamille.getStrCODETAUXREMBOURSEMENT(), tabString[9].trim(), 0, 0,
                             (OTFamille.getLgTYPEETIQUETTEID() != null ? OTFamille.getLgTYPEETIQUETTEID().getLgTYPEETIQUETTEID() : Parameter.DEFAUL_TYPEETIQUETTE), "",
                             (OTFamille.getLgCODETVAID() != null ? OTFamille.getLgCODETVAID().getLgCODETVAID() : ""),
-                            OTFamille.getBoolRESERVE(), OTFamille.getIntSEUILRESERVE(), OTFamille.getIntSTOCKREAPROVISONEMENT(), OTFamille.getIntQTEREAPPROVISIONNEMENT(), "", "", "")) {
+                            OTFamille.getBoolRESERVE(), OTFamille.getIntSEUILRESERVE(), OTFamille.getIntSTOCKREAPROVISONEMENT(), OTFamille.getIntQTEREAPPROVISIONNEMENT(), "", "", "",null)) {
 
                         OTFamilleStock = OtellerManagement.getTProductItemStock(OTFamille.getLgFAMILLEID());
                         OTTypeStockFamille = OStockManager.getTTypeStockFamilleByTypestock("1", OTFamille.getLgFAMILLEID());
                         if (OTFamilleStock != null && OTTypeStockFamille != null) {
-                            OTFamilleStock.setIntNUMBERAVAILABLE(Integer.parseInt(tabString[11].trim()));
+                            OTFamilleStock.setIntNUMBERAVAILABLE(Integer.valueOf(tabString[11].trim()));
                             OTFamilleStock.setIntNUMBER(OTFamilleStock.getIntNUMBERAVAILABLE());
                             OTFamilleStock.setDtUPDATED(new Date());
-                            OTTypeStockFamille.setIntNUMBER(Integer.parseInt(tabString[11].trim()));
+                            OTTypeStockFamille.setIntNUMBER(Integer.valueOf(tabString[11].trim()));
                             OTTypeStockFamille.setDtUPDATED(new Date());
                             if (this.persiste(OTTypeStockFamille)) {
                                 count++;
@@ -3424,7 +3431,11 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             String int_CIP, String int_EAN13, String lg_GROSSISTE_ID,
             String lg_FAMILLEARTICLE_ID, String lg_CODE_ACTE_ID, String lg_CODE_GESTION_ID,
             String str_CODE_REMISE, String str_CODE_TAUX_REMBOURSEMENT, String lg_ZONE_GEO_ID, int int_QTEDETAIL,
-            int int_PRICE_DETAIL, String lg_TYPEETIQUETTE_ID, String lg_REMISE_ID, String lg_CODE_TVA_ID, boolean bool_RESERVE, int int_SEUIL_RESERVE, int int_STOCK_REAPROVISONEMENT, int int_QTE_REAPPROVISIONNEMENT, String dt_Peremtion, String gammeId, String laboratoireId) {
+            int int_PRICE_DETAIL, String lg_TYPEETIQUETTE_ID, String lg_REMISE_ID,
+            String lg_CODE_TVA_ID, boolean bool_RESERVE, 
+            int int_SEUIL_RESERVE, int int_STOCK_REAPROVISONEMENT, 
+            int int_QTE_REAPPROVISIONNEMENT, String dt_Peremtion,
+            String gammeId, String laboratoireId, Integer cmuPrice) {
         String lg_TYPE_STOCK_RESERVE_ID = "2";
         int int_PRICE_OLD = 0, int_PAT_OLD = 0, int_PAF_OLD = 0, int_TAUX = 0;
 
@@ -3525,6 +3536,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             OTFamille.setIntEAN13(int_EAN13);
             OTFamille.setIntPAF(int_PAF);
             OTFamille.setIntPAT(int_PAT);
+            OTFamille.setCmuPrice(cmuPrice);
             if (!"".equals(dt_Peremtion)) {
                 OTFamille.setDtPEREMPTION(java.sql.Date.valueOf(dt_Peremtion));
             }
@@ -3640,12 +3652,13 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         return result;
 
     }
-  private TFamilleGrossiste getFamilleGrossisteByCIP(String CIP,TGrossiste OGrossiste) {
+
+    private TFamilleGrossiste getFamilleGrossisteByCIP(String CIP, TGrossiste OGrossiste) {
         TFamilleGrossiste OTFamilleGrossiste = null;
         try {
             OTFamilleGrossiste = (TFamilleGrossiste) this.getOdataManager().getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE o.strCODEARTICLE =?1 AND o.strSTATUT = ?2 AND o.lgGROSSISTEID=?3").setParameter(1, CIP).
                     setParameter(2, commonparameter.statut_enable).
-                      setParameter(3, OGrossiste)
+                    setParameter(3, OGrossiste)
                     .setMaxResults(1).getSingleResult();
 
         } catch (Exception e) {
@@ -3653,11 +3666,12 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         }
         return OTFamilleGrossiste;
     }
+
     public boolean updateFamilleGrossisteCip(String CIP, TFamille OFamille, TGrossiste OGrossiste, int mode, String currentcip) {
         boolean isUpdate = false;
         String Codecip = CIP;
         System.out.println(" current cip " + currentcip + " CIP " + CIP);
-        TFamilleGrossiste familleGrossiste = getFamilleGrossisteByCIP(CIP,OGrossiste);
+        TFamilleGrossiste familleGrossiste = getFamilleGrossisteByCIP(CIP, OGrossiste);
         TFamilleGrossiste OFamilleGrossiste = getFamilleGrossisteByIDANDLGROSSISTE(OFamille.getLgFAMILLEID(), OGrossiste.getLgGROSSISTEID());
         TFamille OTFamilleDecontionne = null;
         TFamilleGrossiste OTFamilleGrossisteDeconditionne = null;
@@ -5166,6 +5180,8 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                     json.put("P_UPDATE_DESIGNATION", Boolean.valueOf(Obj[8].toString()));
                     json.put("lg_FAMILLE_ID", t.getLgFAMILLEID());
                     json.put("scheduled", t.isScheduled());
+                    json.put("cmu_price", t.getCmuPrice());
+
                     try {
                         json.put("gammeId", t.getGamme().getId());
                     } catch (Exception e) {
@@ -5799,9 +5815,11 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             String int_EAN13, String lg_GROSSISTE_ID, String lg_FAMILLEARTICLE_ID, String lg_CODE_ACTE_ID,
             String lg_CODE_GESTION_ID, String str_CODE_REMISE,
             String str_CODE_TAUX_REMBOURSEMENT, String lg_ZONE_GEO_ID, int int_NUMBER_AVAILABLE,
-            int int_QTEDETAIL, String lg_FORME_ARTICLE_ID, String lg_FABRIQUANT_ID, short bool_DECONDITIONNE, String lg_TYPEETIQUETTE_ID, String lg_REMISE_ID, String lg_CODE_TVA_ID, boolean bool_RESERVE, int int_SEUIL_RESERVE, String lg_FAMILLE_PARENT_ID, int int_STOCK_REAPROVISONEMENT, int int_QTE_REAPPROVISIONNEMENT, int int_QUANTITY_STOCK, String dt_Peremtion, String gammeId, String laboratoireId) {
+            int int_QTEDETAIL, String lg_FORME_ARTICLE_ID, String lg_FABRIQUANT_ID, short bool_DECONDITIONNE, String lg_TYPEETIQUETTE_ID, String lg_REMISE_ID, String lg_CODE_TVA_ID, boolean bool_RESERVE, int int_SEUIL_RESERVE, String lg_FAMILLE_PARENT_ID, int int_STOCK_REAPROVISONEMENT, int int_QTE_REAPPROVISIONNEMENT,
+            int int_QUANTITY_STOCK, String dt_Peremtion, String gammeId,
+            String laboratoireId, Integer cmuPrice) {
         TFamille OTFamille = null;
-        TParameters OParameters, OParametersPerime = null;
+        TParameters OParameters, OParametersPerime;
         String lg_TYPE_STOCK_RESERVE_ID = "2";
         short bool_DECONDITIONNE_EXIST = 1;
         int int_TAUX = 0;
@@ -5906,6 +5924,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             OTFamille.setIntT(int_T);
             OTFamille.setIntS(int_S);
             OTFamille.setScheduled(false);
+            OTFamille.setCmuPrice(cmuPrice);
             OTFamille.setIntPRICE((!int_T.equalsIgnoreCase("") && lg_FAMILLE_PARENT_ID.equalsIgnoreCase("") ? int_PRICE + int_TAUX : int_PRICE));
             OTFamille.setIntPRICETIPS(OTFamille.getIntPRICETIPS());
             OTFamille.setIntTAUXMARQUE(int_TAUX_MARQUE);
@@ -5914,7 +5933,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             }
             //OTFamille.setStrCODEETIQUETTE(str_CODE_ETIQUETTE);
             OTFamille.setStrCODEREMISE(str_CODE_REMISE);
-            TCodeTva OTCodeTva = null;
+            TCodeTva OTCodeTva;
             try {
                 OTCodeTva = this.getCodeTva(lg_CODE_TVA_ID);
                 if (OTCodeTva == null) {
