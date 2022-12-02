@@ -6,6 +6,7 @@
 package rest.service.impl;
 
 import bll.common.Parameter;
+import com.mchange.lang.IntegerUtils;
 import commonTasks.dto.AyantDroitDTO;
 import commonTasks.dto.ClientDTO;
 import commonTasks.dto.ClotureVenteParams;
@@ -105,6 +106,7 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.jpa.QueryHints;
 import org.json.JSONArray;
@@ -1495,19 +1497,17 @@ public class SalesServiceImpl implements SalesService {
                     tp.setIntACCOUNT(tp.getIntPRICE());
                 }
                 emg.merge(tpd);
-
                 afficheurProduit(tpd.getLgFAMILLEID().getStrNAME(), tpd.getIntQUANTITY(), tpd.getIntPRICEUNITAIR(), tpd.getIntPRICE());
             } else {
                 if (!forcerStock(params.getQte(), params.getProduitId(), tp.getLgUSERID().getLgEMPLACEMENTID())) {
                     return json.put("success", false).put("msg", "Impossible de forcer le stock « voir le gestionnaire »");
                 }
                 TPreenregistrementDetail dp = addPreenregistrementItem(tp, famille, params.getQte(), params.getQteServie(), params.getQteUg(), params.getItemPu(), emg);
-                tp.setCmuAmount(computeCmuAmount(dp));
+                tp.setCmuAmount(tp.getCmuAmount() + computeCmuAmount(dp));
                 emg.persist(dp);
                 afficheurProduit(dp.getLgFAMILLEID().getStrNAME(), dp.getIntQUANTITY(), dp.getIntPRICEUNITAIR(), dp.getIntPRICE());
             }
             tp = emg.merge(tp);
-
             JSONObject data = new JSONObject();
             data.put("lgPREENREGISTREMENTID", tp.getLgPREENREGISTREMENTID());
             data.put("strREF", tp.getStrREF());
@@ -2826,7 +2826,7 @@ public class SalesServiceImpl implements SalesService {
             int totalTaux = 0;
             int montantVariable;
             int diffMontantTotalAndCmuAmount = 0;
-            int cmuAmount = 0;
+            int cmuAmount = OTPreenregistrement.getCmuAmount();
             MontantAPaye montantAPaye;
             List<TiersPayantParams> resultat = new ArrayList<>();
             if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
@@ -2854,17 +2854,17 @@ public class SalesServiceImpl implements SalesService {
                 resultat.add(tp);
             } else {
                 TRemise remise = OTPreenregistrement.getRemise();
-                cmuAmount = OTPreenregistrement.getCmuAmount();
 
                 if (remise != null) {
                     montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
                     //  montantvente = montantAPaye.getMontant();
-                    montantvente = montantAPaye.getMontant() - cmuAmount;
+                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
                     remiseCarnet = montantAPaye.getRemise();
+
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                    montantvente = montantAPaye.getMontant() - cmuAmount;
+                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
                 }
                 diffMontantTotalAndCmuAmount = montantAPaye.getMontant() - cmuAmount;
@@ -2899,7 +2899,7 @@ public class SalesServiceImpl implements SalesService {
             if (totalTaux >= 100) {
                 netCustomer = 0;
             }
-            MontantAPaye map = new MontantAPaye(netCustomer, montantvente, totalTp,
+            MontantAPaye map = new MontantAPaye(netCustomer, montantvente + diffMontantTotalAndCmuAmount, totalTp,
                     remiseCarnet, montantAPaye.getMarge(), montantAPaye.getMontantTva());
             map.setTierspayants(resultat);
             map.setCmuAmount(cmuAmount);
@@ -3908,6 +3908,8 @@ public class SalesServiceImpl implements SalesService {
             Integer totalTp = 0;
             Integer netCustomer = 0;
             MontantAPaye montantAPaye;
+            int montantCmu = OTPreenregistrement.getCmuAmount();
+            int diffMontantCmu = OTPreenregistrement.getIntPRICE() - montantCmu;
             List<TiersPayantParams> resultat = new ArrayList<>();
             TClient client = OTPreenregistrement.getClient();
             if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
@@ -3949,12 +3951,12 @@ public class SalesServiceImpl implements SalesService {
                 TRemise remise = OTPreenregistrement.getRemise();
                 if (remise != null) {
                     montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
-                    montantvente = montantAPaye.getMontant();
+                    montantvente = montantCmu > 0 ? montantCmu : montantAPaye.getMontant();
                     montantVariable = montantvente;
                     RemiseCarnet = montantAPaye.getRemise();
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                    montantvente = montantAPaye.getMontant();
+                    montantvente = montantCmu > 0 ? montantCmu : montantAPaye.getMontant();
                     montantVariable = montantvente;
                 }
 
@@ -3995,10 +3997,10 @@ public class SalesServiceImpl implements SalesService {
                     tp.setDiscount(0);
                     resultat.add(tp);
                 }
-                netCustomer = (montantvente - totalTp) - RemiseCarnet;
+                netCustomer = (montantvente - totalTp) - RemiseCarnet + diffMontantCmu;
             }
 
-            MontantAPaye map = new MontantAPaye(netCustomer, montantvente, totalTp,
+            MontantAPaye map = new MontantAPaye(netCustomer, montantvente + diffMontantCmu, totalTp,
                     RemiseCarnet, montantAPaye.getMarge(), montantAPaye.getMontantTva());
             map.setMessage(msg);
             map.setRestructuring(hasRestructuring);
@@ -5129,10 +5131,10 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private int computeCmuAmount(TPreenregistrementDetail pd) {
-        return pd.getIntQUANTITY() * pd.getCmuPrice();
+        if (pd.getCmuPrice() != null && pd.getCmuPrice() > 0) {
+            return pd.getIntQUANTITY() * pd.getCmuPrice();
+        }
+        return pd.getIntQUANTITY() * pd.getIntPRICEUNITAIR();
     }
 
-    private int removeCmuAmount(TPreenregistrementDetail pd) {
-        return pd.getIntQUANTITY() * pd.getCmuPrice();
-    }
 }
