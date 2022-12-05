@@ -39,6 +39,11 @@ public class MontantAPaye implements Serializable {
         this.cmuAmount = cmuAmount;
     }
 
+    public MontantAPaye cmuAmount(int cmuAmount) {
+        this.cmuAmount = cmuAmount;
+        return this;
+    }
+
     public void setRestructuring(boolean restructuring) {
         this.restructuring = restructuring;
     }
