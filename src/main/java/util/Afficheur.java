@@ -49,7 +49,7 @@ public class Afficheur {
             w32Driver.initialize();
 //            sPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            
         }
         try {
             portId = CommPortIdentifier.getPortIdentifier(jdom.com_port_displayer);
@@ -59,7 +59,7 @@ public class Afficheur {
         try {
             sPort = (SerialPort) portId.open(jdom.APP_NAME, 3000);
         } catch (PortInUseException e) {
-              e.printStackTrace(System.err);
+              
         }
 
         try {
@@ -68,12 +68,12 @@ public class Afficheur {
                     = new BufferedReader(
                             new InputStreamReader(sPort.getInputStream()));
         } catch (IOException e) {
-            e.printStackTrace(System.err);
+           
         }
         try {
             sPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
         } catch (UnsupportedCommOperationException e) {
-              e.printStackTrace(System.err);
+              
         }
 
     }
@@ -81,9 +81,9 @@ public class Afficheur {
     public void communique(char envoie) {
         try {
             //affiche un caractere a l'ecran
-            outStream.write((int) envoie);
+            outStream.write( envoie);
         } catch (IOException e) {
-            e.printStackTrace(System.err);
+          
         }
     }
 
@@ -96,7 +96,7 @@ public class Afficheur {
             outStream.close();
             sPort.close();
         } catch (IOException e) {
-            e.printStackTrace(System.err);
+           
         }
 
     }
@@ -107,9 +107,9 @@ public class Afficheur {
             sPort = (SerialPort) portId.open(jdom.APP_NAME, 1000);
 
             isOpen = true;
-        } catch (Exception e) {
+        } catch (PortInUseException e) {
             isOpen = false;
-            e.printStackTrace(System.err);
+         
         }
         //règle les paramètres de la connexion
         try {
@@ -118,9 +118,9 @@ public class Afficheur {
                     SerialPort.DATABITS_8,
                     SerialPort.STOPBITS_1,
                     SerialPort.PARITY_NONE);
-        } catch (Exception e) {
+        } catch (UnsupportedCommOperationException e) {
 
-            e.printStackTrace(System.err);
+         
         }
         //récupération du flux de lecture et écriture du port
         try {
@@ -129,7 +129,7 @@ public class Afficheur {
                     = new BufferedReader(
                             new InputStreamReader(sPort.getInputStream()));
         } catch (IOException e) {
-            e.printStackTrace(System.err);
+       
         }
 
     }
@@ -152,7 +152,7 @@ public class Afficheur {
                 communique(tab1.charAt(0));
             }
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+           
         }
     }
 
@@ -169,7 +169,7 @@ public class Afficheur {
                 communique(tab1.charAt(0));
             }
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+          
         }
     }
 }

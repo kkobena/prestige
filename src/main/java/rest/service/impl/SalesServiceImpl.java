@@ -434,45 +434,7 @@ public class SalesServiceImpl implements SalesService {
         }
     }
     
-    public JSONObject buildRef__(LocalDate ODate, String KEY_PARAMETER, EntityManager emg) {
-        JSONObject result = new JSONObject();
-        try {
-            TParameters parameters = findByKeyPara(KEY_PARAMETER, emg);
-            TParameters OTParameters_KEY_SIZE_ORDER_NUMBER = findByKeyPara("KEY_SIZE_ORDER_NUMBER", emg);
-            String jsondata = parameters.getStrVALUE();
-            JSONArray jsonArray = new JSONArray(jsondata);
-            JSONObject jsonObject = jsonArray.getJSONObject(0);
-            int int_last_code = new Integer(jsonObject.getString("int_last_code"));
-            LocalDate dt_last_date = LocalDate.parse(jsonObject.getString("str_last_date"), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-            if (!ODate.isEqual(dt_last_date)) {
-                int_last_code = 0;
-            }
-            int intsize = ((int_last_code + 1) + "").length();
-            int intsize_tobuild = Integer.valueOf(OTParameters_KEY_SIZE_ORDER_NUMBER.getStrVALUE());
-            String str_last_code = "";
-            for (int i = 0; i < (intsize_tobuild - intsize); i++) {
-                str_last_code = str_last_code + "0";
-                
-            }
-            str_last_code = str_last_code + (int_last_code + 1) + "";
-            LocalDate now = LocalDate.now();
-            String str_code = (now.getYear() - 2010) + "" + now.getMonthValue() + "" + now.getDayOfMonth() + "_" + str_last_code;
-            JSONObject json = new JSONObject();
-            JSONArray arrayObj = new JSONArray();
-            json.put("int_last_code", str_last_code);
-            json.put("str_last_date", ODate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
-            arrayObj.put(json);
-            result.put("code", str_code);
-            result.put("params", arrayObj);
-            parameters.setDtUPDATED(new Date());
-            parameters.setStrVALUE(arrayObj.toString());
-            emg.merge(parameters);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-        }
-        return result;
-    }
-    
+   
     private Optional<TRecettes> findRecette(String id, EntityManager emg) {
         try {
             TypedQuery<TRecettes> query = emg.createQuery("SELECT o FROM TRecettes o WHERE o.strREFFACTURE=?1", TRecettes.class);
