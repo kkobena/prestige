@@ -28,13 +28,13 @@ public class Afficheur {
 
     private static final Logger LOG = Logger.getLogger(Afficheur.class.getName());
 
-    public BufferedReader bufRead; //flux de lecture du port
-    public OutputStream outStream; //flux d'écriture du port
-    public CommPortIdentifier portId; //identifiant du port
-    public SerialPort sPort; //le port série
+    private BufferedReader bufRead; //flux de lecture du port
+    private OutputStream outStream; //flux d'écriture du port
+    private CommPortIdentifier portId; //identifiant du port
+    private SerialPort sPort; //le port série
     private static Afficheur INSTANCE = null;
-    public Boolean isOpen;
-    public CommPort cp;
+    private Boolean isOpen;
+    private CommPort cp;
 
     public  static Afficheur getInstance() {
         if (INSTANCE == null) {

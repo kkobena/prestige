@@ -37,4 +37,8 @@ public class ResultFactory {
      public static <T> Result<T> getFailResult() {
         return new Result(false, "Erreur!!: L'opération n'a pas abouti");
     }
+
+    private ResultFactory() {
+    }
+     
 }

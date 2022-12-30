@@ -93,7 +93,19 @@ public class TPreenregistrementDetail implements Serializable {
     private Integer prixAchat = 0;
     @Column(name = "montanttvaug")
     private Integer montantTvaUg = 0;
+    @Column(name = "cmu_price")
+    private Integer cmuPrice;
 
+    public Integer getCmuPrice() {
+        return cmuPrice;
+    }
+
+    public void setCmuPrice(Integer cmuPrice) {
+        this.cmuPrice = cmuPrice;
+    }
+
+    
+    
     public TPreenregistrementDetail() {
     }
 
@@ -357,6 +369,7 @@ public class TPreenregistrementDetail implements Serializable {
         this.valeurTva = p.getValeurTva();
         this.prixAchat = p.getPrixAchat();
         this.montantTvaUg = p.getMontantTvaUg();
+        this.cmuPrice=p.cmuPrice;
     }
 
 }

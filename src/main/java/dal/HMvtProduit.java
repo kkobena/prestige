@@ -74,24 +74,32 @@ public class HMvtProduit implements Serializable {
     private Boolean checked = true;
     @Column(name = "ug", nullable = false)
     private Integer ug = 0;
+     @Column(name = "cmu_price")
+    private Integer cmuPrice;
     @ManyToOne
     @JoinColumn(name = "lg_PREENREGISTREMENT_DETAIL_ID", referencedColumnName = "lg_PREENREGISTREMENT_DETAIL_ID")
     private TPreenregistrementDetail preenregistrementDetail;
+
+
+    public Integer getCmuPrice() {
+        return cmuPrice;
+    }
 
     /* @Formula("qteMvt*prixUn")
     private double montantTtc;
     @Formula("(qteMvt*prixUn)/(1+(valeurTva/100))")
     private double montantHt;*/
-
- /*@Transient
+    /*@Transient
     public double getMontantHt() {
-        return montantHt;
+    return montantHt;
     }
-
     @Transient
     public double getMontantTtc() {
-        return montantTtc;
+    return montantTtc;
     }*/
+    public void setCmuPrice(Integer cmuPrice) {
+        this.cmuPrice = cmuPrice;
+    }
 
     public TPreenregistrementDetail getPreenregistrementDetail() {
         return preenregistrementDetail;

@@ -25,9 +25,23 @@ public class MontantAPaye implements Serializable {
     private boolean restructuring;
     private String message;
     private int montantTvaUg = 0;
+    private int cmuAmount = 0;
 
     public boolean isRestructuring() {
         return restructuring;
+    }
+
+    public int getCmuAmount() {
+        return cmuAmount;
+    }
+
+    public void setCmuAmount(int cmuAmount) {
+        this.cmuAmount = cmuAmount;
+    }
+
+    public MontantAPaye cmuAmount(int cmuAmount) {
+        this.cmuAmount = cmuAmount;
+        return this;
     }
 
     public void setRestructuring(boolean restructuring) {
@@ -175,8 +189,8 @@ public class MontantAPaye implements Serializable {
     public void setMontantTvaUg(int montantTvaUg) {
         this.montantTvaUg = montantTvaUg;
     }
-    
-       public MontantAPaye montantTvaUg(int montantTvaUg) {
+
+    public MontantAPaye montantTvaUg(int montantTvaUg) {
         this.montantTvaUg = montantTvaUg;
         return this;
     }
