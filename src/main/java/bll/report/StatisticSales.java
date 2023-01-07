@@ -791,8 +791,7 @@ public class StatisticSales extends bll.bllBase {
         JSONArray data = new JSONArray();
         try {
             JSONArray array = this.getVisitorStatisticData(dt_start, dt_end);
-            JSONArray keyvalue = new JSONArray();
-
+         
             double UN_AMONT = 0, DEUX_AMONT = 0, TROIS_AMONT = 0, QUATRE_AMONT = 0, CINQ_AMONT = 0, SIX_AMONT = 0, SEPT_AMONT = 0, HUIT_AMONT = 0, NEUF_AMONT = 0, DIX_AMONT = 0;
             double UN_COUNT = 0, DEUX_COUNT = 0, TROIS_COUNT = 0, QUATRE_COUNT = 0,
                     VALUES_COUNT = 0, CINQ_COUNT = 0,
