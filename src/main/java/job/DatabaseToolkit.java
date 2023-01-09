@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
@@ -73,8 +72,6 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.service.CarnetAsDepotService;
-import shedule.DailyStockTask;
 import util.DateConverter;
 import util.SmsParameters;
 
@@ -98,7 +95,6 @@ public class DatabaseToolkit {
     private TimerService timerService;
     @Inject
     private UserTransaction userTransaction;
- 
 
     @PostConstruct
     public void init() {
@@ -120,11 +116,9 @@ public class DatabaseToolkit {
         } catch (FlywayException e) {
             LOG.log(Level.SEVERE, "ini migration", e);
         }
-       
+
         createTimer();
-        mes.submit(() -> {
-            updateStockDailyValue();
-        });
+        mes.submit(this::updateStockDailyValue );
 
     }
 
@@ -235,7 +229,7 @@ public class DatabaseToolkit {
             q.setParameter("statut", Statut.NOT_SEND);
             return q.getResultList();
         } catch (Exception e) {
-             LOG.log(Level.SEVERE, "---->>>>  ", e);
+            LOG.log(Level.SEVERE, "---->>>>  ", e);
             return Collections.emptyList();
         }
     }
@@ -259,7 +253,7 @@ public class DatabaseToolkit {
             q.setParameter("canaux", EnumSet.of(Canal.SMS));
             return q.getResultList();
         } catch (Exception e) {
-             LOG.log(Level.SEVERE, "---->>>>  ", e);
+            LOG.log(Level.SEVERE, "---->>>>  ", e);
             return Collections.emptyList();
         }
     }
@@ -267,7 +261,7 @@ public class DatabaseToolkit {
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = em.find(TParameters.class, key);
-            return (Integer.valueOf(parameters.getStrVALUE().trim()) == 1);
+            return (Integer.parseInt(parameters.getStrVALUE().trim()) == 1);
         } catch (Exception e) {
             return false;
         }

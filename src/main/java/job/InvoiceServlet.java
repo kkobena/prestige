@@ -122,7 +122,7 @@ public class InvoiceServlet extends HttpServlet {
             Map<String, Object> parameters = getParametters(OFacture, OTUser, codeModelFacture, OTiersPayant, OTypeMvtCaisse);
             JasperPrint jasperPrint;
             File destFile;
-            int codeFACT =  Integer.valueOf(codeModelFacture);
+            int codeFACT =  Integer.parseInt(codeModelFacture);
             switch (action) {
                 case "exls":
                     switch (codeFACT) {
@@ -145,7 +145,7 @@ public class InvoiceServlet extends HttpServlet {
                         case 6:
                             List taux = facManagement.getFacturePercent(lg_FACTURE_ID);
                             for (int i = 0; i < taux.size(); i++) {
-                                int tauxValue = Integer.valueOf(taux.get(i) + "");
+                                int tauxValue = Integer.parseInt(taux.get(i) + "");
                                 List<EntityData> entityDatas = facManagement.getFactureReportDataPercent(lg_FACTURE_ID, OTiersPayant.getLgTIERSPAYANTID(), tauxValue);
                                 long P_TOTAL_AMOUNT = 0, P_ADHER_AMOUNT = 0, P_REMISE_AMOUNT = 0, P_ATT_AMOUNT = 0, P_REMISEFORFAITAIRE = 0, P_MONTANTBRUTTP = 0;
                                 for (EntityData OtEntityData : entityDatas) {
