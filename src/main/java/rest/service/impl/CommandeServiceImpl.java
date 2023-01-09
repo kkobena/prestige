@@ -186,7 +186,7 @@ public class CommandeServiceImpl implements CommandeService {
                 return json.put("success", false).put("msg", "Impossible de trouver ce bon. Verifier s'il ce bon n'est pas deja cloturé");
             }
             List<TBonLivraisonDetail> lstTBonLivraisonDetail = bonLivraisonDetail(id, emg);
-            if (Integer.valueOf(tp.getStrVALUE()) == 1) {
+            if (Integer.parseInt(tp.getStrVALUE()) == 1) {
                 if (isEntreeStockIsAuthorize(lstTBonLivraisonDetail)) {
                     return json.put("success", false).put("msg", "La reception de certains produits n'a pas ete faites. Veuillez verifier vos saisie");
                 }
