@@ -167,7 +167,7 @@ public class factureManagement extends bll.bllBase {
             OTFacture.setDblMONTANTCMDE(d_montant);
             boolean numerationFacture = getParametreFacturation();
             if (numerationFacture) {
-                OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+                OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy")).concat("_").concat(CODEFACTURE));
             } else {
                 OTFacture.setStrCODEFACTURE(CODEFACTURE);
             }
