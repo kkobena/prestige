@@ -5,6 +5,8 @@
  */
 package job;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static org.quartz.JobBuilder.newJob;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -19,7 +21,7 @@ import org.quartz.impl.StdSchedulerFactory;
  * @author KKOFFI
  */
 public class JobStockService {
-
+   private static final Logger LOG = Logger.getLogger(JobStockService.class.getName());
 
     public void executeJobStockReappro() {
         Scheduler scheduler;
@@ -35,8 +37,8 @@ public class JobStockService {
                     .build();
             scheduler.start();
             scheduler.scheduleJob(job, trigger);
-        } catch (SchedulerException ex) {
-            ex.printStackTrace();
+        } catch (SchedulerException e) {
+            LOG.log(Level.SEVERE, "executeJobStockReappro", e);
         }
     }
     // cette fonction met à jour les produits perimes
@@ -54,8 +56,8 @@ public class JobStockService {
                     .build();
             scheduler.start();
             scheduler.scheduleJob(job, trigger);
-        } catch (SchedulerException ex) {
-            ex.printStackTrace();
+        } catch (SchedulerException e) {
+           LOG.log(Level.SEVERE, "executeJobLot", e);
         }
     }
 

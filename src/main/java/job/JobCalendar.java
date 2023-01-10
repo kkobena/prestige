@@ -43,7 +43,7 @@ public class JobCalendar {
         return em;
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         exec();
         removeFacture();
@@ -123,7 +123,6 @@ public class JobCalendar {
             TCalendrier o = tq.getSingleResult();
             return o != null ? Optional.of(o) : Optional.empty();
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
             return Optional.empty();
         }
     }

@@ -192,9 +192,7 @@ public class Reapprovisionnement {
             Q3 = Integer.valueOf(q3.getStrVALUE().trim());
         }
         List<LocalDate> nombreMois = nombreMoisPleinsConsommation(Q3).stream().sorted().collect(Collectors.toList());
-        nombreMois.forEach((t) -> {
-            System.err.println("==>> " + t);
-        });
+        
         if (!nombreMois.isEmpty()) {
             JSONObject json;
             for (int i = start; i <= total; i += limit) {
