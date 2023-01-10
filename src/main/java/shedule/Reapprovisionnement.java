@@ -177,24 +177,21 @@ public class Reapprovisionnement {
 
     public void calculStockReappro() {
         int start = 0, limit = 10, Q1 = 4, Q2 = 2, Q3 = 3;
-//        long total = loadArticleCount();
         long total = 10;
         TParameters q1 = findParameters(DateConverter.Q1);
         if (q1 != null) {
-            Q1 = Integer.valueOf(q1.getStrVALUE().trim());
+            Q1 = Integer.parseInt(q1.getStrVALUE().trim());
         }
         TParameters q2 = findParameters(DateConverter.Q2);
         if (q2 != null) {
-            Q2 = Integer.valueOf(q2.getStrVALUE().trim());
+            Q2 = Integer.parseInt(q2.getStrVALUE().trim());
         }
         TParameters q3 = findParameters(DateConverter.Q3);
         if (q3 != null) {
-            Q3 = Integer.valueOf(q3.getStrVALUE().trim());
+            Q3 = Integer.parseInt(q3.getStrVALUE().trim());
         }
         List<LocalDate> nombreMois = nombreMoisPleinsConsommation(Q3).stream().sorted().collect(Collectors.toList());
-        nombreMois.forEach((t) -> {
-            System.err.println("==>> " + t);
-        });
+    
         if (!nombreMois.isEmpty()) {
             JSONObject json;
             for (int i = start; i <= total; i += limit) {
@@ -241,7 +238,7 @@ public class Reapprovisionnement {
         }
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void init() {
         try {
             TParameters semois = em.find(TParameters.class, "SEMOIS");

@@ -16,7 +16,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -56,7 +55,7 @@ public class DailyStockTask implements Runnable {
             boolean canContinue = false;
             try (Statement s = con.createStatement(); ResultSet rs = s.executeQuery("SELECT o.* FROM t_parameters o WHERE str_KEY='KEY_VALORISATION_JOURNALIERE'")) {
                 while (rs.next()) {
-                    canContinue = Integer.valueOf(rs.getString("str_VALUE").trim()) == 1;
+                    canContinue = Integer.parseInt(rs.getString("str_VALUE").trim()) == 1;
                     break;
                 }
             }
@@ -72,7 +71,7 @@ public class DailyStockTask implements Runnable {
                 LOG.log(Level.INFO, "daily stock snapshot end at {0} ,duration in seconde", new Object[]{endAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), ChronoUnit.SECONDS.between(startAt, endAt)});
             }
         } catch (SQLException e) {
-            e.printStackTrace(System.err);
+            
         }
 //        updateStock();
     }
@@ -80,9 +79,9 @@ public class DailyStockTask implements Runnable {
     private boolean findById() {
         try {
             TParameters tp = getEntityManager().find(TParameters.class, "KEY_VALORISATION_JOURNALIERE");
-            return Integer.valueOf(tp.getStrVALUE()) == 1;
+            return Integer.parseInt(tp.getStrVALUE()) == 1;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+           
             return false;
         }
     }
@@ -103,11 +102,10 @@ public class DailyStockTask implements Runnable {
         
         try {
             TypedQuery<TStockSnapshot> q = getEntityManager().createNamedQuery("TStockSnapshot.findAll", TStockSnapshot.class);
-//            q.setFirstResult(n);
             q.setMaxResults(e);
             return q.getResultList();
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+            
             return Collections.emptyList();
         }
         
@@ -142,7 +140,7 @@ public class DailyStockTask implements Runnable {
                                 .prixPaf(s.getPrixPaf())
                                 .prixUni(s.getPrixUni())
                                 .qty(s.getQty())
-                                .stockOfDay(Integer.valueOf(s.getTStockSnapshotPK().getId().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
+                                .stockOfDay(Integer.parseInt(s.getTStockSnapshotPK().getId().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
                 );
                 entityManager.merge(snapshot);
                 entityManager.remove(entityManager.merge(s));
@@ -160,7 +158,7 @@ public class DailyStockTask implements Runnable {
     public void migrerStock() {
         int e = 365;
         List<TStockSnapshot> l ;
-        Instant start = Instant.now();
+       
      
         while (true) {
             l = list(e);
@@ -176,8 +174,8 @@ public class DailyStockTask implements Runnable {
         if (findById()) {
             try {
                 
-                final LocalDate dateStock_ = getDateStock();
-                int dateAsInt = Integer.valueOf(dateStock_.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+                final LocalDate thatDateStock = getDateStock();
+                int dateAsInt = Integer.parseInt(thatDateStock.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
                 List<TFamilleStock> list = findAll();
                 Iterator<TFamilleStock> iterator = list.iterator();
                 userTransaction.begin();
@@ -210,7 +208,7 @@ public class DailyStockTask implements Runnable {
                 userTransaction.commit();
                 migrerStock();
             } catch (Exception e) {
-                e.printStackTrace(System.err);
+               
             }
         }
         
