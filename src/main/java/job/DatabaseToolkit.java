@@ -376,7 +376,7 @@ public class DatabaseToolkit {
             }
             userTransaction.commit();
 
-        } catch (Exception e) {
+        } catch (IllegalStateException | NumberFormatException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
             LOG.log(Level.SEVERE, "===>> updateStockDailyValue", e);
         }
     }

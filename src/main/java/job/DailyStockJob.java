@@ -6,7 +6,6 @@
 package job;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import javax.annotation.Resource;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
