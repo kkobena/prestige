@@ -49,7 +49,6 @@ public class StockReapproServiceImpl implements StockReapproService {
     private EntityManager em;
     @Inject
     private UserTransaction userTransaction;
-    private final String status = "enable";
 
     @Override
     public void execute() {
@@ -75,7 +74,6 @@ public class StockReapproServiceImpl implements StockReapproService {
             Date now = new Date();
             LOG.log(Level.INFO, "REAPPRO COMPUTE BEGIN AT ======>>>  {0} ", new Object[]{LocalDateTime.now()});
             userTransaction.begin();
-
             List<Produit> boiteCh = new ArrayList<>();
             Map<String, Integer> deconditiones = new HashMap<>();
             fetchConsommationProduit(threeMonthAgo, lastMonth).forEach((t) -> {
@@ -99,34 +97,8 @@ public class StockReapproServiceImpl implements StockReapproService {
                 }
 
             });
-            boiteCh.forEach((produit) -> {
-                int conso = produit.getConsommation();
-                int itemQty = produit.getItemQuantity();
-                Integer itemQtySold = deconditiones.remove(produit.getProduitId());
-                if (itemQtySold != null) {
-                    int itemConso = (int) Math.ceil(itemQty / Double.valueOf(itemQtySold));
-                    conso += itemConso;
-                }
-
-                updateTFamille(produit.getProduitId(), compute(conso, dayStock, delayReappro), now);
-            });
-            deconditiones.forEach((k, v) -> {
-                TFamille famille = this.em.find(TFamille.class, k);
-                if (famille.getStrSTATUT().equals(status)) {
-                    int itemConso = (int) Math.ceil(famille.getIntNUMBERDETAIL() / Double.valueOf(v));
-                    Reappro r = compute(itemConso, dayStock, delayReappro);
-                    famille.setIntSEUILMIN(r.getSeuilMin());
-                    famille.setIntSEUILMAX(r.getSeuilMax());
-                    famille.setIntQTEREAPPROVISIONNEMENT(r.getQuantity());
-                    famille.setDtUPDATED(now);
-                    famille.setDtLASTUPDATESEUILREAPPRO(now);
-
-                    this.em.merge(famille);
-                }
-            });
-            produitsInvendus(threeMonthAgo, lastMonth).forEach((tuple) -> {
-                updateTFamilleInvendus(tuple.get("id", String.class), now);
-            });
+            computeBoiteCh(boiteCh, deconditiones, dayStock, delayReappro, now);
+            computeInvendus(lastMonth, threeMonthAgo, deconditiones, dayStock, delayReappro, now);
             TParameters p = getParameters("KEY_DAY_SEUIL_REAPPRO");
             p.setStrVALUE(LocalDate.now().toString());
             p.setDtUPDATED(now);
@@ -137,6 +109,36 @@ public class StockReapproServiceImpl implements StockReapproService {
             LOG.log(Level.SEVERE, null, e);
         }
         LOG.log(Level.INFO, "REAPPRO COMPUTE END AT ======>>>  {0} ", new Object[]{LocalDateTime.now()});
+
+    }
+
+    private void computeBoiteCh(List<Produit> boiteCh, Map<String, Integer> deconditiones, final int dayStock, final int delayReappro, Date now) {
+        boiteCh.forEach((produit) -> {
+            int conso = produit.getConsommation();
+            int itemQty = produit.getItemQuantity();
+            Integer itemQtySold = deconditiones.remove(produit.getProduitId());
+            if (itemQtySold != null) {
+                int itemConso = (int) Math.ceil(itemQty / Double.valueOf(itemQtySold));
+                conso += itemConso;
+            }
+
+            updateTFamille(produit.getProduitId(), compute(conso, dayStock, delayReappro), now);
+        });
+    }
+
+    private void computeInvendus(LocalDate lastMonth,
+            LocalDate threeMonthAgo, Map<String, Integer> deconditiones, final int dayStock, final int delayReappro, Date now) {
+
+        produitsInvendus(threeMonthAgo, lastMonth).forEach((tuple) -> {
+            String produitId = tuple.get("id", String.class);
+            Integer itemQty = deconditiones.remove(produitId);
+            if (itemQty != null) {
+                int conso = (int) Math.ceil(tuple.get("itemQuantity", Integer.class) / Double.valueOf(itemQty));
+                updateTFamille(produitId, compute(conso, dayStock, delayReappro), now);
+            } else {
+                updateTFamilleInvendus(tuple.get("id", String.class), now);
+            }
+        });
 
     }
 
@@ -157,7 +159,7 @@ public class StockReapproServiceImpl implements StockReapproService {
     }
 
     private List<Tuple> produitsInvendus(LocalDate threeMonthAgo, LocalDate lastMonth) {
-        String sql = "SELECT pr.lg_FAMILLE_ID AS id FROM t_famille pr WHERE pr.bool_DECONDITIONNE=0 AND pr.lg_FAMILLE_ID NOT IN ( SELECT f.lg_FAMILLE_ID FROM  t_preenregistrement_detail d,t_famille f,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND f.lg_FAMILLE_ID=d.lg_FAMILLE_ID "
+        String sql = "SELECT pr.lg_FAMILLE_ID AS id,pr.int_NUMBERDETAIL AS itemQuantity FROM t_famille pr WHERE pr.bool_DECONDITIONNE=0 AND pr.lg_FAMILLE_ID NOT IN ( SELECT f.lg_FAMILLE_ID FROM  t_preenregistrement_detail d,t_famille f,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND f.lg_FAMILLE_ID=d.lg_FAMILLE_ID "
                 + " AND f.str_STATUT='enable' AND p.str_STATUT='is_Closed' AND p.int_PRICE >0 AND p.b_IS_CANCEL=0 AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2)";
         try {
             Query q = em.createNativeQuery(sql, Tuple.class);
@@ -171,7 +173,7 @@ public class StockReapproServiceImpl implements StockReapproService {
     }
 
     private void updateTFamille(String produitId, Reappro reappro, Date now) {
-       
+
         CriteriaBuilder cb = this.em.getCriteriaBuilder();
         CriteriaUpdate<TFamille> update = cb.
                 createCriteriaUpdate(TFamille.class);
@@ -184,8 +186,9 @@ public class StockReapproServiceImpl implements StockReapproService {
         update.where(cb.equal(root.get(TFamille_.lgFAMILLEID), produitId));
         this.em.createQuery(update).executeUpdate();
     }
-private void updateTFamilleInvendus(String produitId, Date now) {
-       
+
+    private void updateTFamilleInvendus(String produitId, Date now) {
+
         CriteriaBuilder cb = this.em.getCriteriaBuilder();
         CriteriaUpdate<TFamille> update = cb.
                 createCriteriaUpdate(TFamille.class);
@@ -198,6 +201,7 @@ private void updateTFamilleInvendus(String produitId, Date now) {
         update.where(cb.equal(root.get(TFamille_.lgFAMILLEID), produitId));
         this.em.createQuery(update).executeUpdate();
     }
+
     private TParameters getParameters(String key) {
         try {
             return em.getReference(TParameters.class, key);
@@ -208,7 +212,7 @@ private void updateTFamilleInvendus(String produitId, Date now) {
     }
 
     private boolean checkExecutePossible() {
-     
+
         TParameters p = getParameters("KEY_DAY_SEUIL_REAPPRO");//derniere date de mise a jour stock reappro
         if (p == null) {
             return false;
