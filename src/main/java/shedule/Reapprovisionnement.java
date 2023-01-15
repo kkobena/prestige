@@ -100,7 +100,7 @@ public class Reapprovisionnement {
 
             int qte = adder.intValue();
             if (qte > 0) {
-                return (int) Math.ceil(qteDetail / adder.intValue());
+                return (int) Math.ceil(qte /qteDetail);
             }
             return 0;
 
