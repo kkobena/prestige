@@ -188,7 +188,7 @@ public class CommandeServiceImpl implements CommandeService {
             List<TBonLivraisonDetail> lstTBonLivraisonDetail = bonLivraisonDetail(id, emg);
             if (Integer.parseInt(tp.getStrVALUE()) == 1) {
                 if (isEntreeStockIsAuthorize(lstTBonLivraisonDetail)) {
-                    return json.put("success", false).put("msg", "La reception de certains produits n'a pas ete faites. Veuillez verifier vos saisie");
+                    return json.put("success", false).put("msg", "La reception de certains produits n'a pas ete faites. Veuillez verifier vos saisies");
                 }
             }
             for (TBonLivraisonDetail bn : lstTBonLivraisonDetail) {

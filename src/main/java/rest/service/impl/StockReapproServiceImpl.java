@@ -83,7 +83,7 @@ public class StockReapproServiceImpl implements StockReapproService {
                 short hasChild = t.get("hasChild", Byte.class).shortValue();
                 short isChild = t.get("isChild", Byte.class).shortValue();
                 Integer itemQuantity = t.get("itemQuantity", Integer.class);
-
+               
                 if (StringUtils.isEmpty(parentId) && (hasChild == 0)) {
                     Reappro reappro = compute(consommation, dayStock, delayReappro);
                     updateTFamille(id, reappro, now);
@@ -97,6 +97,7 @@ public class StockReapproServiceImpl implements StockReapproService {
                 }
 
             });
+          
             computeBoiteCh(boiteCh, deconditiones, dayStock, delayReappro, now);
             computeInvendus(lastMonth, threeMonthAgo, deconditiones, dayStock, delayReappro, now);
             TParameters p = getParameters("KEY_DAY_SEUIL_REAPPRO");
@@ -118,12 +119,16 @@ public class StockReapproServiceImpl implements StockReapproService {
             int itemQty = produit.getItemQuantity();
             Integer itemQtySold = deconditiones.remove(produit.getProduitId());
             if (itemQtySold != null) {
-                int itemConso = (int) Math.ceil(itemQty / Double.valueOf(itemQtySold));
+                int itemConso = computeItemConso(itemQtySold, itemQty);
                 conso += itemConso;
             }
 
             updateTFamille(produit.getProduitId(), compute(conso, dayStock, delayReappro), now);
         });
+    }
+
+    private int computeItemConso(int conso, int quantity) {
+        return (int) Math.ceil(conso / Double.valueOf(quantity));
     }
 
     private void computeInvendus(LocalDate lastMonth,
@@ -133,7 +138,7 @@ public class StockReapproServiceImpl implements StockReapproService {
             String produitId = tuple.get("id", String.class);
             Integer itemQty = deconditiones.remove(produitId);
             if (itemQty != null) {
-                int conso = (int) Math.ceil(tuple.get("itemQuantity", Integer.class) / Double.valueOf(itemQty));
+                int conso = computeItemConso(itemQty, tuple.get("itemQuantity", Integer.class));
                 updateTFamille(produitId, compute(conso, dayStock, delayReappro), now);
             } else {
                 updateTFamilleInvendus(tuple.get("id", String.class), now);
@@ -146,7 +151,6 @@ public class StockReapproServiceImpl implements StockReapproService {
         String sql = "SELECT f.lg_FAMILLE_ID AS id, f.lg_FAMILLE_PARENT_ID AS parentId,SUM(d.int_QUANTITY) AS consommation, f.bool_DECONDITIONNE_EXIST AS hasChild,f.bool_DECONDITIONNE AS isChild,f.int_NUMBERDETAIL AS itemQuantity FROM  t_preenregistrement_detail d,t_famille f,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND f.lg_FAMILLE_ID=d.lg_FAMILLE_ID "
                 + " "
                 + " AND f.str_STATUT='enable' AND p.str_STATUT='is_Closed' AND p.int_PRICE >0 AND p.b_IS_CANCEL=0 AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2 GROUP BY f.lg_FAMILLE_ID";
-
         try {
             Query q = em.createNativeQuery(sql, Tuple.class);
             q.setParameter(1, java.sql.Date.valueOf(threeMonthAgo), TemporalType.DATE);
