@@ -20,25 +20,6 @@ import org.quartz.impl.StdSchedulerFactory;
  */
 public class JobStockService {
 
-
-    public void executeJobStockReappro() {
-        Scheduler scheduler;
-        try {
-            scheduler = StdSchedulerFactory.getDefaultScheduler();
-
-            JobDetail job = newJob(JobStockReappro.class).withIdentity("jobreapro", "reappromanagement").build();
-            Trigger trigger = newTrigger().withIdentity("triggerjobreapro", "reappromanagement")
-                    .startNow()
-                    .withSchedule(simpleSchedule()
-                            .withIntervalInHours(2)
-                            .repeatForever())
-                    .build();
-            scheduler.start();
-            scheduler.scheduleJob(job, trigger);
-        } catch (SchedulerException ex) {
-            ex.printStackTrace();
-        }
-    }
     // cette fonction met à jour les produits perimes
 
     public void executeJobLot() {
@@ -55,7 +36,6 @@ public class JobStockService {
             scheduler.start();
             scheduler.scheduleJob(job, trigger);
         } catch (SchedulerException ex) {
-            ex.printStackTrace();
         }
     }
 
