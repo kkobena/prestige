@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.GenerateTicketService;
 import rest.service.ReglementService;
+import util.Constant;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -57,7 +58,7 @@ public class ReglementRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         Params body = new Params();
         if (!"".equals(query)) {
@@ -80,7 +81,7 @@ public class ReglementRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         clotureVenteParams.setUserId(tu);
         JSONObject json = reglementService.reglerDiffere(clotureVenteParams);
@@ -94,7 +95,7 @@ public class ReglementRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         clotureVenteParams.setUserId(tu);
         JSONObject json = reglementService.reglerDiffereAll(clotureVenteParams);
@@ -111,7 +112,7 @@ public class ReglementRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = reglementService.reglementsDifferes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), clientId);
         return Response.ok().entity(jsono.toString()).build();
@@ -126,7 +127,7 @@ public class ReglementRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = reglementService.detailsReglmentDiffere(ref);
         return Response.ok().entity(jsono.toString()).build();
@@ -138,7 +139,7 @@ public class ReglementRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = generateTicketService.ticketReglementDiffere(ref);
         return Response.ok().entity(json.toString()).build();
@@ -149,7 +150,7 @@ public class ReglementRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = generateTicketService.ticketReglementCarnet(ref);
         return Response.ok().entity(json.toString()).build();

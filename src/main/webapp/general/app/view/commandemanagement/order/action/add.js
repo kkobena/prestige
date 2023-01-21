@@ -72,8 +72,11 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         var store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
             data: [
-                {str_TYPE_TRANSACTION: 'PRIX', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE'},
+               // {str_TYPE_TRANSACTION: 'PRIX', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE'},
+                {str_TYPE_TRANSACTION: 'PRIX_VENTE_DIFF', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE'},
+                 {str_TYPE_TRANSACTION: 'PRIX_VENTE_PLUS_30', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE DE 30F'},
                 {str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous'}
+                
             ]
         });
 
@@ -100,10 +103,11 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_orderdetails_process + "?lg_ORDER_ID=" + ref,
+               
+                url: '../api/v1/commande/commande-en-cours-items',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 },
                 timeout: 180000
@@ -588,19 +592,15 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     typeAhead: true,
                                     queryMode: 'local',
                                     emptyText: 'Filtre article...',
+                                    value:'ALL',
                                     flex: 1,
                                     listeners: {
                                         select: function (cmp) {
-                                            var value = cmp.getValue();
+                                            const value = cmp.getValue();
                                             str_TYPE_TRANSACTION = value;
-//                                            ../webservices/commandemanagement/orderdetail/ws_data.jsp
-                                            var val = Ext.getCmp('rechercherDetail');
-                                            Ext.getCmp('gridpanelID').getStore().load({
-                                                params: {
-                                                    search_value: val.getValue(),
-                                                    filtre: value
-                                                }
-                                            });
+
+                                           
+                                          Me_Window.onRechClick();
                                         }
                                     }
                                 }
@@ -612,10 +612,27 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 pageSize: itemsPerPageGrid,
                                 store: store_details_order,
                                 displayInfo: true,
-                                plugins: new Ext.ux.ProgressBarPager()
+                                plugins: new Ext.ux.ProgressBarPager(),
+                                bebeforechange: function (me,page, currentPage){
+                                  
+        const myProxy = me.getStore().getProxy();
+        const val = Ext.getCmp('rechercherDetail');
+        const filtre= Ext.getCmp('str_TYPE_TRANSACTION');
+    
+        myProxy.params = {
+            query: '',
+                filtre:'ALL',
+                orderId:ref
+
+        };
+          myProxy.setExtraParam('query', val.getValue());
+        myProxy.setExtraParam('filtre', filtre.getValue());
+        myProxy.setExtraParam('orderId', ref);
+                                }
                             },
                             listeners: {
                                 scope: this
+                                
                             }
                         }
 
@@ -731,7 +748,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         });
     },
     loadStore: function () {
-        Ext.getCmp('gridpanelID').getStore().load();
+        Me_Window.onRechClick();
     },
 
     onbtndetail: function () {
@@ -783,10 +800,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
-    checkIfGridIsEmpty: function () {
-        var gridTotalCount = Ext.getCmp('gridpanelID').getStore().getTotalCount();
-        return gridTotalCount;
-    },
+    
     updateCip: function (win, formulaire) {
         var me = this;
         if (formulaire.isValid()) {
@@ -1017,7 +1031,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                             failure: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
+                               
                                 console.log("Bug " + response.responseText);
                                 Ext.MessageBox.alert('Error Message', response.responseText);
                             }
@@ -1026,12 +1040,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                     }
                 });
     },
-    onSelectionChange: function (model, records) {
-        var rec = records[0];
-        if (rec) {
-            this.getForm().loadRecord(rec);
-        }
-    },
+   
     onbtnsave: function () {
 
         Ext.MessageBox.confirm('Message',
@@ -1051,17 +1060,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     Ext.MessageBox.alert('Error Message', object.errors);
                                     return;
                                 }
-/*
-                                Ext.MessageBox.confirm('Message',
-                                        'Imprimer le bon de commande?',
-                                        function (btn) {
-                                            if (btn === 'yes') {
-                                                Me_Window.onPdfClick(ref);
-                                                return;
-                                            }
-                                            Me_Window.onbtncancel();
-                                        });
-                            */},
+},
                             failure: function (response)
                             {
                                 var object = Ext.JSON.decode(response.responseText, false);
@@ -1071,7 +1070,6 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                         });
                     }
                 });
-//        this.up('window').close();
     },
     onDetailClick: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
@@ -1093,12 +1091,15 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         Me_Window.onbtncancel();
     },
     onRechClick: function () {
-        var val = Ext.getCmp('rechercherDetail');
+        const val = Ext.getCmp('rechercherDetail');
+        const filtre= Ext.getCmp('str_TYPE_TRANSACTION');
         Ext.getCmp('gridpanelID').getStore().load({
             params: {
-                search_value: val.getValue()
+                query: val.getValue(),
+                filtre:filtre.getValue(),
+                orderId:ref
             }
-        }, url_services_data_orderdetails_process);
+        });
     }
 });
 function onfiltercheckingCommande() {

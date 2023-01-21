@@ -29,6 +29,7 @@ import dal.TFamilleGrossiste;
 import dal.TFamille_;
 import dal.TGrossiste_;
 import dal.TMouvementprice;
+import dal.TOrder_;
 import dal.TParameters;
 import dal.TUser;
 import dal.TZoneGeographique;
@@ -42,6 +43,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
@@ -67,8 +69,11 @@ import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.OrderService;
+import rest.service.dto.CommandeEncourDetailDTO;
+import rest.service.dto.CommandeFiltre;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
+import util.FunctionUtils;
 
 /**
  *
@@ -127,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
                 TFamille famille = d.getLgFAMILLEID();
                 TFamilleStock stock = getTProductItemStock(famille.getLgFAMILLEID(), emp);
                 if (stock != null) {
-                    
+
                     createBLDetail(OTBonLivraison, grossiste, famille, d, famille.getLgZONEGEOID(), stock.getIntNUMBERAVAILABLE());
                     d.setStrSTATUT(Parameter.STATUT_ENTREE_STOCK);
                     d.setDtUPDATED(new Date());
@@ -191,7 +196,7 @@ public class OrderServiceImpl implements OrderService {
         OTBonLivraisonDetail.setLgZONEGEOID(OTZoneGeographique);
         OTBonLivraisonDetail.setIntQTECMDE(d.getIntQTEREPGROSSISTE());
         OTBonLivraisonDetail.setIntQTERECUE(d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT());
-       
+
         OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
         OTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
         OTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
@@ -689,7 +694,7 @@ public class OrderServiceImpl implements OrderService {
         if (dto.getPrixVente() != grossiste.getIntPRICE()) {
             String desc = "Modification du prix de vente du produit :" + f.getStrNAME() + " ancien prix: " + grossiste.getIntPRICE() + " nouveau prix :" + dto.getPrixVente();
             logService.updateItem(user, grossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
-             notificationService.save(new Notification()
+            notificationService.save(new Notification()
                     .canal(Canal.SMS_EMAIL)
                     .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE)
                     .message(desc)
@@ -808,4 +813,79 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    public List<CommandeEncourDetailDTO> fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit, boolean all) {
+        try {
+
+            CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+            CriteriaQuery<TOrderDetail> cq = cb.createQuery(TOrderDetail.class);
+            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
+            cq.select(root).orderBy(cb.desc(root.get(TOrderDetail_.dtUPDATED)), cb.asc(root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
+            List<Predicate> predicates = fetchOrderItemsPredicats(cb, root, orderId, filtre, query);
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            TypedQuery<TOrderDetail> q = getEmg().createQuery(cq);
+            if (!all && filtre != CommandeFiltre.PRIX_VENTE_PLUS_30) {
+                q.setFirstResult(start);
+                q.setMaxResults(limit);
+            }
+            if (filtre == CommandeFiltre.PRIX_VENTE_PLUS_30) {
+                return q.getResultList().stream().filter(FunctionUtils.ECART_PRIX_VENTE_30).map(CommandeEncourDetailDTO::new).collect(Collectors.toList());
+            }
+            return q.getResultList().stream().map(CommandeEncourDetailDTO::new).collect(Collectors.toList());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private List<Predicate> fetchOrderItemsPredicats(CriteriaBuilder cb, Root<TOrderDetail> root, String orderId, CommandeFiltre filtre, String query) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.equal(root.get(TOrderDetail_.lgORDERID).get(TOrder_.lgORDERID), orderId));
+
+        CommandeFiltre commandeFiltre = Objects.isNull(filtre) ? CommandeFiltre.ALL : filtre;
+
+        switch (commandeFiltre) {
+            case PRIX_VENTE_DIFF:
+                predicates.add(cb.notEqual(root.get(TOrderDetail_.intPRICEDETAIL), root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.intPRICE)));
+                break;
+            case PRIX_VENTE_PLUS_30:
+            case ALL:
+                break;
+            default:
+                break;
+        }
+        if (StringUtils.isNotEmpty(query)) {
+            predicates.add(cb.or(cb.like(root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"),
+                    cb.like(root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%")));
+        }
+        return predicates;
+    }
+
+    @Override
+    public JSONObject fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit) {
+        List<CommandeEncourDetailDTO> data = this.fetchOrderItems(filtre, orderId, query, start, limit, false);
+        if (filtre == CommandeFiltre.PRIX_VENTE_PLUS_30) {
+            return FunctionUtils.returnData(data);
+        }
+        return FunctionUtils.returnData(data, fetchOrderItemsCount(filtre, orderId, query));
+    }
+
+    public long fetchOrderItemsCount(CommandeFiltre filtre, String orderId, String query) {
+        try {
+
+            CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
+            cq.select(cb.count(root));
+            List<Predicate> predicates = fetchOrderItemsPredicats(cb, root, orderId, filtre, query);
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            TypedQuery<Long> q = getEmg().createQuery(cq);
+
+            return q.getSingleResult().intValue();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
 }

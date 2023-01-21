@@ -21,6 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.DashBoardService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -49,7 +50,7 @@ public class DashBoardRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = dashBoardService.donneesCreditAccordesView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),  tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, query, start, limit, false);
         return Response.ok().entity(jsono.toString()).build();
@@ -68,7 +69,7 @@ public class DashBoardRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         JSONObject jsono = dashBoardService.donneesReglementsTpView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, query, start, limit, false);
@@ -86,7 +87,7 @@ public class DashBoardRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = dashBoardService.donneesRecapActiviteView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, "");
         return Response.ok().entity(jsono.toString()).build();

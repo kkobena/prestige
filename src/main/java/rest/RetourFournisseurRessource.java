@@ -25,6 +25,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import rest.service.RetourFournisseurService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -48,7 +49,7 @@ public class RetourFournisseurRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         List<RetourDetailsDTO> data = retourFournisseurService.loadDetailRetourFournisseur(retourId);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
@@ -62,7 +63,7 @@ public class RetourFournisseurRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUser(tu);
         
@@ -81,7 +82,7 @@ public class RetourFournisseurRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         RetourDetailsDTO data = retourFournisseurService.addItem(params);
@@ -99,7 +100,7 @@ public class RetourFournisseurRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         RetourDetailsDTO data = retourFournisseurService.updateItem(params);
@@ -117,7 +118,7 @@ public class RetourFournisseurRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         retourFournisseurService.removeItem(id);
@@ -133,7 +134,7 @@ public class RetourFournisseurRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         retourFournisseurService.returnFullBonLivraison(id,params.getLgMOTIFRETOUR(),tu);

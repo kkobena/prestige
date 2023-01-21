@@ -23,6 +23,8 @@ import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.CommandeEncourDetailDTO;
+import rest.service.dto.CommandeFiltre;
 
 /**
  *
@@ -85,4 +87,8 @@ public interface OrderService {
     TGrossiste findGrossiste(String id);
 
     JSONObject updateScheduled(String idProduit, boolean scheduled) throws JSONException;
+
+    List<CommandeEncourDetailDTO> fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit, boolean all);
+
+    JSONObject fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit);
 }

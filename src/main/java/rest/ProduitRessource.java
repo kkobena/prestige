@@ -33,6 +33,7 @@ import rest.service.MvtProduitService;
 import rest.service.ProduitService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
+import util.Constant;
 
 /**
  *
@@ -58,7 +59,7 @@ public class ProduitRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         QueryDTO body = new QueryDTO();
         body.setLimit(limit);
@@ -76,7 +77,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = produitService.activerProduitDesactive(id, tu);
         return Response.ok().entity(json.toString()).build();
@@ -88,7 +89,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = produitService.desactiverProduitDesactive(id, tu);
         return Response.ok().entity(json.toString()).build();
@@ -100,7 +101,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = produitService.supprimerProduitDesactive(id, tu);
         return Response.ok().entity(json.toString()).build();
@@ -112,7 +113,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setOperateur(tu);
         JSONObject json = mvtProduitService.validerRetourFournisseur(params);
@@ -159,7 +160,7 @@ public class ProduitRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         MvtArticleParams params = new MvtArticleParams();
         params.setAll(false);
@@ -187,7 +188,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateViewDatas(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
@@ -204,7 +205,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateVentes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
@@ -222,7 +223,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateAjustement(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), positif);
         return Response.ok().entity(jsono.toString()).build();
@@ -240,7 +241,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateDecond(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), positif);
         return Response.ok().entity(jsono.toString()).build();
@@ -257,7 +258,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateRetourFour(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
@@ -274,7 +275,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateEntree(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
@@ -291,7 +292,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateInv(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
@@ -308,7 +309,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateAnnulation(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
@@ -325,7 +326,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclatePerime(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
@@ -342,7 +343,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.suivitEclateRetourDepot(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
@@ -362,7 +363,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.valorisationStock(mode, LocalDate.parse(dtStart),
                 lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
@@ -384,7 +385,7 @@ public class ProduitRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         if (StringUtils.isEmpty(dtEnd)) {
             dtEnd = LocalDate.now().toString();

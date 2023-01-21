@@ -3146,7 +3146,7 @@ public class orderManagement extends bllBase {
             Root<TOrderDetail> root = cq.from(TOrderDetail.class);
             cq.select(root).orderBy(cb.desc(root.get(TOrderDetail_.dtUPDATED)), cb.asc(root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
             List<Predicate> predicates = predicats(cb, root, lg_ORDER_ID, filtre, searchValue);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TOrderDetail> q = em.createQuery(cq);
             q.setFirstResult(start);
             q.setMaxResults(limit);
@@ -3165,7 +3165,7 @@ public class orderManagement extends bllBase {
             Root<TOrderDetail> root = cq.from(TOrderDetail.class);
             cq.select(cb.count(root));
             List<Predicate> predicates = predicats(cb, root, lg_ORDER_ID, filtre, searchValue);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = em.createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {

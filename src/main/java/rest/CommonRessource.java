@@ -40,6 +40,7 @@ import rest.service.CommonService;
 import rest.service.LogService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
+import util.Constant;
 
 /**
  *
@@ -153,7 +154,7 @@ public class CommonRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         TEmplacement emplacement = tu.getLgEMPLACEMENTID();
         long total = commonService.findUsers(query, emplacement.getLgEMPLACEMENTID());
