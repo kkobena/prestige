@@ -17,6 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
 import rest.service.TvaDataService;
+import util.Constant;
 
 /**
  *
@@ -38,7 +39,7 @@ public class StatistiqueTvaRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         Params params = new Params();
         params.setDtEnd(dtEnd);
@@ -54,7 +55,7 @@ public class StatistiqueTvaRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         Params params = new Params();
         params.setDtEnd(dtEnd);

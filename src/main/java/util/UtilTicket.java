@@ -15,7 +15,7 @@ import javax.print.PrintServiceLookup;
  *
  * @author koben
  */
-public class UtilTicket {
+public final class UtilTicket {
       public static PrintService getPrintService(String printername) {
 
         // Initalize print service
@@ -52,4 +52,8 @@ public class UtilTicket {
 
         return printers;
     }
+
+    private UtilTicket() {
+    }
+    
 }

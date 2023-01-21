@@ -27,6 +27,7 @@ import org.json.JSONObject;
 import rest.service.MvtProduitService;
 import rest.service.impl.ImportationVente;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -50,7 +51,7 @@ public class DepotRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = mvtProduitService.validerRetourDepot(id, tu);
         return Response.ok().entity(json.toString()).build();

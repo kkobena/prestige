@@ -27,6 +27,7 @@ import org.json.JSONObject;
 import rest.service.FicheArticleService;
 import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -59,7 +60,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0);
@@ -75,7 +76,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = ficheArticleService.modifierArticleDatePeremption(id, datePeremption);
         return Response.ok().entity(jsono.toString()).build();
@@ -95,7 +96,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = ficheArticleService.articleSurStock(tu, query, codeFamile, codeRayon, codeGrossiste, nbreMois, nbreConsommation, 0, 0);
         return Response.ok().entity(jsono.toString()).build();
@@ -119,7 +120,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = ficheArticleService.comparaisonStock(tu, query, filtreStock, filtreSeuil, codeFamile, codeRayon, codeGrossiste, stock, seuil, start, limit);
         return Response.ok().entity(jsono.toString()).build();
@@ -137,7 +138,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = ficheArticleService.produitConsomamation(tu, query, dtStart, dtEnd, id, 0, 0);
         return Response.ok().entity(jsono.toString()).build();
@@ -161,7 +162,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         List<ArticleDTO> datas = ficheArticleService.comparaisonStock(tu, query, filtreStock, filtreSeuil, codeFamile, codeRayon, codeGrossiste, stock, seuil, 0, 0, true);
         JSONObject json = suggestionService.makeSuggestionFromArticleInvendus(datas, tu);
@@ -176,7 +177,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         boolean res = ficheArticleService.updateProduitAccount(id, account.isCheckug());
         return Response.ok().entity(new JSONObject().put("success", res).toString()).build();
@@ -195,7 +196,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = ficheArticleService.produitAccounts(query, rayon, filtre, tu, start, limit);
         return Response.ok().entity(json.toString()).build();
@@ -217,7 +218,7 @@ public class FicheArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = ficheArticleService.saisiePerimes(query, dtStart, dtEnd, tu, codeFamile, codeRayon, codeGrossiste, start, limit);
         return Response.ok().entity(jsono.toString()).build();

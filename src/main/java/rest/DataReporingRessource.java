@@ -23,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.DataReporingService;
 import rest.service.SuggestionService;
+import util.Constant;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -59,7 +60,7 @@ public class DataReporingRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = dataReporingService.margeProduitsVendus(dtStart, dtEnd, codeFamile, critere, query, tu, codeRayon, codeGrossiste, start, limit, filtre);
         return Response.ok().entity(jsono.toString()).build();
@@ -81,7 +82,7 @@ public class DataReporingRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = dataReporingService.statsUnintesVendues(dtStart, dtEnd, codeFamile, query, tu, codeRayon, codeGrossiste, start, limit);
         return Response.ok().entity(jsono.toString()).build();
@@ -104,7 +105,7 @@ public class DataReporingRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = dataReporingService.statsUnintesVenduesparLaboratoire(dtStart, dtEnd, codeFamile, query, tu, codeRayon, codeGrossiste, laboratoireId, start, limit);
         return Response.ok().entity(jsono.toString()).build();
@@ -127,7 +128,7 @@ public class DataReporingRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = dataReporingService.statsUnintesVenduesparGamme(dtStart, dtEnd, codeFamile, query, tu, codeRayon, codeGrossiste, gammeId, start, limit);
         return Response.ok().entity(jsono.toString()).build();
@@ -151,7 +152,7 @@ public class DataReporingRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = dataReporingService.statsArticlesInvendus(dtStart, dtEnd, codeFamile, query, tu, codeRayon, codeGrossiste, stock, filtre, start, limit);
         return Response.ok().entity(jsono.toString()).build();
@@ -174,7 +175,7 @@ public class DataReporingRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         List<ArticleDTO> datas = dataReporingService.statsArticlesInvendus(dtStart, dtEnd, codeFamile, query, tu, codeRayon, codeGrossiste, stock, filtre, 0, 0, true);
         JSONObject jsono = suggestionService.makeSuggestionFromArticleInvendus(datas,tu);

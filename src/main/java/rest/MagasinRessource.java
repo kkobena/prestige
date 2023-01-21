@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.MagasinService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -44,7 +45,7 @@ public class MagasinRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = magasinService.findAllDepots(query);
 
@@ -60,7 +61,7 @@ public class MagasinRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
        
         JSONObject jsono = magasinService.findAllDepots(query, "2");

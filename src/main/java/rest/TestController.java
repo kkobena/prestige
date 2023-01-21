@@ -25,7 +25,7 @@ import rest.service.MouvementProduitService;
 import rest.service.SalesStatsService;
 import rest.service.impl.CommonCorrection;
 import toolkits.parameters.commonparameter;
-
+import util.Constant;
 /**
  *
  * @author koben
@@ -65,7 +65,7 @@ public class TestController {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         mouvementProduitService.updateVenteStock2(id);
         return Response.ok().build();
@@ -77,7 +77,7 @@ public class TestController {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         int result = commonCorrection.updateFamille();
         return Response.ok(result).build();
@@ -89,7 +89,7 @@ public class TestController {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         int result = commonCorrection.updateVente();
         return Response.ok(result).build();
