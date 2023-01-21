@@ -29,6 +29,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.MouvementProduitService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -52,7 +53,7 @@ public class AjustRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setOperateur(tu);
         JSONObject json = mvtProduitService.creerAjustement(params);
@@ -122,7 +123,7 @@ public class AjustRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         boolean canCancel = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.ACTIONDELETEAJUSTEMENT);

@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import rest.service.FamilleArticleService;
 import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -53,7 +54,7 @@ public class FamilleArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = familleArticleService.statistiqueParFamilleArticleView(dtStart, dtEnd, codeFamillle, query, tu, codeRayon, codeGrossiste);
         return Response.ok().entity(jsono.toString()).build();
@@ -73,7 +74,7 @@ public class FamilleArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = familleArticleService.geVingtQuatreVingt(dtStart, dtEnd, tu, codeFamillle, codeRayon, codeGrossiste, 0, 0, qtyOrCa);
         return Response.ok().entity(jsono.toString()).build();
@@ -93,7 +94,7 @@ public class FamilleArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         List<VenteDetailsDTO> datas = familleArticleService.geVingtQuatreVingt(dtStart, dtEnd, tu, codeFamillle, codeRayon, codeGrossiste, 0, 0, true, qtyOrCa);
         JSONObject jsono = suggestionService.makeSuggestion(datas);
@@ -114,7 +115,7 @@ public class FamilleArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = familleArticleService.statistiqueParGrossistesView(dtStart, dtEnd, codeFamillle, query, tu, codeRayon, codeGrossiste);
         return Response.ok().entity(jsono.toString()).build();
@@ -134,7 +135,7 @@ public class FamilleArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = familleArticleService.statistiqueParRayonsView(dtStart, dtEnd, codeFamillle, query, tu, codeRayon, codeGrossiste);
         return Response.ok().entity(jsono.toString()).build();
@@ -154,7 +155,7 @@ public class FamilleArticleRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = familleArticleService.statistiqueParFamilleArticleViewVeto(dtStart, dtEnd, codeFamillle, query, tu, codeRayon, codeGrossiste);
         return Response.ok().entity(jsono.toString()).build();

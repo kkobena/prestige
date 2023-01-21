@@ -24,6 +24,7 @@ import org.json.JSONObject;
 import rest.service.PharmaMlService;
 import shedule.Reapprovisionnement;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -47,7 +48,7 @@ public class PharmaMlResource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = pharmaMlService.envoiPharmaCommande(commandeId, LocalDate.now().plusDays(1), 0, null, null);
         return Response.ok().entity(json.toString()).build();
@@ -59,7 +60,7 @@ public class PharmaMlResource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = pharmaMlService.envoiPharmaInfosProduit(commandeId);
         return Response.ok().entity(json.toString()).build();
@@ -78,7 +79,7 @@ public class PharmaMlResource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = pharmaMlService.renvoiPharmaCommande(ruptureId,  grossiste,LocalDate.now().plusDays(1), 0, null, null);
         return Response.ok().entity(json.toString()).build();

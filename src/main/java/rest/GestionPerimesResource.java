@@ -6,9 +6,7 @@
 package rest;
 
 import commonTasks.dto.Params;
-import dal.GammeProduit;
 import dal.TUser;
-import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -26,6 +24,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import rest.service.GestionPerimesService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -47,7 +46,7 @@ public class GestionPerimesResource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = gestionPerimesService.addPerime(params.getRef(), params.getValue(), params.getRefTwo(), params.getRefParent(), tu);
         return Response.ok(json.toString()).build();
@@ -59,7 +58,7 @@ public class GestionPerimesResource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setOperateur(tu);
         JSONObject json = gestionPerimesService.updatePerime(params);
@@ -79,7 +78,7 @@ public class GestionPerimesResource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         JSONObject json = gestionPerimesService.completePerimes(id, tu);

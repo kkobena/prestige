@@ -30,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ClientService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -61,7 +62,7 @@ public class ClientRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         List<ClientDTO> data = clientService.clientDifferes(query, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
@@ -75,7 +76,7 @@ public class ClientRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         List<ClientDTO> data = clientService.clientDiffere(query, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
@@ -88,7 +89,7 @@ public class ClientRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         TClient tc = clientService.createClient(clientLambda);
@@ -102,7 +103,7 @@ public class ClientRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = clientService.createClient(clientLambda, id);
         return Response.ok().entity(json.toString()).build();
@@ -172,7 +173,7 @@ public class ClientRessource {
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         JSONObject json = clientService.updateCreateClientCarnet(client);
@@ -185,7 +186,7 @@ public class ClientRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 //        JSONObject json = clientService.updateClientAssurance(client);
         JSONObject json = clientService.updateOrCreateClientAssurance(client);
@@ -237,7 +238,7 @@ public class ClientRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = clientService.addNewTiersPayantToClient(tiersPayantDTO, clientId, typeTiersPayantId, taux);
         return Response.ok().entity(json.toString()).build();
@@ -249,7 +250,7 @@ public class ClientRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = clientService.updateClientInfos(clientDTO, clientId);
         return Response.ok().entity(json.toString()).build();
@@ -261,7 +262,7 @@ public class ClientRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         ayantDroitDTO.setLgAYANTSDROITSID(ayantDroitId);
         JSONObject json = clientService.updateAyantDroitInfos(ayantDroitDTO);

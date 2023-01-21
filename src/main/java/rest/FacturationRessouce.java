@@ -24,6 +24,7 @@ import rest.qualifier.Facturation;
 import rest.service.FacturationService;
 import rest.service.GenererFactureService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -49,7 +50,7 @@ public class FacturationRessouce {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
         JSONObject json = facturationService.update(id, o);
@@ -123,7 +124,7 @@ public class FacturationRessouce {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         facturationService.removeFacture(id);
         return Response.ok().build();

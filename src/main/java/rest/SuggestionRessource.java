@@ -37,7 +37,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
-
+import util.Constant;
 /**
  *
  * @author kkoffi
@@ -96,7 +96,7 @@ public class SuggestionRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject json = suggestionService.findCHDetailStock(id, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(json.toString()).build();

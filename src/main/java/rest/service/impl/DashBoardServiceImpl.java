@@ -276,7 +276,7 @@ public class DashBoardServiceImpl implements DashBoardService {
                 List<String> or = getPayants(query).stream().map(TTiersPayant::getLgTIERSPAYANTID).collect(Collectors.toList());
                 predicates.add(root.get(TDossierReglement_.strORGANISMEID).in(or));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Params> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -384,7 +384,6 @@ public class DashBoardServiceImpl implements DashBoardService {
             Root<TDossierReglement> root = cq.from(TDossierReglement.class);
             //String description, String ref, String refParent, long value, long nbreClient, long nbreBons
             cq.select(cb.count(root));
-//            Join<TDossierReglement, TFacture> fac = root.join(TDossierReglement_.lgFACTUREID, JoinType.INNER);
             predicates.add(cb.equal(root.get(TDossierReglement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID),
                     emplacementId));
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TDossierReglement_.dtCREATED)), java.sql.Date.valueOf(dtStart),
@@ -394,7 +393,7 @@ public class DashBoardServiceImpl implements DashBoardService {
                 List<String> or = getPayants(query).stream().map(TTiersPayant::getLgTIERSPAYANTID).collect(Collectors.toList());
                 predicates.add(root.get(TDossierReglement_.strORGANISMEID).in(or));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();
 

@@ -23,7 +23,7 @@ import org.json.JSONObject;
 import rest.service.StatistiqueRemiseService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
-
+import util.Constant;
 /**
  *
  * @author koben
@@ -53,7 +53,7 @@ public class SuiviRemiseRessource {
         
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, commonparameter.str_SHOW_VENTE);
