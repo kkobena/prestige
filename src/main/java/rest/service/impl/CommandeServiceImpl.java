@@ -186,10 +186,9 @@ public class CommandeServiceImpl implements CommandeService {
                 return json.put("success", false).put("msg", "Impossible de trouver ce bon. Verifier s'il ce bon n'est pas deja cloturé");
             }
             List<TBonLivraisonDetail> lstTBonLivraisonDetail = bonLivraisonDetail(id, emg);
-            if (Integer.parseInt(tp.getStrVALUE()) == 1) {
-                if (isEntreeStockIsAuthorize(lstTBonLivraisonDetail)) {
+            if (Integer.parseInt(tp.getStrVALUE()) == 1 && isEntreeStockIsAuthorize(lstTBonLivraisonDetail)) {
                     return json.put("success", false).put("msg", "La reception de certains produits n'a pas ete faites. Veuillez verifier vos saisie");
-                }
+                
             }
             for (TBonLivraisonDetail bn : lstTBonLivraisonDetail) {
                 TFamille OFamille = bn.getLgFAMILLEID();
@@ -238,7 +237,7 @@ public class CommandeServiceImpl implements CommandeService {
                 if (familleGrossiste != null) {
                     familleGrossiste.setIntPAF(bn.getIntPAF());
                 }
-                if (bn.getPrixUni() != null && bn.getPrixUni().compareTo(bn.getIntPRIXVENTE()) != 0) {
+                if (bn.getPrixUni() != null /*&& bn.getPrixUni().compareTo(bn.getIntPRIXVENTE()) != 0*/) {
                     OFamille.setIntPRICE(bn.getIntPRIXVENTE());
                     if (familleGrossiste != null) {
                         familleGrossiste.setIntPRICE(bn.getIntPRIXVENTE());
@@ -246,7 +245,6 @@ public class CommandeServiceImpl implements CommandeService {
                 } else if (StringUtils.isEmpty(OFamille.getIntT()) && (bn.getIntPRIXVENTE().compareTo(OFamille.getIntPRICE()) > 0)) {
                     OFamille.setIntPRICE(bn.getIntPRIXVENTE());
                     if (familleGrossiste != null) {
-                        
                         familleGrossiste.setIntPRICE(bn.getIntPRIXVENTE());
                     }
                     
@@ -258,9 +256,8 @@ public class CommandeServiceImpl implements CommandeService {
                 }
                 
                 avoirs.stream().filter(e -> e.getLgFAMILLEID().equals(OFamille))
-                        .forEach(s -> {
-                            _avoirs.add(s);
-                        });
+                        .forEach(s -> _avoirs.add(s));
+                            
             }
             
             closureOrder(order, emg);

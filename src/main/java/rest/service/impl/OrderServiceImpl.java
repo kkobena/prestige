@@ -63,6 +63,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.RandomStringGenerator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -209,7 +210,7 @@ public class OrderServiceImpl implements OrderService {
         OTBonLivraisonDetail.setIntINITSTOCK(int_INITSTOCK);
         OTBonLivraisonDetail.setIntQTEMANQUANT(OTBonLivraisonDetail.getIntQTECMDE());
         OTBonLivraisonDetail.setDtCREATED(new Date());
-        OTBonLivraisonDetail.setDtUPDATED(new Date());
+        OTBonLivraisonDetail.setDtUPDATED(OTBonLivraisonDetail.getDtCREATED());
         OTBonLivraisonDetail.setStrSTATUT(DateConverter.STATUT_ENABLE);
         getEmg().persist(OTBonLivraisonDetail);
         return OTBonLivraisonDetail;
@@ -594,13 +595,13 @@ public class OrderServiceImpl implements OrderService {
         LocalDate date = LocalDate.parse(jsonObject.getString("str_last_date"), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         int lastCode = 0;
         if (date.equals(LocalDate.now())) {
-            lastCode = new Integer(jsonObject.getString("int_last_code"));
+            lastCode =  Integer.parseInt(jsonObject.getString("int_last_code"));
         } else {
             date = LocalDate.now();
         }
         lastCode++;
 
-        String left = StringUtils.leftPad("" + lastCode, Integer.valueOf(OTParameters_KEY_SIZE_ORDER_NUMBER.getStrVALUE()), '0');
+        String left = StringUtils.leftPad("" + lastCode, Integer.parseInt(OTParameters_KEY_SIZE_ORDER_NUMBER.getStrVALUE()), '0');
         jsonObject.put("int_last_code", left);
         jsonObject.put("str_last_date", date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
         jsonArray = new JSONArray();
@@ -674,47 +675,37 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto, TUser user) throws Exception {
+    public TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto, TUser user) {
 
         TOrderDetail detail = this.getEmg().find(TOrderDetail.class, dto.getId());
         TFamille f = detail.getLgFAMILLEID();
         TOrder order = detail.getLgORDERID();
-        TFamilleGrossiste grossiste = findOrCreateFamilleGrossiste(f, order.getLgGROSSISTEID());
-        if (dto.getPrixAchat() != grossiste.getIntPAF()) {
-            String desc = "Modification du prix d'achat du produit : " + f.getIntCIP() + " " + f.getStrNAME() + " ancien prix: " + grossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
-            logService.updateItem(user, grossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
+        TFamilleGrossiste produitGrossiste = findOrCreateFamilleGrossiste(f, order.getLgGROSSISTEID());
+        if (dto.getPrixAchat() != produitGrossiste.getIntPAF()) {
+            String desc = "Modification du prix d'achat du produit : " + f.getIntCIP() + " " + f.getStrNAME() + " ancien prix: " + produitGrossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
+            logService.updateItem(user, produitGrossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
             notificationService.save(new Notification()
                     .canal(Canal.SMS_EMAIL)
                     .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE)
                     .message(desc)
                     .addUser(user));
-            SaveMouvementPrice(f, dto.getPrixAchat(), grossiste.getIntPAF(), f.getIntCIP(), user);
+            saveMouvementPrice(f, dto.getPrixAchat(), produitGrossiste.getIntPAF(), f.getIntCIP(), user);
 
         }
-        if (dto.getPrixVente() != grossiste.getIntPRICE()) {
-            String desc = "Modification du prix de vente du produit :" + f.getStrNAME() + " ancien prix: " + grossiste.getIntPRICE() + " nouveau prix :" + dto.getPrixVente();
-            logService.updateItem(user, grossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
-            notificationService.save(new Notification()
-                    .canal(Canal.SMS_EMAIL)
-                    .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE)
-                    .message(desc)
-                    .addUser(user));
-            SaveMouvementPrice(f, dto.getPrixVente(), grossiste.getIntPRICE(), f.getIntCIP(), user);
-
-        }
+  
         detail.setIntNUMBER(dto.getStock());
         detail.setIntQTEREPGROSSISTE(dto.getStock());
         detail.setIntQTEMANQUANT(dto.getStock());
         detail.setIntPRICE(dto.getStock() * dto.getPrixAchat());
         detail.setIntPAFDETAIL(dto.getPrixAchat());
-        detail.setIntPRICEDETAIL(dto.getPrixVente());
+//        detail.setIntPRICEDETAIL(dto.getPrixVente());
         detail.setStrSTATUT(DateConverter.STATUT_PROCESS);
         detail.setDtUPDATED(new Date());
-        detail.setPrixAchat(grossiste.getIntPAF());
-        detail.setPrixUnitaire(grossiste.getIntPRICE());
+        detail.setPrixAchat(produitGrossiste.getIntPAF());
+//        detail.setPrixUnitaire(produitGrossiste.getIntPRICE());
+      
         this.getEmg().merge(detail);
-//                findByOrderId(order)
-        order.setDtUPDATED(new Date());
+        order.setDtUPDATED(detail.getDtUPDATED());
         this.getEmg().merge(order);
         return detail;
     }
@@ -724,10 +715,10 @@ public class OrderServiceImpl implements OrderService {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private void SaveMouvementPrice(TFamille OTFamille, int int_PRICE, int int_PRICE_OLD, String str_REF, TUser u) {
+    private void saveMouvementPrice(TFamille OTFamille, int int_PRICE, int int_PRICE_OLD, String str_REF, TUser u) {
 
         try {
-            TMouvementprice OTMouvementprice = new TMouvementprice(RandomStringUtils.randomAlphanumeric(20));
+            TMouvementprice OTMouvementprice = new TMouvementprice(UUID.randomUUID().toString());
             OTMouvementprice.setLgUSERID(u);
             OTMouvementprice.setStrACTION(commonparameter.code_action_commande);
             OTMouvementprice.setDtUPDATED(new Date());
@@ -869,6 +860,33 @@ public class OrderServiceImpl implements OrderService {
             return FunctionUtils.returnData(data);
         }
         return FunctionUtils.returnData(data, fetchOrderItemsCount(filtre, orderId, query));
+    }
+
+    @Override
+    public String modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto, TUser user) {
+
+        TOrderDetail detail = this.getEmg().find(TOrderDetail.class, dto.getId());
+        TFamille f = detail.getLgFAMILLEID();
+        TOrder order = detail.getLgORDERID();
+        TFamilleGrossiste produitGrossiste = findOrCreateFamilleGrossiste(f, order.getLgGROSSISTEID());
+
+        String desc = "Modification du prix de vente du produit :" + f.getStrNAME() + " prix importé: " + detail.getIntPRICEDETAIL() + " nouveau prix :" + dto.getPrixVente();
+        logService.updateItem(user, produitGrossiste.getStrCODEARTICLE(), desc, TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
+        notificationService.save(new Notification()
+                .canal(Canal.SMS_EMAIL)
+                .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE)
+                .message(desc)
+                .addUser(user));
+        saveMouvementPrice(f, dto.getPrixVente(), detail.getIntPRICEDETAIL() , f.getIntCIP(), user);
+        detail.setIntPRICEDETAIL(dto.getPrixVente());
+        detail.setStrSTATUT(DateConverter.STATUT_PROCESS);
+        detail.setDtUPDATED(new Date());
+        detail.setPrixUnitaire(dto.getPrixVente());
+        this.getEmg().merge(detail);
+        order.setDtUPDATED(detail.getDtUPDATED());
+        order.setLgUSERID(user);
+        this.getEmg().merge(order);
+        return order.getLgORDERID();
     }
 
     public long fetchOrderItemsCount(CommandeFiltre filtre, String orderId, String query) {

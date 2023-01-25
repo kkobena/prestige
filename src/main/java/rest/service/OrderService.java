@@ -74,7 +74,7 @@ public interface OrderService {
 
     RuptureDetail ruptureDetaisByRuptureAndProduitId(String idRupture, String produitCip);
 
-    TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto, TUser user) throws Exception;
+    TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto, TUser user);
 
     JSONObject supprimerProduitCommandeEncours(String idCommande) throws JSONException;
 
@@ -91,4 +91,6 @@ public interface OrderService {
     List<CommandeEncourDetailDTO> fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit, boolean all);
 
     JSONObject fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit);
+
+    String modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto, TUser user);
 }
