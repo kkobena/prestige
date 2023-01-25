@@ -19,9 +19,9 @@ public final class FunctionUtils {
     private static final String DATA = "data";
     public static final Predicate<TOrderDetail> ECART_PRIX_VENTE_30 = t -> {
         if (Objects.isNull(t.getPrixUnitaire())) {
-            return Math.abs(t.getLgFAMILLEID().getIntPRICE() - t.getIntPRICEDETAIL()) == 30;
+            return Math.abs(t.getLgFAMILLEID().getIntPRICE() - t.getIntPRICEDETAIL()) != 30;
         }
-        return Math.abs(t.getLgFAMILLEID().getIntPRICE() - t.getPrixUnitaire()) == 30;
+        return Math.abs(t.getLgFAMILLEID().getIntPRICE() - t.getPrixUnitaire()) != 30;
     };
 
     public static JSONObject returnData(List<?> data, long total) {
