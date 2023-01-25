@@ -162,7 +162,7 @@ public class FileFormaManager extends HttpServlet {
             JSONArray jsonArray = new JSONArray(jsondata);
             JSONObject jsonObject = jsonArray.getJSONObject(0);
 
-            int_last_code = Integer.valueOf(jsonObject.getString("int_last_code"));
+            int_last_code = Integer.parseInt(jsonObject.getString("int_last_code"));
             Date dt_last_date = date.stringToDate(jsonObject.getString("str_last_date"), date.formatterMysqlShort2);
 
             String str_lasd = date.DateToString(dt_last_date, date.formatterMysqlShort2);
@@ -184,7 +184,7 @@ public class FileFormaManager extends HttpServlet {
         String mois_tostring = "";
 
         int intsize = ((int_last_code + 1) + "").length();
-        int intsize_tobuild = Integer.valueOf(OTParameters_KEY_SIZE_ORDER_NUMBER.getStrVALUE());
+        int intsize_tobuild = Integer.parseInt(OTParameters_KEY_SIZE_ORDER_NUMBER.getStrVALUE());
         String str_last_code = "";
         for (int i = 0; i < (intsize_tobuild - intsize); i++) {
             str_last_code = str_last_code + "0";
@@ -207,7 +207,6 @@ public class FileFormaManager extends HttpServlet {
         String jsonData = arrayObj.toString();
 
         OTParameters.setStrVALUE(jsonData);
-        //  this.persiste(OTParameters);
         new logger().OCategory.info(jsonData);
         new logger().OCategory.info(str_code);
         return str_code;
@@ -231,7 +230,6 @@ public class FileFormaManager extends HttpServlet {
             } catch (Exception e) {
             }
 
-//            OTOrder.setStrSTATUT(commonparameter.statut_is_Process);
             OTOrder.setStrSTATUT(str_STATUT);
             OTOrder.setDtCREATED(new Date());
             OTOrder.setDtUPDATED(new Date());
@@ -424,7 +422,7 @@ public class FileFormaManager extends HttpServlet {
                         if (isFirstLigne < 0) {
                             continue;
                         }
-                        System.out.println("isFirstLigne "+isFirstLigne);
+                       
                         int qty = Integer.parseInt(cSVRecord.get(1));
                         int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(0), qty, null);
                         i += ligne;
@@ -538,7 +536,7 @@ public class FileFormaManager extends HttpServlet {
                     OTOrderDetail.setIntPRICEDETAIL((pu == 0 ? OTFamilleGrossiste.getIntPRICE() : pu));
                     OTOrderDetail.setIntPAFDETAIL(int_PAF_DETAIL);
                     OTOrderDetail.setPrixAchat(OTOrderDetail.getIntPAFDETAIL());
-                    OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
+//                    OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
                     OTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
                     OTOrderDetail.setDtCREATED(new Date());
                     OTOrderDetail.setUg(ug);
@@ -686,7 +684,7 @@ public class FileFormaManager extends HttpServlet {
                     OTOrderDetail.setIntPRICEDETAIL(OTFamille.getIntPRICE());
                     OTOrderDetail.setIntPAFDETAIL(prixAchat == null ? OTFamille.getIntPAF() : prixAchat);
                     OTOrderDetail.setPrixAchat(OTOrderDetail.getIntPAFDETAIL());
-                    OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
+//                    OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
                     OTOrderDetail.setIntPRICE(qty * OTOrderDetail.getIntPAFDETAIL());
                     OTOrderDetail.setStrSTATUT(DateConverter.STATUT_PROCESS);
                     OTOrderDetail.setDtCREATED(new Date());

@@ -9,7 +9,6 @@ import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.Params;
 import dal.TOrderDetail;
 import dal.TUser;
-import java.time.LocalDate;
 import java.util.concurrent.atomic.LongAdder;
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -100,24 +99,15 @@ public class CommandeRessource {
     
     @POST
     @Path("updateorderitem")
-    public Response modifierProduitCommande(ArticleDTO DTO) throws JSONException {
+    public Response modifierProduitCommande(ArticleDTO dto) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         try {
-            TOrderDetail detail = orderService.modificationProduitCommandeEncours(DTO, tu);
-            LongAdder PRIX_ACHAT_TOTAL = new LongAdder();
-            LongAdder PRIX_VENTE_TOTAL = new LongAdder();
-            orderService.findByOrderId(detail.getLgORDERID().getLgORDERID()).forEach(p -> {
-                PRIX_ACHAT_TOTAL.add(p.getIntPRICE());
-                PRIX_VENTE_TOTAL.add(p.getIntNUMBER() * p.getIntPRICEDETAIL());
-            });
-            return Response.ok().entity(new JSONObject().put("success", true)
-                    .put("prixAchat", PRIX_ACHAT_TOTAL.intValue())
-                    .put("prixVente", PRIX_VENTE_TOTAL.intValue())
-                    //                    .put("ref", detail.getLgORDERID().getStrREFORDER())
+            TOrderDetail detail = orderService.modificationProduitCommandeEncours(dto, tu);
+            return Response.ok().entity(computeOrderSummary(detail.getLgORDERID().getLgORDERID())
                     .toString()).build();
             
         } catch (Exception e) {
@@ -159,4 +149,37 @@ public class CommandeRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
     
+    
+      @POST
+    @Path("orderitem-prix-vente")
+    public Response modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        try {
+            String orderId= orderService.modifierProduitPrixVenteCommandeEnCours(dto, tu);
+            return Response.ok().entity(computeOrderSummary(orderId)
+                    .toString()).build();
+            
+        } catch (Exception e) {
+            
+            return Response.ok().entity(new JSONObject().put("success", false).toString()).build();
+        }
+        
+    }
+    
+    
+    private JSONObject computeOrderSummary(String orderId) {
+        LongAdder prixAchatTotal = new LongAdder();
+        LongAdder prixVenteTotal = new LongAdder();
+        orderService.findByOrderId(orderId).forEach(p -> {
+            prixAchatTotal.add(p.getIntPRICE());
+            prixVenteTotal.add(p.getIntNUMBER() * p.getIntPRICEDETAIL());
+        });
+        return new JSONObject().put("success", true)
+                .put("prixAchat", prixAchatTotal.intValue())
+                .put("prixVente", prixVenteTotal.intValue());
+    }
 }

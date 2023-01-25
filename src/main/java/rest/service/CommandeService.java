@@ -22,7 +22,6 @@ import org.json.JSONObject;
  * @author DICI
  */
 @Local
-//@Remote
 public interface CommandeService {
 
     JSONObject cloturerBonLivraison(String id, TUser user) throws JSONException;

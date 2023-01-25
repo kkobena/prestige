@@ -2959,7 +2959,7 @@ public class orderManagement extends bllBase {
             OTOrderDetail.setDtUPDATED(new Date());
             OTOrderDetail.setIntORERSTATUS((short) 2);
             OTOrderDetail.setPrixAchat(OTFamilleGrossiste.getIntPAF());
-            OTOrderDetail.setPrixUnitaire(OTFamilleGrossiste.getIntPRICE());
+//            OTOrderDetail.setPrixUnitaire(OTFamilleGrossiste.getIntPRICE());
             this.getOdataManager().getEm().persist(OTOrderDetail);
             OTFamille.setBCODEINDICATEUR((short) 1);
             this.getOdataManager().getEm().merge(OTFamille);
@@ -3082,7 +3082,6 @@ public class orderManagement extends bllBase {
             this.getOdataManager().BeginTransaction();
             if (OTOrderDetail == null) {
                 TOrder Oder = this.getOdataManager().getEm().find(TOrder.class, lgORDERID);
-
                 OTOrderDetail = new TOrderDetail();
                 OTOrderDetail.setLgORDERDETAILID(this.getKey().getComplexId());
                 OTOrderDetail.setLgORDERID(Oder);
@@ -3096,10 +3095,10 @@ public class orderManagement extends bllBase {
                 OTOrderDetail.setLgGROSSISTEID(OTGrossiste);
                 OTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
                 OTOrderDetail.setDtCREATED(new Date());
-                OTOrderDetail.setDtUPDATED(new Date());
+                OTOrderDetail.setDtUPDATED(OTOrderDetail.getDtCREATED());
                 OTOrderDetail.setIntORERSTATUS((short) 2);
                 OTOrderDetail.setPrixAchat(OTOrderDetail.getIntPAFDETAIL());
-                OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
+//                OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
                 this.getOdataManager().getEm().persist(OTOrderDetail);
                 OTFamille.setBCODEINDICATEUR((short) 1);
                 this.getOdataManager().getEm().merge(OTFamille);
