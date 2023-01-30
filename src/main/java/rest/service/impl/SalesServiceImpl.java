@@ -80,6 +80,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
@@ -2860,7 +2861,8 @@ public class SalesServiceImpl implements SalesService {
             if (totalTaux >= 100) {
                 netCustomer = 0;
             }
-            MontantAPaye map = new MontantAPaye(netCustomer, montantvente + diffMontantTotalAndCmuAmount, totalTp,
+            int finalSaleAmount=diffMontantTotalAndCmuAmount!=montantvente?montantvente + diffMontantTotalAndCmuAmount:montantvente;
+            MontantAPaye map = new MontantAPaye(netCustomer, finalSaleAmount, totalTp,
                     remiseCarnet, montantAPaye.getMarge(), montantAPaye.getMontantTva());
             map.setTierspayants(resultat);
             map.setCmuAmount(cmuAmount);
@@ -3442,6 +3444,7 @@ public class SalesServiceImpl implements SalesService {
         try {
             TPreenregistrement preenregistrement = getEm().find(TPreenregistrement.class, params.getVenteId());
             MontantAPaye montant = calculVoNet(preenregistrement, params.getTierspayants(), getEm());
+            System.err.println("shownetpayVo ====>>>  "+montant);
             Integer montantNet = montant.getMontantNet();
             preenregistrement.setIntPRICEREMISE(montant.getRemise());
             preenregistrement.setIntCUSTPART(montantNet);
@@ -5096,7 +5099,8 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private int computeCmuAmount(TPreenregistrementDetail pd) {
-        if (pd.getCmuPrice() != null && pd.getCmuPrice() > 0) {
+       
+        if ( Objects.nonNull(pd.getCmuPrice()) && pd.getCmuPrice() > 0) {
             return pd.getIntQUANTITY() * pd.getCmuPrice();
         }
         return pd.getIntQUANTITY() * pd.getIntPRICEUNITAIR();
