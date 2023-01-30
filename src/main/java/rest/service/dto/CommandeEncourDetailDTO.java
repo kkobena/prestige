@@ -221,8 +221,8 @@ public class CommandeEncourDetailDTO {
         this.prixAchat=detail.getPrixAchat();
         this.lgORDERDETAILID = detail.getLgORDERDETAILID();
         this.intNUMBER = detail.getIntNUMBER();
-        this.intPRICE = detail.getIntNUMBER();
-        this.intPAFDETAIL = detail.getIntNUMBER();
+        this.intPRICE = detail.getIntPRICE();
+        this.intPAFDETAIL = detail.getIntPAFDETAIL();
         this.intPRICEDETAIL = detail.getIntPRICEDETAIL();
         this.intQTEMANQUANT = detail.getIntQTEMANQUANT();
         this.intQTEREPGROSSISTE = detail.getIntQTEREPGROSSISTE();
