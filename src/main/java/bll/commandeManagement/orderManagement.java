@@ -145,63 +145,7 @@ public class orderManagement extends bllBase {
         return s;
     }
 
-    /*
-     public void DetailCommande(String lg_ORDER_ID, JSONObject json) {
-
-     // <editor-fold defaultstate="collapsed" desc="Calcul du montant d'achat et de vente">
-     try {
-
-     List<dal.TOrderDetail> lstTOrderDetail;
-     int int_LINE = 0;
-     int int_NBRE_PRODUIT = 0;
-     int int_NUMBER = 0;
-     int PRIX_ACHAT_TOTAL = 0, PRIX_VENTE_TOTAL = 0;
-     String NAME = "";
-     String str_ARTICLE = "";
-
-     lstTOrderDetail = this.getTOrderDetail(lg_ORDER_ID);
-
-     if (lstTOrderDetail != null) {
-
-     int_LINE = lstTOrderDetail.size();
-     new logger().OCategory.info("int_LINE   ----  " + int_LINE);
-
-     for (TOrderDetail OTOrderDetail : lstTOrderDetail) {
-
-     NAME = OTOrderDetail.getLgFAMILLEID().getStrNAME();
-     int_NUMBER = OTOrderDetail.getIntNUMBER();
-
-     if (NAME != null) {
-     str_ARTICLE = "<b>" + NAME + " :  (" + int_NUMBER + ")</b><br> " + str_ARTICLE;
-
-     int_NBRE_PRODUIT = int_NBRE_PRODUIT + int_NUMBER;
-
-     PRIX_ACHAT_TOTAL = PRIX_ACHAT_TOTAL + (OTOrderDetail.getLgFAMILLEID().getIntPAT() * int_NUMBER);
-
-     PRIX_VENTE_TOTAL = PRIX_VENTE_TOTAL + (OTOrderDetail.getLgFAMILLEID().getIntPRICE() * int_NUMBER);
-     }
-
-     }
-
-     new logger().OCategory.info("str_ARTICLE   ----  " + str_ARTICLE);
-
-     json.put("int_LINE", int_LINE);
-     json.put("str_FAMILLE_ITEM", str_ARTICLE);
-     json.put("int_NBRE_PRODUIT", int_NBRE_PRODUIT);
-     json.put("PRIX_ACHAT_TOTAL", PRIX_ACHAT_TOTAL);
-     json.put("PRIX_VENTE_TOTAL", PRIX_VENTE_TOTAL);
-
-     }
-
-     } catch (Exception e) {
-
-     new logger().OCategory.info("ECHEC   ----  " + e);
-
-     }
-
-     // </editor-fold>
-     }
-     */
+   
     public void basculerProduit(String lg_FAMILLE_ID, String lg_GROSSISTE_ID) {
 
         // <editor-fold defaultstate="collapsed" desc="basculerPrduit - Envoyer l'article chez un autre grossiste">
@@ -716,20 +660,7 @@ public class orderManagement extends bllBase {
                 this.getOdataManager().getEm().getTransaction().commit();
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             }
-            /* if (i > 0) {
-                if (lstTOrderDetail.size() == i) {
-                    OTOrder.setStrSTATUT(commonparameter.statut_is_Process);
-                    OTOrder.setDtUPDATED(new Date());
-                    if (this.persiste(OTOrder)) {
-                        this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-                    } else {
-                        this.buildErrorTraceMessage("Echec de l'annulation de la commande");
-                    }
-
-                }
-            } else {
-                this.buildErrorTraceMessage("Echec de l'annulation de la commande");
-            }*/
+      
         } catch (Exception e) {
 
             this.buildErrorTraceMessage("Echec de l'annulation de la commande");
@@ -1071,7 +1002,7 @@ public class orderManagement extends bllBase {
             OTOrderDetail.setStrSTATUT(str_STATUT);
             OTOrderDetail.setDtUPDATED(new Date());
             OTOrderDetail.setPrixAchat(int_PAF);
-            OTOrderDetail.setPrixUnitaire(int_PRICE);
+//            OTOrderDetail.setPrixUnitaire(int_PRICE);
             OTOrder.setDtUPDATED(new Date());
             if (this.persiste(OTOrderDetail) && this.persiste(OTOrder)) {
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));

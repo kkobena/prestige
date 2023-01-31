@@ -55,7 +55,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     initComponent: function () {
         Me_Window = this;
         let itemsPerPage = 100;
-        let itemsPerPageGrid =9999999;
+        let itemsPerPageGrid =10;
         famille_id_search = "";
 
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
@@ -71,7 +71,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         let store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
             data: [
-               // {str_TYPE_TRANSACTION: 'PRIX', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE'},
+            
                 {str_TYPE_TRANSACTION: 'PRIX_VENTE_DIFF', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE'},
                  {str_TYPE_TRANSACTION: 'PRIX_VENTE_PLUS_30', str_desc: 'PRIX DE VENTE BL DIFFERENT DU PRIX EN MACHINE DE 30F'},
                 {str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous'}
@@ -423,7 +423,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 },
 
                                 {
-                                    text: 'PU.MACHINE',
+                                    text: 'PV.MACHINE',
                                     flex: 1,
 //                                    hidden: true,
                                     align: 'right',
@@ -434,7 +434,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 },
 
                                 {
-                                    text: 'PRIX.VENTE',
+                                    text: 'PV IMPORT',
                                     flex: 1,
                                     sortable: true,
                                     align: 'right',
@@ -462,7 +462,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
                                 },
                                 {
-                                    text: 'PA.FACT',
+                                    text: 'PA.IMPORT',
                                     flex: 1,
                                     sortable: true,
                                     align: 'right',
@@ -611,9 +611,10 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 store: store_details_order,
                                 displayInfo: true,
                                 plugins: new Ext.ux.ProgressBarPager(),
-                                bebeforechange: function (me,page, currentPage){
-                                  
-        const myProxy = me.getStore().getProxy();
+                                 listeners: {
+                                  beforechange: function (page, currentPage) {
+                                 console.log('--------------------------------------------------------------------------------------------') ;
+        const myProxy = this.store.getProxy();
         const val = Ext.getCmp('rechercherDetail');
         const filtre= Ext.getCmp('str_TYPE_TRANSACTION');
     
@@ -627,6 +628,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         myProxy.setExtraParam('filtre', filtre.getValue());
         myProxy.setExtraParam('orderId', ref);
                                 }
+                                
+                            }
+                              
                             },
                             listeners: {
                                 scope: this
@@ -1062,6 +1066,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         Me_Window.onbtncancel();
     },
     onRechClick: function () {
+        console.log("--------------qdqsdqsd  ");
         const val = Ext.getCmp('rechercherDetail');
         const filtre= Ext.getCmp('str_TYPE_TRANSACTION');
         Ext.getCmp('gridpanelID').getStore().load({
