@@ -74,7 +74,7 @@ public class TOrderDetail implements Serializable {
     @ManyToOne(optional = false)
     private TFamille lgFAMILLEID;
     @Column(name = "prixUnitaire")
-    private Integer prixUnitaire = 0;
+    private Integer prixUnitaire ;
     @Column(name = "prixAchat")
     private Integer prixAchat = 0;
     @Column(name = "int_ORERSTATUS")
