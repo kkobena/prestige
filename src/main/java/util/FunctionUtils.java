@@ -17,6 +17,7 @@ public final class FunctionUtils {
 
     private static final String TOTAL = "total";
     private static final String DATA = "data";
+    public static final int VALEUR_TABLEAU=30;
     public static final Predicate<TOrderDetail> ECART_PRIX_VENTE_30 = t -> {
         if (Objects.isNull(t.getPrixUnitaire())) {
             int diff = Math.abs(t.getLgFAMILLEID().getIntPRICE() - t.getIntPRICEDETAIL());

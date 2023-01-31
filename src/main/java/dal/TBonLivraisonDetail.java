@@ -106,7 +106,7 @@ public class TBonLivraisonDetail implements Serializable,Cloneable  {
     @Column(name = "prixTarif")
     private Integer prixTarif = 0;
     @Column(name = "prixUni")
-    private Integer prixUni = 0;
+    private Integer prixUni ;
 
     public TBonLivraisonDetail() {
     }

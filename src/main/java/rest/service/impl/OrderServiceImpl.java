@@ -188,7 +188,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private TBonLivraisonDetail createBLDetail(TBonLivraison OTBonLivraison, TGrossiste OTGrossiste,
-            TFamille OTFamille, TOrderDetail d, TZoneGeographique OTZoneGeographique, int int_INITSTOCK) {
+            TFamille OTFamille, TOrderDetail d, TZoneGeographique OTZoneGeographique, int initStock) {
         TBonLivraisonDetail OTBonLivraisonDetail = new TBonLivraisonDetail();
         OTBonLivraisonDetail.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
         OTBonLivraisonDetail.setLgBONLIVRAISONID(OTBonLivraison);
@@ -197,7 +197,6 @@ public class OrderServiceImpl implements OrderService {
         OTBonLivraisonDetail.setLgZONEGEOID(OTZoneGeographique);
         OTBonLivraisonDetail.setIntQTECMDE(d.getIntQTEREPGROSSISTE());
         OTBonLivraisonDetail.setIntQTERECUE(d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT());
-
         OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
         OTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
         OTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
@@ -207,7 +206,7 @@ public class OrderServiceImpl implements OrderService {
         OTBonLivraisonDetail.setStrETATARTICLE("");
         OTBonLivraisonDetail.setStrLIVRAISONADP("");
         OTBonLivraisonDetail.setStrMANQUEFORCES("");
-        OTBonLivraisonDetail.setIntINITSTOCK(int_INITSTOCK);
+        OTBonLivraisonDetail.setIntINITSTOCK(initStock);
         OTBonLivraisonDetail.setIntQTEMANQUANT(OTBonLivraisonDetail.getIntQTECMDE());
         OTBonLivraisonDetail.setDtCREATED(new Date());
         OTBonLivraisonDetail.setDtUPDATED(OTBonLivraisonDetail.getDtCREATED());
@@ -595,7 +594,7 @@ public class OrderServiceImpl implements OrderService {
         LocalDate date = LocalDate.parse(jsonObject.getString("str_last_date"), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         int lastCode = 0;
         if (date.equals(LocalDate.now())) {
-            lastCode =  Integer.parseInt(jsonObject.getString("int_last_code"));
+            lastCode = Integer.parseInt(jsonObject.getString("int_last_code"));
         } else {
             date = LocalDate.now();
         }
@@ -692,7 +691,7 @@ public class OrderServiceImpl implements OrderService {
             saveMouvementPrice(f, dto.getPrixAchat(), produitGrossiste.getIntPAF(), f.getIntCIP(), user);
 
         }
-  
+
         detail.setIntNUMBER(dto.getStock());
         detail.setIntQTEREPGROSSISTE(dto.getStock());
         detail.setIntQTEMANQUANT(dto.getStock());
@@ -703,7 +702,7 @@ public class OrderServiceImpl implements OrderService {
         detail.setDtUPDATED(new Date());
         detail.setPrixAchat(produitGrossiste.getIntPAF());
 //        detail.setPrixUnitaire(produitGrossiste.getIntPRICE());
-      
+
         this.getEmg().merge(detail);
         order.setDtUPDATED(detail.getDtUPDATED());
         this.getEmg().merge(order);
@@ -877,7 +876,7 @@ public class OrderServiceImpl implements OrderService {
                 .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE)
                 .message(desc)
                 .addUser(user));
-        saveMouvementPrice(f, dto.getPrixVente(), detail.getIntPRICEDETAIL() , f.getIntCIP(), user);
+        saveMouvementPrice(f, dto.getPrixVente(), detail.getIntPRICEDETAIL(), f.getIntCIP(), user);
         detail.setIntPRICEDETAIL(dto.getPrixVente());
         detail.setStrSTATUT(DateConverter.STATUT_PROCESS);
         detail.setDtUPDATED(new Date());

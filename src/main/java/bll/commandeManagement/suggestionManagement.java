@@ -1969,7 +1969,7 @@ public class suggestionManagement extends bllBase {
         TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
         eventLog.setLgUSERID(user);
         eventLog.setDtCREATED(new Date());
-        eventLog.setDtUPDATED(new Date());
+        eventLog.setDtUPDATED(eventLog.getDtCREATED());
         eventLog.setStrCREATEDBY(user.getStrLOGIN());
         eventLog.setStrSTATUT(commonparameter.statut_enable);
         eventLog.setStrTABLECONCERN(T.getClass().getName());
