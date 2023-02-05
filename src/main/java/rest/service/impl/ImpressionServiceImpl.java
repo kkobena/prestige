@@ -41,7 +41,7 @@ import util.DateConverter;
 public class ImpressionServiceImpl implements Printable {
 
     private static final Logger LOG = Logger.getLogger(ImpressionServiceImpl.class.getName());
-    final public static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     private PrintService service;
     private int limit = 0, intBegin = 0, nombreCopie = 1, fontSize = 0;
     private boolean showCodeBar;
@@ -311,15 +311,15 @@ public class ImpressionServiceImpl implements Printable {
     public void printTicketVente(int copies) throws PrinterException {
          
         PrinterJob printerjob = findPrinterJob();
-        TImprimante OImprimante = this.getOTImprimante();
-        if (OImprimante != null) {
-            intBegin = OImprimante.getIntBEGIN();
-            columnOne = OImprimante.getIntCOLUMN1();
-            columnTwo = OImprimante.getIntCOLUMN2();
-            columnThree = OImprimante.getIntCOLUMN3();
-            columnFour = OImprimante.getIntCOLUMN4();
+        TImprimante oImprimante = this.getOTImprimante();
+        if (oImprimante != null) {
+            intBegin = oImprimante.getIntBEGIN();
+            columnOne = oImprimante.getIntCOLUMN1();
+            columnTwo = oImprimante.getIntCOLUMN2();
+            columnThree = oImprimante.getIntCOLUMN3();
+            columnFour = oImprimante.getIntCOLUMN4();
         }
-        PrintRequestAttributeSet OPrintRequestAttributeSet = new HashPrintRequestAttributeSet();
+        PrintRequestAttributeSet printRequestAttributeSet = new HashPrintRequestAttributeSet();
         if (printerjob != null) {
             PageFormat pageFormat = printerjob.defaultPage();
             Paper paper = new Paper();
@@ -328,17 +328,12 @@ public class ImpressionServiceImpl implements Printable {
             // paper.setImageableArea(20, -70, paper.getWidth(), paper.getHeight()); //definition des marges de la feuille
             pageFormat.setPaper(paper);
             pageFormat.setOrientation(PageFormat.PORTRAIT); //orientation de la page
-           
-            if(copies>1){
-               OPrintRequestAttributeSet.add(MultipleDocumentHandling.SEPARATE_DOCUMENTS_UNCOLLATED_COPIES);
-//                OPrintRequestAttributeSet.add(MultipleDocumentHandling.SEPARATE_DOCUMENTS_COLLATED_COPIES);
-            }
-            OPrintRequestAttributeSet.add(new Copies(copies)); //nombre de copie a imprimer
-            OPrintRequestAttributeSet.add(Chromaticity.COLOR); //insiste sur la netteté de la couleur du texte
+            printRequestAttributeSet.add(new Copies(copies)); //nombre de copie a imprimer
+            printRequestAttributeSet.add(Chromaticity.COLOR); //insiste sur la netteté de la couleur du texte
 
             printerjob.setPrintable(this, pageFormat);
 
-            printerjob.print(OPrintRequestAttributeSet);
+            printerjob.print(printRequestAttributeSet);
 
         }
 
