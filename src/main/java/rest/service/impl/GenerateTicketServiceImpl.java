@@ -78,6 +78,7 @@ import toolkits.utils.jdom;
 import util.Afficheur;
 
 import util.DateConverter;
+import util.FunctionUtils;
 import util.TicketTemplate;
 
 /**
@@ -179,8 +180,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             TPreenregistrement oTPreenregistrement = getEntityManager().find(TPreenregistrement.class, id);
             String _id = id;
             MvtTransaction mvtTransaction = findByPkey(_id);
-         copies=   nbreDeCopiesOranges( mvtTransaction,  copies);
-         copies=5;
+            copies = nbreDeCopiesOranges(mvtTransaction, copies);
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
@@ -198,7 +198,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             imp.setOTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
-            imp.setTitle("Ticket N° " + title);
+            imp.setTitle(FunctionUtils.RECEIT_TITLE + title);
             imp.setTypeTicket(DateConverter.TICKET_VENTE);
             imp.setShowCodeBar(true);
             imp.setEmplacement(te);
@@ -287,7 +287,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
             if (datas.size() <= counter) {
                 imp.buildTicket(datas, infoSellers, infotiersPayants, generateDataSummaryVo(oTPreenregistrement, mvtTransaction), generateCommentaire(oTPreenregistrement, mvtTransaction), fileBarecode);
-               print(imp, mvtTransaction, oTPreenregistrement.getIntPRICE());
+                print(imp, mvtTransaction, oTPreenregistrement.getIntPRICE());
             } else {
                 page = datas.size() / counter;
                 while (page != pageCurrent) {
@@ -318,7 +318,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
             }
             json.put("success", true);
-        } catch (Exception e) {
+        } catch (PrinterException | JSONException e) {
             LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "Impression n'a pas aboutie");
         }
@@ -431,11 +431,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
         datas.add("Part du Client:: " + DateConverter.amountFormat(partClt) + "  CFA");
         for (int i = 0; i < lstT.size(); i++) {
-            /* if (p.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
-                datas.add(lstT.get(i).getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME() + "   " + lstT.get(i).getIntPERCENT() + "%" + " :: " + DateConverter.amountFormat(p.getIntPRICE() - p.getIntPRICEREMISE()) + "  CFA");
-            } else {
-                datas.add(lstT.get(i).getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME() + "   " + lstT.get(i).getIntPERCENT() + "%" + " :: " + DateConverter.amountFormat(lstT.get(i).getIntPRICE()) + "  CFA");
-            }*/
+          
             datas.add(lstT.get(i).getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME() + "   " + lstT.get(i).getIntPERCENT() + "%" + " :: " + DateConverter.amountFormat(lstT.get(i).getIntPRICE()) + "  CFA");
         }
         return datas;
