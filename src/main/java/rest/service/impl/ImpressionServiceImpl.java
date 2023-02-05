@@ -41,7 +41,7 @@ import util.DateConverter;
 public class ImpressionServiceImpl implements Printable {
 
     private static final Logger LOG = Logger.getLogger(ImpressionServiceImpl.class.getName());
-    final public static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     private PrintService service;
     private int limit = 0, intBegin = 0, nombreCopie = 1, fontSize = 0;
     private boolean showCodeBar;

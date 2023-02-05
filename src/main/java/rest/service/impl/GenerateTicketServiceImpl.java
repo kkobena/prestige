@@ -91,8 +91,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     private static final Logger LOG = Logger.getLogger(GenerateTicketServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-//    @EJB
-//    CommonService commonService;
     @EJB
     ReportUtil reportUtil;
     @EJB
