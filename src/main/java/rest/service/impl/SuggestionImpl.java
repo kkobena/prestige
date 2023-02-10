@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
@@ -44,6 +45,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SuggestionService;
@@ -329,7 +331,7 @@ public class SuggestionImpl implements SuggestionService {
             });
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+              LOG.log(Level.SEVERE, null, e);
         }
     }
 
@@ -339,6 +341,9 @@ public class SuggestionImpl implements SuggestionService {
 
             list.forEach(item -> {
                 TFamille famille = item.getLgFAMILLEID();
+                if(StringUtils.isNotEmpty(famille.getLgFAMILLEPARENTID()) && famille.getBoolDECONDITIONNE()==1){
+                    famille=em.find(TFamille.class, famille.getLgFAMILLEPARENTID());
+                }
                 TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, getEmg());
                 if (familleStock != null) {
                     makeSuggestionAuto(familleStock, famille);
@@ -347,15 +352,15 @@ public class SuggestionImpl implements SuggestionService {
             });
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+              LOG.log(Level.SEVERE, null, e);
         }
     }
 
     @Override
     public void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille) {
         EntityManager emg = getEmg();
-        if (famille.getIntSEUILMIN() != null && famille.getBoolDECONDITIONNE() == 0 && famille.getStrSTATUT().equalsIgnoreCase(DateConverter.STATUT_ENABLE)) {
-            if (OTFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN()) {
+        if (Objects.nonNull(famille.getIntSEUILMIN())&& OTFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN() && famille.getBoolDECONDITIONNE() == 0 && famille.getStrSTATUT().equals(DateConverter.STATUT_ENABLE)) {
+            
                 int statut = verifierProduitDansLeProcessusDeCommande(famille);
                 if (statut == 0 || statut == 1) {
                     TSuggestionOrder OTSuggestionOrder;
@@ -380,7 +385,7 @@ public class SuggestionImpl implements SuggestionService {
                         }
                     }
 
-                }
+                
             }
         }
     }
@@ -429,10 +434,9 @@ public class SuggestionImpl implements SuggestionService {
             OTSuggestionOrderDetails.setIntPRICEDETAIL((OTFamilleGrossiste != null && OTFamilleGrossiste.getIntPRICE() != null && OTFamilleGrossiste.getIntPRICE() != 0) ? OTFamilleGrossiste.getIntPRICE() : OTFamille.getIntPRICE());
             OTSuggestionOrderDetails.setStrSTATUT(commonparameter.statut_is_Process);
             OTSuggestionOrderDetails.setDtCREATED(new Date());
-            OTSuggestionOrderDetails.setDtUPDATED(new Date());
+            OTSuggestionOrderDetails.setDtUPDATED(OTSuggestionOrderDetails.getDtCREATED());
             emg.persist(OTSuggestionOrderDetails);
-//            OTFamille.setIntORERSTATUS((short) 1);
-//            emg.merge(OTFamille);
+//         
 
             return OTSuggestionOrderDetails;
         } catch (Exception e) {
@@ -477,7 +481,7 @@ public class SuggestionImpl implements SuggestionService {
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementDetail_.dtCREATED)), java.sql.Date.valueOf(dtDEBUT),
                     java.sql.Date.valueOf(dtFin));
             predicates.add(cb.and(btw));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
@@ -493,11 +497,11 @@ public class SuggestionImpl implements SuggestionService {
             if (codeGestion != null && (!codeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("0"))) {
                 QTE_REAPPRO = getQuantityReapportByCodeGestionArticle(OTFamilleStock, tf, emg);
 
-            } else if (tf.getIntQTEREAPPROVISIONNEMENT() != null && tf.getIntSEUILMIN() != null) {
-                if (tf.getIntSEUILMIN() >= OTFamilleStock.getIntNUMBERAVAILABLE()) {
+            } else if (Objects.nonNull(tf.getIntQTEREAPPROVISIONNEMENT())   && Objects.nonNull( tf.getIntSEUILMIN()) && tf.getIntSEUILMIN() >= OTFamilleStock.getIntNUMBERAVAILABLE()) {
+                
                     QTE_REAPPRO = (tf.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE()) + tf.getIntQTEREAPPROVISIONNEMENT();
 
-                }
+                
             }
         } catch (Exception e) {
         }
@@ -520,7 +524,7 @@ public class SuggestionImpl implements SuggestionService {
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementDetail_.dtCREATED)), java.sql.Date.valueOf(dtDEBUT),
                     java.sql.Date.valueOf(dtFin));
             predicates.add(cb.and(btw));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
