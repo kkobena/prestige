@@ -267,7 +267,8 @@ Ext.define('testextjs.model.TiersPayant', {
             name: 'montantFact',
             type: 'number'
         },
-        {name: 'P_BTN_DESACTIVER_TIERS_PAYANT', type: 'boolean'}
+        {name: 'P_BTN_DESACTIVER_TIERS_PAYANT', type: 'boolean'},
+             {name: 'cmu', type: 'boolean'}
 
 
     ]

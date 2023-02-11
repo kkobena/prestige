@@ -207,7 +207,19 @@ public class TTiersPayant implements Serializable {
     private Boolean isDepot = Boolean.FALSE;
     @Column(name = "grouping_by_taux", nullable = false)
     private Boolean groupingByTaux = Boolean.FALSE;
+    @Column(name = "is_cmus", nullable = false)
+    private Boolean cmus= Boolean.FALSE;
 
+    public Boolean getCmus() {
+        return cmus;
+    }
+
+    public void setCmus(Boolean cmus) {
+        this.cmus = cmus;
+    }
+
+  
+    
     public Boolean getGroupingByTaux() {
         return groupingByTaux;
     }

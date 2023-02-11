@@ -2787,6 +2787,7 @@ public class SalesServiceImpl implements SalesService {
             int montantVariable;
             int diffMontantTotalAndCmuAmount = 0;
             int cmuAmount = 0;
+            boolean isCmu=tierspayants.stream().allMatch(TiersPayantParams::isCmu);
             MontantAPaye montantAPaye;
             List<TiersPayantParams> resultat = new ArrayList<>();
             if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
@@ -2817,7 +2818,8 @@ public class SalesServiceImpl implements SalesService {
 
                 if (remise != null) {
                     montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
-                    cmuAmount=montantAPaye.getCmuAmount();
+                  
+                    cmuAmount= isCmu? montantAPaye.getCmuAmount():0;
                     //  montantvente = montantAPaye.getMontant();
                     montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
@@ -2825,7 +2827,7 @@ public class SalesServiceImpl implements SalesService {
 
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                      cmuAmount=montantAPaye.getCmuAmount();
+                      cmuAmount=isCmu?montantAPaye.getCmuAmount():0;
                     montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
                 }
@@ -2835,7 +2837,6 @@ public class SalesServiceImpl implements SalesService {
                     Integer taux = tierspayant.getTaux();
                     Double montantTp = montantvente * (Double.valueOf(taux) / 100);
                     Integer tpnet = (int) Math.ceil(montantTp);
-
                     int thatTaux = 0;
                     if (montantVariable > tpnet) {
                         montantVariable -= tpnet;
@@ -3444,7 +3445,6 @@ public class SalesServiceImpl implements SalesService {
         try {
             TPreenregistrement preenregistrement = getEm().find(TPreenregistrement.class, params.getVenteId());
             MontantAPaye montant = calculVoNet(preenregistrement, params.getTierspayants(), getEm());
-            System.err.println("shownetpayVo ====>>>  "+montant);
             Integer montantNet = montant.getMontantNet();
             preenregistrement.setIntPRICEREMISE(montant.getRemise());
             preenregistrement.setIntCUSTPART(montantNet);
@@ -3456,7 +3456,7 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", true).put("msg", "Opération effectuée avec success");
             json.put("data", new JSONObject(montant));
             afficheurMontantAPayer(montant.getMontantNet(), "NET A PAYER: ");
-        } catch (Exception e) {
+        } catch (JSONException e) {
             LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
         }
