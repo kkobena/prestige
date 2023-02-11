@@ -1207,11 +1207,11 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     doSearch: function () {
-        var me = this;
+        let me = this;
         me.refresh();
     },
     handleMontantField: function (montantNet) {
-        var me = this, typeRegle = me.getVnotypeReglement().getValue();
+        let me = this, typeRegle = me.getVnotypeReglement().getValue();
         if (montantNet > 0 && (typeRegle === '1' || typeRegle === '4')) {
             me.getMontantRecu().setReadOnly(false);
         }
@@ -1491,7 +1491,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.showAndHideInfosStandardClient(true);
             me.getMontantRecu().setReadOnly(false);
             me.getCbContainer().hide();
-        } else if (value === '7' || value === '8' || value === '9') {
+        } else if (value === '7' || value === '8' || value === '9'|| value === '10') {
             me.handleMobileMoney();
         } else {
             if (value === '2' || value === '3' || value === '6') {
@@ -1507,9 +1507,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                 me.getMontantRecu().setReadOnly(false);
                 me.getMontantRecu().focus(true);
             }
-
-//            }
-
 
         }
     }
@@ -1570,17 +1567,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     }
     ,
-    /* showNextGroup: function () {
-     var grid = this.getGroups(),
-     store = grid.getStore(),
-     selModel = grid.getSelectionModel(),
-     selected = selModel.getLastSelected(),
-     curIndex = store.indexOf(selected),
-     next = store.getAt(curIndex + 1);
-     if (next) {
-     selModel.select([next]);
-     }
-     },*/
+
     buildLambdaClientGrid: function () {
         var me = this;
         me.getClientLambdaform().setVisible(false);
@@ -1765,7 +1752,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                 url: '../api/v1/client/add/lambda',
                 params: Ext.JSON.encode(form.getValues()),
                 success: function (response, options) {
-//                    progress.hide();
                     var result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         var clientData = result.data;
@@ -2131,14 +2117,13 @@ Ext.define('testextjs.controller.VenteCtr', {
                         'lgPREENREGISTREMENTID': record.lgPREENREGISTREMENTID
                     };
                     me.netAmountToPay = null;
-                    me.ayantDroit = ayantDroit,
-                            me.updateComboxFields(lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, typeRemiseId, lgREMISEID);
+                    me.ayantDroit = ayantDroit;
+                 me.updateComboxFields(lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, typeRemiseId, lgREMISEID);
                     me.updateAmountFields((parseInt(intPRICE) - parseInt(intPRICEREMISE)), intPRICEREMISE, intPRICE);
                     if (lgTYPEVENTEID === '2' || lgTYPEVENTEID === '3') {
                         me.loadClientAssurance(client, lgTYPEVENTEID, ayantDroit);
                     }
                     if (lgTYPEVENTEID === '1' && client) {
-
                         me.client = new testextjs.model.caisse.ClientLambda(record.client);
                         me.updateClientLambdInfos();
                         me.showAndHideInfosStandardClient(true);

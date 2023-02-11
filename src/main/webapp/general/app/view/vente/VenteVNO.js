@@ -63,18 +63,6 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                 }
             }
         });
-//        var remise = new Ext.data.Store({
-//            model: 'testextjs.model.caisse.Remise',
-//            pageSize: null,
-//            autoLoad: false,//remises-client
-//            proxy: {
-//                type: 'memory',
-//                reader: {
-//                    model: 'testextjs.model.caisse.Remise',
-//                    type: 'json'
-//                }
-//            }
-//        });
         var remise = new Ext.data.Store({
             model: 'testextjs.model.caisse.Remise',
             pageSize: null,
@@ -208,7 +196,6 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     style: 'background-color:#F0F8FF !important;',
                                     title: '<span style="color:blue;">INFOS ASSURE</span>',
                                     itemId: 'assureCmp',
-//                                    hidden: true,
                                     margin: '0 5 0 0',
                                     flex: 1.2,
                                     layout: {
@@ -339,7 +326,6 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                             xtype: 'fieldset',
                             title: '<span style="color:blue;">INFOS TIERS PAYANTS</span>',
                             itemId: 'tpContainer',
-//                            hidden: true,
                             layout: {type: 'fit'},
                             bodyStyle: 'background:#F0F8FF !important;',
                             flex: 1,
@@ -365,8 +351,6 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                     collapsible: false,
                     defaultType: 'textfield',
                     layout: 'anchor',
-//                    bodyPadding: 5,
-//                    height: 70,
                     cls: 'background_gray',
                     defaults: {
                         anchor: '100%'
@@ -599,11 +583,8 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     renderer: function (value, metadata, record) {
 
                                         if (record.get('BISAVOIR') === true) {
-//                                            metadata.tdStyle = " font-size:0.9em; color: red;font-weight: bold;bgcolor='ffc6c6'";
                                             metadata.style = "color: red;font-weight: bold;";
-//                                            metadata.tdAttr = 'bgcolor="ffc6c6"';
-//                                            metadata.tdCls = myclass;
-//                                            value = '<span style="color: red;font-weight: bold;">' + value + '</span>';
+//                                          
                                         }
                                         return value;
                                     }
@@ -641,11 +622,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     items: [{
                                             icon: 'resources/images/icons/fam/delete.png',
                                             tooltip: 'Supprimer le produit',
-                                            scope: this/*,
-                                             handler: function () {
-                                             me.fireEvent('removeRow', this);
-                                             },*/
-//                                            itemId: 'btnRemoveItem',
+                                            scope: this
                                             , getClass: function (value, metadata, record) {
                                                 if (record.get('bISAVOIR') === true) {
                                                     return 'x-hide-display';
