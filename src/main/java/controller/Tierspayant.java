@@ -16,7 +16,6 @@ import dal.TTiersPayant_;
 import dal.TTypeTiersPayant;
 import dal.TTypeTiersPayant_;
 import dal.TUser;
-import dal.dataManager;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -89,7 +88,7 @@ public class Tierspayant extends HttpServlet {
         OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
         List<TPrivilege> privileges = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         String search_value = "", lg_TYPE_TIERS_PAYANT_ID = "";
-        try ( PrintWriter out = response.getWriter()) {
+        try (PrintWriter out = response.getWriter()) {
             if (request.getParameter("search_value") != null) {
                 search_value = request.getParameter("search_value");
 
@@ -107,8 +106,8 @@ public class Tierspayant extends HttpServlet {
                 search_value = request.getParameter("query");
 
             }
-            int start = Integer.valueOf(request.getParameter("start"));
-            int limit = Integer.valueOf(request.getParameter("limit"));
+            int start = Integer.parseInt(request.getParameter("start"));
+            int limit = Integer.parseInt(request.getParameter("limit"));
 
             JSONObject data = new JSONObject();
             List<TTiersPayant> list = ShowAllOrOneTierspayant(search_value, lg_TYPE_TIERS_PAYANT_ID, start, limit);
@@ -120,8 +119,7 @@ public class Tierspayant extends HttpServlet {
             for (TTiersPayant tTiersPayant : list) {
                 JSONObject json = new JSONObject();
                 TCompteClient OTCompteClient = getTCompteClient(tTiersPayant.getLgTIERSPAYANTID());
-
-                // lg_TIERS_PAYANT_ID
+                json.put("cmu", tTiersPayant.getCmus());
                 json.put("lg_TIERS_PAYANT_ID", tTiersPayant.getLgTIERSPAYANTID());
                 // str_CODE_ORGANISME
                 json.put("str_CODE_ORGANISME", tTiersPayant.getStrCODEORGANISME());
@@ -223,7 +221,6 @@ public class Tierspayant extends HttpServlet {
                     json.put("dbl_QUOTA_CONSO_MENSUELLE", OTCompteClient.getDblQUOTACONSOMENSUELLE());
                 }
 
-//        List<TCompteClientTiersPayant> lstTCompteClientTiersPayant  = tTiersPayant.getTCompteClientTiersPayantCollection().stream().collect(Collectors.toList());
                 List<TCompteClientTiersPayant> lstTCompteClientTiersPayant = getTiersPayantsByClient(tTiersPayant.getLgTIERSPAYANTID());
 
                 String str_Product = "";

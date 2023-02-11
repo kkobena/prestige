@@ -363,6 +363,13 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     fieldLabel: 'Grouper les factures par taux',
                                     name: 'groupingByTaux',
                                     id: 'groupingByTaux'
+                                },
+                                  {
+                                    
+                                    xtype: 'checkbox',
+                                    fieldLabel: 'Utilise la cmu',
+                                    name: 'cmu',
+                                    id: 'cmu'
                                 }
 
                             ]
@@ -864,7 +871,6 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             Ext.getCmp('dbl_BASE_REMISE').setValue(this.getOdatasource().dbl_BASE_REMISE);
             Ext.getCmp('str_CODE_DOC_COMPTOIRE').setValue(this.getOdatasource().str_CODE_DOC_COMPTOIRE);
             Ext.getCmp('bool_ENABLED').setValue(this.getOdatasource().bool_ENABLED);
-
             Ext.getCmp('lg_VILLE_ID').setValue(this.getOdatasource().lg_VILLE_ID);
             Ext.getCmp('lg_TYPE_TIERS_PAYANT_ID_ADD').setValue(this.getOdatasource().lg_TYPE_TIERS_PAYANT_ID);
             Ext.getCmp('lg_TYPE_CONTRAT_ID').setValue(this.getOdatasource().lg_TYPE_CONTRAT_ID);
@@ -876,8 +882,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             Ext.getCmp('montantFact').setValue(this.getOdatasource().montantFact);
             Ext.getCmp('nbrbons').setValue(this.getOdatasource().nbrbons);
               Ext.getCmp('groupingByTaux').setValue(this.getOdatasource().groupingByTaux);
-
-
+                 Ext.getCmp('cmu').setValue(this.getOdatasource().cmu);
             Ext.getCmp('dbl_CAUTION').disable();
 
             Ext.getCmp('bool_IsACCOUNT').hide();
@@ -998,8 +1003,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                     lg_GROUPE_ID: lg_GROUPE_ID,
                     montantFact: Ext.getCmp('montantFact').getValue(),
                     nbrbons: Ext.getCmp('nbrbons').getValue(),
-                    groupingByTaux:  Ext.getCmp('groupingByTaux').getValue()
-
+                    groupingByTaux:  Ext.getCmp('groupingByTaux').getValue(),
+                    cmu:Ext.getCmp('cmu').getValue()
                 },
                 success: function (response)
                 {
