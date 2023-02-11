@@ -42,20 +42,20 @@ import toolkits.utils.logger;
  * @author AKOUAME
  */
 public class tierspayantManagement extends bllBase {
-
+    
     Object Otable = TTiersPayant.class;
-
+    
     public tierspayantManagement(dataManager OdataManager) {
         this.setOdataManager(OdataManager);
         this.checkDatamanager();
     }
-
+    
     public tierspayantManagement(dataManager OdataManager, TUser OTUser) {
         this.setOdataManager(OdataManager);
         this.setOTUser(OTUser);
         this.checkDatamanager();
     }
-
+    
     public boolean create(
             String str_CODE_ORGANISME, String str_NAME, String str_FULLNAME,
             String str_ADRESSE, String str_MOBILE, String str_TELEPHONE, String str_MAIL,
@@ -69,20 +69,20 @@ public class tierspayantManagement extends bllBase {
             String lg_VILLE_ID, String lg_TYPE_TIERS_PAYANT_ID, String lg_TYPE_CONTRAT_ID, String lg_REGIMECAISSE_ID,
             String lg_RISQUE_ID, double dbl_CAUTION, double dbl_QUOTA_CONSO_MENSUELLE, int dbl_SOLDE, boolean bool_IsACCOUNT,
             TSequencier OTSequencier, String str_REGISTRE_COMMERCE, String str_CODE_OFFICINE, String str_COMPTE_CONTRIBUABLE,
-            boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons, Integer montantFact, boolean groupingByTaux) {
+            boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons, Integer montantFact, boolean groupingByTaux, boolean cmu) {
         boolean result = false;
         String str_PHOTO = "default.png";
         try {
-
+            
             if (this.checkTiersPayantIsExitst(str_CODE_ORGANISME, lg_TYPE_TIERS_PAYANT_ID) != null) {
                 this.buildErrorTraceMessage("Désolé! Un tiers payant utilise déjà ce code");
                 return false;
             }
-
+            
             TModelFacture OModelFacture = null;
             TTiersPayant OTTiersPayant = new TTiersPayant();
             compteClientManagement OcompteClientManagement = new compteClientManagement(this.getOdataManager());
-
+            
             try {
                 TGroupeTierspayant gr = (TGroupeTierspayant) this.getOdataManager().getEm().createNamedQuery("TGroupeTierspayant.findByStrLIBELLE").setParameter("strLIBELLE", lg_GROUPE_ID).getSingleResult();
                 if (gr != null) {
@@ -90,6 +90,7 @@ public class tierspayantManagement extends bllBase {
                 }
             } catch (Exception e) {
             }
+            OTTiersPayant.setCmus(cmu);
             OTTiersPayant.setIntMONTANTFAC(montantFact);
             OTTiersPayant.setIntNBREBONS(nbrbons);
             OTTiersPayant.setLgTIERSPAYANTID(this.getKey().getComplexId());
@@ -102,7 +103,7 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setStrTELEPHONE(str_TELEPHONE);
             OTTiersPayant.setStrMAIL(str_MAIL);
             OTTiersPayant.setDblPLAFONDCREDIT(dbl_PLAFOND_CREDIT);
-
+            
             OTTiersPayant.setBIsAbsolute(b_IsAbsolute);
             OTTiersPayant.setBoolIsACCOUNT(bool_IsACCOUNT);
             OTTiersPayant.setDblTAUXREMBOURSEMENT(dbl_TAUX_REMBOURSEMENT);
@@ -142,38 +143,38 @@ public class tierspayantManagement extends bllBase {
                  return;*/
                 OTTiersPayant.setLgVILLEID(OTVille);
             }
-
+            
             TTypeTiersPayant OTTypeTiersPayant = this.getOdataManager().getEm().find(TTypeTiersPayant.class, lg_TYPE_TIERS_PAYANT_ID);
             if (OTTypeTiersPayant != null) {
                 /*this.buildErrorTraceMessage("Impossible de creer un " + Otable, " Ref TYPE_TIERS_PAYANT : " + lg_TYPE_TIERS_PAYANT_ID + "  Invalide ");
                  return;*/
                 OTTiersPayant.setLgTYPETIERSPAYANTID(OTTypeTiersPayant);
             }
-
+            
             TTypeContrat OTTypeContrat = this.getOdataManager().getEm().find(TTypeContrat.class, lg_TYPE_CONTRAT_ID);
             if (OTTypeContrat != null) {
                 /*this.buildErrorTraceMessage("Impossible de creer un " + Otable, "Ref lg_TYPE_CONTRAT_ID : " + lg_TYPE_CONTRAT_ID + "  Invalide ");
                  return;*/
                 OTTiersPayant.setLgTYPECONTRATID(OTTypeContrat);
             }
-
+            
             TRegimeCaisse OTRegimeCaisse = this.getOdataManager().getEm().find(TRegimeCaisse.class, lg_REGIMECAISSE_ID);
             if (OTRegimeCaisse != null) {
                 /*this.buildErrorTraceMessage("Impossible de creer un " + Otable, "Ref lg_REGIMECAISSE_ID : " + lg_REGIMECAISSE_ID + "  Invalide ");
                  return;*/
                 OTTiersPayant.setLgREGIMECAISSEID(OTRegimeCaisse);
             }
-
+            
             TRisque OTRisque = this.getOdataManager().getEm().find(TRisque.class, lg_RISQUE_ID);
             if (OTRisque != null) {
                 /*this.buildErrorTraceMessage("Impossible de creer un " + Otable, "Ref Grossiste : " + lg_RISQUE_ID + "  Invalide ");
                  return;*/
                 OTTiersPayant.setLgRISQUEID(OTRisque);
             }
-
+            
             OTTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTTiersPayant.setDtCREATED(new Date());
-
+            
             if (this.persiste(OTTiersPayant)) {
                 if (OcompteClientManagement.createCompteClient("", dbl_QUOTA_CONSO_MENSUELLE, dbl_CAUTION, dbl_SOLDE, commonparameter.clt_TIERSPAYANT, OTTiersPayant.getLgTIERSPAYANTID()) != null) {
                     result = true;
@@ -187,7 +188,7 @@ public class tierspayantManagement extends bllBase {
         }
         return result;
     }
-
+    
     public void update(
             String lg_TIERS_PAYANT_ID, String str_CODE_ORGANISME, String str_NAME, String str_FULLNAME,
             String str_ADRESSE, String str_MOBILE, String str_TELEPHONE, String str_MAIL,
@@ -201,23 +202,23 @@ public class tierspayantManagement extends bllBase {
             String lg_VILLE_ID, String lg_TYPE_TIERS_PAYANT_ID, String lg_TYPE_CONTRAT_ID, String lg_REGIMECAISSE_ID,
             String lg_RISQUE_ID, String str_CODE_OFFICINE, String str_REGISTRE_COMMERCE, String str_COMPTE_CONTRIBUABLE,
             double dbl_QUOTA_CONSO_MENSUELLE, boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons,
-            Integer montantFact, boolean groupingByTaux) {
+            Integer montantFact, boolean groupingByTaux, boolean cmu) {
         TTiersPayant OTTiersPayant = null, OTTiersPayantOld = null;
         TCompteClient OTCompteClient = null;
         try {
-
+            
             OTTiersPayant = this.getTTiersPayant(lg_TIERS_PAYANT_ID);
             OTCompteClient = new compteClientManagement(this.getOdataManager()).getTCompteClient(lg_TIERS_PAYANT_ID);
             if (OTTiersPayant == null && OTCompteClient == null) {
                 this.buildErrorTraceMessage("Echec de mise à jour. Tiers payant inexisant.");
                 return;
             }
-
+            
             if (OTTiersPayantOld != null && !OTTiersPayant.equals(OTTiersPayantOld)) {
                 this.buildErrorTraceMessage("Désolé ce code est déjà utilisé par le tiers payant " + OTTiersPayant.getStrFULLNAME());
                 return;
             }
-
+            
             try {
 
                 // lg_VILLE_ID
@@ -254,9 +255,9 @@ public class tierspayantManagement extends bllBase {
                     OTTiersPayant.setLgRISQUEID(OTRisque);
                     new logger().oCategory.info("lg_RISQUE_ID  Create   " + lg_RISQUE_ID);
                 }
-
+                
             } catch (Exception e) {
-
+                
                 new logger().oCategory.info("Impossible de mettre a jour les donnees vennant des cles etrangers   ");
             }
             try {
@@ -266,7 +267,7 @@ public class tierspayantManagement extends bllBase {
                 }
             } catch (Exception e) {
             }
-
+            
             OTTiersPayant.setIntMONTANTFAC(montantFact);
             OTTiersPayant.setIntNBREBONS(nbrbons);
             OTTiersPayant.setStrCODEORGANISME(str_CODE_ORGANISME);
@@ -285,7 +286,7 @@ public class tierspayantManagement extends bllBase {
             }
             OTTiersPayant.setDblPLAFONDCREDIT(dbl_PLAFOND_CREDIT);
             OTTiersPayant.setBIsAbsolute(b_IsAbsolute);
-
+            OTTiersPayant.setCmus(cmu);
             OTTiersPayant.setDblTAUXREMBOURSEMENT(dbl_TAUX_REMBOURSEMENT);
             OTTiersPayant.setStrNUMEROCAISSEOFFICIEL(str_NUMERO_CAISSE_OFFICIEL);
             OTTiersPayant.setStrCENTREPAYEUR(str_CENTRE_PAYEUR);
@@ -304,7 +305,7 @@ public class tierspayantManagement extends bllBase {
             if (OTModelFacture != null) {
                 OTTiersPayant.setLgMODELFACTUREID(OTModelFacture);
             }
-
+            
             OTTiersPayant.setIntNBREEXEMPLAIREBORD(int_NBRE_EXEMPLAIRE_BORD);
             OTTiersPayant.setIntPERIODICITEEDITBORD(int_PERIODICITE_EDIT_BORD);
             OTTiersPayant.setIntDATEDERNIEREEDITION(int_DATE_DERNIERE_EDITION);
@@ -316,50 +317,50 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setGroupingByTaux(groupingByTaux);
             OTTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTTiersPayant.setDtUPDATED(new Date());
-
+            
             if (OTCompteClient.getDblQUOTACONSOMENSUELLE() > dbl_QUOTA_CONSO_MENSUELLE) {
                 this.buildErrorTraceMessage("Impossible de modifier le plafond. Etat du plafond supérieur au nouveau plafond.");
                 return;
             }
-
+            
             OTCompteClient.setDblPLAFOND(dbl_QUOTA_CONSO_MENSUELLE);
             OTCompteClient.setDtUPDATED(OTTiersPayant.getDtUPDATED());
             this.getOdataManager().getEm().merge(OTCompteClient);
-
+            
             this.merge(OTTiersPayant);
             this.do_event_log(this.getOdataManager(), "", "Modification du Tiers-payant " + OTTiersPayant.getStrFULLNAME(), this.getOTUser().getStrFIRSTNAME(), commonparameter.statut_enable, "t_tiers_payant", "t_tiers_payant", "Mouvement Tiers-payant", this.getOTUser().getLgUSERID());
-
+            
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible de mettre à jour  " + Otable, e.getMessage());
         }
-
+        
     }
-
+    
     public void updatePhotoTiersPayant(String lg_TIERS_PAYANT_ID, String str_PHOTO) {
-
+        
         try {
-
+            
             TTiersPayant OTTiersPayant = getOdataManager().getEm().find(TTiersPayant.class, lg_TIERS_PAYANT_ID);
             OTTiersPayant.setStrPHOTO(str_PHOTO);
-
+            
             OTTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTTiersPayant.setDtUPDATED(new Date());
-
+            
             this.persiste(OTTiersPayant);
-
+            
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
         } catch (Exception e) {
             this.buildErrorTraceMessage("Impossible de mettre à jour  " + Otable, e.getMessage());
         }
-
+        
     }
-
+    
     public boolean deleteTierspayant(String lg_TIERS_PAYANT_ID) {
         boolean result = false;
         try {
-
+            
             TTiersPayant OTTiersPayant = this.getTTiersPayant(lg_TIERS_PAYANT_ID);
             if (this.delete(OTTiersPayant)) {
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
@@ -367,164 +368,164 @@ public class tierspayantManagement extends bllBase {
             } else {
                 this.buildErrorTraceMessage("Echec de suppression d'un tiers payant qui a déjà subit une action dans le système");
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Echec de suppression du tiers payant sélectionné");
         }
         return result;
     }
-
+    
     public List<TTiersPayant> getAllTiersPayant() {
-
+        
         List<dal.TTiersPayant> lstTTiersPayant = null;
-
+        
         try {
-
+            
             lstTTiersPayant = getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE  t.strSTATUT LIKE ?1 ").
                     setParameter(1, commonparameter.statut_enable).
                     getResultList();
             new logger().OCategory.info(lstTTiersPayant.size());
-
+            
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             this.buildSuccesTraceMessage("TiersPayant(s) Existant(s)   :: " + lstTTiersPayant);
             return lstTTiersPayant;
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("TiersPayant Inexistant ", e.getMessage());
             return lstTTiersPayant;
         }
-
+        
     }
-
+    
     public List<TTiersPayant> getTiersPayantByType(String lg_TYPE_TIERS_PAYANT_ID) {
-
+        
         List<dal.TTiersPayant> lstTTiersPayant = null;
-
+        
         try {
-
+            
             lstTTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.lgTIERSPAYANTID LIKE ?1 AND t.strSTATUT LIKE ?2").
                     setParameter(1, "%" + lg_TYPE_TIERS_PAYANT_ID + "%").
                     setParameter(2, commonparameter.statut_enable).
                     getResultList();
             new logger().OCategory.info(lstTTiersPayant.size());
-
+            
             for (TTiersPayant lstTTiersPayant1 : lstTTiersPayant) {
                 this.refresh(lstTTiersPayant1);
             }
-
+            
             this.buildSuccesTraceMessage("Produit(s) Existant(s)   :: " + lstTTiersPayant);
             return lstTTiersPayant;
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("Produit Inexistant ", e.getMessage());
             return lstTTiersPayant;
         }
-
+        
     }
-
+    
     public List<TTiersPayant> getTiersPayantByTypeContrat(String lg_TYPE_CONTRAT_ID) {
-
+        
         List<dal.TTiersPayant> lstTTiersPayant = null;
-
+        
         try {
-
+            
             lstTTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.lgTYPECONTRATID = ?1 AND t.strSTATUT LIKE ?2").
                     setParameter(1, lg_TYPE_CONTRAT_ID).
                     setParameter(2, commonparameter.statut_enable).
                     getResultList();
             new logger().OCategory.info(lstTTiersPayant.size());
-
+            
             for (TTiersPayant lstTTiersPayant1 : lstTTiersPayant) {
                 this.refresh(lstTTiersPayant1);
             }
-
+            
             this.buildSuccesTraceMessage("Produit(s) Existant(s)   :: " + lstTTiersPayant);
             return lstTTiersPayant;
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("Produit Inexistant ", e.getMessage());
             return lstTTiersPayant;
         }
-
+        
     }
-
+    
     public List<TTiersPayant> getTiersPayantByCodeTP(String str_CODE_ORGANISME) {
-
+        
         List<dal.TTiersPayant> lstTTiersPayant = null;
-
+        
         try {
-
+            
             lstTTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.strCODEORGANISME LIKE ?1 AND t.strSTATUT LIKE ?2").
                     setParameter(1, "%" + str_CODE_ORGANISME + "%").
                     setParameter(2, commonparameter.statut_enable).
                     getResultList();
             new logger().OCategory.info(lstTTiersPayant.size());
-
+            
             for (TTiersPayant lstTTiersPayant1 : lstTTiersPayant) {
                 this.refresh(lstTTiersPayant1);
             }
-
+            
             this.buildSuccesTraceMessage("Produit(s) Existant(s)   :: " + lstTTiersPayant);
             return lstTTiersPayant;
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("Produit Inexistant ", e.getMessage());
             return lstTTiersPayant;
         }
-
+        
     }
-
+    
     public List<TTiersPayant> getTiersPayantByNomAbrege(String str_NAME) {
-
+        
         List<dal.TTiersPayant> lstTTiersPayant = null;
-
+        
         try {
-
+            
             lstTTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.strNAME = ?1 AND t.strSTATUT LIKE ?2").
                     setParameter(1, "%" + str_NAME + "%").
                     setParameter(2, commonparameter.statut_enable).
                     getResultList();
             new logger().OCategory.info(lstTTiersPayant.size());
-
+            
             for (TTiersPayant lstTTiersPayant1 : lstTTiersPayant) {
                 this.refresh(lstTTiersPayant1);
             }
-
+            
             this.buildSuccesTraceMessage("Produit(s) Existant(s)   :: " + lstTTiersPayant);
             return lstTTiersPayant;
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("Produit Inexistant ", e.getMessage());
             return lstTTiersPayant;
         }
-
+        
     }
-
+    
     public List<TTiersPayant> getTiersPayantByNomComplet(String str_FULLNAME) {
-
+        
         List<dal.TTiersPayant> lstTTiersPayant = null;
-
+        
         try {
-
+            
             lstTTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.strFULLNAME = ?1 AND t.strSTATUT LIKE ?2").
                     setParameter(1, "%" + str_FULLNAME + "%").
                     setParameter(2, commonparameter.statut_enable).
                     getResultList();
             new logger().OCategory.info(lstTTiersPayant.size());
-
+            
             for (TTiersPayant lstTTiersPayant1 : lstTTiersPayant) {
                 this.refresh(lstTTiersPayant1);
             }
-
+            
             this.buildSuccesTraceMessage("Produit(s) Existant(s)   :: " + lstTTiersPayant);
             return lstTTiersPayant;
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("Produit Inexistant ", e.getMessage());
             return lstTTiersPayant;
         }
-
+        
     }
 
     //String str_CODE_ORGANISME,, String str_MOBILE
@@ -542,12 +543,12 @@ public class tierspayantManagement extends bllBase {
      double dbl_MONTANT_F_CLIENT, double dbl_BASE_REMISE, String str_CODE_DOC_COMPTOIRE, boolean bool_ENABLED
      */
     ) {
-
+        
         TTiersPayant OTTiersPayant = null;
         try {
-
+            
             OTTiersPayant = new TTiersPayant();
-
+            
             OTTiersPayant.setLgTIERSPAYANTID(this.getKey().getComplexId());
             OTTiersPayant.setStrCODEORGANISME(str_CODE_ORGANISME);
             OTTiersPayant.setStrNAME(str_NAME);
@@ -580,7 +581,7 @@ public class tierspayantManagement extends bllBase {
              OTTiersPayant.setDblBASEREMISE(dbl_BASE_REMISE);
              OTTiersPayant.setStrCODEDOCCOMPTOIRE(str_CODE_DOC_COMPTOIRE);
              OTTiersPayant.setBoolENABLED(bool_ENABLED);*/
-
+            
             TVille OTVille = this.getOdataManager().getEm().find(TVille.class, lg_VILLE_ID);
             if (OTVille == null) {
                 this.buildErrorTraceMessage("Impossible de creer un " + Otable, "Ref Ville : " + lg_VILLE_ID + "  Invalide ");
@@ -588,75 +589,75 @@ public class tierspayantManagement extends bllBase {
             }
             OTTiersPayant.setLgVILLEID(OTVille);
             new logger().OCategory.info("Ville OK ID = " + OTVille.getLgVILLEID());
-
+            
             TTypeTiersPayant OTTypeTiersPayant = this.getOdataManager().getEm().find(TTypeTiersPayant.class, lg_TYPE_TIERS_PAYANT_ID);
             if (OTTypeTiersPayant == null) {
                 this.buildErrorTraceMessage("Impossible de creer un " + Otable, " Ref TYPE_TIERS_PAYANT : " + lg_TYPE_TIERS_PAYANT_ID + "  Invalide ");
                 return null;
             }
             OTTiersPayant.setLgTYPETIERSPAYANTID(OTTypeTiersPayant);
-
+            
             TTypeContrat OTTypeContrat = this.getOdataManager().getEm().find(TTypeContrat.class, lg_TYPE_CONTRAT_ID);
             if (OTTypeContrat == null) {
                 this.buildErrorTraceMessage("Impossible de creer un " + Otable, "Ref Grossiste : " + lg_TYPE_CONTRAT_ID + "  Invalide ");
                 return null;
             }
             OTTiersPayant.setLgTYPECONTRATID(OTTypeContrat);
-
+            
             TRegimeCaisse OTRegimeCaisse = this.getOdataManager().getEm().find(TRegimeCaisse.class, lg_REGIMECAISSE_ID);
             if (OTRegimeCaisse == null) {
                 this.buildErrorTraceMessage("Impossible de creer un " + Otable, "Ref Grossiste : " + lg_REGIMECAISSE_ID + "  Invalide ");
                 return null;
             }
             OTTiersPayant.setLgREGIMECAISSEID(OTRegimeCaisse);
-
+            
             TRisque OTRisque = this.getOdataManager().getEm().find(TRisque.class, lg_RISQUE_ID);
             if (OTRisque == null) {
                 this.buildErrorTraceMessage("Impossible de creer un " + Otable, "Ref Grossiste : " + lg_RISQUE_ID + "  Invalide ");
                 return null;
             }
             OTTiersPayant.setLgRISQUEID(OTRisque);
-
+            
             OTTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTTiersPayant.setDtCREATED(new Date());
-
+            
             this.persiste(OTTiersPayant);
             this.refresh(OTTiersPayant);
-
+            
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-
+            
             return OTTiersPayant;
-
+            
         } catch (Exception e) {
             this.buildErrorTraceMessage("Impossible de creer un " + Otable, e.getMessage());
         }
-
+        
         return OTTiersPayant;
-
+        
     }
-
+    
     private Integer GetintTotalPercentageCustTP(String lg_COMPTE_CLIENT_ID) {
         List<dal.TCompteClientTiersPayant> lstTCompteClientTiersPayant = new ArrayList<>();
         int int_sum_percentage = 0;
         try {
-
+            
             lstTCompteClientTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgCOMPTECLIENTID.lgCOMPTECLIENTID LIKE ?1    AND t.strSTATUT LIKE ?3").
                     setParameter(1, lg_COMPTE_CLIENT_ID)
                     .setParameter(3, commonparameter.statut_enable)
                     .getResultList();
-
+            
             for (int i = 0; i < lstTCompteClientTiersPayant.size(); i++) {
-
+                
                 int_sum_percentage = int_sum_percentage + lstTCompteClientTiersPayant.get(i).getIntPOURCENTAGE();
                 new logger().OCategory.info("*** int_sum_percentage *** " + int_sum_percentage);
             }
         } catch (Exception e) {
             new logger().OCategory.info("Error Loading data  " + e.toString());
         }
-
+        
         return int_sum_percentage;
     }
-
+    
     public boolean CheckPercentageLimit(int int_sum_percentage) {
         int int_limite_percentage = 100;
         boolean result = true;
@@ -673,23 +674,23 @@ public class tierspayantManagement extends bllBase {
         try {
             TTiersPayant OTTiersPayant = this.getTTiersPayant(lg_TIERS_PAYANT_ID);
             TCompteClient OTCompteClient = new clientManagement(this.getOdataManager()).getTCompteClient(lg_COMPTE_CLIENT_ID);
-
+            
             if (OTTiersPayant != null && OTCompteClient != null) {
                 if (!this.isTiersPayantExistForCptltTiersP(OTCompteClient.getLgCOMPTECLIENTID(), OTTiersPayant.getLgTIERSPAYANTID())) {
                     if (!this.isRegimeExistForCptltTiersP(OTCompteClient.getLgCOMPTECLIENTID(), int_PRIORITY)) {
                         OTCompteClientTiersPayant = this.createTCompteClientTiersPayant(OTCompteClient, OTTiersPayant, int_POURCENTAGE, int_PRIORITY, dbl_PLAFOND, dbl_QUOTA_CONSO_VENTE, str_NUMERO_SECURITE_SOCIAL, dbPLAFONDENCOURS, b_IsAbsolute);
-
+                        
                     }
                 }
             } else {
                 this.buildErrorTraceMessage("Echec d'ajout de ce tiers payant au client séléctionné");
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Echec d'ajout de ce tiers payant au client séléctionné");
         }
-
+        
         return OTCompteClientTiersPayant;
     }
 
@@ -697,13 +698,13 @@ public class tierspayantManagement extends bllBase {
     public void delete_compteclt_tierspayant(String lg_COMPTE_CLIENT_ID, String lg_TIERS_PAYANT_ID) {
         List<TCompteClientTiersPayant> lstTCompteClientTiersPayant = new ArrayList<TCompteClientTiersPayant>();
         try {
-
+            
             new logger().OCategory.info(" ID Compte Client " + lg_COMPTE_CLIENT_ID);
             new logger().OCategory.info(" ID Tiers Payant " + lg_TIERS_PAYANT_ID);
             lstTCompteClientTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgCOMPTECLIENTID.lgCOMPTECLIENTID = ?1 AND t.lgTIERSPAYANTID.lgTIERSPAYANTID = ?2")
                     .setParameter(1, lg_COMPTE_CLIENT_ID)
                     .setParameter(2, lg_TIERS_PAYANT_ID).getResultList();
-
+            
             for (TCompteClientTiersPayant OTCompteClientTiersPayant : lstTCompteClientTiersPayant) {
                 this.refresh(OTCompteClientTiersPayant);
                 this.delete(OTCompteClientTiersPayant);
@@ -715,7 +716,7 @@ public class tierspayantManagement extends bllBase {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible de supprimer un tiers payant ayant un compte client");
         }
-
+        
     }
 
     // fin karno
@@ -723,38 +724,38 @@ public class tierspayantManagement extends bllBase {
         List<TCompteClientTiersPayant> lstTCompteClientTiersPayant = new ArrayList<TCompteClientTiersPayant>();
         int i = 0;
         try {
-
+            
             lstTCompteClientTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgCOMPTECLIENTTIERSPAYANTID = ?1")
                     .setParameter(1, lg_COMPTE_CLIENT_TIERS_PAYANT_ID).getResultList();
-
+            
             for (TCompteClientTiersPayant OTCompteClientTiersPayant : lstTCompteClientTiersPayant) {
                 this.refresh(OTCompteClientTiersPayant);
                 if (this.delete(OTCompteClientTiersPayant)) {
                     i++;
                 }
             }
-
+            
             if (lstTCompteClientTiersPayant.size() == i) {
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             } else {
                 this.buildErrorTraceMessage("Le client sélectionné a déjà effectué des transactions avec ce tiers payant");
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible de supprimer ce tiers payant associé au client courant");
         }
-
+        
     }
 
     //mise a jour tiers payant compte client
     public boolean updateComptecltTierspayant(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID, String lg_COMPTE_CLIENT_ID, String lg_TIERS_PAYANT_ID, int int_POURCENTAGE, int int_PRIORITY, double dbl_PLAFOND, double dbl_QUOTA_CONSO_VENTE, String str_NUMERO_SECURITE_SOCIAL, Integer db_PLAFOND_ENCOURS, boolean modeupdate, boolean isUbsolut) {
         boolean result = false;
         try {
-
+            
             TCompteClientTiersPayant OTCompteClientTiersPayant = this.getOdataManager().getEm().find(TCompteClientTiersPayant.class, lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
             new logger().OCategory.info("Dans updateComptecltTierspayant lg_COMPTE_CLIENT_TIERS_PAYANT_ID  " + OTCompteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID());
-
+            
             if (modeupdate) {
                 if (db_PLAFOND_ENCOURS != null) {
                     if (OTCompteClientTiersPayant.getDbCONSOMMATIONMENSUELLE() > db_PLAFOND_ENCOURS && db_PLAFOND_ENCOURS > 0) {
@@ -762,24 +763,24 @@ public class tierspayantManagement extends bllBase {
                         return result;
                     }
                     OTCompteClientTiersPayant.setDbPLAFONDENCOURS(db_PLAFOND_ENCOURS);
-
+                    
                 }
                 OTCompteClientTiersPayant.setDblPLAFOND(dbl_PLAFOND);
                 OTCompteClientTiersPayant.setBIsAbsolute(isUbsolut);
             }
             OTCompteClientTiersPayant.setIntPOURCENTAGE(int_POURCENTAGE);
-
+            
             OTCompteClientTiersPayant.setDblQUOTACONSOVENTE(dbl_QUOTA_CONSO_VENTE);
             OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(str_NUMERO_SECURITE_SOCIAL);
             System.out.println("-------------------------------------------  " + OTCompteClientTiersPayant.getStrNUMEROSECURITESOCIAL());
 
             //OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTCompteClientTiersPayant.setDtUPDATED(new Date());
-
+            
             TCompteClient OCompteClient = new clientManagement(this.getOdataManager()).getTCompteClient(lg_COMPTE_CLIENT_ID);
             TTiersPayant OTTiersPayant = this.getTTiersPayant(lg_TIERS_PAYANT_ID);
             new logger().OCategory.info("Client " + OCompteClient.getLgCLIENTID().getStrFIRSTNAME() + " tiers payant " + OTTiersPayant.getStrFULLNAME());
-
+            
             try {
                 TCompteClientTiersPayant OTCompteClientTiersPayantBis = this.isRegimeExistForCptltTiersPBis(OCompteClient.getLgCOMPTECLIENTID(), int_PRIORITY, commonparameter.statut_enable);
                 new logger().OCategory.info("tiers payant trouvé " + OTCompteClientTiersPayantBis.getLgTIERSPAYANTID().getStrFULLNAME());
@@ -795,7 +796,7 @@ public class tierspayantManagement extends bllBase {
                     OTCompteClientTiersPayant.setIntPRIORITY(int_PRIORITY);
                     result = true;
                 }
-
+                
             } catch (Exception e) {
                 e.printStackTrace();
                 new logger().OCategory.info("Dans le catch de l'appel de isRegimeExistForCptltTiersPBis");
@@ -803,11 +804,11 @@ public class tierspayantManagement extends bllBase {
                 result = true;
             }
             OTCompteClientTiersPayant.setLgTIERSPAYANTID(OTTiersPayant);
-
+            
             if (result) {
                 this.merge(OTCompteClientTiersPayant);
                 if (OTCompteClientTiersPayant.getIntPRIORITY() == 1) {
-
+                    
                     TClient client = OTCompteClientTiersPayant.getLgCOMPTECLIENTID().getLgCLIENTID();
                     client.setStrNUMEROSECURITESOCIAL(str_NUMERO_SECURITE_SOCIAL);
                     System.out.println("client  " + client.getStrNUMEROSECURITESOCIAL());
@@ -815,7 +816,7 @@ public class tierspayantManagement extends bllBase {
                 }
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible de mettre a jour ce tiers payant associé au client courant");
@@ -842,16 +843,16 @@ public class tierspayantManagement extends bllBase {
 
     //Liste des transactions par date par compte,et type de compte 
     public List<TPreenregistrementCompteClientTiersPayent> listTransactionByClientPerDateAndByTierspayant(String search_value, String dt_DEBUT, String dt_FIN, String lg_COMPTE_CLIENT_TIERS_PAYANT_ID, String str_STATUT) {
-
+        
         List<TPreenregistrementCompteClientTiersPayent> lstTPreenregistrementCompteClientTiersPayent = new ArrayList<TPreenregistrementCompteClientTiersPayent>();
         Date dtFin;
-
+        
         try {
-
+            
             if (search_value.equalsIgnoreCase("") || search_value == null) {
                 search_value = "%%";
             }
-
+            
             if (dt_DEBUT.equalsIgnoreCase("") || dt_DEBUT == null) {
                 dt_DEBUT = "2015-04-20";
                 new logger().OCategory.info("dt_DEBUT:" + dt_DEBUT);
@@ -863,7 +864,7 @@ public class tierspayantManagement extends bllBase {
             }
             Date dtDEBUT = this.getKey().stringToDate(dt_DEBUT, this.getKey().formatterMysqlShort);
             new logger().OCategory.info("dtDEBUT   " + dtDEBUT + " dtFin " + dtFin);
-
+            
             new logger().OCategory.info("search_value  " + search_value + " dans la fonction listTransactionByClientPerDateAndByTierspayant lg_COMPTE_CLIENT_TIERS_PAYANT_ID :" + lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
             lstTPreenregistrementCompteClientTiersPayent = this.getOdataManager().getEm().createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID LIKE ?1 AND t.strSTATUT = ?2 AND (t.dtCREATED BETWEEN ?3 AND ?4) AND (t.lgPREENREGISTREMENTID.strREF LIKE ?5 OR t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strFIRSTNAME LIKE ?6 OR t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strLASTNAME LIKE ?7) ORDER BY t.dtCREATED DESC")
                     .setParameter(1, lg_COMPTE_CLIENT_TIERS_PAYANT_ID).setParameter(2, str_STATUT).setParameter(3, dtDEBUT).setParameter(4, dtFin).setParameter(5, "%" + search_value + "%").setParameter(6, "%" + search_value + "%").setParameter(7, "%" + search_value + "%").getResultList();
@@ -872,7 +873,7 @@ public class tierspayantManagement extends bllBase {
                 this.refresh(OTPreenregistrementCompteClientTiersPayent);
                 new logger().OCategory.info("Reference vente " + OTPreenregistrementCompteClientTiersPayent.getLgPREENREGISTREMENTID().getStrREF() + " Client " + OTPreenregistrementCompteClientTiersPayent.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID().getStrFIRSTNAME() + " " + OTPreenregistrementCompteClientTiersPayent.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID().getStrLASTNAME() + " Tiers payant " + OTPreenregistrementCompteClientTiersPayent.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME());
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.setMessage(commonparameter.PROCESS_FAILED);
@@ -906,16 +907,16 @@ public class tierspayantManagement extends bllBase {
 
     //liste des snap shot sur une periode
     public List<TSnapshotPreenregistrementCompteClientTiersPayent> listTSnapshotPreenregistrementCompteClientTiersPayent(String search_value, String dt_DEBUT, String dt_FIN, String lg_TIERS_PAYANT_ID, String lg_COMPTE_CLIENT_ID, String str_STATUT) {
-
+        
         List<TSnapshotPreenregistrementCompteClientTiersPayent> listTSnapshotPreenregistrementCompteClientTiersPayent = new ArrayList<TSnapshotPreenregistrementCompteClientTiersPayent>();
         Date dtFin;
-
+        
         try {
-
+            
             if (search_value.equalsIgnoreCase("") || search_value == null) {
                 search_value = "%%";
             }
-
+            
             if (dt_DEBUT.equalsIgnoreCase("") || dt_DEBUT == null) {
                 dt_DEBUT = "2015-04-20";
                 new logger().OCategory.info("dt_DEBUT:" + dt_DEBUT);
@@ -927,7 +928,7 @@ public class tierspayantManagement extends bllBase {
             }
             Date dtDEBUT = this.getKey().stringToDate(dt_DEBUT, this.getKey().formatterMysqlShort);
             new logger().OCategory.info("dtDEBUT   " + dtDEBUT + " dtFin " + dtFin);
-
+            
             new logger().OCategory.info("search_value  " + search_value + " dans la fonction listTSnapshotPreenregistrementCompteClientTiersPayent lg_TIERS_PAYANT_ID :" + lg_TIERS_PAYANT_ID + " lg_COMPTE_CLIENT_ID " + lg_COMPTE_CLIENT_ID);
             listTSnapshotPreenregistrementCompteClientTiersPayent = this.getOdataManager().getEm().createQuery("SELECT t FROM TSnapshotPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTIERSPAYANTID LIKE ?1 AND t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCOMPTECLIENTID LIKE ?2 AND t.strSTATUT = ?3 AND (t.dtCREATED BETWEEN ?4 AND ?5) AND (t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strFIRSTNAME LIKE ?6 OR t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strLASTNAME LIKE ?7) ORDER BY t.dtCREATED DESC")
                     .setParameter(1, lg_TIERS_PAYANT_ID).setParameter(2, lg_COMPTE_CLIENT_ID).setParameter(3, str_STATUT).setParameter(4, dtDEBUT).setParameter(5, dtFin).setParameter(6, "%" + search_value + "%").setParameter(7, "%" + search_value + "%").getResultList();
@@ -936,7 +937,7 @@ public class tierspayantManagement extends bllBase {
                 this.refresh(OTSnapshotPreenregistrementCompteClientTiersPayent);
                 new logger().OCategory.info("Nombre de transaction " + OTSnapshotPreenregistrementCompteClientTiersPayent.getIntNUMBERTRANSACTION() + " Client " + OTSnapshotPreenregistrementCompteClientTiersPayent.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID().getStrFIRSTNAME() + " " + OTSnapshotPreenregistrementCompteClientTiersPayent.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID().getStrLASTNAME() + " Tiers payant " + OTSnapshotPreenregistrementCompteClientTiersPayent.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME());
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.setMessage(commonparameter.PROCESS_FAILED);
@@ -990,7 +991,7 @@ public class tierspayantManagement extends bllBase {
             }
             Date dtDEBUT = this.getKey().stringToDate(dt_DEBUT, this.getKey().formatterMysqlShort);
             new logger().OCategory.info("dtDEBUT   " + dtDEBUT + " dtFin " + dtFin);
-
+            
             lst = this.getOdataManager().getEm().createQuery("SELECT t FROM TSnapshotPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTIERSPAYANTID LIKE ?1 AND t.strSTATUT = ?2 AND (t.dtCREATED BETWEEN ?4 AND ?5) ORDER BY t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strFULLNAME ASC")
                     .setParameter(1, lg_TIERS_PAYANT_ID).setParameter(2, str_STATUT).setParameter(4, dtDEBUT).setParameter(5, dtFin).getResultList();
             new logger().OCategory.info("lst taille dans getAllDossierNoSold " + lst.size());
@@ -1042,7 +1043,7 @@ public class tierspayantManagement extends bllBase {
     public List<TTiersPayant> getAllTierspayant(String str_STATUT, String dt_DEBUT, String dt_FIN, String lg_TIERS_PAYANT_ID) {
         List<TTiersPayant> lstTiersPayants = new ArrayList<TTiersPayant>();
         List<TTiersPayant> lstTiersPayantsFinal = new ArrayList<TTiersPayant>();
-
+        
         Date dtFin;
         try {
             if (dt_DEBUT.equalsIgnoreCase("") || dt_DEBUT == null) {
@@ -1056,7 +1057,7 @@ public class tierspayantManagement extends bllBase {
             }
             Date dtDEBUT = this.getKey().stringToDate(dt_DEBUT, this.getKey().formatterMysqlShort);
             new logger().OCategory.info("dtDEBUT   " + dtDEBUT + " dtFin " + dtFin);
-
+            
             lstTiersPayants = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.strSTATUT = ?1 AND t.lgTIERSPAYANTID LIKE ?2")
                     .setParameter(1, commonparameter.statut_enable).setParameter(2, lg_TIERS_PAYANT_ID).getResultList();
             new logger().OCategory.info("lstTiersPayants taille " + lstTiersPayants.size());
@@ -1075,13 +1076,13 @@ public class tierspayantManagement extends bllBase {
         new logger().OCategory.info("lstTiersPayantsFinal taille " + lstTiersPayantsFinal.size());
         return lstTiersPayantsFinal;
     }
-
+    
     public List<TTiersPayant> getAllTierspayant(String str_STATUT, Date dtDEBUT, Date dtFin, String lg_TIERS_PAYANT_ID) {
         List<TTiersPayant> lstTiersPayants = new ArrayList<TTiersPayant>();
         List<TTiersPayant> lstTiersPayantsFinal = new ArrayList<TTiersPayant>();
-
+        
         try {
-
+            
             lstTiersPayants = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.strSTATUT = ?1 AND t.lgTIERSPAYANTID LIKE ?2")
                     .setParameter(1, commonparameter.statut_enable).setParameter(2, lg_TIERS_PAYANT_ID).getResultList();
             new logger().OCategory.info("lstTiersPayants taille " + lstTiersPayants.size());
@@ -1103,31 +1104,31 @@ public class tierspayantManagement extends bllBase {
     //fin liste des tiers payants qui doivent sur une periode
 
     public List<TTiersPayant> getTiersPayantByTypeBis(String lg_TYPE_CLIENT_ID) {
-
+        
         List<TTiersPayant> lstTTiersPayant = new ArrayList<TTiersPayant>();
         String str_NAME = "%%";
         TTypeClient OTypeClient = null;
         try {
-
+            
             if (!lg_TYPE_CLIENT_ID.equalsIgnoreCase("%%")) {
                 OTypeClient = this.getOdataManager().getEm().find(TTypeClient.class, lg_TYPE_CLIENT_ID);
                 new logger().OCategory.info("str_NAME " + OTypeClient.getStrNAME());
                 str_NAME = OTypeClient.getStrNAME();
             }
             new logger().OCategory.info("str_NAME " + str_NAME);
-
+            
             lstTTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.lgTYPETIERSPAYANTID.strLIBELLETYPETIERSPAYANT LIKE ?1 AND t.strSTATUT LIKE ?2").
                     setParameter(1, str_NAME).
                     setParameter(2, commonparameter.statut_enable).
                     getResultList();
-
+            
             for (TTiersPayant lstTTiersPayant1 : lstTTiersPayant) {
                 this.refresh(lstTTiersPayant1);
             }
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Aucun tiers payant trouvé ", e.getMessage());
-
+            
         }
         new logger().OCategory.info("lstTTiersPayant taille : " + lstTTiersPayant.size());
         return lstTTiersPayant;
@@ -1140,7 +1141,7 @@ public class tierspayantManagement extends bllBase {
         try {
             TCompteClient OTCompteClient = this.getOdataManager().getEm().find(TCompteClient.class, lg_COMPTE_CLIENT_ID);
             TTiersPayant OTTiersPayant = this.getOdataManager().getEm().find(TTiersPayant.class, lg_TIERS_PAYANT_ID);
-
+            
             OTCompteClientTiersPayant.setLgCOMPTECLIENTTIERSPAYANTID(this.getKey().getComplexId());
             OTCompteClientTiersPayant.setIntPOURCENTAGE(int_POURCENTAGE);
             OTCompteClientTiersPayant.setIntPRIORITY(int_PRIORITY);
@@ -1151,31 +1152,31 @@ public class tierspayantManagement extends bllBase {
             OTCompteClientTiersPayant.setBIsAbsolute(b_IsAbsolute);
             OTCompteClientTiersPayant.setDbPLAFONDENCOURS(db_PLAFOND_ENCOURS);
             OTCompteClientTiersPayant.setDblPLAFOND(plafond);
-
+            
             if (bool_REGIME_add.equals("RO")) {
                 OTCompteClientTiersPayant.setBISRO(true);
             } else {
                 OTCompteClientTiersPayant.setBISRO(false);
             }
-
+            
             if (bool_REGIME_add.equals("RC1")) {
                 OTCompteClientTiersPayant.setBISRC1(true);
             } else {
                 OTCompteClientTiersPayant.setBISRC1(false);
             }
-
+            
             if (bool_REGIME_add.equals("RC2")) {
                 OTCompteClientTiersPayant.setBISRC2(true);
             } else {
                 OTCompteClientTiersPayant.setBISRC2(false);
             }
-
+            
             this.persiste(OTCompteClientTiersPayant);
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             result = true;
         } catch (Exception e) {
             this.buildErrorTraceMessage("Impossible d\'associer un tiers payant a un compte client");
-
+            
         }
         return result;
     }
@@ -1183,41 +1184,41 @@ public class tierspayantManagement extends bllBase {
 
     public void updateComptecltTierspayantPercent(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID, int int_POURCENTAGE) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = null;
-
+        
         try {
-
+            
             OTCompteClientTiersPayant = this.getOdataManager().getEm().find(TCompteClientTiersPayant.class, lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
             if (OTCompteClientTiersPayant == null) {
                 new logger().OCategory.info("  *** OTCompteClientTiersPayant is null *** ");
                 return;
             }
-
+            
             OTCompteClientTiersPayant.setIntPOURCENTAGE(int_POURCENTAGE);
             OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTCompteClientTiersPayant.setDtUPDATED(new Date());
-
+            
             this.persiste(OTCompteClientTiersPayant);
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible de mettre a jour ce tiers payant associé au client courant  " + e.toString());
         }
-
+        
     }
-
+    
     public TCompteClientTiersPayant updateComptecltTierspayantLigth(String lg_COMPTE_CLIENT_ID, String lg_TIERS_PAYANT_ID, int int_POURCENTAGE) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = null;
         try {
-
+            
             OTCompteClientTiersPayant = (TCompteClientTiersPayant) this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgCOMPTECLIENTID.lgCOMPTECLIENTID = ?1 AND t.lgTIERSPAYANTID.lgTIERSPAYANTID = ?2 AND t.strSTATUT LIKE ?3")
                     .setParameter(1, lg_COMPTE_CLIENT_ID)
                     .setParameter(2, lg_TIERS_PAYANT_ID)
                     .setParameter(3, commonparameter.statut_enable).getSingleResult();
-
+            
             OTCompteClientTiersPayant.setIntPOURCENTAGE(int_POURCENTAGE);
             OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTCompteClientTiersPayant.setDtUPDATED(new Date());
-
+            
             this.persiste(OTCompteClientTiersPayant);
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
         } catch (Exception e) {
@@ -1226,24 +1227,24 @@ public class tierspayantManagement extends bllBase {
         }
         return OTCompteClientTiersPayant;
     }
-
+    
     public List<TPreenregistrementCompteClientTiersPayent> ManageVenteTpCouverture(List<TCompteClientTiersPayant> lstTCompteClientTiersPayant, TPreenregistrement OTPreenregistrement) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = null;
         List<TPreenregistrementCompteClientTiersPayent> lstT = new ArrayList<TPreenregistrementCompteClientTiersPayent>();
         List<TPreenregistrementCompteClientTiersPayent> lstTemp = new ArrayList<TPreenregistrementCompteClientTiersPayent>();
         int tp_taux = 0;
         TPreenregistrementCompteClientTiersPayent oTPreenregistrementCompteClientTiersPayent = null;
-
+        
         if (OTPreenregistrement == null) {
             this.buildErrorTraceMessage("ERROR", " Desole il ne sagit pas dune vente ");
             return null;
         }
-
+        
         if (lstTCompteClientTiersPayant == null) {
             this.buildErrorTraceMessage("ERROR", "Desole lstTCompteClientTiersPayant est null");
             return null;
         }
-
+        
         if (lstTCompteClientTiersPayant.isEmpty()) {
             this.buildErrorTraceMessage("ERROR", "Desole lstTCompteClientTiersPayant est vide");
             return null;
@@ -1255,11 +1256,11 @@ public class tierspayantManagement extends bllBase {
                     .setParameter(2, commonparameter.statut_is_Process)
                     .setParameter(3, OTCompteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID())
                     .getResultList();
-
+            
             lstT.addAll(lstTemp);
         }
         new logger().OCategory.info(" 223 lstT  " + lstT.size());
-
+        
         if (lstT == null || lstT.isEmpty()) {
             new logger().OCategory.info(" 226 lstT is null ");
             this.buildErrorTraceMessage("ERROR", "Desole pas de preenregistrement compte client tiers payant");
@@ -1269,10 +1270,10 @@ public class tierspayantManagement extends bllBase {
                 } else {
                     tp_taux = lstTCompteClientTiersPayant.get(j).getIntPOURCENTAGE();
                 }
-
+                
                 oTPreenregistrementCompteClientTiersPayent = new TPreenregistrementCompteClientTiersPayent();
                 oTPreenregistrementCompteClientTiersPayent.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(this.getKey().getComplexId());
-
+                
                 oTPreenregistrementCompteClientTiersPayent.setDtCREATED(new Date());
                 oTPreenregistrementCompteClientTiersPayent.setLgCOMPTECLIENTTIERSPAYANTID(lstTCompteClientTiersPayant.get(j));
                 oTPreenregistrementCompteClientTiersPayent.setLgPREENREGISTREMENTID(OTPreenregistrement);
@@ -1284,7 +1285,7 @@ public class tierspayantManagement extends bllBase {
             }
             return lstT;
         }
-
+        
         if (!lstT.isEmpty()) {
             for (int i = 0; i < lstT.size(); i++) {
                 oTPreenregistrementCompteClientTiersPayent = lstT.get(i);
@@ -1293,13 +1294,13 @@ public class tierspayantManagement extends bllBase {
                 } else {
                     tp_taux = oTPreenregistrementCompteClientTiersPayent.getLgCOMPTECLIENTTIERSPAYANTID().getIntPOURCENTAGE();
                 }
-
+                
                 oTPreenregistrementCompteClientTiersPayent.setDtUPDATED(new Date());
                 oTPreenregistrementCompteClientTiersPayent.setIntPERCENT(tp_taux);
                 oTPreenregistrementCompteClientTiersPayent.setLgCOMPTECLIENTTIERSPAYANTID(lstT.get(i).getLgCOMPTECLIENTTIERSPAYANTID());
                 this.persiste(oTPreenregistrementCompteClientTiersPayent);
                 lstT.add(oTPreenregistrementCompteClientTiersPayent);
-
+                
             }
             return lstT;
         } else {
@@ -1311,7 +1312,7 @@ public class tierspayantManagement extends bllBase {
                 }
                 oTPreenregistrementCompteClientTiersPayent = new TPreenregistrementCompteClientTiersPayent();
                 oTPreenregistrementCompteClientTiersPayent.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(this.getKey().getComplexId());
-
+                
                 oTPreenregistrementCompteClientTiersPayent.setDtCREATED(new Date());
                 oTPreenregistrementCompteClientTiersPayent.setLgCOMPTECLIENTTIERSPAYANTID(lstTCompteClientTiersPayant.get(q));
                 oTPreenregistrementCompteClientTiersPayent.setLgPREENREGISTREMENTID(OTPreenregistrement);
@@ -1323,7 +1324,7 @@ public class tierspayantManagement extends bllBase {
             }
             return lstT;
         }
-
+        
     }
 
     //liste des tiers payants qui doivent sur une periode
@@ -1331,7 +1332,7 @@ public class tierspayantManagement extends bllBase {
         List<TTiersPayant> lstTTiersPayant = new ArrayList<TTiersPayant>();
         List<TTiersPayant> lstTTiersPayantFinal = new ArrayList<TTiersPayant>();
         Preenregistrement OPreenregistrement = new Preenregistrement(this.getOdataManager(), this.getOTUser());
-
+        
         try {
             lstTTiersPayant = this.ShowAllOrOneTierspayant(search_value, lg_TIERS_PAYANT_ID, lg_TYPE_TIERS_PAYANT_ID, commonparameter.statut_enable);
             for (TTiersPayant OTTiersPayant : lstTTiersPayant) {
@@ -1356,7 +1357,7 @@ public class tierspayantManagement extends bllBase {
             if (search_value.equalsIgnoreCase("")) {
                 search_value = "%%";
             }
-
+            
             lstTTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.lgTIERSPAYANTID LIKE ?1 AND (t.strCODEORGANISME LIKE ?2 OR t.strFULLNAME LIKE ?2 OR t.strNAME LIKE ?2) AND t.strSTATUT = ?3 AND (t.lgTYPETIERSPAYANTID.lgTYPETIERSPAYANTID LIKE ?4 OR t.lgTYPETIERSPAYANTID.strLIBELLETYPETIERSPAYANT LIKE ?4) ORDER BY t.lgTYPETIERSPAYANTID.strLIBELLETYPETIERSPAYANT, t.strFULLNAME").
                     setParameter(1, lg_TIERS_PAYANT_ID).
                     setParameter(2, search_value + "%").
@@ -1381,7 +1382,7 @@ public class tierspayantManagement extends bllBase {
             if (search_value.equalsIgnoreCase("") || search_value == null) {
                 search_value = "%%";
             }
-
+            
             new logger().OCategory.info("search_value:" + search_value + " lg_TIERS_PAYANT_ID:" + lg_TIERS_PAYANT_ID + " lg_TYPE_TIERS_PAYANT_ID:" + lg_TYPE_TIERS_PAYANT_ID + " lg_PREENREGISTREMENT_ID:" + lg_PREENREGISTREMENT_ID + " str_STATUT:" + str_STATUT);
             lstTPreenregistrementCompteClientTiersPayent = this.getOdataManager().getEm().createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTIERSPAYANTID LIKE ?1 AND (t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strCODEORGANISME LIKE ?2 OR t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strFULLNAME LIKE ?2) AND t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strSTATUT = ?3 AND t.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTYPETIERSPAYANTID.lgTYPETIERSPAYANTID LIKE ?4 AND t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID LIKE ?5 AND t.lgPREENREGISTREMENTID.strSTATUT LIKE ?6").
                     setParameter(1, lg_TIERS_PAYANT_ID).setParameter(2, "%" + search_value + "%").setParameter(3, commonparameter.statut_enable)
@@ -1412,7 +1413,7 @@ public class tierspayantManagement extends bllBase {
     //verifier si un client a deja un tiers payant qui lui est attribué avec une priorité donné
     public boolean isRegimeExistForCptltTiersP(String lg_COMPTE_CLIENT_ID, int int_PRIORITY) {
         boolean result = false;
-
+        
         try {
             TCompteClientTiersPayant OTCompteClientTiersPayant = (TCompteClientTiersPayant) this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.intPRIORITY = ?1 AND t.lgCOMPTECLIENTID.lgCOMPTECLIENTID = ?2 AND t.strSTATUT = ?3")
                     .setParameter(1, int_PRIORITY).setParameter(2, lg_COMPTE_CLIENT_ID).setParameter(3, commonparameter.statut_enable).getSingleResult();
@@ -1422,23 +1423,23 @@ public class tierspayantManagement extends bllBase {
                 new clientManagement(this.getOdataManager()).buildErrorTraceMessage("Ce client a déjà ce régime");
                 result = true;
             }
-
+            
         } catch (Exception e) {
             //e.printStackTrace();
         }
         new logger().OCategory.info("result isRegimeExistForCptltTiersP " + result);
         return result;
     }
-
+    
     public TCompteClientTiersPayant isRegimeExistForCptltTiersPBis(String lg_COMPTE_CLIENT_ID, int int_PRIORITY, String str_STATUT) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = null;
-
+        
         try {
             new logger().OCategory.info("lg_COMPTE_CLIENT_ID " + lg_COMPTE_CLIENT_ID + "|int_PRIORITY " + int_PRIORITY);
             OTCompteClientTiersPayant = (TCompteClientTiersPayant) this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.intPRIORITY = ?1 AND t.lgCOMPTECLIENTID.lgCOMPTECLIENTID = ?2 AND t.strSTATUT = ?3")
                     .setParameter(1, int_PRIORITY).setParameter(2, lg_COMPTE_CLIENT_ID).setParameter(3, str_STATUT).getSingleResult();
             new logger().OCategory.info("Client " + OTCompteClientTiersPayant.getLgCOMPTECLIENTID().getLgCLIENTID().getStrFIRSTNAME() + " Tiers payant " + OTCompteClientTiersPayant.getLgTIERSPAYANTID().getStrNAME());
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1449,7 +1450,7 @@ public class tierspayantManagement extends bllBase {
     //verifier si un client a deja un tiers payant qui lui est attribué avec une priorité donné
     public boolean isTiersPayantExistForCptltTiersP(String lg_COMPTE_CLIENT_ID, String lg_TIERS_PAYANT_ID) {
         boolean result = false;
-
+        
         try {
             TCompteClientTiersPayant OTCompteClientTiersPayant = (TCompteClientTiersPayant) this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgTIERSPAYANTID.lgTIERSPAYANTID = ?1 AND t.lgCOMPTECLIENTID.lgCOMPTECLIENTID = ?2 AND t.strSTATUT = ?3")
                     .setParameter(1, lg_TIERS_PAYANT_ID).setParameter(2, lg_COMPTE_CLIENT_ID).setParameter(3, commonparameter.statut_enable).getSingleResult();
@@ -1459,7 +1460,7 @@ public class tierspayantManagement extends bllBase {
                 new clientManagement(this.getOdataManager()).buildErrorTraceMessage("Ce tiers payant a déjà été ajouté au client sélectionné");
                 result = true;
             }
-
+            
         } catch (Exception e) {
 //            e.printStackTrace();
         }
@@ -1471,7 +1472,7 @@ public class tierspayantManagement extends bllBase {
     //creation d'un compte client tiers payant
     public TCompteClientTiersPayant createTCompteClientTiersPayant(TCompteClient OTCompteClient, TTiersPayant OTTiersPayant, int int_POURCENTAGE, int int_PRIORITY, double dbl_PLAFOND, double dbl_QUOTA_CONSO_VENTE, String str_NUMERO_SECURITE_SOCIAL, Integer dbPLAFONDENCOURS, boolean b_IsAbsolute) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = null;
-
+        
         try {
             OTCompteClientTiersPayant = new TCompteClientTiersPayant();
             OTCompteClientTiersPayant.setLgCOMPTECLIENTTIERSPAYANTID(this.getKey().getComplexId());
@@ -1538,7 +1539,7 @@ public class tierspayantManagement extends bllBase {
     //liste des compte client tiers payant
     public List<TCompteClientTiersPayant> getListCompteClientTiersPayants(String search_value, String lg_COMPTE_CLIENT_ID, String lg_TIERS_PAYANT_ID) {
         List<TCompteClientTiersPayant> lst = new ArrayList<>();
-
+        
         try {
             if (search_value.equalsIgnoreCase("") || search_value == null) {
                 search_value = "%%";
@@ -1548,25 +1549,25 @@ public class tierspayantManagement extends bllBase {
             for (TCompteClientTiersPayant tCompteClientTiersPayant : lst) {
                 this.refresh(tCompteClientTiersPayant);
             }
-
+            
             new logger().OCategory.info("lst taille " + lst.size());
         } catch (Exception e) {
             e.printStackTrace();
         }
         return lst;
     }
-
+    
     public List<TCompteClientTiersPayant> getListCompteClientTiersPayants(String lg_CLIENT_ID) {
         List<TCompteClientTiersPayant> lst = new ArrayList<>();
-
+        
         try {
-
+            
             lst = this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID LIKE ?1 AND t.lgCOMPTECLIENTID.lgCLIENTID.strSTATUT = ?2 AND t.strSTATUT = ?2")
                     .setParameter(1, lg_CLIENT_ID).setParameter(2, commonparameter.statut_enable).getResultList();
             for (TCompteClientTiersPayant tCompteClientTiersPayant : lst) {
                 this.refresh(tCompteClientTiersPayant);
             }
-
+            
             new logger().OCategory.info("lst taille " + lst.size());
         } catch (Exception e) {
             e.printStackTrace();
@@ -1578,12 +1579,12 @@ public class tierspayantManagement extends bllBase {
     //recuperation compte client tiers payant
     public TCompteClientTiersPayant getClientTiersPayant(String lg_COMPTE_CLIENT_ID, String lg_TIERS_PAYANT_ID) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = null;
-
+        
         try {
-
+            
             OTCompteClientTiersPayant = (TCompteClientTiersPayant) this.getOdataManager().getEm().createQuery("SELECT t FROM TCompteClientTiersPayant t WHERE t.lgCOMPTECLIENTID.lgCOMPTECLIENTID LIKE ?2 AND (t.lgTIERSPAYANTID.lgTIERSPAYANTID LIKE ?3 OR t.lgTIERSPAYANTID.strFULLNAME LIKE ?3 OR t.lgTIERSPAYANTID.strNAME LIKE ?3) AND t.strSTATUT = ?4")
                     .setParameter(2, lg_COMPTE_CLIENT_ID).setParameter(3, lg_TIERS_PAYANT_ID).setParameter(4, commonparameter.statut_enable).getSingleResult();
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Le tiers payant n'est pas associé au client en cours");
@@ -1614,7 +1615,7 @@ public class tierspayantManagement extends bllBase {
         boolean result = false;
         int count = 0;
         factureManagement OfactureManagement = new factureManagement(this.getOdataManager(), this.getOTUser());
-
+        
         try {
             for (int i = 0; i < lstData.size(); i++) { //lstData:  liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("ligne " + i + "------" + lstData.get(i)); //ligne courant
@@ -1624,10 +1625,10 @@ public class tierspayantManagement extends bllBase {
                         tabString[4].trim(), tabString[4].trim(),
                         "", 0, 0, "", "", "", 0, false, "46700000000", false, 0, "", 0, 0, 0, "1", Integer.parseInt(tabString[5].trim()),
                         0, 0, "", 0, 0, "", false, "1", (tabString[6].trim().equalsIgnoreCase("X") ? "2" : "1"),
-                        "", "", "55181642844215217016", 0, 0, 0, false, OfactureManagement.CreateSequencier(), "", "", "", false, "", -1, -1, false)) {
+                        "", "", "55181642844215217016", 0, 0, 0, false, OfactureManagement.CreateSequencier(), "", "", "", false, "", -1, -1, false,false)) {
                     count++;
                 }
-
+                
             }
             if (count == lstData.size()) {
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
@@ -1651,11 +1652,11 @@ public class tierspayantManagement extends bllBase {
         List<String> lst = new ArrayList<>();
         List<TTiersPayant> lstTTiersPayant = new ArrayList<>();
         String row = "";
-
+        
         try {
             lstTTiersPayant = this.ShowAllOrOneTierspayant("", "%%", "%%", commonparameter.statut_enable);
             for (TTiersPayant OTTiersPayant : lstTTiersPayant) {
-
+                
                 row += OTTiersPayant.getLgTIERSPAYANTID() + ";" + OTTiersPayant.getStrCODEORGANISME() + ";" + OTTiersPayant.getStrNAME() + ";" + OTTiersPayant.getStrFULLNAME() + ";";
                 row += (OTTiersPayant.getStrADRESSE() != null ? OTTiersPayant.getStrADRESSE() : " ") + ";";
                 row += (OTTiersPayant.getStrTELEPHONE() != null ? OTTiersPayant.getStrTELEPHONE() : " ") + ";";
@@ -1666,7 +1667,7 @@ public class tierspayantManagement extends bllBase {
                 lst.add(row);
                 row = "";
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1680,7 +1681,7 @@ public class tierspayantManagement extends bllBase {
         try {
             OTModelFacture = (TModelFacture) this.getOdataManager().getEm().createQuery("SELECT t FROM TModelFacture t WHERE (t.lgMODELFACTUREID = ?1 OR t.strVALUE = ?1) AND t.strSTATUT = ?2")
                     .setParameter(1, str_CODE).setParameter(2, commonparameter.statut_enable).getSingleResult();
-
+            
         } catch (Exception e) {
 //            e.printStackTrace();
         }
@@ -1714,9 +1715,9 @@ public class tierspayantManagement extends bllBase {
                     lst.add(lstData.get(i));
                 }
             }
-
+            
             this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Echec de vérification du fichier. Aucune ligne n'a été pris en compte");
@@ -1728,7 +1729,7 @@ public class tierspayantManagement extends bllBase {
     public String createStandardClient(String str_FIRST_NAME, String str_LAST_NAME, String str_PHONE, String str_SEXE) {
         String lg_Client_ID = null;
         try {
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1766,13 +1767,13 @@ public class tierspayantManagement extends bllBase {
         try {
             state = (str_STATUT.equalsIgnoreCase(commonparameter.statut_enable) ? commonparameter.statut_disable : commonparameter.statut_enable);
             OTTiersPayant = this.getOdataManager().getEm().find(TTiersPayant.class, lg_TIERS_PAYANT_ID);
-
+            
             if (OTTiersPayant != null) {
                 lstTCompteClientTiersPayant = OclientManagement.getTiersPayantsByClient("", "%%", lg_TIERS_PAYANT_ID, state);
-
+                
                 for (TCompteClientTiersPayant OTCompteClientTiersPayant1 : lstTCompteClientTiersPayant) {
                     lstTCompteCTP = OclientManagement.getTiersPayantsByClient("", OTCompteClientTiersPayant1.getLgCOMPTECLIENTID().getLgCOMPTECLIENTID(), "%%", state);
-
+                    
                     if (str_STATUT.equalsIgnoreCase(commonparameter.statut_disable)) {
                         if (lstTCompteCTP.size() >= 1) {
                             OTCompteClientTiersPayant1.setStrSTATUT(str_STATUT);
@@ -1800,19 +1801,19 @@ public class tierspayantManagement extends bllBase {
                                 OTClient.setStrSTATUT(str_STATUT);
                                 OTClient.setDtUPDATED(new Date());
                             }
-
+                            
                         }
                     }
-
+                    
                 }
-
+                
                 OTTiersPayant.setStrSTATUT(str_STATUT);
                 OTTiersPayant.setDtUPDATED(new Date());
                 if (this.persiste(OTTiersPayant)) {
                     this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
                     String desc = (state.equals(commonparameter.statut_enable) ? "Désactivation du Tiers-payant " : "Activation du Tiers-payant ");
                     this.do_event_log(this.getOdataManager(), "", desc + OTTiersPayant.getStrFULLNAME(), this.getOTUser().getStrFIRSTNAME(), commonparameter.statut_enable, "t_client", "t_client", "Mouvement Tiers-payant", this.getOTUser().getLgUSERID());
-
+                    
                 } else {
                     this.buildErrorTraceMessage("Echec de l'opération");
                 }
@@ -1832,23 +1833,23 @@ public class tierspayantManagement extends bllBase {
             if (search_value.equalsIgnoreCase("")) {
                 search_value = "%%";
             }
-
+            
             lstTTiersPayant = this.getOdataManager().getEm().createQuery("SELECT t FROM TTiersPayant t WHERE t.lgTIERSPAYANTID LIKE ?1 AND (t.strCODEORGANISME LIKE ?2 OR t.strFULLNAME LIKE ?2 OR t.strNAME LIKE ?2) AND t.strSTATUT = ?3 AND t.lgTYPETIERSPAYANTID.lgTYPETIERSPAYANTID LIKE ?4 ORDER BY t.lgTYPETIERSPAYANTID.strLIBELLETYPETIERSPAYANT, t.strFULLNAME").
                     setParameter(1, lg_TIERS_PAYANT_ID).
                     setParameter(2, search_value + "%").
                     setParameter(3, commonparameter.statut_enable)
                     .setParameter(4, lg_TYPE_TIERS_PAYANT_ID)
                     .getResultList();
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
         new logger().OCategory.info("Liste tiers payant taille " + lstTTiersPayant.size());
         return lstTTiersPayant;
     }
-
+    
     public long verifieComptClientTierspayantVente(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
-
+        
         TypedQuery<Long> typedQuery = null;
         try {
             typedQuery = this.getOdataManager().getEm().createQuery("SELECT COUNT(o) FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID=?1 AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.strSTATUTFACTURE <> ?2 AND o.intPRICE >0  ", Long.class)
@@ -1857,11 +1858,11 @@ public class tierspayantManagement extends bllBase {
             e.printStackTrace();
         }
         return typedQuery.getSingleResult();
-
+        
     }
-
+    
     public List<TPreenregistrementCompteClientTiersPayent> getComptClientTierspayantVente(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
-
+        
         TypedQuery<TPreenregistrementCompteClientTiersPayent> typedQuery = null;
         try {
             typedQuery = this.getOdataManager().getEm().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID=?1  ", TPreenregistrementCompteClientTiersPayent.class)
@@ -1870,11 +1871,11 @@ public class tierspayantManagement extends bllBase {
             e.printStackTrace();
         }
         return typedQuery.getResultList();
-
+        
     }
-
+    
     public List<TSnapshotPreenregistrementCompteClientTiersPayent> getCompteClientTiersPayents(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
-
+        
         TypedQuery<TSnapshotPreenregistrementCompteClientTiersPayent> typedQuery = null;
         try {
             typedQuery = this.getOdataManager().getEm().createQuery("SELECT o FROM TSnapshotPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID=?1  ", TSnapshotPreenregistrementCompteClientTiersPayent.class)
@@ -1883,16 +1884,16 @@ public class tierspayantManagement extends bllBase {
             e.printStackTrace();
         }
         return typedQuery.getResultList();
-
+        
     }
-
+    
     public void deleteComptecltTierspayant(String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
         TCompteClientTiersPayant OClientTiersPayant = null;
         System.out.println("lg_COMPTE_CLIENT_TIERS_PAYANT_ID ---------------------------------" + lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
-
+        
         try {
             OClientTiersPayant = this.getOdataManager().getEm().find(TCompteClientTiersPayant.class, lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
-
+            
             if (verifieComptClientTierspayantVente(lg_COMPTE_CLIENT_TIERS_PAYANT_ID) > 0) {
                 this.buildErrorTraceMessage("Le client sélectionné a déjà effectué des transactions avec ce tiers payant.<br> Pour poursuivre vous devez annuler les ventes du client liées à cet Organisme");
             } else {
@@ -1905,7 +1906,7 @@ public class tierspayantManagement extends bllBase {
                 }).forEachOrdered((p) -> {
                     this.getOdataManager().getEm().merge(p);
                 });
-
+                
                 this.getCompteClientTiersPayents(lg_COMPTE_CLIENT_TIERS_PAYANT_ID).stream().map((sp) -> {
                     sp.setStrSTATUT(commonparameter.statut_delete);
                     return sp;
@@ -1919,62 +1920,62 @@ public class tierspayantManagement extends bllBase {
                 }
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Impossible de supprimer ce tiers payant associé au client courant");
         }
-
+        
     }
-
+    
     public TCompteClientTiersPayant createComptecltTierspayant(String lg_COMPTE_CLIENT_ID, String lg_TIERS_PAYANT_ID, int int_POURCENTAGE, int int_PRIORITY, double dbl_PLAFOND, double dbl_QUOTA_CONSO_VENTE, String str_NUMERO_SECURITE_SOCIAL, Integer dbPLAFONDENCOURS, boolean b_IsAbsolute) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = null;
         try {
             TTiersPayant OTTiersPayant = this.getTTiersPayant(lg_TIERS_PAYANT_ID);
             TCompteClient OTCompteClient = new clientManagement(this.getOdataManager()).getTCompteClient(lg_COMPTE_CLIENT_ID);
-
+            
             if (OTTiersPayant != null && OTCompteClient != null) {
                 if (!this.isTiersPayantExistForCptltTiersP(OTCompteClient.getLgCOMPTECLIENTID(), OTTiersPayant.getLgTIERSPAYANTID())) {
                     if (!this.isRegimeExistForCptltTiersP(OTCompteClient.getLgCOMPTECLIENTID(), int_PRIORITY)) {
                         OTCompteClientTiersPayant = this.createTCompteClientTiersPayant(OTCompteClient, OTTiersPayant, int_POURCENTAGE, int_PRIORITY, dbl_PLAFOND, dbl_QUOTA_CONSO_VENTE, str_NUMERO_SECURITE_SOCIAL, dbPLAFONDENCOURS, b_IsAbsolute);
-
+                        
                     }
                 }
             } else {
                 this.buildErrorTraceMessage("Echec d'ajout de ce tiers payant au client séléctionné");
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             this.buildErrorTraceMessage("Echec d'ajout de ce tiers payant au client séléctionné");
         }
-
+        
         return OTCompteClientTiersPayant;
     }
-
+    
     private void createAyantdroit(TClient OClient, String lg_TYPE_CLIENT_ID) {
-
+        
         try {
             TTypeClient OTTypeClient = this.getOdataManager().getEm().find(TTypeClient.class, lg_TYPE_CLIENT_ID);
             if (!"2".equals(lg_TYPE_CLIENT_ID)) {
-
+                
                 TAyantDroit OTAyantDroit = new TAyantDroit();
-
+                
                 OTAyantDroit.setLgAYANTSDROITSID(this.getKey().getComplexId());
                 OTAyantDroit.setStrFIRSTNAME(OClient.getStrFIRSTNAME());
                 OTAyantDroit.setStrLASTNAME(OClient.getStrLASTNAME());
-
+                
                 OTAyantDroit.setStrCODEINTERNE(this.getKey().getShortId(6));
                 //lg_CLIENT_ID
 
                 OTAyantDroit.setLgCLIENTID(OClient);
-
+                
                 OTAyantDroit.setStrSTATUT(commonparameter.statut_enable);
                 OTAyantDroit.setDtCREATED(new Date());
                 this.getOdataManager().getEm().persist(OTAyantDroit);
-
+                
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-
+                
             }
             OClient.setLgTYPECLIENTID(OTTypeClient);
             OClient.setDtUPDATED(new Date());
@@ -1983,7 +1984,7 @@ public class tierspayantManagement extends bllBase {
             this.buildErrorTraceMessage("Echec de création de l'ayant droit");
             e.printStackTrace();
         }
-
+        
     }
 
     //fonction d'ajout de tierspayant lors de la transfromation d'une proforma en une vente
@@ -1995,7 +1996,7 @@ public class tierspayantManagement extends bllBase {
             }
             TTiersPayant OTTiersPayant = this.getTTiersPayant(lg_TIERS_PAYANT_ID);
             TCompteClient OTCompteClient = new clientManagement(this.getOdataManager()).getTCompteClient(lg_COMPTE_CLIENT_ID);
-
+            
             OTCompteClientTiersPayant = new TCompteClientTiersPayant();
             OTCompteClientTiersPayant.setLgCOMPTECLIENTTIERSPAYANTID(this.getKey().getComplexId());
             OTCompteClientTiersPayant.setLgCOMPTECLIENTID(OTCompteClient);
@@ -2016,11 +2017,11 @@ public class tierspayantManagement extends bllBase {
         }
         return OTCompteClientTiersPayant;
     }
-
+    
     public JSONArray getByTiersPayant(String lgID, String dt_start, String dt_end, String search, int start, int limit) {
         List<Object[]> data = new ArrayList<>();
         JSONArray arra = new JSONArray();
-
+        
         try {
             data = this.getOdataManager().getEm().createQuery("SELECT  COUNT(o) AS NB,SUM(o.intPRICE) AS MONTANT,o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strCODEORGANISME,o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strFULLNAME,o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTIERSPAYANTID  FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTIERSPAYANTID LIKE ?1 AND (o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strFULLNAME LIKE ?2 OR o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strCODEORGANISME LIKE ?2 ) AND  FUNCTION('DATE', o.lgPREENREGISTREMENTID.dtUPDATED) BETWEEN ?3 AND ?4 AND o.lgPREENREGISTREMENTID.strSTATUT='is_Closed' AND o.intPRICE >0 AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE >0  GROUP BY o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTIERSPAYANTID,o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strCODEORGANISME,o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strFULLNAME ORDER BY o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.lgTYPETIERSPAYANTID.strLIBELLETYPETIERSPAYANT,o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.strFULLNAME")
                     .setParameter(1, lgID + "%")
@@ -2039,18 +2040,18 @@ public class tierspayantManagement extends bllBase {
                 json.put("CODE", ob[2]);
                 json.put("NBBON", ob[0]);
                 json.put("MONTANTVENTE", ob[1]);
-
+                
                 json.put("TOTALMONTANT", Totaux.get("TOTALMONTANT"));
                 json.put("TOTALBON", Totaux.get("TOTALBON"));
                 arra.put(json);
             }
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
         return arra;
     }
-
+    
     public JSONObject getTotauxTP(String lgID, String dt_start, String dt_end, String search) {
         List<Object[]> data = new ArrayList<>();
         JSONObject json = new JSONObject();
@@ -2063,7 +2064,7 @@ public class tierspayantManagement extends bllBase {
                     getResultList();
             int count = 1;
             for (Object[] ob : data) {
-
+                
                 json.put("TOTALBON", ob[0]);
                 json.put("TOTALMONTANT", ob[1]);
             }
@@ -2072,7 +2073,7 @@ public class tierspayantManagement extends bllBase {
         }
         return json;
     }
-
+    
     public int countTP(String lgID, String dt_start, String dt_end, String search) {
         List<Object[]> data = new ArrayList<>();
         int count = 0;
@@ -2084,11 +2085,11 @@ public class tierspayantManagement extends bllBase {
                     .setParameter(4, java.sql.Date.valueOf(dt_end)).
                     getResultList();
             count = data.size();
-
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
         return count;
     }
-
+    
 }

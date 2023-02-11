@@ -1,6 +1,6 @@
 /* global Ext */
 
-var url_services_data_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
+
 var url_services_transaction_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_transaction.jsp?mode=';
 var url_services_data_ville = '../webservices/configmanagement/ville/ws_data.jsp';
 var url_services_data_typetierspayant = '../webservices/tierspayantmanagement/typetierspayant/ws_data.jsp';
@@ -54,7 +54,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantManager'
 
         Me_Workflow = this;
         lg_TYPE_TIERS_PAYANT_ID = "";
-        url_services_data_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_data.jsp';
+   
         url_services_pdf_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_generate_pdf.jsp';
         var itemsPerPage = 20;
 
@@ -64,7 +64,6 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantManager'
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-               // url: url_services_data_tierspayant,
                   url: '../tierspayant',
                 reader: {
                     type: 'json',
@@ -94,8 +93,6 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantManager'
         this.cellEditing = new Ext.grid.plugin.CellEditing({
             clicksToEdit: 1
         });
-
-
         Ext.apply(this, {
             width: '98%',
             height: 580,
