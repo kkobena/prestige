@@ -193,7 +193,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(oTPreenregistrement);
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTitle(FunctionUtils.RECEIT_TITLE + title);
@@ -271,7 +271,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<TPreenregistrementCompteClientTiersPayent> listeVenteTiersPayants = listeVenteTiersPayantsByIdVente(oTPreenregistrement.getLgPREENREGISTREMENTID());
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
@@ -624,7 +624,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(oTPreenregistrement);
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTitle("Ticket N° " + title);
@@ -733,7 +733,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<TPreenregistrementCompteClientTiersPayent> listeVenteTiersPayants = listeVenteTiersPayantsByIdVente(oTPreenregistrement.getLgPREENREGISTREMENTID());
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
@@ -1274,7 +1274,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             ODriverPrinter.setInfoSellers(new ArrayList<>());
             ODriverPrinter.setCommentaires(new ArrayList<>());
             ODriverPrinter.setShowCodeBar(true);
-            ODriverPrinter.setOTImprimante(imprimante);
+            ODriverPrinter.setoTImprimante(imprimante);
             ODriverPrinter.setOfficine(officine);
             ODriverPrinter.setService(printService);
             ODriverPrinter.setCodeBar(this.buildLineBarecode(DateConverter.getShortId(10)));
@@ -1305,7 +1305,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(lstTDossierReglementDetail, dossierReglement);
             List<String> infoSellers = generateDataOperateur(mvtTransaction.getUser());
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setEmplacement(emplacement);
             imp.setOfficine(officine);
             imp.setService(printService);
@@ -1415,7 +1415,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<TPreenregistrementCompteClientTiersPayent> listeVenteTiersPayants = listeVenteTiersPayantsByIdVente(oTPreenregistrement.getLgPREENREGISTREMENTID());
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
@@ -1571,7 +1571,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(oTPreenregistrement);
             List<String> infoSellers = infoDepot(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
@@ -1682,7 +1682,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(oTPreenregistrement);
             List<String> infoSellers = infoDepot(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
@@ -2018,7 +2018,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(lstTDossierReglementDetail, dossierReglement);
             List<String> infoSellers = generateDataOperateur(mvtTransaction.getUser());
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setOTImprimante(imprimante);
+            imp.setoTImprimante(imprimante);
             imp.setEmplacement(emplacement);
             imp.setOfficine(officine);
             imp.setService(printService);

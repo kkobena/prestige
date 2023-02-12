@@ -28,7 +28,6 @@ import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Chromaticity;
 import javax.print.attribute.standard.Copies;
-import javax.print.attribute.standard.MultipleDocumentHandling;
 import javax.swing.ImageIcon;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
@@ -45,7 +44,7 @@ public class ImpressionServiceImpl implements Printable {
     private PrintService service;
     private int limit = 0, intBegin = 0, nombreCopie = 1, fontSize = 0;
     private boolean showCodeBar;
-    private TImprimante OTImprimante;
+    private TImprimante oTImprimante;
     private Date operation;
     private Date operationSectionDeux;
     private LocalDateTime operationLocalTime;
@@ -264,12 +263,12 @@ public class ImpressionServiceImpl implements Printable {
         this.operationLocalTime = operationLocalTime;
     }
 
-    public TImprimante getOTImprimante() {
-        return OTImprimante;
+    public TImprimante getoTImprimante() {
+        return oTImprimante;
     }
 
-    public void setOTImprimante(TImprimante OTImprimante) {
-        this.OTImprimante = OTImprimante;
+    public void setoTImprimante(TImprimante oImprimante) {
+        this.oTImprimante = oImprimante;
     }
 
     public boolean isShowCodeBar() {
@@ -311,7 +310,7 @@ public class ImpressionServiceImpl implements Printable {
     public void printTicketVente(int copies) throws PrinterException {
          
         PrinterJob printerjob = findPrinterJob();
-        TImprimante oImprimante = this.getOTImprimante();
+        TImprimante oImprimante = this.getoTImprimante();
         if (oImprimante != null) {
             intBegin = oImprimante.getIntBEGIN();
             columnOne = oImprimante.getIntCOLUMN1();
@@ -427,7 +426,7 @@ public class ImpressionServiceImpl implements Printable {
         limit = start + (scale_texte * ++i);
 
         if (intBegin == 0) {
-            graphics.drawImage(logo, 155, 85, (int) Lw, (int) Lh, null); // A decommenter pour les imprimantes thermique
+            graphics.drawImage(logo, 155, 85,  Lw,  Lh, null); // A decommenter pour les imprimantes thermique
         }
     }
 
@@ -497,8 +496,7 @@ public class ImpressionServiceImpl implements Printable {
         limit = start + (scale_texte * datas.size());
     }
 
-    public ImpressionServiceImpl() {
-    }
+   
 
     public void buildSubCommentaire(Graphics2D graphics, int scale_texte, int start) {
         List<String> _commentaires = this.getCommentaires();
@@ -525,12 +523,6 @@ public class ImpressionServiceImpl implements Printable {
         int codeBarHeight = 15;
         int Cw = scale_image * codeBarWidth;
         int Ch = scale_image * codeBarHeight;
-
-        /* if (this.getType_ticket().equalsIgnoreCase(commonparameter.str_ACTION_VENTE)) {
-         graphics.drawString("***** Merci de votre confiance.*****", 15, start);
-         }*/
-//        graphics.drawString("Logiciel DICI", 125, start + (scale_texte * 2)); //a decommenter apres 11/06/2016
-//        graphics.drawString("Logiciel DICI", 0, start + (scale_texte * 2));
 
         graphics.drawString(SIMPLE_DATE_FORMAT.format(this.getOperation()), 125, start + (scale_texte * 1)); // imprimante matricielle
 

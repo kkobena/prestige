@@ -2788,6 +2788,7 @@ public class SalesServiceImpl implements SalesService {
             int diffMontantTotalAndCmuAmount = 0;
             int cmuAmount = 0;
             boolean isCmu=tierspayants.stream().allMatch(TiersPayantParams::isCmu);
+          
             MontantAPaye montantAPaye;
             List<TiersPayantParams> resultat = new ArrayList<>();
             if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {

@@ -51,8 +51,7 @@ public class CaisseRessource {
     private HttpServletRequest servletRequest;
     @EJB
     private CaisseService caisseService;
-    @EJB
-    CommonService commonService;
+
     @EJB
     GenerateTicketService generateTicketService;
 
