@@ -448,6 +448,7 @@ public class CaisseServiceImpl implements CaisseService {
                     case DateConverter.MODE_MTN:
                     case DateConverter.MODE_MOOV:
                     case DateConverter.TYPE_REGLEMENT_ORANGE:
+                        case DateConverter.MODE_WAVE:
                         v.forEach(b -> {
                             montantMobileMoney.add(b.getMontant());
                             if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
@@ -980,6 +981,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
 
@@ -1051,6 +1053,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
 
@@ -3027,6 +3030,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += montantNonPara;
                             break;
                     }
@@ -3097,6 +3101,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
                     }
@@ -3551,6 +3556,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += (mvt.getMontantRegle() - mvt.getMontantnetug());
                             break;
 
@@ -3618,6 +3624,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
 
@@ -3950,6 +3957,7 @@ public class CaisseServiceImpl implements CaisseService {
                     case DateConverter.MODE_MOOV:
                     case DateConverter.TYPE_REGLEMENT_ORANGE:
                     case DateConverter.MODE_MTN:
+                        case DateConverter.MODE_WAVE:
                         montantMobilePayment += montantPara;
                         break;
                 }
@@ -4464,7 +4472,7 @@ public class CaisseServiceImpl implements CaisseService {
     private boolean isTrue(String parameterKey) {
         try {
             TParameters tp = getEntityManager().find(TParameters.class, parameterKey);
-            return (Integer.valueOf(tp.getStrVALUE()) == 1);
+            return (Integer.parseInt(tp.getStrVALUE()) == 1);
 
         } catch (Exception e) {
             return false;
@@ -4473,10 +4481,9 @@ public class CaisseServiceImpl implements CaisseService {
 
     private int montantFlag(MvtTransaction mvt) {
         if (mvt.getFlaged()) {
-            System.out.println("=======>>>> +mvt " + mvt);
+         
             return mvt.getMontant() - mvt.getMontantAcc();
         }
-//   return mvt.getMontantAcc().compareTo(mvt.getMontant()) == 0 ? mvt.getMontant() :  mvt.getMontantAcc();
         return mvt.getMontant();
 
     }
@@ -4546,6 +4553,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += montantNonPara;
                             break;
                     }
@@ -4553,7 +4561,6 @@ public class CaisseServiceImpl implements CaisseService {
                 }
 
                 _montantTTC += montantTTC;
-                // _montantTTC-=montantFlag;
                 _montantNet += montantNet;
                 _MontantVirement += MontantVirement;
                 _montantCB += montantCB;
@@ -4619,6 +4626,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
                     }
@@ -5104,6 +5112,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += montantNonPara;
                             break;
                     }
@@ -5178,6 +5187,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                            case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
                     }
