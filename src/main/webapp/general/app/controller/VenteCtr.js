@@ -755,7 +755,7 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     onTypeVenteSelect: function (field) {
-        var me = this;
+        const me = this;
         const value = field.getValue();
         if (me.getCurrent()) {
             me.modifierTypeVente(value, me.getCurrent().lgPREENREGISTREMENTID, field);
@@ -776,7 +776,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     closeClientLambdaWindow: function () {
-        var me = this;
+        const me = this;
         me.showAndHideInfosStandardClient(false);
         me.getClientLambda().destroy();
         if (!me.getClient()) {
@@ -785,7 +785,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.getVnoproduitCombo().focus(true, 100);
     },
     addClientForm: function () {
-        var me = this;
+        const me = this;
         me.getLambdaClientGrid().setVisible(false);
         me.getClientLambdaform().setVisible(true);
         me.getNomLambdaClient().focus(true, 100);
@@ -905,10 +905,10 @@ Ext.define('testextjs.controller.VenteCtr', {
 
         }
         field.suspendEvents();
-        var task = new Ext.util.DelayedTask(function (combo, e) {
+        let task = new Ext.util.DelayedTask(function (combo, e) {
             if (e.getKey() === e.ENTER) {
                 if (combo.getValue() === null || combo.getValue().trim() === "") {
-                    var selection = combo.getPicker().getSelectionModel().getSelection();
+                    let selection = combo.getPicker().getSelectionModel().getSelection();
                     if (selection.length <= 0) {
                         if (typeVente === '1') {
                             me.showNetPaidVno();
@@ -921,9 +921,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                         }
                     }
                 } else {
-                    var record = combo.findRecord("lgFAMILLEID" || "intCIP", combo.getValue());
+                    const record = combo.findRecord("lgFAMILLEID" || "intCIP", combo.getValue());
                     if (record) {
-                        var vnoemplacementId = me.getVnoemplacementField();
+                        const vnoemplacementId = me.getVnoemplacementField();
                         me.updateStockField(record.get('intNUMBERAVAILABLE'));
                         vnoemplacementId.setValue(record.get('strLIBELLEE'));
                         me.getVnoqtyField().focus(true, 100);
@@ -1311,8 +1311,8 @@ Ext.define('testextjs.controller.VenteCtr', {
 
 
             let montantRemis = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
-            var totalRecap = data.montant, montantPaye = montantRecu - montantRemis;
-            var param = {
+            let totalRecap = data.montant, montantPaye = montantRecu - montantRemis;
+            let param = {
                 "typeVenteId": typeVenteCombo,
                 "natureVenteId": natureCombo,
                 "devis": false,
@@ -2180,21 +2180,21 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
 
-    goToVenteView: function ()/* a ameliorer après */ {
+    goToVenteView: function (){
         var me = this, view = me.getDoventemanager(), contenu = me.getContenu();
-        var data = view.getData();
+        const data = view.getData();
         if (data) {
-            var isEdit = data.isEdit;
+            const isEdit = data.isEdit;
             me.categorie = data.categorie;
             if (isEdit && me.getCategorie() === 'VENTE') {
-                var record = data.record;
+                const record = data.record;
                 me.loadExistantSale(record.lgPREENREGISTREMENTID);
             } else if (me.getCategorie() === 'PREVENTE' && !isEdit) {
                 me.current = null;
                 me.netAmountToPay = null;
                 me.client = null;
                 contenu.removeAll();
-                var vno = Ext.create('testextjs.view.vente.VenteVNO');
+                const vno = Ext.create('testextjs.view.vente.VenteVNO');
                 contenu.add(vno);
                 me.componentsToHidePresales();
                 me.updateComboxFields(null, null, null, null, null);
@@ -2203,7 +2203,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     me.getBtnClosePrevente().show();
                 }
             } else if (isEdit && me.getCategorie() === 'PREVENTE') {
-                var record = data.record;
+                const record = data.record;
                 me.loadExistantSale(record.lgPREENREGISTREMENTID);
                 me.componentsToHidePresales();
                 me.getVnobtnCloture().hide();
@@ -2213,7 +2213,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
 
             } else if (isEdit && me.getCategorie() === 'COPY') {
-                var record = data.record;
+                const record = data.record;
                 me.chargerCopieDeVenteAmodifier(record.lgPREENREGISTREMENTID);
 
 
@@ -2222,7 +2222,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 me.netAmountToPay = null;
                 me.client = null;
                 contenu.removeAll();
-                var vno = Ext.create('testextjs.view.vente.VenteVNO');
+                const vno = Ext.create('testextjs.view.vente.VenteVNO');
                 contenu.add(vno);
                 me.updateComboxFields(null, null, null, null, null);
             }
@@ -2231,7 +2231,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.netAmountToPay = null;
             me.client = null;
             contenu.removeAll();
-            var vno = Ext.create('testextjs.view.vente.VenteVNO');
+            const vno = Ext.create('testextjs.view.vente.VenteVNO');
             contenu.add(vno);
             me.updateComboxFields(null, null, null, null, null);
         }
@@ -2249,7 +2249,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             method: 'GET',
             url: '../api/v1/common/plafond-vente',
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.plafondVente = result.data;
                 }
@@ -2277,7 +2277,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             method: 'GET',
             url: '../api/v1/common/autorisation-prix-vente',
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.canModifyPu = result.data;
                 }
@@ -2301,8 +2301,8 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     onPrintTicketCopy: function (id) {
-        var url = '../api/v1/vente/copy/' + id;
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        let url = '../api/v1/vente/copy/' + id;
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             headers: {'Content-Type': 'application/json'},
             method: 'POST',
@@ -2672,29 +2672,29 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     onbtnClientAssurence: function () {
-        var me = this,
+        let me = this,
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
         if (typeVenteCombo === '2') {
-            var clientwin = Ext.create('testextjs.view.vente.user.addClientAssurance');
+            const clientwin = Ext.create('testextjs.view.vente.user.addClientAssurance');
             clientwin.show();
             me.getNomAssClient().focus(false, 100);
         } else if (typeVenteCombo === '3') {
-            var clientwin = Ext.create('testextjs.view.vente.user.AddCarnet');
+            const clientwin = Ext.create('testextjs.view.vente.user.AddCarnet');
             clientwin.show();
             me.getNomCarnetClient().focus(false, 50);
         }
     },
     onBtnCancelAssClient: function () {
-        var me = this, addaddclientwindow = me.getAddaddclientwindow();
+        const me = this, addaddclientwindow = me.getAddaddclientwindow();
         addaddclientwindow.destroy();
     },
     onBtnCancelCarnet: function () {
-        var me = this, addCarnetwindow = me.getAddCarnetwindow();
+        const me = this, addCarnetwindow = me.getAddCarnetwindow();
         addCarnetwindow.destroy();
     },
     onRemoveTierspayantCompl: function (grid, rowIndex, colIndex) {
-        var me = this;
-        var store = grid.getStore();
+        const me = this;
+        const store = grid.getStore();
         store.removeAt(colIndex);
         me.toRecalculate = true;
 
@@ -2703,10 +2703,10 @@ Ext.define('testextjs.controller.VenteCtr', {
         var me = this, form = me.getClientAssuranceForm(), grid = me.getTpComplementaireGrid();
         me.toRecalculate = true;
         if (form.isValid()) {
-            var client = form.getValues();
-            var record = new testextjs.model.caisse.ClientAssurance(client);
-            var tiersPayants = [];
-            var storeTp = grid.getStore();
+            let client = form.getValues();
+            let record = new testextjs.model.caisse.ClientAssurance(client);
+            let tiersPayants = [];
+            let storeTp = grid.getStore();
 
             if (storeTp.getRange()) {
                 Ext.each(storeTp.getRange(), function (item) {
@@ -2719,10 +2719,11 @@ Ext.define('testextjs.controller.VenteCtr', {
                         "bIsAbsolute": item.get('bIsAbsolute'),
                         "dbPLAFONDENCOURS": item.get('dbPLAFONDENCOURS'),
                         "tpFullName": item.get('tpFullName')
+                        
                     });
                 });
             }
-            var datas = {
+            let datas = {
                 "bIsAbsolute": record.get('bIsAbsolute'),
                 "dbPLAFONDENCOURS": record.get('dbPLAFONDENCOURS'),
                 "dblQUOTACONSOMENSUELLE": record.get('dblQUOTACONSOMENSUELLE'),
@@ -2807,7 +2808,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 params: Ext.JSON.encode({"typeVenteId": tpId,
                     "ayantDroitId": _newTp}),
                 success: function (response, options) {
-                    var result = Ext.JSON.decode(response.responseText, true);
+                    const result = Ext.JSON.decode(response.responseText, true);
                     me.updateClientAssurance(result.data);
                 }
             });
@@ -2817,9 +2818,9 @@ Ext.define('testextjs.controller.VenteCtr', {
     onBtnAddClientCarnteClick: function () {
         var me = this, form = me.getClientCarnetForm();
         if (form.isValid()) {
-            var client = form.getValues();
-            var record = new testextjs.model.caisse.ClientAssurance(client);
-            var datas = {
+            const client = form.getValues();
+            const record = new testextjs.model.caisse.ClientAssurance(client);
+            const datas = {
                 "bIsAbsolute": record.get('bIsAbsolute'),
                 "dbPLAFONDENCOURS": record.get('dbPLAFONDENCOURS'),
                 "dblQUOTACONSOMENSUELLE": record.get('dblQUOTACONSOMENSUELLE'),
@@ -3360,24 +3361,23 @@ Ext.define('testextjs.controller.VenteCtr', {
             var tierspayants = client.get('tiersPayants');
             if (tierspayants.length > 1) {
 
-                var btnAddTp = {
+                const btnAddTp = {
                     xtype: 'button',
                     text: 'Autre tiers-payant',
                     margin: '35 5 5 5',
                     style: 'background-color:green !important;border-color:green !important; background:green !important;',
                     handler: function (btn) {
-                        var newStore = Array.from(tierspayants);
-                        var items = tpContainerForm.items;
+                        let newStore = Array.from(tierspayants);
+                        let items = tpContainerForm.items;
                         Ext.each(items.items, function (item) {
                             if (item.items) {
-                                var tp = item.items.items[3].getValue(), taux = item.items.items[4],
-                                        cmtp = item.items.items[2];
+                                let tp = item.items.items[3].getValue();
                                 newStore = me.buildRecord(newStore, tp);
                             }
 
 
                         });
-                        var tpclientStore = new Ext.data.Store({
+                        let tpclientStore = new Ext.data.Store({
                             model: 'testextjs.model.caisse.ClientTiersPayant',
                             data: newStore,
                             pageSize: null,
@@ -3390,8 +3390,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                                 }
                             }
                         });
-                        var slectedRecord = null;
-                        var form = Ext.create('Ext.window.Window',
+                        let slectedRecord = null;
+                        let form = Ext.create('Ext.window.Window',
                                 {
 
                                     autoShow: true,
@@ -3477,9 +3477,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                                                             emptyText: 'Choisir un tiers-payant...',
                                                             listeners: {
                                                                 select: function (field) {
-                                                                    var parent = field.up('fieldset');
-                                                                    var numberField = parent.down('numberfield');
-                                                                    var record = field.findRecord("compteTp", field.getValue());
+                                                                    const parent = field.up('fieldset');
+                                                                    const numberField = parent.down('numberfield');
+                                                                    const record = field.findRecord("compteTp", field.getValue());
                                                                     slectedRecord = record;
                                                                     numberField.setValue(record.get('taux'));
                                                                     numberField.focus(false, 50);
@@ -3503,8 +3503,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                                                                     if (e.getKey() === e.ENTER) {
                                                                         if (slectedRecord) {
                                                                             slectedRecord.set('taux', field.getValue());
-                                                                            var record = slectedRecord.data;
-                                                                            var cmp = me.buildCmp(record);
+                                                                            let record = slectedRecord.data;
+                                                                            let cmp = me.buildCmp(record);
                                                                             tpContainerForm.insert(items.length - 1, cmp);
                                                                             me.addtierspayant(slectedRecord.get('compteTp'), field.getValue());
                                                                             form.destroy();
@@ -3532,12 +3532,12 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
     buildCmp: function (record) {
-        var percent = '30%';
-        var me = this, typeVente = me.getTypeVenteCombo().getValue();
+        let percent = '30%';
+        let me = this, typeVente = me.getTypeVenteCombo().getValue();
         if (typeVente === '3') {
             percent = '40%';
         }
-        var cmp = {
+        const cmp = {
             xtype: 'container',
             width: percent,
             margin: '0 10 0 0',
@@ -3593,9 +3593,9 @@ Ext.define('testextjs.controller.VenteCtr', {
                             text: 'Retirer',
                             margin: '0 10 0 0',
                             handler: function (btn) {
-                                var cp = btn.up('fieldcontainer');
-                                var container = cp.up('container');
-                                var compteTp = container.query('hiddenfield:first');
+                                const cp = btn.up('fieldcontainer');
+                                const container = cp.up('container');
+                                const compteTp = container.query('hiddenfield:first');
                                 me.removetierspayant(compteTp[0].value);
                                 container.destroy();
                             }
@@ -3614,10 +3614,17 @@ Ext.define('testextjs.controller.VenteCtr', {
                     itemId: 'lgTIERSPAYANTID' + record.order,
                     value: record.lgTIERSPAYANTID
                 },
+              
                 {
                     xtype: 'numberfield',
                     value: record.taux,
                     hidden: true
+                },
+                   {
+                    xtype: 'hiddenfield',
+                    name: 'cmu' + record.order,
+                    itemId: 'cmu' + record.order,
+                    value: record.cmu
                 }
             ]
         };
@@ -3914,20 +3921,23 @@ Ext.define('testextjs.controller.VenteCtr', {
         return result;
     },
     buildAssuranceData: function () {
-        var me = this, tpContainerForm = me.getTpContainerForm();
-        var items = tpContainerForm.items;
-        var tierspayants = [];
+        let me = this, tpContainerForm = me.getTpContainerForm();
+        let items = tpContainerForm.items;
+        let tierspayants = [];
         Ext.each(items.items, function (item) {
             if (item.items) {
-                var numBonField = item.items.items[1].items.items[0];
+                const numBonField = item.items.items[1].items.items[0];
                 /*tp = item.items.items[3].getValue(),*/
-                var taux = item.items.items[4], cmtp = item.items.items[2];
-
+                const taux = item.items.items[4];
+                const cmtp = item.items.items[2];
+                const cmu= item.items.items[5];
+                 console.log(cmu,'************************************************');
                 tierspayants.push(
                         {
                             "compteTp": cmtp.getValue(),
                             "numBon": numBonField.getValue(),
-                            "taux": parseInt(taux.getValue())
+                            "taux": parseInt(taux.getValue()),
+                            "cmu":cmu.getValue()
                         }
                 );
             }
@@ -3938,8 +3948,8 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     showNetPaidWithPlafondVente: function () {
-        var me = this, sansBon = me.getSansBon();
-        var result = me.checkEmptyBonRef();
+        let me = this, sansBon = me.getSansBon();
+        let result = me.checkEmptyBonRef();
         if (result) {
             if (!me.getVenteSansBon()) {
                 Ext.MessageBox.show({
@@ -3973,20 +3983,20 @@ Ext.define('testextjs.controller.VenteCtr', {
                 }
             }
         } else {
-            var vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
+            let vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
             if (vente) {
-                var venteId = vente.lgPREENREGISTREMENTID;
-                var tierspayants = me.buildAssuranceData();
+                let venteId = vente.lgPREENREGISTREMENTID;
+                let tierspayants = me.buildAssuranceData();
                 if (tierspayants.length === 0) {
                     Ext.Msg.alert("Message", 'Veuillez ajouter un tiers-payant à la vente');
                     return false;
                 }
-                var data = {
+                let data = {
                     "remiseId": remiseId,
                     "venteId": venteId,
                     "tierspayants": tierspayants
                 };
-                var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                let progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
                 Ext.Ajax.request({
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -3994,7 +4004,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     params: Ext.JSON.encode(data),
                     success: function (response, options) {
                         progress.hide();
-                        var result = Ext.JSON.decode(response.responseText, true);
+                        const result = Ext.JSON.decode(response.responseText, true);
                         if (result.success) {
                             if (result.hasRestructuring) {
                                 Ext.MessageBox.show({
@@ -4014,7 +4024,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                             me.netAmountToPay = result.data;
                             me.toRecalculate = false;
-                            var montantNet = me.getNetAmountToPay().montantNet;
+                            let montantNet = me.getNetAmountToPay().montantNet;
                             me.getMontantNet().setValue(me.getNetAmountToPay().montantNet);
                             me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
                             me.getMontantTp().setValue(me.getNetAmountToPay().montantTp);
