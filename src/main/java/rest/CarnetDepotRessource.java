@@ -8,6 +8,7 @@ package rest;
 import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.ReglementCarnetDTO;
 import dal.TUser;
+import dal.enumeration.TypeReglementCarnet;
 import java.time.LocalDate;
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -101,18 +102,20 @@ public class CarnetDepotRessource {
     public Response reglementsCarnet(
             @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit) {
-        JSONObject json = carnetAsDepotService.reglementsCarnet(tiersPayantId, dtStart, dtEnd, start, limit);
+            @QueryParam(value = "limit") int limit,  @QueryParam(value = "typeReglementCarnet") TypeReglementCarnet typeReglementCarnet) {
+        JSONObject json = carnetAsDepotService.reglementsCarnet(tiersPayantId,typeReglementCarnet, dtStart, dtEnd, start, limit);
         return Response.ok().entity(json.toString()).build();
 
     }
 
     @PUT
     @Path("regler/{tiersPayantId}")
-    public Response exclureOrInclureById(@PathParam("tiersPayantId") String id, ReglementCarnetDTO o) {
+    public Response regler(@PathParam("tiersPayantId") String id, ReglementCarnetDTO o) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        JSONObject json = reglementService.faireReglementCarnetDepot(o.setTiersPayantId(id), tu);
+        JSONObject json = reglementService.faireReglementCarnetDepot(o.setTiersPayantId(id)
+                .typeReglementCarnet(TypeReglementCarnet.REGLEMENT)
+                , tu);
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -157,5 +160,17 @@ public class CarnetDepotRessource {
 
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
 
+    }
+    
+    
+     @PUT
+    @Path("regler/depense/{tiersPayantId}")
+    public Response reglerDepense(@PathParam("tiersPayantId") String id, ReglementCarnetDTO o) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        JSONObject json = reglementService.faireReglementCarnetDepot(o.setTiersPayantId(id)
+                .typeReglementCarnet(TypeReglementCarnet.DEPENSE)
+                , tu);
+        return Response.ok().entity(json.toString()).build();
     }
 }

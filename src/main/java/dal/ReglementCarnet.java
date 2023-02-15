@@ -5,6 +5,7 @@
  */
 package dal;
 
+import dal.enumeration.TypeReglementCarnet;
 import dal.enumeration.TypeTiersPayant;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -62,7 +63,7 @@ public class ReglementCarnet implements Serializable {
     @ManyToOne
     private TTiersPayant tiersPayant;
     @Column(name = "createdAt", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt ;
     @NotNull
     @Column(name = "reference", nullable = false)
     private Integer reference = 0;
@@ -75,6 +76,28 @@ public class ReglementCarnet implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "type_tiers_payant", nullable = false, length = 30)
     private TypeTiersPayant typeTiersPayant = TypeTiersPayant.CARNET_AS_DEPOT;
+    @ManyToOne
+    private MotifReglement motifReglement;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_reglement", length = 30)
+    private TypeReglementCarnet typeReglementCarnet = TypeReglementCarnet.REGLEMENT;
+
+    public MotifReglement getMotifReglement() {
+        return motifReglement;
+    }
+
+    public TypeReglementCarnet getTypeReglementCarnet() {
+        return typeReglementCarnet;
+    }
+
+    public void setTypeReglementCarnet(TypeReglementCarnet typeReglementCarnet) {
+        this.typeReglementCarnet = typeReglementCarnet;
+    }
+
+    public void setMotifReglement(MotifReglement motifReglement) {
+        this.motifReglement = motifReglement;
+    }
 
     public String getIdDossier() {
         return idDossier;
@@ -90,9 +113,6 @@ public class ReglementCarnet implements Serializable {
 
     public void setTypeTiersPayant(TypeTiersPayant typeTiersPayant) {
         this.typeTiersPayant = typeTiersPayant;
-    }
-
-    public ReglementCarnet() {
     }
 
     public Integer getId() {

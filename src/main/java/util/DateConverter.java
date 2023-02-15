@@ -31,6 +31,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -162,7 +163,7 @@ public final class DateConverter {
     public static final String MODE_ORANGE = "10";
     public static final String TYPE_REGLEMENT_ORANGE = "7";
     public static final String MODE_MTN = "9";
-     public static final String MODE_WAVE = "10";
+    public static final String MODE_WAVE = "10";
 
     public static final String KEY_HEURE_EMAIL = "KEY_HEURE_EMAIL";
     public static final String CLIENT_ASSURANCE = "1";
@@ -575,5 +576,7 @@ public final class DateConverter {
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
     }
+
+  
 
 }

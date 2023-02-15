@@ -34,7 +34,7 @@ public interface LogService {
 
     JSONObject logs(String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit, String userId, int criteria) throws JSONException;
 
-    void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, Date date) throws Exception;
+    void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, Date date) ;
     
      void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T,String remoteHost,String remoteAddr);
 }

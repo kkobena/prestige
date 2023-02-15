@@ -38,7 +38,7 @@ public class Reference implements Serializable {
     private String id;
     @NotBlank
     @NotNull
-    @Column(name = "reference", length = 20, nullable = false)
+    @Column( length = 20, nullable = false)
     private String reference;
     @Column(name = "reference_temp", length = 20)
     private String referenceTemp;

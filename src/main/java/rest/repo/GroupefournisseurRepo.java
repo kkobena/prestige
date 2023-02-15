@@ -25,9 +25,10 @@ public class GroupefournisseurRepo extends AbstractRepoImpl<Groupefournisseur> {
         return em;
     }
 
-    public GroupefournisseurRepo() {
+     public GroupefournisseurRepo() {
         super(Groupefournisseur.class);
     }
+   
    public Groupefournisseur saveOrUpdate(Groupefournisseur groupefournisseur) {
        
         try {

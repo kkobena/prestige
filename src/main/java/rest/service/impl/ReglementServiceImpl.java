@@ -10,6 +10,7 @@ import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.DelayedDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.ReglementCarnetDTO;
+import dal.MotifReglement;
 import dal.MvtTransaction;
 import dal.Notification;
 import dal.ReglementCarnet;
@@ -37,6 +38,7 @@ import dal.enumeration.Canal;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
+import dal.enumeration.TypeReglementCarnet;
 import dal.enumeration.TypeTiersPayant;
 import dal.enumeration.TypeTransaction;
 import java.text.SimpleDateFormat;
@@ -47,8 +49,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -69,6 +74,7 @@ import rest.service.NotificationService;
 import rest.service.ReglementService;
 import rest.service.TransactionService;
 import rest.service.dto.DossierReglementDTO;
+import util.DateCommonUtils;
 import util.DateConverter;
 
 /**
@@ -77,10 +83,12 @@ import util.DateConverter;
  */
 @Stateless
 public class ReglementServiceImpl implements ReglementService {
-
+    
+    private static final Logger LOG = Logger.getLogger(ReglementServiceImpl.class.getName());
+    
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-
+    
     public EntityManager getEmg() {
         return em;
     }
@@ -90,7 +98,7 @@ public class ReglementServiceImpl implements ReglementService {
     LogService logService;
     @EJB
     NotificationService notificationService;
-
+    
     @Override
     public boolean checkCaisse(TUser ooTUser) {
         try {
@@ -100,11 +108,11 @@ public class ReglementServiceImpl implements ReglementService {
                     .setMaxResults(1);
             return (q.getSingleResult() != null);
         } catch (Exception e) {
-//            LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.SEVERE, null, e);
             return false;
         }
     }
-
+    
     @Override
     public JSONObject listeDifferesData(Params params, boolean pairclient) throws JSONException {
         JSONObject json = new JSONObject();
@@ -114,23 +122,23 @@ public class ReglementServiceImpl implements ReglementService {
         } catch (Exception e) {
         }
         return json;
-
+        
     }
     Comparator<DelayedDTO> comparator = Comparator.comparing(DelayedDTO::getDate);
-
+    
     private TPreenregistrementCompteClient findById(String id) {
         return getEmg().find(TPreenregistrementCompteClient.class, id);
     }
-
+    
     private TClient findClientById(String id) {
         try {
             return getEmg().find(TClient.class, id);
         } catch (Exception e) {
             return null;
         }
-
+        
     }
-
+    
     @Override
     public List<DelayedDTO> listeDifferes(Params params, boolean pairclient) {
         try {
@@ -155,9 +163,9 @@ public class ReglementServiceImpl implements ReglementService {
                 if (params.getRef() != null) {
                     predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.lgCLIENTID), params.getRef())));
                 }
-
+                
             }
-
+            
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementCompteClient_.dtUPDATED)), java.sql.Date.valueOf(params.getDtStart()),
                     java.sql.Date.valueOf(params.getDtEnd()));
             predicates.add(cb.and(btw));
@@ -166,21 +174,21 @@ public class ReglementServiceImpl implements ReglementService {
             TypedQuery<TPreenregistrementCompteClient> q = emg.createQuery(cq);
             return q.getResultList().stream().map(DelayedDTO::new).sorted(comparator).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
-
+    
     private TCompteClient getByClientId(String id) {
         TypedQuery<TCompteClient> q = getEmg().createQuery("SELECT t FROM TCompteClient t WHERE t.lgCLIENTID.lgCLIENTID = ?1", TCompteClient.class).setMaxResults(1)
                 .setParameter(1, id);
         return q.getSingleResult();
     }
-
+    
     private TModeReglement findByIdMod(String id) {
         return getEmg().find(TModeReglement.class, id);
     }
-
+    
     private TModeReglement findModeReglement(String idTypeRegl) {
         TModeReglement modeReglement;
         switch (idTypeRegl) {
@@ -205,16 +213,16 @@ public class ReglementServiceImpl implements ReglementService {
         }
         return modeReglement;
     }
-
+    
     private TMotifReglement findMotifReglement(String id) {
         return getEmg().find(TMotifReglement.class, id);
     }
-
+    
     public void addtransactionComptant(TTypeMvtCaisse optionalCaisse, TMvtCaisse caisse, Integer int_AMOUNT, TCompteClient compteClient, Integer int_AMOUNT_REMIS, Integer int_AMOUNT_RECU, TReglement OTReglement, String lg_TYPE_REGLEMENT_ID, TUser user) {
         TCashTransaction cashTransaction = new TCashTransaction(UUID.randomUUID().toString());
         cashTransaction.setBoolCHECKED(Boolean.TRUE);
-        cashTransaction.setDtCREATED(new Date());
-        cashTransaction.setDtUPDATED(new Date());
+        cashTransaction.setDtCREATED(OTReglement.getDtCREATED());
+        cashTransaction.setDtUPDATED(OTReglement.getDtCREATED());
         cashTransaction.setIntACCOUNT(int_AMOUNT);
         cashTransaction.setIntAMOUNT(int_AMOUNT);
         cashTransaction.setStrTYPE(Boolean.TRUE);
@@ -237,9 +245,9 @@ public class ReglementServiceImpl implements ReglementService {
         cashTransaction.setCaissier(user);
         cashTransaction.setStrREFCOMPTECLIENT((compteClient != null ? compteClient.getLgCOMPTECLIENTID() : ""));
         getEmg().persist(cashTransaction);
-
+        
     }
-
+    
     public TMvtCaisse mvtCaisse(TTypeMvtCaisse OTTypeMvtCaisse, TUser u, TModeReglement modeReglement,
             String str_NUM_COMPTE, String str_NUM_PIECE_COMPTABLE, TReglement reglement, int int_AMOUNT, Date dt_DATE_MVT, String P_KEY) {
         TMvtCaisse OTMvtCaisse = new TMvtCaisse();
@@ -253,16 +261,16 @@ public class ReglementServiceImpl implements ReglementService {
         OTMvtCaisse.setStrSTATUT(DateConverter.STATUT_ENABLE);
         OTMvtCaisse.setDtDATEMVT(dt_DATE_MVT);
         OTMvtCaisse.setStrCREATEDBY(u);
-        OTMvtCaisse.setDtCREATED(new Date());
+        OTMvtCaisse.setDtCREATED(reglement.getDtCREATED());
         OTMvtCaisse.setPKey(P_KEY);
-        OTMvtCaisse.setDtUPDATED(new Date());
+        OTMvtCaisse.setDtUPDATED(reglement.getDtCREATED());
         OTMvtCaisse.setStrREFTICKET(DateConverter.getShortId(10));
         OTMvtCaisse.setLgUSERID(u.getLgUSERID());
         OTMvtCaisse.setBoolCHECKED(true);
         getEmg().persist(OTMvtCaisse);
         return OTMvtCaisse;
     }
-
+    
     private TDossierReglementDetail createDossierReglementDetail(String ref, TDossierReglement dossierReglement, int montant) {
         TDossierReglementDetail dossierReglementDetail = new TDossierReglementDetail(UUID.randomUUID().toString());
         dossierReglementDetail.setDblAMOUNT(Double.valueOf(montant));
@@ -274,13 +282,13 @@ public class ReglementServiceImpl implements ReglementService {
         getEmg().persist(dossierReglementDetail);
         return dossierReglementDetail;
     }
-
+    
     @Override
     public JSONObject reglerDiffereAll(ClotureVenteParams clotureVenteParams) throws JSONException {
         JSONObject json = new JSONObject();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try {
-
+            
             if (checkCaisse(clotureVenteParams.getUserId())) {
                 TTypeMvtCaisse OTTypeMvtCaisse = getEmg().find(TTypeMvtCaisse.class, Parameter.KEY_PARAM_MVT_REGLEMENT_DIFFERES);
                 TCompteClient compteClient = getByClientId(clotureVenteParams.getClientId());
@@ -290,24 +298,24 @@ public class ReglementServiceImpl implements ReglementService {
                 }
                 TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
                 TDossierReglement dossierReglement = createDossierReglements(clotureVenteParams.getClientId(), clotureVenteParams.getUserId(),
-                        clotureVenteParams.getMontantPaye(), "DIFFERE", dateFormat.parse(clotureVenteParams.getNatureVenteId()), clotureVenteParams.getTotalRecap());
+                        clotureVenteParams.getMontantPaye(), "DIFFERE", dateFormat.parse(clotureVenteParams.getNatureVenteId()), clotureVenteParams.getTotalRecap(), new Date());
                 TReglement reglement = createTReglement(compteClient.getLgCOMPTECLIENTID(), clotureVenteParams.getUserId(),
                         dossierReglement.getLgDOSSIERREGLEMENTID(), clotureVenteParams.getBanque(),
-                        clotureVenteParams.getLieux(), "", modeReglement, clotureVenteParams.getMontantPaye(), clotureVenteParams.getNom(), dateFormat.parse(clotureVenteParams.getNatureVenteId()));
+                        clotureVenteParams.getLieux(), "", modeReglement, clotureVenteParams.getMontantPaye(), clotureVenteParams.getNom(), dateFormat.parse(clotureVenteParams.getNatureVenteId()), new Date());
                 TMvtCaisse caisse = mvtCaisse(OTTypeMvtCaisse, clotureVenteParams.getUserId(),
                         modeReglement, OTTypeMvtCaisse.getStrCODECOMPTABLE(),
                         dossierReglement.getLgDOSSIERREGLEMENTID(), reglement,
                         clotureVenteParams.getMontantPaye(), dossierReglement.getDtREGLEMENT(), clotureVenteParams.getNom());
                 addtransactionComptant(OTTypeMvtCaisse, caisse, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), reglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId());
                 String Description = "Reglement de différé  " + dossierReglement.getDblAMOUNT() + " Type de mouvement " + OTTypeMvtCaisse.getStrDESCRIPTION() + " PAR " + clotureVenteParams.getUserId().getStrFIRSTNAME() + " " + clotureVenteParams.getUserId().getStrLASTNAME();
-
+                
                 transactionService.addTransaction(clotureVenteParams.getUserId(),
                         clotureVenteParams.getUserId(), dossierReglement.getLgDOSSIERREGLEMENTID(),
                         clotureVenteParams.getMontantPaye(),
                         clotureVenteParams.getTotalRecap(), clotureVenteParams.getMontantPaye(), clotureVenteParams.getMontantRecu(), Boolean.TRUE, CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
                         modeReglement.getLgTYPEREGLEMENTID(), OTTypeMvtCaisse, getEmg(),
                         clotureVenteParams.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), compteClient.getLgCLIENTID().getLgCLIENTID(), clotureVenteParams.getTotalRecap() - clotureVenteParams.getMontantPaye());
-             
+                
                 listpreenregistrementCompteClient.forEach(a -> {
                     createDossierReglementDetail(a.getLgPREENREGISTREMENTCOMPTECLIENTID(), dossierReglement, a.getIntPRICERESTE());
                     a.setIntPRICERESTE(0);
@@ -323,88 +331,141 @@ public class ReglementServiceImpl implements ReglementService {
                         .addUser(clotureVenteParams.getUserId()));
                 return json.put("success", true).put("msg", "Opération effectuée").put("ref", dossierReglement.getLgDOSSIERREGLEMENTID());
             }
-
+            
             return json.put("success", false).put("msg", "Votre caisse est fermée");
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
         return json;
     }
-  @Override
+
+    private MotifReglement fromId(Integer id) {
+        if (Objects.nonNull(id)) {
+            MotifReglement motifReglement = new MotifReglement();
+            motifReglement.setId(id);
+            return motifReglement;
+        }
+        return null;
+    }
+
+    @Override
     public JSONObject faireReglementCarnetDepot(ReglementCarnetDTO reglementCarnetDTO, TUser user) {
         JSONObject json = new JSONObject();
         if (!this.checkCaisse(user)) {
             return json.put("success", false).put("msg", "Votre caisse est fermée");
-      }
-      TTypeMvtCaisse OTTypeMvtCaisse = getEmg().find(TTypeMvtCaisse.class, DateConverter.MVT_REGLE_TP);
-      TTypeReglement typeReglement = getEmg().find(TTypeReglement.class, reglementCarnetDTO.getTypeReglement());
-       TModeReglement modeReglement= findModeReglement(typeReglement.getLgTYPEREGLEMENTID());
-      TTiersPayant payant = getEmg().find(TTiersPayant.class, reglementCarnetDTO.getTiersPayantId());
+        }
+        TTypeMvtCaisse oTTypeMvtCaisse = getEmg().find(TTypeMvtCaisse.class, DateConverter.MVT_REGLE_TP);
+        TTypeReglement typeReglement = getEmg().find(TTypeReglement.class, reglementCarnetDTO.getTypeReglement());
+        TModeReglement modeReglement = findModeReglement(typeReglement.getLgTYPEREGLEMENTID());
+        TTiersPayant payant = getEmg().find(TTiersPayant.class, reglementCarnetDTO.getTiersPayantId());
         if (payant.getAccount().intValue() < reglementCarnetDTO.getMontantPaye()) {
             return json.put("success", false).put("msg", "VEUILLEZ SAISIR UN MONTANT EGAL OU INFERIEUR AU SOLDE");
         }
         ReglementCarnet carnet = new ReglementCarnet();
+        if (Objects.nonNull(reglementCarnetDTO.getMotifId()) || reglementCarnetDTO.getMotifId() != 0) {
+            carnet.setMotifReglement(fromId(reglementCarnetDTO.getMotifId()));
+        }
+        if (StringUtils.isNotEmpty(reglementCarnetDTO.getDateReglement())) {
+            carnet.setCreatedAt(DateCommonUtils.convertLocalDateToLocalDateTime(LocalDate.parse(reglementCarnetDTO.getDateReglement())));            
+            
+        } else {
+            carnet.setCreatedAt(LocalDateTime.now());            
+        }
         carnet.setTypeReglement(typeReglement);
-        carnet.setCreatedAt(LocalDateTime.now());
+        
         carnet.setUser(user);
         carnet.setTiersPayant(payant);
-        if(!payant.getIsDepot()){
+        if (!payant.getIsDepot()) {
             carnet.setTypeTiersPayant(TypeTiersPayant.TIERS_PAYANT_EXCLUS);
         }
+        Date evtDate = DateCommonUtils.convertLocalDateTimeToDate(carnet.getCreatedAt());        
         carnet.setDescription(reglementCarnetDTO.getDescription());
         carnet.setMontantPaye(reglementCarnetDTO.getMontantPaye());
         carnet.setMontantPayer(payant.getAccount().intValue());
         carnet.setMontantRestant(carnet.getMontantPayer() - carnet.getMontantPaye());
+        if (Objects.nonNull(reglementCarnetDTO.getTypeReglementCarnet())) {
+            carnet.setTypeReglementCarnet(reglementCarnetDTO.getTypeReglementCarnet());
+        } else {
+            carnet.setTypeReglementCarnet(TypeReglementCarnet.REGLEMENT);
+        }
+        
         getEmg().persist(carnet);
         payant.setAccount(payant.getAccount() - carnet.getMontantPaye());
         carnet.setReference(findLastReference() + 1);
-          TDossierReglement dossierReglement = createDossierReglements(payant.getLgTIERSPAYANTID(),user,
-                        carnet.getMontantPaye(), OTTypeMvtCaisse.getStrNAME(), new Date(),  carnet.getMontantPayer());
-          carnet.setIdDossier(dossierReglement.getLgDOSSIERREGLEMENTID());
-                TReglement reglement = createTReglement(payant.getLgTIERSPAYANTID(), user,
-                        dossierReglement.getLgDOSSIERREGLEMENTID(),"",
-                        "", "", modeReglement, carnet.getMontantPaye(), "", new Date());
-                TMvtCaisse caisse = mvtCaisse(OTTypeMvtCaisse, user,
-                        modeReglement, OTTypeMvtCaisse.getStrCODECOMPTABLE(),
-                        dossierReglement.getLgDOSSIERREGLEMENTID(), reglement,
-                        carnet.getMontantPaye(), dossierReglement.getDtREGLEMENT(), "");
-                addtransactionComptant(OTTypeMvtCaisse, caisse,carnet.getMontantPaye(), null, 0, carnet.getMontantPaye(), reglement, typeReglement.getLgTYPEREGLEMENTID(), user);
-                String Description = "Reglement de   " + dossierReglement.getDblAMOUNT() + " Type de mouvement " + OTTypeMvtCaisse.getStrDESCRIPTION() + " PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-      transactionService.addTransaction(user,
-              user, dossierReglement.getLgDOSSIERREGLEMENTID(),
-              carnet.getMontantPaye(),
-              carnet.getMontantPaye(), carnet.getMontantPaye(), 0, Boolean.TRUE, CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
-              modeReglement.getLgTYPEREGLEMENTID(), OTTypeMvtCaisse, getEmg(),
-              carnet.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), payant.getLgTIERSPAYANTID(), 0);
-      logService.updateItem(user, caisse.getLgMVTCAISSEID(), Description,
-              TypeLog.MVT_DE_CAISSE, caisse, getEmg());
-      notificationService.save(new Notification()
-              .canal(Canal.SMS_EMAIL)
-              .typeNotification(TypeNotification.MVT_DE_CAISSE)
-              .message(Description)
-              .addUser(user));
-      getEmg().persist(carnet);
+        TDossierReglement dossierReglement = createDossierReglements(payant.getLgTIERSPAYANTID(), user,
+                carnet.getMontantPaye(), oTTypeMvtCaisse.getStrNAME(), evtDate, carnet.getMontantPayer(), evtDate);
+        carnet.setIdDossier(dossierReglement.getLgDOSSIERREGLEMENTID());
+        TReglement reglement = createTReglement(payant.getLgTIERSPAYANTID(), user,
+                dossierReglement.getLgDOSSIERREGLEMENTID(), "",
+                "", "", modeReglement, carnet.getMontantPaye(), "", evtDate, evtDate);
+        TMvtCaisse caisse = mvtCaisse(oTTypeMvtCaisse, user,
+                modeReglement, oTTypeMvtCaisse.getStrCODECOMPTABLE(),
+                dossierReglement.getLgDOSSIERREGLEMENTID(), reglement,
+                carnet.getMontantPaye(), dossierReglement.getDtREGLEMENT(), "");
+        addtransactionComptant(oTTypeMvtCaisse, caisse, carnet.getMontantPaye(), null, 0, carnet.getMontantPaye(), reglement, typeReglement.getLgTYPEREGLEMENTID(), user);
+        String description = "Reglement de   " + dossierReglement.getDblAMOUNT() + " Type de mouvement " + oTTypeMvtCaisse.getStrDESCRIPTION() + " PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+        addTransaction(user, carnet, caisse, dossierReglement.getLgDOSSIERREGLEMENTID(), typeReglement, payant.getLgTIERSPAYANTID());
+        logService.updateItem(user, caisse.getLgMVTCAISSEID(), description,
+                TypeLog.MVT_DE_CAISSE, caisse, evtDate);
+        notificationService.save(new Notification()
+                .canal(Canal.SMS_EMAIL)
+                .typeNotification(TypeNotification.MVT_DE_CAISSE)
+                .message(description)
+                .addUser(user));
+        getEmg().persist(carnet);
         getEmg().merge(payant);
-      return json.put("success", true).put("msg", "Opération effectuée").put("ref", dossierReglement.getLgDOSSIERREGLEMENTID());
-      
+        return json.put("success", true).put("msg", "Opération effectuée").put("ref", dossierReglement.getLgDOSSIERREGLEMENTID());
+        
     }
-        private int findLastReference() {
+
+    private int findLastReference() {
         try {
             TypedQuery<Integer> query = getEmg().createQuery("SELECT MAX(o.reference) FROM ReglementCarnet o ", Integer.class);
             return query.getSingleResult();
         } catch (Exception e) {
-         
+            
             return 0;
         }
     }
+    
+    public void addTransaction(TUser ooTUser, ReglementCarnet carnet, TMvtCaisse caisse, String pkey, TTypeReglement typeReglement, String organisme) {
+        MvtTransaction transaction = new MvtTransaction();
+        transaction.setUuid(UUID.randomUUID().toString());
+        transaction.setUser(ooTUser);
+        transaction.setCreatedAt(carnet.getCreatedAt());
+        transaction.setPkey(pkey);
+        transaction.setMvtDate(carnet.getCreatedAt().toLocalDate());
+        transaction.setAvoidAmount(carnet.getMontantPaye());
+        transaction.setMontant(carnet.getMontantPaye());
+        transaction.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        transaction.setCaisse(ooTUser);
+        transaction.setMontantCredit(0);
+        transaction.setMontantVerse(0);
+        transaction.setMontantRegle(carnet.getMontantPaye());
+        transaction.setMontantPaye(carnet.getMontantPaye());
+        transaction.setMontantNet(carnet.getMontantPaye());
+        transaction.settTypeMvtCaisse(caisse.getLgTYPEMVTCAISSEID());
+        transaction.setReglement(typeReglement);
+        transaction.setMontantRestant(0);
+        transaction.setMontantRemise(0);
+        transaction.setMontantTva(0);
+        transaction.setMarge(0);
+        transaction.setCategoryTransaction(CategoryTransaction.CREDIT);
+        transaction.setTypeTransaction(TypeTransaction.ENTREE);
+        transaction.setChecked(Boolean.TRUE);
+        transaction.setReference(caisse.getStrREFTICKET());
+        transaction.setOrganisme(organisme);
+        getEmg().persist(transaction);
+    }    
+    
     @Override
     public JSONObject reglerDiffere(ClotureVenteParams clotureVenteParams) throws JSONException {
-     
+        
         JSONObject json = new JSONObject();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try {
             if (checkCaisse(clotureVenteParams.getUserId())) {
-                TTypeMvtCaisse OTTypeMvtCaisse = getEmg().find(TTypeMvtCaisse.class, Parameter.KEY_PARAM_MVT_REGLEMENT_DIFFERES);
+                TTypeMvtCaisse oTTypeMvtCaisse = getEmg().find(TTypeMvtCaisse.class, Parameter.KEY_PARAM_MVT_REGLEMENT_DIFFERES);
                 TCompteClient compteClient = getByClientId(clotureVenteParams.getClientId());
                 JSONArray array = new JSONArray(clotureVenteParams.getCommentaire());
                 if (array.isEmpty()) {
@@ -412,21 +473,21 @@ public class ReglementServiceImpl implements ReglementService {
                 }
                 TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
                 TDossierReglement dossierReglement = createDossierReglements(clotureVenteParams.getClientId(), clotureVenteParams.getUserId(),
-                        clotureVenteParams.getMontantPaye(), "DIFFERE", dateFormat.parse(clotureVenteParams.getNatureVenteId()), clotureVenteParams.getTotalRecap());
+                        clotureVenteParams.getMontantPaye(), "DIFFERE", dateFormat.parse(clotureVenteParams.getNatureVenteId()), clotureVenteParams.getTotalRecap(), new Date());
                 TReglement reglement = createTReglement(compteClient.getLgCOMPTECLIENTID(), clotureVenteParams.getUserId(),
                         dossierReglement.getLgDOSSIERREGLEMENTID(), clotureVenteParams.getBanque(),
-                        clotureVenteParams.getLieux(), "", modeReglement, clotureVenteParams.getMontantPaye(), clotureVenteParams.getNom(), dateFormat.parse(clotureVenteParams.getNatureVenteId()));
-                TMvtCaisse caisse = mvtCaisse(OTTypeMvtCaisse, clotureVenteParams.getUserId(),
-                        modeReglement, OTTypeMvtCaisse.getStrCODECOMPTABLE(),
+                        clotureVenteParams.getLieux(), "", modeReglement, clotureVenteParams.getMontantPaye(), clotureVenteParams.getNom(), dateFormat.parse(clotureVenteParams.getNatureVenteId()), new Date());
+                TMvtCaisse caisse = mvtCaisse(oTTypeMvtCaisse, clotureVenteParams.getUserId(),
+                        modeReglement, oTTypeMvtCaisse.getStrCODECOMPTABLE(),
                         dossierReglement.getLgDOSSIERREGLEMENTID(), reglement,
                         clotureVenteParams.getMontantPaye(), dossierReglement.getDtREGLEMENT(), clotureVenteParams.getNom());
-                addtransactionComptant(OTTypeMvtCaisse, caisse, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), reglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId());
-                String Description = "Reglement de différé  " + dossierReglement.getDblAMOUNT() + " Type de mouvement " + OTTypeMvtCaisse.getStrDESCRIPTION() + " PAR " + clotureVenteParams.getUserId().getStrFIRSTNAME() + " " + clotureVenteParams.getUserId().getStrLASTNAME();
+                addtransactionComptant(oTTypeMvtCaisse, caisse, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), reglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId());
+                String Description = "Reglement de différé  " + dossierReglement.getDblAMOUNT() + " Type de mouvement " + oTTypeMvtCaisse.getStrDESCRIPTION() + " PAR " + clotureVenteParams.getUserId().getStrFIRSTNAME() + " " + clotureVenteParams.getUserId().getStrLASTNAME();
                 transactionService.addTransaction(clotureVenteParams.getUserId(),
                         clotureVenteParams.getUserId(), dossierReglement.getLgDOSSIERREGLEMENTID(),
                         clotureVenteParams.getMontantPaye(),
                         clotureVenteParams.getTotalRecap(), clotureVenteParams.getMontantPaye(), clotureVenteParams.getMontantRecu(), Boolean.TRUE, CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
-                        modeReglement.getLgTYPEREGLEMENTID(), OTTypeMvtCaisse, getEmg(),
+                        modeReglement.getLgTYPEREGLEMENTID(), oTTypeMvtCaisse, getEmg(),
                         clotureVenteParams.getMontantPaye(), 0, 0, caisse.getStrREFTICKET(), compteClient.getLgCLIENTID().getLgCLIENTID(), clotureVenteParams.getTotalRecap() - clotureVenteParams.getMontantPaye());
                 LongAdder montant = new LongAdder();
                 montant.add(clotureVenteParams.getMontantPaye());
@@ -451,22 +512,22 @@ public class ReglementServiceImpl implements ReglementService {
                 });
                 logService.updateItem(clotureVenteParams.getUserId(), caisse.getLgMVTCAISSEID(), Description,
                         TypeLog.MVT_DE_CAISSE, caisse, getEmg());
-                  notificationService.save(new Notification()
+                notificationService.save(new Notification()
                         .canal(Canal.SMS_EMAIL)
                         .typeNotification(TypeNotification.MVT_DE_CAISSE)
                         .message(Description)
                         .addUser(clotureVenteParams.getUserId()));
                 return json.put("success", true).put("msg", "Opération effectuée").put("ref", dossierReglement.getLgDOSSIERREGLEMENTID());
             }
-
+            
             return json.put("success", false).put("msg", "Votre caisse est fermée");
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
         return json;
     }
-
-    public TReglement createTReglement(String str_REF_COMPTE_CLIENT, TUser u, String str_REF_RESSOURCE, String str_BANQUE, String str_LIEU, String str_COMMENTAIRE, TModeReglement OTModeReglement, int int_AMOUNT, String nom, Date dt_reglement) {
+    
+    public TReglement createTReglement(String str_REF_COMPTE_CLIENT, TUser u, String str_REF_RESSOURCE, String str_BANQUE, String str_LIEU, String str_COMMENTAIRE, TModeReglement OTModeReglement, int int_AMOUNT, String nom, Date dt_reglement, Date evt) {
         TReglement OTReglement = new TReglement();
         OTReglement.setLgREGLEMENTID(UUID.randomUUID().toString());
         OTReglement.setStrBANQUE(str_BANQUE);
@@ -476,8 +537,8 @@ public class ReglementServiceImpl implements ReglementService {
         OTReglement.setStrFIRSTLASTNAME(nom);
         OTReglement.setStrREFRESSOURCE(str_REF_RESSOURCE);
         OTReglement.setIntTAUX(0);
-        OTReglement.setDtCREATED(new Date());
-        OTReglement.setDtUPDATED(new Date());
+        OTReglement.setDtCREATED(evt);
+        OTReglement.setDtUPDATED(evt);
         OTReglement.setLgMODEREGLEMENTID(OTModeReglement);
         OTReglement.setDtREGLEMENT(dt_reglement);
         OTReglement.setLgUSERID(u);
@@ -487,9 +548,9 @@ public class ReglementServiceImpl implements ReglementService {
         getEmg().persist(OTReglement);
         return OTReglement;
     }
-
-    private TDossierReglement createDossierReglements(String lg_CLIENT_ID, TUser u, Integer amount, String nature_dossier, Date dt_reglement, Integer montantattendu) {
-
+    
+    private TDossierReglement createDossierReglements(String lg_CLIENT_ID, TUser u, Integer amount, String nature_dossier, Date dt_reglement, Integer montantattendu, Date evt) {
+        
         TDossierReglement OTDossierReglement = new TDossierReglement();
         OTDossierReglement.setLgDOSSIERREGLEMENTID(UUID.randomUUID().toString());
         OTDossierReglement.setDblAMOUNT(Double.valueOf(amount));
@@ -497,18 +558,18 @@ public class ReglementServiceImpl implements ReglementService {
         OTDossierReglement.setStrNATUREDOSSIER(nature_dossier);
         OTDossierReglement.setStrORGANISMEID(lg_CLIENT_ID);
         OTDossierReglement.setDtREGLEMENT(dt_reglement);
-        OTDossierReglement.setDtCREATED(new Date());
-        OTDossierReglement.setDtUPDATED(new Date());
+        OTDossierReglement.setDtCREATED(evt);
+        OTDossierReglement.setDtUPDATED(evt);
         OTDossierReglement.setDblMONTANTATTENDU(Double.valueOf(montantattendu));
         OTDossierReglement.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
         getEmg().persist(OTDossierReglement);
-
+        
         return OTDossierReglement;
-
+        
     }
-
+    
     public List<TPreenregistrementCompteClient> getPreenregistrementCompteClients(String dtDebut, String dtFin, String cmpt) {
-
+        
         EntityManager emg = this.getEmg();
         List<Predicate> predicates = new ArrayList<>();
         CriteriaBuilder cb = emg.getCriteriaBuilder();
@@ -524,9 +585,9 @@ public class ReglementServiceImpl implements ReglementService {
         cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<TPreenregistrementCompteClient> q = emg.createQuery(cq);
         return q.getResultList();
-
+        
     }
-
+    
     private List<MvtTransaction> listeReglement(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId, String typeMvt) {
         try {
@@ -540,17 +601,17 @@ public class ReglementServiceImpl implements ReglementService {
             query.setParameter(5, typeMvt);
             return query.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
-
+    
     @Override
     public JSONObject reglementsDifferes(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, String clientId) throws JSONException {
         List<DelayedDTO> list = reglementsDifferesDto(dtStart, dtEnd, checked, emplacementId, clientId);
         return new JSONObject().put("total", list.size()).put("data", new JSONArray(list));
     }
-
+    
     @Override
     public List<DelayedDTO> reglementsDifferesDto(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId, String clientId) {
         try {
@@ -562,45 +623,43 @@ public class ReglementServiceImpl implements ReglementService {
             List<MvtTransaction> query = listeReglement(dtStart, dtEnd, checked, emplacementId, DateConverter.MVT_REGLE_DIFF);
             return query.stream().map(x -> new DelayedDTO(x, findClientById(x.getOrganisme()))).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
-
+    
     private List<DelayedDTO> detailsReglmentDifferes(String refReglement) {
         try {
             TypedQuery<TDossierReglementDetail> q = getEmg().createQuery("SELECT o FROM TDossierReglementDetail o WHERE o.lgDOSSIERREGLEMENTID.lgDOSSIERREGLEMENTID=?1", TDossierReglementDetail.class);
             q.setParameter(1, refReglement);
             return q.getResultList().stream().map(x -> new DelayedDTO(x, findById(x.getStrREF()))).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
-
+    
     @Override
     public JSONObject detailsReglmentDiffere(String refReglement) throws JSONException {
         List<DelayedDTO> list = detailsReglmentDifferes(refReglement);
         return new JSONObject().put("total", list.size()).put("data", new JSONArray(list));
     }
-
     
-   
     @Override
     public List<DossierReglementDTO> listeReglementFactures(String dtStart, String dtEnd, String tiersPayantId) {
-      
-        if(StringUtils.isNotEmpty(tiersPayantId)){
-      TTiersPayant payant=      getEmg().find(TTiersPayant.class, tiersPayantId);
-             TypedQuery<TDossierReglement> q=getEmg().createQuery("SELECT o FROM TDossierReglement o WHERE FUNCTION('DATE',o.dtREGLEMENT) BETWEEN ?1 AND ?2 AND o.strORGANISMEID=?3", TDossierReglement.class);
-       q.setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
-        q.setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
-           q.setParameter(3, tiersPayantId);
-        return  q.getResultList().stream().map(e->new DossierReglementDTO(e, payant)).collect(Collectors.toList());
+        
+        if (StringUtils.isNotEmpty(tiersPayantId)) {
+            TTiersPayant payant = getEmg().find(TTiersPayant.class, tiersPayantId);
+            TypedQuery<TDossierReglement> q = getEmg().createQuery("SELECT o FROM TDossierReglement o WHERE FUNCTION('DATE',o.dtREGLEMENT) BETWEEN ?1 AND ?2 AND o.strORGANISMEID=?3", TDossierReglement.class);
+            q.setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
+            q.setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
+            q.setParameter(3, tiersPayantId);
+            return q.getResultList().stream().map(e -> new DossierReglementDTO(e, payant)).collect(Collectors.toList());
         }
-       TypedQuery<TDossierReglement> q=getEmg().createQuery("SELECT o FROM TDossierReglement o WHERE FUNCTION('DATE',o.dtREGLEMENT) BETWEEN ?1 AND ?2 AND o.lgFACTUREID IS NOT NULL", TDossierReglement.class);
-       q.setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
+        TypedQuery<TDossierReglement> q = getEmg().createQuery("SELECT o FROM TDossierReglement o WHERE FUNCTION('DATE',o.dtREGLEMENT) BETWEEN ?1 AND ?2 AND o.lgFACTUREID IS NOT NULL", TDossierReglement.class);
+        q.setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
         q.setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
-        return  q.getResultList().stream().map(e->new DossierReglementDTO(e, getEmg().find(TTiersPayant.class, e.getStrORGANISMEID()))).collect(Collectors.toList());
+        return q.getResultList().stream().map(e -> new DossierReglementDTO(e, getEmg().find(TTiersPayant.class, e.getStrORGANISMEID()))).collect(Collectors.toList());
     }
-
+    
 }

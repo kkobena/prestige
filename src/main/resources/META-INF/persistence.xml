@@ -212,6 +212,7 @@
         <class>dal.RetourCarnet</class>
         <class>dal.RetourCarnetDetail</class>
         <class>dal.VenteExclus</class>
+          <class>dal.MotifReglement</class>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
         </properties>
@@ -222,8 +223,8 @@
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5InnoDBDialect"/>
-          <!-- <property name="hibernate.hbm2ddl.auto" value="update"/>
-             <property name="hibernate.show_sql" value="true"/>-->
+<!--          <property name="hibernate.hbm2ddl.auto" value="update"/>-->
+            <!--  <property name="hibernate.show_sql" value="true"/>-->
             <property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform"/>
         </properties>
     </persistence-unit>

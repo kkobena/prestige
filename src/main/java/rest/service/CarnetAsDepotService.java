@@ -13,6 +13,7 @@ import dal.MvtTransaction;
 import dal.TPreenregistrement;
 import dal.TTiersPayant;
 import dal.TUser;
+import dal.enumeration.TypeReglementCarnet;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
@@ -38,11 +39,11 @@ public interface CarnetAsDepotService {
 
     TiersPayantExclusDTO fetchVenteSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
 
-    JSONObject reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size);
+    JSONObject reglementsCarnet(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size);
 
-    List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size, boolean all);
+    List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size, boolean all);
 
-    ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
+    ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId, TypeReglementCarnet typeReglementCarnet,LocalDate dtStart, LocalDate dtEnd);
 
     JSONObject faireReglement(ReglementCarnetDTO reglementCarnetDTO, TUser user);
 
