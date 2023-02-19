@@ -42,12 +42,24 @@ public class ReglementCarnetDTO {
     private TypeReglementCarnet typeReglementCarnet;
     private String dateReglement;
     private Integer motifId;
+    private String motif;
 
     public Integer getId() {
         return id;
     }
 
+    public String getMotif() {
+        return motif;
+    }
+
+    public void setMotif(String motif) {
+        this.motif = motif;
+    }
+
     public Integer getMotifId() {
+        if (Objects.isNull(motifId) && StringUtils.isNotEmpty(motif)) {
+            motifId = Integer.valueOf(motif);
+        }
         return motifId;
     }
 
@@ -214,8 +226,8 @@ public class ReglementCarnetDTO {
     }
 
     public ReglementCarnetDTO(Long montantPaye, Long montantPayer) {
-        this.montantPaye = Objects.nonNull(montantPaye)? montantPaye.intValue():0;
-        this.montantPayer = Objects.nonNull(montantPayer)?montantPayer.intValue():0;
+        this.montantPaye = Objects.nonNull(montantPaye) ? montantPaye.intValue() : 0;
+        this.montantPayer = Objects.nonNull(montantPayer) ? montantPayer.intValue() : 0;
 
     }
 

@@ -6,4 +6,4 @@ INSERT IGNORE  INTO t_privilege (`lg_PRIVELEGE_ID`, `str_NAME`, `str_TYPE`, `str
 
 ALTER TABLE motif_reglement ADD  CONSTRAINT motif_reglement_libelle_uniq UNIQUE (libelle);  
 
-UPDATE  reglement_carnet SET type_tiers_payant='REGLEMENT';
+UPDATE  reglement_carnet SET type_reglement='REGLEMENT';

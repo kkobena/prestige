@@ -39,11 +39,11 @@ public interface CarnetAsDepotService {
 
     TiersPayantExclusDTO fetchVenteSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
 
-    JSONObject reglementsCarnet(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size);
+    JSONObject reglementsCarnet(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size);
 
-    List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size, boolean all);
+    List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size, boolean all);
 
-    ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId, TypeReglementCarnet typeReglementCarnet,LocalDate dtStart, LocalDate dtEnd);
+    ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd);
 
     JSONObject faireReglement(ReglementCarnetDTO reglementCarnetDTO, TUser user);
 
@@ -70,11 +70,14 @@ public interface CarnetAsDepotService {
     void setToExcludeOrNot(String id, boolean isDepot);
 
     void create(TPreenregistrement preenregistrement, MvtTransaction mvtTransaction, TTiersPayant payant);
+
+    void updateOldData();
+
+    List<DepotProduitVendusDTO> produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query, int start, int size, boolean all);
+
+    JSONObject produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query, int start, int size);
+
+    DepotProduitVendusDTO produitVenduParDepotSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query);
     
-  void updateOldData() ;
-  
-  List<DepotProduitVendusDTO> produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query,int start, int size,boolean all) ;
-  
-  JSONObject produitVenduParDepot(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query,int start, int size) ;
-  DepotProduitVendusDTO produitVenduParDepotSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) ;
+    List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd);
 }

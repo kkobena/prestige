@@ -362,7 +362,7 @@ public class ReglementServiceImpl implements ReglementService {
             return json.put("success", false).put("msg", "VEUILLEZ SAISIR UN MONTANT EGAL OU INFERIEUR AU SOLDE");
         }
         ReglementCarnet carnet = new ReglementCarnet();
-        if (Objects.nonNull(reglementCarnetDTO.getMotifId()) || reglementCarnetDTO.getMotifId() != 0) {
+        if (Objects.nonNull(reglementCarnetDTO.getMotifId()) && reglementCarnetDTO.getMotifId() != 0) {
             carnet.setMotifReglement(fromId(reglementCarnetDTO.getMotifId()));
         }
         if (StringUtils.isNotEmpty(reglementCarnetDTO.getDateReglement())) {

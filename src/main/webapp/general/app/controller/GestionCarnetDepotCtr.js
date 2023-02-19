@@ -155,21 +155,23 @@ Ext.define('testextjs.controller.GestionCarnetDepotCtr', {
         }
         let dtStart = me.getDtStart().getSubmitValue();
         let dtEnd = me.getDtEnd().getSubmitValue();
-        let linkUrl = "";
-        if (itemId === 'ventePanel' ||itemId === 'retourPanel' ) {
-            linkUrl = '../TiersPayantExcludServlet?mode=RETOUR&dtStart=' + dtStart +
+        let linkUrl = ""; 
+        if (itemId === 'ventePanel'  ) {
+            linkUrl = '../TiersPayantExcludServlet?mode=RETOUR_CARNET_DEPOT&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
         } else if(itemId==='produitsPanel'){
                linkUrl = '../TiersPayantExcludServlet?mode=PRODUITS&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
-        }else if(itemId === 'reglementPanel' ||itemId === 'depensePanel'){
-             linkUrl = '../TiersPayantExcludServlet?mode=REGLEMENTS&dtStart=' + dtStart +
-                    '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId+'&typeReglementCarnet=REGLEMENT';
-        }else if(itemId === 'depensePanel'){
-             linkUrl = '../TiersPayantExcludServlet?mode=REGLEMENTS&dtStart=' + dtStart +
+        }else if(itemId === 'reglementPanel' || itemId === 'depensePanel'){
+             linkUrl = '../TiersPayantExcludServlet?mode=REGLEMENTS_CARNET_DEPOT&dtStart=' + dtStart +
+                    '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId;
+        }
+        
+       /* else if(itemId === 'depensePanel'){
+             linkUrl = '../TiersPayantExcludServlet?mode=REGLEMENTS_CARNET_DEPOT&dtStart=' + dtStart +
                     '&dtEnd=' + dtEnd + '&tiersPayantId=' + tiersPayantId+'&typeReglementCarnet=DEPENSE';
             
-        }
+        }*/
         window.open(linkUrl);
     },
 
@@ -527,7 +529,7 @@ me.doSearchProduits();
                            flex: 1,
                                                 height: 30,
                             fieldLabel: 'Motif réglèment',
-                            name: 'motifId',
+                            name: 'motif',
                             store: me.getMotifReglementStore(),
                             pageSize: 9999,
                             valueField: 'id',
@@ -535,6 +537,7 @@ me.doSearchProduits();
                             typeAhead: true,
                             queryMode: 'local',
                             minChars: 2,
+                            value:null,
                             emptyText: 'Sélectionnez le motif'
                         },
                   
@@ -746,7 +749,7 @@ me.doSearchProduits();
                            flex: 1,
                                                 height: 30,
                             fieldLabel: 'Motif réglèment',
-                            name: 'motifId',
+                            name: 'motif',
                             store: me.getMotifReglementStore(),
                             pageSize: 999,
                             valueField: 'id',

@@ -52,7 +52,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
     private RetourCarnetService retourCarnetService;
 
     private enum Action {
-        VENTE, REGLEMENTS, RETOUR, PRODUITS, RETOUR_CARNET_DEPOT
+        VENTE, REGLEMENTS, RETOUR, PRODUITS, RETOUR_CARNET_DEPOT,REGLEMENTS_CARNET_DEPOT
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -103,6 +103,14 @@ public class TiersPayantExcludServlet extends HttpServlet {
             case RETOUR_CARNET_DEPOT:
                 file = retourCarnetDepot(tiersPayantId, query, dtStart, dtEnd, OTUser);
                 break;
+            case REGLEMENTS_CARNET_DEPOT: {
+                if (period == 0) {
+                    file = reglementCarnetDepot(tiersPayantId,typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
+                } else {
+                    file = extraitCarnetDepotCompteMonthly(tiersPayantId,typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
+                }
+            }
+            break;
         }
         response.sendRedirect(request.getContextPath() + file);
     }
@@ -336,6 +344,69 @@ public class TiersPayantExcludServlet extends HttpServlet {
 
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_retour_au_depot_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_retour_au_depot_" + report_generate_file;
+    }
+    
+      public String reglementCarnetDepot(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, TUser tu) throws IOException {
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+
+        TOfficine oTOfficine = caisseService.findOfficine();
+        String P_H_CLT_INFOS = "EXTRAIT COMPTE CLIENT ";
+        String tiersPayant = " ";
+        String scr_report_file = "rp_extrait_compte_carnet_only_one";
+        if (StringUtils.isEmpty(tiersPayantId)) {
+            scr_report_file = "rp_extrait_compte_carnet";
+        } else {
+            tiersPayant = carnetAsDepotService.getTiersPayantName(tiersPayantId) + " ";
+        }
+
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
+        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompte(tiersPayantId,typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
+        return "/data/reports/pdf/extrait_compte_" + report_generate_file;
+    }
+
+  public String extraitCarnetDepotCompteMonthly(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, TUser tu) throws IOException {
+        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        try {
+            dtSt = LocalDate.parse(dtStart);
+            dtEn = LocalDate.parse(dtEnd);
+        } catch (Exception e) {
+        }
+
+        TOfficine oTOfficine = caisseService.findOfficine();
+        String P_H_CLT_INFOS = "EXTRAIT COMPTE CLIENT ";
+        String tiersPayant = " ";
+        String scr_report_file = "rp_extrait_compte_carnet_only_monthly";
+        if (StringUtils.isEmpty(tiersPayantId)) {
+            scr_report_file = "rp_extrait_compte_carnet_monthy";
+        } else {
+            tiersPayant = carnetAsDepotService.getTiersPayantName(tiersPayantId);
+        }
+
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtEn.isEqual(dtSt)) {
+            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
+
+        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompte(tiersPayantId,typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_vente_" + report_generate_file, datas);
+        return "/data/reports/pdf/extrait_compte_vente_" + report_generate_file;
     }
 
 }
