@@ -527,7 +527,7 @@ me.doSearchProduits();
                                             {
                             xtype: 'combobox',
                            flex: 1,
-                                                height: 30,
+                            height: 30,
                             fieldLabel: 'Motif réglèment',
                             name: 'motif',
                             store: me.getMotifReglementStore(),
@@ -537,7 +537,6 @@ me.doSearchProduits();
                             typeAhead: true,
                             queryMode: 'local',
                             minChars: 2,
-                            value:null,
                             emptyText: 'Sélectionnez le motif'
                         },
                   

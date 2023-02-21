@@ -156,6 +156,64 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
             }
         });
         
+         let depenses = new Ext.data.Store({
+            fields: [
+                {
+                    name: 'tiersPayantId',
+                    type: 'string'
+                },
+                {
+                    name: 'description',
+                    type: 'string'
+                },
+                {
+                    name: 'tiersPayant',
+                    type: 'string'
+                }, {
+                    name: 'userId',
+                    type: 'string'
+                },
+                {
+                    name: 'user',
+                    type: 'string'
+                },
+                {
+                    name: 'montantPaye',
+                    type: 'number'
+                },
+                {
+                    name: 'createdAt',
+                    type: 'string'
+                }, {
+                    name: 'montantPayer',
+                    type: 'number'
+                }
+                , {
+                    name: 'montantRestant',
+                    type: 'number'
+                }, {
+                    name: 'id',
+                    type: 'string'
+                }
+                , {
+                    name: 'idDossier',
+                    type: 'string'
+                }
+            ],
+            pageSize: 18,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v2/carnet-depot/reglements',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total',
+                    metaProperty: 'metaData'
+                },
+                timeout: 2400000
+            }
+        });
         
            let produits = new Ext.data.Store({
             fields: [
@@ -554,7 +612,7 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                             xtype: 'gridpanel',
                             title: '',
                             border: false,
-                            store: reglements,
+                            store: depenses,
                             scrollable: true,
                             columns:
                                     [
@@ -636,7 +694,7 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                             dockedItems: [
                                 {
                                     xtype: 'pagingtoolbar',
-                                    store: reglements,
+                                    store: depenses,
                                     pageSize: 18,
                                     dock: 'bottom',
                                     displayInfo: true
