@@ -5,11 +5,14 @@
  */
 package commonTasks.dto;
 
+import dal.MotifReglement;
 import dal.ReglementCarnet;
 import dal.TTiersPayant;
 import dal.TUser;
+import dal.enumeration.TypeReglementCarnet;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -35,9 +38,41 @@ public class ReglementCarnetDTO {
     private String createdAt;
     private String typeReglement;
     private String idDossier;
+    private String motifLibelle;
+    private TypeReglementCarnet typeReglementCarnet;
+    private String dateReglement;
+    private Integer motifId;
+    private String motif;
 
     public Integer getId() {
         return id;
+    }
+
+    public String getMotif() {
+        return motif;
+    }
+
+    public void setMotif(String motif) {
+        this.motif = motif;
+    }
+
+    public Integer getMotifId() {
+        if (Objects.isNull(motifId) && StringUtils.isNotEmpty(motif)) {
+            motifId = Integer.valueOf(motif);
+        }
+        return motifId;
+    }
+
+    public void setMotifId(Integer motifId) {
+        this.motifId = motifId;
+    }
+
+    public String getDateReglement() {
+        return dateReglement;
+    }
+
+    public void setDateReglement(String dateReglement) {
+        this.dateReglement = dateReglement;
     }
 
     public void setId(Integer id) {
@@ -109,6 +144,11 @@ public class ReglementCarnetDTO {
         return this;
     }
 
+    public ReglementCarnetDTO typeReglementCarnet(TypeReglementCarnet typeReglementCarnet) {
+        this.typeReglementCarnet = typeReglementCarnet;
+        return this;
+    }
+
     public String getTiersPayant() {
         return tiersPayant;
     }
@@ -136,6 +176,22 @@ public class ReglementCarnetDTO {
     public ReglementCarnetDTO() {
     }
 
+    public String getMotifLibelle() {
+        return motifLibelle;
+    }
+
+    public void setMotifLibelle(String motifLibelle) {
+        this.motifLibelle = motifLibelle;
+    }
+
+    public TypeReglementCarnet getTypeReglementCarnet() {
+        return typeReglementCarnet;
+    }
+
+    public void setTypeReglementCarnet(TypeReglementCarnet typeReglementCarnet) {
+        this.typeReglementCarnet = typeReglementCarnet;
+    }
+
     public ReglementCarnetDTO(ReglementCarnet carnet) {
         this.id = carnet.getId();
         this.description = carnet.getDescription();
@@ -153,6 +209,12 @@ public class ReglementCarnetDTO {
         this.reference = StringUtils.leftPad(carnet.getReference().toString(), 5, '0');
         this.created = carnet.getCreatedAt();
         this.idDossier = carnet.getIdDossier();
+        MotifReglement motifReglement = carnet.getMotifReglement();
+        if (Objects.nonNull(motifReglement)) {
+            this.motifLibelle = motifReglement.getLibelle();
+            this.motifId = motifReglement.getId();
+        }
+        this.typeReglementCarnet = Objects.nonNull(carnet.getTypeReglementCarnet()) ? carnet.getTypeReglementCarnet() : TypeReglementCarnet.REGLEMENT;
     }
 
     public String getIdDossier() {
@@ -164,8 +226,8 @@ public class ReglementCarnetDTO {
     }
 
     public ReglementCarnetDTO(Long montantPaye, Long montantPayer) {
-        this.montantPaye = montantPaye.intValue();
-        this.montantPayer = montantPayer.intValue();
+        this.montantPaye = Objects.nonNull(montantPaye) ? montantPaye.intValue() : 0;
+        this.montantPayer = Objects.nonNull(montantPayer) ? montantPayer.intValue() : 0;
 
     }
 

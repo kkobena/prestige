@@ -265,10 +265,11 @@ public class TransactionServiceImpl implements TransactionService {
             return 0;
         }
     }
-    
+
+   
     @Override
     public void addTransaction(TUser ooTUser, TUser caisse, String pkey, Integer montant, Integer voidAmount, Integer montantNet, Integer montantVerse, Boolean checked, CategoryTransaction categoryTransaction, TypeTransaction typeTransaction, TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg, Integer montantPaye, Integer montantTva, Integer marge, String reference, String organisme, Integer montantRestant) {
-        MvtTransaction _new = new MvtTransaction();
+        MvtTransaction transaction = new MvtTransaction();
         int compare = montantNet.compareTo(montantVerse);
         Integer montantPaid;
         if (compare <= 0) {
@@ -277,61 +278,61 @@ public class TransactionServiceImpl implements TransactionService {
             montantPaid = montantVerse;
             
         }
-        _new.setUuid(UUID.randomUUID().toString());
-        _new.setUser(ooTUser);
-        _new.setCreatedAt(LocalDateTime.now());
-        _new.setPkey(pkey);
-        _new.setMvtDate(LocalDate.now());
-        _new.setAvoidAmount(voidAmount);
-        _new.setMontant(montant);
-        _new.setMagasin(ooTUser.getLgEMPLACEMENTID());
-        _new.setCaisse(caisse);
-        _new.setMontantCredit(0);
-        _new.setMontantVerse(montantVerse);
-        _new.setMontantRegle(montantPaid);
-        _new.setMontantPaye(montantPaye);
-        _new.setMontantNet(montantNet);
-        _new.settTypeMvtCaisse(tTypeMvtCaisse);
-        _new.setReglement(reglement);
-        _new.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
-        _new.setMontantRemise(0);
-        _new.setMontantTva(montantTva);
-        _new.setMarge(marge);
-        _new.setCategoryTransaction(categoryTransaction);
-        _new.setTypeTransaction(typeTransaction);
-        _new.setChecked(checked);
-        _new.setReference(reference);
-        _new.setOrganisme(organisme);
-        emg.persist(_new);
+        transaction.setUuid(UUID.randomUUID().toString());
+        transaction.setUser(ooTUser);
+        transaction.setCreatedAt(LocalDateTime.now());
+        transaction.setPkey(pkey);
+        transaction.setMvtDate(LocalDate.now());
+        transaction.setAvoidAmount(voidAmount);
+        transaction.setMontant(montant);
+        transaction.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        transaction.setCaisse(caisse);
+        transaction.setMontantCredit(0);
+        transaction.setMontantVerse(montantVerse);
+        transaction.setMontantRegle(montantPaid);
+        transaction.setMontantPaye(montantPaye);
+        transaction.setMontantNet(montantNet);
+        transaction.settTypeMvtCaisse(tTypeMvtCaisse);
+        transaction.setReglement(reglement);
+        transaction.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
+        transaction.setMontantRemise(0);
+        transaction.setMontantTva(montantTva);
+        transaction.setMarge(marge);
+        transaction.setCategoryTransaction(categoryTransaction);
+        transaction.setTypeTransaction(typeTransaction);
+        transaction.setChecked(checked);
+        transaction.setReference(reference);
+        transaction.setOrganisme(organisme);
+        emg.persist(transaction);
     }
     
     public void addTransactionBL(TUser ooTUser, TBonLivraison bl, EntityManager emg) {
         
-        MvtTransaction _new = new MvtTransaction();
-        _new.setUuid(UUID.randomUUID().toString());
-        _new.setUser(ooTUser);
-        _new.setCreatedAt(DateConverter.convertDateToLocalDateTime(bl.getDtDATELIVRAISON()));
-        _new.setPkey(bl.getLgBONLIVRAISONID());
-        _new.setMvtDate(DateConverter.convertDateToLocalDate(bl.getDtDATELIVRAISON()));
-        _new.setAvoidAmount(0);
-        _new.setMontant(bl.getIntHTTC());
-        _new.setMontantTva(bl.getIntTVA());
-        _new.setMagasin(ooTUser.getLgEMPLACEMENTID());
-        _new.setCaisse(ooTUser);
-        _new.setMontantCredit(0);
-        _new.setGrossiste(bl.getLgORDERID().getLgGROSSISTEID());
-        _new.setMontantRegle(0);
-        _new.setMontantVerse(0);
-        _new.setMontantRestant(bl.getIntHTTC());
-        _new.setMontantNet(bl.getIntMHT());
-        _new.setMontantRemise(0);
-        _new.setMarge(0);
-        _new.setMontantAcc(bl.getIntMHT());
-        _new.setReference(bl.getStrREFLIVRAISON());
-        _new.setCategoryTransaction(CategoryTransaction.DEBIT);
-        _new.setTypeTransaction(TypeTransaction.ACHAT);
-        _new.setChecked(Boolean.TRUE);
-        emg.persist(_new);
+        MvtTransaction transaction = new MvtTransaction();
+        transaction.setUuid(UUID.randomUUID().toString());
+        transaction.setUser(ooTUser);
+        transaction.setCreatedAt(DateConverter.convertDateToLocalDateTime(bl.getDtDATELIVRAISON()));
+        transaction.setPkey(bl.getLgBONLIVRAISONID());
+        transaction.setMvtDate(DateConverter.convertDateToLocalDate(bl.getDtDATELIVRAISON()));
+        transaction.setAvoidAmount(0);
+        transaction.setMontant(bl.getIntHTTC());
+        transaction.setMontantTva(bl.getIntTVA());
+        transaction.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        transaction.setCaisse(ooTUser);
+        transaction.setMontantCredit(0);
+        transaction.setGrossiste(bl.getLgORDERID().getLgGROSSISTEID());
+        transaction.setMontantRegle(0);
+        transaction.setMontantVerse(0);
+        transaction.setMontantRestant(bl.getIntHTTC());
+        transaction.setMontantNet(bl.getIntMHT());
+        transaction.setMontantRemise(0);
+        transaction.setMarge(0);
+        transaction.setMontantAcc(bl.getIntMHT());
+        transaction.setReference(bl.getStrREFLIVRAISON());
+        transaction.setCategoryTransaction(CategoryTransaction.DEBIT);
+        transaction.setTypeTransaction(TypeTransaction.ACHAT);
+        transaction.setChecked(Boolean.TRUE);
+        emg.persist(transaction);
     }
     
 }

@@ -12,7 +12,7 @@ if (Ext.repoDevMode) {
     document.write('<link rel="stylesheet" type="text/css" href="../build/testextjs/ext-theme-' +
             Ext.themeName + '/resources/testextjs-all.css"/>');
 }
-//Ext.Loader.setPath('Ext.ux', 'extjs/ux');  
+
 Ext.application({
     name: 'testextjs',
     requires: [
@@ -853,7 +853,8 @@ Ext.application({
         'TierspAsDepotCtrl',
         'TierspExclusCtrl',
         'SuiviPerimesCtr',
-        'BalanceVenteCarnetCtr'
+        'BalanceVenteCarnetCtr',
+        'MotifReglementCtr'
         
     ],
     stores: [

@@ -17,6 +17,7 @@ import dal.TUser;
 import dal.VenteExclus;
 import dal.VenteExclus_;
 import dal.enumeration.Statut;
+import dal.enumeration.TypeReglementCarnet;
 import dal.enumeration.TypeTiersPayant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -91,7 +93,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
                     cb.like(root.get(VenteExclus_.tiersPayant).get(TTiersPayant_.strFULLNAME), query + "%")));
         }
         predicates.add(cb.equal(root.get(VenteExclus_.status), Statut.IS_CLOSE));
-         predicates.add(cb.equal(root.get(VenteExclus_.typeTiersPayant), TypeTiersPayant.TIERS_PAYANT_EXCLUS));
+        predicates.add(cb.equal(root.get(VenteExclus_.typeTiersPayant), TypeTiersPayant.TIERS_PAYANT_EXCLUS));
         return predicates;
     }
 
@@ -100,7 +102,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         long count = countAll(query);
         List<TiersPayantExclusDTO> data = all(start, size, query, false);
         return new JSONObject().put("total", count).put("data", data);
-      
+
     }
 
     private long countAll(String query) {
@@ -183,25 +185,25 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
     }
 
     @Override
-    public JSONObject reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size) {
-        ReglementCarnetDTO metaData = reglementsCarnetSummary(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
-        List<ReglementCarnetDTO> data = reglementsCarnet(tiersPayantId, dtStart, dtEnd, start, size, false);
+    public JSONObject reglementsCarnet(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size) {
+        ReglementCarnetDTO metaData = reglementsCarnetSummary(tiersPayantId,typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        List<ReglementCarnetDTO> data = reglementsCarnet(tiersPayantId, typeReglementCarnet, dtStart, dtEnd, start, size, false);
         JSONObject json = new JSONObject();
         json.put("metaData", new JSONObject(metaData));
-        json.put("total", reglementsCarnetCount(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd)));
+        json.put("total", reglementsCarnetCount(typeReglementCarnet,tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd)));
         json.put("data", new JSONArray(data));
 
         return json;
     }
 
     @Override
-    public List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size, boolean all) {
+    public List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size, boolean all) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<ReglementCarnet> cq = cb.createQuery(ReglementCarnet.class);
             Root<ReglementCarnet> root = cq.from(ReglementCarnet.class);
             cq.select(root).orderBy(cb.desc(root.get(ReglementCarnet_.createdAt)));
-            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tiersPayantId);
+            List<Predicate> predicates = reglementsCarnetPredicat(typeReglementCarnet, cb, root, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tiersPayantId);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ReglementCarnet> q = getEntityManager().createQuery(cq);
             if (!all) {
@@ -215,11 +217,14 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         }
     }
 
-    private List<Predicate> reglementsCarnetPredicat(CriteriaBuilder cb, Root<ReglementCarnet> root, LocalDate dtStart, LocalDate dtEnd, String tiersPayantId) {
+    private List<Predicate> reglementsCarnetPredicat(TypeReglementCarnet typeReglementCarnet, CriteriaBuilder cb, Root<ReglementCarnet> root, LocalDate dtStart, LocalDate dtEnd, String tiersPayantId) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(root.get(ReglementCarnet_.TYPE_TIERS_PAYANT), TypeTiersPayant.TIERS_PAYANT_EXCLUS));
         if (!StringUtils.isEmpty(tiersPayantId)) {
             predicates.add(cb.equal(root.get(ReglementCarnet_.tiersPayant).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
+        }
+        if (Objects.nonNull(typeReglementCarnet)) {
+            predicates.add(cb.equal(root.get(ReglementCarnet_.typeReglementCarnet), typeReglementCarnet));
         }
         Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(ReglementCarnet_.createdAt)),
                 java.sql.Date.valueOf(dtStart),
@@ -228,13 +233,13 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         return predicates;
     }
 
-    private long reglementsCarnetCount(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd) {
+    private long reglementsCarnetCount(TypeReglementCarnet typeReglementCarnet,String tiersPayantId, LocalDate dtStart, LocalDate dtEnd) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<ReglementCarnet> root = cq.from(ReglementCarnet.class);
             cq.select(cb.count(root));
-            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, dtStart, dtEnd, tiersPayantId);
+            List<Predicate> predicates = reglementsCarnetPredicat(typeReglementCarnet,cb, root, dtStart, dtEnd, tiersPayantId);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
@@ -244,7 +249,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
     }
 
     @Override
-    public ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd) {
+    public ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<ReglementCarnetDTO> cq = cb.createQuery(ReglementCarnetDTO.class);
@@ -252,7 +257,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
             cq.select(cb.construct(ReglementCarnetDTO.class, cb.sum(root.get(ReglementCarnet_.montantPaye)),
                     cb.count(root)
             ));
-            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, dtStart, dtEnd, tiersPayantId);
+            List<Predicate> predicates = reglementsCarnetPredicat(typeReglementCarnet,cb, root, dtStart, dtEnd, tiersPayantId);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ReglementCarnetDTO> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
@@ -286,22 +291,12 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
     }
 
     @Override
-    public List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd) {
+    public List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd) {
         List<ExtraitCompteClientDTO> datas = new ArrayList<>();
-        datas.addAll(reglementsCarnet(tiersPayantId, dtStart.toString(), dtEnd.toString(), 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
-         datas.addAll(fetchVente(tiersPayantId, dtStart, dtEnd, 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.addAll(reglementsCarnet(tiersPayantId,typeReglementCarnet, dtStart.toString(), dtEnd.toString(), 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.addAll(fetchVente(tiersPayantId, dtStart, dtEnd, 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getCreatedAt));
         return datas;
-    }
-
-    private int findLastReference() {
-        try {
-            TypedQuery<Integer> query = getEntityManager().createQuery("SELECT MAX(o.reference) FROM ReglementCarnet o ", Integer.class);
-            return query.getSingleResult();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "findLastReference=====>> ", e);
-            return 0;
-        }
     }
 
     @Override
@@ -371,7 +366,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
         }
     }
 
-     private long countAllTiersPayants(String query) {
+    private long countAllTiersPayants(String query) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
@@ -388,13 +383,12 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
 
     @Override
     public JSONObject allTiersPayant(int start, int size, String query) {
-         long count = countAllTiersPayants(query);
+        long count = countAllTiersPayants(query);
         List<TiersPayantExclusDTO> data = allTiersPayants(start, size, query, false);
         return new JSONObject().put("total", count).put("data", data);
     }
-     
-     
-      private List<TiersPayantExclusDTO> allTiersPayants(int start, int size, String query, boolean all) {
+
+    private List<TiersPayantExclusDTO> allTiersPayants(int start, int size, String query, boolean all) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TTiersPayant> cq = cb.createQuery(TTiersPayant.class);
@@ -413,9 +407,8 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
             return Collections.emptyList();
         }
     }
-     
-     
-         private List<Predicate> allTiersPayantPredicatCountAll(CriteriaBuilder cb, Root<TTiersPayant> root, String query) {
+
+    private List<Predicate> allTiersPayantPredicatCountAll(CriteriaBuilder cb, Root<TTiersPayant> root, String query) {
         List<Predicate> predicates = new ArrayList<>();
         if (!StringUtils.isEmpty(query)) {
             predicates.add(cb.or(cb.like(root.get(TTiersPayant_.strNAME), query + "%"),
@@ -423,7 +416,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
                     cb.like(root.get(TTiersPayant_.strFULLNAME), query + "%")));
         }
         predicates.add(cb.equal(root.get(TTiersPayant_.strSTATUT), DateConverter.STATUT_ENABLE));
-       
+
         return predicates;
     }
 }

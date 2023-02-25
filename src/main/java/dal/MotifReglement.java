@@ -23,19 +23,19 @@ import javax.validation.constraints.NotNull;
  * @author koben
  */
 @Entity
-@Table(name = "motif_retour_carnet")
+@Table(name = "motif_reglement")
 @NamedQueries({
-    @NamedQuery(name = "MotifRetourCarnet.findAll", query = "SELECT o FROM MotifRetourCarnet o ORDER BY o.libelle")}
+    @NamedQuery(name = "MotifReglement.findAll", query = "SELECT o FROM MotifReglement o ORDER BY o.libelle")}
         )
-public class MotifRetourCarnet implements Serializable {
+public class MotifReglement implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
-      @GeneratedValue(strategy = GenerationType.AUTO)
     @Basic(optional = false)
-    @Column(name = "id", nullable = false, length = 11)
+     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", nullable = false)
     private Integer id;
     @NotNull
-    @Column(name = "libelle", nullable = false,unique = true)
+    @Column(name = "libelle", nullable = false)
     private String libelle;
 
     public Integer getId() {
@@ -57,7 +57,7 @@ public class MotifRetourCarnet implements Serializable {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 59 * hash + Objects.hashCode(this.id);
+        hash = 97 * hash + Objects.hashCode(this.id);
         return hash;
     }
 
@@ -72,13 +72,13 @@ public class MotifRetourCarnet implements Serializable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final MotifRetourCarnet other = (MotifRetourCarnet) obj;
+        final MotifReglement other = (MotifReglement) obj;
         return Objects.equals(this.id, other.id);
     }
 
     @Override
     public String toString() {
-        return "MotifRetourCarnet{" + "id=" + id + ", libelle=" + libelle + '}';
+        return "MotifReglement{" + "id=" + id + ", libelle=" + libelle + '}';
     }
     
     

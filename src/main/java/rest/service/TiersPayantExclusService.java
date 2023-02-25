@@ -11,6 +11,7 @@ import commonTasks.dto.TiersPayantExclusDTO;
 import commonTasks.dto.VenteTiersPayantsDTO;
 import dal.TTiersPayant;
 import dal.TUser;
+import dal.enumeration.TypeReglementCarnet;
 import dal.enumeration.TypeTiersPayant;
 import java.time.LocalDate;
 import java.util.List;
@@ -44,11 +45,11 @@ public interface TiersPayantExclusService {
 
     TiersPayantExclusDTO fetchVenteSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
 
-    JSONObject reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size);
+    JSONObject reglementsCarnet(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size);
 
-    List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size, boolean all);
+    List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size, boolean all);
 
-    ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
+    ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd);
 
     JSONObject faireReglement(ReglementCarnetDTO reglementCarnetDTO, TUser user);
 
@@ -56,7 +57,7 @@ public interface TiersPayantExclusService {
 
     void updateTiersPayantAccount(TTiersPayant payant, int montant);
 
-    List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd);
+    List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd);
 
     List<VenteExclusDTO> fetchVenteExclus(String tiersPayantId, LocalDate from, LocalDate to, TypeTiersPayant typeTiersPayant, int start, int size, boolean all);
 

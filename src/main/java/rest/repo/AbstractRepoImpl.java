@@ -5,23 +5,28 @@
  */
 package rest.repo;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.EntityManager;
-import rest.repo.AbstractRepo;
 
 /**
  *
  * @author koben
+ * @param <T>
  */
 public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
 
+    protected static final Logger LOG = Logger.getLogger(AbstractRepoImpl.class.getName());
+
     protected abstract EntityManager getEntityManager();
-    private Class<T> entityClass;
+    private final Class<T> entityClass;
 
     public AbstractRepoImpl(Class<T> entityClass) {
         this.entityClass = entityClass;
     }
-
+   
     @Override
     public void save(T entity) {
         getEntityManager().persist(entity);
@@ -57,7 +62,7 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
             }
             return Optional.empty();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Optional.empty();
         }
     }
@@ -81,7 +86,7 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
             }
             return Optional.empty();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, null, e);
             return Optional.empty();
         }
     }
@@ -105,10 +110,12 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
             }
             return Optional.empty();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Optional.empty();
         }
     }
+    
+    
 //  @Override
 //public Optional<T> find(Class<T> clazz, ID id) {
 //if (id == null) {
@@ -116,4 +123,6 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
 //}
 //return Optional.ofNullable(entityManager.find(clazz, id));
 //}
+
+  
 }
