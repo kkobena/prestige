@@ -47,21 +47,21 @@
             <version>2.10.0</version>
         </dependency>
         
-        <!--   <dependency>
+          <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <version>3.7.2</version>
-        </dependency> -->
+        </dependency> 
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.12</version>
+            <version>1.18.26</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.kstruct</groupId>
             <artifactId>gethostname4j</artifactId>
-             <version>1.0.0</version>
+            <version>1.0.0</version>
         </dependency>
         
         <dependency>
@@ -200,6 +200,7 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    
                 </configuration>
             </plugin>
             <plugin>
@@ -207,6 +208,13 @@
                 <version>3.2.1</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.26</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
                
             </plugin>

@@ -3858,7 +3858,7 @@ public class CaisseServiceImpl implements CaisseService {
                 Predicate predicate = cb.and(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(st.get(TPreenregistrement_.strREFTICKET), query + "%"), cb.like(st.get(TPreenregistrement_.strREF), query + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
                 predicates.add(predicate);
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(cq);
             return q.getResultList().stream().map(e
                     -> new VenteDetailsDTO(e).stockUg(stockUg(e.getLgFAMILLEID().getLgFAMILLEID(), DateConverter.OFFICINE))

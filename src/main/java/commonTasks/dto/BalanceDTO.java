@@ -20,8 +20,9 @@ public class BalanceDTO implements Serializable {
     private String balanceId = UUID.randomUUID().toString();
     private String typeVente, reglement;
     long montantTTC = 0, montantNet = 0, montantRemise = 0, pourcentage = 0, panierMoyen = 0,
-            montantEsp = 0, montantCheque = 0, marge = 0, MontantVirement = 0, montantTva = 0, montantCB = 0, montantTp = 0, montantDiff = 0, nbreVente = 0, montantMobilePayment = 0;
+            montantEsp = 0, montantCheque = 0, marge = 0,  montantTva = 0, montantCB = 0, montantTp = 0, montantDiff = 0, nbreVente = 0, montantMobilePayment = 0;
     private TypeTransaction typeTransaction;
+    private long montantVirement = 0;
 
     public String getBalanceId() {
         return balanceId;
@@ -112,13 +113,14 @@ public class BalanceDTO implements Serializable {
     }
 
     public long getMontantVirement() {
-        return MontantVirement;
+        return montantVirement;
     }
 
-    public void setMontantVirement(long MontantVirement) {
-        this.MontantVirement = MontantVirement;
+    public void setMontantVirement(long montantVirement) {
+        this.montantVirement = montantVirement;
     }
 
+ 
     public long getMontantCB() {
         return montantCB;
     }
@@ -186,7 +188,7 @@ public class BalanceDTO implements Serializable {
 
     @Override
     public String toString() {
-        return "BalanceDTO{" + "balanceId=" + balanceId + ", typeVente=" + typeVente + ", montantTTC=" + montantTTC + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", pourcentage=" + pourcentage + ", panierMoyen=" + panierMoyen + ", montantEsp=" + montantEsp + ", montantCheque=" + montantCheque + ", MontantVirement=" + MontantVirement + ", montantCB=" + montantCB + ", montantTp=" + montantTp + ", montantDiff=" + montantDiff + '}';
+        return "BalanceDTO{" + "balanceId=" + balanceId + ", typeVente=" + typeVente + ", montantTTC=" + montantTTC + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", pourcentage=" + pourcentage + ", panierMoyen=" + panierMoyen + ", montantEsp=" + montantEsp + ", montantCheque=" + montantCheque + ", montantCB=" + montantCB + ", montantTp=" + montantTp + ", montantDiff=" + montantDiff + '}';
     }
 /*
     constructor vente

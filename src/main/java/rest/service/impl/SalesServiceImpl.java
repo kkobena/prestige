@@ -708,7 +708,7 @@ public class SalesServiceImpl implements SalesService {
         newTp.setIntCUSTPART((-1) * tp.getIntCUSTPART());
         newTp.setMontantTva((-1) * tp.getMontantTva());
         newTp.setDtCREATED(new Date());
-        newTp.setDtUPDATED(new Date());
+        newTp.setDtUPDATED(newTp.getDtCREATED());
         newTp.setLgPARENTID(tp.getLgPREENREGISTREMENTID());
         newTp.setStrSTATUT(commonparameter.statut_is_Closed);
         newTp.setLgUSERVENDEURID(tp.getLgUSERVENDEURID());
@@ -736,7 +736,7 @@ public class SalesServiceImpl implements SalesService {
         newTp.setMedecin(tp.getMedecin());
         newTp.setStrREF(buildRef(LocalDate.now(), ooTUser.getLgEMPLACEMENTID()).getReference());
         tp.setBISCANCEL(true);
-        tp.setDtANNULER(new Date());
+        tp.setDtANNULER(tp.getDtCREATED());
         tp.setLgUSERID(ooTUser);
         newTp.setChecked(Boolean.FALSE);
         tp.setChecked(Boolean.FALSE);
@@ -1118,7 +1118,6 @@ public class SalesServiceImpl implements SalesService {
         try {
             return Optional.ofNullable(getEm().find(TClient.class, id));
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
             return Optional.empty();
         }
     }
