@@ -229,6 +229,7 @@ public class SalesServiceImpl implements SalesService {
         transactionNew.setChecked(checked);
         transactionNew.setMontantTva(tp.getMontantTva());
         transactionNew.setMontantAcc(montantAcc);
+        transactionNew.setPreenregistrement(tp);
         if (data != null) {
             transactionNew.setMontantnetug(data.getMontantNetUg());
             transactionNew.setMontantttcug(data.getMontantTtcUg());
@@ -799,18 +800,18 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    public ArrayList<TPreenregistrementDetail> items(TPreenregistrement tp, EntityManager emg) {
-        ArrayList<TPreenregistrementDetail> list = new ArrayList<>();
+    public List<TPreenregistrementDetail> items(TPreenregistrement tp, EntityManager emg) {
+     
         try {
 
             Query q = emg.
                     createQuery("SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1").
                     setParameter(1, tp.getLgPREENREGISTREMENTID());
 
-            list.addAll(q.getResultList());
-            return list;
+       return  q.getResultList();
+  
         } catch (Exception ex) {
-            return list;
+           throw  ex;
         }
 
     }
@@ -1749,12 +1750,12 @@ public class SalesServiceImpl implements SalesService {
         return margeUg;
     }
 
-    private boolean checkAvoir(ArrayList<TPreenregistrementDetail> list) {
+    private boolean checkAvoir(List<TPreenregistrementDetail> list) {
         java.util.function.Predicate<TPreenregistrementDetail> p = e -> e.getBISAVOIR();
         return list.stream().anyMatch(p);
     }
 
-    private boolean checkOrdonnancier(ArrayList<TPreenregistrementDetail> list) {
+    private boolean checkOrdonnancier(List<TPreenregistrementDetail> list) {
         java.util.function.Predicate<TPreenregistrementDetail> p = e -> (e.getLgFAMILLEID().isScheduled() && !e.getLgFAMILLEID().getIntT().trim().isEmpty());
         return list.stream().anyMatch(p);
     }
@@ -1968,8 +1969,15 @@ public class SalesServiceImpl implements SalesService {
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId(), emg);
             Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Parameter.KEY_PARAM_MVT_VENTE_ORDONNANCE, emg);
-            ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp, emg);
-            Integer montant = tp.getIntPRICE(), amount;
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp, emg);
+            int montant = tp.getIntPRICE();
+            if (diffAmount(montant, lstTPreenregistrementDetail)) {
+                json.put("success", false);
+                json.put("msg", "Désolé impossible de terminer la vente. Veuillez recalculer le montant de la vente ");
+                json.put("codeError", 0);
+                return json;
+            }
+            int amount;
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
@@ -2112,7 +2120,7 @@ public class SalesServiceImpl implements SalesService {
                 json.put("codeError", 0);
                 return json;
             }
-            ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp, emg);
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp, emg);
             boolean ordonnancier = gererOrdoncier();
             if (ordonnancier) {
                 boolean isOrdonnancier = checkOrdonnancier(lstTPreenregistrementDetail);
@@ -2133,8 +2141,14 @@ public class SalesServiceImpl implements SalesService {
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId(), emg);
             Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Parameter.KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE, emg);
+            int montant = tp.getIntPRICE();
+            if (diffAmount(montant, lstTPreenregistrementDetail)) {
+                json.put("success", false);
+                json.put("msg", "Désolé impossible de terminer la vente. Veuillez recalculer le montant de la vente ");
+                json.put("codeError", 0);
+                return json;
+            }
 
-            Integer montant = tp.getIntPRICE(); //sumVente(lstTPreenregistrementDetail);
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             if (isAvoir && tp.getClient() == null) {
                 json.put("success", false);
@@ -2178,13 +2192,13 @@ public class SalesServiceImpl implements SalesService {
             }
             tp.setCompletionDate(new Date());
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
-            java.util.function.Predicate<Optional<TParameters>> test = e -> {
+            java.util.function.Predicate<Optional<TParameters>> testP = e -> {
                 if (e.isPresent()) {
                     return Integer.parseInt(e.get().getStrVALUE().trim()) == 1;
                 }
                 return false;
             };
-            boolean key_account = test.test(KEY_TAKE_INTO_ACCOUNT);
+            boolean key_account = testP.test(KEY_TAKE_INTO_ACCOUNT);
             if (key_account) {
                 tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             }
@@ -2779,7 +2793,7 @@ public class SalesServiceImpl implements SalesService {
 
     public MontantAPaye calculVoNet(TPreenregistrement OTPreenregistrement, List<TiersPayantParams> tierspayants, EntityManager emg) {
         try {
-            ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, emg);
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, emg);
             int remiseCarnet = 0;
             int montantvente;
             int totalTp = 0;
@@ -2787,8 +2801,8 @@ public class SalesServiceImpl implements SalesService {
             int montantVariable;
             int diffMontantTotalAndCmuAmount = 0;
             int cmuAmount = 0;
-            boolean isCmu=tierspayants.stream().allMatch(TiersPayantParams::isCmu);
-          
+            boolean isCmu = tierspayants.stream().allMatch(TiersPayantParams::isCmu);
+
             MontantAPaye montantAPaye;
             List<TiersPayantParams> resultat = new ArrayList<>();
             if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
@@ -2819,8 +2833,8 @@ public class SalesServiceImpl implements SalesService {
 
                 if (remise != null) {
                     montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
-                  
-                    cmuAmount= isCmu? montantAPaye.getCmuAmount():0;
+
+                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
                     //  montantvente = montantAPaye.getMontant();
                     montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
@@ -2828,7 +2842,7 @@ public class SalesServiceImpl implements SalesService {
 
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                      cmuAmount=isCmu?montantAPaye.getCmuAmount():0;
+                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
                     montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
                 }
@@ -2863,7 +2877,7 @@ public class SalesServiceImpl implements SalesService {
             if (totalTaux >= 100) {
                 netCustomer = 0;
             }
-            int finalSaleAmount=diffMontantTotalAndCmuAmount!=montantvente?montantvente + diffMontantTotalAndCmuAmount:montantvente;
+            int finalSaleAmount = diffMontantTotalAndCmuAmount != montantvente ? montantvente + diffMontantTotalAndCmuAmount : montantvente;
             MontantAPaye map = new MontantAPaye(netCustomer, finalSaleAmount, totalTp,
                     remiseCarnet, montantAPaye.getMarge(), montantAPaye.getMontantTva());
             map.setTierspayants(resultat);
@@ -2883,8 +2897,8 @@ public class SalesServiceImpl implements SalesService {
         LongAdder marge = new LongAdder();
         LongAdder montantTva = new LongAdder();
         LongAdder montantAccount = new LongAdder();
-         LongAdder montantCMU = new LongAdder();
-        ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, getEm());
+        LongAdder montantCMU = new LongAdder();
+        List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, getEm());
         lstTPreenregistrementDetail.forEach(x -> {
             totalAmount.add(x.getIntPRICE());
             montantCMU.add(x.getCmuPrice());
@@ -3196,7 +3210,7 @@ public class SalesServiceImpl implements SalesService {
             tp.setCopy(Boolean.FALSE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId(), emg);
             Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Parameter.KEY_PARAM_MVT_VENTE_ORDONNANCE, emg);
-            ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp, emg);
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp, emg);
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
@@ -3266,8 +3280,15 @@ public class SalesServiceImpl implements SalesService {
             tp.setCopy(Boolean.FALSE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId(), emg);
             Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Parameter.KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE, emg);
-            ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp, emg);
-            Integer montant = tp.getIntPRICE();
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp, emg);
+
+            int montant = tp.getIntPRICE();
+            if (diffAmount(montant, lstTPreenregistrementDetail)) {
+                json.put("success", false);
+                json.put("msg", "Désolé impossible de terminer la vente. Veuillez recalculer le montant de la vente ");
+                json.put("codeError", 0);
+                return json;
+            }
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
@@ -3653,7 +3674,7 @@ public class SalesServiceImpl implements SalesService {
             }
             return json.put("success", true).put("msg", "Opération effectuée avec success").put("data", data);
         } catch (Exception e) {
-           
+
             return json.put("success", false).put("msg", "Erreur :: l'opération a échouée");
         }
     }
@@ -3869,12 +3890,12 @@ public class SalesServiceImpl implements SalesService {
         try {
             String msg = " ";
             boolean hasRestructuring = false;
-            ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, this.getEm());
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, this.getEm());
             Integer RemiseCarnet = 0, montantvente = 0;
             Integer totalTp = 0;
             Integer netCustomer = 0;
             MontantAPaye montantAPaye;
-           
+
             List<TiersPayantParams> resultat = new ArrayList<>();
             TClient client = OTPreenregistrement.getClient();
             if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
@@ -3914,7 +3935,7 @@ public class SalesServiceImpl implements SalesService {
             } else {
                 int montantVariable;
                 TRemise remise = OTPreenregistrement.getRemise();
-            
+
                 if (remise != null) {
                     montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
                     montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() : montantAPaye.getMontant();
@@ -3963,10 +3984,10 @@ public class SalesServiceImpl implements SalesService {
                     tp.setDiscount(0);
                     resultat.add(tp);
                 }
-                netCustomer = (montantvente - totalTp) - RemiseCarnet + (montantAPaye.getMontant()-montantAPaye.getCmuAmount());
+                netCustomer = (montantvente - totalTp) - RemiseCarnet + (montantAPaye.getMontant() - montantAPaye.getCmuAmount());
             }
 
-            MontantAPaye map = new MontantAPaye(netCustomer, montantvente + (montantAPaye.getMontant()-montantAPaye.getCmuAmount()), totalTp,
+            MontantAPaye map = new MontantAPaye(netCustomer, montantvente + (montantAPaye.getMontant() - montantAPaye.getCmuAmount()), totalTp,
                     RemiseCarnet, montantAPaye.getMarge(), montantAPaye.getMontantTva());
             map.setMessage(msg);
             map.setRestructuring(hasRestructuring);
@@ -4142,7 +4163,7 @@ public class SalesServiceImpl implements SalesService {
         List<TPreenregistrementCompteClientTiersPayent> newList = getTPreenregistrementCompteClientTiersPayent(old.getLgPREENREGISTREMENTID());
         List<TPreenregistrementCompteClientTiersPayent> array = new ArrayList<>();
         TClient client = old.getClient();
-        ArrayList<TPreenregistrementDetail> list = items(old, getEm());
+        List<TPreenregistrementDetail> list = items(old, getEm());
         int montant = old.getIntPRICE();
         int montantVariable = montant;
         List<TiersPayantParams> payantParamses = salesParams.getTierspayants();
@@ -4240,7 +4261,7 @@ public class SalesServiceImpl implements SalesService {
         getEm().persist(_new);
     }
 
-    public JSONObject calculVoNetAvecPlafondVente(TPreenregistrement OTPreenregistrement, int montant, int montantVariable, int taux, ArrayList<TPreenregistrementDetail> list) {
+    public JSONObject calculVoNetAvecPlafondVente(TPreenregistrement OTPreenregistrement, int montant, int montantVariable, int taux, List<TPreenregistrementDetail> list) {
         JSONObject tp = new JSONObject();
         try {
 
@@ -4669,7 +4690,7 @@ public class SalesServiceImpl implements SalesService {
         return r;
     }
 
-    private MontantAPaye sumVenteSansRemise(ArrayList<TPreenregistrementDetail> list) {
+    private MontantAPaye sumVenteSansRemise(List<TPreenregistrementDetail> list) {
         int montant = 0;
         int montantMarge = 0;
         int montantTva = 0;
@@ -4677,10 +4698,10 @@ public class SalesServiceImpl implements SalesService {
         int montantNetUg = 0;
         int montantTtcUg = 0;
         int margeUg = 0;
-        int montantCMU=0;
+        int montantCMU = 0;
         for (TPreenregistrementDetail x : list) {
             montant += x.getIntPRICE();
-            montantCMU+=x.getCmuPrice();
+            montantCMU += x.getCmuPrice();
             TFamille famille = x.getLgFAMILLEID();
             if (famille.getBoolACCOUNT()) {
                 int marge = ((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF()));
@@ -4698,7 +4719,6 @@ public class SalesServiceImpl implements SalesService {
                 .montantNetUg(montantNetUg)
                 .montantTtcUg(montantTtcUg)
                 .cmuAmount(montantCMU);
-                
 
     }
 
@@ -4745,7 +4765,7 @@ public class SalesServiceImpl implements SalesService {
         LongAdder tvaUg = new LongAdder();
         TEmplacement emplacement = OTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
         boolean isVno = OTPreenregistrement.getStrTYPEVENTE().equals(DateConverter.VENTE_COMPTANT);
-        ArrayList<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, getEm());
+        List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, getEm());
         lstTPreenregistrementDetail.forEach(x -> {
             totalAmount.add(x.getIntPRICE());
             montantTva.add(x.getMontantTva());
@@ -4809,7 +4829,7 @@ public class SalesServiceImpl implements SalesService {
                 montantNetUg(montantTtcUg.intValue());
     }
 
-    private MontantAPaye sumVenteSansRemise(ArrayList<TPreenregistrementDetail> list, TPreenregistrement p) {
+    private MontantAPaye sumVenteSansRemise(List<TPreenregistrementDetail> list, TPreenregistrement p) {
         int montant = 0;
         int montantMarge = 0;
         int montantTva = 0;
@@ -5100,11 +5120,18 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private int computeCmuAmount(TPreenregistrementDetail pd) {
-       
-        if ( Objects.nonNull(pd.getCmuPrice()) && pd.getCmuPrice() > 0) {
+
+        if (Objects.nonNull(pd.getCmuPrice()) && pd.getCmuPrice() > 0) {
             return pd.getIntQUANTITY() * pd.getCmuPrice();
         }
         return pd.getIntQUANTITY() * pd.getIntPRICEUNITAIR();
     }
 
+    private int computeVenteAmount(List<TPreenregistrementDetail> details) {
+        return details.stream().map(TPreenregistrementDetail::getIntPRICE).reduce(0, Integer::sum);
+    }
+
+    private boolean diffAmount(int venteAmount, List<TPreenregistrementDetail> details) {
+        return computeVenteAmount(details) != venteAmount;
+    }
 }

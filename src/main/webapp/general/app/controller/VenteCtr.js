@@ -1387,10 +1387,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                                 }
                             });
                         }
-
-
-
-
                     }
 
                 },
