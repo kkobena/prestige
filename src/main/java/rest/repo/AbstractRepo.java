@@ -10,6 +10,7 @@ import java.util.Optional;
 /**
  *
  * @author koben
+ * @param <T>
  */
 public interface AbstractRepo<T> {
 
@@ -30,4 +31,6 @@ public interface AbstractRepo<T> {
     int deleteById(Integer entityId);
 
     Optional<T> findById(Integer entityId);
+
+   
 }

@@ -17,6 +17,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.ejb.Stateless;
@@ -42,6 +44,8 @@ import toolkits.parameters.commonparameter;
 @Stateless
 public class LogServiceImpl implements LogService {
 
+    private static final Logger LOG = Logger.getLogger(LogServiceImpl.class.getName());
+
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -65,20 +69,20 @@ public class LogServiceImpl implements LogService {
 
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
         }
     }
 
     @Override
-    public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, EntityManager em) {
+    public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object t, EntityManager em) {
         TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
         eventLog.setLgUSERID(user);
         eventLog.setDtCREATED(new Date());
-        eventLog.setDtUPDATED(new Date());
+        eventLog.setDtUPDATED(eventLog.getDtCREATED());
         eventLog.setStrCREATEDBY(user.getStrLOGIN());
         eventLog.setStrSTATUT(commonparameter.statut_enable);
-        eventLog.setStrTABLECONCERN(T.getClass().getName());
+        eventLog.setStrTABLECONCERN(t.getClass().getName());
         eventLog.setTypeLog(typeLog);
         eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
         eventLog.setStrTYPELOG(ref);
@@ -123,11 +127,11 @@ public class LogServiceImpl implements LogService {
             if(!StringUtils.isEmpty(userId)){
                  predicates.add(cb.equal(root.get(TEventLog_.lgUSERID).get("lgUSERID"), userId));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return 0;
         }
     }
@@ -152,7 +156,7 @@ public class LogServiceImpl implements LogService {
             if (criteria > 0) {
                 predicates.add(cb.equal(root.get(TEventLog_.typeLog), TypeLog.values()[criteria]));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TEventLog> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -160,7 +164,7 @@ public class LogServiceImpl implements LogService {
             }
             return q.getResultList().stream().map(LogDTO::new).sorted(comparatorDate.reversed()).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -175,6 +179,7 @@ public class LogServiceImpl implements LogService {
         return new JSONObject().put("total", count).put("data", new JSONArray(l));
 
     }
+       @Override
  public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, Date date) {
         TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
         eventLog.setLgUSERID(user);

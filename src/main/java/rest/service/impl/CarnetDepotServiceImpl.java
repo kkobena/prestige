@@ -23,6 +23,7 @@ import dal.TTiersPayant_;
 import dal.TTypeMvtCaisse;
 import dal.TUser;
 import dal.VenteExclus;
+import dal.enumeration.TypeReglementCarnet;
 import dal.enumeration.TypeTiersPayant;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -288,25 +289,25 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     }
 
     @Override
-    public JSONObject reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size) {
-        ReglementCarnetDTO metaData = reglementsCarnetSummary(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
-        List<ReglementCarnetDTO> data = reglementsCarnet(tiersPayantId, dtStart, dtEnd, start, size, false);
+    public JSONObject reglementsCarnet(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size) {
+        ReglementCarnetDTO metaData = reglementsCarnetSummary(tiersPayantId, typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        List<ReglementCarnetDTO> data = reglementsCarnet(tiersPayantId, typeReglementCarnet, dtStart, dtEnd, start, size, false);
         JSONObject json = new JSONObject();
         json.put("metaData", new JSONObject(metaData));
-        json.put("total", reglementsCarnetCount(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd)));
+        json.put("total", reglementsCarnetCount(tiersPayantId, typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd)));
         json.put("data", new JSONArray(data));
 
         return json;
     }
 
     @Override
-    public List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId, String dtStart, String dtEnd, int start, int size, boolean all) {
+    public List<ReglementCarnetDTO> reglementsCarnet(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, int start, int size, boolean all) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<ReglementCarnet> cq = cb.createQuery(ReglementCarnet.class);
             Root<ReglementCarnet> root = cq.from(ReglementCarnet.class);
             cq.select(root).orderBy(cb.desc(root.get(ReglementCarnet_.createdAt)));
-            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tiersPayantId);
+            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tiersPayantId, typeReglementCarnet);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ReglementCarnet> q = getEntityManager().createQuery(cq);
             if (!all) {
@@ -320,11 +321,15 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         }
     }
 
-    private List<Predicate> reglementsCarnetPredicat(CriteriaBuilder cb, Root<ReglementCarnet> root, LocalDate dtStart, LocalDate dtEnd, String tiersPayantId) {
+    private List<Predicate> reglementsCarnetPredicat(CriteriaBuilder cb, Root<ReglementCarnet> root, LocalDate dtStart, LocalDate dtEnd, String tiersPayantId, TypeReglementCarnet typeReglementCarnet) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isTrue(root.get(ReglementCarnet_.tiersPayant).get(TTiersPayant_.isDepot)));
-        if (!StringUtils.isEmpty(tiersPayantId)) {
+        if (StringUtils.isNotEmpty(tiersPayantId)) {
             predicates.add(cb.equal(root.get(ReglementCarnet_.tiersPayant).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
+        }
+        if (Objects.nonNull(typeReglementCarnet)) {
+
+            predicates.add(cb.equal(root.get(ReglementCarnet_.typeReglementCarnet), typeReglementCarnet));
         }
         Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(ReglementCarnet_.createdAt)),
                 java.sql.Date.valueOf(dtStart),
@@ -333,13 +338,13 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         return predicates;
     }
 
-    private long reglementsCarnetCount(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd) {
+    private long reglementsCarnetCount(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<ReglementCarnet> root = cq.from(ReglementCarnet.class);
             cq.select(cb.count(root));
-            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, dtStart, dtEnd, tiersPayantId);
+            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, dtStart, dtEnd, tiersPayantId, typeReglementCarnet);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
@@ -349,7 +354,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     }
 
     @Override
-    public ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd) {
+    public ReglementCarnetDTO reglementsCarnetSummary(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<ReglementCarnetDTO> cq = cb.createQuery(ReglementCarnetDTO.class);
@@ -357,7 +362,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             cq.select(cb.construct(ReglementCarnetDTO.class, cb.sum(root.get(ReglementCarnet_.montantPaye)),
                     cb.count(root)
             ));
-            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, dtStart, dtEnd, tiersPayantId);
+            List<Predicate> predicates = reglementsCarnetPredicat(cb, root, dtStart, dtEnd, tiersPayantId, typeReglementCarnet);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ReglementCarnetDTO> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
@@ -484,7 +489,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
     @Override
     public List<ExtraitCompteClientDTO> extraitcompteAvecRetour(String tiersPayantId, LocalDate dtStart, LocalDate dtEnd, String query) {
         List<ExtraitCompteClientDTO> datas = new ArrayList<>();
-        datas.addAll(reglementsCarnet(tiersPayantId, dtStart.toString(), dtEnd.toString(), 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.addAll(reglementsCarnet(tiersPayantId, null, dtStart.toString(), dtEnd.toString(), 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
         datas.addAll(fetchVente(tiersPayantId, dtStart, dtEnd, 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
         datas.addAll(retourCarnetService.listRetourByTierspayantIdAndPeriode(tiersPayantId, query, dtStart, dtEnd).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getCreatedAt));
@@ -547,7 +552,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         try {
             return this.getEntityManager().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o  WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.toBeExclude =TRUE AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE>0 AND o.lgPREENREGISTREMENTID.strSTATUT='is_Closed'  ", TPreenregistrementCompteClientTiersPayent.class).getResultList();
         } catch (Exception e) {
-            e.printStackTrace();
+
             return new ArrayList<>();
         }
     }
@@ -556,7 +561,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         try {
             return this.getEntityManager().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o  WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgTIERSPAYANTID.isDepot=TRUE AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE>0 AND o.lgPREENREGISTREMENTID.strSTATUT='is_Closed' ", TPreenregistrementCompteClientTiersPayent.class).getResultList();
         } catch (Exception e) {
-            e.printStackTrace();
+
             return new ArrayList<>();
         }
     }
@@ -569,7 +574,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace();
+
             return null;
         }
     }
@@ -579,7 +584,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             return this.getEntityManager().createQuery("SELECT o FROM ReglementCarnet o  WHERE o.tiersPayant.lgTIERSPAYANTID=?1",
                     ReglementCarnet.class).setParameter(1, tpId).getResultList();
         } catch (Exception e) {
-            e.printStackTrace();
+
             return new ArrayList<>();
         }
     }
@@ -653,7 +658,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
         sqlQuery += closeWhereTp(tiersPayantId);
         sqlQuery += closeWhereSearch(query, tiersPayantId);
         sqlQuery += "  GROUP BY f.lg_FAMILLE_ID";
-        System.out.println("sqlQuery===="+sqlQuery);
+
         try {
             Query q = getEntityManager().createNativeQuery(sqlQuery, Tuple.class);
             updateQueryParam(q, tiersPayantId, dtStart, dtEnd, query);
@@ -674,7 +679,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
                     .build()).sorted(Comparator.comparing(DepotProduitVendusDTO::getCodeCip)).collect(Collectors.toList());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
         }
         return new ArrayList<>();
     }
@@ -703,7 +708,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             return q.getResultList().size();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
         }
         return 0;
     }
@@ -725,9 +730,17 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
                     .build();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
         }
         return DepotProduitVendusDTO.builder().build();
     }
 
+    @Override
+    public List<ExtraitCompteClientDTO> extraitcompte(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, LocalDate dtStart, LocalDate dtEnd) {
+        List<ExtraitCompteClientDTO> datas = new ArrayList<>();
+        datas.addAll(reglementsCarnet(tiersPayantId, typeReglementCarnet, dtStart.toString(), dtEnd.toString(), 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.addAll(fetchVente(tiersPayantId, dtStart, dtEnd, 0, 0, true).stream().map(ExtraitCompteClientDTO::new).collect(Collectors.toList()));
+        datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getCreatedAt));
+        return datas;
+    }
 }

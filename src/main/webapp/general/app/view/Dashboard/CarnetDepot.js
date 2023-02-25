@@ -8,7 +8,7 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
     height: 670,
     tabPosition: "top",
     initComponent: function () {
-        var tierspayantExlus = new Ext.data.Store({
+        let tierspayantExlus = new Ext.data.Store({
             fields: [
                 {
                     name: 'id',
@@ -44,7 +44,7 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                 timeout: 2400000
             }
         });
-        var ventes = new Ext.data.Store({
+        let ventes = new Ext.data.Store({
             fields: [
                 {
                     name: 'tiersPayantId',
@@ -97,7 +97,7 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
             }
         });
 
-        var reglements = new Ext.data.Store({
+        let reglements = new Ext.data.Store({
             fields: [
                 {
                     name: 'tiersPayantId',
@@ -156,8 +156,66 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
             }
         });
         
+         let depenses = new Ext.data.Store({
+            fields: [
+                {
+                    name: 'tiersPayantId',
+                    type: 'string'
+                },
+                {
+                    name: 'description',
+                    type: 'string'
+                },
+                {
+                    name: 'tiersPayant',
+                    type: 'string'
+                }, {
+                    name: 'userId',
+                    type: 'string'
+                },
+                {
+                    name: 'user',
+                    type: 'string'
+                },
+                {
+                    name: 'montantPaye',
+                    type: 'number'
+                },
+                {
+                    name: 'createdAt',
+                    type: 'string'
+                }, {
+                    name: 'montantPayer',
+                    type: 'number'
+                }
+                , {
+                    name: 'montantRestant',
+                    type: 'number'
+                }, {
+                    name: 'id',
+                    type: 'string'
+                }
+                , {
+                    name: 'idDossier',
+                    type: 'string'
+                }
+            ],
+            pageSize: 18,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v2/carnet-depot/reglements',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total',
+                    metaProperty: 'metaData'
+                },
+                timeout: 2400000
+            }
+        });
         
-           var produits = new Ext.data.Store({
+           let produits = new Ext.data.Store({
             fields: [
                 {
                     name: 'codeCip',
@@ -211,7 +269,7 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
         
         
         
-        var me = this;
+        let me = this;
         Ext.applyIf(me, {
             dockedItems: [
                 {xtype: 'toolbar',
@@ -544,6 +602,169 @@ Ext.define('testextjs.view.Dashboard.CarnetDepot', {
                     ]
                 },
                 
+                 {
+                    xtype: 'panel',
+                    title: 'DEPENSES',
+                    border: false,
+                    itemId: 'depensePanel',
+                    items: [
+                        {
+                            xtype: 'gridpanel',
+                            title: '',
+                            border: false,
+                            store: depenses,
+                            scrollable: true,
+                            columns:
+                                    [
+                                        {
+                                            header: 'id',
+                                            dataIndex: 'id',
+                                            hidden: true
+                                        },
+
+                                        {
+                                            header: 'Tiers-payant',
+                                            dataIndex: 'tiersPayant',
+                                            flex: 1
+                                        },
+
+                                        {
+                                            header: 'Description',
+                                            dataIndex: 'description',
+                                            flex: 1
+                                        },
+                                        {
+                                            header: 'Date',
+                                            dataIndex: 'createdAt',
+                                            flex: 0.5
+                                        }, {
+                                            header: 'Montant versé',
+                                            dataIndex: 'montantPaye',
+                                            align: 'right',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            flex: 0.5
+
+                                        },
+                                        {
+                                            header: 'Montant attendu',
+                                            dataIndex: 'montantPayer',
+                                            align: 'right',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            flex: 0.5
+                                        },
+
+                                        {
+                                            header: 'Montant restant',
+                                            dataIndex: 'montantRestant',
+                                            align: 'right',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            flex: 0.5
+                                        },
+                                        {
+                                            header: 'Opérateur',
+                                            dataIndex: 'user',
+                                            hidden: true,
+                                            flex: 1
+                                        },
+                                         {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/fam/printer.png',
+                                    tooltip: 'Réimprimer le ticket',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('printTicket', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+                                }]
+                        }
+
+                                    ],
+                            selModel: {
+                                selType: 'cellmodel'
+
+                            },
+                            dockedItems: [
+                                {
+                                    xtype: 'pagingtoolbar',
+                                    store: depenses,
+                                    pageSize: 18,
+                                    dock: 'bottom',
+                                    displayInfo: true
+
+                                },
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'top',
+                                    items: [
+                                        {
+                                            text: 'Nouvelle dépense',
+                                            scope: this,
+                                            itemId: 'btnDepense',
+                                            iconCls: 'addicon'
+
+                                        },
+                                           {
+                                            xtype: 'displayfield',
+                                            flex: 1,
+                                            fieldLabel: 'Solde',
+                                            labelWidth: 50,
+                                            itemId: 'account',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            fieldStyle: "color:red;font-weight:900;",
+                                            value: 0
+
+                                        }
+                                 
+
+                                    ]
+                                },
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'bottom',
+                                    items: [
+                                        {
+                                            xtype: 'displayfield',
+                                            flex: 1,
+                                            fieldLabel: 'Total versé',
+                                            labelWidth: 80,
+                                            itemId: 'montantDepensePaye',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            fieldStyle: "color:blue;font-weight:800;",
+                                            value: 0
+
+                                        }, {
+                                            xtype: 'displayfield',
+                                            flex: 1,
+                                            fieldLabel: 'Nombre de règlement',
+                                            labelWidth: 150,
+                                            itemId: 'montantDepensePayer',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            fieldStyle: "color:blue;font-weight:800;",
+                                            value: 0
+
+                                        }
+
+                                    ]
+                                }
+
+                            ]
+                        }
+                    ]
+                },
                 
                  {
                     xtype: 'panel',

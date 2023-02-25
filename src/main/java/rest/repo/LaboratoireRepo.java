@@ -28,10 +28,10 @@ public class LaboratoireRepo extends AbstractRepoImpl<Laboratoire> {
     protected EntityManager getEntityManager() {
         return em;
     }
-
-    public LaboratoireRepo() {
-        super(Laboratoire.class);
+  public LaboratoireRepo() {
+     super(Laboratoire.class);
     }
+  
 
     public Laboratoire saveOrUpdate(Laboratoire laboratoire) {
         try {

@@ -3931,7 +3931,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                 const taux = item.items.items[4];
                 const cmtp = item.items.items[2];
                 const cmu= item.items.items[5];
-                 console.log(cmu,'************************************************');
                 tierspayants.push(
                         {
                             "compteTp": cmtp.getValue(),

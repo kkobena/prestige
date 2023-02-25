@@ -7,9 +7,11 @@ package rest.service.dto;
 
 import commonTasks.dto.ReglementCarnetDTO;
 import commonTasks.dto.VenteTiersPayantsDTO;
+import dal.enumeration.TypeReglementCarnet;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 /**
  *
@@ -18,16 +20,11 @@ import java.time.format.DateTimeFormatter;
 public class ExtraitCompteClientDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private static  final  String PATERN="MM/yyyy";
 
     private String libelle, ref;
 
-    public String getRef() {
-        return ref;
-    }
 
-    public void setRef(String ref) {
-        this.ref = ref;
-    }
     private String user;
     private LocalDateTime createdAt;
     private String dateOperation;
@@ -39,7 +36,13 @@ public class ExtraitCompteClientDTO implements Serializable {
     public String getLibelle() {
         return libelle;
     }
+    public String getRef() {
+        return ref;
+    }
 
+    public void setRef(String ref) {
+        this.ref = ref;
+    }
     public void setLibelle(String libelle) {
         this.libelle = libelle;
     }
@@ -118,12 +121,26 @@ public class ExtraitCompteClientDTO implements Serializable {
         this.tierspayantId = dto.getTiersPayantId();
         this.credit = dto.getMontant();
         this.ref = dto.getRefVente();
-        this.monthDay = dto.getCreatedAt().format(DateTimeFormatter.ofPattern("MM/yyyy"));
+        this.monthDay = dto.getCreatedAt().format(DateTimeFormatter.ofPattern(PATERN));
 
     }
 
     public ExtraitCompteClientDTO(ReglementCarnetDTO dto) {
-        this.libelle = "VERSEMENT";
+        TypeReglementCarnet typeReglementCarnet=dto.getTypeReglementCarnet();
+         this.libelle = "VERSEMENT";
+        if(Objects.nonNull(typeReglementCarnet)){
+            switch (typeReglementCarnet) {
+                case DEPENSE:
+                     this.libelle = "DEPENSE";
+                    break;
+                    case REGLEMENT:
+                      this.libelle = "VERSEMENT";
+                    break;
+                default:
+                    break;
+            }
+        }
+       
         this.user = dto.getUser();
         this.createdAt = dto.getCreated();
         this.dateOperation = dto.getCreatedAt();
@@ -144,7 +161,7 @@ public class ExtraitCompteClientDTO implements Serializable {
         this.tierspayantId = dto.getTierspayantId();
         this.debit = dto.getMontant();
         this.ref = "";
-        this.monthDay = dto.getCreatedAt().format(DateTimeFormatter.ofPattern("MM/yyyy"));
+        this.monthDay = dto.getCreatedAt().format(DateTimeFormatter.ofPattern(PATERN));
 
     }
 }

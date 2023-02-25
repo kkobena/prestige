@@ -91,7 +91,7 @@ public class TiersPayantExclusRessource {
             @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
-        JSONObject json = tiersPayantExclusService.reglementsCarnet(tiersPayantId, dtStart, dtEnd, start, limit);
+        JSONObject json = tiersPayantExclusService.reglementsCarnet(tiersPayantId,null, dtStart, dtEnd, start, limit);
         return Response.ok().entity(json.toString()).build();
 
     }
