@@ -13,7 +13,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import rest.service.TvaService;
-import util.Constant;
 /**
  *
  * @author koben

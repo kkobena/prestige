@@ -1,4 +1,3 @@
-
 package rest.service;
 
 import commonTasks.dto.BalanceDTO;
@@ -13,10 +12,10 @@ import rest.service.dto.BalanceParamsDTO;
  */
 @Local
 public interface BalanceService {
-    
+
     List<TPreenregistrementDetail> listPreenregistrements(BalanceParamsDTO balanceParams);
-    
+
     List<BalanceDTO> buildBalanceFromPreenregistrement(BalanceParamsDTO balanceParams);
-    
-    
+
+    List<BalanceDTO> buildBalanceTypeMvts(BalanceParamsDTO balanceParams);
 }

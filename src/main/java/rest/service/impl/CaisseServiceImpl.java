@@ -144,7 +144,7 @@ public class CaisseServiceImpl implements CaisseService {
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = getEntityManager().find(TParameters.class, key);
-            return (Integer.valueOf(parameters.getStrVALUE().trim()) == 1);
+            return (Integer.parseInt(parameters.getStrVALUE().trim()) == 1);
         } catch (Exception e) {
             return false;
         }

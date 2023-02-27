@@ -105,7 +105,7 @@ public class CaisseRessource {
     @GET
     @Path("balancesalecash")
     public Response balanceCaisse(
-            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtStart") String dtStart, 
             @QueryParam(value = "dtEnd") String dtEnd
     ) {
         HttpSession hs = servletRequest.getSession();
@@ -114,7 +114,7 @@ public class CaisseRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
+        try {  
             dtSt = LocalDate.parse(dtStart);
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {

@@ -306,36 +306,36 @@ public class SalesServiceImpl implements SalesService {
     public MvtTransaction addTransactionDepot(TUser ooTUser, TPreenregistrement tp,
             TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg,
             Integer marge, TClient client) {
-        MvtTransaction _new = new MvtTransaction();
-        _new.setUuid(UUID.randomUUID().toString());
-        _new.setUser(ooTUser);
-        _new.setCreatedAt(LocalDateTime.now());
-        _new.setPkey(tp.getLgPREENREGISTREMENTID());
-        _new.setMvtDate(LocalDate.now());
-        _new.setAvoidAmount(tp.getIntPRICE());
-        _new.setMontant(tp.getIntPRICE());
-        _new.setMagasin(ooTUser.getLgEMPLACEMENTID());
-        _new.setCaisse(ooTUser);
-        _new.setMontantCredit(tp.getIntPRICE());
-        _new.setMontantVerse(0);
-        _new.setMontantRegle(0);
-        _new.setMontantNet(tp.getIntPRICE());
-        _new.settTypeMvtCaisse(tTypeMvtCaisse);
-        _new.setReglement(reglement);
-        _new.setMontantRestant(0);
-        _new.setMarge(marge);
-        _new.setReference(tp.getStrREF());
-        _new.setMontantPaye(0);
-        _new.setMontantRemise(tp.getIntPRICE() - tp.getIntPRICE());
-        _new.setCategoryTransaction(CategoryTransaction.CREDIT);
-        _new.setTypeTransaction(TypeTransaction.VENTE_CREDIT);
-        _new.setChecked(false);
-        _new.setMontantTva(tp.getMontantTva());
-        _new.setPreenregistrement(tp);
+        MvtTransaction mvtTransac = new MvtTransaction();
+        mvtTransac.setUuid(UUID.randomUUID().toString());
+        mvtTransac.setUser(ooTUser);
+        mvtTransac.setCreatedAt(LocalDateTime.now());
+        mvtTransac.setPkey(tp.getLgPREENREGISTREMENTID());
+        mvtTransac.setMvtDate(LocalDate.now());
+        mvtTransac.setAvoidAmount(tp.getIntPRICE());
+        mvtTransac.setMontant(tp.getIntPRICE());
+        mvtTransac.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        mvtTransac.setCaisse(ooTUser);
+        mvtTransac.setMontantCredit(tp.getIntPRICE());
+        mvtTransac.setMontantVerse(0);
+        mvtTransac.setMontantRegle(0);
+        mvtTransac.setMontantNet(tp.getIntPRICE());
+        mvtTransac.settTypeMvtCaisse(tTypeMvtCaisse);
+        mvtTransac.setReglement(reglement);
+        mvtTransac.setMontantRestant(0);
+        mvtTransac.setMarge(marge);
+        mvtTransac.setReference(tp.getStrREF());
+        mvtTransac.setMontantPaye(0);
+        mvtTransac.setMontantRemise(tp.getIntPRICE() - tp.getIntPRICE());
+        mvtTransac.setCategoryTransaction(CategoryTransaction.CREDIT);
+        mvtTransac.setTypeTransaction(TypeTransaction.VENTE_CREDIT);
+        mvtTransac.setChecked(false);
+        mvtTransac.setMontantTva(tp.getMontantTva());
+        mvtTransac.setPreenregistrement(tp);
         if (client != null) {
-            _new.setOrganisme(client.getLgCLIENTID());
+            mvtTransac.setOrganisme(client.getLgCLIENTID());
         }
-        return _new;
+        return mvtTransac;
 
     }
 

@@ -1,5 +1,6 @@
 package rest.service.dto;
 
+import dal.enumeration.TypeTransaction;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -23,11 +24,22 @@ public class BalanceVenteItemDTO {
 
     private LocalDate mvtDate;
     private String typeVente;
-    private String typeReglment;
-    private BigDecimal montantVenteDetail;
+    private String typeReglement;
     private BigDecimal montantAchat;
     private BigDecimal montantTva;
-    private BigDecimal montantUG;
+    private BigDecimal montantUg;
     private BigDecimal montantRemise;
-
+    private TypeTransaction typeTransaction;
+    private BigDecimal montantTTC;
+    private BigDecimal montantNet;
+    private BigDecimal montantCredit;
+    private BigDecimal montantRegle;
+    private BigDecimal montantPaye;
+    private BigDecimal montantDiffere;
+    private BigDecimal montantTTCDetatil;
+    private BigDecimal montantAchatUg;
+    private BigDecimal montantRemiseDetail;
+    private long totalVente;
+    private BigDecimal montantAcc;
+     private String typeMvtCaisse;
 }

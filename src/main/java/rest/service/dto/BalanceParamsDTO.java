@@ -25,4 +25,5 @@ private String   dtEnd;
 private boolean checked;
 private String emplacementId;
 private Boolean excludeSome;
+private boolean toPrint;
 }
