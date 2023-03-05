@@ -1,4 +1,3 @@
-
 package rest.service.impl;
 
 import commonTasks.dto.Params;
@@ -49,7 +48,7 @@ public class TvaDataServiceImpl implements TvaDataService {
     @Override
     public List<TvaDTO> statistiqueTvaWithSomeCriteria(Params params) {
         long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
-        System.out.println("montant ====>> "+montant);
+        System.out.println("montant ====>> " + montant);
         List<TvaDTO> tvas = new ArrayList<>();
         List<TvaDTO> datas = findTvaDatas(params);
         for (TvaDTO data : datas) {
@@ -59,7 +58,7 @@ public class TvaDataServiceImpl implements TvaDataService {
             if (data.getTaux() == 0) {
                 montantTTC -= montant;
             }
-            
+
             montantTTC -= montantUg;
             Double valeurTva = 1 + (Double.valueOf(data.getTaux()) / 100);
             long htAmont = (long) Math.ceil(montantTTC / valeurTva);
@@ -82,7 +81,7 @@ public class TvaDataServiceImpl implements TvaDataService {
             query.setParameter(2, LocalDate.parse(params.getDtEnd()));
             return query.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
             return 0;
         }
 

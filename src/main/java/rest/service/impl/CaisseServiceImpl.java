@@ -110,7 +110,6 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -138,9 +137,7 @@ public class CaisseServiceImpl implements CaisseService {
     NotificationService notificationService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    @Resource(name = "concurrent/__defaultManagedExecutorService")
-    ManagedExecutorService mes;
-
+  
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = getEntityManager().find(TParameters.class, key);
@@ -181,159 +178,6 @@ public class CaisseServiceImpl implements CaisseService {
 
         }
         return json;
-    }
-// @Override
-
-    public SumCaisseDTO cumul__(CaisseParamsDTO caisseParams, boolean all) {
-        List<SumCaisseDTO> os = new ArrayList<>();
-        SumCaisseDTO dTO = new SumCaisseDTO();
-        List<VisualisationCaisseDTO> caisses;
-        List<VisualisationCaisseDTO> sum;
-        if (!all) {
-            caisses = findAllsTransaction(caisseParams, all);
-            dTO.setCaisses(caisses);
-            sum = findAllsTransaction(caisseParams, true);
-        } else {
-            caisses = findAllsTransaction(caisseParams, all);
-            dTO.setCaisses(caisses);
-            sum = caisses;
-        }
-
-        Map<String, List<VisualisationCaisseDTO>> map = sum.stream().collect(Collectors.groupingBy(s -> s.getModeRegle()));
-        LongAdder montantEspec = new LongAdder();
-        LongAdder montantCredit = new LongAdder();
-        LongAdder montantAnnulation = new LongAdder();
-        LongAdder montantSortie = new LongAdder();
-        LongAdder montantEntree = new LongAdder();
-        LongAdder montantVir = new LongAdder();
-        LongAdder montantCb = new LongAdder();
-        LongAdder montantcheque = new LongAdder();
-        LongAdder montantCaisse = new LongAdder();
-        LongAdder montantFondCaisse = new LongAdder();
-
-        map.forEach((k, v) -> {
-            switch (k) {
-                case DateConverter.MODE_ESP:
-                    v.forEach(b -> {
-                        montantCaisse.add(b.getMontantCaisse());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_FOND_CAISSE)) {
-                            montantFondCaisse.add(b.getMontant());
-                        } else {
-                            montantEspec.add(b.getMontant());
-
-                            if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                                montantCredit.add(b.getMontantCredit());
-                                if (b.getMontant() < 0) {
-                                    montantAnnulation.add(b.getMontant());
-                                }
-                            } else {
-                                if (b.getMontant() < 0) {
-                                    montantSortie.add(b.getMontant());
-                                } else {
-                                    montantEntree.add(b.getMontant());
-                                }
-                            }
-                        }
-
-                    });
-                    break;
-                case DateConverter.MODE_VIREMENT:
-                    v.forEach(b -> {
-                        montantVir.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
-                            } else {
-                                montantEntree.add(b.getMontant());
-                            }
-                        }
-
-                    });
-                    break;
-                case DateConverter.MODE_CB:
-                    v.forEach(b -> {
-                        montantCb.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
-                            } else {
-                                montantEntree.add(b.getMontant());
-                            }
-                        }
-
-                    });
-                    break;
-                case DateConverter.MODE_CHEQUE:
-                    v.forEach(b -> {
-                        montantcheque.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
-                            } else {
-                                montantEntree.add(b.getMontant());
-                            }
-                        }
-
-                    });
-                    break;
-
-                default:
-                    break;
-            }
-        });
-
-        Integer _montantEspec = montantEspec.intValue();
-        Integer _montantCredit = montantCredit.intValue();
-        Integer _montantAnnulation = montantAnnulation.intValue();
-        Integer _montantSortie = montantSortie.intValue();
-        Integer _montantEntree = montantEntree.intValue();
-        Integer _montantVir = montantVir.intValue();
-        Integer _montantCb = montantCb.intValue();
-        Integer _montantcheque = montantcheque.intValue();
-        Integer _montantFondCaisse = montantFondCaisse.intValue();
-        if (_montantFondCaisse.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantFondCaisse, "Fond.Caisse"));
-        }
-
-        if (_montantcheque.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantcheque, "Chèque"));
-        }
-        if (_montantCb.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantCb, "Carte.Bancaire"));
-        }
-        if (_montantVir.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantVir, "Virement"));
-        }
-        if (_montantCredit.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantCredit, "Différé"));
-        }
-        if (_montantSortie.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantSortie, "Sortie.Caisse"));
-        }
-        if (_montantEntree.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantEntree, "Entrée.Caisse"));
-        }
-        os.add(new SumCaisseDTO(_montantEspec, "Espèce"));
-        if (_montantAnnulation.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantAnnulation, "Annulation"));
-        }
-        dTO.setSummary(os);
-        return dTO;
     }
 
     @Override

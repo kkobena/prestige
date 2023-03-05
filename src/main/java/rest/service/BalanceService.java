@@ -1,9 +1,10 @@
 package rest.service;
 
 import commonTasks.dto.BalanceDTO;
-import dal.TPreenregistrementDetail;
+import commonTasks.dto.GenericDTO;
 import java.util.List;
 import javax.ejb.Local;
+import org.json.JSONObject;
 import rest.service.dto.BalanceParamsDTO;
 
 /**
@@ -13,9 +14,9 @@ import rest.service.dto.BalanceParamsDTO;
 @Local
 public interface BalanceService {
 
-    List<TPreenregistrementDetail> listPreenregistrements(BalanceParamsDTO balanceParams);
-
     List<BalanceDTO> buildBalanceFromPreenregistrement(BalanceParamsDTO balanceParams);
 
-    List<BalanceDTO> buildBalanceTypeMvts(BalanceParamsDTO balanceParams);
+    GenericDTO getBalanceVenteCaisseData(BalanceParamsDTO balanceParams);
+
+    JSONObject getBalanceVenteCaisseDataView(BalanceParamsDTO balanceParams);
 }

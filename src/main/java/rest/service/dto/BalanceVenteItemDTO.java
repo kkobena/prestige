@@ -39,7 +39,7 @@ public class BalanceVenteItemDTO {
     private BigDecimal montantTTCDetatil;
     private BigDecimal montantAchatUg;
     private BigDecimal montantRemiseDetail;
-    private long totalVente;
+    private int totalVente;
     private BigDecimal montantAcc;
      private String typeMvtCaisse;
 }

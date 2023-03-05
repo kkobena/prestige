@@ -1,6 +1,4 @@
-
 package rest.service.dto;
-
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,10 +18,11 @@ import lombok.ToString;
 @Getter
 @Setter
 public class BalanceParamsDTO {
- private   String dtStart;
-private String   dtEnd;
-private boolean checked;
-private String emplacementId;
-private Boolean excludeSome;
-private boolean toPrint;
+
+    private String dtStart;
+    private String dtEnd;
+    private boolean checked;
+    private String emplacementId;
+    private Boolean excludeSome;
+    private boolean toPrint;
 }

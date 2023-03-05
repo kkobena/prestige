@@ -1,26 +1,31 @@
 package rest.service.impl;
 
 import commonTasks.dto.BalanceDTO;
+import commonTasks.dto.GenericDTO;
+import commonTasks.dto.SummaryDTO;
 import dal.TPreenregistrementDetail;
 import dal.enumeration.TypeTransaction;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
+import org.json.JSONObject;
 import rest.service.BalanceService;
 import rest.service.dto.BalanceParamsDTO;
 import rest.service.dto.BalanceVenteItemDTO;
 import util.DateConverter;
+import util.FunctionUtils;
 
 /**
  *
@@ -48,18 +53,9 @@ public class BalanceServiceImpl implements BalanceService {
 
     private final String otherMvtSql = "SELECT m.`typeMvtCaisseId` AS typeMvtCaisse, SUM(m.montant) AS montantTTC FROM  mvttransaction m WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` >2  AND m.`lg_EMPLACEMENT_ID` =?3  GROUP BY m.`typeMvtCaisseId` ";
 
+    private final String bonsSql = "SELECT  SUM(m.montant) AS montant FROM  mvttransaction m WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` =2  AND m.`lg_EMPLACEMENT_ID` =?3 ";
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-
-    @Override
-    public List<TPreenregistrementDetail> listPreenregistrements(BalanceParamsDTO balanceParams) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    @Override
-    public List<BalanceDTO> buildBalanceTypeMvts(BalanceParamsDTO balanceParams) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 
     @Override
     public List<BalanceDTO> buildBalanceFromPreenregistrement(BalanceParamsDTO balanceParams) {
@@ -76,23 +72,38 @@ public class BalanceServiceImpl implements BalanceService {
         }
 
         Map<TypeTransaction, List<BalanceVenteItemDTO>> groupByTypeVente = dataVentes.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeTransaction));
-
-        // Map<String, List<BalanceVenteItemDTO>> groupRemiseByTypeVente = remiseVentesNonPara.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeVente));
-        //  Map<String, List<BalanceVenteItemDTO>> groupRemiseSupprimerByTypeVente = remiseVentesNonParaSupp.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeVente));
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_COMPTANT)) {
 
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_COMPTANT);
             BalanceDTO balanceVno = buildVenteBalance(vnoData);
             balanceVno.setTypeVente(DateConverter.VENTE_COMPTANT);
+            balanceVno.setBalanceId(balanceVno.getTypeVente());
             balances.add(balanceVno);
         }
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_CREDIT)) {
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_CREDIT);
-            BalanceDTO balanceVno = buildVenteBalance(vnoData);
-            balanceVno.setTypeVente(DateConverter.VENTE_ASSURANCE);
-            balances.add(balanceVno);
+            BalanceDTO balanceVo = buildVenteBalance(vnoData);
+            balanceVo.setTypeVente(DateConverter.VENTE_ASSURANCE);
+            balanceVo.setBalanceId(balanceVo.getTypeVente());
+            balances.add(balanceVo);
         }
-        return balances;
+        return updatePourcent(balances);
+    }
+
+    @Override
+    public GenericDTO getBalanceVenteCaisseData(BalanceParamsDTO balanceParams) {
+        List<BalanceDTO> balances = buildBalanceFromPreenregistrement(balanceParams);
+        long montantAchat = bonLivraisonsAmount(balanceParams);
+        List<BalanceVenteItemDTO> othersTypeMvts = othersTypeMvts(balanceParams);
+        return buildBalance(balances, othersTypeMvts, montantAchat);
+    }
+
+    @Override
+    public JSONObject getBalanceVenteCaisseDataView(BalanceParamsDTO balanceParams) {
+        GenericDTO generic = this.getBalanceVenteCaisseData(balanceParams);
+        SummaryDTO summary = generic.getSummary();
+        List<BalanceDTO> balances = generic.getBalances();
+        return FunctionUtils.returnData(balances, balances.size(), summary);
     }
 
     private BalanceDTO buildVenteBalance(List<BalanceVenteItemDTO> venteData) {
@@ -152,7 +163,7 @@ public class BalanceServiceImpl implements BalanceService {
 
         }
         BalanceDTO balance = new BalanceDTO();
-        // long montantRemise = remiseVentesPara.stream().flatMap(e -> Stream.of(e.getMontantRemise().longValue())).reduce(0l, Long::sum);
+
         if (nbreVente > 0) {
             panierMoyen = montantTTC / nbreVente;
             balance.setNbreVente(nbreVente);
@@ -188,7 +199,6 @@ public class BalanceServiceImpl implements BalanceService {
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
             return query.getResultList();
-            //  return list.stream().map(this::buildFromTuple).collect(Collectors.toList());
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -221,15 +231,32 @@ public class BalanceServiceImpl implements BalanceService {
         LOG.log(Level.INFO, "sql--- balance othersTypeMvts {0}", otherMvtSql);
         try {
             Query query = em.createNativeQuery(otherMvtSql, Tuple.class)
-                    .setParameter(3, balanceParams.getEmplacementId())
                     .setParameter(1, java.sql.Date.valueOf(balanceParams.getDtStart()))
-                    .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtEnd()));
+                    .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtEnd()))
+                    .setParameter(3, balanceParams.getEmplacementId());
             List<Tuple> list = query.getResultList();
             return list.stream().map(this::buildFromTupleOtherMvt).collect(Collectors.toList());
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new ArrayList<>();
+        }
+    }
+
+    private long bonLivraisonsAmount(BalanceParamsDTO balanceParams) {
+
+        LOG.log(Level.INFO, "sql--- bonLivraison {0}", bonsSql);
+        try {
+            Query query = em.createNativeQuery(bonsSql, Tuple.class)
+                    .setParameter(1, java.sql.Date.valueOf(balanceParams.getDtStart()))
+                    .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtEnd()))
+                    .setParameter(3, balanceParams.getEmplacementId());
+            Tuple tuple = (Tuple) query.getSingleResult();
+            return tuple.get("montant", BigDecimal.class).longValue();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
         }
     }
 
@@ -259,14 +286,15 @@ public class BalanceServiceImpl implements BalanceService {
                 .montantDiffere(tuple.get("montantDiffere", BigDecimal.class))
                 .montantTTCDetatil(tuple.get("montantTTCDetatil", BigDecimal.class))
                 .montantAchat(tuple.get("montantAChat", BigDecimal.class))
-                .totalVente(tuple.get("totalVente", Long.class))
+                .totalVente(tuple.get("totalVente", BigInteger.class).intValue())
+                .montantRemiseDetail(tuple.get("montantRemiseDetail", BigDecimal.class))
                 .build();
     }
 
     private BalanceVenteItemDTO buildPdfDataFromTuple(Tuple tuple) {
-        return buildFromTuple(tuple).builder()
-                .typeMvtCaisse(tuple.get("typeMvtCaisse", String.class))
-                .build();
+        BalanceVenteItemDTO balanceVenteItem = buildFromTuple(tuple);
+        balanceVenteItem.setTypeMvtCaisse(tuple.get("typeMvtCaisse", String.class));
+        return balanceVenteItem;
     }
 
     private BalanceVenteItemDTO buildFromTupleOtherMvt(Tuple tuple) {
@@ -274,6 +302,135 @@ public class BalanceServiceImpl implements BalanceService {
                 .typeMvtCaisse(tuple.get("typeMvtCaisse", String.class))
                 .montantTTC(tuple.get("montantTTC", BigDecimal.class))
                 .build();
+    }
+
+    private int computePercent(long amount, long totalAmount) {
+        return (int) Math.round((Double.valueOf(amount) * 100) / Math.abs(totalAmount));
+    }
+
+    private List<BalanceDTO> updatePourcent(List<BalanceDTO> balances) {
+        List<BalanceDTO> list = new ArrayList<>();
+        long totalMontantNet = 0;
+        BalanceDTO balanceVNO = null;
+        BalanceDTO balanceVO = null;
+        for (BalanceDTO balance : balances) {
+            totalMontantNet += balance.getMontantNet();
+            if (balance.getTypeVente().equals(DateConverter.VENTE_COMPTANT)) {
+                balanceVNO = balance;
+            } else if (balance.getTypeVente().equals(DateConverter.VENTE_ASSURANCE)) {
+                balanceVO = balance;
+            }
+        }
+        if (balanceVNO != null) {
+            balanceVNO.setPourcentage(computePercent(balanceVNO.getMontantNet(), totalMontantNet));
+            list.add(balanceVNO);
+        }
+        if (balanceVO != null) {
+            balanceVO.setPourcentage(computePercent(balanceVO.getMontantNet(), totalMontantNet));
+            list.add(balanceVO);
+        }
+        return list;
+    }
+
+    private GenericDTO buildBalance(List<BalanceDTO> balances, List<BalanceVenteItemDTO> othersTypeMvts, long montantAchat) {
+        long montantTTC = 0;
+        long montantNet = 0;
+        long montantRemise = 0;
+        long panierMoyen = 0;
+        long montantEsp = 0;
+        long montantCheque = 0;
+        long montantVirement = 0;
+        long montantCB = 0;
+        long montantTp = 0;
+        long montantDiff = 0;
+        int nbreVente = 0;
+        long fondCaisse = 0;
+        long montantRegDiff = 0;
+        long montantMobilePayment = 0;
+        long montantRegleTp = 0;
+        long montantEntre = 0;
+        long montantSortie = 0;
+        long marge = 0;
+        long montantTva = 0;
+        double ratioVA = 0.0;
+        double rationAV = 0.0;
+        for (BalanceDTO balance : balances) {
+            montantTTC += balance.getMontantTTC();
+            montantNet += balance.getMontantNet();
+            montantRemise += balance.getMontantRemise();
+            montantEsp += balance.getMontantEsp();
+            montantCheque += balance.getMontantCheque();
+            montantVirement += balance.getMontantVirement();
+            montantCB += balance.getMontantCB();
+            montantTp += balance.getMontantTp();
+            montantDiff += balance.getMontantDiff();
+            nbreVente += balance.getNbreVente();
+            montantMobilePayment += balance.getMontantMobilePayment();
+            marge += balance.getMarge();
+            montantTva += balance.getMontantTva();
+
+        }
+        long montantHT = montantTTC - montantTva;
+        for (BalanceVenteItemDTO o : othersTypeMvts) {
+            long amount = o.getMontantTTC().longValue();
+            switch (o.getTypeMvtCaisse()) {
+                case DateConverter.MVT_FOND_CAISSE:
+                    fondCaisse += amount;
+                    break;
+                case DateConverter.MVT_SORTIE_CAISSE:
+                    montantSortie += amount;
+                    break;
+                case DateConverter.MVT_ENTREE_CAISSE:
+                    montantEntre += amount;
+                    break;
+                case DateConverter.MVT_REGLE_DIFF:
+                    montantRegDiff += amount;
+                    break;
+                case DateConverter.MVT_REGLE_TP:
+                    montantRegleTp += amount;
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (montantAchat > 0) {
+
+            ratioVA = new BigDecimal(Double.valueOf(montantTTC) / montantAchat).setScale(2, RoundingMode.HALF_UP).doubleValue();
+            rationAV = new BigDecimal(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP).doubleValue();
+        }
+        if (nbreVente > 0) {
+            panierMoyen = montantTTC / nbreVente;
+
+        }
+        SummaryDTO summary = new SummaryDTO();
+        summary.setFondCaisse(fondCaisse);
+        summary.setMarge(marge);
+        summary.setMontantAchat(montantAchat);
+        summary.setMontantCB(montantCB);
+        summary.setMontantCheque(montantCheque);
+        summary.setMontantDiff(montantDiff);
+        summary.setMontantRegDiff(montantRegDiff);
+        summary.setMontantEntre(montantEntre);
+        summary.setMontantEsp(montantEsp);
+        summary.setMontantNet(montantNet);
+        summary.setMontantSortie(montantSortie);
+        summary.setMontantVirement(montantVirement);
+        summary.setMontantHT(montantHT);
+        summary.setMontantRegleTp(montantRegleTp);
+        summary.setMontantRemise(montantRemise);
+        summary.setMontantTva(montantTva);
+        summary.setNbreVente(nbreVente);
+        summary.setMontantTTC(montantTTC);
+        summary.setMontantMobilePayment(montantMobilePayment);
+        summary.setPanierMoyen(panierMoyen);
+        summary.setRatioVA(ratioVA);
+        summary.setRationAV(rationAV);
+        summary.setMontantTp(montantTp);
+        GenericDTO generic = new GenericDTO();
+        generic.setSummary(summary);
+        generic.setBalances(balances);
+        return generic;
+
     }
 
 }
