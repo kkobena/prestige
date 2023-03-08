@@ -32,7 +32,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CaisseService;
-import rest.service.CommonService;
 import rest.service.GenerateTicketService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
