@@ -429,7 +429,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
         datas.add("Part du Client:: " + DateConverter.amountFormat(partClt) + "  CFA");
         for (int i = 0; i < lstT.size(); i++) {
-          
+
             datas.add(lstT.get(i).getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME() + "   " + lstT.get(i).getIntPERCENT() + "%" + " :: " + DateConverter.amountFormat(lstT.get(i).getIntPRICE()) + "  CFA");
         }
         return datas;
@@ -588,16 +588,17 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return OTPreenregistrementCompteClient;
     }
 
- private void print( ImpressionServiceImpl impressionService,int nbreCopie){
+    private void print(ImpressionServiceImpl impressionService, int nbreCopie) {
         try {
-            for (int i = 0; i < nbreCopie ; i++) {
-                impressionService.printTicketVente(1); 
+            for (int i = 0; i < nbreCopie; i++) {
+                impressionService.printTicketVente(1);
             }
-           
+
         } catch (PrinterException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
- }
+    }
+
     @Override
     public JSONObject lunchPrinterForTicket(ClotureVenteParams clotureVenteParams) throws JSONException {
         JSONObject json = new JSONObject();
@@ -640,7 +641,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             }
             if (datas.size() <= counter) {
                 imp.buildTicket(datas, infoSellers, infoClientAvoir, generateDataSummaryVno, generateCommentaire, fileBarecode);
-                print(imp,copies);
+                print(imp, copies);
             } else {
                 page = datas.size() / counter;
                 while (page != pageCurrent) {
@@ -648,7 +649,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                         lstDataFinal.add(datas.get(i));
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infoClientAvoir, Collections.emptyList(), Collections.emptyList(), fileBarecode);
-                     print(imp,copies);
+                    print(imp, copies);
                     k = counter;
                     diff = datas.size() - counter;
                     if (diff > counter_constante) {
@@ -666,7 +667,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infoClientAvoir, generateDataSummaryVno, generateCommentaire, fileBarecode);
                 }
-                 print(imp,copies);
+                print(imp, copies);
 
             }
             json.put("success", true);
@@ -976,6 +977,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                                 case DateConverter.MODE_MOOV:
                                 case DateConverter.MODE_MTN:
                                 case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                case DateConverter.MODE_WAVE:
                                     utotalMobile.add(b.getMontantRegle());
                                     rtotalMobile.add(b.getMontantRegle());
                                     break;
@@ -1011,6 +1013,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                                 case DateConverter.MODE_MOOV:
                                 case DateConverter.MODE_MTN:
                                 case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                case DateConverter.MODE_WAVE:
                                     utotalMobile.add(b.getMontantRegle());
                                     rtotalMobile.add(b.getMontantRegle());
                                     break;
@@ -1065,6 +1068,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                                 case DateConverter.MODE_MOOV:
                                 case DateConverter.MODE_MTN:
                                 case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                case DateConverter.MODE_WAVE:
                                     utotalMobile.add(b.getMontant());
                                     if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
                                         regleEntreeMobile.add(b.getMontant());
@@ -1101,6 +1105,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                                 case DateConverter.MODE_MOOV:
                                 case DateConverter.MODE_MTN:
                                 case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                case DateConverter.MODE_WAVE:
                                     utotalMobile.add(b.getMontant());
                                     totalSortieCaisseMobile.add(b.getMontant());
                                 default:
@@ -1280,7 +1285,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             ODriverPrinter.setCodeBar(this.buildLineBarecode(DateConverter.getShortId(10)));
             ODriverPrinter.printTicketVente(1);
             return json.put("success", true).put("msg", "Opération effectuée ");
-        } catch (Exception e) {
+        } catch (PrinterException | JSONException e) {
             e.printStackTrace(System.err);
             return json.put("success", false).put("msg", "Erreur du serveur");
 
@@ -1332,10 +1337,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             TParameters KEY_TICKET_COUNT = getEntityManager().find(TParameters.class, "KEY_TICKET_COUNT");
 
             if (KEY_TICKET_COUNT != null) {
-                return Integer.valueOf(KEY_TICKET_COUNT.getStrVALUE().trim());
+                return Integer.parseInt(KEY_TICKET_COUNT.getStrVALUE().trim());
             }
             return 1;
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return 1;
         }
 
@@ -1356,7 +1361,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     private List<String> generateData(List<TDossierReglementDetail> lstTDossierReglementDetail, TDossierReglement dossierReglement) {
         List<String> datas = new ArrayList<>();
 
-        double int_AMOUNT = 0, int_AMOUNT_RESTE;
+        double int_AMOUNT;
+        double int_AMOUNT_RESTE;
 
         int_AMOUNT = dossierReglement.getDblAMOUNT();
         int_AMOUNT_RESTE = dossierReglement.getDblMONTANTATTENDU() - int_AMOUNT;
