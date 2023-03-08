@@ -183,6 +183,7 @@ public final class DateConverter {
     public static final String TYPE_REGLEMENT_ESPECE = "1";
     public static final String CHARGED = "charged";
     public static final String TYPE_VENTE_VNO = "1";
+    public static final String KEY_CHECK_UG = "KEY_CHECK_UG";
     /*
     parametre nombre de mois à considerer
      */
@@ -576,7 +577,5 @@ public final class DateConverter {
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
     }
-
-  
 
 }

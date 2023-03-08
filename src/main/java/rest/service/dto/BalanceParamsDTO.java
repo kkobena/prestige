@@ -25,4 +25,10 @@ public class BalanceParamsDTO {
     private String emplacementId;
     private Boolean excludeSome;
     private boolean toPrint;
+    @Builder.Default
+    private boolean excludeStatement = true;
+    @Builder.Default
+    private boolean flagedStatement = true;
+    private boolean removeUg;
+    private boolean vnoOnly ;
 }

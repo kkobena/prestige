@@ -67,7 +67,7 @@ public class BalancePdfServlet extends HttpServlet {
         String dtEnd = request.getParameter("dtEnd");
         boolean checkug = false;
         try {
-            checkug = Boolean.valueOf(request.getParameter("checkug"));
+            checkug = Boolean.parseBoolean(request.getParameter("checkug"));
         } catch (Exception e) {
         }
         Params params = new Params();

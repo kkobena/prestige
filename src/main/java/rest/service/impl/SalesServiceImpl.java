@@ -631,7 +631,7 @@ public class SalesServiceImpl implements SalesService {
             json.put("ref", newItem.getLgPREENREGISTREMENTID());
             sendMessageClientJmsQueue(newItem.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+                 LOG.log(Level.SEVERE, null, e);
             json.put("success", false);
             json.put("msg", "Erreur annulation de la vente ");
             json.put("ref", ref);
@@ -647,7 +647,7 @@ public class SalesServiceImpl implements SalesService {
                     .setParameter(1, venteId)
                     .setMaxResults(1).getSingleResult());
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
             return Optional.empty();
         }
     }
@@ -675,7 +675,7 @@ public class SalesServiceImpl implements SalesService {
         newItem.setMontantTva((-1) * tp.getMontantTva());
         newItem.setDtCREATED(new Date());
         newItem.setStrSTATUT(commonparameter.statut_is_Closed);
-        newItem.setDtUPDATED(new Date());
+        newItem.setDtUPDATED(newItem.getDtCREATED());
         newItem.setBoolACCOUNT(tp.getBoolACCOUNT());
         newItem.setLgFAMILLEID(tp.getLgFAMILLEID());
         newItem.setCmuPrice(tp.getCmuPrice());

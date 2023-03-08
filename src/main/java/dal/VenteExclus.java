@@ -5,8 +5,6 @@
  */
 package dal;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dal.enumeration.Statut;
 import dal.enumeration.TypeTiersPayant;
 import java.io.Serializable;

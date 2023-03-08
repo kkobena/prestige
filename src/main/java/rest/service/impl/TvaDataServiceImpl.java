@@ -81,7 +81,7 @@ public class TvaDataServiceImpl implements TvaDataService {
             query.setParameter(2, LocalDate.parse(params.getDtEnd()));
             return query.getSingleResult();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+             e.printStackTrace();
             return 0;
         }
 

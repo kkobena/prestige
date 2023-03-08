@@ -2,6 +2,7 @@ package rest.service;
 
 import commonTasks.dto.BalanceDTO;
 import commonTasks.dto.GenericDTO;
+import commonTasks.dto.TvaDTO;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONObject;
@@ -19,4 +20,13 @@ public interface BalanceService {
     GenericDTO getBalanceVenteCaisseData(BalanceParamsDTO balanceParams);
 
     JSONObject getBalanceVenteCaisseDataView(BalanceParamsDTO balanceParams);
+
+    JSONObject statistiqueTvaView(BalanceParamsDTO balanceParams);
+
+    long montantToRemove(BalanceParamsDTO balanceParams);
+
+    List<TvaDTO> statistiqueTva(BalanceParamsDTO balanceParams);
+
+   
+    boolean useLastUpdateStats();
 }
