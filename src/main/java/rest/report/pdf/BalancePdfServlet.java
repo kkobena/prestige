@@ -180,7 +180,7 @@ public class BalancePdfServlet extends HttpServlet {
                 codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
-                boolean qtyOrCa = Boolean.valueOf(request.getParameter("qtyOrCa"));
+                boolean qtyOrCa = Boolean.parseBoolean(request.getParameter("qtyOrCa"));
                 file = balance.geVingtQuatreVingt(dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste, qtyOrCa);
                 break;
             case PERIMES:
@@ -190,7 +190,7 @@ public class BalancePdfServlet extends HttpServlet {
                 query = request.getParameter("query");
                 int _n = 0;
                 try {
-                    _n = Integer.valueOf(request.getParameter("nbre"));
+                    _n = Integer.parseInt(request.getParameter("nbre"));
                 } catch (Exception e) {
                 }
 
