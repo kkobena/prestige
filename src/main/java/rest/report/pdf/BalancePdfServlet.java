@@ -103,12 +103,12 @@ public class BalancePdfServlet extends HttpServlet {
                 file = balance.gestionCaissepdf(params, LstTPrivilege);
                 break;
             case TABLEAU:
-                boolean ration = Boolean.valueOf(request.getParameter("ration"));
-                boolean monthly = Boolean.valueOf(request.getParameter("monthly"));
+                boolean ration = Boolean.parseBoolean(request.getParameter("ration"));
+                boolean monthly = Boolean.parseBoolean(request.getParameter("monthly"));
                 file = balance.tableauBordPharmation(params, ration, monthly);
                 break;
             case TABLEAUOLD:
-                boolean _ration = Boolean.valueOf(request.getParameter("ration"));
+                boolean _ration = Boolean.parseBoolean(request.getParameter("ration"));
                 file = balance.tableauBordPharmationOld(params, _ration);
                 break;
 
