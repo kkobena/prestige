@@ -88,7 +88,7 @@
     TModelFacture modelFacture = OTiersPayant.getLgMODELFACTUREID();
     String codeModelFacture = modelFacture.getLgMODELFACTUREID();
     TParameters recapParam = null;
-    ;
+    
     try {
         recapParam = obllBase.getOdataManager().getEm().find(dal.TParameters.class, "KEY_IMPRESSION_RECAP_FACTURE");
     } catch (Exception e) {
@@ -99,8 +99,8 @@
     }
     facManagement = new factureManagement(OdataManager, OTUser);
     // int codeFACT = 7;
-
-    int codeFACT = new Integer(codeModelFacture);
+   Double montantRecap=facManagement.getAmount(OFacture.getLgFACTUREID());
+    int codeFACT =  Integer.parseInt(codeModelFacture);
     String scr_report_file = "rp_facturerecap";
     Map<String, Object> parameters = new HashMap();
     if (7 == codeFACT) {
@@ -108,7 +108,7 @@
         scr_report_file = "rp_facturerecapClient";
 
         parameters.put("P_DATEFAC", date.FULDATE.format(OFacture.getDtCREATED()));
-        parameters.put("P_TOTAL_IN_LETTERS", conversion.GetNumberTowords(facManagement.getAmount(OFacture.getLgFACTUREID())).toUpperCase() + " (" + conversion.AmountFormat(facManagement.getAmount(OFacture.getLgFACTUREID()).intValue()) + " FCFA)");
+        parameters.put("P_TOTAL_IN_LETTERS", conversion.GetNumberTowords(montantRecap).toUpperCase() + " (" + conversion.AmountFormat(montantRecap.intValue()) + " FCFA)");
     }
 
     //String scr_report_file = "rp_facturerecap";
@@ -176,7 +176,7 @@
 
         P_INSTITUTION_ADRESSE += " - CPT N°: " + oTOfficine.getStrNUMCOMPTABLE();
     }
-
+    parameters.put("P_TOTAL_IN_LETTERS", conversion.GetNumberTowords(montantRecap).toUpperCase() + " (" + conversion.AmountFormat(montantRecap.intValue()) + " FCFA)");
     parameters.put("P_INSTITUTION_ADRESSE", P_INSTITUTION_ADRESSE);
     parameters.put("P_FOOTER_RC", P_FOOTER_RC);
     parameters.put("P_CODE_POSTALE", (OTiersPayant.getStrADRESSE() != null && !"".equals(OTiersPayant.getStrADRESSE())) ? OTiersPayant.getStrADRESSE() : "");
