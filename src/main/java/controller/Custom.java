@@ -37,7 +37,7 @@ public class Custom extends HttpServlet {
         HttpSession session = request.getSession();
         OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
         String dt_start = LocalDate.now().toString(), dt_end = dt_start;
-        Integer virtualAmount = 0;
+        Integer virtualAmount ;
         if (request.getParameter("dt_start") != null && !"".equalsIgnoreCase(request.getParameter("dt_start"))) {
             dt_start = request.getParameter("dt_start");
         }

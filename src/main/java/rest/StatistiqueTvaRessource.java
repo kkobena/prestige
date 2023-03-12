@@ -15,8 +15,10 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.BalanceService;
 import toolkits.parameters.commonparameter;
 import rest.service.TvaDataService;
+import rest.service.dto.BalanceParamsDTO;
 import util.Constant;
 
 /**
@@ -32,6 +34,8 @@ public class StatistiqueTvaRessource {
     private HttpServletRequest servletRequest;
     @EJB
     private TvaDataService dataService;
+    @EJB
+    private BalanceService balanceService;
 
     @GET
     @Path("tvas/criterion")
@@ -41,11 +45,20 @@ public class StatistiqueTvaRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        Params params = new Params();
-        params.setDtEnd(dtEnd);
-        params.setDtStart(dtStart);
-        params.setOperateur(tu);
-        JSONObject json = dataService.statistiqueTvaViewSomeCriteria(params);
+        JSONObject json;
+        if (!this.balanceService.useLastUpdateStats()) {
+            Params params = new Params();
+            params.setDtEnd(dtEnd);
+            params.setDtStart(dtStart);
+            params.setOperateur(tu);
+            json = dataService.statistiqueTvaViewSomeCriteria(params);
+        } else {
+            json = this.balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtEnd(dtEnd)
+                    .dtStart(dtStart)
+                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                    .build());
+        }
+
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -56,6 +69,14 @@ public class StatistiqueTvaRessource {
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        if (this.balanceService.useLastUpdateStats()) {
+            boolean isTvaVNO = StringUtils.isNotBlank(typeVente) && !typeVente.equalsIgnoreCase("TOUT");
+
+            return Response.ok().entity(this.balanceService.statistiqueTvaView(BalanceParamsDTO.builder().dtEnd(dtEnd)
+                    .dtStart(dtStart)
+                    .vnoOnly(isTvaVNO)
+                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build()).toString()).build();
         }
         Params params = new Params();
         params.setDtEnd(dtEnd);

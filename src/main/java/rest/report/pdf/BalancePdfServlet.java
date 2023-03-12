@@ -67,7 +67,7 @@ public class BalancePdfServlet extends HttpServlet {
         String dtEnd = request.getParameter("dtEnd");
         boolean checkug = false;
         try {
-            checkug = Boolean.valueOf(request.getParameter("checkug"));
+            checkug = Boolean.parseBoolean(request.getParameter("checkug"));
         } catch (Exception e) {
         }
         Params params = new Params();
@@ -103,12 +103,12 @@ public class BalancePdfServlet extends HttpServlet {
                 file = balance.gestionCaissepdf(params, LstTPrivilege);
                 break;
             case TABLEAU:
-                boolean ration = Boolean.valueOf(request.getParameter("ration"));
-                boolean monthly = Boolean.valueOf(request.getParameter("monthly"));
+                boolean ration = Boolean.parseBoolean(request.getParameter("ration"));
+                boolean monthly = Boolean.parseBoolean(request.getParameter("monthly"));
                 file = balance.tableauBordPharmation(params, ration, monthly);
                 break;
             case TABLEAUOLD:
-                boolean _ration = Boolean.valueOf(request.getParameter("ration"));
+                boolean _ration = Boolean.parseBoolean(request.getParameter("ration"));
                 file = balance.tableauBordPharmationOld(params, _ration);
                 break;
 
@@ -180,7 +180,7 @@ public class BalancePdfServlet extends HttpServlet {
                 codeFamile = request.getParameter("codeFamile");
                 codeRayon = request.getParameter("codeRayon");
                 codeGrossiste = request.getParameter("codeGrossiste");
-                boolean qtyOrCa = Boolean.valueOf(request.getParameter("qtyOrCa"));
+                boolean qtyOrCa = Boolean.parseBoolean(request.getParameter("qtyOrCa"));
                 file = balance.geVingtQuatreVingt(dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste, qtyOrCa);
                 break;
             case PERIMES:
@@ -190,7 +190,7 @@ public class BalancePdfServlet extends HttpServlet {
                 query = request.getParameter("query");
                 int _n = 0;
                 try {
-                    _n = Integer.valueOf(request.getParameter("nbre"));
+                    _n = Integer.parseInt(request.getParameter("nbre"));
                 } catch (Exception e) {
                 }
 

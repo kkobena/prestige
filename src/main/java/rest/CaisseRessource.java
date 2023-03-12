@@ -31,8 +31,10 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.BalanceService;
 import rest.service.CaisseService;
 import rest.service.GenerateTicketService;
+import rest.service.dto.BalanceParamsDTO;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 import util.Constant;
@@ -53,6 +55,8 @@ public class CaisseRessource {
 
     @EJB
     GenerateTicketService generateTicketService;
+    @EJB
+    private BalanceService balanceService;
 
     @GET
     @Path("listecaisse")
@@ -119,7 +123,17 @@ public class CaisseRessource {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        JSONObject json = caisseService.balanceVenteCaisse(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), true);
+        JSONObject json;
+        if (!this.balanceService.useLastUpdateStats()) {
+            json = caisseService.balanceVenteCaisse(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), true);
+        } else {
+            json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
+                    .dtStart(dtStart)
+                    .dtEnd(dtEnd)
+                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                    .build());
+        }
+
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -195,10 +209,20 @@ public class CaisseRessource {
         } catch (Exception e) {
         }
         JSONObject json;
-        if (monthly) {
-            json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
+        if (!this.balanceService.useLastUpdateStats()) {
+
+            if (monthly) {
+                json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
+            } else {
+                json = caisseService.tableauBoardDatas(dtSt, dtEn, true, tu, 0, 0, true);
+            }
         } else {
-            json = caisseService.tableauBoardDatas(dtSt, dtEn, true, tu, 0, 0, true);
+            json = this.balanceService.tableauBoardDatas(BalanceParamsDTO.builder()
+                    .dtStart(dtStart)
+                    .dtEnd(dtEnd)
+                    .byMonth(monthly)
+                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                    .build());
         }
 
         return Response.ok().entity(json.toString()).build();
