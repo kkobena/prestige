@@ -31,7 +31,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -183,6 +182,8 @@ public final class DateConverter {
     public static final String KEY_NOMBRE_TICKET_OTHER_ESPECE = "KEY_NOMBRE_TICKET_OTHER_ESPECE";
     public static final String TYPE_REGLEMENT_ESPECE = "1";
     public static final String CHARGED = "charged";
+    public static final String TYPE_VENTE_VNO = "1";
+    public static final String KEY_CHECK_UG = "KEY_CHECK_UG";
     /*
     parametre nombre de mois à considerer
      */
@@ -199,7 +200,7 @@ public final class DateConverter {
 //    Runtime.getRuntime().totalMemory() -
 //Runtime.getRuntime().freeMemory()
 //String path = System.getProperty("user.home") 
-    public DateConverter() {
+    private DateConverter() {
     }
 
     public static String getNumberRandom() {
@@ -576,7 +577,5 @@ public final class DateConverter {
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
     }
-
-  
 
 }

@@ -19,7 +19,6 @@ import lombok.ToString;
  * @author koben
  */
 @Builder
-
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString

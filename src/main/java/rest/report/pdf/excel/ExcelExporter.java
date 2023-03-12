@@ -32,7 +32,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import rest.report.ReportUtil;
+import rest.service.BalanceService;
 import rest.service.CaisseService;
+import rest.service.dto.BalanceParamsDTO;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
 
@@ -44,7 +46,8 @@ import toolkits.utils.jdom;
 public class ExcelExporter extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-    DateFormat df = new SimpleDateFormat("dd_MM_YYYY_HH_mm_ss");
+    @EJB
+    private BalanceService balanceService;
     @EJB
     CaisseService caisseService;
     @EJB
@@ -73,9 +76,9 @@ public class ExcelExporter extends HttpServlet {
 
         switch (Action.valueOf(action)) {
             case TABLEAU:
-                boolean ration = Boolean.valueOf(request.getParameter("ration"));
-                boolean monthly = Boolean.valueOf(request.getParameter("monthly"));
-                exportToxlsx(response, new File( tableauBordPharmation(params, ration, monthly)));
+                boolean ration = Boolean.parseBoolean(request.getParameter("ration"));
+                boolean monthly = Boolean.parseBoolean(request.getParameter("monthly"));
+                exportToxlsx(response, new File(tableauBordPharmation(params, ration, monthly)));
                 break;
             default:
                 break;
@@ -177,12 +180,20 @@ public class ExcelExporter extends HttpServlet {
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".xlsx";
         List<TableauBaordPhDTO> datas = new ArrayList<>();
         Map<TableauBaordSummary, List<TableauBaordPhDTO>> map;
-        if (monthly) {
-            map = caisseService.tableauBoardDatasMonthly(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+        if (!this.balanceService.useLastUpdateStats()) {
+            if (monthly) {
+                map = caisseService.tableauBoardDatasMonthly(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+            } else {
+                map = caisseService.tableauBoardDatas(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+            }
         } else {
-            map = caisseService.tableauBoardDatas(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+            map = this.balanceService.getTableauBoardData(BalanceParamsDTO.builder()
+                    .dtStart(parasm.getDtStart())
+                    .dtEnd(parasm.getDtEnd())
+                    .byMonth(monthly)
+                    .emplacementId(parasm.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                    .build());
         }
-
         if (!map.isEmpty()) {
             map.forEach((k, v) -> {
                 datas.addAll(v);

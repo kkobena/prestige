@@ -95,10 +95,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -110,7 +108,6 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -138,13 +135,11 @@ public class CaisseServiceImpl implements CaisseService {
     NotificationService notificationService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    @Resource(name = "concurrent/__defaultManagedExecutorService")
-    ManagedExecutorService mes;
 
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = getEntityManager().find(TParameters.class, key);
-            return (Integer.valueOf(parameters.getStrVALUE().trim()) == 1);
+            return (Integer.parseInt(parameters.getStrVALUE().trim()) == 1);
         } catch (Exception e) {
             return false;
         }
@@ -181,159 +176,6 @@ public class CaisseServiceImpl implements CaisseService {
 
         }
         return json;
-    }
-// @Override
-
-    public SumCaisseDTO cumul__(CaisseParamsDTO caisseParams, boolean all) {
-        List<SumCaisseDTO> os = new ArrayList<>();
-        SumCaisseDTO dTO = new SumCaisseDTO();
-        List<VisualisationCaisseDTO> caisses;
-        List<VisualisationCaisseDTO> sum;
-        if (!all) {
-            caisses = findAllsTransaction(caisseParams, all);
-            dTO.setCaisses(caisses);
-            sum = findAllsTransaction(caisseParams, true);
-        } else {
-            caisses = findAllsTransaction(caisseParams, all);
-            dTO.setCaisses(caisses);
-            sum = caisses;
-        }
-
-        Map<String, List<VisualisationCaisseDTO>> map = sum.stream().collect(Collectors.groupingBy(s -> s.getModeRegle()));
-        LongAdder montantEspec = new LongAdder();
-        LongAdder montantCredit = new LongAdder();
-        LongAdder montantAnnulation = new LongAdder();
-        LongAdder montantSortie = new LongAdder();
-        LongAdder montantEntree = new LongAdder();
-        LongAdder montantVir = new LongAdder();
-        LongAdder montantCb = new LongAdder();
-        LongAdder montantcheque = new LongAdder();
-        LongAdder montantCaisse = new LongAdder();
-        LongAdder montantFondCaisse = new LongAdder();
-
-        map.forEach((k, v) -> {
-            switch (k) {
-                case DateConverter.MODE_ESP:
-                    v.forEach(b -> {
-                        montantCaisse.add(b.getMontantCaisse());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_FOND_CAISSE)) {
-                            montantFondCaisse.add(b.getMontant());
-                        } else {
-                            montantEspec.add(b.getMontant());
-
-                            if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                                montantCredit.add(b.getMontantCredit());
-                                if (b.getMontant() < 0) {
-                                    montantAnnulation.add(b.getMontant());
-                                }
-                            } else {
-                                if (b.getMontant() < 0) {
-                                    montantSortie.add(b.getMontant());
-                                } else {
-                                    montantEntree.add(b.getMontant());
-                                }
-                            }
-                        }
-
-                    });
-                    break;
-                case DateConverter.MODE_VIREMENT:
-                    v.forEach(b -> {
-                        montantVir.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
-                            } else {
-                                montantEntree.add(b.getMontant());
-                            }
-                        }
-
-                    });
-                    break;
-                case DateConverter.MODE_CB:
-                    v.forEach(b -> {
-                        montantCb.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
-                            } else {
-                                montantEntree.add(b.getMontant());
-                            }
-                        }
-
-                    });
-                    break;
-                case DateConverter.MODE_CHEQUE:
-                    v.forEach(b -> {
-                        montantcheque.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
-                            } else {
-                                montantEntree.add(b.getMontant());
-                            }
-                        }
-
-                    });
-                    break;
-
-                default:
-                    break;
-            }
-        });
-
-        Integer _montantEspec = montantEspec.intValue();
-        Integer _montantCredit = montantCredit.intValue();
-        Integer _montantAnnulation = montantAnnulation.intValue();
-        Integer _montantSortie = montantSortie.intValue();
-        Integer _montantEntree = montantEntree.intValue();
-        Integer _montantVir = montantVir.intValue();
-        Integer _montantCb = montantCb.intValue();
-        Integer _montantcheque = montantcheque.intValue();
-        Integer _montantFondCaisse = montantFondCaisse.intValue();
-        if (_montantFondCaisse.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantFondCaisse, "Fond.Caisse"));
-        }
-
-        if (_montantcheque.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantcheque, "Chèque"));
-        }
-        if (_montantCb.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantCb, "Carte.Bancaire"));
-        }
-        if (_montantVir.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantVir, "Virement"));
-        }
-        if (_montantCredit.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantCredit, "Différé"));
-        }
-        if (_montantSortie.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantSortie, "Sortie.Caisse"));
-        }
-        if (_montantEntree.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantEntree, "Entrée.Caisse"));
-        }
-        os.add(new SumCaisseDTO(_montantEspec, "Espèce"));
-        if (_montantAnnulation.compareTo(0) != 0) {
-            os.add(new SumCaisseDTO(_montantAnnulation, "Annulation"));
-        }
-        dTO.setSummary(os);
-        return dTO;
     }
 
     @Override
@@ -448,7 +290,7 @@ public class CaisseServiceImpl implements CaisseService {
                     case DateConverter.MODE_MTN:
                     case DateConverter.MODE_MOOV:
                     case DateConverter.TYPE_REGLEMENT_ORANGE:
-                        case DateConverter.MODE_WAVE:
+                    case DateConverter.MODE_WAVE:
                         v.forEach(b -> {
                             montantMobileMoney.add(b.getMontant());
                             if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO) || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
@@ -805,29 +647,6 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-    @Override
-    public List<VisualisationCaisseDTO> mouvementsCaisses(CaisseParamsDTO caisseParams, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-        // Tools | Templates.
-    }
-
-    @Override
-    public List<VisualisationCaisseDTO> visualisationsCaisses(CaisseParamsDTO caisseParams, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-        // Tools | Templates.
-    }
-
-    @Override
-    public List<VisualisationCaisseDTO> gestionsCaisses(CaisseParamsDTO caisseParams, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-        // Tools | Templates.
-    }
-
-    @Override
-    public List<VisualisationCaisseDTO> recaptilatifsCaisses(CaisseParamsDTO caisseParams, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-        // Tools | Templates.
-    }
 
     public EntityManager getEntityManager() {
         return em;
@@ -981,7 +800,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
 
@@ -1025,7 +844,7 @@ public class CaisseServiceImpl implements CaisseService {
                         nbreVente = 0;
 
                 for (MvtTransaction mvt : venteVO) {
-                  
+
                     montantTTC += mvt.getMontant();
                     montantNet += mvt.getMontantNet();
                     montantRemise += mvt.getMontantRemise();
@@ -1053,7 +872,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
 
@@ -1419,7 +1238,6 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-//                        montantAchat.add(op.getMontantNet());
                         montantAchat.add(op.getMontant());
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
@@ -3030,7 +2848,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += montantNonPara;
                             break;
                     }
@@ -3101,7 +2919,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
                     }
@@ -3220,7 +3038,7 @@ public class CaisseServiceImpl implements CaisseService {
         try {
 
             TParameters tp = getEntityManager().find(TParameters.class, DateConverter.KEY_TAKE_INTO_ACCOUNT);
-            return (Integer.valueOf(tp.getStrVALUE()) == 1);
+            return (Integer.parseInt(tp.getStrVALUE()) == 1);
 
         } catch (Exception e) {
             return false;
@@ -3232,7 +3050,7 @@ public class CaisseServiceImpl implements CaisseService {
         try {
 
             TParameters tp = getEntityManager().find(TParameters.class, DateConverter.KEY_PARAMS);
-            return (Integer.valueOf(tp.getStrVALUE()) == 1);
+            return (Integer.parseInt(tp.getStrVALUE()) == 1);
 
         } catch (Exception e) {
             return false;
@@ -3276,24 +3094,6 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-    public long montantAccount00(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TypeTransaction transaction, String typrReglement, String typeMvtCaisse) {
-        try {
-            TypedQuery<Long> query = getEntityManager().createQuery("SELECT COALESCE(SUM(o.montant),0)- COALESCE(SUM(o.montantAcc),0) AS montant FROM MvtTransaction o WHERE o.mvtDate BETWEEN ?1 AND ?2 AND o.magasin.lgEMPLACEMENTID=?3 AND o.checked=?4 AND o.typeTransaction =?5 AND o.reglement.lgTYPEREGLEMENTID=?6 AND o.tTypeMvtCaisse.lgTYPEMVTCAISSEID=?7 ",
-                    Long.class);
-            query.setParameter(1, dtStart);
-            query.setParameter(2, dtEnd);
-            query.setParameter(3, emplacementId);
-            query.setParameter(4, true);
-            query.setParameter(5, transaction);
-            query.setParameter(6, typrReglement);
-            query.setParameter(7, typeMvtCaisse);
-            return query.getSingleResult();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return 0;
-        }
-    }
-
     @Override
     public long montantAccount(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TypeTransaction transaction, String typrReglement, String typeMvtCaisse) {
         try {
@@ -3309,194 +3109,6 @@ public class CaisseServiceImpl implements CaisseService {
             LOG.log(Level.SEVERE, null, e);
             return 0;
         }
-    }
-
-    private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buillTableauBoardData0__(List<MvtTransaction> transactions) {
-        if (transactions.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        Map<TableauBaordSummary, List<TableauBaordPhDTO>> summ = new HashMap<>();
-        List<TableauBaordPhDTO> tableauBaords = new ArrayList<>();
-        TableauBaordSummary summary = new TableauBaordSummary();
-        Map<LocalDate, List<MvtTransaction>> map = transactions.stream()
-                .collect(Collectors.groupingBy(o -> o.getMvtDate()));
-        LongAdder _summontantTTC = new LongAdder(), _summontantNet = new LongAdder(),
-                _summontantRemise = new LongAdder(),
-                _summontantEsp = new LongAdder(),
-                _summontantCredit = new LongAdder(),
-                _sumnbreVente = new LongAdder(), _summontantAchatOne = new LongAdder(),
-                _summontantAchatTwo = new LongAdder(),
-                _summontantAchatThree = new LongAdder(), _summontantAchatFour = new LongAdder(),
-                _summontantAchatFive = new LongAdder(),
-                _summontantAvoir = new LongAdder(),
-                _summontantAchat = new LongAdder();
-        DoubleAdder _sumratioVA = new DoubleAdder(), _sumrationAV = new DoubleAdder();
-
-        map.forEach((k, v) -> {
-            TableauBaordPhDTO baordPh = new TableauBaordPhDTO();
-            baordPh.setMvtDate(k);
-            LongAdder montantTTC = new LongAdder(), montantNet = new LongAdder(),
-                    montantRemise = new LongAdder(),
-                    montantEsp = new LongAdder(),
-                    montantCredit = new LongAdder(),
-                    nbreVente = new LongAdder(), montantAchatOne = new LongAdder(),
-                    montantAchatTwo = new LongAdder(),
-                    montantAchatThree = new LongAdder(), montantAchatFour = new LongAdder(),
-                    montantAchatFive = new LongAdder(),
-                    montantAchat = new LongAdder(), montantAvoir = new LongAdder();
-            DoubleAdder ratioVA = new DoubleAdder(), rationAV = new DoubleAdder();
-
-            int avoir = avoirFournisseur(k);
-
-            montantAvoir.add(avoir);
-            v.forEach(op -> {
-                switch (op.getTypeTransaction()) {
-                    case VENTE_COMPTANT: {
-                        int remiseNonPara = 0;
-                        if (Math.abs(op.getMontantRemise()) > 0) {
-                            remiseNonPara = remiseNonPara(op.getPkey());
-                        }
-
-//                    montantRemise += remiseNonPara;
-//                        int remise = remisePara(op.getPkey());
-                        int newAmount = op.getMontantAcc().compareTo(op.getMontant()) == 0 ? op.getMontant() : op.getMontant() - op.getMontantAcc();
-
-                        /*   int montantNet_ = op.getMontantAcc() - remiseNonPara - op.getMontantttcug();
-                        int montantTTC_ = op.getMontantAcc() - op.getMontantttcug();*/
-                        int montantNet_ = newAmount - remiseNonPara;
-                        int montantTTC_ = newAmount;
-                        montantNet.add(montantNet_);
-                        montantTTC.add(montantTTC_);
-                        montantEsp.add(montantNet_);
-                        /*
-                            montantTTC.add(op.getMontant());
-                            montantNet.add(op.getMontantNet());
-                            montantEsp.add(op.getMontantRegle());
-                         */
-                        montantRemise.add(remiseNonPara);
-                        montantCredit.add(op.getMontantCredit());
-                        montantCredit.add(op.getMontantRestant());
-                        if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
-                            nbreVente.increment();
-                        }
-                    }
-
-                    break;
-                    case VENTE_CREDIT: {
-                        montantTTC.add(op.getMontant());
-                        montantNet.add(op.getMontantNet());
-                        montantRemise.add(op.getMontantRemise());
-                        montantEsp.add(op.getMontantRegle());
-                        montantCredit.add(op.getMontantCredit());
-                        montantCredit.add(op.getMontantRestant());
-                        if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
-                            nbreVente.increment();
-                        }
-                    }
-                    break;
-                    case ACHAT: {
-                        montantAchat.add(op.getMontantNet());
-                        try {
-                            Groupefournisseur g = op.getGrossiste().getGroupeId();
-                            switch (g.getLibelle()) {
-                                case DateConverter.LABOREXCI:
-                                    montantAchatOne.add(op.getMontantNet());
-                                    break;
-                                case DateConverter.DPCI:
-                                    montantAchatTwo.add(op.getMontantNet());
-                                    break;
-                                case DateConverter.COPHARMED:
-                                    montantAchatThree.add(op.getMontantNet());
-                                    break;
-                                case DateConverter.TEDIS:
-                                    montantAchatFour.add(op.getMontantNet());
-                                    break;
-                                case DateConverter.AUTRES:
-                                    montantAchatFive.add(op.getMontantNet());
-                                    break;
-                                default:
-                                    break;
-                            }
-
-                        } catch (Exception e) {
-                        }
-
-                    }
-                    break;
-                    default:
-                        break;
-
-                }
-            });
-
-            Integer _montantNet = montantNet.intValue();
-            Integer _montantAchat = montantAchat.intValue() - avoir;
-            if (_montantAchat.compareTo(0) > 0) {
-                ratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
-            }
-            if (_montantNet.compareTo(0) > 0) {
-                rationAV.add(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
-            }
-            baordPh.setMontantAchatFive(montantAchatFive.intValue());
-            baordPh.setMontantAchatFour(montantAchatFour.intValue());
-            baordPh.setMontantAchatThree(montantAchatThree.intValue());
-            baordPh.setNbreVente(nbreVente.intValue());
-            baordPh.setMontantAchatTwo(montantAchatTwo.intValue());
-            baordPh.setMontantAchatOne(montantAchatOne.intValue());
-            baordPh.setMontantAchat(_montantAchat);
-            baordPh.setRatioVA(ratioVA.doubleValue());
-            baordPh.setRationAV(rationAV.doubleValue());
-            baordPh.setMontantTTC(montantTTC.intValue());
-            baordPh.setMontantNet(_montantNet);
-            baordPh.setMontantEsp(montantEsp.intValue());
-            baordPh.setMontantRemise(montantRemise.intValue());
-            baordPh.setMontantCredit(montantCredit.intValue());
-            baordPh.setMontantAvoir(montantAvoir.intValue());
-
-            /**
-             * ** ***************
-             */
-            _summontantAchatFive.add(baordPh.getMontantAchatFive());
-            _summontantAchatFour.add(baordPh.getMontantAchatFour());
-            _summontantAchatThree.add(baordPh.getMontantAchatThree());
-            _sumnbreVente.add(baordPh.getNbreVente());
-            _summontantAchatTwo.add(baordPh.getMontantAchatTwo());
-            _summontantAchatOne.add(baordPh.getMontantAchatOne());
-            _summontantAchat.add(baordPh.getMontantAchat());
-            _summontantTTC.add(baordPh.getMontantTTC());
-            _summontantNet.add(baordPh.getMontantNet());
-            _summontantEsp.add(baordPh.getMontantEsp());
-            _summontantRemise.add(baordPh.getMontantRemise());
-            _summontantCredit.add(baordPh.getMontantCredit());
-            _summontantAvoir.add(baordPh.getMontantAvoir());
-            tableauBaords.add(baordPh);
-        });
-
-        Long _montantNet = _summontantNet.longValue();
-        Long _montantAchat = _summontantAchat.longValue();
-        if (_montantAchat.compareTo(0l) > 0) {
-            _sumratioVA.add(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
-        }
-        if (_montantNet.compareTo(0l) > 0) {
-            _sumrationAV.add(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
-        }
-        summary.setMontantAchatFive(_summontantAchatFive.longValue());
-        summary.setMontantAchatFour(_summontantAchatFour.longValue());
-        summary.setMontantAchatThree(_summontantAchatThree.longValue());
-        summary.setNbreVente(_sumnbreVente.longValue());
-        summary.setMontantAchatTwo(_summontantAchatTwo.longValue());
-        summary.setMontantAchatOne(_summontantAchatOne.longValue());
-        summary.setMontantAchat(_summontantAchat.longValue());
-        summary.setRatioVA(_sumratioVA.doubleValue());
-        summary.setRationAV(_sumrationAV.doubleValue());
-        summary.setMontantTTC(_summontantTTC.longValue());
-        summary.setMontantNet(_summontantNet.longValue());
-        summary.setMontantEsp(_summontantEsp.longValue());
-        summary.setMontantRemise(_summontantRemise.longValue());
-        summary.setMontantCredit(_summontantCredit.longValue());
-        summary.setMontantAvoir(_summontantAvoir.longValue());
-        summ.put(summary, tableauBaords.stream().sorted(comparator).collect(Collectors.toList()));
-        return summ;
     }
 
     @Override
@@ -3556,7 +3168,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += (mvt.getMontantRegle() - mvt.getMontantnetug());
                             break;
 
@@ -3624,7 +3236,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
 
@@ -3858,7 +3470,7 @@ public class CaisseServiceImpl implements CaisseService {
                 Predicate predicate = cb.and(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(st.get(TPreenregistrement_.strREFTICKET), query + "%"), cb.like(st.get(TPreenregistrement_.strREF), query + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
                 predicates.add(predicate);
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(cq);
             return q.getResultList().stream().map(e
                     -> new VenteDetailsDTO(e).stockUg(stockUg(e.getLgFAMILLEID().getLgFAMILLEID(), DateConverter.OFFICINE))
@@ -3914,7 +3526,7 @@ public class CaisseServiceImpl implements CaisseService {
         GenericDTO generic = new GenericDTO();
         SummaryDTO summary = new SummaryDTO();
         if (!venteVNO.isEmpty()) {
-            BalanceDTO vno = vno = new BalanceDTO();
+            BalanceDTO vno = new BalanceDTO();
             vno.setTypeVente("VNO");
 
             int _montantTTC = 0, _montantNet = 0, _montantRemise = 0, _montantEsp = 0,
@@ -3957,7 +3569,7 @@ public class CaisseServiceImpl implements CaisseService {
                     case DateConverter.MODE_MOOV:
                     case DateConverter.TYPE_REGLEMENT_ORANGE:
                     case DateConverter.MODE_MTN:
-                        case DateConverter.MODE_WAVE:
+                    case DateConverter.MODE_WAVE:
                         montantMobilePayment += montantPara;
                         break;
                 }
@@ -3990,11 +3602,9 @@ public class CaisseServiceImpl implements CaisseService {
             vno.setMontantMobilePayment(montantMobilePayment);
             vno.setPanierMoyen(panierMoyen);
 
-            if (vno != null) {
-                int pourcentageVno = (int) Math.round((Double.valueOf(vno.getMontantNet()) * 100) / Math.abs(_montantNet));
-                vno.setPourcentage(pourcentageVno);
-                balances.add(vno);
-            }
+            int pourcentageVno = (int) Math.round((Double.valueOf(vno.getMontantNet()) * 100) / Math.abs(_montantNet));
+            vno.setPourcentage(pourcentageVno);
+            balances.add(vno);
 
             if (montantAchat > 0) {
                 ratioVA = Double.valueOf(_montantTTC) / montantAchat;
@@ -4481,7 +4091,7 @@ public class CaisseServiceImpl implements CaisseService {
 
     private int montantFlag(MvtTransaction mvt) {
         if (mvt.getFlaged()) {
-         
+
             return mvt.getMontant() - mvt.getMontantAcc();
         }
         return mvt.getMontant();
@@ -4626,7 +4236,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
                     }
@@ -4817,17 +4427,16 @@ public class CaisseServiceImpl implements CaisseService {
 
                     break;
                     case VENTE_CREDIT: {
-                     
-                            montantTTC.add(op.getMontant());
-                            montantNet.add(op.getMontantNet());
-                            montantRemise.add(op.getMontantRemise());
-                            montantEsp.add(op.getMontantRegle());
-                            montantCredit.add(op.getMontantCredit());
-                            montantCredit.add(op.getMontantRestant());
-                            if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
-                                nbreVente.increment();
-                            }
-                        
+
+                        montantTTC.add(op.getMontant());
+                        montantNet.add(op.getMontantNet());
+                        montantRemise.add(op.getMontantRemise());
+                        montantEsp.add(op.getMontantRegle());
+                        montantCredit.add(op.getMontantCredit());
+                        montantCredit.add(op.getMontantRestant());
+                        if (op.getCategoryTransaction().equals(CategoryTransaction.CREDIT)) {
+                            nbreVente.increment();
+                        }
 
                     }
                     break;
@@ -5112,7 +4721,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += montantNonPara;
                             break;
                     }
@@ -5159,7 +4768,7 @@ public class CaisseServiceImpl implements CaisseService {
                         nbreVente = 0, montantMobilePayment = 0;
 
                 for (MvtTransaction mvt : venteVO) {
-                
+
                     montantTTC += mvt.getMontant();
                     montantNet += mvt.getMontantNet();
                     montantRemise += mvt.getMontantRemise();
@@ -5187,7 +4796,7 @@ public class CaisseServiceImpl implements CaisseService {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
-                            case DateConverter.MODE_WAVE:
+                        case DateConverter.MODE_WAVE:
                             montantMobilePayment += mvt.getMontantRegle();
                             break;
                     }

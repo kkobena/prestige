@@ -146,7 +146,7 @@ public class FlagService {
                 for (TPreenregistrement tPreenregistrement : list) {
                     Integer finalPrice;
                     Integer Net = tPreenregistrement.getIntPRICE();
-                    Integer newPrice = 0;
+                    Integer newPrice ;
                     int netPercent = (virtualAmount * 100) / Net;
                     if (netPercent >= 100) {
                         newPrice = (Net * 35) / 100;

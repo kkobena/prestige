@@ -122,11 +122,12 @@
             String P_INSTITUTION_ADRESSE = oTOfficine.getStrADRESSSEPOSTALE();
             String P_H_CLT_INFOS = "PERIODE DU " + date.formatterShort.format(OFacture.getDtDEBUTFACTURE()) + " AU " + date.formatterShort.format(OFacture.getDtFINFACTURE());
             String P_H_LOGO = jdom.scr_report_file_logo;
-           
+          
             parameters.put("P_H_LOGO", P_H_LOGO);
             parameters.put("P_H_INSTITUTION", P_H_INSTITUTION);
             parameters.put("P_INSTITUTION_ADRESSE", P_INSTITUTION_ADRESSE);
             parameters.put("P_PRINTED_BY", " ");
+
             parameters.put("P_AUTRE_DESC", oTOfficine.getStrFIRSTNAME() + " " + oTOfficine.getStrLASTNAME());
             parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS);
             parameters.put("P_LG_FACTURE_ID", OFacture.getLgFACTUREID());
@@ -161,7 +162,7 @@
                 }
 
                 P_INSTITUTION_ADRESSE += " -  " + finalphonestring;
-                
+               
             }
             if (oTOfficine.getStrCOMPTEBANCAIRE() != null) {
                 P_INSTITUTION_ADRESSE += " - Compte Bancaire: " + oTOfficine.getStrCOMPTEBANCAIRE();
@@ -198,8 +199,7 @@
                     Path = app.fill(parameters, controller.generateInvoices(OFacture.getLgFACTUREID()), Ojdom.scr_report_file + "rp_groupbycompany.jrxml", "rp_groupbycompany_" + date.FILENAME.format(new Date()) + ".pdf");
 
                     String _outputStreamFile = Ojdom.scr_report_pdf + Path;
-                    // inputPdfList.add(new FileInputStream(_outputStreamFile));
-                    //   String _str_file = "rp_facture_" + date.FILENAME.format(new Date()) + ".pdf";
+                
 
                     finalpath = _outputStreamFile;
 
@@ -213,7 +213,7 @@
 
                     String str_file = "rp_facture_" + date.FILENAME.format(new Date()) + ".pdf";
                     String outputStreamFile = Ojdom.scr_report_pdf + str_file;
-                    // inputPdfList.add(new FileInputStream(complementairePath));
+                    
                     finalpath = outputStreamFile;
 
                     break;
@@ -275,7 +275,7 @@
 
                         parameters.put("P_TOTAL_IN_LETTERS", conversion.GetNumberTowords(Double.parseDouble(P_ATT_AMOUNT + "")).toUpperCase() + " (" + conversion.AmountFormat(Integer.valueOf(P_ATT_AMOUNT + "")) + " FCFA)");
                         OreportManager.BuildReport(parameters, Ojconnexion);
-                        // inputPdfList.add(new FileInputStream(Ojdom.scr_report_pdf + "rp_facture_percentage_" + report_generate_file));
+                        
                         finalpath = Ojdom.scr_report_pdf + "rp_facture_percentage_" + report_generate_file;
                         tauxpath += finalpath + "@";
                     }
@@ -297,8 +297,7 @@
                         OreportManager.setPath_report_pdf(Ojdom.scr_report_pdf + "rp_facture_" + report_generate_file);
                         parameters.put("P_TOTAL_IN_LETTERS", conversion.GetNumberTowords(idCMP.getDouble("Montant")).toUpperCase() + " (" + conversion.AmountFormat(Double.valueOf(idCMP.getDouble("Montant")).intValue()) + " FCFA)");
                         OreportManager.BuildReport(parameters, Ojconnexion);
-                        //  inputPdfList.add(new FileInputStream(Ojdom.scr_report_pdf + "rp_facture_" + report_generate_file));
-
+                 
                         finalpath = Ojdom.scr_report_pdf + "rp_facture_" + report_generate_file;
                     }
                     break;
@@ -366,7 +365,6 @@
                     OreportManager.setPath_report_src(Ojdom.scr_report_file + scr_report_file + ".jrxml");
                     OreportManager.setPath_report_pdf(Ojdom.scr_report_pdf + "rp_facture_" + report_generate_file);
                     OreportManager.BuildReport(parameters, Ojconnexion);
-                    // inputPdfList.add(new FileInputStream(Ojdom.scr_report_pdf + "rp_facture_" + report_generate_file));
                     finalpath = Ojdom.scr_report_pdf + "rp_facture_" + report_generate_file;
                     break;
 

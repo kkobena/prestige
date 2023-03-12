@@ -42,14 +42,15 @@ import javax.ejb.Stateless;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import rest.report.ReportUtil;
+import rest.service.BalanceService;
 import rest.service.CaisseService;
-import rest.service.CommonService;
 import rest.service.DashBoardService;
 import rest.service.FamilleArticleService;
 import rest.service.FicheArticleService;
 import rest.service.ProduitService;
 import rest.service.SalesStatsService;
 import rest.service.TvaService;
+import rest.service.dto.BalanceParamsDTO;
 import toolkits.utils.jdom;
 import util.DateConverter;
 
@@ -64,8 +65,7 @@ public class Balance {
     CaisseService caisseService;
     @EJB
     ReportUtil reportUtil;
-    @EJB
-    CommonService commonService;
+
     @EJB
     SalesStatsService salesStatsService;
     @EJB
@@ -76,10 +76,12 @@ public class Balance {
     FamilleArticleService familleArticleService;
     @EJB
     FicheArticleService ficheArticleService;
-      @EJB
+    @EJB
     private TvaService tvaService;
+    @EJB
+    private BalanceService balanceService;
 
-    public String generatepdf(Params parasm,boolean  exludeSome) throws IOException {
+    public String generatepdf(Params parasm, boolean exludeSome) throws IOException {
         TUser tu = parasm.getOperateur();
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_balancevente_caissev2";
@@ -98,11 +100,20 @@ public class Balance {
         BalanceDTO vo = new BalanceDTO();
         BalanceDTO vno = new BalanceDTO();
         GenericDTO generic;
-        if (!parasm.isCheckug()) {
-            generic = caisseService.balanceVenteCaisseReport(dtSt, dtEn, true, empl.getLgEMPLACEMENTID(),exludeSome);
+        if (this.balanceService.useLastUpdateStats()) {
+            generic = this.balanceService.getBalanceVenteCaisseData(BalanceParamsDTO.builder()
+                    .dtEnd(parasm.getDtEnd())
+                    .dtStart(parasm.getDtStart())
+                    .emplacementId(parasm.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                    .build());
         } else {
-            generic = caisseService.balanceVenteCaisseReportVersion2(dtSt, dtEn, true, empl.getLgEMPLACEMENTID(),exludeSome);
+            if (!parasm.isCheckug()) {
+                generic = caisseService.balanceVenteCaisseReport(dtSt, dtEn, true, empl.getLgEMPLACEMENTID(), exludeSome);
+            } else {
+                generic = caisseService.balanceVenteCaisseReportVersion2(dtSt, dtEn, true, empl.getLgEMPLACEMENTID(), exludeSome);
+            }
         }
+
         List<VisualisationCaisseDTO> findAllMvtCaisse = caisseService.findAllMvtCaisse(dtSt, dtEn, true, empl.getLgEMPLACEMENTID());
         SummaryDTO summary = generic.getSummary();
         List<BalanceDTO> balances = generic.getBalances();
@@ -123,7 +134,7 @@ public class Balance {
             }
         }
 
-        P_H_CLT_INFOS = "BALANCE VENTE/CAISSE             DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        P_H_CLT_INFOS = "BALANCE VENTE/CAISSE   DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         parameters.put("P_EMPLACEMENT", empl.getLgEMPLACEMENTID());
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS);
         parameters.put("P_TYPE_VENTE", "%%");
@@ -247,6 +258,8 @@ public class Balance {
                     P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
                     P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                    list = typeRe.get(DateConverter.MODE_WAVE);
+                    P_SORTIECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     break;
 
                 case DateConverter.MVT_ENTREE_CAISSE:
@@ -266,7 +279,8 @@ public class Balance {
                     P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
                     P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
-
+                    list = typeRe.get(DateConverter.MODE_WAVE);
+                    P_ENTREECAISSE_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     break;
                 case DateConverter.MVT_REGLE_TP:
                     P_REGLEMENT_LABEL = val.get(0).getTypeMouvement();
@@ -284,6 +298,8 @@ public class Balance {
                     list = typeRe.get(DateConverter.MODE_MTN);
                     P_REGLEMENT_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     list = typeRe.get(DateConverter.TYPE_REGLEMENT_ORANGE);
+                    P_REGLEMENT_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+                    list = typeRe.get(DateConverter.MODE_WAVE);
                     P_REGLEMENT_MOBILE += (list == null) ? 0 : list.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
                     break;
                 case DateConverter.MVT_REGLE_DIFF:
@@ -326,34 +342,14 @@ public class Balance {
                         case DateConverter.MODE_MOOV:
                         case DateConverter.TYPE_REGLEMENT_ORANGE:
                         case DateConverter.MODE_MTN:
+                        case DateConverter.MODE_WAVE:
                             mobile.add(de.getMontantRegle());
                             break;
                         default:
                             break;
                     }
                 }
-                /* transactions.stream().forEach(de -> {
-                    String typ = de.getReglement().getLgTYPEREGLEMENTID();
-                    switch (typ) {
-                        case DateConverter.MODE_ESP:
-                            esp.add(de.getMontantRegle());
-                            break;
-                        case DateConverter.MODE_CB:
-                            cb.add(de.getMontantRegle());
-                            break;
-                        case DateConverter.MODE_CHEQUE:
-                            ch.add(de.getMontantRegle());
-                            break;
-                        case DateConverter.MODE_MOOV:
-                        case DateConverter.TYPE_REGLEMENT_ORANGE:
-                        case DateConverter.MODE_MTN:
-                            mobile.add(de.getMontantRegle());
-                            break;
-                        default:
-                            break;
-                    }
 
-                });*/
                 P_REGLEMENTDEPOT_ESPECE = esp.longValue();
                 P_REGLEMENTDEPOT_CHEQUES = ch.longValue();
                 P_REGLEMENTDEPOT_CB = cb.longValue();
@@ -489,7 +485,6 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        //  List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_gestioncaisses";
@@ -524,13 +519,23 @@ public class Balance {
 
         }
         parameters.put("P_H_CLT_INFOS", "TABLEAU DE BORD DU PHARMACIEN \nARRETE " + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+
         List<TableauBaordPhDTO> datas = new ArrayList<>();
         Map<TableauBaordSummary, List<TableauBaordPhDTO>> map;
-        if (monthly) {
-            map = caisseService.tableauBoardDatasMonthly(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+        if (!this.balanceService.useLastUpdateStats()) {
+            if (monthly) {
+                map = caisseService.tableauBoardDatasMonthly(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+            } else {
+                map = caisseService.tableauBoardDatas(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+            }
+
         } else {
-            map = caisseService.tableauBoardDatas(dtSt, dtEn, Boolean.TRUE, tu, 0, 0, 0, true);
+            map = this.balanceService.getTableauBoardData(BalanceParamsDTO.builder()
+                    .dtStart(parasm.getDtStart())
+                    .dtEnd(parasm.getDtEnd())
+                    .byMonth(monthly)
+                    .emplacementId(parasm.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                    .build());
         }
 
         if (!map.isEmpty()) {
@@ -555,8 +560,8 @@ public class Balance {
             });
         }
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "tableau_de_bord_" + report_generate_file, datas);
-        return "/data/reports/pdf/tableau_de_bord_" + report_generate_file;
+        return reportUtil.buildReport(parameters, scr_report_file, datas);
+
     }
 
     public String tvapdf(Params parasm) throws IOException {
@@ -578,31 +583,38 @@ public class Balance {
 
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".pdf";
+        
+        boolean isTvaVNO = StringUtils.isNotBlank(parasm.getRef()) && !"TOUT".equalsIgnoreCase(parasm.getRef());
         List<TvaDTO> datas;
-
-        if (!parasm.isCheckug()) {
-            if (StringUtils.isNotBlank(parasm.getRef()) && !parasm.getRef().equalsIgnoreCase("TOUT")) {
-                datas = salesStatsService.tvasRapportVNO2(parasm);
-            } else {
-                if(!tvaService.isExcludTiersPayantActive()){
-                   datas = salesStatsService.tvasRapport2(parasm);   
-                }else{
-                    datas=  tvaService.tva(dtSt, dtEn, false, null);
+        if (!this.balanceService.useLastUpdateStats()) {
+            if (!parasm.isCheckug()) {
+                if (isTvaVNO) {
+                    datas = salesStatsService.tvasRapportVNO2(parasm);
+                } else {
+                    if (!tvaService.isExcludTiersPayantActive()) {
+                        datas = salesStatsService.tvasRapport2(parasm);
+                    } else {
+                        datas = tvaService.tva(dtSt, dtEn, false, null);
+                    }
                 }
+            } else {
+                if (!tvaService.isExcludTiersPayantActive()) {
+                    datas = salesStatsService.tvaRapport2(parasm);
+                } else {
+                    datas = tvaService.tva(dtSt, dtEn, false, null);
+                }
+
             }
         } else {
-             if(!tvaService.isExcludTiersPayantActive()){
-                  datas = salesStatsService.tvaRapport2(parasm);  
-                }else{
-                    datas=  tvaService.tva(dtSt, dtEn, false, null);
-                }
-           
-
+            datas = this.balanceService.statistiqueTva(BalanceParamsDTO.builder().dtEnd(parasm.getDtEnd())
+                    .dtStart(parasm.getDtStart())
+                    .vnoOnly(isTvaVNO)
+                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         }
+
         datas.sort(Comparator.comparing(TvaDTO::getTaux));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "tvastat_" + report_generate_file, datas);
-        return "/data/reports/pdf/tvastat_" + report_generate_file;
+        return reportUtil.buildReport(parameters, scr_report_file, datas);
+
     }
 
     Comparator<RapportDTO> comparatorReport = Comparator.comparingInt(RapportDTO::getOder);
@@ -808,14 +820,14 @@ public class Balance {
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-      /*  List<TvaDTO> datas;
+        /*  List<TvaDTO> datas;
         if (!parasm.isCheckug()) {
             datas = salesStatsService.tvasRapportJournalier(parasm);
         } else {
             datas = salesStatsService.tvaRapportJournalier(parasm);
         }*/
         List<TvaDTO> datas = salesStatsService.tvasRapportJournalier2(parasm);
-       // datas.sort(comparatorTvaDTO);
+        // datas.sort(comparatorTvaDTO);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "tvastat_" + report_generate_file, datas);
         return "/data/reports/pdf/tvastat_" + report_generate_file;
     }
@@ -987,7 +999,7 @@ public class Balance {
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getUserId());
         parameters.put("P_H_CLT_INFOS", "LISTE DES AVOIRS");
         parameters.put("avoir_subreport", jdom.scr_report_file);
-      
+
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".pdf";
         List<VenteDTO> data = salesStatsService.listeVentesReport(params);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "avoirs_" + report_generate_file, data);
@@ -1105,17 +1117,18 @@ public class Balance {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_statfamilleart_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_statfamilleart_" + report_generate_file;
     }
-  public String suiviRemise(SalesStatsParams params) {
+
+    public String suiviRemise(SalesStatsParams params) {
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_suivi_remise";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getUserId());
         String periode = "PERIODE DU " + params.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        if (! params.getDtStart().isEqual(params.getDtEnd())) {
+        if (!params.getDtStart().isEqual(params.getDtEnd())) {
             periode += " AU " + params.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
-        parameters.put("P_H_CLT_INFOS", "SUIVI  REMISE "+periode);
+        parameters.put("P_H_CLT_INFOS", "SUIVI  REMISE " + periode);
         parameters.put("suivi_remise_subreport", jdom.scr_report_file);
-      
+
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".pdf";
         List<VenteDTO> data = salesStatsService.venteAvecRemise(params);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "suivi_remise_" + report_generate_file, data);
