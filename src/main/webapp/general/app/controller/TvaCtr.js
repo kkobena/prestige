@@ -103,7 +103,7 @@ Ext.define('testextjs.controller.TvaCtr', {
 
         };
         if (me.getCheckUg()) {
-            //  myProxy.url = '../api/v2/caisse/tvas';
+           
             myProxy.url = '../api/v3/tvas/criterion';
         } else {
             myProxy.url = '../api/v3/tvas';
