@@ -66,14 +66,7 @@ Author author = entityManager.find(Author.class, id, properties);
      */
     List<VisualisationCaisseDTO> listCaisses(CaisseParamsDTO caisseParams, boolean all);
 
-    List<VisualisationCaisseDTO> mouvementsCaisses(CaisseParamsDTO caisseParams, boolean all);
-
-    List<VisualisationCaisseDTO> visualisationsCaisses(CaisseParamsDTO caisseParams, boolean all);
-
-    List<VisualisationCaisseDTO> gestionsCaisses(CaisseParamsDTO caisseParams, boolean all);
-
-    List<VisualisationCaisseDTO> recaptilatifsCaisses(CaisseParamsDTO caisseParams, boolean all);
-
+   
     List<TCashTransaction> cashTransactions(CaisseParamsDTO caisseParams, boolean all);
 
     long countcashTransactions(CaisseParamsDTO caisseParams);

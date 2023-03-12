@@ -31,4 +31,6 @@ public class BalanceParamsDTO {
     private boolean flagedStatement = true;
     private boolean removeUg;
     private boolean vnoOnly ;
+    private boolean byDay;
+     private boolean byMonth ;
 }

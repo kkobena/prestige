@@ -2,8 +2,11 @@ package rest.service;
 
 import commonTasks.dto.BalanceDTO;
 import commonTasks.dto.GenericDTO;
+import commonTasks.dto.TableauBaordPhDTO;
+import commonTasks.dto.TableauBaordSummary;
 import commonTasks.dto.TvaDTO;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.Local;
 import org.json.JSONObject;
 import rest.service.dto.BalanceParamsDTO;
@@ -27,6 +30,11 @@ public interface BalanceService {
 
     List<TvaDTO> statistiqueTva(BalanceParamsDTO balanceParams);
 
-   
+    List<TvaDTO> statistiqueTvaGroupingByDay(BalanceParamsDTO balanceParams);
+
     boolean useLastUpdateStats();
+
+    Map<TableauBaordSummary, List<TableauBaordPhDTO>> getTableauBoardData(BalanceParamsDTO balanceParams);
+
+    JSONObject tableauBoardDatas(BalanceParamsDTO balanceParams);
 }

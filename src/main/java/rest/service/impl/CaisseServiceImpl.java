@@ -647,29 +647,6 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-    @Override
-    public List<VisualisationCaisseDTO> mouvementsCaisses(CaisseParamsDTO caisseParams, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-        // Tools | Templates.
-    }
-
-    @Override
-    public List<VisualisationCaisseDTO> visualisationsCaisses(CaisseParamsDTO caisseParams, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-        // Tools | Templates.
-    }
-
-    @Override
-    public List<VisualisationCaisseDTO> gestionsCaisses(CaisseParamsDTO caisseParams, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-        // Tools | Templates.
-    }
-
-    @Override
-    public List<VisualisationCaisseDTO> recaptilatifsCaisses(CaisseParamsDTO caisseParams, boolean all) {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-        // Tools | Templates.
-    }
 
     public EntityManager getEntityManager() {
         return em;
@@ -1261,7 +1238,6 @@ public class CaisseServiceImpl implements CaisseService {
                     }
                     break;
                     case ACHAT: {
-//                        montantAchat.add(op.getMontantNet());
                         montantAchat.add(op.getMontant());
                         try {
                             Groupefournisseur g = op.getGrossiste().getGroupeId();
