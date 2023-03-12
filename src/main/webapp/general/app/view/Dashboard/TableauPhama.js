@@ -83,11 +83,9 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
             ],
             pageSize: 99999,
             autoLoad: false,
-//            storeId: 'tableaudata',
             proxy: {
                 type: 'ajax',
                 url: '../api/v1/caisse/tableauboard',
-//              url: '../api/v1/caisse/tableauboard-old',
                 reader: {
                     type: 'json',
                     root: 'data',

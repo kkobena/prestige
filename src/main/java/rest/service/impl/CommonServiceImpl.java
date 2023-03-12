@@ -707,7 +707,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
         try {
             TParameters tp = getEntityManager().find(TParameters.class, "KEY_CHECK_UG");
             if (tp != null) {
-                return Integer.valueOf(tp.getStrVALUE().trim()) == 1;
+                return Integer.parseInt(tp.getStrVALUE().trim()) == 1;
             }
             return false;
         } catch (Exception e) {
@@ -721,7 +721,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
         try {
             TParameters tp = getEntityManager().find(TParameters.class, key);
             if (tp != null) {
-                return Integer.valueOf(tp.getStrVALUE().trim()) == 1;
+                return Integer.parseInt(tp.getStrVALUE().trim()) == 1;
             }
             return false;
         } catch (Exception e) {
@@ -733,9 +733,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
     @Override
     public boolean isNormalUse() {
         boolean takeInAccount = this.findParam(DateConverter.KEY_TAKE_INTO_ACCOUNT);
-        System.out.println("takeInAccount===>> " + takeInAccount);
         boolean keyParams = this.findParam(DateConverter.KEY_PARAMS);
-        System.out.println("keyParams===>> " + takeInAccount);
         return takeInAccount || keyParams;
     }
 
