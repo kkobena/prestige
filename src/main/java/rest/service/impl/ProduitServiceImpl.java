@@ -131,7 +131,8 @@ public class ProduitServiceImpl implements ProduitService {
                     root.get(TFamille_.intPRICE),
                     fa.get(TFamilleStock_.intNUMBERAVAILABLE),
                     root.get(TFamille_.intPAF),
-                    fa.get(TFamilleStock_.intNUMBER)
+                    fa.get(TFamilleStock_.intNUMBER),
+                    root.get(TFamille_.dtUPDATED)
             )).orderBy(cb.asc(root.get(TFamille_.strNAME))).distinct(true);
             cq.where(predicate);
             Query q = getEntityManager().createQuery(cq);
