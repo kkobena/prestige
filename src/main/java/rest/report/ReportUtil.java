@@ -372,23 +372,27 @@ public class ReportUtil {
         }
     }
 
-    public String getFileName(String reportName) {
-        return jdom.scr_report_pdf + reportName + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern(FILE_PATERN)) + ".pdf";
+    public String getReportDirectory(String fileName) {
+        return jdom.scr_report_pdf + fileName;
+    }
+
+    public String getFileNames(String reportName) {
+        return reportName + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern(FILE_PATERN)) + ".pdf";
     }
 
     public String buildReport(Map<String, Object> parameters, String reportName, List<?> datas) {
-        String fileName = this.getFileName(reportName);
+        String fileName = getFileNames(reportName);
         try {
             JasperReport jasperReport = getReport(reportName, jdom.scr_report_file);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
-            JasperExportManager.exportReportToPdfFile(jasperPrint, fileName);
+            JasperExportManager.exportReportToPdfFile(jasperPrint, this.getReportDirectory(fileName));
         } catch (JRException e) {
             LOG.log(Level.SEVERE, null, e);
-           
+
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        return fileName;
+        return "/data/reports/pdf/" + fileName;
     }
 }
