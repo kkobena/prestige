@@ -53,7 +53,7 @@ public class StatistiqueTvaRessource {
             params.setOperateur(tu);
             json = dataService.statistiqueTvaViewSomeCriteria(params);
         } else {
-            json = this.balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtEnd(dtEnd)
+            json = this.balanceService.statistiqueTvaView(BalanceParamsDTO.builder().dtEnd(dtEnd)
                     .dtStart(dtStart)
                     .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
                     .build());

@@ -135,7 +135,51 @@ public class BalanceServiceImpl implements BalanceService {
         List<BalanceDTO> balances = generic.getBalances();
         return FunctionUtils.returnData(balances, balances.size(), summary);
     }
+    @Override
+    public Map<TableauBaordSummary, List<TableauBaordPhDTO>> getTableauBoardData(BalanceParamsDTO balanceParams) {
 
+        List<TableauBaordPhDTO> bons = buildBonAchats(fetchBonLivraisons(balanceParams));
+        List<TableauBaordPhDTO> ventes = buildVente(fetchPreenregistrements(balanceParams));
+        bons.addAll(ventes);
+
+        if (!balanceParams.isByMonth()) {
+            Map<LocalDate, List<TableauBaordPhDTO>> dailyData = bons.stream().collect(Collectors.groupingBy(TableauBaordPhDTO::getMvtDate));
+            return buildTableauBoard(dailyData);
+        } else {
+
+            Map<YearMonth, List<TableauBaordPhDTO>> monthyData = bons.stream().collect(Collectors.groupingBy(TableauBaordPhDTO::getYearMonth));
+            return buildTableauBoard(monthyData);
+        }
+
+    }
+
+    @Override
+    public JSONObject tableauBoardDatas(BalanceParamsDTO balanceParams) throws JSONException {
+
+        JSONObject json = new JSONObject();
+        Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = getTableauBoardData(balanceParams);
+
+        if (map.isEmpty()) {
+            json.put("total", 0);
+            json.put("data", new JSONArray());
+
+        }
+        map.forEach((k, v) -> {
+            json.put("total", v.size());
+            json.put("data", new JSONArray(v));
+            json.put("metaData", new JSONObject(k));
+
+        });
+        return json;
+
+    }
+    @Override
+    public List<TvaDTO> statistiqueTva(BalanceParamsDTO balanceParams) {
+        if (balanceParams.isByDay()) {
+            return this.statistiqueTvaGroupingByDay(balanceParams);
+        }
+        return this.statistiqueTvaPeriodique(balanceParams);
+    }
     private BalanceDTO buildVenteBalance(List<BalanceVenteItemDTO> venteData, boolean checkUg) {
         long montantTTC = 0;
         long montantNet = 0;
@@ -536,13 +580,7 @@ public class BalanceServiceImpl implements BalanceService {
 
     }
 
-    @Override
-    public List<TvaDTO> statistiqueTva(BalanceParamsDTO balanceParams) {
-        if (balanceParams.isByDay()) {
-            return this.statistiqueTvaGroupingByDay(balanceParams);
-        }
-        return this.statistiqueTvaPeriodique(balanceParams);
-    }
+
 
     private List<TvaDTO> statistiqueTvaPeriodique(BalanceParamsDTO balanceParams) {
         List<TvaDTO> tvas = new ArrayList<>();
@@ -747,75 +785,7 @@ public class BalanceServiceImpl implements BalanceService {
         return list;
     }
 
-    private List<TableauBaordPhDTO> buildVente(List<Tuple> tuple) {
-        List<TableauBaordPhDTO> list = new ArrayList<>();
-        boolean checkUg = checkUg();
-        if (CollectionUtils.isNotEmpty(tuple)) {
-            for (Tuple t : tuple) {
-                TableauBaordPhDTO o = new TableauBaordPhDTO();
-                o.setVente(true);
-                o.setMvtDate(LocalDate.parse(t.get("mvtDate", String.class)));
-                int montantTTC = t.get("montantTTCDetatil", BigDecimal.class).intValue();
-                int montantNet = t.get("montantNet", BigDecimal.class).intValue();
-                int montantRemise = t.get("montantRemise", BigDecimal.class).intValue();
-                int montantCredit = t.get("montantCredit", BigDecimal.class).intValue();
-                int montantDiffere = t.get("montantDiffere", BigDecimal.class).intValue();
-                int montantEsp = t.get("montantRegle", BigDecimal.class).intValue();
-                int totalVente = t.get("totalVente", BigDecimal.class).intValue();
-                int montantUg = checkUg ? t.get("montantUg", BigDecimal.class).intValue() : 0;
-                o.setMontantTTC(montantTTC - montantUg);
-                o.setMontantNet(montantNet - montantUg);
-                o.setMontantRemise(montantRemise);
-                o.setMontantEsp(montantEsp - montantUg);
-                o.setMontantCredit(montantCredit + montantDiffere);
-                o.setNbreVente(totalVente);
 
-                list.add(o);
-            }
-
-            return list;
-        }
-        return list;
-    }
-
-    @Override
-    public Map<TableauBaordSummary, List<TableauBaordPhDTO>> getTableauBoardData(BalanceParamsDTO balanceParams) {
-
-        List<TableauBaordPhDTO> bons = buildBonAchats(fetchBonLivraisons(balanceParams));
-        List<TableauBaordPhDTO> ventes = buildVente(fetchPreenregistrements(balanceParams));
-        bons.addAll(ventes);
-
-        if (!balanceParams.isByMonth()) {
-            Map<LocalDate, List<TableauBaordPhDTO>> dailyData = bons.stream().collect(Collectors.groupingBy(TableauBaordPhDTO::getMvtDate));
-            return buildTableauBoard(dailyData);
-        } else {
-
-            Map<YearMonth, List<TableauBaordPhDTO>> monthyData = bons.stream().collect(Collectors.groupingBy(TableauBaordPhDTO::getYearMonth));
-            return buildTableauBoard(monthyData);
-        }
-
-    }
-
-    @Override
-    public JSONObject tableauBoardDatas(BalanceParamsDTO balanceParams) throws JSONException {
-
-        JSONObject json = new JSONObject();
-        Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = getTableauBoardData(balanceParams);
-
-        if (map.isEmpty()) {
-            json.put("total", 0);
-            json.put("data", new JSONArray());
-
-        }
-        map.forEach((k, v) -> {
-            json.put("total", v.size());
-            json.put("data", new JSONArray(v));
-            json.put("metaData", new JSONObject(k));
-
-        });
-        return json;
-
-    }
 
     private TableauBaordSummary buildBaordSummary(List<TableauBaordPhDTO> datas) {
         TableauBaordSummary summary = new TableauBaordSummary();
@@ -895,4 +865,35 @@ public class BalanceServiceImpl implements BalanceService {
         map.put(buildBaordSummary(tableauBaords), tableauBaords);
         return map;
     }
+        private List<TableauBaordPhDTO> buildVente(List<Tuple> tuple) {
+        List<TableauBaordPhDTO> list = new ArrayList<>();
+        boolean checkUg = checkUg();
+        if (CollectionUtils.isNotEmpty(tuple)) {
+            for (Tuple t : tuple) {
+                TableauBaordPhDTO o = new TableauBaordPhDTO();
+                o.setVente(true);
+                o.setMvtDate(LocalDate.parse(t.get("mvtDate", String.class)));
+                int montantTTC = t.get("montantTTCDetatil", BigDecimal.class).intValue();
+                int montantNet = t.get("montantNet", BigDecimal.class).intValue();
+                int montantRemise = t.get("montantRemise", BigDecimal.class).intValue();
+                int montantCredit = t.get("montantCredit", BigDecimal.class).intValue();
+                int montantDiffere = t.get("montantDiffere", BigDecimal.class).intValue();
+                int montantEsp = t.get("montantRegle", BigDecimal.class).intValue();
+                int totalVente = t.get("totalVente", BigDecimal.class).intValue();
+                int montantUg = checkUg ? t.get("montantUg", BigDecimal.class).intValue() : 0;
+                o.setMontantTTC(montantTTC - montantUg);
+                o.setMontantNet(montantNet - montantUg);
+                o.setMontantRemise(montantRemise);
+                o.setMontantEsp(montantEsp - montantUg);
+                o.setMontantCredit(montantCredit + montantDiffere);
+                o.setNbreVente(totalVente);
+
+                list.add(o);
+            }
+
+            return list;
+        }
+        return list;
+    }
+
 }

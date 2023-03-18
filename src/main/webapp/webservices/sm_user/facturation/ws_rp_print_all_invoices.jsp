@@ -122,11 +122,12 @@
             String P_INSTITUTION_ADRESSE = oTOfficine.getStrADRESSSEPOSTALE();
             String P_H_CLT_INFOS = "PERIODE DU " + date.formatterShort.format(OFacture.getDtDEBUTFACTURE()) + " AU " + date.formatterShort.format(OFacture.getDtFINFACTURE());
             String P_H_LOGO = jdom.scr_report_file_logo;
-           
+          
             parameters.put("P_H_LOGO", P_H_LOGO);
             parameters.put("P_H_INSTITUTION", P_H_INSTITUTION);
             parameters.put("P_INSTITUTION_ADRESSE", P_INSTITUTION_ADRESSE);
             parameters.put("P_PRINTED_BY", " ");
+
             parameters.put("P_AUTRE_DESC", oTOfficine.getStrFIRSTNAME() + " " + oTOfficine.getStrLASTNAME());
             parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS);
             parameters.put("P_LG_FACTURE_ID", OFacture.getLgFACTUREID());
@@ -161,7 +162,7 @@
                 }
 
                 P_INSTITUTION_ADRESSE += " -  " + finalphonestring;
-                
+               
             }
             if (oTOfficine.getStrCOMPTEBANCAIRE() != null) {
                 P_INSTITUTION_ADRESSE += " - Compte Bancaire: " + oTOfficine.getStrCOMPTEBANCAIRE();
