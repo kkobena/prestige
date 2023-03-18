@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.PharmaMlService;
-import shedule.Reapprovisionnement;
+
 import toolkits.parameters.commonparameter;
 import util.Constant;
 
@@ -39,8 +39,7 @@ public class PharmaMlResource {
     private HttpServletRequest servletRequest;
     @EJB
     PharmaMlService pharmaMlService;
-    @EJB
-    Reapprovisionnement reapprovisionnement;
+   
 
     @PUT
     @Path("{id}")

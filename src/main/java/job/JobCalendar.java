@@ -123,7 +123,6 @@ public class JobCalendar {
             TCalendrier o = tq.getSingleResult();
             return o != null ? Optional.of(o) : Optional.empty();
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
             return Optional.empty();
         }
     }
@@ -155,7 +154,7 @@ public class JobCalendar {
             q.where(cb.equal(root.get(TFactureDetail_.lgFACTUREID), facture));
             getEm().createQuery(q).executeUpdate();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+          
         }
     }
 

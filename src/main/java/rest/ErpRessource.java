@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response;
 import rest.service.ErpService;
 import rest.service.RetourFournisseurService;
 import rest.service.impl.DataExportService;
-import shedule.Reapprovisionnement;
+
 
 /**
  *
@@ -34,8 +34,7 @@ public class ErpRessource {
     private RetourFournisseurService retourFournisseurService;
     @EJB
     private DataExportService dataExportService;
-    @EJB
-    Reapprovisionnement r;
+   
     @Resource(name = "concurrent/__defaultManagedExecutorService")
     ManagedExecutorService mes;
 
@@ -134,15 +133,7 @@ public class ErpRessource {
         return Response.ok().entity(dataExportService.getMaxAndMinDate()).build();
     }
 
-    @GET
-    @Path("reap")
-    public Response testReap() {
-        mes.submit(() -> {
-            r.execute();
-        });
-
-        return Response.ok().build();
-    }
+  
 
     @GET
     @Path("ws/groupe-tierspayants")
