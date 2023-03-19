@@ -251,7 +251,7 @@ public class SalesServiceImpl implements SalesService {
             TTypeMvtCaisse tTypeMvtCaisse, Integer montantCredit,
             Integer montantPaye, Integer marge, boolean diff, String typeReglement) throws Exception {
         Integer montantClient = tp.getIntCUSTPART() - tp.getIntPRICEREMISE();
-        MvtTransaction _new = new MvtTransaction();
+        MvtTransaction transactionNew = new MvtTransaction();
         Integer montantPaid = 0, montantRestant = montantClient;
         if (typeReglement.equals(DateConverter.MODE_ESP) || typeReglement.equals(DateConverter.REGL_DIFF)) {
             if (montantVerse > 0 && montantClient > 0) {
@@ -267,41 +267,41 @@ public class SalesServiceImpl implements SalesService {
             montantPaid = montantPaye;
 
         }
-        _new.setUuid(UUID.randomUUID().toString());
-        _new.setUser(ooTUser);
-        _new.setCreatedAt(DateConverter.convertDateToLocalDateTime(tp.getDtUPDATED()));
-        _new.setMvtDate(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()));
-        _new.setPkey(tp.getLgPREENREGISTREMENTID());
-        _new.setAvoidAmount(tp.getIntACCOUNT());
-        _new.setMontant(montant);
-        _new.setMagasin(ooTUser.getLgEMPLACEMENTID());
-        _new.setCaisse(ooTUser);
-        _new.setReference(tp.getStrREF());
-        _new.setMontantCredit(montantCredit);
-        _new.setMontantVerse(montantVerse);
-        _new.setMontantRegle(montantPaid);//09032020
-        _new.setMontantPaye(montantPaye);
-        _new.setMontantNet(montantNet);
-        _new.settTypeMvtCaisse(tTypeMvtCaisse);
-        _new.setReglement(reglement);
-        _new.setMontantRestant(0);
-        _new.setPreenregistrement(tp);
+        transactionNew.setUuid(UUID.randomUUID().toString());
+        transactionNew.setUser(ooTUser);
+        transactionNew.setCreatedAt(DateConverter.convertDateToLocalDateTime(tp.getDtUPDATED()));
+        transactionNew.setMvtDate(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()));
+        transactionNew.setPkey(tp.getLgPREENREGISTREMENTID());
+        transactionNew.setAvoidAmount(tp.getIntACCOUNT());
+        transactionNew.setMontant(montant);
+        transactionNew.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        transactionNew.setCaisse(ooTUser);
+        transactionNew.setReference(tp.getStrREF());
+        transactionNew.setMontantCredit(montantCredit);
+        transactionNew.setMontantVerse(montantVerse);
+        transactionNew.setMontantRegle(montantPaid);//09032020
+        transactionNew.setMontantPaye(montantPaye);
+        transactionNew.setMontantNet(montantNet);
+        transactionNew.settTypeMvtCaisse(tTypeMvtCaisse);
+        transactionNew.setReglement(reglement);
+        transactionNew.setMontantRestant(0);
+        transactionNew.setPreenregistrement(tp);
         if (diff && typeReglement.equals(DateConverter.MODE_ESP)) {
-            _new.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
+            transactionNew.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
         }
 
-        _new.setMontantRemise(tp.getIntPRICEREMISE());
-        _new.setMontantTva(tp.getMontantTva());
-        _new.setMarge(marge);
-        _new.setCategoryTransaction(CategoryTransaction.CREDIT);
-        _new.setTypeTransaction(TypeTransaction.VENTE_CREDIT);
-        _new.setChecked(checked);
+        transactionNew.setMontantRemise(tp.getIntPRICEREMISE());
+        transactionNew.setMontantTva(tp.getMontantTva());
+        transactionNew.setMarge(marge);
+        transactionNew.setCategoryTransaction(CategoryTransaction.CREDIT);
+        transactionNew.setTypeTransaction(TypeTransaction.VENTE_CREDIT);
+        transactionNew.setChecked(checked);
         if (tp.getClient() != null) {
-            _new.setOrganisme(tp.getClient().getLgCLIENTID());
+            transactionNew.setOrganisme(tp.getClient().getLgCLIENTID());
         }
-        _new.setMontantAcc(tp.getIntACCOUNT());
-        getEm().persist(_new);
-        return _new;
+        transactionNew.setMontantAcc(tp.getIntACCOUNT());
+        getEm().persist(transactionNew);
+        return transactionNew;
     }
 
     public MvtTransaction addTransactionDepot(TUser ooTUser, TPreenregistrement tp,
@@ -342,39 +342,39 @@ public class SalesServiceImpl implements SalesService {
 
     public void addTransactionCopy(TUser ooTUser, TUser caisse,
             String pkey, MvtTransaction old, EntityManager emg, String ref, LocalDateTime localDateTime, LocalDate localDate) {
-        MvtTransaction _new = new MvtTransaction();
-        _new.setUuid(UUID.randomUUID().toString());
-        _new.setUser(ooTUser);
-        _new.setPreenregistrement(old.getPreenregistrement());
-        _new.setCreatedAt(localDateTime);
-        _new.setPkey(pkey);
-        _new.setMvtDate(localDate);
-        _new.setAvoidAmount((-1) * old.getAvoidAmount());
-        _new.setMontant((-1) * old.getMontant());
-        _new.setMagasin(ooTUser.getLgEMPLACEMENTID());
-        _new.setCaisse(caisse);
-        _new.setReference(ref);
-        _new.setMontantCredit((-1) * old.getMontantCredit());
-        _new.setMontantVerse((-1) * old.getMontantVerse());
-        _new.setMontantRegle((-1) * old.getMontantRegle());
-        _new.setMontantPaye((-1) * old.getMontantPaye());
-        _new.setMontantNet((-1) * old.getMontantNet());
-        _new.settTypeMvtCaisse(old.gettTypeMvtCaisse());
-        _new.setReglement(old.getReglement());
-        _new.setMontantRestant((-1) * old.getMontantRestant());
-        _new.setMontantRemise((-1) * old.getMontantRemise());
-        _new.setMontantTva((-1) * old.getMontantTva());
-        _new.setMarge((-1) * old.getMarge());
-        _new.setCategoryTransaction(CategoryTransaction.DEBIT);
-        _new.setTypeTransaction(old.getTypeTransaction());
-        _new.setOrganisme(old.getOrganisme());
-        _new.setMarge((-1) * old.getMarge());
-        _new.setMontantttcug((-1) * old.getMontantttcug());
-        _new.setMontantnetug((-1) * old.getMontantnetug());
-        _new.setMargeug((-1) * old.getMargeug());
-        _new.setMontantTvaUg((-1) * old.getMontantTvaUg());
-        _new.setChecked(false);
-        emg.persist(_new);
+        MvtTransaction newTransaction = new MvtTransaction();
+        newTransaction.setUuid(UUID.randomUUID().toString());
+        newTransaction.setUser(ooTUser);
+        newTransaction.setPreenregistrement(old.getPreenregistrement());
+        newTransaction.setCreatedAt(localDateTime);
+        newTransaction.setPkey(pkey);
+        newTransaction.setMvtDate(localDate);
+        newTransaction.setAvoidAmount((-1) * old.getAvoidAmount());
+        newTransaction.setMontant((-1) * old.getMontant());
+        newTransaction.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        newTransaction.setCaisse(caisse);
+        newTransaction.setReference(ref);
+        newTransaction.setMontantCredit((-1) * old.getMontantCredit());
+        newTransaction.setMontantVerse((-1) * old.getMontantVerse());
+        newTransaction.setMontantRegle((-1) * old.getMontantRegle());
+        newTransaction.setMontantPaye((-1) * old.getMontantPaye());
+        newTransaction.setMontantNet((-1) * old.getMontantNet());
+        newTransaction.settTypeMvtCaisse(old.gettTypeMvtCaisse());
+        newTransaction.setReglement(old.getReglement());
+        newTransaction.setMontantRestant((-1) * old.getMontantRestant());
+        newTransaction.setMontantRemise((-1) * old.getMontantRemise());
+        newTransaction.setMontantTva((-1) * old.getMontantTva());
+        newTransaction.setMarge((-1) * old.getMarge());
+        newTransaction.setCategoryTransaction(CategoryTransaction.DEBIT);
+        newTransaction.setTypeTransaction(old.getTypeTransaction());
+        newTransaction.setOrganisme(old.getOrganisme());
+        newTransaction.setMarge((-1) * old.getMarge());
+        newTransaction.setMontantttcug((-1) * old.getMontantttcug());
+        newTransaction.setMontantnetug((-1) * old.getMontantnetug());
+        newTransaction.setMargeug((-1) * old.getMargeug());
+        newTransaction.setMontantTvaUg((-1) * old.getMontantTvaUg());
+        newTransaction.setChecked(false);
+        emg.persist(newTransaction);
     }
 
     @Override
@@ -470,37 +470,37 @@ public class SalesServiceImpl implements SalesService {
             emg.merge(cashTransaction);
             addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), _newP.getLgPREENREGISTREMENTID(), cashTransaction, emg, _newP.getStrREF(), LocalDateTime.now(), LocalDate.now());
         } else {
-            MvtTransaction _new = new MvtTransaction();
-            _new.setUuid(UUID.randomUUID().toString());
-            _new.setUser(ooTUser);
-            _new.setCreatedAt(LocalDateTime.now());
-            _new.setPkey(_newP.getLgPREENREGISTREMENTID());
-            _new.setPreenregistrement(_newP);
-            _new.setMvtDate(LocalDate.now());
-            _new.setAvoidAmount((-1) * cashTransaction.getAvoidAmount());
-            _new.setMontant((-1) * cashTransaction.getMontant());
-            _new.setMontantNet((-1) * cashTransaction.getMontantNet());
-            _new.setMontantRegle((-1) * cashTransaction.getMontantRegle());
-            _new.setMontantRestant((-1) * cashTransaction.getMontantRestant());
-            _new.setMontantRemise((-1) * cashTransaction.getMontantRemise());
-            _new.setMontantCredit((-1) * cashTransaction.getMontantCredit());
-            _new.setMontantPaye((-1) * cashTransaction.getMontantPaye());
-            _new.setCategoryTransaction(CategoryTransaction.DEBIT);
-            _new.setMontantTva((-1) * cashTransaction.getMontantTva());
-            _new.setMarge((-1) * cashTransaction.getMarge());
-            _new.setMontantttcug((-1) * cashTransaction.getMontantttcug());
-            _new.setMontantnetug((-1) * cashTransaction.getMontantnetug());
-            _new.setMargeug((-1) * cashTransaction.getMargeug());
-            _new.setMontantTvaUg((-1) * cashTransaction.getMontantTvaUg());
-            _new.setChecked(Boolean.TRUE);
-            _new.setReference(_newP.getStrREF());
-            _new.setOrganisme(cashTransaction.getOrganisme());
-            _new.settTypeMvtCaisse(cashTransaction.gettTypeMvtCaisse());
-            _new.setReglement(cashTransaction.getReglement());
-            _new.setTypeTransaction(cashTransaction.getTypeTransaction());
-            _new.setCaisse(cashTransaction.getCaisse());
-            _new.setMagasin(cashTransaction.getMagasin());
-            emg.persist(_new);
+            MvtTransaction newTransaction = new MvtTransaction();
+            newTransaction.setUuid(UUID.randomUUID().toString());
+            newTransaction.setUser(ooTUser);
+            newTransaction.setCreatedAt(LocalDateTime.now());
+            newTransaction.setPkey(_newP.getLgPREENREGISTREMENTID());
+            newTransaction.setPreenregistrement(_newP);
+            newTransaction.setMvtDate(LocalDate.now());
+            newTransaction.setAvoidAmount((-1) * cashTransaction.getAvoidAmount());
+            newTransaction.setMontant((-1) * cashTransaction.getMontant());
+            newTransaction.setMontantNet((-1) * cashTransaction.getMontantNet());
+            newTransaction.setMontantRegle((-1) * cashTransaction.getMontantRegle());
+            newTransaction.setMontantRestant((-1) * cashTransaction.getMontantRestant());
+            newTransaction.setMontantRemise((-1) * cashTransaction.getMontantRemise());
+            newTransaction.setMontantCredit((-1) * cashTransaction.getMontantCredit());
+            newTransaction.setMontantPaye((-1) * cashTransaction.getMontantPaye());
+            newTransaction.setCategoryTransaction(CategoryTransaction.DEBIT);
+            newTransaction.setMontantTva((-1) * cashTransaction.getMontantTva());
+            newTransaction.setMarge((-1) * cashTransaction.getMarge());
+            newTransaction.setMontantttcug((-1) * cashTransaction.getMontantttcug());
+            newTransaction.setMontantnetug((-1) * cashTransaction.getMontantnetug());
+            newTransaction.setMargeug((-1) * cashTransaction.getMargeug());
+            newTransaction.setMontantTvaUg((-1) * cashTransaction.getMontantTvaUg());
+            newTransaction.setChecked(Boolean.TRUE);
+            newTransaction.setReference(_newP.getStrREF());
+            newTransaction.setOrganisme(cashTransaction.getOrganisme());
+            newTransaction.settTypeMvtCaisse(cashTransaction.gettTypeMvtCaisse());
+            newTransaction.setReglement(cashTransaction.getReglement());
+            newTransaction.setTypeTransaction(cashTransaction.getTypeTransaction());
+            newTransaction.setCaisse(cashTransaction.getCaisse());
+            newTransaction.setMagasin(cashTransaction.getMagasin());
+            emg.persist(newTransaction);
         }
 
     }
@@ -2900,7 +2900,9 @@ public class SalesServiceImpl implements SalesService {
         List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, getEm());
         lstTPreenregistrementDetail.forEach(x -> {
             totalAmount.add(x.getIntPRICE());
-            montantCMU.add(x.getCmuPrice());
+            if(Objects.nonNull(x.getCmuPrice())){
+                 montantCMU.add(x.getCmuPrice());
+            }
             montantTva.add(x.getMontantTva());
             TFamille famille = x.getLgFAMILLEID();
             Integer remise = 0;
@@ -4229,35 +4231,35 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public void cloneTransaction(MvtTransaction old, TPreenregistrement p) {
-        MvtTransaction _new = new MvtTransaction();
-        _new.setUuid(UUID.randomUUID().toString());
-        _new.setUser(p.getLgUSERID());
-        _new.setCreatedAt(DateConverter.convertDateToLocalDateTime(p.getDtUPDATED()));
-        _new.setPkey(p.getLgPREENREGISTREMENTID());
-        _new.setPreenregistrement(p);
-        _new.setMvtDate(DateConverter.convertDateToLocalDate(p.getDtUPDATED()));
-        _new.setAvoidAmount(old.getAvoidAmount());
-        _new.setMontant(old.getMontant());
-        _new.setMagasin(old.getMagasin());
-        _new.setCaisse(old.getCaisse());
-        _new.setReference(p.getStrREF());
-        _new.setMontantCredit(old.getMontantCredit());
-        _new.setMontantVerse(old.getMontantVerse());
-        _new.setMontantRegle(old.getMontantRegle());//09032020
-        _new.setMontantPaye(old.getMontantPaye());
-        _new.setMontantNet(old.getMontantNet());
-        _new.settTypeMvtCaisse(old.gettTypeMvtCaisse());
-        _new.setReglement(old.getReglement());
-        _new.setMontantRestant(old.getMontantRestant());
-        _new.setMontantRemise(old.getMontantRemise());
-        _new.setMontantTva(old.getMontantTva());
-        _new.setMarge(old.getMarge());
-        _new.setCategoryTransaction(old.getCategoryTransaction());
-        _new.setTypeTransaction(old.getTypeTransaction());
-        _new.setChecked(old.getChecked());
-        _new.setOrganisme(p.getClient().getLgCLIENTID());
-        _new.setMontantAcc(old.getMontantAcc());
-        getEm().persist(_new);
+        MvtTransaction transaction = new MvtTransaction();
+        transaction.setUuid(UUID.randomUUID().toString());
+        transaction.setUser(p.getLgUSERID());
+        transaction.setCreatedAt(DateConverter.convertDateToLocalDateTime(p.getDtUPDATED()));
+        transaction.setPkey(p.getLgPREENREGISTREMENTID());
+        transaction.setPreenregistrement(p);
+        transaction.setMvtDate(DateConverter.convertDateToLocalDate(p.getDtUPDATED()));
+        transaction.setAvoidAmount(old.getAvoidAmount());
+        transaction.setMontant(old.getMontant());
+        transaction.setMagasin(old.getMagasin());
+        transaction.setCaisse(old.getCaisse());
+        transaction.setReference(p.getStrREF());
+        transaction.setMontantCredit(old.getMontantCredit());
+        transaction.setMontantVerse(old.getMontantVerse());
+        transaction.setMontantRegle(old.getMontantRegle());//09032020
+        transaction.setMontantPaye(old.getMontantPaye());
+        transaction.setMontantNet(old.getMontantNet());
+        transaction.settTypeMvtCaisse(old.gettTypeMvtCaisse());
+        transaction.setReglement(old.getReglement());
+        transaction.setMontantRestant(old.getMontantRestant());
+        transaction.setMontantRemise(old.getMontantRemise());
+        transaction.setMontantTva(old.getMontantTva());
+        transaction.setMarge(old.getMarge());
+        transaction.setCategoryTransaction(old.getCategoryTransaction());
+        transaction.setTypeTransaction(old.getTypeTransaction());
+        transaction.setChecked(old.getChecked());
+        transaction.setOrganisme(p.getClient().getLgCLIENTID());
+        transaction.setMontantAcc(old.getMontantAcc());
+        getEm().persist(transaction);
     }
 
     public JSONObject calculVoNetAvecPlafondVente(TPreenregistrement OTPreenregistrement, int montant, int montantVariable, int taux, List<TPreenregistrementDetail> list) {
@@ -4330,25 +4332,25 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    private TPreenregistrement updateVente(SalesParams salesParams, TPreenregistrement _new) {
-        _new.setLgUSERID(salesParams.getUserId());
+    private TPreenregistrement updateVente(SalesParams salesParams, TPreenregistrement preen) {
+        preen.setLgUSERID(salesParams.getUserId());
         TClient client = findClient(salesParams.getClientId(), getEm());
-        _new.setClient(client);
-        _new.setStrFIRSTNAMECUSTOMER(client.getStrFIRSTNAME());
-        _new.setStrLASTNAMECUSTOMER(client.getStrLASTNAME());
-        _new.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
-        _new.setStrPHONECUSTOME(client.getStrADRESSE());
-        _new.setStrINFOSCLT("");
+        preen.setClient(client);
+        preen.setStrFIRSTNAMECUSTOMER(client.getStrFIRSTNAME());
+        preen.setStrLASTNAMECUSTOMER(client.getStrLASTNAME());
+        preen.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
+        preen.setStrPHONECUSTOME(client.getStrADRESSE());
+        preen.setStrINFOSCLT("");
         findAyantDroit(salesParams.getAyantDroitId(), getEm()).ifPresent(a -> {
-            _new.setAyantDroit(a);
-            _new.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
-            _new.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
-            _new.setStrNUMEROSECURITESOCIAL(a.getStrNUMEROSECURITESOCIAL());
+            preen.setAyantDroit(a);
+            preen.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
+            preen.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
+            preen.setStrNUMEROSECURITESOCIAL(a.getStrNUMEROSECURITESOCIAL());
         });
-//        transactionNew.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
-        _new.setCompletionDate(new Date());
-        getEm().merge(_new);
-        return _new;
+
+        preen.setCompletionDate(new Date());
+        getEm().merge(preen);
+        return preen;
     }
 
     @Override
@@ -4362,24 +4364,24 @@ public class SalesServiceImpl implements SalesService {
             Optional<TRecettes> oprectte = findRecette(tp.getLgPREENREGISTREMENTID(), emg);
             List<TPreenregistrementDetail> preenregistrementDetails = getTPreenregistrementDetail(tp, emg);
             String idVente = tp.getLgPREENREGISTREMENTID();
-            TPreenregistrement _new = cloneVente(ooTUser, tp);
+            TPreenregistrement clonedPreen = cloneVente(ooTUser, tp);
             LongAdder montantRestant = new LongAdder();
             findOptionalCmt(tp, emg).ifPresent(cp -> {
                 montantRestant.add(cp.getIntPRICERESTE());
                 cp.setIntPRICE(0);
                 cp.setIntPRICERESTE(0);
                 cp.setStrSTATUT(commonparameter.statut_delete);
-                cp.setDtUPDATED(_new.getDtUPDATED());
+                cp.setDtUPDATED(clonedPreen.getDtUPDATED());
                 emg.merge(cp);
             });
             if (tp.getStrTYPEVENTE().equals("VO")) {
-                clonePreenregistrementTp(_new, idVente, ooTUser);
+                clonePreenregistrementTp(clonedPreen, idVente, ooTUser);
                 if (!cashTransactions.isEmpty()) {
                     for (TCashTransaction cashTransaction : cashTransactions) {
                         if (cashTransaction.getIntAMOUNT() > 0) {
-                            addTransaction(ooTUser, cashTransaction, _new, tp, !sameDate ? sameDate : checked);
+                            addTransaction(ooTUser, cashTransaction, clonedPreen, tp, !sameDate ? sameDate : checked);
                         } else {
-                            addTransactionCredit(ooTUser, cashTransaction, _new, tp, !sameDate ? sameDate : checked);
+                            addTransactionCredit(ooTUser, cashTransaction, clonedPreen, tp, !sameDate ? sameDate : checked);
                         }
                     }
 
@@ -4388,17 +4390,17 @@ public class SalesServiceImpl implements SalesService {
             } else {
                 Optional<TCashTransaction> cashTransactio = cashTransactions.stream().findFirst();
                 cashTransactio.ifPresent(cs -> {
-                    addTransaction(ooTUser, cs, _new, tp, !sameDate ? sameDate : checked);
+                    addTransaction(ooTUser, cs, clonedPreen, tp, !sameDate ? sameDate : checked);
 
                 });
             }
 
             transaction(idVente, emg).ifPresent(tr -> {
-                cloneMvtTransaction(ooTUser, tr, _new, tp);
+                cloneMvtTransaction(ooTUser, tr, clonedPreen, tp);
             });
 
             oprectte.ifPresent(re -> {
-                copyRecette(_new, re, ooTUser, emg);
+                copyRecette(clonedPreen, re, ooTUser, emg);
             });
 
             findClientTiersPayents(tp.getLgPREENREGISTREMENTID(), emg).forEach(action -> {
@@ -4408,7 +4410,7 @@ public class SalesServiceImpl implements SalesService {
             TEmplacement emplacement = ooTUser.getLgEMPLACEMENTID();
             final Typemvtproduit typemvtproduit = checked ? findById(DateConverter.ANNULATION_DE_VENTE) : findById(DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
             preenregistrementDetails.forEach((e) -> {
-                TPreenregistrementDetail _newItem = createItemCopy(ooTUser, e, _new, emg);
+                TPreenregistrementDetail _newItem = createItemCopy(ooTUser, e, clonedPreen, emg);
                 TFamille OTFamille = e.getLgFAMILLEID();
                 updateNbreVenteApresAnnulation(OTFamille, ooTUser, _newItem.getIntQUANTITY(), emg);
                 TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), emplacement, emg);
@@ -4425,9 +4427,9 @@ public class SalesServiceImpl implements SalesService {
 
             });
             String desc = "Modification de la vente " + tp.getStrREF() + " montant : " + tp.getIntPRICE() + " par " + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
-            logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.MODIFICATION_INFO_VENTE, tp, _new.getDtUPDATED());
+            logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.MODIFICATION_INFO_VENTE, tp, clonedPreen.getDtUPDATED());
 
-            sendMessageClientJmsQueue(_new.getLgPREENREGISTREMENTID());
+            sendMessageClientJmsQueue(clonedPreen.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
             e.printStackTrace(System.err);
 
@@ -4700,7 +4702,10 @@ public class SalesServiceImpl implements SalesService {
         int montantCMU = 0;
         for (TPreenregistrementDetail x : list) {
             montant += x.getIntPRICE();
-            montantCMU += x.getCmuPrice();
+            if(Objects.nonNull(x.getCmuPrice())){
+               montantCMU += x.getCmuPrice();   
+            }
+          
             TFamille famille = x.getLgFAMILLEID();
             if (famille.getBoolACCOUNT()) {
                 int marge = ((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF()));
@@ -5052,18 +5057,18 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    private TPreenregistrement updateVenteCarnet(SalesParams salesParams, TPreenregistrement _new) throws Exception {
-        _new.setLgUSERID(salesParams.getUserId());
+    private TPreenregistrement updateVenteCarnet(SalesParams salesParams, TPreenregistrement prenn) throws Exception {
+        prenn.setLgUSERID(salesParams.getUserId());
         TClient client = findClient(salesParams.getClientId(), getEm());
-        _new.setClient(client);
-        _new.setStrFIRSTNAMECUSTOMER(client.getStrFIRSTNAME());
-        _new.setStrLASTNAMECUSTOMER(client.getStrLASTNAME());
-        _new.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
-        _new.setStrPHONECUSTOME(client.getStrADRESSE());
-        _new.setStrINFOSCLT("");
-        _new.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
-        getEm().merge(_new);
-        return _new;
+        prenn.setClient(client);
+        prenn.setStrFIRSTNAMECUSTOMER(client.getStrFIRSTNAME());
+        prenn.setStrLASTNAMECUSTOMER(client.getStrLASTNAME());
+        prenn.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
+        prenn.setStrPHONECUSTOME(client.getStrADRESSE());
+        prenn.setStrINFOSCLT("");
+        prenn.setStrREFBON(salesParams.getTierspayants().get(0).getNumBon());
+        getEm().merge(prenn);
+        return prenn;
     }
 
     @Override

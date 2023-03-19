@@ -49,8 +49,8 @@ Ext.define('testextjs.view.produits.ProduitDesactives', {
                             name: 'intNUMBER',
                             type: 'number'
                         }, {
-                            name: 'dt_UPDATED',
-                            type: 'date'
+                            name: 'displayDate',
+                            type: 'string'
                         }
                     ],
             pageSize: 15,
@@ -157,14 +157,13 @@ Ext.define('testextjs.view.produits.ProduitDesactives', {
                         
                         {
                             header: "date",
-                            xtype: 'numbercolumn',
+                         
                              align: 'right',
                             sortable: false,
                             menuDisabled: true,
-                            dataIndex: 'dt_UPDATED',
-                            flex: 0.6,
-                            format: '0,000.'
-
+                            dataIndex: 'displayDate',
+                            flex: 0.6
+                        
                         },
                         
                         {
@@ -175,8 +174,10 @@ Ext.define('testextjs.view.produits.ProduitDesactives', {
                             items: [{
                                     icon: 'resources/images/icons/fam/enable.png',
                                     tooltip: 'Activer le produit',
-                                    menuDisabled: true,
-                                    scope: me
+                                  
+                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('activeProduit', view, rowIndex, colIndex, item, e, record, row);
+                                    }
 
                                 }]
                         },
@@ -189,7 +190,10 @@ Ext.define('testextjs.view.produits.ProduitDesactives', {
                             items: [{
                                     icon: 'resources/images/icons/fam/delete.png',
                                     tooltip: 'Supprimer',
-                                    scope: me
+                                   
+                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('remove', view, rowIndex, colIndex, item, e, record, row);
+                                    }
 
                                 }]
                         }
