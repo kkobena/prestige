@@ -66,17 +66,18 @@ public class TvaServlet extends HttpServlet {
         params.setRef(ref);
         params.setOperateur(OTUser);
         String file = "";
-        if (dtEnd != null && !"".equals(dtEnd)) {
+        if (StringUtils.isNotEmpty(dtEnd)) {
             params.setDtEnd(dtEnd);
         }
-        if (dtStart != null && !"".equals(dtStart)) {
-            params.setDtStart(dtStart);
+         if (StringUtils.isNotEmpty(dtStart)) {
+              params.setDtStart(dtStart);
         }
+       
         params.setCheckug(checkug);
         if (this.balanceService.useLastUpdateStats()) {
             file = tvaPdf(BalanceParamsDTO.builder()
-                    .dtEnd(dtEnd)
-                    .dtStart(dtStart)
+                    .dtEnd(params.getDtEnd())
+                    .dtStart(params.getDtStart())
                     .emplacementId(OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
                     .vnoOnly(StringUtils.isNotBlank(ref) && !"TOUT".equalsIgnoreCase(ref))
                     .byDay("TVA_JOUR".equals(action))
@@ -84,7 +85,6 @@ public class TvaServlet extends HttpServlet {
         } else {
             switch (TvaAction.valueOf(action)) {
                 case TVA:
-                    
                     file = tvaPdf(params);
                     break;
                 case TVA_WITH_CRITERIA:
@@ -112,11 +112,6 @@ public class TvaServlet extends HttpServlet {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-    
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
 
     public String tvaPdfWithCriteria(Params parasm) throws IOException {
         
@@ -184,7 +179,7 @@ public class TvaServlet extends HttpServlet {
     }
     
     public String tvaPdfGroupByJour(Params parasm) throws IOException {
-        System.err.println("-----------------------------------------------------");
+   
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(parasm.getDtStart());
@@ -217,7 +212,8 @@ public class TvaServlet extends HttpServlet {
     
     public String tvaPdf(BalanceParamsDTO balanceParams, TUser tu) throws IOException {
         
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        LocalDate dtSt =LocalDate.parse(balanceParams.getDtStart()) ;
+        LocalDate dtEn =LocalDate.parse(balanceParams.getDtEnd()) ;
         
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
