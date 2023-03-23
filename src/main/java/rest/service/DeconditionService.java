@@ -15,7 +15,7 @@ import org.json.JSONObject;
  * @author Kobena
  */
 @Local
-//@Remote
+
 public interface DeconditionService {
 
     public JSONObject deconditionnementVente(SalesParams params)throws JSONException;

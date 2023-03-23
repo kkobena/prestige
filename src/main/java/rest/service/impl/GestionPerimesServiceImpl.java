@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -27,6 +28,7 @@ import javax.persistence.TypedQuery;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import rest.service.GestionPerimesService;
+import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 
@@ -41,6 +43,8 @@ public class GestionPerimesServiceImpl implements GestionPerimesService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private SuggestionService suggestionService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -271,6 +275,7 @@ public class GestionPerimesServiceImpl implements GestionPerimesService {
                             + stockInit + " qté saisie= " + tWarehouse.getIntNUMBER() + " qté après saisie = " + OTFamilleStock.getIntNUMBERAVAILABLE()
                             + " . Saisie effectuée par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
                     updateItem(user, famille.getIntCIP(), desc, TypeLog.SAISIS_PERIMES, famille);
+                    suggestionService.makeSuggestionAuto(OTFamilleStock, famille);
                     i++;
                 }
             }

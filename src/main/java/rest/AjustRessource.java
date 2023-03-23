@@ -44,7 +44,7 @@ public class AjustRessource {
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
-    MouvementProduitService mvtProduitService;
+   private MouvementProduitService mvtProduitService;
     
     @POST
     @Path("creeation")
