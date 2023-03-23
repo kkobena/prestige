@@ -16,13 +16,32 @@ import java.util.Objects;
  * @author DICI
  */
 public class Params implements Serializable {
+
     private static final long serialVersionUID = 1L;
     private String ref, description, refParent, refTwo;
     private Integer value, valueTwo, valueThree, valueFour;
     private String dtStart = LocalDate.now().toString();
     private String dtEnd = dtStart;
+    private String hrEnd;
+    private String hrStart;
     private TUser operateur;
-    boolean scheduled,checkug=false;
+    boolean scheduled, checkug = false;
+
+    public String getHrEnd() {
+        return hrEnd;
+    }
+
+    public void setHrEnd(String hrEnd) {
+        this.hrEnd = hrEnd;
+    }
+
+    public String getHrStart() {
+        return hrStart;
+    }
+
+    public void setHrStart(String hrStart) {
+        this.hrStart = hrStart;
+    }
 
     public String getRefParent() {
         return refParent;
@@ -209,7 +228,8 @@ public class Params implements Serializable {
     public void setCheckug(boolean checkug) {
         this.checkug = checkug;
     }
-     public Params ref(String ref) {
+
+    public Params ref(String ref) {
         this.ref = ref;
         return this;
     }
@@ -218,6 +238,5 @@ public class Params implements Serializable {
     public String toString() {
         return "Params{" + "ref=" + ref + ", description=" + description + ", refParent=" + refParent + ", refTwo=" + refTwo + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", checkug=" + checkug + '}';
     }
-     
-     
+
 }

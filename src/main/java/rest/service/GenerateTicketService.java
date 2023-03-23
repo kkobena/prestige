@@ -85,4 +85,6 @@ public interface GenerateTicketService {
     JSONObject generateDepotTicketOnFly(String venteId);
 
     JSONObject ticketReglementCarnet(String idDossier) throws JSONException;
+    
+     JSONObject buildTicketZ(Params params) ;
 }

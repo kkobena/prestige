@@ -32,6 +32,10 @@ import dal.TTypeReglement;
 import dal.TUser;
 import dal.dataManager;
 import dal.enumeration.TypeTransaction;
+import static dal.enumeration.TypeTransaction.ENTREE;
+import static dal.enumeration.TypeTransaction.SORTIE;
+import static dal.enumeration.TypeTransaction.VENTE_COMPTANT;
+import static dal.enumeration.TypeTransaction.VENTE_CREDIT;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -44,15 +48,22 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,17 +71,20 @@ import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.imageio.ImageIO;
+import javax.jms.Queue;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.report.ReportUtil;
 import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
+import rest.service.dto.TicketZDTO;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.Maths;
 import toolkits.utils.StringComplexUtils.DataStringManager;
@@ -79,6 +93,7 @@ import util.Afficheur;
 
 import util.DateConverter;
 import util.FunctionUtils;
+import util.NumberUtils;
 import util.TicketTemplate;
 
 /**
@@ -890,368 +905,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return new JSONObject().put("success", true);
     }
 
-    List<MvtTransaction> ticketZData(Params params) {
-        try {
-            TypedQuery<MvtTransaction> q;
-            if (params.getDescription().equals("ALL")) {
-                q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate =:dtStart AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac", MvtTransaction.class);
-                q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT, TypeTransaction.SORTIE, TypeTransaction.ENTREE));
-            } else {
-                q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate =:dtStart AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac", MvtTransaction.class);
-                q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT));
-            }
-            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
-            return q.getResultList();
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            return Collections.emptyList();
-        }
-    }
-
-    List<String> generateTicketZForPrintMVT(Params params) {
-        Map<TUser, List<MvtTransaction>> mapuser = ticketZData(params).parallelStream().collect(Collectors.groupingBy(MvtTransaction::getCaisse));
-        List<String> lstData = new ArrayList<>();
-        LongAdder _totalEsp = new LongAdder();
-        LongAdder _totalMobile = new LongAdder();
-        LongAdder _totalCredit = new LongAdder();
-        LongAdder _totalCheque = new LongAdder();
-        LongAdder _totalVirement = new LongAdder();
-        LongAdder _totalCB = new LongAdder();
-        if (mapuser.isEmpty()) {
-            return lstData;
-        }
-        mapuser.forEach((k, v) -> {
-            lstData.add("RECAPITULATIF DE CAISSE: " + k.getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + k.getStrLASTNAME() + " ; ; ; ;1;0");
-            lstData.add(" ; ; ; ; ; ;");
-            LongAdder utotalEsp = new LongAdder();
-            LongAdder utotalMobile = new LongAdder();
-            LongAdder utotalCredit = new LongAdder();
-            LongAdder utotalCheque = new LongAdder();
-            LongAdder utotalVirement = new LongAdder();
-            LongAdder utotalCB = new LongAdder();
-            LongAdder totalSortieCaisseMobile = new LongAdder();
-            LongAdder rtotalEsp = new LongAdder();
-            LongAdder rtotalMobile = new LongAdder();
-            LongAdder regleEntreeMobile = new LongAdder();
-            LongAdder entreeMobile = new LongAdder();
-            LongAdder rtotalCheque = new LongAdder();
-            LongAdder rtotalVirement = new LongAdder();
-            LongAdder rtotalCB = new LongAdder();
-            LongAdder etotalEsp = new LongAdder();
-            LongAdder etotalCheque = new LongAdder();
-            LongAdder etotalVirement = new LongAdder();
-            LongAdder etotalCB = new LongAdder();
-            LongAdder stotalEsp = new LongAdder();
-            LongAdder stotalCheque = new LongAdder();
-            LongAdder stotalVirement = new LongAdder();
-            LongAdder stotalCB = new LongAdder();
-            LongAdder retotalEsp = new LongAdder();
-            LongAdder rretotalCheque = new LongAdder();
-            LongAdder rretotalVirement = new LongAdder();
-            LongAdder retotalCB = new LongAdder();
-            Map<TypeTransaction, List<MvtTransaction>> mapTypeRegle = v.parallelStream().collect(Collectors.groupingBy(MvtTransaction::getTypeTransaction));
-            mapTypeRegle.forEach((t, r) -> {
-
-                switch (t) {
-                    case VENTE_COMPTANT:
-                        r.forEach(b -> {
-                            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
-                                case DateConverter.MODE_ESP:
-                                    utotalEsp.add(b.getMontantRegle());
-                                    rtotalEsp.add(b.getMontantRegle());
-                                    utotalCredit.add(b.getMontantRestant());
-                                    break;
-                                case DateConverter.MODE_VIREMENT:
-                                    utotalVirement.add(b.getMontantRegle());
-                                    rtotalVirement.add(b.getMontantRegle());
-                                    break;
-                                case DateConverter.MODE_CHEQUE:
-                                    utotalCheque.add(b.getMontantRegle());
-                                    rtotalCheque.add(b.getMontantRegle());
-                                    break;
-                                case DateConverter.MODE_CB:
-                                    utotalCB.add(b.getMontantRegle());
-                                    rtotalCB.add(b.getMontantRegle());
-                                    break;
-                                case DateConverter.MODE_MOOV:
-                                case DateConverter.MODE_MTN:
-                                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                                case DateConverter.MODE_WAVE:
-                                    utotalMobile.add(b.getMontantRegle());
-                                    rtotalMobile.add(b.getMontantRegle());
-                                    break;
-                                default:
-                                    break;
-
-                            }
-
-                        });
-
-                        break;
-                    case VENTE_CREDIT:
-                        r.forEach(b -> {
-                            utotalCredit.add(b.getMontantCredit());
-                            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
-                                case DateConverter.MODE_ESP:
-                                    utotalEsp.add(b.getMontantRegle());
-                                    utotalCredit.add(b.getMontantRestant());
-                                    rtotalEsp.add(b.getMontantRegle());
-                                    break;
-                                case DateConverter.MODE_VIREMENT:
-                                    utotalVirement.add(b.getMontantRegle());
-                                    rtotalVirement.add(b.getMontantRegle());
-                                    break;
-                                case DateConverter.MODE_CHEQUE:
-                                    utotalCheque.add(b.getMontantRegle());
-                                    rtotalCheque.add(b.getMontantRegle());
-                                    break;
-                                case DateConverter.MODE_CB:
-                                    utotalCB.add(b.getMontantRegle());
-                                    rtotalCB.add(b.getMontantRegle());
-                                    break;
-                                case DateConverter.MODE_MOOV:
-                                case DateConverter.MODE_MTN:
-                                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                                case DateConverter.MODE_WAVE:
-                                    utotalMobile.add(b.getMontantRegle());
-                                    rtotalMobile.add(b.getMontantRegle());
-                                    break;
-                                default:
-                                    break;
-
-                            }
-
-                        });
-                        break;
-                    case ENTREE:
-                        r.forEach(b -> {
-                            TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
-                            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
-
-                                case DateConverter.MODE_ESP:
-                                    utotalEsp.add(b.getMontant());
-                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
-                                        retotalEsp.add(b.getMontant());
-                                    } else {
-                                        etotalEsp.add(b.getMontant());
-                                    }
-
-                                    break;
-                                case DateConverter.MODE_VIREMENT:
-                                    utotalVirement.add(b.getMontant());
-                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
-                                        rretotalVirement.add(b.getMontant());
-                                    } else {
-                                        etotalVirement.add(b.getMontant());
-                                    }
-
-                                    break;
-                                case DateConverter.MODE_CHEQUE:
-                                    utotalCheque.add(b.getMontant());
-                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
-                                        rretotalCheque.add(b.getMontant());
-                                    } else {
-                                        etotalCheque.add(b.getMontant());
-                                    }
-
-                                    break;
-                                case DateConverter.MODE_CB:
-                                    utotalCB.add(b.getMontant());
-                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
-                                        retotalCB.add(b.getMontant());
-                                    } else {
-                                        etotalCB.add(b.getMontant());
-                                    }
-
-                                    break;
-                                case DateConverter.MODE_MOOV:
-                                case DateConverter.MODE_MTN:
-                                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                                case DateConverter.MODE_WAVE:
-                                    utotalMobile.add(b.getMontant());
-                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
-                                        regleEntreeMobile.add(b.getMontant());
-                                    } else {
-                                        entreeMobile.add(b.getMontant());
-                                    }
-                                    break;
-                                default:
-                                    break;
-
-                            }
-
-                        });
-                        break;
-                    case SORTIE:
-                        r.forEach(b -> {
-                            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
-                                case DateConverter.MODE_ESP:
-                                    utotalEsp.add(b.getMontant());
-                                    stotalEsp.add(b.getMontant());
-                                    break;
-                                case DateConverter.MODE_VIREMENT:
-                                    utotalVirement.add(b.getMontant());
-                                    stotalVirement.add(b.getMontant());
-                                    break;
-                                case DateConverter.MODE_CHEQUE:
-                                    utotalCheque.add(b.getMontant());
-                                    stotalCheque.add(b.getMontant());
-                                    break;
-                                case DateConverter.MODE_CB:
-                                    utotalCB.add(b.getMontant());
-                                    stotalCB.add(b.getMontant());
-                                    break;
-                                case DateConverter.MODE_MOOV:
-                                case DateConverter.MODE_MTN:
-                                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                                case DateConverter.MODE_WAVE:
-                                    utotalMobile.add(b.getMontant());
-                                    totalSortieCaisseMobile.add(b.getMontant());
-                                default:
-                                    break;
-
-                            }
-
-                        });
-                        break;
-                    default:
-                        break;
-                }
-
-            });
-
-            int usp = rtotalEsp.intValue();
-            int ucredit = utotalCredit.intValue();
-            int uCheque = rtotalCheque.intValue();
-            int montantMobile = utotalMobile.intValue();
-            int montantReglementMobile = rtotalMobile.intValue();
-            int entreeMobileMoney = entreeMobile.intValue();
-            int entreeEsp = etotalEsp.intValue();
-            int sEsp = stotalEsp.intValue();
-            int reEsp = retotalEsp.intValue();
-            int cbv = rtotalCB.intValue();
-            int virv = rtotalVirement.intValue();
-            int entreCh = etotalCheque.intValue();
-            int entreCB = etotalCB.intValue();
-            int entreVir = etotalVirement.intValue();
-            int teglech = rretotalCheque.intValue();
-            int teglcb = retotalCB.intValue();
-            int teglVir = rretotalVirement.intValue();
-
-            _totalEsp.add(utotalEsp.intValue());
-            _totalCredit.add(ucredit);
-            _totalMobile.add(montantMobile);
-            _totalCheque.add(utotalCheque.intValue());
-            _totalCB.add(utotalCB.intValue());
-            _totalVirement.add(utotalVirement.intValue());
-
-            if (usp != 0) {
-                lstData.add("Espèce(vno/vo):" + ";" + DateConverter.amountFormat(usp) + "; F CFA;;0;1");
-            }
-            if (ucredit != 0) {
-                lstData.add("Crédit(vno/vo):" + ";" + DateConverter.amountFormat(ucredit) + "; F CFA;;0;1");
-            }
-
-            if (entreeEsp != 0) {
-                lstData.add("Espèce Entrée:" + ";" + DateConverter.amountFormat(entreeEsp) + "; F CFA;;0;1");
-            }
-            if (reEsp != 0) {
-                lstData.add("Espèce Regl:" + ";" + DateConverter.amountFormat(reEsp) + "; F CFA;;0;1");
-            }
-            if (sEsp != 0) {
-                lstData.add("Espèce Sortie:" + ";" + DateConverter.amountFormat(sEsp) + "; F CFA;;0;1");
-            }
-
-            lstData.add("Total espèce: ;" + DateConverter.amountFormat(utotalEsp.intValue()) + ";F CFA;;1;1");
-            if (uCheque != 0) {
-                lstData.add("Total Ch (vno/vo): ;" + DateConverter.amountFormat(uCheque) + ";F CFA;;1;1");
-            }
-            if (montantMobile != 0) {
-                lstData.add("Mobile (vno/vo): ;" + DateConverter.amountFormat(montantMobile) + ";F CFA;;1;1");
-            }
-
-            if (cbv != 0) {
-                lstData.add("Total CB (vno/vo): ;" + DateConverter.amountFormat(cbv) + ";F CFA;;1;1");
-            }
-            if (virv != 0) {
-                lstData.add("Total Vir. (vno/vo): ;" + DateConverter.amountFormat(virv) + ";F CFA;;1;1");
-            }
-            if (entreCh != 0) {
-                lstData.add("Total Entrée Chèque : ;" + DateConverter.amountFormat(entreCh) + ";F CFA;;1;1");
-            }
-            if (entreeMobileMoney != 0) {
-                lstData.add("Total Entrée Mobile : ;" + DateConverter.amountFormat(entreeMobileMoney) + ";F CFA;;1;1");
-            }
-
-            if (entreCB != 0) {
-                lstData.add("Total Entrée CB : ;" + DateConverter.amountFormat(entreCB) + ";F CFA;;1;1");
-            }
-            if (entreVir != 0) {
-                lstData.add("Total entrée.Vir: ;" + DateConverter.amountFormat(entreVir) + ";F CFA;;1;1");
-            }
-            if (teglech != 0) {
-                lstData.add("Total Regl Ch: ;" + DateConverter.amountFormat(teglech) + ";F CFA;;1;1");
-            }
-            if (montantReglementMobile != 0) {
-                lstData.add("Total.Regl.Mobile: ;" + DateConverter.amountFormat(montantReglementMobile) + ";F CFA;;1;1");
-            }
-            if (teglcb != 0) {
-                lstData.add("Total Regl CB: ;" + DateConverter.amountFormat(teglcb) + ";F CFA;;1;1");
-            }
-            if (teglVir != 0) {
-                lstData.add("Total Regl Vir: ;" + DateConverter.amountFormat(teglVir) + ";F CFA;;1;1");
-            }
-
-            int sortieChe = stotalCheque.intValue();
-            int sortieCb = stotalCB.intValue();
-            int sortieVir = stotalVirement.intValue();
-            int sortieCaisseMobile = totalSortieCaisseMobile.intValue();
-            if (sortieChe != 0) {
-                lstData.add("Total Sortie Ch: ;" + DateConverter.amountFormat(sortieChe) + ";F CFA;;1;1");
-            }
-            if (sortieCb != 0) {
-                lstData.add("Total Sortie CB: ;" + DateConverter.amountFormat(sortieCb) + ";F CFA;;1;1");
-            }
-            if (sortieCaisseMobile != 0) {
-                lstData.add("Total.Sortie.Mobile: ;" + DateConverter.amountFormat(sortieCaisseMobile) + ";F CFA;;1;1");
-            }
-            if (sortieVir != 0) {
-                lstData.add("Total Sortie Vir: ;" + DateConverter.amountFormat(sortieVir) + ";F CFA;;1;1");
-            }
-            lstData.add(" ; ; ; ; ; ;");
-        });
-
-        int _tes = _totalEsp.intValue();
-        if (_tes != 0) {
-            // lstData.add("TOTAL GENERAL ESP: ; " + DateConverter.amountFormat(_tes) + "; F CFA;;1;1;G");
-            lstData.add("TOTAL ESP: ; " + DateConverter.amountFormat(_tes) + "; F CFA;;1;1;G");
-        }
-        int cr = _totalCredit.intValue();
-        if (cr != 0) {
-//             lstData.add("TOTAL GENERAL (VNO/VO): ;" + DateConverter.amountFormat(cr) + "; F CFA;;1;1;G");
-            lstData.add("TOTAL (VNO/VO): ;" + DateConverter.amountFormat(cr) + "; F CFA;;1;1;G");
-        }
-        int ch = _totalCheque.intValue();
-        if (ch != 0) {
-            lstData.add("TOTAL CH: ;" + DateConverter.amountFormat(ch) + "; F CFA;;1;1;G");
-        }
-        int cb = _totalCB.intValue();
-        if (cb != 0) {
-            lstData.add("TOTAL CB: ; " + DateConverter.amountFormat(cb) + "; F CFA;;1;1;G");
-        }
-        int totalMobilePayment = _totalMobile.intValue();
-        if (totalMobilePayment != 0) {
-            lstData.add("TOTAL MOBILE: ; " + DateConverter.amountFormat(totalMobilePayment) + "; F CFA;;1;1;G");
-        }
-        int vr = _totalVirement.intValue();
-        if (vr != 0) {
-            lstData.add("TOTAL VIR: ; " + DateConverter.amountFormat(vr) + "; F CFA;;1;1;G");
-        }
-
-        return lstData;
-    }
-
     @Override
     public JSONObject ticketZ(Params params) throws JSONException {
         JSONObject json = new JSONObject();
@@ -1286,7 +939,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             ODriverPrinter.printTicketVente(1);
             return json.put("success", true).put("msg", "Opération effectuée ");
         } catch (PrinterException | JSONException e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return json.put("success", false).put("msg", "Erreur du serveur");
 
         }
@@ -2069,4 +1722,968 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
         return copies;
     }
+
+    @Override
+    public JSONObject buildTicketZ(Params params) {
+        JSONObject json = new JSONObject();
+
+        try {
+            Set<TicketZDTO> tickets = dataPerUser(params);
+            LinkedList<String> body = buildBody(tickets);
+            LinkedList<String> footer = buildFooter(tickets);
+
+            if (tickets.isEmpty()) {
+                return json.put("success", false).put("msg", "Aucune donnée trouvée . Veuillez choisir une autre option");
+            }
+            ImpressionServiceImpl serviceImpression = new ImpressionServiceImpl();
+            TEmplacement emplacement = params.getOperateur().getLgEMPLACEMENTID();
+            PrintService printService = findPrintService();
+            TImprimante imprimante = findImprimanteByName();
+            TOfficine officine = findOfficine();
+            serviceImpression.setEmplacement(emplacement);
+
+            serviceImpression.setDatas(new ArrayList<>());
+            serviceImpression.setOperation(new Date());
+            serviceImpression.setOperationLocalTime(LocalDateTime.now());
+            serviceImpression.setSubtotal(new ArrayList<>());
+            serviceImpression.setInfoTiersPayants(new ArrayList<>());
+//            String dtTitle = LocalDate.parse(params.getDtStart()).format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
+//            String title = "TICKET Z DU " + dtTitle + "  A  " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+            serviceImpression.setTitle(getTicketZTitle(params));
+            serviceImpression.setInfoSellers(new ArrayList<>());
+            serviceImpression.setCommentaires(new ArrayList<>());
+            serviceImpression.setShowCodeBar(true);
+            serviceImpression.setoTImprimante(imprimante);
+            serviceImpression.setOfficine(officine);
+            serviceImpression.setService(printService);
+            serviceImpression.setCodeBar(this.buildLineBarecode(DateConverter.getShortId(10)));
+            printTicketZ(serviceImpression, body, footer);
+            // serviceImpression.printTicketVente(1);
+            return json.put("success", true).put("msg", "Opération effectuée ");
+        } catch (PrinterException | JSONException e) {
+            LOG.log(Level.SEVERE, null, e);
+            return json.put("success", false).put("msg", "Erreur du serveur");
+
+        }
+    }
+
+    private void printTicketZ(ImpressionServiceImpl serviceImpression, LinkedList<String> body, LinkedList<String> footer) throws PrinterException {
+        int size = body.size() + footer.size();
+        body.addAll(footer);
+        if (size <= 40) {
+            serviceImpression.setTypeTicket(DateConverter.TICKET_ZZ);
+            serviceImpression.setTicketZdatas(body);
+            serviceImpression.printTicketVente(1);
+        } else {
+            int counter = 40, k = 0;
+            int page = size / counter;
+            int begin = 0;
+            while (k < page) {
+                serviceImpression.setTypeTicket(DateConverter.TICKET_Z);
+                serviceImpression.setDatas(body.subList(begin, counter));
+                serviceImpression.printTicketVente(1);
+                k++;
+                begin += 40;
+                counter += 40;
+
+            }
+            serviceImpression.setTypeTicket(DateConverter.TICKET_Z);
+            serviceImpression.setDatas(body.subList(begin, size - 1));
+            serviceImpression.printTicketVente(1);
+        }
+
+    }
+// a revoir
+
+    private String getTicketZTitle(Params params) {
+        LocalDate dtStart = LocalDate.parse(params.getDtStart());
+        LocalDate dtEnd = LocalDate.parse(params.getDtEnd());
+        String dtTitle = dtStart.format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
+        String title ;
+        if (Objects.equals(params.getDtStart(), params.getDtEnd())) {
+            if (StringUtils.isAllEmpty(params.getHrEnd(), params.getHrStart())) {
+                if (dtStart.isEqual(LocalDate.now())) {
+                    title = "TICKET Z DU " + dtTitle + "  A  " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+                } else {
+
+                    title = "TICKET Z DU " + dtTitle;
+
+                }
+            } else if (StringUtils.isEmpty(params.getHrStart())) {
+                title = "TICKET Z DU " + dtTitle + " AU " + dtEnd.format(DateTimeFormatter.ofPattern("dd/MM/YYYY")) + " A  " + LocalTime.parse(params.getHrEnd()).format(DateTimeFormatter.ofPattern("HH:mm"));
+            } else if (StringUtils.isEmpty(params.getHrEnd())) {
+                title = "TICKET Z DU " + dtTitle + "  A  " + LocalTime.parse(params.getHrStart()).format(DateTimeFormatter.ofPattern("HH:mm")) + " AU " + dtEnd.format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
+            } else {
+                title = "TICKET Z DU " + dtTitle + "  A  " + LocalTime.parse(params.getHrStart()).format(DateTimeFormatter.ofPattern("HH:mm")) + " AU " + dtEnd.format(DateTimeFormatter.ofPattern("dd/MM/YYYY")) + " A  " + LocalTime.parse(params.getHrEnd()).format(DateTimeFormatter.ofPattern("HH:mm"));
+            }
+
+        } else {
+            if (StringUtils.isAllEmpty(params.getHrEnd(), params.getHrStart())) {
+                title = "TICKET Z DU " + dtTitle + " AU " + dtEnd.format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
+            } else {
+                if (StringUtils.isEmpty(params.getHrStart())) {
+                    title = "TICKET Z DU " + dtTitle + " AU " + dtEnd.format(DateTimeFormatter.ofPattern("dd/MM/YYYY")) + " A  " + LocalTime.parse(params.getHrEnd()).format(DateTimeFormatter.ofPattern("HH:mm"));
+                } else if (StringUtils.isEmpty(params.getHrEnd())) {
+                    title = "TICKET Z DU " + dtTitle + "  A  " + LocalTime.parse(params.getHrStart()).format(DateTimeFormatter.ofPattern("HH:mm")) + " AU " + dtEnd.format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
+                } else {
+                    title = "TICKET Z DU " + dtTitle + "  A  " + LocalTime.parse(params.getHrStart()).format(DateTimeFormatter.ofPattern("HH:mm")) + " AU " + dtEnd.format(DateTimeFormatter.ofPattern("dd/MM/YYYY")) + " A  " + LocalTime.parse(params.getHrEnd()).format(DateTimeFormatter.ofPattern("HH:mm"));
+                }
+            }
+
+        }
+        return title;
+    }
+
+    List<String> generateTicketZForPrintMVT(Params params) {
+        Map<TUser, List<MvtTransaction>> mapuser = ticketZData(params).parallelStream().collect(Collectors.groupingBy(MvtTransaction::getCaisse));
+        List<String> lstData = new ArrayList<>();
+        LongAdder _totalEsp = new LongAdder();
+        LongAdder _totalMobile = new LongAdder();
+        LongAdder _totalCredit = new LongAdder();
+        LongAdder _totalCheque = new LongAdder();
+        LongAdder _totalVirement = new LongAdder();
+        LongAdder _totalCB = new LongAdder();
+        if (mapuser.isEmpty()) {
+            return lstData;
+        }
+        mapuser.forEach((k, v) -> {
+            lstData.add("RECAPITULATIF DE CAISSE: " + k.getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + k.getStrLASTNAME() + " ; ; ; ;1;0");
+            lstData.add(" ; ; ; ; ; ;");
+            LongAdder utotalEsp = new LongAdder();
+            LongAdder utotalMobile = new LongAdder();
+            LongAdder utotalCredit = new LongAdder();
+            LongAdder utotalCheque = new LongAdder();
+            LongAdder utotalVirement = new LongAdder();
+            LongAdder utotalCB = new LongAdder();
+            LongAdder totalSortieCaisseMobile = new LongAdder();
+            LongAdder rtotalEsp = new LongAdder();
+            LongAdder rtotalMobile = new LongAdder();
+            LongAdder regleEntreeMobile = new LongAdder();
+            LongAdder entreeMobile = new LongAdder();
+            LongAdder rtotalCheque = new LongAdder();
+            LongAdder rtotalVirement = new LongAdder();
+            LongAdder rtotalCB = new LongAdder();
+            LongAdder etotalEsp = new LongAdder();
+            LongAdder etotalCheque = new LongAdder();
+            LongAdder etotalVirement = new LongAdder();
+            LongAdder etotalCB = new LongAdder();
+            LongAdder stotalEsp = new LongAdder();
+            LongAdder stotalCheque = new LongAdder();
+            LongAdder stotalVirement = new LongAdder();
+            LongAdder stotalCB = new LongAdder();
+            LongAdder retotalEsp = new LongAdder();
+            LongAdder rretotalCheque = new LongAdder();
+            LongAdder rretotalVirement = new LongAdder();
+            LongAdder retotalCB = new LongAdder();
+            Map<TypeTransaction, List<MvtTransaction>> mapTypeRegle = v.parallelStream().collect(Collectors.groupingBy(MvtTransaction::getTypeTransaction));
+            mapTypeRegle.forEach((t, r) -> {
+
+                switch (t) {
+                    case VENTE_COMPTANT:
+                        r.forEach(b -> {
+                            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
+                                case DateConverter.MODE_ESP:
+                                    utotalEsp.add(b.getMontantRegle());
+                                    rtotalEsp.add(b.getMontantRegle());
+                                    utotalCredit.add(b.getMontantRestant());
+                                    break;
+                                case DateConverter.MODE_VIREMENT:
+                                    utotalVirement.add(b.getMontantRegle());
+                                    rtotalVirement.add(b.getMontantRegle());
+                                    break;
+                                case DateConverter.MODE_CHEQUE:
+                                    utotalCheque.add(b.getMontantRegle());
+                                    rtotalCheque.add(b.getMontantRegle());
+                                    break;
+                                case DateConverter.MODE_CB:
+                                    utotalCB.add(b.getMontantRegle());
+                                    rtotalCB.add(b.getMontantRegle());
+                                    break;
+                                case DateConverter.MODE_MOOV:
+                                case DateConverter.MODE_MTN:
+                                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                case DateConverter.MODE_WAVE:
+                                    utotalMobile.add(b.getMontantRegle());
+                                    rtotalMobile.add(b.getMontantRegle());
+                                    break;
+                                default:
+                                    break;
+
+                            }
+
+                        });
+
+                        break;
+                    case VENTE_CREDIT:
+                        r.forEach(b -> {
+                            utotalCredit.add(b.getMontantCredit());
+                            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
+                                case DateConverter.MODE_ESP:
+                                    utotalEsp.add(b.getMontantRegle());
+                                    utotalCredit.add(b.getMontantRestant());
+                                    rtotalEsp.add(b.getMontantRegle());
+                                    break;
+                                case DateConverter.MODE_VIREMENT:
+                                    utotalVirement.add(b.getMontantRegle());
+                                    rtotalVirement.add(b.getMontantRegle());
+                                    break;
+                                case DateConverter.MODE_CHEQUE:
+                                    utotalCheque.add(b.getMontantRegle());
+                                    rtotalCheque.add(b.getMontantRegle());
+                                    break;
+                                case DateConverter.MODE_CB:
+                                    utotalCB.add(b.getMontantRegle());
+                                    rtotalCB.add(b.getMontantRegle());
+                                    break;
+                                case DateConverter.MODE_MOOV:
+                                case DateConverter.MODE_MTN:
+                                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                case DateConverter.MODE_WAVE:
+                                    utotalMobile.add(b.getMontantRegle());
+                                    rtotalMobile.add(b.getMontantRegle());
+                                    break;
+                                default:
+                                    break;
+
+                            }
+
+                        });
+                        break;
+                    case ENTREE:
+                        r.forEach(b -> {
+                            TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
+                            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
+
+                                case DateConverter.MODE_ESP:
+                                    utotalEsp.add(b.getMontant());
+                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                                        retotalEsp.add(b.getMontant());
+                                    } else {
+                                        etotalEsp.add(b.getMontant());
+                                    }
+
+                                    break;
+                                case DateConverter.MODE_VIREMENT:
+                                    utotalVirement.add(b.getMontant());
+                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                                        rretotalVirement.add(b.getMontant());
+                                    } else {
+                                        etotalVirement.add(b.getMontant());
+                                    }
+
+                                    break;
+                                case DateConverter.MODE_CHEQUE:
+                                    utotalCheque.add(b.getMontant());
+                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                                        rretotalCheque.add(b.getMontant());
+                                    } else {
+                                        etotalCheque.add(b.getMontant());
+                                    }
+
+                                    break;
+                                case DateConverter.MODE_CB:
+                                    utotalCB.add(b.getMontant());
+                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                                        retotalCB.add(b.getMontant());
+                                    } else {
+                                        etotalCB.add(b.getMontant());
+                                    }
+
+                                    break;
+                                case DateConverter.MODE_MOOV:
+                                case DateConverter.MODE_MTN:
+                                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                case DateConverter.MODE_WAVE:
+                                    utotalMobile.add(b.getMontant());
+                                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                                        regleEntreeMobile.add(b.getMontant());
+                                    } else {
+                                        entreeMobile.add(b.getMontant());
+                                    }
+                                    break;
+                                default:
+                                    break;
+
+                            }
+
+                        });
+                        break;
+                    case SORTIE:
+                        r.forEach(b -> {
+                            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
+                                case DateConverter.MODE_ESP:
+                                    utotalEsp.add(b.getMontant());
+                                    stotalEsp.add(b.getMontant());
+                                    break;
+                                case DateConverter.MODE_VIREMENT:
+                                    utotalVirement.add(b.getMontant());
+                                    stotalVirement.add(b.getMontant());
+                                    break;
+                                case DateConverter.MODE_CHEQUE:
+                                    utotalCheque.add(b.getMontant());
+                                    stotalCheque.add(b.getMontant());
+                                    break;
+                                case DateConverter.MODE_CB:
+                                    utotalCB.add(b.getMontant());
+                                    stotalCB.add(b.getMontant());
+                                    break;
+                                case DateConverter.MODE_MOOV:
+                                case DateConverter.MODE_MTN:
+                                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                                case DateConverter.MODE_WAVE:
+                                    utotalMobile.add(b.getMontant());
+                                    totalSortieCaisseMobile.add(b.getMontant());
+                                default:
+                                    break;
+
+                            }
+
+                        });
+                        break;
+                    default:
+                        break;
+                }
+
+            });
+
+            int usp = rtotalEsp.intValue();
+            int ucredit = utotalCredit.intValue();
+            int uCheque = rtotalCheque.intValue();
+            int montantMobile = utotalMobile.intValue();
+            int montantReglementMobile = rtotalMobile.intValue();
+            int entreeMobileMoney = entreeMobile.intValue();
+            int entreeEsp = etotalEsp.intValue();
+            int sEsp = stotalEsp.intValue();
+            int reEsp = retotalEsp.intValue();
+            int cbv = rtotalCB.intValue();
+            int virv = rtotalVirement.intValue();
+            int entreCh = etotalCheque.intValue();
+            int entreCB = etotalCB.intValue();
+            int entreVir = etotalVirement.intValue();
+            int teglech = rretotalCheque.intValue();
+            int teglcb = retotalCB.intValue();
+            int teglVir = rretotalVirement.intValue();
+
+            _totalEsp.add(utotalEsp.intValue());
+            _totalCredit.add(ucredit);
+            _totalMobile.add(montantMobile);
+            _totalCheque.add(utotalCheque.intValue());
+            _totalCB.add(utotalCB.intValue());
+            _totalVirement.add(utotalVirement.intValue());
+
+            if (usp != 0) {
+                lstData.add("Espèce(vno/vo):" + ";" + DateConverter.amountFormat(usp) + "; F CFA;;0;1");
+            }
+            if (ucredit != 0) {
+                lstData.add("Crédit(vno/vo):" + ";" + DateConverter.amountFormat(ucredit) + "; F CFA;;0;1");
+            }
+
+            if (entreeEsp != 0) {
+                lstData.add("Espèce Entrée:" + ";" + DateConverter.amountFormat(entreeEsp) + "; F CFA;;0;1");
+            }
+            if (reEsp != 0) {
+                lstData.add("Espèce Regl:" + ";" + DateConverter.amountFormat(reEsp) + "; F CFA;;0;1");
+            }
+            if (sEsp != 0) {
+                lstData.add("Espèce Sortie:" + ";" + DateConverter.amountFormat(sEsp) + "; F CFA;;0;1");
+            }
+
+            lstData.add("Total espèce: ;" + DateConverter.amountFormat(utotalEsp.intValue()) + ";F CFA;;1;1");
+            if (uCheque != 0) {
+                lstData.add("Total Ch (vno/vo): ;" + DateConverter.amountFormat(uCheque) + ";F CFA;;1;1");
+            }
+            if (montantMobile != 0) {
+                lstData.add("Mobile (vno/vo): ;" + DateConverter.amountFormat(montantMobile) + ";F CFA;;1;1");
+            }
+
+            if (cbv != 0) {
+                lstData.add("Total CB (vno/vo): ;" + DateConverter.amountFormat(cbv) + ";F CFA;;1;1");
+            }
+            if (virv != 0) {
+                lstData.add("Total Vir. (vno/vo): ;" + DateConverter.amountFormat(virv) + ";F CFA;;1;1");
+            }
+            if (entreCh != 0) {
+                lstData.add("Total Entrée Chèque : ;" + DateConverter.amountFormat(entreCh) + ";F CFA;;1;1");
+            }
+            if (entreeMobileMoney != 0) {
+                lstData.add("Total Entrée Mobile : ;" + DateConverter.amountFormat(entreeMobileMoney) + ";F CFA;;1;1");
+            }
+
+            if (entreCB != 0) {
+                lstData.add("Total Entrée CB : ;" + DateConverter.amountFormat(entreCB) + ";F CFA;;1;1");
+            }
+            if (entreVir != 0) {
+                lstData.add("Total entrée.Vir: ;" + DateConverter.amountFormat(entreVir) + ";F CFA;;1;1");
+            }
+            if (teglech != 0) {
+                lstData.add("Total Regl Ch: ;" + DateConverter.amountFormat(teglech) + ";F CFA;;1;1");
+            }
+            if (montantReglementMobile != 0) {
+                lstData.add("Total.Regl.Mobile: ;" + DateConverter.amountFormat(montantReglementMobile) + ";F CFA;;1;1");
+            }
+            if (teglcb != 0) {
+                lstData.add("Total Regl CB: ;" + DateConverter.amountFormat(teglcb) + ";F CFA;;1;1");
+            }
+            if (teglVir != 0) {
+                lstData.add("Total Regl Vir: ;" + DateConverter.amountFormat(teglVir) + ";F CFA;;1;1");
+            }
+
+            int sortieChe = stotalCheque.intValue();
+            int sortieCb = stotalCB.intValue();
+            int sortieVir = stotalVirement.intValue();
+            int sortieCaisseMobile = totalSortieCaisseMobile.intValue();
+            if (sortieChe != 0) {
+                lstData.add("Total Sortie Ch: ;" + DateConverter.amountFormat(sortieChe) + ";F CFA;;1;1");
+            }
+            if (sortieCb != 0) {
+                lstData.add("Total Sortie CB: ;" + DateConverter.amountFormat(sortieCb) + ";F CFA;;1;1");
+            }
+            if (sortieCaisseMobile != 0) {
+                lstData.add("Total.Sortie.Mobile: ;" + DateConverter.amountFormat(sortieCaisseMobile) + ";F CFA;;1;1");
+            }
+            if (sortieVir != 0) {
+                lstData.add("Total Sortie Vir: ;" + DateConverter.amountFormat(sortieVir) + ";F CFA;;1;1");
+            }
+            lstData.add(" ; ; ; ; ; ;");
+        });
+
+        int _tes = _totalEsp.intValue();
+        if (_tes != 0) {
+            // lstData.add("TOTAL GENERAL ESP: ; " + DateConverter.amountFormat(_tes) + "; F CFA;;1;1;G");
+            lstData.add("TOTAL ESP: ; " + DateConverter.amountFormat(_tes) + "; F CFA;;1;1;G");
+        }
+        int cr = _totalCredit.intValue();
+        if (cr != 0) {
+//             lstData.add("TOTAL GENERAL (VNO/VO): ;" + DateConverter.amountFormat(cr) + "; F CFA;;1;1;G");
+            lstData.add("TOTAL (VNO/VO): ;" + DateConverter.amountFormat(cr) + "; F CFA;;1;1;G");
+        }
+        int ch = _totalCheque.intValue();
+        if (ch != 0) {
+            lstData.add("TOTAL CH: ;" + DateConverter.amountFormat(ch) + "; F CFA;;1;1;G");
+        }
+        int cb = _totalCB.intValue();
+        if (cb != 0) {
+            lstData.add("TOTAL CB: ; " + DateConverter.amountFormat(cb) + "; F CFA;;1;1;G");
+        }
+        int totalMobilePayment = _totalMobile.intValue();
+        if (totalMobilePayment != 0) {
+            lstData.add("TOTAL MOBILE: ; " + DateConverter.amountFormat(totalMobilePayment) + "; F CFA;;1;1;G");
+        }
+        int vr = _totalVirement.intValue();
+        if (vr != 0) {
+            lstData.add("TOTAL VIR: ; " + DateConverter.amountFormat(vr) + "; F CFA;;1;1;G");
+        }
+
+        return lstData;
+    }
+
+    List<MvtTransaction> ticketZData(Params params) {
+        try {
+            TypedQuery<MvtTransaction> q;
+            if (params.getDescription().equals("ALL")) {
+                q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac", MvtTransaction.class);
+                q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT, TypeTransaction.SORTIE, TypeTransaction.ENTREE));
+            } else {
+                q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac", MvtTransaction.class);
+                q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT));
+            }
+            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
+            q.setParameter("dtEnd", LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE));
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    List<MvtTransaction> ticketZVenteData(Params params) {
+        try {
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac", MvtTransaction.class);
+            q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT));
+
+            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
+            q.setParameter("dtEnd", LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE));
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    List<MvtTransaction> ticketZSortieData(Params params) {
+        try {
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac", MvtTransaction.class);
+            q.setParameter("typetransac", TypeTransaction.SORTIE);
+            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
+            q.setParameter("dtEnd", LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE));
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    List<MvtTransaction> ticketZEntreesData(Params params) {
+        try {
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac", MvtTransaction.class);
+            q.setParameter("typetransac", TypeTransaction.ENTREE);
+            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
+            q.setParameter("dtEnd", LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE));
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private void computeVenteTicketZDataByUser(TicketZDTO ticket, List<MvtTransaction> list) {
+
+        for (MvtTransaction b : list) {
+            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
+                case DateConverter.MODE_ESP:
+
+                    if (b.getTypeTransaction().equals(TypeTransaction.VENTE_CREDIT)) {
+                        ticket.setTotalCredit(ticket.getTotalCredit() + b.getMontantCredit());
+                    } else {
+                        TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
+                        if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                            ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
+                        }
+                    }
+                    ticket.setTotalEsp(ticket.getTotalEsp() + b.getMontantRegle());
+
+                    break;
+                case DateConverter.MODE_VIREMENT:
+                    ticket.setTotalVirement(b.getMontantRegle() + ticket.getTotalVirement());
+
+                    break;
+                case DateConverter.MODE_CHEQUE:
+                    ticket.setTotalCheque(b.getMontantRegle() + ticket.getTotalCheque());
+
+                    break;
+                case DateConverter.MODE_CB:
+                    ticket.setTotalCB(b.getMontantRegle() + ticket.getTotalCB());
+
+                    break;
+                case DateConverter.MODE_MOOV:
+                case DateConverter.MODE_MTN:
+                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                case DateConverter.MODE_WAVE:
+                    ticket.setTotalMobile(b.getMontantRegle() + ticket.getTotalMobile());
+                    break;
+                case DateConverter.MODE_REGL_DIFFERE:
+                    ticket.setDiffere(b.getMontantRestant() + ticket.getDiffere());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
+
+    private void computeReglementTicketZDataByUser(TicketZDTO ticket, List<MvtTransaction> list) {
+
+        for (MvtTransaction b : list) {
+            TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
+            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
+
+                case DateConverter.MODE_ESP:
+                    // ticket.setTotalEsp(b.getMontant() + ticket.getTotalEsp());
+                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                        ticket.setTotalReglementEsp(b.getMontant() + ticket.getTotalReglementEsp());
+                    } else {
+                        ticket.setTotalEntreeEsp(b.getMontant() + ticket.getTotalEntreeEsp());
+
+                    }
+
+                    break;
+                case DateConverter.MODE_VIREMENT:
+
+                    //ticket.setTotalVirement(b.getMontant() + ticket.getTotalVirement());
+                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                        ticket.setTotalReglementVirement(b.getMontant() + ticket.getTotalReglementVirement());
+                    } else {
+
+                        ticket.setTotalEntreeVirement(b.getMontant() + ticket.getTotalEntreeVirement());
+                    }
+
+                    break;
+                case DateConverter.MODE_CHEQUE:
+
+                    // ticket.setTotalCheque(b.getMontant() + ticket.getTotalCheque());
+                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+
+                        ticket.setTotalReglementCheque(b.getMontant() + ticket.getTotalReglementCheque());
+                    } else {
+
+                        ticket.setTotalEntreeCheque(b.getMontant() + ticket.getTotalEntreeCheque());
+                    }
+
+                    break;
+                case DateConverter.MODE_CB:
+                    // ticket.setTotalCB(b.getMontant() + ticket.getTotalCB());
+
+                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+
+                        ticket.setTotalReglementCB(b.getMontant() + ticket.getTotalReglementCB());
+                    } else {
+                        ticket.setTotalEntreeCB(b.getMontant() + ticket.getTotalEntreeCB());
+                    }
+
+                    break;
+                case DateConverter.MODE_MOOV:
+                case DateConverter.MODE_MTN:
+                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                case DateConverter.MODE_WAVE:
+                    // ticket.setTotalMobile(b.getMontant() + ticket.getTotalMobile());
+                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_TP) || mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                        ticket.setTotalReglementMobile(b.getMontant() + ticket.getTotalReglementMobile());
+                    } else {
+                        ticket.setTotalEntreeMobile(b.getMontant() + ticket.getTotalEntreeMobile());
+                    }
+                    break;
+                default:
+                    break;
+
+            }
+        }
+
+    }
+
+    private void computeSortiesTicketZDataByUser(TicketZDTO ticket, List<MvtTransaction> list) {
+
+        for (MvtTransaction b : list) {
+            switch (b.getReglement().getLgTYPEREGLEMENTID()) {
+                case DateConverter.MODE_ESP:
+
+                    //  ticket.setTotalEsp(ticket.getTotalEsp() + b.getMontant());
+                    ticket.setTotalSortieEsp(ticket.getTotalSortieEsp() + b.getMontant());
+                    break;
+                case DateConverter.MODE_VIREMENT:
+                    ticket.setTotalVirement(ticket.getTotalVirement() + b.getMontant());
+                    ticket.setTotalSortieVirement(ticket.getTotalSortieVirement() + b.getMontant());
+
+                    break;
+                case DateConverter.MODE_CHEQUE:
+                    //  ticket.setTotalCheque(ticket.getTotalCheque() + b.getMontant());
+                    ticket.setTotalSortieCheque(ticket.getTotalSortieCheque() + b.getMontant());
+
+                    break;
+                case DateConverter.MODE_CB:
+                    // ticket.setTotalCB(ticket.getTotalCB() + b.getMontant());
+                    ticket.setTotalSortieCB(ticket.getTotalSortieCB() + b.getMontant());
+                    break;
+                case DateConverter.MODE_MOOV:
+                case DateConverter.MODE_MTN:
+                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                case DateConverter.MODE_WAVE:
+                    // ticket.setTotalMobile(b.getMontant() + ticket.getTotalMobile());
+                    ticket.setTotalSortieMobile(ticket.getTotalSortieMobile() + b.getMontant());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
+
+    private Set<TicketZDTO> dataPerUser(Params params) {
+        List<TicketZDTO> tickes = new LinkedList<>();
+
+        ticketZEntreesData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse))
+                .forEach((user, trans) -> {
+                    TicketZDTO userData = new TicketZDTO();
+                    userData.setUserId(user.getLgUSERID());
+                    userData.setUser(user.getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + user.getStrLASTNAME());
+                    computeReglementTicketZDataByUser(userData, trans);
+                    tickes.add(userData);
+
+                });
+        ticketZSortieData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse)).forEach((user, trans) -> {
+
+            TicketZDTO userData = null;
+            ListIterator<TicketZDTO> listIterator = tickes.listIterator();
+            while (listIterator.hasNext()) {
+                TicketZDTO oldValue = listIterator.next();
+                if (oldValue.getUserId().equals(user.getLgUSERID())) {
+                    userData = oldValue;
+                    break;
+                }
+
+            }
+            if (Objects.isNull(userData)) {
+                userData = new TicketZDTO();
+            }
+
+            computeSortiesTicketZDataByUser(userData, trans);
+            tickes.add(userData);
+
+        });
+        ticketZVenteData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse))
+                .forEach((user, trans) -> {
+
+                    TicketZDTO userData = null;
+                    ListIterator<TicketZDTO> listIterator = tickes.listIterator();
+                    while (listIterator.hasNext()) {
+                        TicketZDTO oldValue = listIterator.next();
+                        if (oldValue.getUserId().equals(user.getLgUSERID())) {
+                            userData = oldValue;
+                            break;
+                        }
+
+                    }
+                    if (Objects.isNull(userData)) {
+                        userData = new TicketZDTO();
+                    }
+
+                    computeVenteTicketZDataByUser(userData, trans);
+                    tickes.add(userData);
+
+                });
+
+        return tickes.stream().collect(Collectors.toSet());
+
+    }
+
+    private LinkedList<String> buildBody(Set<TicketZDTO> tickets) {
+        LinkedList<String> lstData = new LinkedList<>();
+        if (tickets.isEmpty()) {
+            return lstData;
+        }
+        for (TicketZDTO v : tickets) {
+            long totalEspUser = (v.getTotalEsp() + v.getTotalEntreeEsp() + v.getTotalReglementEsp() + v.getTotalSortieEsp());
+
+            lstData.add("RECAPITULATIF DE CAISSE: " + v.getUser() + " ; ; ; ;1;0");
+            lstData.add(" ; ; ; ; ; ;");
+
+            if (v.getTotalEsp() != 0) {
+                lstData.add("Espèce(vno/vo):" + ";" + NumberUtils.formatLongToString(v.getTotalEsp()) + "; F CFA;;0;1");
+            }
+            if (v.getTotalCredit() != 0) {
+                lstData.add("Crédit(vno/vo):" + ";" + NumberUtils.formatLongToString(v.getTotalCredit()) + "; F CFA;;0;1");
+            }
+
+            if (v.getTotalEntreeEsp() != 0) {
+                lstData.add("Espèce Entrée:" + ";" + NumberUtils.formatLongToString(v.getTotalEntreeEsp()) + "; F CFA;;0;1");
+            }
+            if (v.getTotalReglementEsp() != 0) {
+                lstData.add("Espèce Regl:" + ";" + NumberUtils.formatLongToString(v.getTotalReglementEsp()) + "; F CFA;;0;1");
+            }
+            if (v.getTotalSortieEsp() != 0) {
+                lstData.add("Espèce Sortie:" + ";" + NumberUtils.formatLongToString(v.getTotalSortieEsp()) + "; F CFA;;0;1");
+            }
+            if (v.getDiffere() != 0) {
+                lstData.add("Différé:" + ";" + NumberUtils.formatLongToString(v.getDiffere()) + "; F CFA;;0;1");
+            }
+            if (v.getTotalMobile() != 0) {
+                lstData.add("Mobile (vno/vo):" + ";" + NumberUtils.formatLongToString(v.getTotalMobile()) + "; F CFA;;0;1");
+            }
+            if (totalEspUser != 0) {
+                lstData.add("Total espèce: ;" + NumberUtils.formatLongToString(totalEspUser) + ";F CFA;;1;1");
+            }
+
+            if (v.getTotalCheque() != 0) {
+                lstData.add("Total Ch (vno/vo): ;" + NumberUtils.formatLongToString(v.getTotalCheque()) + ";F CFA;;1;1");
+            }
+
+            if (v.getTotalCB() != 0) {
+                lstData.add("Total CB (vno/vo): ;" + NumberUtils.formatLongToString(v.getTotalCB()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalVirement() != 0) {
+                lstData.add("Total Vir. (vno/vo): ;" + NumberUtils.formatLongToString(v.getTotalVirement()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalEntreeCheque() != 0) {
+                lstData.add("Total Entrée Chèque : ;" + NumberUtils.formatLongToString(v.getTotalEntreeCheque()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalEntreeMobile() != 0) {
+                lstData.add("Total Entrée Mobile : ;" + NumberUtils.formatLongToString(v.getTotalEntreeMobile()) + ";F CFA;;1;1");
+            }
+
+            if (v.getTotalEntreeCB() != 0) {
+                lstData.add("Total Entrée CB : ;" + NumberUtils.formatLongToString(v.getTotalEntreeCB()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalEntreeVirement() != 0) {
+                lstData.add("Total entrée.Vir: ;" + NumberUtils.formatLongToString(v.getTotalEntreeVirement()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalReglementCheque() != 0) {
+                lstData.add("Total Regl Ch: ;" + NumberUtils.formatLongToString(v.getTotalReglementCheque()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalReglementMobile() != 0) {
+                lstData.add("Total.Regl.Mobile: ;" + NumberUtils.formatLongToString(v.getTotalReglementMobile()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalReglementCB() != 0) {
+                lstData.add("Total Regl CB: ;" + NumberUtils.formatLongToString(v.getTotalReglementCB()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalReglementVirement() != 0) {
+                lstData.add("Total Regl Vir: ;" + NumberUtils.formatLongToString(v.getTotalReglementVirement()) + ";F CFA;;1;1");
+            }
+
+            if (v.getTotalSortieCheque() != 0) {
+                lstData.add("Total Sortie Ch: ;" + NumberUtils.formatLongToString(v.getTotalSortieCheque()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalSortieCB() != 0) {
+                lstData.add("Total Sortie CB: ;" + NumberUtils.formatLongToString(v.getTotalSortieCB()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalSortieMobile() != 0) {
+                lstData.add("Total.Sortie.Mobile: ;" + NumberUtils.formatLongToString(v.getTotalSortieMobile()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalSortieVirement() != 0) {
+                lstData.add("Total Sortie Vir: ;" + NumberUtils.formatLongToString(v.getTotalSortieVirement()) + ";F CFA;;1;1");
+            }
+            lstData.add(" ; ; ; ; ; ;");
+        }
+        return lstData;
+    }
+
+    private LinkedList<String> buildFooter(Set<TicketZDTO> tickets) {
+        LinkedList<String> lstData = new LinkedList<>();
+        if (tickets.isEmpty()) {
+            return lstData;
+        }
+        long totalEsp = 0;
+        long totalMobile = 0;
+        long totalCredit = 0;
+        long totalCheque = 0;
+        long totalVirement = 0;
+        long totalCB = 0;
+        long differe = 0;
+        for (TicketZDTO v : tickets) {
+            totalEsp += (v.getTotalEsp() + v.getTotalEntreeEsp() + v.getTotalReglementEsp() + v.getTotalSortieEsp());
+            totalMobile += (v.getTotalEntreeMobile() + v.getTotalReglementMobile() + v.getTotalSortieMobile());
+            totalCredit += (v.getTotalCredit() + v.getTotalEntreeCredit() + v.getTotalReglementCredit() + v.getTotalSortieCredit());
+            totalCheque += (v.getTotalCheque() + v.getTotalEntreeCheque() + v.getTotalReglementCheque() + v.getTotalSortieCheque());
+            totalVirement += (v.getTotalVirement() + v.getTotalEntreeVirement() + v.getTotalReglementVirement() + v.getTotalSortieVirement());
+            totalCB += (v.getTotalCB() + v.getTotalEntreeCB() + v.getTotalReglementCB() + v.getTotalSortieCB());
+            differe += v.getDiffere();
+
+        }
+
+        if (totalEsp != 0) {
+            // lstData.add("TOTAL GENERAL ESP: ; " + DateConverter.amountFormat(_tes) + "; F CFA;;1;1;G");
+            lstData.add("TOTAL ESP: ; " + NumberUtils.formatLongToString(totalEsp) + "; F CFA;;1;1;G");
+        }
+
+        if (totalCredit != 0) {
+//             lstData.add("TOTAL GENERAL (VNO/VO): ;" + DateConverter.amountFormat(cr) + "; F CFA;;1;1;G");
+            lstData.add("TOTAL (VNO/VO): ;" + NumberUtils.formatLongToString(totalCredit) + "; F CFA;;1;1;G");
+        }
+
+        if (totalCheque != 0) {
+            lstData.add("TOTAL CH: ;" + NumberUtils.formatLongToString(totalCheque) + "; F CFA;;1;1;G");
+        }
+
+        if (totalCB != 0) {
+            lstData.add("TOTAL CB: ; " + NumberUtils.formatLongToString(totalCB) + "; F CFA;;1;1;G");
+        }
+
+        if (totalMobile != 0) {
+            lstData.add("TOTAL MOBILE: ; " + NumberUtils.formatLongToString(totalMobile) + "; F CFA;;1;1;G");
+        }
+
+        if (totalVirement != 0) {
+            lstData.add("TOTAL VIR: ; " + NumberUtils.formatLongToString(totalVirement) + "; F CFA;;1;1;G");
+        }
+        if (differe != 0) {
+            lstData.add("TOTAL DIFFERE: ; " + NumberUtils.formatLongToString(differe) + "; F CFA;;1;1;G");
+        }
+        return lstData;
+    }
+
+    List<String> buildTicketZForPrintMVT(Params params) {
+        Set<TicketZDTO> tickets = dataPerUser(params);
+        // List<String> lstData = new ArrayList<>();
+        LinkedList<String> lstData = new LinkedList<String>();
+
+        if (tickets.isEmpty()) {
+            return lstData;
+        }
+        for (TicketZDTO v : tickets) {
+            long totalEsp = (v.getTotalEsp() + v.getTotalEntreeEsp() + v.getTotalReglementEsp() + v.getTotalSortieEsp());
+            lstData.add("RECAPITULATIF DE CAISSE: " + v.getUser() + " ; ; ; ;1;0");
+            lstData.add(" ; ; ; ; ; ;");
+
+            if (v.getTotalEsp() != 0) {
+                lstData.add("Espèce(vno/vo):" + ";" + NumberUtils.formatLongToString(v.getTotalEsp()) + "; F CFA;;0;1");
+            }
+            if (v.getTotalCredit() != 0) {
+                lstData.add("Crédit(vno/vo):" + ";" + NumberUtils.formatLongToString(v.getTotalCredit()) + "; F CFA;;0;1");
+            }
+
+            if (v.getTotalEntreeEsp() != 0) {
+                lstData.add("Espèce Entrée:" + ";" + NumberUtils.formatLongToString(v.getTotalEntreeEsp()) + "; F CFA;;0;1");
+            }
+            if (v.getTotalReglementEsp() != 0) {
+                lstData.add("Espèce Regl:" + ";" + NumberUtils.formatLongToString(v.getTotalReglementEsp()) + "; F CFA;;0;1");
+            }
+            if (v.getTotalSortieEsp() != 0) {
+                lstData.add("Espèce Sortie:" + ";" + NumberUtils.formatLongToString(v.getTotalSortieEsp()) + "; F CFA;;0;1");
+            }
+            if (v.getDiffere() != 0) {
+                lstData.add("Différé:" + ";" + NumberUtils.formatLongToString(v.getDiffere()) + "; F CFA;;0;1");
+            }
+            if (v.getTotalMobile() != 0) {
+                lstData.add("Mobile (vno/vo):" + ";" + NumberUtils.formatLongToString(v.getTotalMobile()) + "; F CFA;;0;1");
+            }
+            if (totalEsp != 0) {
+                lstData.add("Total espèce: ;" + NumberUtils.formatLongToString(totalEsp) + ";F CFA;;1;1");
+            }
+
+            if (v.getTotalCheque() != 0) {
+                lstData.add("Total Ch (vno/vo): ;" + NumberUtils.formatLongToString(v.getTotalCheque()) + ";F CFA;;1;1");
+            }
+
+            if (v.getTotalCB() != 0) {
+                lstData.add("Total CB (vno/vo): ;" + NumberUtils.formatLongToString(v.getTotalCB()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalVirement() != 0) {
+                lstData.add("Total Vir. (vno/vo): ;" + NumberUtils.formatLongToString(v.getTotalVirement()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalEntreeCheque() != 0) {
+                lstData.add("Total Entrée Chèque : ;" + NumberUtils.formatLongToString(v.getTotalEntreeCheque()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalEntreeMobile() != 0) {
+                lstData.add("Total Entrée Mobile : ;" + NumberUtils.formatLongToString(v.getTotalEntreeMobile()) + ";F CFA;;1;1");
+            }
+
+            if (v.getTotalEntreeCB() != 0) {
+                lstData.add("Total Entrée CB : ;" + NumberUtils.formatLongToString(v.getTotalEntreeCB()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalEntreeVirement() != 0) {
+                lstData.add("Total entrée.Vir: ;" + NumberUtils.formatLongToString(v.getTotalEntreeVirement()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalReglementCheque() != 0) {
+                lstData.add("Total Regl Ch: ;" + NumberUtils.formatLongToString(v.getTotalReglementCheque()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalReglementMobile() != 0) {
+                lstData.add("Total.Regl.Mobile: ;" + NumberUtils.formatLongToString(v.getTotalReglementMobile()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalReglementCB() != 0) {
+                lstData.add("Total Regl CB: ;" + NumberUtils.formatLongToString(v.getTotalReglementCB()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalReglementVirement() != 0) {
+                lstData.add("Total Regl Vir: ;" + NumberUtils.formatLongToString(v.getTotalReglementVirement()) + ";F CFA;;1;1");
+            }
+
+            if (v.getTotalSortieCheque() != 0) {
+                lstData.add("Total Sortie Ch: ;" + NumberUtils.formatLongToString(v.getTotalSortieCheque()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalSortieCB() != 0) {
+                lstData.add("Total Sortie CB: ;" + NumberUtils.formatLongToString(v.getTotalSortieCB()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalSortieMobile() != 0) {
+                lstData.add("Total.Sortie.Mobile: ;" + NumberUtils.formatLongToString(v.getTotalSortieMobile()) + ";F CFA;;1;1");
+            }
+            if (v.getTotalSortieVirement() != 0) {
+                lstData.add("Total Sortie Vir: ;" + NumberUtils.formatLongToString(v.getTotalSortieVirement()) + ";F CFA;;1;1");
+            }
+            lstData.add(" ; ; ; ; ; ;");
+        }
+
+        return lstData;
+    }
+
 }
