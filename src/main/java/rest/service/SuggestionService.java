@@ -8,6 +8,7 @@ package rest.service;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TCalendrier;
+import dal.TEmplacement;
 import dal.TFamille;
 import dal.TFamilleStock;
 import dal.TSuggestionOrderDetails;
@@ -54,7 +55,9 @@ public interface SuggestionService {
     JSONObject makeSuggestionFromArticleInvendus(List<ArticleDTO> datas, TUser tu) throws JSONException;
 
     JSONObject makeSuggestion(Set<VenteDetailsDTO> datas) throws JSONException;
-    
-    JSONObject findCHDetailStock(String idProduit,String emplacement);
+
+    JSONObject findCHDetailStock(String idProduit, String emplacement);
+
+    void proccessSuggetion(TFamille famille, TEmplacement emplacementId);
 
 }

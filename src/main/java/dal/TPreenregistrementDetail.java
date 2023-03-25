@@ -94,7 +94,7 @@ public class TPreenregistrementDetail implements Serializable {
     @Column(name = "montanttvaug")
     private Integer montantTvaUg = 0;
     @Column(name = "cmu_price")
-    private Integer cmuPrice;
+    private Integer cmuPrice=0;
 
     public Integer getCmuPrice() {
         return cmuPrice;

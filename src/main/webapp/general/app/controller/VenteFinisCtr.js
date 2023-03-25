@@ -4,7 +4,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
     extend: 'Ext.app.Controller',
     requires: [
         'testextjs.model.caisse.Vente',
-        'testextjs.view.vente.user.UpdateVenteClientTpForm'
+        'testextjs.view.vente.user.UpdateVenteClientTpForm', 'testextjs.view.vente.DetailVente'
     ],
     views: ['testextjs.view.vente.VentesFinis'],
     refs: [{
@@ -48,6 +48,11 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             ref: 'nature',
             selector: 'ventemanager #nature'
         }
+        , {
+            ref: 'salesItem',
+            selector: 'salesItem'
+        }
+
 
 
     ],
@@ -68,7 +73,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             'ventemanager #nature': {
                 select: this.doSearch
             },
-            
+
             'ventemanager gridpanel': {
                 viewready: this.doInitStore
             },
@@ -81,14 +86,22 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 onSuggestion: this.onSuggestion,
                 ticketModifie: this.printTicketR,
                 toClientOrTp: this.onUpdateClientOrTp,
-                toExportToJson: this.toExportToJson
+                toExportToJson: this.toExportToJson,
+                goto: this.goto
             },
             'ventemanager #query': {
                 specialkey: this.onSpecialKey
+            },
+            'salesItem #btnCancel': {
+                click: this.onCloseSalesItem
             }
         });
     },
+    onCloseSalesItem: function () {
+        var me = this;
+        me.getSalesItem().destroy();
 
+    },
     onUpdateClientOrTp: function (view, rowIndex, colIndex, item, e, rec, row) {
         if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modificationClientTp')) {
             Ext.create('testextjs.view.vente.user.UpdateVenteClientTpForm', {venteId: rec.get('lgPREENREGISTREMENTID')}).show();
@@ -129,7 +142,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             }
         }
     },
-    
+
     updateInfosvente: function (win, formulaire, rec, linkUrl) {
         if (formulaire.isValid()) {
             var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
@@ -361,7 +374,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                 },
                                 failure: function (response)
                                 {
-                                
+
                                     Ext.MessageBox.alert('Error Message', response.responseText);
                                 }
                             });
@@ -472,7 +485,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             hStart: null,
             onlyAvoir: false,
             sansBon: false,
-            nature:null
+            nature: null
 
         };
         myProxy.setExtraParam('sansBon', false);
@@ -483,7 +496,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         myProxy.setExtraParam('typeVenteId', me.getTypeVente().getValue());
         myProxy.setExtraParam('hStart', me.getHStart().getSubmitValue());
         myProxy.setExtraParam('hEnd', me.getHEnd().getSubmitValue());
-           myProxy.setExtraParam('nature',me.getNature().getValue());
+        myProxy.setExtraParam('nature', me.getNature().getValue());
     },
     doInitStore: function () {
         var me = this;
@@ -513,6 +526,20 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         });
     },
     toExportToJson: function (view, rowIndex, colIndex, item, e, rec, row) {
-             window.location = '../api/v1/vente-depot/as/order/'+rec.get('lgPREENREGISTREMENTID') ;
+        window.location = '../api/v1/vente-depot/as/order/' + rec.get('lgPREENREGISTREMENTID');
+    },
+    goto: function (view, rowIndex, colIndex, item, e, rec, row) {
+        var me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/ventestats/find-one/' + rec.get('lgPREENREGISTREMENTID'),
+            success: function (response, options) {
+                var result = Ext.JSON.decode(response.responseText, true);
+                Ext.create('testextjs.view.vente.DetailVente', {vente: result.data}).show();
+            }
+
+        });
+
+
     }
 });

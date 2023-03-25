@@ -632,7 +632,7 @@ public class SalesServiceImpl implements SalesService {
             json.put("ref", newItem.getLgPREENREGISTREMENTID());
             sendMessageClientJmsQueue(newItem.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
-                 LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.SEVERE, null, e);
             json.put("success", false);
             json.put("msg", "Erreur annulation de la vente ");
             json.put("ref", ref);
@@ -801,17 +801,17 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public List<TPreenregistrementDetail> items(TPreenregistrement tp, EntityManager emg) {
-     
+
         try {
 
             Query q = emg.
                     createQuery("SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1").
                     setParameter(1, tp.getLgPREENREGISTREMENTID());
 
-       return  q.getResultList();
-  
+            return q.getResultList();
+
         } catch (Exception ex) {
-           throw  ex;
+            throw ex;
         }
 
     }
@@ -1760,7 +1760,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private TTypeReglement findById(String id, EntityManager emg) {
-        if (id != null && !"".equals(id)) {
+        if (StringUtils.isNotEmpty(id)) {
             if ("Especes".equals(id) || "4".equals(id)) {
                 return emg.find(TTypeReglement.class, "1");
             } else {
@@ -1810,6 +1810,15 @@ public class SalesServiceImpl implements SalesService {
                 break;
             case "7":
                 modeReglement = findByIdMod(DateConverter.MODE_ORANGE, emg);
+                break;
+            case "8":
+                modeReglement = findByIdMod("8", emg);
+                break;
+            case "9":
+                modeReglement = findByIdMod("9", emg);
+                break;
+            case "10":
+                modeReglement = findByIdMod("11", emg);
                 break;
             default:
                 modeReglement = findByIdMod(idTypeRegl, emg);
@@ -2900,8 +2909,8 @@ public class SalesServiceImpl implements SalesService {
         List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, getEm());
         lstTPreenregistrementDetail.forEach(x -> {
             totalAmount.add(x.getIntPRICE());
-            if(Objects.nonNull(x.getCmuPrice())){
-                 montantCMU.add(x.getCmuPrice());
+            if (Objects.nonNull(x.getCmuPrice())) {
+                montantCMU.add(x.getCmuPrice());
             }
             montantTva.add(x.getMontantTva());
             TFamille famille = x.getLgFAMILLEID();
@@ -4702,10 +4711,10 @@ public class SalesServiceImpl implements SalesService {
         int montantCMU = 0;
         for (TPreenregistrementDetail x : list) {
             montant += x.getIntPRICE();
-            if(Objects.nonNull(x.getCmuPrice())){
-               montantCMU += x.getCmuPrice();   
+            if (Objects.nonNull(x.getCmuPrice())) {
+                montantCMU += x.getCmuPrice();
             }
-          
+
             TFamille famille = x.getLgFAMILLEID();
             if (famille.getBoolACCOUNT()) {
                 int marge = ((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF()));

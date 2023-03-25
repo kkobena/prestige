@@ -50,10 +50,29 @@ public final class FunctionUtils {
         } else {
             json.put(TOTAL, total).put(DATA, new JSONArray(data));
         }
-        if(summary!=null){
-              json.put("metaData", new JSONObject(summary));
+        if (summary != null) {
+            json.put("metaData", new JSONObject(summary));
         }
         return json;
+    }
+
+    public static JSONObject returnData(List<?> data, Object summary) {
+        JSONObject json = new JSONObject();
+        if (CollectionUtils.isEmpty(data)) {
+            json.put(TOTAL, 0).put(DATA, new JSONArray(Collections.emptyList()));
+        } else {
+            json.put(TOTAL, data.size()).put(DATA, new JSONArray(data));
+        }
+        if (summary != null) {
+            json.put("metaData", new JSONObject(summary));
+        }
+        return json;
+    }
+
+    public static JSONObject returnData(Object o) {
+
+        return new JSONObject().put(DATA, new JSONObject(o));
+
     }
 
     private FunctionUtils() {

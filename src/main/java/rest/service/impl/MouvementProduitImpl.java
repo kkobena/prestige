@@ -919,11 +919,6 @@ public class MouvementProduitImpl implements MouvementProduitService {
 
     }
 
-    @Override
-    public JSONObject deconditionner(Params params) throws JSONException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     private HMvtProduit findByItemVenteId(String idVenteItem) {
         TypedQuery<HMvtProduit> tq = getEmg().createQuery("SELECT o FROM HMvtProduit o WHERE o.pkey=?1 ", HMvtProduit.class);
         tq.setParameter(1, idVenteItem);
