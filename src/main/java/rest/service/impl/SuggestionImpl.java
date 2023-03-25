@@ -331,7 +331,7 @@ public class SuggestionImpl implements SuggestionService {
             });
 
         } catch (Exception e) {
-              LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.SEVERE, null, e);
         }
     }
 
@@ -341,8 +341,8 @@ public class SuggestionImpl implements SuggestionService {
 
             list.forEach(item -> {
                 TFamille famille = item.getLgFAMILLEID();
-                if(StringUtils.isNotEmpty(famille.getLgFAMILLEPARENTID()) && famille.getBoolDECONDITIONNE()==1){
-                    famille=em.find(TFamille.class, famille.getLgFAMILLEPARENTID());
+                if (StringUtils.isNotEmpty(famille.getLgFAMILLEPARENTID()) && famille.getBoolDECONDITIONNE() == 1) {
+                    famille = em.find(TFamille.class, famille.getLgFAMILLEPARENTID());
                 }
                 TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, getEmg());
                 if (familleStock != null) {
@@ -352,40 +352,53 @@ public class SuggestionImpl implements SuggestionService {
             });
 
         } catch (Exception e) {
-              LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.SEVERE, null, e);
         }
     }
 
     @Override
+    public void proccessSuggetion(TFamille famille, TEmplacement emplacementId) {
+
+        if (StringUtils.isNotEmpty(famille.getLgFAMILLEPARENTID()) && famille.getBoolDECONDITIONNE() == 1) {
+            famille = em.find(TFamille.class, famille.getLgFAMILLEPARENTID());
+        }
+        TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, getEmg());
+        if (familleStock != null) {
+            makeSuggestionAuto(familleStock, famille);
+        }
+
+    }
+
+    @Override
     public void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille) {
+
         EntityManager emg = getEmg();
-        if (Objects.nonNull(famille.getIntSEUILMIN())&& OTFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN() && famille.getBoolDECONDITIONNE() == 0 && famille.getStrSTATUT().equals(DateConverter.STATUT_ENABLE)) {
-            
-                int statut = verifierProduitDansLeProcessusDeCommande(famille);
-                if (statut == 0 || statut == 1) {
-                    TSuggestionOrder OTSuggestionOrder;
-                    Integer int_QTE_A_SUGGERE;
-                    TGrossiste grossiste = famille.getLgGROSSISTEID();
-                    if (grossiste != null) {
-                        OTSuggestionOrder = checkSuggestionGrossiteExiste(grossiste.getLgGROSSISTEID(), emg);
-                        if (statut == 0) {
-                            int_QTE_A_SUGGERE = calcQteReappro(OTFamilleStock, famille, emg);
-                            if (OTSuggestionOrder == null) {
-                                OTSuggestionOrder = createSuggestionOrder(grossiste, commonparameter.statut_is_Auto, emg);
-                                createTSuggestionOrderDetails(OTSuggestionOrder, famille, grossiste, int_QTE_A_SUGGERE, emg);
-                            } else {
-                                addToTSuggestionOrderDetails(famille, grossiste, OTSuggestionOrder, int_QTE_A_SUGGERE, emg);
-                            }
+        if (Objects.nonNull(famille.getIntSEUILMIN()) && OTFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN() && famille.getBoolDECONDITIONNE() == 0 && famille.getStrSTATUT().equals(DateConverter.STATUT_ENABLE)) {
+
+            int statut = verifierProduitDansLeProcessusDeCommande(famille);
+            if (statut == 0 || statut == 1) {
+                TSuggestionOrder OTSuggestionOrder;
+                Integer int_QTE_A_SUGGERE;
+                TGrossiste grossiste = famille.getLgGROSSISTEID();
+                if (grossiste != null) {
+                    OTSuggestionOrder = checkSuggestionGrossiteExiste(grossiste.getLgGROSSISTEID(), emg);
+                    if (statut == 0) {
+                        int_QTE_A_SUGGERE = calcQteReappro(OTFamilleStock, famille, emg);
+                        if (OTSuggestionOrder == null) {
+                            OTSuggestionOrder = createSuggestionOrder(grossiste, commonparameter.statut_is_Auto, emg);
+                            createTSuggestionOrderDetails(OTSuggestionOrder, famille, grossiste, int_QTE_A_SUGGERE, emg);
                         } else {
-                            if (OTSuggestionOrder != null) {
-                                int_QTE_A_SUGGERE = calcQteReappro(OTFamilleStock, famille, emg);
-                                addToTSuggestionOrderDetails(famille, grossiste, OTSuggestionOrder, int_QTE_A_SUGGERE, emg);
-                            }
-
+                            addToTSuggestionOrderDetails(famille, grossiste, OTSuggestionOrder, int_QTE_A_SUGGERE, emg);
                         }
-                    }
+                    } else {
+                        if (OTSuggestionOrder != null) {
+                            int_QTE_A_SUGGERE = calcQteReappro(OTFamilleStock, famille, emg);
+                            addToTSuggestionOrderDetails(famille, grossiste, OTSuggestionOrder, int_QTE_A_SUGGERE, emg);
+                        }
 
-                
+                    }
+                }
+
             }
         }
     }
@@ -497,11 +510,10 @@ public class SuggestionImpl implements SuggestionService {
             if (codeGestion != null && (!codeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("0"))) {
                 QTE_REAPPRO = getQuantityReapportByCodeGestionArticle(OTFamilleStock, tf, emg);
 
-            } else if (Objects.nonNull(tf.getIntQTEREAPPROVISIONNEMENT())   && Objects.nonNull( tf.getIntSEUILMIN()) && tf.getIntSEUILMIN() >= OTFamilleStock.getIntNUMBERAVAILABLE()) {
-                
-                    QTE_REAPPRO = (tf.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE()) + tf.getIntQTEREAPPROVISIONNEMENT();
+            } else if (Objects.nonNull(tf.getIntQTEREAPPROVISIONNEMENT()) && Objects.nonNull(tf.getIntSEUILMIN()) && tf.getIntSEUILMIN() >= OTFamilleStock.getIntNUMBERAVAILABLE()) {
 
-                
+                QTE_REAPPRO = (tf.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE()) + tf.getIntQTEREAPPROVISIONNEMENT();
+
             }
         } catch (Exception e) {
         }

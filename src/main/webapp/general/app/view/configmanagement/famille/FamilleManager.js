@@ -1579,14 +1579,14 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     xtype: 'mvtdetail',
                     alias: 'widget.mvtdetail',
                     autoShow: true,
-                    height: 570,
+                    height: 530,
                     width: '80%',
                     modal: true,
                     title: "Détail de l'article [ " + libelle + " ]",
                     closeAction: 'hide',
 
                     closable: true,
-                    maximizable: true,
+                    maximizable: false,
                     layout: {
                         type: 'fit'
 
@@ -1630,8 +1630,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 {
                                     xtype: 'displayfield',
                                     flex: 1,
-                                    fieldLabel: 'Ret.Four',
-                                    labelWidth: 70,
+                                    fieldLabel: 'Retour Fournisseur',
+                                    labelWidth: 120,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
                                     },
@@ -1654,8 +1654,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 {
                                     xtype: 'displayfield',
                                     flex: 1,
-                                    fieldLabel: 'Entrée',
-                                    labelWidth: 60,
+                                    fieldLabel: 'Entrée en stock',
+                                    labelWidth: 100,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
                                     },
@@ -1667,7 +1667,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 {
                                     xtype: 'displayfield',
                                     flex: 1,
-                                    fieldLabel: 'Ajust.Entrant',
+                                    fieldLabel: 'Ajust (+)',
                                     labelWidth: 80,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
@@ -1680,7 +1680,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 {
                                     xtype: 'displayfield',
                                     flex: 1,
-                                    fieldLabel: 'Ajust.Sortant',
+                                    fieldLabel: 'Ajust (-)',
                                     labelWidth: 80,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
@@ -1700,8 +1700,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 {
                                     xtype: 'displayfield',
                                     flex: 1,
-                                    fieldLabel: 'Décon.Entrant',
-                                    labelWidth: 85,
+                                    fieldLabel: 'Décond. Detail',
+                                    labelWidth: 100,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
                                     },
@@ -1712,8 +1712,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 {
                                     xtype: 'displayfield',
                                     flex: 1,
-                                    fieldLabel: 'Décon.Sortie',
-                                    labelWidth: 80,
+                                    fieldLabel: 'Décond Boite CH',
+                                    labelWidth: 120,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
                                     },
@@ -1724,8 +1724,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 {
                                     xtype: 'displayfield',
                                     flex: 1,
-                                    fieldLabel: 'Ret.Dépôt',
-                                    labelWidth: 80,
+                                    fieldLabel: 'Retour Dépôt',
+                                    labelWidth: 100,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
                                     },
@@ -1735,8 +1735,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 {
                                     xtype: 'displayfield',
                                     flex: 1,
-                                    fieldLabel: 'Inv',
-                                    labelWidth: 40,
+                                    fieldLabel: 'Inventaire',
+                                    labelWidth: 100,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
                                     },
@@ -1748,7 +1748,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                     xtype: 'displayfield',
                                     flex: 1,
                                     fieldLabel: 'Annulation',
-                                    labelWidth: 80,
+                                    labelWidth: 100,
                                     renderer: function (v) {
                                         return Ext.util.Format.number(v, '0,000.');
                                     },
@@ -1776,12 +1776,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                     sortable: false,
                                     menuDisabled: true,
                                     dataIndex: 'dateOp',
-                                    flex: 1
+                                    width: 90
                                 }, {
-                                    text: 'Qté.Init',
+                                    text: 'Stock Debut',
                                     xtype: 'numbercolumn',
                                     dataIndex: 'stockInit',
-                                    flex: 0.7,
+                                    width: 95,
                                     align: 'right',
                                     format: '0,000.'
                                 },
@@ -1793,39 +1793,39 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                                     text: 'Vente',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyVente',
-                                                    flex: 0.7,
+                                                    width: 55,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 },
                                                 {
-                                                    text: 'Ret.four',
+                                                    text: 'Retour',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyRetour',
-                                                    flex: 0.7,
+                                                    width: 60,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 },
                                                 {
-                                                    text: 'Qté.périmé',
+                                                    text: 'Périmé',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyPerime',
-                                                    flex: 0.7,
+                                                    width: 60,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 },
                                                 {
-                                                    text: 'Qté.Ajustée',
+                                                    text: 'Ajust(-)',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyAjustSortie',
-                                                    flex: 0.7,
+                                                    width: 60,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 },
                                                 {
-                                                    text: 'Qté.Décon',
+                                                    text: 'Décon(-)',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyDecondSortant',
-                                                    flex: 0.7,
+                                                    width: 70,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 }
@@ -1836,42 +1836,42 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                     columns:
                                             [
                                                 {
-                                                    text: 'Qté.Entrée',
+                                                    text: 'Entrée',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyEntree',
-                                                    flex: 0.7,
+                                                    width: 60,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 },
                                                 {
-                                                    text: 'Qté.Ajustée',
+                                                    text: 'Ajust(+)',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyAjust',
-                                                    flex: 0.7,
+                                                    width: 60,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 },
                                                 {
-                                                    text: 'Qté.Décon',
+                                                    text: 'Décon(+)',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyDeconEntrant',
-                                                    flex: 0.7,
+                                                    width: 70,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 },
                                                 {
-                                                    text: 'Qté.Annulée',
+                                                    text: 'Annulation',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyAnnulation',
-                                                    flex: 0.7,
+                                                    width: 80,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 },
                                                 {
-                                                    text: 'Qté.Ret.Depôt',
+                                                    text: 'Retour Depot',
                                                     xtype: 'numbercolumn',
                                                     dataIndex: 'qtyRetourDepot',
-                                                    flex: 0.7,
+                                                    width: 100,
                                                     align: 'right',
                                                     format: '0,000.'
                                                 }
@@ -1879,26 +1879,26 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 }
                                 ,
                                 {
-                                    text: 'Qté.Inv',
+                                    text: 'INV',
                                     xtype: 'numbercolumn',
                                     dataIndex: 'qtyInv',
-                                    flex: 0.7,
+                                    width: 50,
                                     align: 'right',
                                     format: '0,000.'
                                 },
                                 {
-                                    text: 'Ecart.Inv',
+                                    text: 'Ecart INV',
                                     xtype: 'numbercolumn',
                                     dataIndex: 'ecartInventaire',
-                                    flex: 0.7,
+                                    width: 80,
                                     align: 'right',
                                     format: '0,000.'
                                 },
                                 {
-                                    text: 'Stock',
+                                    text: 'Stock Final',
                                     xtype: 'numbercolumn',
                                     dataIndex: 'stockFinal',
-                                    flex: 0.7,
+                                    width: 90,
                                     align: 'right',
                                     format: '0,000.'
                                 }

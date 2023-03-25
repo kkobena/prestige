@@ -49,10 +49,10 @@ public class RetourFournisseur extends HttpServlet {
             int limit = 10;
             
             if (request.getParameter("start") != null) {
-                start = Integer.valueOf(request.getParameter("start")) ;
+                start = Integer.parseInt(request.getParameter("start")) ;
             }
                if (request.getParameter("limit") != null) {
-                limit = Integer.valueOf(request.getParameter("limit")) ;
+                limit = Integer.parseInt(request.getParameter("limit")) ;
             }
             
             JSONObject json = findRetourBl(search, start, limit, entityManager);

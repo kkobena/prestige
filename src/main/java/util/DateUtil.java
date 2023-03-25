@@ -4,7 +4,10 @@
  */
 package util;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -29,6 +32,14 @@ public final class DateUtil {
         return LocalDate.of(lastMonth.getYear(), lastMonth.getMonth(), 1);
     }
 
+    public static String convertDateToDD_MM_YYYY_HH_mm(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        if (date != null) {
+            return dateFormat.format(date);
+        } else {
+            return "";
+        }
+    }
     private DateUtil() {
     }
 

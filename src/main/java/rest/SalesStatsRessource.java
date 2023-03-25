@@ -43,14 +43,13 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.service.CommonService;
 import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
 import rest.service.TvaService;
-import rest.service.impl.ImportationVente;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 import util.Constant;
+import util.FunctionUtils;
 
 /**
  *
@@ -66,11 +65,8 @@ public class SalesStatsRessource {
     @EJB
     SalesStatsService salesService;
     @EJB
-    CommonService commonService;
-    @EJB
     GenerateTicketService generateTicketService;
-    @EJB
-    ImportationVente importationVente;
+
     @EJB
     private TvaService tvaService;
 
@@ -79,9 +75,9 @@ public class SalesStatsRessource {
     public Response getDetails(@QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String query,
-            @QueryParam(value = "typeVenteId") String typeVenteId, 
+            @QueryParam(value = "typeVenteId") String typeVenteId,
             @QueryParam(value = "statut") String statut,
-             @QueryParam(value = "nature") String nature
+            @QueryParam(value = "nature") String nature
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
@@ -238,7 +234,7 @@ public class SalesStatsRessource {
 
     @GET
     @Path("depot/{id}")
-    public Response getOne(@PathParam("id") String id) throws JSONException {
+    public Response getDepot(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -343,7 +339,7 @@ public class SalesStatsRessource {
             @QueryParam(value = "hStart") String hStart,
             @QueryParam(value = "hEnd") String hEnd,
             @QueryParam(value = "typeVenteId") String typeVenteId,
-           @QueryParam(value = "nature") String nature
+            @QueryParam(value = "nature") String nature
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
@@ -464,7 +460,7 @@ public class SalesStatsRessource {
             @QueryParam(value = "nbre") int nbre,
             @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "stock")  Integer stock,
+            @QueryParam(value = "stock") Integer stock,
             @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
             @QueryParam(value = "stockFiltre") String stockFiltre,
             @QueryParam(value = "rayonId") String rayonId,
@@ -646,7 +642,7 @@ public class SalesStatsRessource {
                 List<TPreenregistrementDetail> detailses = salesService.venteDetailByVenteId(venteId);
                 Writer writer = new OutputStreamWriter(out, "UTF-8");
 
-                try ( CSVPrinter printer = CSVFormat.EXCEL
+                try (CSVPrinter printer = CSVFormat.EXCEL
                         .withDelimiter(';').withHeader(ArticleHeader.class).print(writer)) {
 
                     detailses.forEach(f -> {
@@ -669,6 +665,15 @@ public class SalesStatsRessource {
                 .header("content-disposition", "attachment; filename = " + filename)
                 .build();
 
+    }
+
+    @GET
+    @Path("find-one/{id}")
+
+    public Response getOne(@PathParam("id") String venteId) {
+
+        JSONObject json = FunctionUtils.returnData(salesService.getOne(venteId));
+        return Response.ok().entity(json.toString()).build();
     }
 
 }

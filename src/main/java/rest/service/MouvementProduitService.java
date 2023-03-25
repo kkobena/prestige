@@ -59,9 +59,6 @@ public interface MouvementProduitService {
 
     JSONObject creerAjustement(Params params) throws JSONException;
 
-    JSONObject deconditionner(Params params) throws JSONException;
-
-//    void deconditionner(String produitId, String produitParentId, Integer qty,String emplacementId);
     JSONObject ajusterProduitAjustement(Params params) throws JSONException;
 
     JSONObject modifierProduitAjustement(Params params) throws JSONException;

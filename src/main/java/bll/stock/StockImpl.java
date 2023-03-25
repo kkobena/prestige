@@ -93,11 +93,7 @@ public class StockImpl implements MouvementService {
         return count;
     }
 
-    @Override
-    public Integer stockDeconditionne(TFamille famille, LocalDate debut, LocalDate fin, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
+  
     @Override
     public Integer stockVente(TFamille famille, LocalDate debut, LocalDate fin, String empl) {
 
@@ -124,30 +120,6 @@ public class StockImpl implements MouvementService {
 
     }
 
-    @Override
-    public Integer stockPerime(TFamille famille, LocalDate debut, LocalDate fin, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Integer stockRetour(TFamille famille, LocalDate debut, LocalDate fin, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Integer stockAjusteNegatitf(TFamille famille, LocalDate debut, LocalDate fin, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Integer stockAjustePositif(TFamille famille, LocalDate debut, LocalDate fin, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Integer stockInventaire(TFamille famille, LocalDate debut, LocalDate fin, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
     @Override
     public List<TMouvement> listMvt(String lgFamille, String zoneID, String search, String dateDebut, String dateEnd, String empl, String LgFamilleArticle,boolean all,int start, int limit) {
@@ -182,25 +154,5 @@ public class StockImpl implements MouvementService {
         return q.getResultList();
     }
 
-    @Override
-    public JSONObject listMvt(JSONArray data, int count, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public JSONArray listMvt(JSONArray data, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private Integer currentStock(TFamille famille, String emplacementId) {
-        return em.createQuery("SELECT o.intNUMBERAVAILABLE FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2 ", Integer.class)
-                .setParameter(1, famille.getLgFAMILLEID()).setParameter(2, emplacementId)
-                .getSingleResult();
-    }
-
-    @Override
-    public Integer stockDeconditionnenegatif(TFamille famille, LocalDate debut, LocalDate fin, String empl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
 }

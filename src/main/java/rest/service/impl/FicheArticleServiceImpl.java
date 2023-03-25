@@ -851,7 +851,6 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         List<Predicate> predicates = new ArrayList<>();
         LocalDate toDay = LocalDate.now();
         LocalDate dayEnd = toDay;
-//        predicates.add(cb.equal(fa.get(TFamille_.strSTATUT), DateConverter.STATUT_ENABLE));
         predicates.add(cb.equal(root.get(TWarehouse_.strSTATUT), DateConverter.STATUT_DELETE));
         if (!StringUtils.isEmpty(query)) {
             predicates.add(cb.or(cb.like(fa.get(TFamille_.intCIP), query + "%"),
@@ -918,7 +917,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             Join<TWarehouse, TFamille> fa = root.join(TWarehouse_.lgFAMILLEID, JoinType.INNER);
             List<Predicate> predicates = saisiePerimesPredicat(cb, root, fa, query, dtStart, dtEnd, codeFamile, codeRayon, codeGrossiste);
             cq.select(cb.count(root));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
 

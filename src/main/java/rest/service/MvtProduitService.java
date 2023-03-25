@@ -89,7 +89,7 @@ public interface MvtProduitService {
             int start,
             int limit,
             String fourId,
-            String query, boolean cunRemove,String filtre) throws JSONException;
+            String query, boolean cunRemove, String filtre) throws JSONException;
 
     JSONObject validerRetourDepot(String retourId, TUser user) throws JSONException;
 
@@ -109,9 +109,9 @@ public interface MvtProduitService {
             String dtStart,
             String dtEnd,
             String fourId,
-            String query,String filtre);
-    
-    
-    void validerFullBlRetourFournisseur(TRetourFournisseur  fournisseur) ;
-      void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur,TMotifRetour motifRetour,List<TBonLivraisonDetail> bonLivraisonDetails);
+            String query, String filtre);
+
+    void validerFullBlRetourFournisseur(TRetourFournisseur fournisseur);
+
+    void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur, TMotifRetour motifRetour, List<TBonLivraisonDetail> bonLivraisonDetails);
 }
