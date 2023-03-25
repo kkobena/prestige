@@ -18,6 +18,7 @@ import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -127,4 +128,6 @@ public interface SalesStatsService {
     List<VenteDTO> listVentes(SalesStatsParams params);
 
     List<VenteDTO> venteAvecRemise(SalesStatsParams params);
+
+    rest.service.dto.VenteDTO getOne(String id);
 }

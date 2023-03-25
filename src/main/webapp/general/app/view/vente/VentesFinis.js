@@ -445,6 +445,25 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                                     }
 
                                 }]
+                        },
+                        
+                        
+                            {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [
+                                 {
+                                    icon: 'resources/images/icons/fam/application_view_list.png',
+                                    tooltip: 'Voir détail',
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('goto', view, rowIndex, colIndex, item, e, record, row);
+                                    }
+
+
+                                }
+                            ]
                         }
                     ],
 

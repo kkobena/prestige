@@ -12,9 +12,18 @@ public class MvtTransactionDTO {
     private TypeTransaction typeTransaction;
     long montantTTC = 0, montantNet = 0, montantRemise = 0, panierMoyen = 0, montantEsp = 0,
             montantCheque = 0, MontantVirement = 0, montantCB = 0, montantDiff = 0, nbreVente = 0, montantMobilePayment = 0;
+      private  CodeInfo typeReglement;
 
     public TypeTransaction getTypeTransaction() {
         return typeTransaction;
+    }
+
+    public CodeInfo getTypeReglement() {
+        return typeReglement;
+    }
+
+    public void setTypeReglement(CodeInfo typeReglement) {
+        this.typeReglement = typeReglement;
     }
 
     public void setTypeTransaction(TypeTransaction typeTransaction) {

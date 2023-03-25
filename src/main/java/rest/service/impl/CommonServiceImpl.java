@@ -268,7 +268,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.or(cb.like(root.get(TUser_.strFIRSTNAME), query + "%"), cb.like(root.get(TUser_.strLASTNAME), query + "%"), cb.like(cb.concat(cb.concat(root.get(TUser_.strFIRSTNAME), " "), root.get(TUser_.strLASTNAME)), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
 
             return ((Long) q.getSingleResult()).intValue();
@@ -292,7 +292,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.or(cb.like(root.get(TUser_.strFIRSTNAME), query + "%"), cb.like(root.get(TUser_.strLASTNAME), query + "%"), cb.like(cb.concat(cb.concat(root.get(TUser_.strFIRSTNAME), " "), root.get(TUser_.strLASTNAME)), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            CriteriaQuery<UserDTO> where = cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = getEntityManager().createQuery(cq);
             q.setFirstResult(start);
             q.setMaxResults(limit);
@@ -337,7 +337,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
         try {
             if (voirNumeroTicket == null) {
                 TParameters tp = getEntityManager().find(TParameters.class, Parameter.KEY_SHOW_NUMERO_TICKET);
-                voirNumeroTicket = (Integer.valueOf(tp.getStrVALUE()) == 1);
+                voirNumeroTicket = (Integer.parseInt(tp.getStrVALUE()) == 1);
             }
             return voirNumeroTicket;
         } catch (Exception e) {
@@ -410,7 +410,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
                     Query qry = getEntityManager().createQuery("SELECT t FROM TImprimante t WHERE t.strNAME = ?1 ")
                             .setParameter(1, service.getName());
-                    if (qry.getResultList().size() > 0) {
+                    if (!qry.getResultList().isEmpty()) {
                         OTImprimante = (TImprimante) qry.getSingleResult();
                     }
                 } catch (Exception e) {
@@ -432,7 +432,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.like(root.get(TVille_.strName), query + "%"));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -455,7 +455,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.like(root.get(TRisque_.strLIBELLERISQUE), query + "%"));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -475,7 +475,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.like(root.get(TCategorieAyantdroit_.strLIBELLECATEGORIEAYANTDROIT), query + "%"));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -558,7 +558,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (!StringUtils.isEmpty(query)) {
                 predicates.add(cb.or(cb.like(root.get(TGrossiste_.strCODE), query + "%"), cb.like(root.get(TGrossiste_.strLIBELLE), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
