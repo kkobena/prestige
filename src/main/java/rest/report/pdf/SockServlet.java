@@ -30,7 +30,7 @@ public class SockServlet extends HttpServlet {
 
     private enum Action {
         VALORISATION, RUPTURE_PHARMAML, UG, VENTE_TIERS_PAYANT_GROUP, VENTE_TIERS_PAYANT,
-        ARTICLE_VENDUS_DETAIL, ARTICLE_VENDUS_RECAP
+        ARTICLE_VENDUS_DETAIL, ARTICLE_VENDUS_RECAP, ETIQUETTE
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -44,12 +44,17 @@ public class SockServlet extends HttpServlet {
         String groupeId = request.getParameter("groupeId");
         String tiersPayantId = request.getParameter("tiersPayantId");
         String query = request.getParameter("query");
-          String typeTp = request.getParameter("typeTp");
+        String typeTp = request.getParameter("typeTp");
         String file = "";
 
         switch (SockServlet.Action.valueOf(action)) {
+            case ETIQUETTE:
+                String bonId = request.getParameter("bonId");
+                int startAt = Integer.parseInt(request.getParameter("startAt"));
+                file = stock.printEtiquettes(bonId, startAt);
+                break;
             case VALORISATION:
-                int mode = Integer.valueOf(request.getParameter("action"));
+                int mode = Integer.parseInt(request.getParameter("action"));
                 String lgGROSSISTEID = request.getParameter("lgGROSSISTEID");
                 String lgZONEGEOID = request.getParameter("lgZONEGEOID");
                 String END = request.getParameter("END");
@@ -67,26 +72,26 @@ public class SockServlet extends HttpServlet {
                 file = stock.venteUgDTO(OTUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
                 break;
             case VENTE_TIERS_PAYANT_GROUP:
-                file = stock.ventesTiersPayants(OTUser, "rp_ventetpGroup", query, dtStart, dtEnd, tiersPayantId, groupeId,typeTp);
+                file = stock.ventesTiersPayants(OTUser, "rp_ventetpGroup", query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp);
                 break;
             case VENTE_TIERS_PAYANT:
-                file = stock.ventesTiersPayants(OTUser, "rp_ventetp", query, dtStart, dtEnd, tiersPayantId, groupeId,typeTp);
+                file = stock.ventesTiersPayants(OTUser, "rp_ventetp", query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp);
                 break;
             case ARTICLE_VENDUS_DETAIL:
             case ARTICLE_VENDUS_RECAP:
                 String user = request.getParameter("user");
                 int stock_ = 0;
-                  int nbre =0;
-                  Integer qteVendu = null;
+                int nbre = 0;
+                Integer qteVendu = null;
                 try {
-                    stock_ = Integer.valueOf(request.getParameter("stock"));
+                    stock_ = Integer.parseInt(request.getParameter("stock"));
                 } catch (Exception e) {
                 }
                 try {
-                 nbre=   Integer.valueOf(request.getParameter("nbre"));
+                    nbre = Integer.parseInt(request.getParameter("nbre"));
                 } catch (Exception e) {
                 }
-                 try {
+                try {
                     qteVendu = Integer.valueOf(request.getParameter("qteVendu"));
                 } catch (Exception e) {
                 }
@@ -94,7 +99,7 @@ public class SockServlet extends HttpServlet {
                 String typeTransaction = request.getParameter("typeTransaction");
                 String stockFiltre = request.getParameter("stockFiltre");
                 String prixachatFiltre = request.getParameter("prixachatFiltre");
-              
+
                 String hEnd = request.getParameter("hEnd");
                 String hStart = request.getParameter("hStart");
                 String type = request.getParameter("type");

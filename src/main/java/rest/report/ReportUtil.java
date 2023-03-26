@@ -21,6 +21,7 @@ import dal.TOfficine;
 import dal.TUser;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Date;
 import javax.ejb.Stateless;
 import javax.print.PrintService;
@@ -386,6 +387,23 @@ public class ReportUtil {
             JasperReport jasperReport = getReport(reportName, jdom.scr_report_file);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            JasperExportManager.exportReportToPdfFile(jasperPrint, this.getReportDirectory(fileName));
+        } catch (JRException e) {
+            LOG.log(Level.SEVERE, null, e);
+
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+        return "/data/reports/pdf/" + fileName;
+    }
+    
+       public String buildReport( String reportName, List<?> datas) {
+        String fileName = getFileNames(reportName);
+        try {
+            Map<String, Object> parameters=new HashMap<>();
+            JasperReport jasperReport = getReport(reportName, jdom.scr_report_file);
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport,parameters, dataSource);
             JasperExportManager.exportReportToPdfFile(jasperPrint, this.getReportDirectory(fileName));
         } catch (JRException e) {
             LOG.log(Level.SEVERE, null, e);

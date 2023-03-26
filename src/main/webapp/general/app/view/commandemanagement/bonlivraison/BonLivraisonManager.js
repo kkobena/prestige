@@ -36,10 +36,9 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
     initComponent: function () {
         myAppController = Ext.create('testextjs.controller.App', {});
         url_services_data_bl_list = '../webservices/commandemanagement/bonlivraison/ws_data.jsp';
-        //  alert("url_services_data_bl_list "+url_services_data_bl_list);
-
+ 
         Me = this;
-      
+  
         var itemsPerPage = 20;
         store_bl = new Ext.data.Store({
             model: 'testextjs.model.BonLivraison',

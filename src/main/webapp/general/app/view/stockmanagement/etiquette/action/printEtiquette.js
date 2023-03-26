@@ -141,6 +141,7 @@ Ext.define('testextjs.view.stockmanagement.etiquette.action.printEtiquette', {
         
         if (form.isValid()) {
             var linkUrl = url_services_pdf_etiquette + '?lg_ETIQUETTE_ID=' + ref + "&begin=" + Ext.getCmp('intQUANTITY').getValue();
+         
             window.open(linkUrl);
             win.close();
             Me_Workflow = Oview;

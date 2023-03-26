@@ -25,6 +25,7 @@ import rest.report.ReportUtil;
 import rest.service.CaisseService;
 import rest.service.ClientService;
 import rest.service.CommonService;
+import rest.service.EtiquetteService;
 import rest.service.OrderService;
 import rest.service.ProduitService;
 import rest.service.SalesStatsService;
@@ -51,6 +52,8 @@ public class Stock {
     private ClientService clientService;
     @EJB
     private SalesStatsService salesStatsService;
+    @EJB
+    private EtiquetteService etiquetteService;
 
     public String valorisation(TUser tu, int mode, LocalDate dtSt, String lgGROSSISTEID, String lgFAMILLEARTICLEID, String lgZONEGEOID, String END, String BEGIN, String emplacementId) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
@@ -177,4 +180,13 @@ public class Stock {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "articlesvendus" + report_generate_file, data);
         return "/data/reports/pdf/articlesvendus" + report_generate_file;
     }
+
+    public String printEtiquettes(String bonId, int startAt) throws IOException {
+        TOfficine oTOfficine = commonService.findOfficine();
+        String scr_rethisport_file = "warehouse_etiqettes";
+       
+        return reportUtil.buildReport(scr_rethisport_file, this.etiquetteService.buildEtiquettes(bonId, startAt, oTOfficine.getStrNOMABREGE()));
+
+    }
+
 }

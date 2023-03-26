@@ -104,7 +104,12 @@ Ext.define('testextjs.view.stockmanagement.etiquette.action.add', {
         }
         
         var url = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + ref + "&int_NUMBER=" + Ext.getCmp('int_NUMBER').getValue();
-        window.open(url);
+        let linkUrl = '../SockServlet?mode=ETIQUETTE&startAt=' + Ext.getCmp('int_NUMBER').getValue() + '&bonId=' + ref;
+        console.warn(linkUrl);
+                                                 window.open(linkUrl);
+//        window.open(url);
+      
         this.up('window').close();
     }
+    
 });

@@ -289,7 +289,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                     hidden: true,
                                     dataIndex: 'lg_FAMILLE_ID'
                                 },
-                               {
+                                {
                                     xtype: 'rownumberer',
                                     text: '#',
                                     hidden: false,
@@ -473,7 +473,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                     typeAhead: true,
                                     queryMode: 'local',
                                     emptyText: 'Filtre article...',
-                                     flex: 1,
+                                    flex: 1,
                                     listeners: {
                                         select: function (cmp) {
                                             var value = cmp.getValue();
@@ -838,7 +838,6 @@ function checkIsAuthorize() {
     var OgridpanelID = Ext.getCmp('gridpanelID');
     OgridpanelID.getStore().each(function (rec) {
         if (parseInt(rec.get('int_QTE_RECUE_BIS')) < 0) {
-//            alert(parseInt(rec.get('int_QTE_RECUE_BIS')));
             result++;
         }
     });
@@ -846,6 +845,7 @@ function checkIsAuthorize() {
 }
 
 function doEntreeStock(lg_BON_LIVRAISON_ID) {
+       
     if (parseInt(Ext.getCmp('int_NUMBER_ETIQUETTE').getValue()) > 65 || parseInt(Ext.getCmp('int_NUMBER_ETIQUETTE').getValue()) < 1) {
         Ext.MessageBox.show({
             title: 'Avertissement',
@@ -873,7 +873,7 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                         method: 'PUT',
                         headers: {'Content-Type': 'application/json'},
                         url: '../api/v1/commande/validerbl/' + lg_BON_LIVRAISON_ID,
-//                        url: '../webservices/commandemanagement/bonlivraison/ws_transaction.jsp?mode=closureBonLivraison',
+
                         timeout: 1800000,
                         /* params: {
                          lg_BON_LIVRAISON_ID: lg_BON_LIVRAISON_ID
@@ -898,16 +898,19 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                                         'Confirmation de l\'impression des entrees reapprovisionnements',
                                         function (btn) {
                                             if (btn == 'yes') {
+                                                 let linkUrl = '../SockServlet?mode=ETIQUETTE&startAt=' + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue() + '&bonId=' + lg_BON_LIVRAISON_ID;
+                                                 window.open(linkUrl);
 
-                                                onPdfBLClick(url_services_pdf_bonlivraison + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID);
+//                                                onPdfBLClick(url_services_pdf_bonlivraison + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID);
                                                 //demande d'impression des etiquettes
                                                 Ext.MessageBox.confirm('Message',
                                                         'Voulez-vous proc&eacute;der aussi &agrave; l\'impression des &eacute;tiquettes',
                                                         function (btn) {
                                                             if (btn == 'yes') {
                                                                 var linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue();
-                                                                onPdfBLClick(linkUrl);
-                                                              
+                                                                let linkUrlb = '../SockServlet?mode=ETIQUETTE&startAt=' + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue() + '&bonId=' + lg_BON_LIVRAISON_ID;
+                                                                  window.open(linkUrlb);
+
                                                                 var xtype = "";
                                                                 xtype = "bonlivraisonmanager";
                                                                 testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
