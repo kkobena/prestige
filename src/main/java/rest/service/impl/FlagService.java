@@ -177,8 +177,6 @@ public class FlagService {
                     }
                 }
                 start += max;
-//                flag.setMontant(flag.getMontant() - virtualAmount);
-//                getEntityManager().merge(flag);
                 json.put("success", 1);
                 json.put("nb", i + " ventes  impactées ");
                  if (virtualAmount == 0) {

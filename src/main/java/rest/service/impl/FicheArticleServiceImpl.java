@@ -94,7 +94,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                 cb.sumAsLong(root.get(TFamilleStock_.intNUMBERAVAILABLE))
         )
         );
-        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
         q.setMaxResults(1);
         return q.getSingleResult();
@@ -157,7 +157,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                         .orderBy(cb.desc(fa.get(TFamille_.dtPEREMPTION)));
             }
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
