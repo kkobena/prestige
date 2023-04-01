@@ -9,6 +9,7 @@ import commonTasks.dto.LogDTO;
 import dal.TEventLog;
 import dal.TEventLog_;
 import dal.TUser;
+import dal.TUser_;
 import dal.enumeration.TypeLog;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -59,14 +60,13 @@ public class LogServiceImpl implements LogService {
             TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
             eventLog.setLgUSERID(user);
             eventLog.setDtCREATED(new Date());
-            eventLog.setDtUPDATED(new Date());
+            eventLog.setDtUPDATED(eventLog.getDtCREATED());
             eventLog.setStrCREATEDBY(user.getStrLOGIN());
             eventLog.setStrSTATUT(commonparameter.statut_enable);
             eventLog.setStrTABLECONCERN(T.getClass().getName());
             eventLog.setTypeLog(typeLog);
             eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
             getEntityManager().persist(eventLog);
-
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -105,28 +105,14 @@ public class LogServiceImpl implements LogService {
         return new JSONObject().put("total", l.size()).put("data", new JSONArray(l));
     }
 
-    public long logs(String search, LocalDate dtStart, LocalDate dtEnd, String userId, int criteria) {
+    private long logs(String search, LocalDate dtStart, LocalDate dtEnd, String userId, int criteria) {
         try {
-            List<Predicate> predicates = new ArrayList<>();
+
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TEventLog> root = cq.from(TEventLog.class);
             cq.select(cb.count(root));
-            Predicate btw = cb.between(
-                    cb.function("DATE", Date.class, root.get(TEventLog_.dtCREATED)),
-                    java.sql.Date.valueOf(dtStart),
-                    java.sql.Date.valueOf(dtEnd));
-            predicates.add(btw);
-            if (search != null && !"".equals(search)) {
-                Predicate predicate = cb.and(cb.or(cb.like(root.get(TEventLog_.strDESCRIPTION), search + "%"), cb.like(root.get(TEventLog_.strTYPELOG), search + "%")));
-                predicates.add(predicate);
-            }
-            if (criteria > 0) {
-                predicates.add(cb.equal(root.get(TEventLog_.typeLog), TypeLog.values()[criteria]));
-            }
-            if(!StringUtils.isEmpty(userId)){
-                 predicates.add(cb.equal(root.get(TEventLog_.lgUSERID).get("lgUSERID"), userId));
-            }
+            List<Predicate> predicates = logs(cb, root, search, dtStart, dtEnd, userId, criteria);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
@@ -136,26 +122,34 @@ public class LogServiceImpl implements LogService {
         }
     }
 
+    private List<Predicate> logs(CriteriaBuilder cb, Root<TEventLog> root, String search, LocalDate dtStart, LocalDate dtEnd, String userId, int criteria) {
+        List<Predicate> predicates = new ArrayList<>();
+        Predicate btw = cb.between(
+                cb.function("DATE", Date.class, root.get(TEventLog_.dtCREATED)),
+                java.sql.Date.valueOf(dtStart),
+                java.sql.Date.valueOf(dtEnd));
+        predicates.add(btw);
+        if (StringUtils.isNotEmpty(search)) {
+            predicates.add(cb.or(cb.like(root.get(TEventLog_.strDESCRIPTION), search + "%"), cb.like(root.get(TEventLog_.strTYPELOG), search + "%")));
+        }
+        if (StringUtils.isNotEmpty(userId)) {
+            predicates.add(cb.equal(root.get(TEventLog_.lgUSERID).get(TUser_.lgUSERID), userId));
+        }
+        if (criteria > 0) {
+            predicates.add(cb.equal(root.get(TEventLog_.typeLog), TypeLog.values()[criteria]));
+        }
+        return predicates;
+    }
+
     @Override
     public List<LogDTO> logs(String search, LocalDate dtStart, LocalDate dtEnd, int start, int limit, boolean all, String userId, int criteria) {
         try {
-            List<Predicate> predicates = new ArrayList<>();
+
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TEventLog> cq = cb.createQuery(TEventLog.class);
             Root<TEventLog> root = cq.from(TEventLog.class);
             cq.select(root).orderBy(cb.desc(root.get(TEventLog_.dtCREATED)));
-            Predicate btw = cb.between(
-                    cb.function("DATE", Date.class, root.get(TEventLog_.dtCREATED)),
-                    java.sql.Date.valueOf(dtStart),
-                    java.sql.Date.valueOf(dtEnd));
-            predicates.add(cb.and(btw));
-            if (search != null && !"".equals(search)) {
-                Predicate predicate = cb.and(cb.or(cb.like(root.get(TEventLog_.strDESCRIPTION), search + "%"), cb.like(root.get(TEventLog_.strTYPELOG), search + "%")));
-                predicates.add(predicate);
-            }
-            if (criteria > 0) {
-                predicates.add(cb.equal(root.get(TEventLog_.typeLog), TypeLog.values()[criteria]));
-            }
+            List<Predicate> predicates = logs(cb, root, search, dtStart, dtEnd, userId, criteria);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TEventLog> q = getEntityManager().createQuery(cq);
             if (!all) {
@@ -164,7 +158,7 @@ public class LogServiceImpl implements LogService {
             }
             return q.getResultList().stream().map(LogDTO::new).sorted(comparatorDate.reversed()).collect(Collectors.toList());
         } catch (Exception e) {
-             LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -179,8 +173,9 @@ public class LogServiceImpl implements LogService {
         return new JSONObject().put("total", count).put("data", new JSONArray(l));
 
     }
-       @Override
- public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, Date date) {
+
+    @Override
+    public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, Date date) {
         TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
         eventLog.setLgUSERID(user);
         eventLog.setDtCREATED(date);
@@ -193,14 +188,14 @@ public class LogServiceImpl implements LogService {
         eventLog.setStrTYPELOG(ref);
         getEntityManager().persist(eventLog);
     }
- 
-   @Override
-    public void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T,String remoteHost,String remoteAddr) {
+
+    @Override
+    public void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T, String remoteHost, String remoteAddr) {
         try {
             TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
             eventLog.setLgUSERID(user);
             eventLog.setDtCREATED(new Date());
-            eventLog.setDtUPDATED(new Date());
+            eventLog.setDtUPDATED(eventLog.getDtCREATED());
             eventLog.setStrCREATEDBY(user.getStrLOGIN());
             eventLog.setStrSTATUT(commonparameter.statut_enable);
             eventLog.setStrTABLECONCERN(T.getClass().getName());
@@ -210,9 +205,8 @@ public class LogServiceImpl implements LogService {
             eventLog.setRemoteHost(remoteHost);
             getEntityManager().persist(eventLog);
 
-
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
         }
     }
