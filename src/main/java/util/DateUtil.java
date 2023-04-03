@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package util;
 
 import java.text.DateFormat;
@@ -31,9 +28,24 @@ public final class DateUtil {
         LocalDate lastMonth = LocalDate.now().minusMonths(nthnMoth);
         return LocalDate.of(lastMonth.getYear(), lastMonth.getMonth(), 1);
     }
-
+   public static String convertDateToDD_MM_YYYY(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        if (date != null) {
+            return dateFormat.format(date);
+        } else {
+            return "";
+        }
+    }
     public static String convertDateToDD_MM_YYYY_HH_mm(Date date) {
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        if (date != null) {
+            return dateFormat.format(date);
+        } else {
+            return "";
+        }
+    }
+        public static String convertDateTo_ISO(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         if (date != null) {
             return dateFormat.format(date);
         } else {

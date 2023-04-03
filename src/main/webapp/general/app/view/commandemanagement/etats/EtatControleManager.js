@@ -1,6 +1,6 @@
 /* global Ext */
 
-var url_services_data_etats_list = '../webservices/commandemanagement/etats/ws_data.jsp';
+//var url_services_data_etats_list = '../webservices/commandemanagement/etats/ws_data.jsp';
 var url_services_data_grossiste = '../webservices/configmanagement/grossiste/ws_data.jsp';
 var url_services_transaction_etats = '../webservices/commandemanagement/etats/ws_transaction.jsp?mode=';
 var url_services_pdf_bonlivraison = '../webservices/commandemanagement/bonlivraison/ws_generate_pdf.jsp';
@@ -14,7 +14,7 @@ var selectedBLs = [];
 var selectedBL;
 var lg_BON_LIVRAISON_ID;
 var int_MHT;
-var btnUpdate=false;
+var btnUpdate = false;
 Ext.util.Format.decimalSeparator = ',';
 Ext.util.Format.thousandSeparator = '.';
 function amountformat(val) {
@@ -33,21 +33,21 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
     plugins: [{
             ptype: 'rowexpander',
             rowBodyTpl: new Ext.XTemplate(
-                    '<p> {str_FAMILLE_ITEM}</p>',
-                    {
-                        formatChange: function (v) {
-                            var color = v >= 0 ? 'green' : 'red';
-                            return '<span style="color: ' + color + ';">' + Ext.util.Format.usMoney(v) + '</span>';
-                        }
-                    })
+                    '<p> {items}</p>'/*,
+                     {
+                     formatChange: function (v) {
+                     let color = v >= 0 ? 'green' : 'red';
+                     return '<span style="color: ' + color + ';">' + Ext.util.Format.usMoney(v) + '</span>';
+                     }
+                     }*/)
         }],
 //    iconCls: 'icon-grid',
     initComponent: function () {
-        url_services_data_etats_list = '../webservices/commandemanagement/etats/ws_data.jsp';
+//        url_services_data_etats_list = '../webservices/commandemanagement/etats/ws_data.jsp';
 
-        var store_grossiste = new Ext.data.Store({
+        let store_grossiste = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
-            pageSize: itemsPerPage,
+            pageSize: 20,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
@@ -70,7 +70,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
             {
                 var object = Ext.JSON.decode(response.responseText, false);
                 btnUpdate = object.BTNUPDATE;
-               
+
             },
             failure: function (response)
             {
@@ -83,29 +83,118 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
 
 
 
-        var itemsPerPage = 20;
-        var store_etats = new Ext.data.Store({
-            model: 'testextjs.model.EtatControle',
+        const itemsPerPage = 20;
+        const store_etats = new Ext.data.Store({
+            //  model: 'testextjs.model.EtatControle',
+            idProperty: 'id',
+            fields: [
+                {
+                    name: 'lgBONLIVRAISONID',
+                    type: 'string'
+                },
+                {
+                    name: 'strREFLIVRAISON',
+                    type: 'string'
+                },
+                {
+                    name: 'dtDATELIVRAISON',
+                    type: 'string'
+                },
+                {
+                    name: 'strSTATUT',
+                    type: 'string'
+                },
+                {
+                    name: 'dtCREATED',
+                    type: 'string'
+                },
+                {
+                    name: 'dtUPDATED',
+                    type: 'string'
+                },
+                {
+                    name: 'strSTATUTFACTURE',
+                    type: 'string'
+                },
+                {
+                    name: 'user',
+                    type: 'auto'
+                },
+                {
+                    name: 'orderId',
+                    type: 'string'
+                },
+                {
+                    name: 'orderRef',
+                    type: 'string'
+                },
+                {
+                    name: 'items',
+                    type: 'string'
+                },
+                {
+                    name: 'fournisseurId',
+                    type: 'string'
+                },
+                {
+                    name: 'fournisseur',
+                    type: 'auto'
+                },
+                {
+                    name: 'intMONTANTRESTANT',
+                    type: 'number'
+                },
+                {
+                    name: 'intMONTANTREGLE',
+                    type: 'number'
+                },
+                {
+                    name: 'intHTTC',
+                    type: 'number'
+                },
+                {
+                    name: 'intTVA',
+                    type: 'number'
+                },
+                {
+                    name: 'intMHT',
+                    type: 'number'
+                },
+                {
+                    name: 'returnFullBl',
+                    type: 'boolean'
+                },
+                {
+                    name: 'montantAvoir',
+                    type: 'number'
+                },
+                {
+                    name: 'bl_SELECTED',
+                    type: 'boolean'
+                },
+                {
+                    name: 'dateLivraison',
+                    type: 'date'
+                }
+
+            ],
             pageSize: itemsPerPage,
             autoLoad: false,
-            groupField: 'str_LIBELLE',
+            groupField: 'fournisseurId',
             proxy: {
                 type: 'ajax',
-                url: url_services_data_etats_list,
+                url: '../api/v1/etat-control-bon/list',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
-                },
-                timeout: 240000
+                }
             }
-
         });
 
         Ext.apply(this, {
             width: '98%',
             height: 580,
-//            features: [{ftype: 'grouping'}],
             store: store_etats,
             id: 'gridID',
             columns: [
@@ -117,74 +206,65 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                 },
                 {
                     header: 'GROSSISTE',
-                    dataIndex: 'str_LIBELLE',
+                    tpl: '{fournisseur.fournisseurLibelle}',
+                    xtype: 'templatecolumn',
                     flex: 1.5
                 },
                 {
                     header: 'NO CMD',
-                    dataIndex: 'str_ORDER_REF',
+                    dataIndex: 'orderRef',
                     flex: 1
                 },
                 {
                     header: 'REF BL',
-                    dataIndex: 'str_BL_REF',
+                    dataIndex: 'strREFLIVRAISON',
                     align: 'right',
                     flex: 1
                 },
                 {
                     header: 'Montant HT',
-                    dataIndex: 'int_ORDER_PRICE',
+                    dataIndex: 'intMHT',
                     renderer: amountformat,
                     align: 'right',
                     flex: 1
                 },
                 {
                     header: 'Montant TVA',
-                    dataIndex: 'int_TVA',
+                    dataIndex: 'intTVA',
                     renderer: amountformat,
                     align: 'right',
                     flex: 1
                 },
                 {
                     header: 'Montant TTC',
-                    dataIndex: 'int_BL_PRICE',
+                    dataIndex: 'intHTTC',
                     renderer: amountformat,
                     align: 'right',
                     flex: 1
                 },
-                {
-                    header: 'QTE CMD',
-                    dataIndex: 'int_QTE_CMDE',
-                    align: 'center',
-                    hidden: true,
-                    flex: 1
-                },
+
                 {
                     header: 'DATE LIVR',
-                    dataIndex: 'dt_DATE_LIVRAISON',
+                    dataIndex: 'dtDATELIVRAISON',
                     flex: 1
                 },
                 {
                     header: 'DATE ENTREE',
-                    dataIndex: 'dt_UPDATED',
+                    dataIndex: 'dtCREATED',
                     flex: 1
                 },
-                {
-                    header: 'QTE ENTREE',
-                    dataIndex: 'int_NUMBER',
-                    hidden: true,
-                    flex: 1
-                },
+
                 {
                     header: 'MTN AVOIR',
-                    dataIndex: 'int_AMOUNT_AVOIR',
+                    dataIndex: 'montantAvoir',
                     renderer: amountformat,
                     align: 'right',
                     flex: 1
                 },
                 {
                     header: 'Operateur',
-                    dataIndex: 'lg_USER_ID',
+                    tpl: '{user.fullName}',
+                    xtype: 'templatecolumn',
                     flex: 1.5
                 },
                 {
@@ -198,29 +278,28 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                     }
 
                 },
-                
-                    {
+
+                {
                     xtype: 'actioncolumn',
                     width: 30,
                     sortable: false,
                     menuDisabled: true,
                     items: [{
-                             icon: 'resources/images/icons/fam/delete.gif',
+                            icon: 'resources/images/icons/fam/delete.gif',
                             tooltip: 'RETOUR COMPLET DU BL',
                             scope: this,
                             getClass: function (value, metadata, record) {
-                            if (record.get('RETURN_FULL_BL')) {
-                                            return 'x-display-hide';
-                                        }
+                                if (record.get('returnFullBl')) {
+                                    return 'x-display-hide';
+                                }
 
-                                        return 'x-hide-display';
+                                return 'x-hide-display';
                             },
 
                             handler: this.retourCompletBL
                         }]
                 },
-                
-                
+
                 {
                     xtype: 'actioncolumn',
                     width: 30,
@@ -233,13 +312,13 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                             getClass: function (value, metadata, record) {
                                 console.log(btnUpdate, 'getClass');
                                 if (btnUpdate) {
-                                    
+
                                     return 'x-display-hide';
 
 
                                 } else {
-                                   
-                                   return 'x-hide-display';
+
+                                    return 'x-hide-display';
                                 }
                             },
 
@@ -314,6 +393,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                     emptyText: 'Date debut',
                     submitFormat: 'Y-m-d',
                     maxValue: new Date(),
+                    value: new Date(),
                     flex: 0.7,
                     format: 'd/m/Y',
                     listeners: {
@@ -328,6 +408,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                     emptyText: 'Date fin',
                     maxValue: new Date(),
                     flex: 0.7,
+                    value: new Date(),
                     submitFormat: 'Y-m-d',
                     format: 'd/m/Y',
                     listeners: {
@@ -368,11 +449,13 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                 {
                     text: 'GESTION DES QUINZAINES',
                     scope: this,
+                    hidden: true,
                     handler: this.onGestionQuinzaine
                 }, '-',
                 {
                     text: 'REGLER UNE SELECTION DE BL',
                     scope: this,
+                    hidden: true,
                     handler: this.onReglerSelectionBL
                 }
             ],
@@ -384,21 +467,21 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                 plugins: new Ext.ux.ProgressBarPager(), // same store GridPanel is using
                 listeners: {
                     beforechange: function (page, currentPage) {
-                        var myProxy = this.store.getProxy();
+                        let myProxy = this.store.getProxy();
                         myProxy.params = {
-                            datedebut: '',
-                            datefin: '',
-                            search_value: '',
-                            lg_GROSSISTE_ID: ''
+                            dtEnd: null,
+                            dtStart: null,
+                            search: '',
+                            grossisteId: ''
                         };
-                        var lg_GROSSISTE_ID = "";
+                        let lg_GROSSISTE_ID = "";
                         if (Ext.getCmp('lg_GROSSISTE_ID').getValue()) {
                             lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
                         }
-                        myProxy.setExtraParam('datedebut', Ext.getCmp('datedebut').getSubmitValue());
-                        myProxy.setExtraParam('datefin', Ext.getCmp('datefin').getSubmitValue());
-                        myProxy.setExtraParam('search_value', Ext.getCmp('rechecher').getValue());
-                        myProxy.setExtraParam('lg_GROSSISTE_ID', lg_GROSSISTE_ID);
+                        myProxy.setExtraParam('dtStart', Ext.getCmp('datedebut').getSubmitValue());
+                        myProxy.setExtraParam('dtEnd', Ext.getCmp('datefin').getSubmitValue());
+                        myProxy.setExtraParam('search', Ext.getCmp('rechecher').getValue());
+                        myProxy.setExtraParam('grossisteId', lg_GROSSISTE_ID);
                     }
 
                 }
@@ -414,9 +497,8 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
 
     },
     loadStore: function () {
-        this.getStore().load({
-            callback: this.onStoreLoad
-        });
+        Me.onRechClick();
+
     },
     onStoreLoad: function () {
 
@@ -428,36 +510,28 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                 'Voulez-vous generer le fichier CSV pour les etiquettes de cette commande?',
                 function (btn) {
                     if (btn === 'yes') {
-                        var rec = grid.getStore().getAt(rowIndex);
-                        window.location = '../DownloadFileServlet?lg_ORDER_ID=' + rec.get('lg_BON_LIVRAISON_ID') + '&str_TYPE_ACTION=ETATCONTROLE';
+                        const rec = grid.getStore().getAt(rowIndex);
+                        window.location = '../DownloadFileServlet?lg_ORDER_ID=' + rec.get('lgBONLIVRAISONID') + '&str_TYPE_ACTION=ETATCONTROLE';
                     }
                 });
     },
     onPdfDetailClick: function (grid, rowIndex) {
 
-        var rec = grid.getStore().getAt(rowIndex);
-        //var str_REF_LIVRAISON = Ext.getCmp('str_REF_LIVRAISON').getValue();
-        var chaine = location.pathname;
-        var reg = new RegExp("[/]+", "g");
-        var tableau = chaine.split(reg);
-        var sitename = tableau[1];
-        var linkUrl = url_services_pdf_bonlivraison + '?lg_BON_LIVRAISON_ID=' + rec.get('str_BL_REF');
-        // testextjs.app.getController('App').onLunchPrinter(linkUrl);
-        //alert("Ok ca marche " + linkUrl);
+        const rec = grid.getStore().getAt(rowIndex);
+        let linkUrl = url_services_pdf_bonlivraison + '?lg_BON_LIVRAISON_ID=' + rec.get('strREFLIVRAISON');
+
         window.open(linkUrl);
-        // Me.onbtncancel();
+
     },
     onPdfEtiquetteClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.stockmanagement.etiquette.action.add({
-            odatasource: rec.get('lg_BON_LIVRAISON_ID'),
+            odatasource: rec.get('lgBONLIVRAISONID'),
             parentview: this,
             mode: "printer",
-            titre: "Edition d'etiquette des produits du bon de livraison [" + rec.get('str_BL_REF') + "]"
+            titre: "Edition d'etiquette des produits du bon de livraison [" + rec.get('strREFLIVRAISON') + "]"
         });
-        /*var rec = grid.getStore().getAt(rowIndex);
-         var linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + rec.get('lg_BON_LIVRAISON_ID');
-         testextjs.app.getController('App').onLunchPrinterBis(linkUrl);*/
+
     },
     onPrintClick: function () {
 
@@ -465,8 +539,18 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                 'Imprimer l\'etat de controle des achats?',
                 function (btn) {
                     if (btn === 'yes') {
-                        Me.onPdfClick();
-                        return;
+                        const valeur = Ext.getCmp('rechecher').getValue();
+                        let lg_GROSSISTE_ID = "";
+                        if (Ext.getCmp('lg_GROSSISTE_ID').getValue() !== null) {
+                            lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
+                        }
+                        const dtEnd = Ext.getCmp('datefin').getSubmitValue();
+                        const dtStart = Ext.getCmp('datedebut').getSubmitValue();
+                        //  const linkUrl = "../webservices/commandemanagement/etats/ws_generate_pdf.jsp?lg_GROSSISTE_ID=" + lg_GROSSISTE_ID + "&search_value=" + valeur + "&datedebut=" + Ext.getCmp('datedebut').getSubmitValue() + "&datefin=" + Ext.getCmp('datefin').getSubmitValue();
+                        var linkUrl = '../EtatControlStockServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
+                                + '&grossisteId=' + lg_GROSSISTE_ID + '&search=' + valeur;
+                        window.open(linkUrl);
+
                     }
                 });
 
@@ -485,31 +569,23 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
         }
         this.getStore().load({
             params: {
-                search_value: Ext.getCmp('rechecher').getValue(),
-                lg_GROSSISTE_ID: lg_GROSSISTE_ID,
-                datedebut: Ext.getCmp('datedebut').getSubmitValue(),
-                datefin: Ext.getCmp('datefin').getSubmitValue()
+                search: Ext.getCmp('rechecher').getValue(),
+                grossisteId: lg_GROSSISTE_ID,
+                dtStart: Ext.getCmp('datedebut').getSubmitValue(),
+                dtEnd: Ext.getCmp('datefin').getSubmitValue()
             }
-        }, url_services_data_etats_list);
+        });
     },
     onPdfClick: function () {
-        var valeur = Ext.getCmp('rechecher').getValue();
-        var lg_GROSSISTE_ID = "";
-        if (Ext.getCmp('lg_GROSSISTE_ID').getValue() != null) {
-            lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
-        }
 
-        var linkUrl = url_services_etatcontrole_pdf + "?lg_GROSSISTE_ID=" + lg_GROSSISTE_ID + "&search_value=" + valeur + "&datedebut=" + Ext.getCmp('datedebut').getSubmitValue() + "&datefin=" + Ext.getCmp('datefin').getSubmitValue();
-
-        window.open(linkUrl);
 
     },
     onGestionQuinzaine: function () {
-        var xtype = "quinzaineManager";
+        const xtype = "quinzaineManager";
         testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion des quinzaines", "0");
     },
     onCheckChange: function (column, rowIndex, checked, eOpts) {
-        var store = Ext.getCmp('gridID').getStore(), rec = store.getAt(rowIndex);
+        let store = Ext.getCmp('gridID').getStore(), rec = store.getAt(rowIndex);
         if (checked) {
             selectedBL = rec;
             selectedBLs.push(rec);
@@ -519,10 +595,10 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                 selectedBLs.splice(selectedBLs.indexOf(rec), 1);
             }
         }
-        console.log(selectedBL);
-        console.log(selectedBLs);
-        lg_BON_LIVRAISON_ID = selectedBL.get('lg_BON_LIVRAISON_ID');
-        int_MHT = selectedBL.get('int_MHT');
+
+
+        lg_BON_LIVRAISON_ID = selectedBL.get('lgBONLIVRAISONID');
+        int_MHT = selectedBL.get('intMHT');
 
         rec.commit();
     },
@@ -539,13 +615,12 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                 }
             });
 
-            return;
         } else {
 
             new testextjs.view.commandemanagement.etats.action.paybls({
                 selectedBLs: selectedBLs,
                 selectedBL: selectedBL,
-                titre: 'Règlement de Bons de Livraison[ ' + selectedBL.get('lg_BON_LIVRAISON_ID') + ' : ' + selectedBL.get('int_MHT') + ' ]'
+                titre: 'Règlement de Bons de Livraison[ ' + selectedBL.get('lgBONLIVRAISONID') + ' : ' + selectedBL.get('intMHT') + ' ]'
             });
         }
 
@@ -554,17 +629,17 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
         if (!btnUpdate) {
             return;
         }
-        var rec = grid.getStore().getAt(rowIndex);
+        let rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.commandemanagement.cmde_passees.action.edit({
             gridToLoad: 'etatscontrolemanagerID',
             odatasource: rec.data,
             parentview: this,
             mode: "update",
-            titre: "Mise &agrave; jour des informations du Bon de livraison N&deg;" + rec.get('str_BL_REF')
+            titre: "Mise &agrave; jour des informations du Bon de livraison N&deg;" + rec.get('strREFLIVRAISON')
         });
     },
-    retourCompletBL:function (view, rowIndex, colIndex, item, e, record, row) {
-         var storetypemotif = new Ext.data.Store({
+    retourCompletBL: function (view, rowIndex, colIndex, item, e, record, row) {
+        let storetypemotif = new Ext.data.Store({
             idProperty: 'lgMOTIFRETOUR',
             fields: [
                 {name: 'lgMOTIFRETOUR',
@@ -589,10 +664,10 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
             }
 
         });
-        
-        
-        
-         var win = Ext.create('Ext.window.Window',
+
+
+
+        const win = Ext.create('Ext.window.Window',
                 {
                     extend: 'Ext.window.Window',
                     autoShow: true,
@@ -617,54 +692,54 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                             },
                             items: [
                                 {
-                                   xtype: 'fieldset',
+                                    xtype: 'fieldset',
                                     layout: {
-        type: 'hbox',
-        align: 'stretch'
-    },
-                                    title: 'Information sur le bl', 
-                                          items: [
-                                              {
-                                                xtype: 'displayfield',   
-                                                fieldLabel: 'Numéro BL',
-                                                value: record.get('str_BL_REF'),
-                                                labelWidth: 70,
-                                               margin: '0 10 0 0',
-                                              
-                                                            fieldStyle: "color:green;font-weight: bold;font-size: 1.2em"
-                                          },
-                                            {
-                                                xtype: 'displayfield',   
-                                                fieldLabel: 'MONATNT TTC',
-                                                value: record.get('int_BL_PRICE'),
-                                                margin: '0 10 0 0',
-                                                 renderer: function (v) {
-                                                                return Ext.util.Format.number(v, '0,000.') ;
-                                                            },
-                                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
-                                          },
-                                           {
-                                                xtype: 'displayfield',   
-                                                fieldLabel: 'MONATNT HT',
-                                                 margin: '0 10 0 0',
-                                                value: record.get('int_ORDER_PRICE'),
-                                                  renderer: function (v) {
-                                                                return Ext.util.Format.number(v, '0,000.') ;
-                                                            },
-                                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
-                                          },
-                                          {
-                                                xtype: 'displayfield',   
-                                                fieldLabel: 'MONATNT TVA',
-                                                value: record.get('int_TVA'),
-                                                  renderer: function (v) {
-                                                                return Ext.util.Format.number(v, '0,000.') ;
-                                                            },
-                                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
-                                          }
-                                      
-                            ]
-                                    
+                                        type: 'hbox',
+                                        align: 'stretch'
+                                    },
+                                    title: 'Information sur le bl',
+                                    items: [
+                                        {
+                                            xtype: 'displayfield',
+                                            fieldLabel: 'Numéro BL',
+                                            value: record.get('strREFLIVRAISON'),
+                                            labelWidth: 70,
+                                            margin: '0 10 0 0',
+
+                                            fieldStyle: "color:green;font-weight: bold;font-size: 1.2em"
+                                        },
+                                        {
+                                            xtype: 'displayfield',
+                                            fieldLabel: 'MONATNT TTC',
+                                            value: record.get('intHTTC'),
+                                            margin: '0 10 0 0',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
+                                        },
+                                        {
+                                            xtype: 'displayfield',
+                                            fieldLabel: 'MONATNT HT',
+                                            margin: '0 10 0 0',
+                                            value: record.get('intMHT'),
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
+                                        },
+                                        {
+                                            xtype: 'displayfield',
+                                            fieldLabel: 'MONATNT TVA',
+                                            value: record.get('intTVA'),
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            fieldStyle: "color:blue;font-weight: bold;font-size: 1.2em"
+                                        }
+
+                                    ]
+
                                 },
 
                                 {
@@ -679,7 +754,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                                         labelWidth: 115
                                     },
                                     items: [
-                                       {
+                                        {
                                             xtype: 'combobox',
                                             fieldLabel: 'Motif',
                                             name: 'lgMOTIFRETOUR',
@@ -691,17 +766,11 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                                             queryMode: 'remote',
                                             flex: 1,
                                             emptyText: 'Choisir un Motif...',
-                                             allowBlank: false,
-                                            listeners: {
-                                                select: function (cmp) {
+                                            allowBlank: false
 
-                                                   
-                                                }
-
-                                            }
                                         }
-                                       
-                                        
+
+
 
                                     ]
                                 }
@@ -721,39 +790,39 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                                             xtype: 'button',
                                             text: 'Enregistrer',
                                             handler: function (btn) {
-                                                var formulaire = btn.up('form');
-                                                 if (formulaire.isValid()) {
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-            Ext.Ajax.request({
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                url: '../api/v1/retourfournisseur/full-bl/' + record.get('lg_BON_LIVRAISON_ID'),
-                params: Ext.JSON.encode(formulaire.getValues()),
-                success: function (response, options) {
-                    progress.hide();
-                    var result = Ext.JSON.decode(response.responseText, true);
-                    if (result.success) {
-                        win.destroy();
-                       Me.onRechClick();
-                    } else {
-                        Ext.MessageBox.show({
-                            title: 'Message d\'erreur',
-                            width: 320,
-                            msg: result.msg,
-                            buttons: Ext.MessageBox.OK,
-                            icon: Ext.MessageBox.ERROR
+                                                const formulaire = btn.up('form');
+                                                if (formulaire.isValid()) {
+                                                    let progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                                                    Ext.Ajax.request({
+                                                        method: 'PUT',
+                                                        headers: {'Content-Type': 'application/json'},
+                                                        url: '../api/v1/retourfournisseur/full-bl/' + record.get('lgBONLIVRAISONID'),
+                                                        params: Ext.JSON.encode(formulaire.getValues()),
+                                                        success: function (response, options) {
+                                                            progress.hide();
+                                                            const result = Ext.JSON.decode(response.responseText, true);
+                                                            if (result.success) {
+                                                                win.destroy();
+                                                                Me.onRechClick();
+                                                            } else {
+                                                                Ext.MessageBox.show({
+                                                                    title: 'Message d\'erreur',
+                                                                    width: 320,
+                                                                    msg: result.msg,
+                                                                    buttons: Ext.MessageBox.OK,
+                                                                    icon: Ext.MessageBox.ERROR
 
-                        });
-                    }
+                                                                });
+                                                            }
 
-                },
-                failure: function (response, options) {
-                    progress.hide();
-                    Ext.Msg.alert("Message", 'Erreur du système ' + response.status);
-                }
+                                                        },
+                                                        failure: function (response, options) {
+                                                            progress.hide();
+                                                            Ext.Msg.alert("Message", 'Erreur du système ' + response.status);
+                                                        }
 
-            });
-        }
+                                                    });
+                                                }
                                             }
                                         },
                                         {
@@ -772,5 +841,5 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
 
                 });
     }
-    
+
 });
