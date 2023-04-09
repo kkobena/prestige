@@ -505,7 +505,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
                 TParameters tp = getEntityManager().find(TParameters.class, "KEY_ACTIVATION_PLAFOND_VENTE");
                 plafondVenteIsActive = (tp != null && tp.getStrVALUE().trim().equals("1"));
             } catch (Exception e) {
-                plafondVenteIsActive = plafondVenteIsActive;
+         
             }
         }
         return plafondVenteIsActive;
