@@ -28,7 +28,8 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
            
 
         Omode = this.getMode();
-        var Oodatasource = this.getOdatasource();lgBONLIVRAISONID=Oodatasource.lg_BON_LIVRAISON_ID;
+        var Oodatasource = this.getOdatasource();
+        lgBONLIVRAISONID=Oodatasource.lgBONLIVRAISONID;
        
         
         
@@ -110,7 +111,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
                             fieldLabel: 'Date BL',
                             name: 'dt_DATE_LIVRAISON',
                             id: 'dt_DATE_LIVRAISON',
-                            //submitFormat: 'Y/m/d',
+                             format: 'd/m/Y',
                             submitFormat: 'Y-m-d',
                             allowBlank: false,
                             maxValue: new Date()
@@ -137,18 +138,18 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
                     ]
                 }]
         });
-        Ext.getCmp('lgGROSSISTEIDEDIT').setValue(Oodatasource.str_LIBELLE);
-        Ext.getCmp('str_REF_').setValue(Oodatasource.str_ORDER_REF);
-        Ext.getCmp('str_REF_LIVRAISON').setValue(Oodatasource.str_BL_REF);
-        Ext.getCmp('dt_DATE_LIVRAISON').setValue(Oodatasource.dt_DATE_LIVRAISON);
-        Ext.getCmp('int_MHT').setValue(Oodatasource.int_ORDER_PRICE);
-        Ext.getCmp('int_TVA').setValue(Oodatasource.int_TVA);
+        Ext.getCmp('lgGROSSISTEIDEDIT').setValue(Oodatasource.fournisseur.fournisseurLibelle);
+        Ext.getCmp('str_REF_').setValue(Oodatasource.orderRef);
+        Ext.getCmp('str_REF_LIVRAISON').setValue(Oodatasource.strREFLIVRAISON);
+        Ext.getCmp('dt_DATE_LIVRAISON').setValue(Oodatasource.dateLivraison);
+        Ext.getCmp('int_MHT').setValue(Oodatasource.intMHT);
+        Ext.getCmp('int_TVA').setValue(Oodatasource.intTVA);
 
 
 
         //Initialisation des valeur
 
-        var win = new Ext.window.Window({
+        let win = new Ext.window.Window({
             autoShow: true,
             title: this.getTitre(),
             width: 500,
@@ -197,9 +198,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
             int_TVA = Ext.getCmp('int_TVA').getValue();
         }
 
-        //var int_HTTC = Ext.getCmp('int_HTTC').getValue();
-
-        //  alert("str_REF_LIVRAISON "+str_REF_LIVRAISON);
+   
         if (str_REF_LIVRAISON === "" || dt_DATE_LIVRAISON === "" || int_MHT === "" || int_TVA === "") {
             Ext.MessageBox.alert('VALIDATION', 'Veuillez renseigner les champs vides svp!');
             return;
@@ -228,16 +227,16 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
             {
                 testextjs.app.getController('App').StopWaitingProcess();
                 console.log('response',response);
-                var object = Ext.JSON.decode(response.responseText, false);
+                const object = Ext.JSON.decode(response.responseText, false);
                 if (object.status === 0) {
                     Ext.MessageBox.alert('Error Message', object.message);
-                     return;
+                    
                 } else {
                     Ext.MessageBox.alert('confirmation', object.message);
                     
                     Oview.getStore().load();
                     
-                    var bouton = button.up('window').close();
+                    button.up('window').close();
 
                 }
 
@@ -245,7 +244,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
             failure: function (response)
             {
                 testextjs.app.getController('App').StopWaitingProcess();
-                var object = Ext.JSON.decode(response.responseText, false);
+                const object = Ext.JSON.decode(response.responseText, false);
                 console.log("Bug " + response.responseText);
                 Ext.MessageBox.alert('Error Message', response.responseText);
 

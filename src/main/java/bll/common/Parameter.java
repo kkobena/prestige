@@ -176,7 +176,7 @@ public final class Parameter {
     public static final String KEY_CODE_NUMERARTION_FACTURE = "KEY_CODE_NUMERARTION_FACTURE";
      public static final String ACTION_RETURN_FULL_BL = "ACTION_RETURN_FULL_BL";
 
-    public Parameter() {
+    private Parameter() {
     }
 
 }

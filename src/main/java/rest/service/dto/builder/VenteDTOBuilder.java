@@ -2,13 +2,11 @@ package rest.service.dto.builder;
 
 import commonTasks.dto.AyantDroitDTO;
 import commonTasks.dto.ClientDTO;
-import commonTasks.dto.FamilleDTO;
 import commonTasks.dto.TiersPayantDTO;
 import commonTasks.dto.UserDTO;
 import dal.MvtTransaction;
 import dal.TAyantDroit;
 import dal.TClient;
-import dal.TFamille;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClientTiersPayent;
@@ -34,8 +32,9 @@ import util.DateUtil;
  *
  * @author koben
  */
-public final class VenteDTOBuilder {
+public final class VenteDTOBuilder extends CommonBuilder{
 
+ 
     public static VenteDTO buildVenteDTO(TPreenregistrement p, MvtTransaction mt) {
         return VenteDTO.builder()
                 .user(VenteDTOBuilder.user(p.getLgUSERID()))
@@ -149,13 +148,7 @@ public final class VenteDTOBuilder {
         return null;
     }
 
-    private static FamilleDTO produit(TFamille f) {
-        FamilleDTO o = new FamilleDTO();
-        o.setStrNAME(f.getStrNAME());
-        o.setIntCIP(f.getIntCIP());
-        o.setIntEAN13(f.getIntEAN13());
-        return o;
-    }
+  
 
     private static TiersPayantDTO tiersPayant(TTiersPayant payant) {
         TiersPayantDTO o = new TiersPayantDTO();
@@ -164,16 +157,7 @@ public final class VenteDTOBuilder {
         return o;
     }
 
-    private static UserDTO user(TUser user) {
-        if (Objects.nonNull(user)) {
-            UserDTO us = new UserDTO();
-            us.setStrFIRSTNAME(user.getStrFIRSTNAME());
-            us.setStrLASTNAME(user.getStrLASTNAME());
-            return us;
-        }
-        return null;
 
-    }
 
     private static ClientDTO client(TClient client) {
         if (Objects.nonNull(client)) {
