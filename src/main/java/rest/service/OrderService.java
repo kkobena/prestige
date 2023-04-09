@@ -31,7 +31,6 @@ import rest.service.dto.CommandeFiltre;
  * @author DICI
  */
 @Local
-//@Remote
 public interface OrderService {
 
     List<RuptureDetail> ruptureDetaisDtoByRupture(String idRupture);
