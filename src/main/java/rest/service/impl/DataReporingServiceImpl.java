@@ -108,7 +108,7 @@ public class DataReporingServiceImpl implements DataReporingService {
         Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
         cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)));
         List<Predicate> predicates = margesPredicats(cb, root, join, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamille, u, codeRayon, codeGrossiste);
-        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
         Query q = getEntityManager().createQuery(cq);
         return (Long) q.getSingleResult();
     }
@@ -542,10 +542,10 @@ public class DataReporingServiceImpl implements DataReporingService {
             Root<TPreenregistrementDetail> subroot = sub.from(TPreenregistrementDetail.class);
             sub.select(subroot.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID));
             List<Predicate> predicatesSubQuery = statsArticlesInvendusSubQueryPredicats(cb, subroot, dtStart, dtEnd, empId);
-            sub.where(predicatesSubQuery.toArray(new Predicate[predicatesSubQuery.size()]));
+            sub.where(predicatesSubQuery.toArray(new Predicate[0]));
             List<Predicate> predicates = statsArticlesInvendusPredicats(cb, root, fa, query, codeFamile, codeRayon, codeGrossiste, empId, stockFiltre, stock);
             predicates.add(cb.not(cb.in(root.get(TFamille_.lgFAMILLEID)).value(sub)));
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<ArticleDTO> q = getEntityManager().createQuery(cq);
             if (!all) {
                  q.setFirstResult(start);
