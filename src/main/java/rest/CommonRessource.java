@@ -82,11 +82,11 @@ public class CommonRessource {
     @Path("autorisation-prix-vente")
     public Response autorisationPrixVente() {
         HttpSession hs = servletRequest.getSession();
-        Boolean bool_UPDATE_PRICE = (Boolean) hs.getAttribute(DateConverter.UPDATE_PRICE);
+        Boolean hasAutority = (Boolean) hs.getAttribute(DateConverter.UPDATE_PRICE);
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);
-        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(bool_UPDATE_PRICE, 1)).build();
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(hasAutority, 1)).build();
     }
 
     @GET
@@ -195,11 +195,11 @@ public class CommonRessource {
     @GET
     @Path("vente-sansbon")
     public Response venteSansBon() {
-        Boolean bool_UPDATE_PRICE = commonService.sansBon();
+        Boolean btn = commonService.sansBon();
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);
-        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(bool_UPDATE_PRICE, 1)).build();
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(btn, 1)).build();
     }
 
     @GET
@@ -315,11 +315,11 @@ public class CommonRessource {
     @GET
     @Path("plafond-vente")
     public Response plafondVente() {
-        Boolean bool_UPDATE_PRICE = commonService.plafondVenteIsActive();
+        Boolean hasAutority = commonService.plafondVenteIsActive();
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);
-        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(bool_UPDATE_PRICE, 1)).build();
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(hasAutority, 1)).build();
     }
 
     @GET
