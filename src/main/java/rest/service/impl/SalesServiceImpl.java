@@ -3804,7 +3804,7 @@ public class SalesServiceImpl implements SalesService {
 
             return salesStatsService.chargerClientLorsModificationVnete(venteId);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
             return new JSONObject().put("success", false);
         }
     }
@@ -3901,11 +3901,14 @@ public class SalesServiceImpl implements SalesService {
             String msg = " ";
             boolean hasRestructuring = false;
             List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, this.getEm());
-            Integer RemiseCarnet = 0, montantvente = 0;
-            Integer totalTp = 0;
-            Integer netCustomer = 0;
+            int remiseCarnet = 0;
+            int montantvente;
+            int totalTp = 0;
+            int netCustomer;
             MontantAPaye montantAPaye;
-
+            int diffMontantTotalAndCmuAmount = 0;
+            int cmuAmount = 0;
+            boolean isCmu = tierspayants.stream().allMatch(TiersPayantParams::isCmu);
             List<TiersPayantParams> resultat = new ArrayList<>();
             TClient client = OTPreenregistrement.getClient();
             if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
@@ -3914,14 +3917,14 @@ public class SalesServiceImpl implements SalesService {
                 if (remise != null) {
                     montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
                     montantvente = montantAPaye.getMontant();
-                    RemiseCarnet = montantAPaye.getRemise();
+                    remiseCarnet = montantAPaye.getRemise();
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
                     montantvente = montantAPaye.getMontant();
 
                 }
 
-                Integer tpnet = montantvente - RemiseCarnet;
+                int tpnet = montantvente - remiseCarnet;
                 totalTp = tpnet;
                 JSONObject json = chechCustomerTiersPayantConsumption(tierspayants.get(0).getCompteTp(), tpnet);
                 if (json.getBoolean("hasRestructuring")) {
@@ -3934,9 +3937,9 @@ public class SalesServiceImpl implements SalesService {
                 tp.setCompteTp(tierspayants.get(0).getCompteTp());
                 tp.setNumBon(tierspayants.get(0).getNumBon());
                 tp.setTpnet(totalTp);
-                tp.setDiscount(RemiseCarnet);
+                tp.setDiscount(remiseCarnet);
                 tp.setTaux(100);
-                if (totalTp.compareTo(tpnet) != 0) {
+                if (totalTp != tpnet) {
                     tp.setTaux((int) Math.ceil((Double.valueOf(totalTp) * 100) / tpnet));
                 }
 
@@ -3948,21 +3951,25 @@ public class SalesServiceImpl implements SalesService {
 
                 if (remise != null) {
                     montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
-                    montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() : montantAPaye.getMontant();
+                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
+                    //   montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() : montantAPaye.getMontant();
+                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
-                    RemiseCarnet = montantAPaye.getRemise();
+                    remiseCarnet = montantAPaye.getRemise();
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                    montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() : montantAPaye.getMontant();
+                    // montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() : montantAPaye.getMontant();
+                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
+                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
                 }
-
+                diffMontantTotalAndCmuAmount = montantAPaye.getMontant() - cmuAmount;
                 for (TiersPayantParams tierspayant : tierspayants) {
                     TiersPayantParams tp = new TiersPayantParams();
                     Integer taux = tierspayant.getTaux();
                     Double montantTp = montantvente * (Double.valueOf(taux) / 100);
                     Integer tpnet = (int) Math.ceil(montantTp);
-                    int _taux = 0;
+                    int taux2 = 0;
                     JSONObject json = chechCustomerTiersPayantConsumption(tierspayant.getCompteTp(), tpnet);
                     if (json.getBoolean("hasRestructuring")) {
                         msg += json.getString("msg") + " ";
@@ -3970,35 +3977,37 @@ public class SalesServiceImpl implements SalesService {
                         tpnet = json.getInt("montantToBePaid");
                         if (montantVariable > tpnet) {
                             montantVariable -= tpnet;
-                            _taux = taux;
+                            taux2 = taux;
                         } else if (montantVariable <= tpnet) {
                             tpnet = montantVariable;
-                            _taux = (int) Math.ceil((Double.valueOf(tpnet) * 100) / montantvente);
+                            taux2 = (int) Math.ceil((Double.valueOf(tpnet) * 100) / montantvente);
                         }
 
                     } else {
                         if (montantVariable > tpnet) {
                             montantVariable -= tpnet;
-                            _taux = taux;
+                            taux2 = taux;
                         } else if (montantVariable <= tpnet) {
                             tpnet = montantVariable;
-                            _taux = (int) Math.ceil((montantTp * 100) / montantvente);
+                            taux2 = (int) Math.ceil((montantTp * 100) / montantvente);
                         }
                     }
 
                     totalTp += tpnet;
-                    tp.setTaux(_taux);
+                    tp.setTaux(taux2);
                     tp.setCompteTp(tierspayant.getCompteTp());
                     tp.setNumBon(tierspayant.getNumBon());
                     tp.setTpnet(tpnet);
                     tp.setDiscount(0);
                     resultat.add(tp);
                 }
-                netCustomer = (montantvente - totalTp) - RemiseCarnet + (montantAPaye.getMontant() - montantAPaye.getCmuAmount());
+                //    netCustomer = (montantvente - totalTp) - RemiseCarnet + (montantAPaye.getMontant() - montantAPaye.getCmuAmount());
+                netCustomer = (montantvente - totalTp) - remiseCarnet + (diffMontantTotalAndCmuAmount != montantvente ? diffMontantTotalAndCmuAmount : 0);
             }
-
-            MontantAPaye map = new MontantAPaye(netCustomer, montantvente + (montantAPaye.getMontant() - montantAPaye.getCmuAmount()), totalTp,
-                    RemiseCarnet, montantAPaye.getMarge(), montantAPaye.getMontantTva());
+            int finalSaleAmount = diffMontantTotalAndCmuAmount != montantvente ? montantvente + diffMontantTotalAndCmuAmount : montantvente;
+            MontantAPaye map = new MontantAPaye(netCustomer, finalSaleAmount, totalTp,
+                    remiseCarnet, montantAPaye.getMarge(), montantAPaye.getMontantTva());
+            map.setCmuAmount(cmuAmount);
             map.setMessage(msg);
             map.setRestructuring(hasRestructuring);
             map.setTierspayants(resultat);
@@ -4363,7 +4372,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp) throws Exception {
+    public void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp) {
         EntityManager emg = this.getEm();
         final boolean checked = tp.getChecked();
         final boolean sameDate = true;
@@ -4419,18 +4428,18 @@ public class SalesServiceImpl implements SalesService {
             TEmplacement emplacement = ooTUser.getLgEMPLACEMENTID();
             final Typemvtproduit typemvtproduit = checked ? findById(DateConverter.ANNULATION_DE_VENTE) : findById(DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
             preenregistrementDetails.forEach((e) -> {
-                TPreenregistrementDetail _newItem = createItemCopy(ooTUser, e, clonedPreen, emg);
-                TFamille OTFamille = e.getLgFAMILLEID();
-                updateNbreVenteApresAnnulation(OTFamille, ooTUser, _newItem.getIntQUANTITY(), emg);
-                TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), emplacement, emg);
+                TPreenregistrementDetail newItem = createItemCopy(ooTUser, e, clonedPreen, emg);
+                TFamille oFamille = e.getLgFAMILLEID();
+                updateNbreVenteApresAnnulation(oFamille, ooTUser, newItem.getIntQUANTITY(), emg);
+                TFamilleStock familleStock = findStock(oFamille.getLgFAMILLEID(), emplacement, emg);
                 int initStock = familleStock.getIntNUMBERAVAILABLE();
-                mouvementProduitService.saveMvtProduit(_newItem.getIntPRICEUNITAIR(), _newItem,
-                        typemvtproduit, OTFamille, ooTUser, emplacement,
-                        _newItem.getIntQUANTITY(), initStock, initStock - _newItem.getIntQUANTITY(), emg, _newItem.getValeurTva(), checked, e.getIntUG());
+                mouvementProduitService.saveMvtProduit(newItem.getIntPRICEUNITAIR(), newItem,
+                        typemvtproduit, oFamille, ooTUser, emplacement,
+                        newItem.getIntQUANTITY(), initStock, initStock - newItem.getIntQUANTITY(), emg, newItem.getValeurTva(), checked, e.getIntUG());
 
-                updateReelStockApresAnnulation(OTFamille, familleStock, ooTUser, _newItem.getIntQUANTITY(), emg);
+                updateReelStockApresAnnulation(oFamille, familleStock, ooTUser, newItem.getIntQUANTITY(), emg);
                 if (!tp.getPkBrand().isEmpty()) {
-                    updateReelStockAnnulationDepot(OTFamille, _newItem.getIntQUANTITY(), tp.getPkBrand(), emg);
+                    updateReelStockAnnulationDepot(oFamille, newItem.getIntQUANTITY(), tp.getPkBrand(), emg);
 
                 }
 
@@ -4440,7 +4449,7 @@ public class SalesServiceImpl implements SalesService {
 
             sendMessageClientJmsQueue(clonedPreen.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
         }
     }

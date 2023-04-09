@@ -25,7 +25,7 @@ public interface SalesService {
 
     void cloneTransaction(MvtTransaction old, TPreenregistrement p);
 
-    JSONObject annulerVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID);
+    JSONObject annulerVente(TUser ooTUser, String id);
 
     JSONObject createPreVente(SalesParams salesParams);
 
@@ -47,11 +47,11 @@ public interface SalesService {
 
     JSONObject updateVenteClotureAssurance(ClotureVenteParams clotureVenteParams);
 
-    JSONObject clotureravoir(String lg_PREENREGISTREMENT_ID, TUser tUser);
+    JSONObject clotureravoir(String id, TUser tUser);
 
-    JSONObject updateVenteBonVente(String idCompteClientItem, String str_REF_BON);
+    JSONObject updateVenteBonVente(String idCompteClientItem, String refBon);
 
-    JSONObject closeventeBon(String lg_PREENREGISTREMENT_ID);
+    JSONObject closeventeBon(String id);
 
     JSONObject addtierspayant(SalesParams params);
 
@@ -119,9 +119,9 @@ public interface SalesService {
 
     JSONObject findVenteForUpdationg(String venteId) throws JSONException;
 
-    void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp) throws Exception;
+    void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp) ;
 
-    JSONObject closePreventeVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID);
+    JSONObject closePreventeVente(TUser ooTUser, String id);
 
     JSONObject clonerDevis(TUser ooTUser, String devisId) throws JSONException;
 

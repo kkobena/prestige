@@ -113,7 +113,6 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                             text: 'AFFICHER NET A PAYER',
                             itemId: 'netBtn',
                             iconCls: 'afficheur_caisse',
-//                            disabled: true,
                             scope: this
 
 
@@ -138,7 +137,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                         },
 
                         {
-                            text: 'Retour',
+                            text: 'RETOUR',
                             itemId: 'btnGoBack',
                             iconCls: 'icon-clear-group',
                             scope: this

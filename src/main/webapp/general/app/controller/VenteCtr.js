@@ -661,7 +661,7 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     onReady: function () {
-        var me = this;
+        let me = this;
         me.goToVenteView();
         me.cheickCaisse();
         me.checkModificationPrixU();
@@ -847,30 +847,40 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
     onTypeRemiseSelect: function () {
-        var me = this, combo = me.getVnotypeRemise(), remiseCombo = me.getVnoremise();
-        var record = combo.getStore().findRecord('lgTYPEREMISEID', combo.getValue());
+        let me = this, combo = me.getVnotypeRemise(), remiseCombo = me.getVnoremise();
+        let record = combo.getStore().findRecord('lgTYPEREMISEID', combo.getValue());
         remiseCombo.getStore().loadData(record.get('remises'));
         remiseCombo.focus(false, 100);
     },
-    onNetBtnClick: function () {
-        var me = this, typeVente = me.getTypeVenteCombo().getValue();
+    onComputeNet: function () {
+        const me = this;
+        const typeVente = me.getTypeVenteCombo().getValue();
         if (typeVente === '1') {
             me.showNetPaidVno();
         } else {
-            me.showNetPaidAssurance();
+            if (me.getPlafondVente()) {
+                me.showNetPaidWithPlafondVente();
+            } else {
+                me.showNetPaidAssurance();
+            }
+
         }
     },
+    onNetBtnClick: function () {
+        const me = this;
+       me.onComputeNet();
+    },
     checkDouchette(field) {
-        var me = this;
+        let me = this;
         Ext.Ajax.request({
             method: 'GET',
             headers: {'Content-Type': 'application/json'},
             url: '../api/v1/vente/findone/' + field.getValue(),
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    var produit = result.data;
-                    var vnoemplacementId = me.getVnoemplacementField();
+                    let produit = result.data;
+                    let vnoemplacementId = me.getVnoemplacementField();
                     me.updateStockField(produit.intNUMBERAVAILABLE);
                     vnoemplacementId.setValue(produit.strLIBELLEE);
                     me.getVnoqtyField().focus(true, 100);
@@ -884,9 +894,11 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
     onProduitSpecialKey: function (field, e) {
-        var me = this, typeVente = me.getTypeVenteCombo().getValue();
+        const me = this;
+        
+        const typeVente = me.getTypeVenteCombo().getValue();
         if (typeVente !== '1') {
-            var client = me.getClient();
+            let client = me.getClient();
             if (!client) {
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
@@ -910,15 +922,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 if (combo.getValue() === null || combo.getValue().trim() === "") {
                     let selection = combo.getPicker().getSelectionModel().getSelection();
                     if (selection.length <= 0) {
-                        if (typeVente === '1') {
-                            me.showNetPaidVno();
-                        } else {
-                            if (me.getPlafondVente()) {
-                                me.showNetPaidWithPlafondVente();
-                            } else {
-                                me.showNetPaidAssurance();
-                            }
-                        }
+                          me.onComputeNet();
                     }
                 } else {
                     const record = combo.findRecord("lgFAMILLEID" || "intCIP", combo.getValue());
@@ -938,7 +942,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
     onMontantRecuVnoKey: function (field, e, options) {
-        var me = this;
+        let me = this;
         if (e.getKey() === e.ENTER) {
             let montantVerse = parseInt(field.getValue());
             if (montantVerse >= 0) {
@@ -964,17 +968,17 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
     onSpecialSpecialKey: function (field, e, options) {
         if (e.getKey() === e.ENTER) {
-            var me = this;
+            const me = this;
             me.refresh();
         }
     },
     onQtySpecialKey: function (field, e, options) {
         if (field.getValue() > 0) {
             if (e.getKey() === e.ENTER) {
-                var me = this;
+                let me = this;
                 me.toRecalculate = true;
-                var produitCmp = me.getVnoproduitCombo();
-                var record = produitCmp.findRecord("lgFAMILLEID", produitCmp.getValue()),
+                let produitCmp = me.getVnoproduitCombo();
+                let record = produitCmp.findRecord("lgFAMILLEID", produitCmp.getValue()),
                         typeVente = me.getTypeVenteCombo().getValue();
                 record = record ? record : produitCmp.findRecord("intCIP", produitCmp.getValue());
                 const vente = me.getCurrent();
@@ -1023,12 +1027,12 @@ Ext.define('testextjs.controller.VenteCtr', {
                                             headers: {'Content-Type': 'application/json'},
                                             url: '../api/v1/vente/search/' + lgFAMILLEID,
                                             success: function (response, options) {
-                                                var result = Ext.JSON.decode(response.responseText, true);
+                                                const result = Ext.JSON.decode(response.responseText, true);
                                                 if (result.success) {
-                                                    var produit = result.data;
-                                                    var qtyDetail = produit.intNUMBERDETAIL,
+                                                    let produit = result.data;
+                                                    let qtyDetail = produit.intNUMBERDETAIL,
                                                             nbreBoite = produit.intNUMBERAVAILABLE;
-                                                    var stockParent = (nbreBoite * qtyDetail) + stock;
+                                                    let stockParent = (nbreBoite * qtyDetail) + stock;
 //
                                                     if (qte < stockParent) {
                                                         if (isVno) {
@@ -1487,11 +1491,11 @@ Ext.define('testextjs.controller.VenteCtr', {
             me.showAndHideInfosStandardClient(true);
             me.getMontantRecu().setReadOnly(false);
             me.getCbContainer().hide();
-        } else if (value === '7' || value === '8' || value === '9'|| value === '10') {
+        } else if (value === '7' || value === '8' || value === '9' || value === '10') {
             me.handleMobileMoney();
         } else {
             if (value === '2' || value === '3' || value === '6') {
-                 me.showAndHideInfosStandardClient(true);
+                me.showAndHideInfosStandardClient(true);
                 me.showAndHideCbInfos(value);
                 if (me.getNetAmountToPay()) {
                     me.getMontantRecu().setValue(me.getNetAmountToPay().montantNet);
@@ -2114,7 +2118,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     };
                     me.netAmountToPay = null;
                     me.ayantDroit = ayantDroit;
-                 me.updateComboxFields(lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, typeRemiseId, lgREMISEID);
+                    me.updateComboxFields(lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, typeRemiseId, lgREMISEID);
                     me.updateAmountFields((parseInt(intPRICE) - parseInt(intPRICEREMISE)), intPRICEREMISE, intPRICE);
                     if (lgTYPEVENTEID === '2' || lgTYPEVENTEID === '3') {
                         me.loadClientAssurance(client, lgTYPEVENTEID, ayantDroit);
@@ -2176,7 +2180,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
 
-    goToVenteView: function (){
+    goToVenteView: function () {
         var me = this, view = me.getDoventemanager(), contenu = me.getContenu();
         const data = view.getData();
         if (data) {
@@ -2240,7 +2244,7 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     checkPlafondVenteStatut: function () {
-        var me = this;
+        let me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/common/plafond-vente',
@@ -2254,12 +2258,12 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
     },
     checkSansBon: function () {
-        var me = this;
+        let me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/common/vente-sansbon',
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.venteSansBon = result.data;
                 }
@@ -2268,7 +2272,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
     },
     checkModificationPrixU: function () {
-        var me = this;
+        let me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/common/autorisation-prix-vente',
@@ -2282,7 +2286,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
     },
     checkShowStock: function () {
-        var me = this;
+        let me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/common/autorisations/showstock',
@@ -2715,7 +2719,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                         "bIsAbsolute": item.get('bIsAbsolute'),
                         "dbPLAFONDENCOURS": item.get('dbPLAFONDENCOURS'),
                         "tpFullName": item.get('tpFullName')
-                        
+
                     });
                 });
             }
@@ -3610,13 +3614,13 @@ Ext.define('testextjs.controller.VenteCtr', {
                     itemId: 'lgTIERSPAYANTID' + record.order,
                     value: record.lgTIERSPAYANTID
                 },
-              
+
                 {
                     xtype: 'numberfield',
                     value: record.taux,
                     hidden: true
                 },
-                   {
+                {
                     xtype: 'hiddenfield',
                     name: 'cmu' + record.order,
                     itemId: 'cmu' + record.order,
@@ -3694,45 +3698,45 @@ Ext.define('testextjs.controller.VenteCtr', {
                             var client = me.getClient();
                             if (client) {
                                 me.onbtncloturerVnoComptant(typeRegle);
-                            }else{
-                               Ext.MessageBox.show({
-                                        title: 'Message d\'erreur',
-                                        width: 320,
-                                        msg: 'Veuillez ajouter un client à la vente',
-                                        buttons: Ext.MessageBox.OK,
-                                        icon: Ext.MessageBox.ERROR,
-                                        fn: function (buttonId) {
-                                            if (buttonId === "ok") {
-                                                me.showAndHideInfosStandardClient(true);
-                                            }
+                            } else {
+                                Ext.MessageBox.show({
+                                    title: 'Message d\'erreur',
+                                    width: 320,
+                                    msg: 'Veuillez ajouter un client à la vente',
+                                    buttons: Ext.MessageBox.OK,
+                                    icon: Ext.MessageBox.ERROR,
+                                    fn: function (buttonId) {
+                                        if (buttonId === "ok") {
+                                            me.showAndHideInfosStandardClient(true);
                                         }
-                                    }); 
+                                    }
+                                });
                             }
                         }
-                      
-                    /*    if (typeRegle === '1' || '4') {
-                            if (typeRegle === '4') {
-                                var client = me.getClient();
-                                if (client) {
-                                    me.onbtncloturerVnoComptant(typeRegle);
-                                } else {
-                                    Ext.MessageBox.show({
-                                        title: 'Message d\'erreur',
-                                        width: 320,
-                                        msg: 'Veuillez ajouter un client pour la vente différée',
-                                        buttons: Ext.MessageBox.OK,
-                                        icon: Ext.MessageBox.ERROR,
-                                        fn: function (buttonId) {
-                                            if (buttonId === "ok") {
-                                                me.showAndHideInfosStandardClient(true);
-                                            }
-                                        }
-                                    });
-                                }
-                            } else {
-                                me.onbtncloturerVnoComptant(typeRegle);
-                            }
-                        }*/
+
+                        /*    if (typeRegle === '1' || '4') {
+                         if (typeRegle === '4') {
+                         var client = me.getClient();
+                         if (client) {
+                         me.onbtncloturerVnoComptant(typeRegle);
+                         } else {
+                         Ext.MessageBox.show({
+                         title: 'Message d\'erreur',
+                         width: 320,
+                         msg: 'Veuillez ajouter un client pour la vente différée',
+                         buttons: Ext.MessageBox.OK,
+                         icon: Ext.MessageBox.ERROR,
+                         fn: function (buttonId) {
+                         if (buttonId === "ok") {
+                         me.showAndHideInfosStandardClient(true);
+                         }
+                         }
+                         });
+                         }
+                         } else {
+                         me.onbtncloturerVnoComptant(typeRegle);
+                         }
+                         }*/
                     } else {
                         me.onbtncloturerAssurance(typeRegle);
                     }
@@ -3926,13 +3930,13 @@ Ext.define('testextjs.controller.VenteCtr', {
                 /*tp = item.items.items[3].getValue(),*/
                 const taux = item.items.items[4];
                 const cmtp = item.items.items[2];
-                const cmu= item.items.items[5];
+                const cmu = item.items.items[5];
                 tierspayants.push(
                         {
                             "compteTp": cmtp.getValue(),
                             "numBon": numBonField.getValue(),
                             "taux": parseInt(taux.getValue()),
-                            "cmu":cmu.getValue()
+                            "cmu": cmu.getValue()
                         }
                 );
             }
