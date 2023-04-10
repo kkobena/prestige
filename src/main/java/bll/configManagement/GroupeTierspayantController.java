@@ -2779,7 +2779,8 @@ private boolean getParametreFacturation(){
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
             criteria = cb.and(criteria, cb.equal(pr.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
             Predicate pu = cb.greaterThan(pr.get("intPRICE"), 0);
-            cq.multiselect(root.get("lgFAMILLEID").get("lgFAMILLEID"), root.get("lgFAMILLEID").get("strNAME"), root.get("lgFAMILLEID").get("intCIP"))
+            cq.multiselect(root.get("lgFAMILLEID").get("lgFAMILLEID"),
+                    root.get("lgFAMILLEID").get("strNAME"), root.get("lgFAMILLEID").get("intCIP"))
                     .groupBy(root.get("lgFAMILLEID").get("lgFAMILLEID"))
                     .orderBy(cb.asc(root.get("lgFAMILLEID").get("strNAME")));
             cq.where(criteria, pu, btw);
@@ -2807,7 +2808,7 @@ private boolean getParametreFacturation(){
                         array.put(json);
                     }
 
-                } catch (JSONException ex) {
+                } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             });
@@ -2875,7 +2876,7 @@ private boolean getParametreFacturation(){
     public int getQty(int year, int month, String id, String empl) {
         int result = 0;
         EntityManager em = this.getEntityManager();
-        try {
+   
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
@@ -2888,23 +2889,16 @@ private boolean getParametreFacturation(){
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             cb.and(criteria, pu);
             Predicate pu2 = cb.greaterThan(root.get(TPreenregistrementDetail_.intQUANTITY), 0);
-//            cb.and(criteria,pu2);
             criteria = cb.and(criteria, cb.equal(prf.get(TFamille_.lgFAMILLEID), id));
             Predicate btw = cb.equal(cb.function("MONTH", Integer.class, root.get("dtCREATED")), month);
-//            criteria=cb.and(criteria,btw);
             Predicate btw2 = cb.equal(cb.function("YEAR", Integer.class, root.get("dtCREATED")), year);
-//            criteria=cb.and(criteria,btw2);
             cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)));
             cq.where(criteria, btw, pu2, btw2, pu);
             Query q = em.createQuery(cq);
             Long r = (Long) q.getSingleResult();
             result = (r != null ? r.intValue() : 0);
 
-        } finally {
-            if (em != null) {
-
-            }
-        }
+    
 
         return result;
     }
