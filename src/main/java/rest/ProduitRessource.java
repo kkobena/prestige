@@ -393,8 +393,8 @@ public class ProduitRessource {
         if (StringUtils.isEmpty(dtStart)) {
             dtStart = LocalDate.now().toString();
         }
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.ACTION_DELETE_RETOUR);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+        boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, DateConverter.ACTION_DELETE_RETOUR);
         JSONObject json = mvtProduitService.loadetourFournisseur(dtStart, dtEnd, start, limit, fourId, query, asAuthority,filtre);
         return Response.ok().entity(json.toString()).build();
     }

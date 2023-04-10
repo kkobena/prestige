@@ -75,6 +75,11 @@ public final class FunctionUtils {
 
     }
 
+    public static JSONObject returnData(JSONArray data) {
+
+        return new JSONObject().put(TOTAL, data.length()).put(DATA, data);
+    }
+
     private FunctionUtils() {
 
     }

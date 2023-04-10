@@ -546,8 +546,8 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                         }
                         const dtEnd = Ext.getCmp('datefin').getSubmitValue();
                         const dtStart = Ext.getCmp('datedebut').getSubmitValue();
-                        //  const linkUrl = "../webservices/commandemanagement/etats/ws_generate_pdf.jsp?lg_GROSSISTE_ID=" + lg_GROSSISTE_ID + "&search_value=" + valeur + "&datedebut=" + Ext.getCmp('datedebut').getSubmitValue() + "&datefin=" + Ext.getCmp('datefin').getSubmitValue();
-                        var linkUrl = '../EtatControlStockServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
+                       
+                        const linkUrl = '../EtatControlStockServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
                                 + '&grossisteId=' + lg_GROSSISTE_ID + '&search=' + valeur;
                         window.open(linkUrl);
 
