@@ -145,22 +145,25 @@ public class GenererFactureServiceImpl implements GenererFactureService {
 
     }
 
-    private CodeFactureDTO genererFactureTemporaire(String groupId, TTiersPayant OTTiersPayant, List<TPreenregistrementCompteClientTiersPayent> data, Date dtdebut,
-            Date dtfin, TTypeFacture OTTypeFacture, TTypeMvtCaisse OTTypeMvtCaisse) {
-        double montantForfetaire = OTTiersPayant.getDblREMISEFORFETAIRE();
+    private CodeFactureDTO genererFactureTemporaire(String groupId, TTiersPayant tiersPayant, List<TPreenregistrementCompteClientTiersPayent> data, Date dtdebut,
+            Date dtfin, TTypeFacture typeFacture, TTypeMvtCaisse typeMvtCaisse) {
+        double montantForfetaire = tiersPayant.getDblREMISEFORFETAIRE();
         double tauxRemise = 0;
         double totalRemise = 0;
         double totalBrut = 0;
-        double montantNetDetails, montantRemiseDetails;
+        double montantNetDetails;
+        double montantRemiseDetails;
         boolean hasDiscount = false;
-        Integer remiseVente = 0, montantTvavente = 0, montantVente = 0;
+        int remiseVente = 0;
+        int montantTvavente = 0;
+        int montantVente = 0;
         try {
             Collection<TFactureDetail> tFactureDetailCollection = new ArrayList<>(data.size());
-            if (OTTiersPayant.getDblPOURCENTAGEREMISE() > 0) {
+            if (tiersPayant.getDblPOURCENTAGEREMISE() > 0) {
                 hasDiscount = true;
-                tauxRemise = (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100);
+                tauxRemise = (tiersPayant.getDblPOURCENTAGEREMISE() / 100);
             }
-            TFacture tf = createInvoiceItem(data.size(), dtdebut, dtfin, 0, groupId, OTTypeFacture, OTTypeMvtCaisse.getStrCODECOMPTABLE(), OTTiersPayant, true, 0, "");
+            TFacture tf = createInvoiceItem(data.size(), dtdebut, dtfin, 0, groupId, typeFacture, typeMvtCaisse.getStrCODECOMPTABLE(), tiersPayant, true, 0, "");
             for (TPreenregistrementCompteClientTiersPayent tp : data) {
                 TPreenregistrement p = tp.getLgPREENREGISTREMENTID();
                 remiseVente += p.getIntPRICEREMISE();
@@ -262,9 +265,9 @@ public class GenererFactureServiceImpl implements GenererFactureService {
 
         }
 
-        TTypeFacture OTTypeFacture = getEntityManager().find(TTypeFacture.class, commonparameter.KEY_TYPE_FACTURE_TIERSPAYANT);
-        TTypeMvtCaisse OTTypeMvtCaisse = getEntityManager().find(TTypeMvtCaisse.class, commonparameter.KEY_TYPE_FACTURE_TIERSPAYANT);
-        return genererFactureTemporaire(datas.getGroupTp(), list.stream().collect(Collectors.groupingBy(o -> o.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID())), DateConverter.convertLocalDateToDate(datas.getDtStart()), DateConverter.convertLocalDateToDate(datas.getDtEnd()), OTTypeFacture, OTTypeMvtCaisse);
+        TTypeFacture oTTypeFacture = getEntityManager().find(TTypeFacture.class, commonparameter.KEY_TYPE_FACTURE_TIERSPAYANT);
+        TTypeMvtCaisse oTTypeMvtCaisse = getEntityManager().find(TTypeMvtCaisse.class, commonparameter.KEY_TYPE_FACTURE_TIERSPAYANT);
+        return genererFactureTemporaire(datas.getGroupTp(), list.stream().collect(Collectors.groupingBy(o -> o.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID())), DateConverter.convertLocalDateToDate(datas.getDtStart()), DateConverter.convertLocalDateToDate(datas.getDtEnd()), oTTypeFacture, oTTypeMvtCaisse);
 
     }
 
@@ -328,29 +331,29 @@ public class GenererFactureServiceImpl implements GenererFactureService {
     }
 
     public TFacture createInvoiceItem(int datasSize, Date dt_debut, Date dt_fin, double d_montant, String groupeFactureId, TTypeFacture OTTypeFacture, String str_CODE_COMPTABLE, TTiersPayant payant, boolean template, int factureGroupe, String codeFacture) {
-        TFacture OTFacture = new TFacture();
-        OTFacture.setLgFACTUREID(UUID.randomUUID().toString());
-        OTFacture.setDtDEBUTFACTURE(dt_debut);
-        OTFacture.setStrPERE(groupeFactureId);
-        OTFacture.setLgTYPEFACTUREID(OTTypeFacture);
-        OTFacture.setDtFINFACTURE(dt_fin);
-        OTFacture.setStrCUSTOMER(payant.getLgTIERSPAYANTID());
-        OTFacture.setDtDATEFACTURE(new Date());
-        OTFacture.setStrCODEFACTURE(codeFacture);
-        OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
-        OTFacture.setDblMONTANTPAYE(0.0);
-        OTFacture.setDblMONTANTBrut(new BigDecimal(0));
-        OTFacture.setDblMONTANTFOFETAIRE(OTFacture.getDblMONTANTBrut());
-        OTFacture.setDblMONTANTREMISE(OTFacture.getDblMONTANTBrut());
-        OTFacture.setIntNBDOSSIER(datasSize);
-        OTFacture.setDtCREATED(OTFacture.getDtDATEFACTURE());
-        OTFacture.setDtUPDATED(OTFacture.getDtDATEFACTURE());
-        OTFacture.setTiersPayant(payant);
-        OTFacture.setStrSTATUT(DateConverter.STATUT_ENABLE);
-        OTFacture.setTemplate(template);
-        OTFacture.setTypeFacture(factureGroupe);
-        OTFacture.setTypeFactureId(groupeFactureId);
-        return OTFacture;
+        TFacture facture = new TFacture();
+        facture.setLgFACTUREID(UUID.randomUUID().toString());
+        facture.setDtDEBUTFACTURE(dt_debut);
+        facture.setStrPERE(groupeFactureId);
+        facture.setLgTYPEFACTUREID(OTTypeFacture);
+        facture.setDtFINFACTURE(dt_fin);
+        facture.setStrCUSTOMER(payant.getLgTIERSPAYANTID());
+        facture.setDtDATEFACTURE(new Date());
+        facture.setStrCODEFACTURE(codeFacture);
+        facture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
+        facture.setDblMONTANTPAYE(0.0);
+        facture.setDblMONTANTBrut(new BigDecimal(0));
+        facture.setDblMONTANTFOFETAIRE(facture.getDblMONTANTBrut());
+        facture.setDblMONTANTREMISE(facture.getDblMONTANTBrut());
+        facture.setIntNBDOSSIER(datasSize);
+        facture.setDtCREATED(facture.getDtDATEFACTURE());
+        facture.setDtUPDATED(facture.getDtDATEFACTURE());
+        facture.setTiersPayant(payant);
+        facture.setStrSTATUT(DateConverter.STATUT_ENABLE);
+        facture.setTemplate(template);
+        facture.setTypeFacture(factureGroupe);
+        facture.setTypeFactureId(groupeFactureId);
+        return facture;
 
     }
 
@@ -466,22 +469,25 @@ public class GenererFactureServiceImpl implements GenererFactureService {
 
     }
 
-    TFacture genererFactureTiersPayants(String groupeFactureId, TTiersPayant OTTiersPayant, List<TPreenregistrementCompteClientTiersPayent> data, Date dtdebut,
-            Date dtfin, TTypeFacture OTTypeFacture, TTypeMvtCaisse OTTypeMvtCaisse, String codeFacture) {
-        double montantForfetaire = OTTiersPayant.getDblREMISEFORFETAIRE();
+    TFacture genererFactureTiersPayants(String groupeFactureId, TTiersPayant tiersPayant, List<TPreenregistrementCompteClientTiersPayent> data, Date dtdebut,
+            Date dtfin, TTypeFacture typeFacture, TTypeMvtCaisse typeMvtCaisse, String codeFacture) {
+        double montantForfetaire = tiersPayant.getDblREMISEFORFETAIRE();
         double tauxRemise = 0;
         double totalRemise = 0;
         double totalBrut = 0;
-        double montantNetDetails, montantRemiseDetails;
+        double montantNetDetails;
+        double montantRemiseDetails;
         boolean hasDiscount = false;
-        Integer remiseVente = 0, montantTvavente = 0, montantVente = 0;
+        int remiseVente = 0;
+        int montantTvavente = 0;
+        int montantVente = 0;
         try {
             Collection<TFactureDetail> tFactureDetailCollection = new ArrayList<>(data.size());
-            if (OTTiersPayant.getDblPOURCENTAGEREMISE() > 0) {
+            if (tiersPayant.getDblPOURCENTAGEREMISE() > 0) {
                 hasDiscount = true;
-                tauxRemise = (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100);
+                tauxRemise = (tiersPayant.getDblPOURCENTAGEREMISE() / 100);
             }
-            TFacture tf = createInvoiceItem(data.size(), dtdebut, dtfin, 0, groupeFactureId, OTTypeFacture, OTTypeMvtCaisse.getStrCODECOMPTABLE(), OTTiersPayant, false, 0, codeFacture);
+            TFacture tf = createInvoiceItem(data.size(), dtdebut, dtfin, 0, groupeFactureId, typeFacture, typeMvtCaisse.getStrCODECOMPTABLE(), tiersPayant, false, 0, codeFacture);
             for (TPreenregistrementCompteClientTiersPayent tp : data) {
                 TPreenregistrement p = tp.getLgPREENREGISTREMENTID();
                 remiseVente += p.getIntPRICEREMISE();
@@ -710,8 +716,8 @@ public class GenererFactureServiceImpl implements GenererFactureService {
             tf.setMontantTvaVente(montantTvavente);
             tf.setMontantVente(montantVente);
             getEntityManager().persist(tf);
-            
-             String description = "Génération de la facture numéro : " + tf.getStrCODEFACTURE() + " période du " + DateConverter.convertDateToDD_MM_YYYY(tf.getDtDEBUTFACTURE()) + " Au " + DateConverter.convertDateToDD_MM_YYYY(tf.getDtFINFACTURE()) + " tiers-payant: " + OTTiersPayant.getStrFULLNAME() + " ";
+
+            String description = "Génération de la facture numéro : " + tf.getStrCODEFACTURE() + " période du " + DateConverter.convertDateToDD_MM_YYYY(tf.getDtDEBUTFACTURE()) + " Au " + DateConverter.convertDateToDD_MM_YYYY(tf.getDtFINFACTURE()) + " tiers-payant: " + OTTiersPayant.getStrFULLNAME() + " ";
 //                updateItem(this.getOTUser(), "", description, TypeLog.GENERATION_DE_FACTURE, OFacture, this.getOdataManager().getEm());
 //                updateInvoicePlafond(OFacture, OTTiersPayant);
             return new CodeFactureDTO(tf.getLgFACTUREID());
