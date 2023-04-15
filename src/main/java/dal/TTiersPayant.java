@@ -111,7 +111,6 @@ public class TTiersPayant implements Serializable {
     private String strTELEPHONE;
     @Column(name = "str_MAIL", length = 100)
     private String strMAIL;
-    // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
     @Column(name = "dbl_PLAFOND_CREDIT", precision = 12, scale = 2)
     private Double dblPLAFONDCREDIT;
     @Column(name = "dbl_TAUX_REMBOURSEMENT", precision = 5, scale = 2)
