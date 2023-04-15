@@ -136,8 +136,7 @@ public class SalesServiceImpl implements SalesService {
     private static final Logger LOG = Logger.getLogger(SalesServiceImpl.class.getName());
     @Inject
     JMSContext ctx;
-    @Resource(lookup = "java:global/queue/mvtstock")
-    Queue mvtStock;
+
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
@@ -179,10 +178,6 @@ public class SalesServiceImpl implements SalesService {
 
     public EntityManager getEm() {
         return em;
-    }
-
-    public void sendMessageMvtsStockQueue(String msg) {
-        ctx.createProducer().send(mvtStock, msg);
     }
 
     void sendMessageClientJmsQueue(String venteId) {
@@ -327,7 +322,7 @@ public class SalesServiceImpl implements SalesService {
         mvtTransac.setMarge(marge);
         mvtTransac.setReference(tp.getStrREF());
         mvtTransac.setMontantPaye(0);
-        mvtTransac.setMontantRemise(tp.getIntPRICE() - tp.getIntPRICE());
+        mvtTransac.setMontantRemise(tp.getIntPRICEREMISE());
         mvtTransac.setCategoryTransaction(CategoryTransaction.CREDIT);
         mvtTransac.setTypeTransaction(TypeTransaction.VENTE_CREDIT);
         mvtTransac.setChecked(false);
@@ -528,12 +523,14 @@ public class SalesServiceImpl implements SalesService {
                 json.put("msg", "Désolé la vente a été facturée");
                 return json;
             }
-            List<TCashTransaction> cashTransactions = lstTCashTransaction(tp.getLgPREENREGISTREMENTID(), emg);
+
             Optional<TRecettes> oprectte = findRecette(tp.getLgPREENREGISTREMENTID(), emg);
             List<TPreenregistrementDetail> preenregistrementDetails = getTPreenregistrementDetail(tp, emg);
             String idVente = tp.getLgPREENREGISTREMENTID();
             TPreenregistrement newItem = createPreventeCopy(ooTUser, tp, emg);
             ref = newItem.getLgPREENREGISTREMENTID();
+            MvtTransaction mtv = transaction(idVente, emg).orElse(null);
+
             LongAdder montantRestant = new LongAdder();
             findOptionalCmt(tp, emg).ifPresent(cp -> {
                 montantRestant.add(cp.getIntPRICERESTE());
@@ -545,35 +542,9 @@ public class SalesServiceImpl implements SalesService {
             });
             if (tp.getStrTYPEVENTE().equals("VO")) {
                 copyPreenregistrementTp(newItem, idVente, ooTUser, emg);
-                if (!cashTransactions.isEmpty()) {
-                    Integer amo = 0;
-                    String re = "";
-                    for (TCashTransaction cashTransaction : cashTransactions) {
-                        re = cashTransaction.getLgTYPEREGLEMENTID();
-                        if (cashTransaction.getIntAMOUNT() > 0) {
-                            amo = cashTransaction.getIntAMOUNT();
-                            addTransaction(ooTUser, cashTransaction, newItem, tp, !sameDate ? sameDate : checked);
-                        } else {
-                            addTransactionCredit(ooTUser, cashTransaction, newItem, tp, !sameDate ? sameDate : checked);
-                        }
-                    }
-
-                    if (!sameDate) {
-                        createAnnulleSnapshot(tp, montantRestant.intValue(), amo, ooTUser, getEm().find(TTypeReglement.class, re));
-                    }
-                }
                 findByVenteId(tp.getLgPREENREGISTREMENTID()).ifPresent(venteExclus -> {
                     venteExclus.setStatus(Statut.DELETE);
                     this.getEm().merge(venteExclus);
-                });
-            } else {
-                Optional<TCashTransaction> cashTransactio = cashTransactions.stream().findFirst();
-                cashTransactio.ifPresent(cs -> {
-                    addTransaction(ooTUser, cs, newItem, tp, !sameDate ? sameDate : checked);
-
-                    if (!sameDate) {
-                        createAnnulleSnapshot(tp, montantRestant.intValue(), cs.getIntAMOUNT(), ooTUser, getEm().find(TTypeReglement.class, cs.getLgTYPEREGLEMENTID()));
-                    }
                 });
             }
 
@@ -582,6 +553,10 @@ public class SalesServiceImpl implements SalesService {
                 copyTransaction(ooTUser, tr, newItem, tp, emg);
                 if (!checkResumeCaisse(tp.getLgUSERCAISSIERID(), emg).isPresent()) {
                     createAnnulationRecette(tp, tr, ooTUser);
+                }
+                if (!sameDate) {
+                    createAnnulleSnapshot(tp, montantRestant.intValue(), tr.getMontantPaye(),
+                            ooTUser, tr.getReglement());
                 }
             });
 
@@ -603,18 +578,18 @@ public class SalesServiceImpl implements SalesService {
             final Typemvtproduit typemvtproduit = checked ? findById(DateConverter.ANNULATION_DE_VENTE) : findById(DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
             preenregistrementDetails.forEach((e) -> {
                 TPreenregistrementDetail newCopieItem = createItemCopy(ooTUser, e, newItem, emg);
-                TFamille OTFamille = e.getLgFAMILLEID();
-                updateNbreVenteApresAnnulation(OTFamille, ooTUser, newCopieItem.getIntQUANTITY(), emg);
-                TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), emplacement, emg);
+                TFamille oFamille = e.getLgFAMILLEID();
+                updateNbreVenteApresAnnulation(oFamille, ooTUser, newCopieItem.getIntQUANTITY());
+                TFamilleStock familleStock = findStock(oFamille.getLgFAMILLEID(), emplacement, emg);
                 int initStock = familleStock.getIntNUMBERAVAILABLE();
                 familleStock.setIntUG(familleStock.getIntUG() - newCopieItem.getIntUG());
                 mouvementProduitService.saveMvtProduit(newCopieItem.getIntPRICEUNITAIR(), newCopieItem,
-                        typemvtproduit, OTFamille, ooTUser, emplacement,
+                        typemvtproduit, oFamille, ooTUser, emplacement,
                         newCopieItem.getIntQUANTITY(), initStock, initStock - newCopieItem.getIntQUANTITY(), emg, newCopieItem.getValeurTva(), checked, e.getIntUG());
 
-                updateReelStockApresAnnulation(OTFamille, familleStock, ooTUser, newCopieItem.getIntQUANTITY(), emg);
+                updateReelStockApresAnnulation(familleStock, newCopieItem.getIntQUANTITY());
                 if (!tp.getPkBrand().isEmpty()) {
-                    updateReelStockAnnulationDepot(OTFamille, newCopieItem.getIntQUANTITY(), tp.getPkBrand(), emg);
+                    updateReelStockAnnulationDepot(oFamille, newCopieItem.getIntQUANTITY(), tp.getPkBrand(), emg);
 
                 }
 
@@ -884,71 +859,6 @@ public class SalesServiceImpl implements SalesService {
         getEm().persist(as);
     }
 
-    public void addTransaction(TUser ooTUser, TCashTransaction cashTransaction, TPreenregistrement newPreenregistrement, TPreenregistrement old, boolean checked) {
-        TCashTransaction newTransaction = new TCashTransaction();
-        newTransaction.setId(UUID.randomUUID().toString());
-        newTransaction.setLgUSERID(ooTUser);
-        newTransaction.setDtCREATED(newPreenregistrement.getDtUPDATED());
-        newTransaction.setDtUPDATED(newPreenregistrement.getDtUPDATED());
-        newTransaction.setIntACCOUNT((-1) * cashTransaction.getIntACCOUNT());
-        newTransaction.setIntAMOUNT((-1) * cashTransaction.getIntAMOUNT());
-        newTransaction.setIntAMOUNT2((-1) * cashTransaction.getIntAMOUNT2());
-        newTransaction.setIntAMOUNTCREDIT(0);
-        newTransaction.setIntAMOUNTDEBIT(cashTransaction.getIntAMOUNT());
-        newTransaction.setStrREFFACTURE(newPreenregistrement.getLgPREENREGISTREMENTID());
-        newTransaction.setStrDESCRIPTION("Annulation de vente ");
-        newTransaction.setStrRESSOURCEREF(newTransaction.getStrREFFACTURE());
-        newTransaction.setStrTASK("ANNULE_VENTE");
-        newTransaction.setStrTYPEVENTE(newPreenregistrement.getStrTYPEVENTE());
-        newTransaction.setStrTRANSACTIONREF("D");
-        newTransaction.setBoolCHECKED(checked);
-        newTransaction.setStrTYPE(cashTransaction.getStrTYPE());
-        newTransaction.setCaissier(old.getLgUSERCAISSIERID());
-        newTransaction.setLgTYPEREGLEMENTID(cashTransaction.getLgTYPEREGLEMENTID());
-        newTransaction.setStrNUMEROCOMPTE(cashTransaction.getStrNUMEROCOMPTE());
-        newTransaction.setLgREGLEMENTID(cashTransaction.getLgREGLEMENTID());
-        newTransaction.setStrREFCOMPTECLIENT(cashTransaction.getStrREFCOMPTECLIENT());
-        newTransaction.setStrTYPEVENTE(cashTransaction.getStrTYPEVENTE());
-        newTransaction.setIntAMOUNTRECU((-1) * cashTransaction.getIntAMOUNTRECU());
-        newTransaction.setIntAMOUNTREMIS(cashTransaction.getIntAMOUNTREMIS());
-        getEm().persist(newTransaction);
-
-    }
-
-    public void addTransactionCredit(TUser ooTUser, TCashTransaction cashTransaction, TPreenregistrement newPreenregistrement, TPreenregistrement old, boolean checked) {
-
-        Integer amount = cashTransaction.getIntAMOUNT();
-        TCashTransaction newTransac = new TCashTransaction();
-        newTransac.setId(UUID.randomUUID().toString());
-        newTransac.setLgUSERID(ooTUser);
-        newTransac.setDtCREATED(newPreenregistrement.getDtUPDATED());
-        newTransac.setDtUPDATED(newPreenregistrement.getDtUPDATED());
-        newTransac.setIntACCOUNT((-1) * cashTransaction.getIntACCOUNT());
-        newTransac.setIntAMOUNT((-1) * cashTransaction.getIntAMOUNT());
-        newTransac.setIntAMOUNT2((-1) * cashTransaction.getIntAMOUNT2());
-        newTransac.setIntAMOUNTCREDIT((-1) * amount);
-        newTransac.setIntAMOUNTDEBIT(cashTransaction.getIntAMOUNT());
-        newTransac.setStrREFFACTURE(newPreenregistrement.getLgPREENREGISTREMENTID());
-        newTransac.setStrDESCRIPTION("Annulation de vente ");
-        newTransac.setBoolCHECKED(checked);
-        newTransac.setStrRESSOURCEREF(newTransac.getStrREFFACTURE());
-        newTransac.setStrTASK("ANNULE_VENTE");
-        newTransac.setStrTYPEVENTE(newPreenregistrement.getStrTYPEVENTE());
-        newTransac.setStrTRANSACTIONREF("D");
-        newTransac.setCaissier(old.getLgUSERCAISSIERID());
-        newTransac.setStrTYPE(cashTransaction.getStrTYPE());
-        newTransac.setCaissier(old.getLgUSERCAISSIERID());
-        newTransac.setLgTYPEREGLEMENTID(cashTransaction.getLgTYPEREGLEMENTID());
-        newTransac.setStrNUMEROCOMPTE(cashTransaction.getStrNUMEROCOMPTE());
-        newTransac.setLgREGLEMENTID(cashTransaction.getLgREGLEMENTID());
-        newTransac.setStrREFCOMPTECLIENT(cashTransaction.getStrREFCOMPTECLIENT());
-        newTransac.setStrTYPEVENTE(cashTransaction.getStrTYPEVENTE());
-        newTransac.setIntAMOUNTRECU((-1) * cashTransaction.getIntAMOUNTRECU());
-        newTransac.setIntAMOUNTREMIS(cashTransaction.getIntAMOUNTREMIS());
-        getEm().persist(newTransac);
-
-    }
-
     private void copyRecette(TPreenregistrement newPreen, TRecettes old, TUser o, EntityManager emg) {
         TRecettes tr = old;
         LOG.log(Level.INFO, "tr {0} ", new Object[]{tr});
@@ -963,79 +873,29 @@ public class SalesServiceImpl implements SalesService {
         emg.persist(tr);
     }
 
-    public void createSnapshotMouvementArticleApresAnnulation(TFamille OTFamille, int qty, TUser ooTUser, TFamilleStock familleStock, EntityManager emg) {
+    public void updateFamilleStockApresAnnulation(int qty, TFamilleStock familleStock) {
+        familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - qty);
+        familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
+        familleStock.setDtUPDATED(new Date());
+        getEm().merge(familleStock);
 
-        Optional<TMouvementSnapshot> tm = findTMouvementSnapshot(OTFamille.getLgFAMILLEID(), ooTUser, emg);
-        if (tm.isPresent()) {
-            TMouvementSnapshot mouvementSnapshot = tm.get();
-            mouvementSnapshot.setDtUPDATED(new Date());
-            mouvementSnapshot.setIntNUMBERTRANSACTION(mouvementSnapshot.getIntNUMBERTRANSACTION() + 1);
-            mouvementSnapshot.setIntSTOCKJOUR(familleStock.getIntNUMBERAVAILABLE() - qty);
-            emg.merge(mouvementSnapshot);
-            familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - qty);
-            familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
-            familleStock.setDtUPDATED(new Date());
-            emg.merge(familleStock);
-        } else {
-            TMouvementSnapshot OTMouvementSnapshot = new TMouvementSnapshot();
-            OTMouvementSnapshot.setLgMOUVEMENTSNAPSHOTID(UUID.randomUUID().toString());
-            OTMouvementSnapshot.setLgFAMILLEID(OTFamille);
-            OTMouvementSnapshot.setDtDAY(new Date());
-            OTMouvementSnapshot.setDtCREATED(new Date());
-            OTMouvementSnapshot.setDtUPDATED(new Date());
-            OTMouvementSnapshot.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvementSnapshot.setIntNUMBERTRANSACTION(0);
-            OTMouvementSnapshot.setIntSTOCKJOUR(familleStock.getIntNUMBERAVAILABLE() - qty);
-            OTMouvementSnapshot.setIntSTOCKDEBUT(familleStock.getIntNUMBERAVAILABLE());
-            OTMouvementSnapshot.setLgEMPLACEMENTID(ooTUser.getLgEMPLACEMENTID());
-
-            emg.persist(OTMouvementSnapshot);
-            familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - qty);
-            familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
-            familleStock.setDtUPDATED(new Date());
-            emg.merge(familleStock);
-        }
     }
 
-    public void saveMvtArticleApresAnnulation(TFamille tf, TUser ooTUser, TFamilleStock familleStock, int qty, EntityManager emg) {
-        Optional<TMouvement> tm = findMouvement(tf, commonparameter.ADD, commonparameter.str_ACTION_VENTE, ooTUser, emg);
-        if (tm.isPresent()) {
-            TMouvement OTMouvement = tm.get();
-            OTMouvement.setIntNUMBERTRANSACTION(1 + OTMouvement.getIntNUMBERTRANSACTION());
-            OTMouvement.setIntNUMBER(qty + OTMouvement.getIntNUMBER());
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setDtUPDATED(new Date());
-            emg.merge(OTMouvement);
-        } else {
-            TMouvement OTMouvement = new TMouvement();
-            OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
-            OTMouvement.setIntNUMBERTRANSACTION(1);
-            OTMouvement.setDtDAY(new Date());
-            OTMouvement.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvement.setIntNUMBER(qty);
-            OTMouvement.setLgFAMILLEID(tf);
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setPKey("");
-            OTMouvement.setStrACTION(commonparameter.str_ACTION_VENTE);
-            OTMouvement.setStrTYPEACTION(commonparameter.ADD);
-            OTMouvement.setDtCREATED(new Date());
-            OTMouvement.setDtUPDATED(OTMouvement.getDtCREATED());
-            OTMouvement.setLgEMPLACEMENTID(ooTUser.getLgEMPLACEMENTID());
-            emg.persist(OTMouvement);
-        }
-        createSnapshotMouvementArticleApresAnnulation(tf, qty, ooTUser, familleStock, emg);
+    public void updateStockApresAnnulation(TFamilleStock familleStock, int qty) {
+
+        updateFamilleStockApresAnnulation(qty, familleStock);
     }
 
-    public void updateNbreVenteApresAnnulation(TFamille OTFamille, TUser ooTUser, int qty, EntityManager emg) {
-        OTFamille.setIntNOMBREVENTES((OTFamille.getIntNOMBREVENTES() != null ? OTFamille.getIntNOMBREVENTES() + qty : 0));
-        OTFamille.setDtLASTMOUVEMENT(new Date());
-        emg.merge(OTFamille);
+    public void updateNbreVenteApresAnnulation(TFamille famille, TUser ooTUser, int qty) {
+        famille.setIntNOMBREVENTES((famille.getIntNOMBREVENTES() != null ? famille.getIntNOMBREVENTES() + qty : 0));
+        famille.setDtLASTMOUVEMENT(new Date());
+        getEm().merge(famille);
     }
 
-    public boolean updateReelStockApresAnnulation(TFamille OTFamille, TFamilleStock familleStock, TUser ooTUser, int int_qte, EntityManager emg) {
+    public boolean updateReelStockApresAnnulation(TFamilleStock familleStock, int qty) {
         try {
 
-            saveMvtArticleApresAnnulation(OTFamille, ooTUser, familleStock, int_qte, emg);
+            updateStockApresAnnulation(familleStock, qty);
             return true;
         } catch (Exception e) {
             return false;
@@ -1893,56 +1753,6 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    public void addtransactionComptant(Optional<TTypeMvtCaisse> optionalCaisse, TPreenregistrement op, boolean KEY_TAKE_INTO_ACCOUNT, Integer int_AMOUNT, TCompteClient compteClient, Integer int_AMOUNT_REMIS, Integer int_AMOUNT_RECU, TReglement OTReglement, String lg_TYPE_REGLEMENT_ID, TUser user, EntityManager emg) {
-        Integer para, intAMOUNT = int_AMOUNT;
-        para = op.getIntACCOUNT();
-        para = (int_AMOUNT > 0 ? para : (-1 * para));
-        if (KEY_TAKE_INTO_ACCOUNT) {
-            Integer y = op.getIntPRICE() - op.getIntACCOUNT();
-            if (y == 0) {
-                intAMOUNT = int_AMOUNT;
-            } else if (y > 0) {
-                Integer x = Math.abs(int_AMOUNT) - (op.getIntACCOUNT() - op.getIntREMISEPARA());
-                if (x >= 0) {
-                    intAMOUNT = op.getIntACCOUNT() - op.getIntREMISEPARA();
-                } else {
-                    intAMOUNT = 0;
-                }
-            }
-        }
-
-        TCashTransaction cashTransaction = new TCashTransaction(UUID.randomUUID().toString());
-        cashTransaction.setBoolCHECKED(Boolean.TRUE);
-        cashTransaction.setDtCREATED(new Date());
-        cashTransaction.setDtUPDATED(cashTransaction.getDtCREATED());
-        cashTransaction.setIntACCOUNT(para);
-        cashTransaction.setIntAMOUNT(int_AMOUNT);
-        cashTransaction.setStrTYPE(Boolean.TRUE);
-        cashTransaction.setStrDESCRIPTION("Vente " + op.getStrTYPEVENTE());
-        cashTransaction.setLgTYPEREGLEMENTID(findById(lg_TYPE_REGLEMENT_ID, emg).getLgTYPEREGLEMENTID());
-        cashTransaction.setLgUSERID(user);
-        cashTransaction.setIntAMOUNT2(intAMOUNT);
-        cashTransaction.setStrTRANSACTIONREF("C");
-        cashTransaction.setStrTASK("VENTE");
-        optionalCaisse.ifPresent(tp -> {
-            cashTransaction.setStrNUMEROCOMPTE(tp.getStrCODECOMPTABLE());
-        });
-        cashTransaction.setLgREGLEMENTID(OTReglement);
-        cashTransaction.setLgMOTIFREGLEMENTID(findMotifReglement(emg));
-        cashTransaction.setStrREFFACTURE(op.getLgPREENREGISTREMENTID());
-        cashTransaction.setStrRESSOURCEREF(op.getLgPREENREGISTREMENTID());
-        cashTransaction.setStrTYPEVENTE(op.getStrTYPEVENTE());
-        cashTransaction.setIntAMOUNTRECU(int_AMOUNT_RECU);
-        cashTransaction.setIntAMOUNTCREDIT(int_AMOUNT);
-        cashTransaction.setIntAMOUNTDEBIT(0);
-        cashTransaction.setIntAMOUNTREMIS(int_AMOUNT_RECU - int_AMOUNT);
-//        cashTransaction.setIntAMOUNTREMIS(int_AMOUNT_REMIS);
-        cashTransaction.setCaissier(user);
-        cashTransaction.setStrREFCOMPTECLIENT((compteClient != null ? compteClient.getLgCOMPTECLIENTID() : ""));
-        emg.persist(cashTransaction);
-
-    }
-
     private Optional<TTypeMvtCaisse> getOne(String id, EntityManager emg) {//Parameter.KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE
         try {
             return Optional.ofNullable(emg.find(TTypeMvtCaisse.class, id));
@@ -2057,13 +1867,13 @@ public class SalesServiceImpl implements SalesService {
             if (key_account) {
                 tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             }
-            cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
+//            cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
 
             if (amount > 0) {
-                addtransactionComptant(typeMvtCaisse, tp, key_account, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), tReglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId(), emg);
+
                 addRecette(clotureVenteParams.getMontantPaye(), "Vente VO", tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
             }
-            addtransactionAssurance(typeMvtCaisse, tp, key_account, (-1) * clotureVenteParams.getPartTP(), compteClient, tReglement, clotureVenteParams.getTypeRegleId(), tUser, clotureVenteParams, emg);
+
             MvtTransaction mvtTransaction = addTransaction(tUser, tp, montant,
                     amount, clotureVenteParams.getMontantRecu(),
                     true,
@@ -2071,13 +1881,13 @@ public class SalesServiceImpl implements SalesService {
                     typeMvtCaisse.get(), clotureVenteParams.getPartTP(),
                     clotureVenteParams.getMontantPaye(), clotureVenteParams.getMarge(), isDiff, clotureVenteParams.getTypeRegleId());
 
-            emg.merge(tp);
             carnetAsDepotService.create(tp, mvtTransaction, this.getTiersPayant());
             json.put("success", true)
                     .put("copy", tp.getCopy())
                     .put("msg", "Opération effectuée avec success")
                     .put("ref", tp.getLgPREENREGISTREMENTID());
-            sendMessageMvtsStockQueue(clotureVenteParams.getVenteId());
+            mvtProduitService.updateVenteStock(tp, lstTPreenregistrementDetail);
+            emg.merge(tp);
             sendMessageClientJmsQueue(clotureVenteParams.getVenteId());
             if (clotureVenteParams.getMontantRemis() > 0) {
                 afficheurMontantAPayer(clotureVenteParams.getMontantRemis(), " MONNAIE:");
@@ -2210,8 +2020,7 @@ public class SalesServiceImpl implements SalesService {
             if (key_account) {
                 tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             }
-            cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
-            addtransactionComptant(typeMvtCaisse, tp, key_account, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), tReglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId(), emg);
+
             addRecette(clotureVenteParams.getMontantPaye(), "Vente VNO", tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
             addTransaction(tUser,
                     tp, montant,
@@ -2220,123 +2029,25 @@ public class SalesServiceImpl implements SalesService {
                     findById(clotureVenteParams.getTypeRegleId(), emg), typeMvtCaisse.get(),
                     clotureVenteParams.getMontantPaye(), clotureVenteParams.getMarge(), tp.getIntACCOUNT(), clotureVenteParams.getData());
 
-            emg.merge(tp);
             json.put("success", true)
                     .put("msg", "Opération effectuée avec success")
                     .put("copy", tp.getCopy())
                     .put("ref", tp.getLgPREENREGISTREMENTID());
 
-            sendMessageMvtsStockQueue(clotureVenteParams.getVenteId());
+            this.mvtProduitService.updateVenteStock(tp, lstTPreenregistrementDetail);
+            emg.merge(tp);
             afficheurMontantAPayer(clotureVenteParams.getMontantRemis(), " MONNAIE:");
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
             try {
                 json.put("success", false).put("msg", "Erreur: Echec de validation de la vente");
                 json.put("codeError", 0);
             } catch (JSONException ex) {
-                ex.printStackTrace(System.err);
+                LOG.log(Level.SEVERE, null, ex);
             }
         }
         return json;
-    }
-
-    public void addtransactionAssurance(Optional<TTypeMvtCaisse> optionalCaisse, TPreenregistrement op, boolean KEY_TAKE_INTO_ACCOUNT, Integer int_AMOUNT, TCompteClient compteClient, TReglement OTReglement, String lg_TYPE_REGLEMENT_ID, TUser user, EntityManager emg) {
-        Integer para, intAMOUNT = int_AMOUNT;
-        para = op.getIntACCOUNT();
-        para = (int_AMOUNT > 0 ? para : (-1 * para));
-        if (KEY_TAKE_INTO_ACCOUNT) {
-            Integer y = op.getIntPRICE() - op.getIntACCOUNT();
-            if (y == 0) {
-                intAMOUNT = int_AMOUNT;
-            } else if (y > 0) {
-                Integer x = Math.abs(int_AMOUNT) - (op.getIntACCOUNT() - op.getIntREMISEPARA());
-                if (x >= 0) {
-                    intAMOUNT = op.getIntACCOUNT() - op.getIntREMISEPARA();
-                } else {
-                    intAMOUNT = 0;
-                }
-            }
-        }
-
-        TCashTransaction cashTransaction = new TCashTransaction(UUID.randomUUID().toString());
-        cashTransaction.setBoolCHECKED(Boolean.TRUE);
-        cashTransaction.setDtCREATED(new Date());
-        cashTransaction.setDtUPDATED(cashTransaction.getDtCREATED());
-        cashTransaction.setIntACCOUNT(para);
-        cashTransaction.setIntAMOUNT(int_AMOUNT);
-        cashTransaction.setStrTYPE(Boolean.TRUE);
-        cashTransaction.setStrDESCRIPTION("Vente " + op.getStrTYPEVENTE());
-        cashTransaction.setLgTYPEREGLEMENTID(findById(lg_TYPE_REGLEMENT_ID, emg).getLgTYPEREGLEMENTID());
-        cashTransaction.setLgUSERID(user);
-        cashTransaction.setIntAMOUNT2(intAMOUNT);
-        cashTransaction.setStrTRANSACTIONREF("C");
-        cashTransaction.setStrTASK("VENTE");
-        optionalCaisse.ifPresent(tp -> {
-            cashTransaction.setStrNUMEROCOMPTE(tp.getStrCODECOMPTABLE());
-        });
-        cashTransaction.setLgREGLEMENTID(OTReglement);
-        cashTransaction.setLgMOTIFREGLEMENTID(findMotifReglement(emg));
-        cashTransaction.setStrREFFACTURE(op.getLgPREENREGISTREMENTID());
-        cashTransaction.setStrRESSOURCEREF(op.getLgPREENREGISTREMENTID());
-        cashTransaction.setStrTYPEVENTE(op.getStrTYPEVENTE());
-        cashTransaction.setIntAMOUNTRECU(0);
-        cashTransaction.setIntAMOUNTCREDIT(0);
-        cashTransaction.setIntAMOUNTDEBIT((-1) * int_AMOUNT);
-        cashTransaction.setIntAMOUNTREMIS(0);
-        cashTransaction.setCaissier(user);
-        cashTransaction.setStrREFCOMPTECLIENT((compteClient != null ? compteClient.getLgCOMPTECLIENTID() : ""));
-        emg.persist(cashTransaction);
-
-    }
-
-    public void addtransactionAssurance(Optional<TTypeMvtCaisse> optionalCaisse, TPreenregistrement op, boolean KEY_TAKE_INTO_ACCOUNT, Integer int_AMOUNT, TCompteClient compteClient, TReglement OTReglement, String lg_TYPE_REGLEMENT_ID, TUser user, ClotureVenteParams clotureVenteParams, EntityManager emg) {
-        Integer para, intAMOUNT = int_AMOUNT;
-        para = op.getIntACCOUNT();
-        para = (int_AMOUNT > 0 ? para : (-1 * para));
-        if (KEY_TAKE_INTO_ACCOUNT) {
-            Integer y = op.getIntPRICE() - op.getIntACCOUNT();
-            if (y == 0) {
-                intAMOUNT = int_AMOUNT;
-            } else if (y > 0) {
-                Integer x = Math.abs(int_AMOUNT) - (op.getIntACCOUNT() - op.getIntREMISEPARA());
-                if (x >= 0) {
-                    intAMOUNT = op.getIntACCOUNT() - op.getIntREMISEPARA();
-                } else {
-                    intAMOUNT = 0;
-                }
-            }
-        }
-
-        TCashTransaction cashTransaction = new TCashTransaction(UUID.randomUUID().toString());
-        cashTransaction.setBoolCHECKED(Boolean.TRUE);
-        cashTransaction.setDtCREATED(new Date());
-        cashTransaction.setDtUPDATED(cashTransaction.getDtCREATED());
-        cashTransaction.setIntACCOUNT(para);
-        cashTransaction.setIntAMOUNT(int_AMOUNT);
-        cashTransaction.setStrTYPE(Boolean.TRUE);
-        cashTransaction.setStrDESCRIPTION("Vente " + op.getStrTYPEVENTE());
-        cashTransaction.setLgTYPEREGLEMENTID(findById(lg_TYPE_REGLEMENT_ID, emg).getLgTYPEREGLEMENTID());
-        cashTransaction.setLgUSERID(user);
-        cashTransaction.setIntAMOUNT2(intAMOUNT);
-        cashTransaction.setStrTRANSACTIONREF("C");
-        cashTransaction.setStrTASK("VENTE");
-        optionalCaisse.ifPresent(tp -> {
-            cashTransaction.setStrNUMEROCOMPTE(tp.getStrCODECOMPTABLE());
-        });
-        cashTransaction.setLgREGLEMENTID(OTReglement);
-        cashTransaction.setLgMOTIFREGLEMENTID(findMotifReglement(emg));
-        cashTransaction.setStrREFFACTURE(op.getLgPREENREGISTREMENTID());
-        cashTransaction.setStrRESSOURCEREF(op.getLgPREENREGISTREMENTID());
-        cashTransaction.setStrTYPEVENTE(op.getStrTYPEVENTE());
-        cashTransaction.setIntAMOUNTRECU(clotureVenteParams.getMontantRecu());
-        cashTransaction.setIntAMOUNTCREDIT(0);
-        cashTransaction.setIntAMOUNTDEBIT((-1) * int_AMOUNT);
-        cashTransaction.setIntAMOUNTREMIS(clotureVenteParams.getMontantRemis());
-        cashTransaction.setCaissier(user);
-        cashTransaction.setStrREFCOMPTECLIENT((compteClient != null ? compteClient.getLgCOMPTECLIENTID() : ""));
-        emg.persist(cashTransaction);
-
     }
 
     public boolean checkRefBonIsUse(String Ref_Bon, TCompteClientTiersPayant oTCompteClientTiersPayant, EntityManager emg) {
@@ -3255,7 +2966,7 @@ public class SalesServiceImpl implements SalesService {
                     emg, clotureVenteParams.getMarge(), client.orElse(null));
             emg.persist(mt);
             emg.merge(tp);
-            addtransactionAssurance(typeMvtCaisse, tp, false, (-1) * tp.getIntPRICE(), compteClient, tReglement, clotureVenteParams.getTypeRegleId(), tUser, clotureVenteParams, emg);
+
             mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emg, emplacement);
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref", tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
@@ -3332,7 +3043,6 @@ public class SalesServiceImpl implements SalesService {
             updateUgData(clotureVenteParams.getData(), tp);
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
             cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
-            addtransactionComptant(typeMvtCaisse, tp, false, clotureVenteParams.getMontantPaye(), compteClient, clotureVenteParams.getMontantRemis(), clotureVenteParams.getMontantRecu(), tReglement, clotureVenteParams.getTypeRegleId(), clotureVenteParams.getUserId(), emg);
             addRecette(clotureVenteParams.getMontantPaye(), "Vente VNO", tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
             MvtTransaction mvtTransaction = addTransaction(tUser,
                     tp, montant,
@@ -3346,12 +3056,12 @@ public class SalesServiceImpl implements SalesService {
             emg.merge(tp);
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref", tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
             try {
                 json.put("success", false).put("msg", "Erreur: Echec de validation de la vente");
             } catch (JSONException ex) {
-
+                LOG.log(Level.SEVERE, null, ex);
             }
         }
         return json;
@@ -4375,10 +4085,9 @@ public class SalesServiceImpl implements SalesService {
     public void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp) {
         EntityManager emg = this.getEm();
         final boolean checked = tp.getChecked();
-        final boolean sameDate = true;
+
         try {
 
-            List<TCashTransaction> cashTransactions = lstTCashTransaction(tp.getLgPREENREGISTREMENTID(), emg);
             Optional<TRecettes> oprectte = findRecette(tp.getLgPREENREGISTREMENTID(), emg);
             List<TPreenregistrementDetail> preenregistrementDetails = getTPreenregistrementDetail(tp, emg);
             String idVente = tp.getLgPREENREGISTREMENTID();
@@ -4394,23 +4103,6 @@ public class SalesServiceImpl implements SalesService {
             });
             if (tp.getStrTYPEVENTE().equals("VO")) {
                 clonePreenregistrementTp(clonedPreen, idVente, ooTUser);
-                if (!cashTransactions.isEmpty()) {
-                    for (TCashTransaction cashTransaction : cashTransactions) {
-                        if (cashTransaction.getIntAMOUNT() > 0) {
-                            addTransaction(ooTUser, cashTransaction, clonedPreen, tp, !sameDate ? sameDate : checked);
-                        } else {
-                            addTransactionCredit(ooTUser, cashTransaction, clonedPreen, tp, !sameDate ? sameDate : checked);
-                        }
-                    }
-
-                }
-
-            } else {
-                Optional<TCashTransaction> cashTransactio = cashTransactions.stream().findFirst();
-                cashTransactio.ifPresent(cs -> {
-                    addTransaction(ooTUser, cs, clonedPreen, tp, !sameDate ? sameDate : checked);
-
-                });
             }
 
             transaction(idVente, emg).ifPresent(tr -> {
@@ -4427,18 +4119,18 @@ public class SalesServiceImpl implements SalesService {
             });
             TEmplacement emplacement = ooTUser.getLgEMPLACEMENTID();
             final Typemvtproduit typemvtproduit = checked ? findById(DateConverter.ANNULATION_DE_VENTE) : findById(DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
-            preenregistrementDetails.forEach((e) -> {
+            preenregistrementDetails.forEach(e -> {
                 TPreenregistrementDetail newItem = createItemCopy(ooTUser, e, clonedPreen, emg);
                 TFamille oFamille = e.getLgFAMILLEID();
-                updateNbreVenteApresAnnulation(oFamille, ooTUser, newItem.getIntQUANTITY(), emg);
+                updateNbreVenteApresAnnulation(oFamille, ooTUser, newItem.getIntQUANTITY());
                 TFamilleStock familleStock = findStock(oFamille.getLgFAMILLEID(), emplacement, emg);
                 int initStock = familleStock.getIntNUMBERAVAILABLE();
                 mouvementProduitService.saveMvtProduit(newItem.getIntPRICEUNITAIR(), newItem,
                         typemvtproduit, oFamille, ooTUser, emplacement,
                         newItem.getIntQUANTITY(), initStock, initStock - newItem.getIntQUANTITY(), emg, newItem.getValeurTva(), checked, e.getIntUG());
 
-                updateReelStockApresAnnulation(oFamille, familleStock, ooTUser, newItem.getIntQUANTITY(), emg);
-                if (!tp.getPkBrand().isEmpty()) {
+                updateReelStockApresAnnulation(familleStock, newItem.getIntQUANTITY());
+                if (StringUtils.isNotEmpty(tp.getPkBrand())) {
                     updateReelStockAnnulationDepot(oFamille, newItem.getIntQUANTITY(), tp.getPkBrand(), emg);
 
                 }

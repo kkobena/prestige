@@ -434,7 +434,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             if (!params.isShowAll()) {
                 predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
@@ -595,7 +595,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 Predicate predicate = cb.and(cb.or(cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%")));
                 predicates.add(predicate);
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
