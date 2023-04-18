@@ -1381,12 +1381,13 @@ public class SalesServiceImpl implements SalesService {
             tp.setIntPRICE(tp.getIntPRICE() + tpd.getIntPRICE());
             tp.setMontantTva(tpd.getMontantTva() + tp.getMontantTva());
             tp.setIntPRICEOTHER(tp.getIntPRICEOTHER() + tpd.getIntPRICE());
+
             if (KEY_TAKE_INTO_ACCOUNT.isPresent()) {
                 if (Integer.parseInt(KEY_TAKE_INTO_ACCOUNT.get().getStrVALUE().trim()) == 1) {
-                    if (!OTFamille.getLgZONEGEOID().getBoolACCOUNT() || !OTFamille.getBoolACCOUNT()) {
-                        tpd.setBoolACCOUNT(false);
-                    } else {
+                    if (OTFamille.getLgZONEGEOID().getBoolACCOUNT() && OTFamille.getBoolACCOUNT()) {
                         tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
+                    } else {
+                        tpd.setBoolACCOUNT(false);
                     }
                 } else {
                     tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
@@ -1402,11 +1403,11 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    public Optional<TPreenregistrementDetail> findItemByProduitAndVente(String lg_PREENREGISTREMENT_ID, String lg_famille_id, EntityManager emg) {
+    public Optional<TPreenregistrementDetail> findItemByProduitAndVente(String idVente, String idProduit) {
         try {
-            TypedQuery<TPreenregistrementDetail> detail = emg.createQuery("SELECT o FROM TPreenregistrementDetail o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?2 ", TPreenregistrementDetail.class);
-            detail.setParameter(1, lg_famille_id);
-            detail.setParameter(2, lg_PREENREGISTREMENT_ID);
+            TypedQuery<TPreenregistrementDetail> detail = this.getEm().createQuery("SELECT o FROM TPreenregistrementDetail o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?2 ", TPreenregistrementDetail.class);
+            detail.setParameter(1, idProduit);
+            detail.setParameter(2, idVente);
             detail.setMaxResults(1);
             return Optional.ofNullable(detail.getSingleResult());
         } catch (Exception e) {
@@ -1418,8 +1419,8 @@ public class SalesServiceImpl implements SalesService {
         if (codeTva == null || codeTva.getIntVALUE() == 0) {
             return 0;
         }
-        Double HT = amount / (1 + (Double.valueOf(codeTva.getIntVALUE()) / 100));
-        return amount - HT.intValue();
+        Double ht = amount / (1 + (Double.valueOf(codeTva.getIntVALUE()) / 100));
+        return amount - ht.intValue();
     }
 
     @Override
@@ -1428,7 +1429,7 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         try {
             TPreenregistrement tp = emg.find(TPreenregistrement.class, params.getVenteId());
-            Optional<TPreenregistrementDetail> detailOp = findItemByProduitAndVente(params.getVenteId(), params.getProduitId(), emg);
+            Optional<TPreenregistrementDetail> detailOp = findItemByProduitAndVente(params.getVenteId(), params.getProduitId());
             TFamille famille = emg.find(TFamille.class, params.getProduitId());
             TCodeTva tva = famille.getLgCODETVAID();
             TPreenregistrementDetail tpd;
@@ -1439,7 +1440,7 @@ public class SalesServiceImpl implements SalesService {
                 if (!forcerStock(qty, params.getProduitId(), tp.getLgUSERID().getLgEMPLACEMENTID())) {
                     return json.put("success", false).put("msg", "Impossible de forcer le stock « voir le gestionnaire »");
                 }
-                Integer int_PRICE_OLD = tpd.getIntPRICE();
+                Integer oldPrice = tpd.getIntPRICE();
                 Integer montantTva = tpd.getMontantTva();
                 tpd.setIntFREEPACKNUMBER(0);
                 tpd.setIntQUANTITY(qty);
@@ -1450,7 +1451,7 @@ public class SalesServiceImpl implements SalesService {
                 tpd.setIntAVOIR(tpd.getIntQUANTITY() - tpd.getIntQUANTITYSERVED());
                 tpd.setDtUPDATED(new Date());
                 tpd.setBISAVOIR(tpd.getIntAVOIR() > 0);
-                tp.setIntPRICE(tp.getIntPRICE() + tpd.getIntPRICE() - int_PRICE_OLD);
+                tp.setIntPRICE(tp.getIntPRICE() + tpd.getIntPRICE() - oldPrice);
                 tp.setMontantTva(tp.getMontantTva() + tpd.getMontantTva() - montantTva);
                 tp.setCmuAmount((tp.getCmuAmount() - oldCmuAmount) + computeCmuAmount(tpd));
                 if (tpd.getBoolACCOUNT()) {
@@ -1506,10 +1507,9 @@ public class SalesServiceImpl implements SalesService {
                 if (p.isPresent()) {
                     TParameters v = p.get();
                     int checkPersmission = Integer.parseInt(v.getStrVALUE());
-                    if (checkPersmission == 1) {
-                        if (!checkpricevente(famille, params.getItemPu(), emg)) {
-                            return json.put("success", false).put("decondition", false).put("msg", "Impossible. Vous n'ête pas autorisé à modifier du prix de vente");
-                        }
+                    if (checkPersmission == 1 && !checkpricevente(famille, params.getItemPu(), emg)) {
+                        return json.put("success", false).put("decondition", false).put("msg", "Impossible. Vous n'ête pas autorisé à modifier du prix de vente");
+
                     }
 
                 }
@@ -1563,7 +1563,7 @@ public class SalesServiceImpl implements SalesService {
 
     public void updateLogFile(TUser user, String ref,
             String desc, TypeLog typeLog,
-            Object T, EntityManager emg
+            Object t, EntityManager emg
     ) {
         TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
         eventLog.setLgUSERID(user);
@@ -1571,7 +1571,7 @@ public class SalesServiceImpl implements SalesService {
         eventLog.setDtUPDATED(eventLog.getDtCREATED());
         eventLog.setStrCREATEDBY(user.getStrLOGIN());
         eventLog.setStrSTATUT(commonparameter.statut_enable);
-        eventLog.setStrTABLECONCERN(T.getClass().getName());
+        eventLog.setStrTABLECONCERN(t.getClass().getName());
         eventLog.setTypeLog(typeLog);
         eventLog.setStrTYPELOG(ref);
         eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
