@@ -75,6 +75,7 @@ import javax.jms.Queue;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
@@ -907,6 +908,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     @Override
     public JSONObject ticketZ(Params params) throws JSONException {
+        return this.buildTicketZ(params);
+    }
+
+    private JSONObject oldPrinter(Params params) {
         JSONObject json = new JSONObject();
         try {
 
@@ -914,29 +919,29 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             if (datas.isEmpty()) {
                 return json.put("success", false).put("msg", "Aucune donnée trouvée . Veuillez choisir une autre option");
             }
-            ImpressionServiceImpl ODriverPrinter = new ImpressionServiceImpl();
+            ImpressionServiceImpl oDriverPrinter = new ImpressionServiceImpl();
             TEmplacement emplacement = params.getOperateur().getLgEMPLACEMENTID();
             PrintService printService = findPrintService();
             TImprimante imprimante = findImprimanteByName();
             TOfficine officine = findOfficine();
-            ODriverPrinter.setEmplacement(emplacement);
-            ODriverPrinter.setTypeTicket(DateConverter.TICKET_Z);
-            ODriverPrinter.setDatas(datas);
-            ODriverPrinter.setOperation(new Date());
-            ODriverPrinter.setOperationLocalTime(LocalDateTime.now());
-            ODriverPrinter.setSubtotal(new ArrayList<>());
-            ODriverPrinter.setInfoTiersPayants(new ArrayList<>());
+            oDriverPrinter.setEmplacement(emplacement);
+            oDriverPrinter.setTypeTicket(DateConverter.TICKET_Z);
+            oDriverPrinter.setDatas(datas);
+            oDriverPrinter.setOperation(new Date());
+            oDriverPrinter.setOperationLocalTime(LocalDateTime.now());
+            oDriverPrinter.setSubtotal(new ArrayList<>());
+            oDriverPrinter.setInfoTiersPayants(new ArrayList<>());
             String dtTitle = LocalDate.parse(params.getDtStart()).format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
             String title = "TICKET Z DU " + dtTitle + "  A  " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
-            ODriverPrinter.setTitle(title);
-            ODriverPrinter.setInfoSellers(new ArrayList<>());
-            ODriverPrinter.setCommentaires(new ArrayList<>());
-            ODriverPrinter.setShowCodeBar(true);
-            ODriverPrinter.setoTImprimante(imprimante);
-            ODriverPrinter.setOfficine(officine);
-            ODriverPrinter.setService(printService);
-            ODriverPrinter.setCodeBar(this.buildLineBarecode(DateConverter.getShortId(10)));
-            ODriverPrinter.printTicketVente(1);
+            oDriverPrinter.setTitle(title);
+            oDriverPrinter.setInfoSellers(new ArrayList<>());
+            oDriverPrinter.setCommentaires(new ArrayList<>());
+            oDriverPrinter.setShowCodeBar(true);
+            oDriverPrinter.setoTImprimante(imprimante);
+            oDriverPrinter.setOfficine(officine);
+            oDriverPrinter.setService(printService);
+            oDriverPrinter.setCodeBar(this.buildLineBarecode(DateConverter.getShortId(10)));
+            oDriverPrinter.printTicketVente(1);
             return json.put("success", true).put("msg", "Opération effectuée ");
         } catch (PrinterException | JSONException e) {
             LOG.log(Level.SEVERE, null, e);
@@ -987,10 +992,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     private int nombreExemplaireTicket() {
         try {
-            TParameters KEY_TICKET_COUNT = getEntityManager().find(TParameters.class, "KEY_TICKET_COUNT");
+            TParameters nbreTicket = getEntityManager().find(TParameters.class, "KEY_TICKET_COUNT");
 
-            if (KEY_TICKET_COUNT != null) {
-                return Integer.parseInt(KEY_TICKET_COUNT.getStrVALUE().trim());
+            if (nbreTicket != null) {
+                return Integer.parseInt(nbreTicket.getStrVALUE().trim());
             }
             return 1;
         } catch (NumberFormatException e) {
@@ -999,13 +1004,13 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     }
 
-    public List<TDossierReglementDetail> getListeDossierReglementDetail(String lg_DOSSIER_REGLEMENT_ID) {
+    public List<TDossierReglementDetail> getListeDossierReglementDetail(String idDossier) {
         try {
             TypedQuery<TDossierReglementDetail> q = getEntityManager().createQuery("SELECT t FROM TDossierReglementDetail t WHERE t.lgDOSSIERREGLEMENTID.lgDOSSIERREGLEMENTID =?1", TDossierReglementDetail.class);
-            q.setParameter(1, lg_DOSSIER_REGLEMENT_ID);
+            q.setParameter(1, idDossier);
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
 
@@ -1141,7 +1146,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             printTicketModificationVenteVo(dTOs);
             return json.put("success", true);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
             LOG.log(Level.SEVERE, null, e);
             return json.put("success", false).put("msg", "Impression n'a pas aboutie");
         }
@@ -1168,7 +1173,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             parameters = reportUtil.ticketParams(parameters, p.getStrREFTICKET(), p.getDtUPDATED(), "Caissier:: " + p.getLgUSERCAISSIERID().getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + p.getLgUSERCAISSIERID().getStrLASTNAME() + " Vendeur:: " + p.getLgUSERVENDEURID().getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + p.getLgUSERVENDEURID().getStrLASTNAME());
             reportUtil.printTicket(parameters, "ticket_annuler", jdom.scr_report_file, findPrintService(), listeVenteByIdVente(p.getLgPREENREGISTREMENTID()).stream().map(VenteDetailsDTO::new).collect(Collectors.toList()));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
 
     }
@@ -1188,7 +1193,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             parameters = reportUtil.barecodeDataParams(parameters, o.getStrREFTICKET());
             reportUtil.printTicket(parameters, "ticket_copyventevo", jdom.scr_report_file, findPrintService(), os);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
 
     }
@@ -1769,13 +1774,14 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     private void printTicketZ(ImpressionServiceImpl serviceImpression, LinkedList<String> body, LinkedList<String> footer) throws PrinterException {
         int size = body.size() + footer.size();
+        int breaking = breakingTicketZParam();
         body.addAll(footer);
-        if (size <= 40) {
+        if (size <= breaking) {
             serviceImpression.setTypeTicket(DateConverter.TICKET_ZZ);
             serviceImpression.setTicketZdatas(body);
             serviceImpression.printTicketVente(1);
         } else {
-            int counter = 40, k = 0;
+            int counter = breaking, k = 0;
             int page = size / counter;
             int begin = 0;
             while (k < page) {
@@ -1783,8 +1789,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 serviceImpression.setDatas(body.subList(begin, counter));
                 serviceImpression.printTicketVente(1);
                 k++;
-                begin += 40;
-                counter += 40;
+                begin += breaking;
+                counter += breaking;
 
             }
             serviceImpression.setTypeTicket(DateConverter.TICKET_Z);
@@ -1799,7 +1805,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         LocalDate dtStart = LocalDate.parse(params.getDtStart());
         LocalDate dtEnd = LocalDate.parse(params.getDtEnd());
         String dtTitle = dtStart.format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
-        String title ;
+        String title;
         if (Objects.equals(params.getDtStart(), params.getDtEnd())) {
             if (StringUtils.isAllEmpty(params.getHrEnd(), params.getHrStart())) {
                 if (dtStart.isEqual(LocalDate.now())) {
@@ -2197,14 +2203,20 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
     }
 
+    private void updateParameters(TypedQuery<MvtTransaction> q, Params params) {
+
+        LocalDateTime dtStart = LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE).atTime(LocalTime.parse(params.getHrStart()));
+        LocalDateTime dtEnd = LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE).atTime(LocalTime.parse(params.getHrEnd().concat(":59")));
+        q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        q.setParameter("dtStart", java.sql.Timestamp.valueOf(dtStart), TemporalType.TIMESTAMP);
+        q.setParameter("dtEnd", java.sql.Timestamp.valueOf(dtEnd), TemporalType.TIMESTAMP);
+    }
+
     List<MvtTransaction> ticketZVenteData(Params params) {
         try {
-            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac", MvtTransaction.class);
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac", MvtTransaction.class);
             q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT));
-
-            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
-            q.setParameter("dtEnd", LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE));
+            updateParameters(q, params);
             return q.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -2214,11 +2226,9 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     List<MvtTransaction> ticketZSortieData(Params params) {
         try {
-            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac", MvtTransaction.class);
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac", MvtTransaction.class);
             q.setParameter("typetransac", TypeTransaction.SORTIE);
-            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
-            q.setParameter("dtEnd", LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE));
+            updateParameters(q, params);
             return q.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -2228,11 +2238,9 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     List<MvtTransaction> ticketZEntreesData(Params params) {
         try {
-            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac", MvtTransaction.class);
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac", MvtTransaction.class);
             q.setParameter("typetransac", TypeTransaction.ENTREE);
-            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
-            q.setParameter("dtEnd", LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE));
+            updateParameters(q, params);
             return q.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -2393,36 +2401,36 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     private Set<TicketZDTO> dataPerUser(Params params) {
         List<TicketZDTO> tickes = new LinkedList<>();
+        if (params.getDescription().equals("ALL")) {
 
-        ticketZEntreesData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse))
-                .forEach((user, trans) -> {
-                    TicketZDTO userData = new TicketZDTO();
-                    userData.setUserId(user.getLgUSERID());
-                    userData.setUser(user.getStrFIRSTNAME().substring(0, 1).toUpperCase() + " " + user.getStrLASTNAME());
-                    computeReglementTicketZDataByUser(userData, trans);
-                    tickes.add(userData);
+            ticketZEntreesData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse))
+                    .forEach((user, trans) -> {
+                        TicketZDTO userData = addUserInfo(user);
+                        computeReglementTicketZDataByUser(userData, trans);
+                        tickes.add(userData);
 
-                });
-        ticketZSortieData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse)).forEach((user, trans) -> {
+                    });
+            ticketZSortieData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse)).forEach((user, trans) -> {
+                TicketZDTO userData = null;
+                ListIterator<TicketZDTO> listIterator = tickes.listIterator();
+                while (listIterator.hasNext()) {
+                    TicketZDTO oldValue = listIterator.next();
+                    if (oldValue.getUserId().equals(user.getLgUSERID())) {
+                        userData = oldValue;
+                        break;
+                    }
 
-            TicketZDTO userData = null;
-            ListIterator<TicketZDTO> listIterator = tickes.listIterator();
-            while (listIterator.hasNext()) {
-                TicketZDTO oldValue = listIterator.next();
-                if (oldValue.getUserId().equals(user.getLgUSERID())) {
-                    userData = oldValue;
-                    break;
+                }
+                if (Objects.isNull(userData)) {
+                    userData = addUserInfo(user);
                 }
 
-            }
-            if (Objects.isNull(userData)) {
-                userData = new TicketZDTO();
-            }
+                computeSortiesTicketZDataByUser(userData, trans);
+                tickes.add(userData);
 
-            computeSortiesTicketZDataByUser(userData, trans);
-            tickes.add(userData);
+            });
 
-        });
+        }
         ticketZVenteData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse))
                 .forEach((user, trans) -> {
 
@@ -2437,7 +2445,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
                     }
                     if (Objects.isNull(userData)) {
-                        userData = new TicketZDTO();
+                        userData = addUserInfo(user);
                     }
 
                     computeVenteTicketZDataByUser(userData, trans);
@@ -2449,7 +2457,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     }
 
+    private TicketZDTO addUserInfo(TUser user) {
+        TicketZDTO userData = new TicketZDTO();
+        userData.setUserId(user.getLgUSERID());
+        userData.setUser(String.format("%s.%s", user.getStrFIRSTNAME().substring(0, 1).toUpperCase(), user.getStrLASTNAME().toUpperCase()));
+        return userData;
+    }
+
     private LinkedList<String> buildBody(Set<TicketZDTO> tickets) {
+
         LinkedList<String> lstData = new LinkedList<>();
         if (tickets.isEmpty()) {
             return lstData;
@@ -2595,8 +2611,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     List<String> buildTicketZForPrintMVT(Params params) {
         Set<TicketZDTO> tickets = dataPerUser(params);
-        // List<String> lstData = new ArrayList<>();
-        LinkedList<String> lstData = new LinkedList<String>();
+
+        LinkedList<String> lstData = new LinkedList<>();
 
         if (tickets.isEmpty()) {
             return lstData;
@@ -2686,4 +2702,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return lstData;
     }
 
+    private int breakingTicketZParam() {
+        try {
+
+            return Integer.parseInt(getEntityManager().find(TParameters.class, "BREAKING_TICKET_Z").getStrVALUE().trim());
+        } catch (Exception e) {
+            return 40;
+        }
+    }
 }

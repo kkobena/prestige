@@ -1,8 +1,6 @@
 
 /* global Ext */
 
-
-
 Ext.define('testextjs.view.caisseManager.TicketzManager', {
     extend: 'Ext.form.Panel',
     xtype: 'ticketzmanager',
@@ -16,12 +14,12 @@ Ext.define('testextjs.view.caisseManager.TicketzManager', {
         msgTarget: 'side'
     },
     initComponent: function () {
-        Me = this;
-        var store_type = new Ext.data.Store({
+
+        const store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
             data: [{str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous les mouvements'}, {str_TYPE_TRANSACTION: 'VENTE', str_desc: 'Ventes uniquements'}]
         });
-        var me = this;
+        const me = this;
 
         Ext.applyIf(me, {
             items: [{
@@ -41,19 +39,53 @@ Ext.define('testextjs.view.caisseManager.TicketzManager', {
                             allowBlank: false,
                             valueField: 'str_TYPE_TRANSACTION',
                             displayField: 'str_desc',
-                            value:'ALL', 
+                            value: 'ALL',
                             editable: false,
                             queryMode: 'local',
                             emptyText: 'Choisir une option...'
                         },
                         {
                             xtype: 'datefield',
-                            fieldLabel: 'Date',
+                            fieldLabel: 'Date debut',
                             name: 'dtStart',
                             itemId: 'dtStart',
                             format: 'd/m/Y',
                             value: new Date(),
                             submitFormat: 'Y-m-d',
+                            allowBlank: false
+                        },
+                        {
+
+                            xtype: 'timefield',
+                            name: 'hrStart',
+                            fieldLabel: 'Heure debut',
+                            itemId: 'hrStart',
+                            emptyText: 'Heure debut(HH:mm)',
+                            increment: 30,
+                            value: '00:00',
+                            format: 'H:i',
+                            allowBlank: false
+                        },
+
+                        {
+                            xtype: 'datefield',
+                            fieldLabel: 'Date fin',
+                            name: 'dtEnd',
+                            itemId: 'dtEnd',
+                            format: 'd/m/Y',
+                            value: new Date(),
+                            submitFormat: 'Y-m-d',
+                            allowBlank: false
+                        },
+                        {
+                            xtype: 'timefield',
+                            name: 'hrEnd',
+                            fieldLabel: 'Heure fin',
+                            itemId: 'hrEnd',
+                            emptyText: 'Heure fin (HH:mm)',
+                            increment: 30,
+                            value: '23:59',
+                            format: 'H:i',
                             allowBlank: false
                         }
 
@@ -75,16 +107,17 @@ Ext.define('testextjs.view.caisseManager.TicketzManager', {
     },
 
     onbtnsave: function (buton) {
-        var form = buton.up('form');
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        const form = buton.up('form');
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             url: '../api/v1/caisse/tickez',
             params: Ext.JSON.encode(form.getValues()),
+            timeout: 600000,
             success: function (response, options) {
                 progress.hide();
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (!result.success) {
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
@@ -100,10 +133,9 @@ Ext.define('testextjs.view.caisseManager.TicketzManager', {
             },
             failure: function (response, options) {
                 progress.hide();
-//                Ext.Msg.alert("Message", 'Erreur du serveur  ' + response.status);
             }
 
         });
-   
+
     }
 });

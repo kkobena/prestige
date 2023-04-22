@@ -25,7 +25,8 @@ public class Params implements Serializable {
     private String hrEnd;
     private String hrStart;
     private TUser operateur;
-    boolean scheduled, checkug = false;
+    boolean scheduled;
+    boolean checkug;
 
     public String getHrEnd() {
         return hrEnd;
