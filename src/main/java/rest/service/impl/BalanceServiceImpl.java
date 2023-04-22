@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -48,12 +49,13 @@ public class BalanceServiceImpl implements BalanceService {
     private static final String BALANCE_SQL_QUERY = "SELECT %s %s m.`typeTransaction`  AS typeVente, m.`typeReglementId` AS typeReglement ,SUM(m.montant) AS montantTTC,"
             + "SUM(m.`montantNet`) AS montantNet,SUM(m.`montantCredit`) AS montantCredit,SUM(m.`montantRemise`) AS montantRemise,"
             + " SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantAChat) AS montantAChat, "
-            + " SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantTva) AS montantTva,SUM(sqlQ.montantAchatUg) AS montantAchatUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail, SUM(sqlQ.montantTvaUg) AS montantTvaUg,"
+            + " SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantTTCDetatilToRemove) AS montantTTCDetatilToRemove,SUM(sqlQ.montantTva) AS montantTva,SUM(sqlQ.montantAchatUg) AS montantAchatUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail, SUM(sqlQ.montantTvaUg) AS montantTvaUg,"
             + " SUM(CASE WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc "
             + " FROM  mvttransaction m,t_preenregistrement p,(SELECT d.`lg_PREENREGISTREMENT_ID` AS idVente,"
-            + " SUM(d.`int_PRICE`) AS montantTTCDetatil,SUM(d.`int_QUANTITY`*d.`prixAchat`) AS montantAChat,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,SUM(d.`montantTva`) AS montantTva\n"
-            + ",SUM(d.`int_UG`*d.`prixAchat`) AS montantAchatUg,SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail,SUM(d.montanttvaug) AS montantTvaUg "
-            + " FROM t_preenregistrement_detail d WHERE d.`bool_ACCOUNT` GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN "
+            + " SUM(d.`int_PRICE`) AS montantTTCDetatilReal,SUM(d.`int_QUANTITY`*d.`prixAchat`) AS montantAChat,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,SUM(d.`montantTva`) AS montantTva\n"
+            + ",SUM(d.`int_UG`*d.`prixAchat`) AS montantAchatUg,SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail,SUM(d.montanttvaug) AS montantTvaUg , SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,\n"
+            + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove "
+            + " FROM t_preenregistrement_detail d  GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN "
             + " ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 {excludeStatement} {flagStatement} GROUP BY typeVente,typeReglement %s %s";
     private static final String REMISE_SQL_QUERY = "SELECT %s p.`lg_TYPE_VENTE_ID` AS typeVente,SUM(d.`int_PRICE_REMISE`) AS montantRemise FROM  t_preenregistrement_detail d,t_preenregistrement p,t_user u,t_famille f WHERE   d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID`  AND d.`lg_FAMILLE_ID`=f.`lg_FAMILLE_ID` AND f.`bool_ACCOUNT`=?1 "
             + "  AND p.`lg_USER_ID`=u.`lg_USER_ID` AND u.`lg_EMPLACEMENT_ID`=?2  AND p.`str_STATUT`='is_Closed' AND %s  AND p.`lg_TYPE_VENTE_ID` <> ?3 AND DATE(p.`dt_UPDATED`) BETWEEN ?4 AND ?5 AND d.`int_PRICE_REMISE` <>0 GROUP BY typeVente %s";
@@ -74,11 +76,14 @@ public class BalanceServiceImpl implements BalanceService {
     private static final String TVA_DATE_PATERN = "dd/MM/yyyy";
 
     private static final String TABLEAU_BOARD_SQL = "SELECT DATE_FORMAT(p.`dt_UPDATED`,'%Y-%m-%d' ) AS mvtDate , SUM(m.montant) AS montantTTC,SUM(m.`montantNet`) AS montantNet,SUM(m.`montantCredit`) AS montantCredit,SUM(m.`montantRemise`) AS montantRemise,"
-            + "SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail,  SUM(CASE  WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p,(SELECT d.`lg_PREENREGISTREMENT_ID` AS idVente, SUM(d.`int_PRICE`) AS montantTTCDetatil,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,"
+            + "SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantTTCDetatilToRemove) AS montantTTCDetatilToRemove,SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail,  SUM(CASE  WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p,(SELECT d.`lg_PREENREGISTREMENT_ID` AS idVente, SUM(d.`int_PRICE`) AS montantTTCDetatilReal,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,"
+            + " SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,\n"
+            + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove,"
             + " SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail FROM t_preenregistrement_detail d WHERE   d.`bool_ACCOUNT` GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2  AND  p.`lg_PREENREGISTREMENT_ID` NOT IN (SELECT v.preenregistrement_id FROM vente_exclu v)   AND  m.flag_id IS NULL  GROUP BY mvtDate";
     private static final String TABLEAU_BOARD_SQL_ACHATS = "SELECT m.mvtdate AS mvtDate ,SUM(m.montant) AS montant,gf.libelle FROM  mvttransaction m,t_grossiste g,groupefournisseur gf WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` =2 "
             + " AND m.`lg_EMPLACEMENT_ID` =?3 AND m.`grossisteId`=g.`lg_GROSSISTE_ID` AND g.`groupeId`=gf.id GROUP BY gf.id,mvtdate ORDER BY mvtDate";
     private final Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
+
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -413,6 +418,11 @@ public class BalanceServiceImpl implements BalanceService {
 
     private BalanceVenteItemDTO buildFromTuple(Tuple tuple) {
         TypeTransaction typeVente = tuple.get("typeVente", Integer.class) == 0 ? TypeTransaction.VENTE_COMPTANT : TypeTransaction.VENTE_CREDIT;
+        BigDecimal montantHorsCa0 = tuple.get("montantTTCDetatilToRemove", BigDecimal.class);
+        BigDecimal montantPaye = tuple.get("montantPaye", BigDecimal.class);
+        BigDecimal montantRegle = tuple.get("montantRegle", BigDecimal.class);
+        long montantHorsCa = Objects.nonNull(montantHorsCa0) ? montantHorsCa0.longValue() : 0;
+
         return BalanceVenteItemDTO.builder()
                 .typeTransaction(typeVente)
                 .typeReglement(tuple.get("typeReglement", String.class))
@@ -425,14 +435,15 @@ public class BalanceServiceImpl implements BalanceService {
                 .montantNet(tuple.get("montantNet", BigDecimal.class))
                 .montantCredit(tuple.get("montantCredit", BigDecimal.class))
                 .montantRemise(tuple.get("montantRemise", BigDecimal.class))
-                .montantRegle(tuple.get("montantRegle", BigDecimal.class))
-                .montantPaye(tuple.get("montantPaye", BigDecimal.class))
+                .montantRegle(Objects.nonNull(montantRegle) ? montantRegle.subtract(BigDecimal.valueOf(montantHorsCa)) : BigDecimal.ONE)
+                .montantPaye(Objects.nonNull(montantPaye) ? montantPaye.subtract(BigDecimal.valueOf(montantHorsCa)) : BigDecimal.ONE)
                 .montantDiffere(tuple.get("montantDiffere", BigDecimal.class))
                 .montantTTCDetatil(tuple.get("montantTTCDetatil", BigDecimal.class))
                 .montantAchat(tuple.get("montantAChat", BigDecimal.class))
                 .totalVente(tuple.get("totalVente", BigDecimal.class).intValue())
                 .montantRemiseDetail(tuple.get("montantRemiseDetail", BigDecimal.class))
                 .montantTvaUg(tuple.get("montantTvaUg", BigDecimal.class))
+                .montantTTCDetatilToRemove(tuple.get("montantTTCDetatilToRemove", BigDecimal.class))
                 .build();
     }
 
@@ -797,13 +808,13 @@ public class BalanceServiceImpl implements BalanceService {
             summary.setMontantAchatFive(summary.getMontantAchatFive() + o.getMontantAchatFive());
             summary.setMontantAchat(summary.getMontantAchat() + o.getMontantAchat());
             summary.setMontantAvoir(summary.getMontantAvoir() + o.getMontantAvoir());
-            Long _montantNet = summary.getMontantNet();
-            Long _montantAchat = summary.getMontantAchat();
-            if (_montantAchat.compareTo(0l) > 0) {
-                summary.setRatioVA(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
+            Long montantNet2 = summary.getMontantNet();
+            Long montantAchat2 = summary.getMontantAchat();
+            if (montantAchat2.compareTo(0l) > 0) {
+                summary.setRatioVA(BigDecimal.valueOf(Double.valueOf(montantNet2) / montantAchat2).setScale(2, RoundingMode.FLOOR).doubleValue());
             }
-            if (_montantNet.compareTo(0l) > 0) {
-                summary.setRationAV(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
+            if (montantNet2.compareTo(0l) > 0) {
+                summary.setRationAV(BigDecimal.valueOf(Double.valueOf(montantAchat2) / montantNet2).setScale(2, RoundingMode.FLOOR).doubleValue());
             }
         }
         return summary;
@@ -844,13 +855,13 @@ public class BalanceServiceImpl implements BalanceService {
                 baordPh.setMontantAchatFive(baordPh.getMontantAchatFive() + o.getMontantAchatFive());
                 baordPh.setMontantAchat(baordPh.getMontantAchat() + o.getMontantAchat());
             }
-            Integer _montantNet = baordPh.getMontantNet();
-            Integer _montantAchat = baordPh.getMontantAchat() - avoir;
-            if (_montantAchat.compareTo(0) > 0) {
-                baordPh.setRatioVA(new BigDecimal(Double.valueOf(_montantNet) / _montantAchat).setScale(2, RoundingMode.FLOOR).doubleValue());
+            Integer montantNet2 = baordPh.getMontantNet();
+            Integer montantAchat2 = baordPh.getMontantAchat() - avoir;
+            if (montantAchat2.compareTo(0) > 0) {
+                baordPh.setRatioVA(BigDecimal.valueOf(Double.valueOf(montantNet2) / montantAchat2).setScale(2, RoundingMode.FLOOR).doubleValue());
             }
-            if (_montantNet.compareTo(0) > 0) {
-                baordPh.setRationAV(new BigDecimal(Double.valueOf(_montantAchat) / _montantNet).setScale(2, RoundingMode.FLOOR).doubleValue());
+            if (montantNet2.compareTo(0) > 0) {
+                baordPh.setRationAV(BigDecimal.valueOf(Double.valueOf(montantAchat2) / montantNet2).setScale(2, RoundingMode.FLOOR).doubleValue());
             }
             baordPh.setMontantAvoir(avoir);
             tableauBaords.add(baordPh);
