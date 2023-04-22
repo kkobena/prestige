@@ -1757,21 +1757,27 @@ public class factureManagement extends bll.bllBase {
         try {
             oFacture = this.createInvoiceItem(dtDebut, dtFin, 0d, null, typeFacture, typeMvtCaisse.getStrCODECOMPTABLE(), tiersPayant, nbreDossier, 0, 0);
             if (oFacture != null) {
-                for (TPreenregistrementCompteClientTiersPayent OPreenregistrementCompteClientTiersPayent : list) {
-                    TPreenregistrement p = OPreenregistrementCompteClientTiersPayent.getLgPREENREGISTREMENTID();
+                for (TPreenregistrementCompteClientTiersPayent op : list) {
+                    TPreenregistrement p = op.getLgPREENREGISTREMENTID();
                     montantTva += p.getMontantTva();
                     remiseVente += p.getIntPRICEREMISE();
                     montantvente += p.getIntPRICE();
-                    if (tauxRemise > 0 && p.getIntPRICEREMISE() == 0) {
-                        montantRemiseDetails = getRemise(tauxRemise, findItems(OPreenregistrementCompteClientTiersPayent.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID()));
+                    if (op.getIntPERCENT() == 100) {
+                        if (tauxRemise > 0 && p.getIntPRICEREMISE() == 0) {
+                            montantRemiseDetails = getRemise(tauxRemise, findItems(op.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID()));
+                        }
+                    } else {
+                        if (tauxRemise > 0) {
+                            montantRemiseDetails = getRemise(tauxRemise, op.getIntPRICE());
+                        }
                     }
 
-                    totalBrut += OPreenregistrementCompteClientTiersPayent.getIntPRICE();
+                    totalBrut += op.getIntPRICE();
                     totalRemise += montantRemiseDetails;
-                    montantNetDetails = Math.round((OPreenregistrementCompteClientTiersPayent.getIntPRICE() - montantRemiseDetails));
-                    if (this.InvoiceDetail(oFacture, OPreenregistrementCompteClientTiersPayent, montantNetDetails, OPreenregistrementCompteClientTiersPayent.getLgPREENREGISTREMENTID().getStrREFBON(), OPreenregistrementCompteClientTiersPayent.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID(), OPreenregistrementCompteClientTiersPayent.getIntPRICE(), montantRemiseDetails)) {
-                        OPreenregistrementCompteClientTiersPayent.setStrSTATUTFACTURE(commonparameter.CHARGED);
-                        this.getOdataManager().getEm().merge(OPreenregistrementCompteClientTiersPayent);
+                    montantNetDetails = Math.round((op.getIntPRICE() - montantRemiseDetails));
+                    if (this.InvoiceDetail(oFacture, op, montantNetDetails, op.getLgPREENREGISTREMENTID().getStrREFBON(), op.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID(), op.getIntPRICE(), montantRemiseDetails)) {
+                        op.setStrSTATUTFACTURE(commonparameter.CHARGED);
+                        this.getOdataManager().getEm().merge(op);
 
                     }
                 }
@@ -1792,24 +1798,9 @@ public class factureManagement extends bll.bllBase {
             }
 
         } catch (Exception e) {
-
-            e.printStackTrace();
             this.buildErrorTraceMessage("La facture n'a pas pu être générée");
         }
         return oFacture;
-    }
-
-    private int getRemise(double tauxRemise, List<TPreenregistrementDetail> lstTPreenregistrementDetail) {
-
-        double sumRemise = 0;
-        for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
-            TFamille famille = x.getLgFAMILLEID();
-            if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2") && !famille.getStrCODEREMISE().equals("3")) {
-                sumRemise += (Double.valueOf(x.getIntPRICE()) * tauxRemise);
-            }
-        }
-        return (int) Math.round(sumRemise);
-
     }
 
     //liste des factures
@@ -1862,7 +1853,7 @@ public class factureManagement extends bll.bllBase {
                         .getSingleResult();
             } else {
                 count = (Long) this.getOdataManager().getEm().createQuery("SELECT COUNT(DISTINCT t) FROM TFacture t,TTiersPayant p,TFactureDetail d,TPreenregistrementCompteClientTiersPayent pc,TPreenregistrement pr WHERE t.lgFACTUREID LIKE ?1 AND (t.strCODEFACTURE LIKE ?2  OR p.strFULLNAME LIKE ?2 OR p.strNAME LIKE ?2 OR d.strFIRSTNAMECUSTOMER LIKE ?2 OR d.strLASTNAMECUSTOMER LIKE ?2 OR d.strNUMEROSECURITESOCIAL LIKE ?2 OR pr.strREF LIKE ?2 OR pr.strREFTICKET LIKE ?2) AND (t.dtCREATED >= ?6 AND t.dtCREATED <= ?7) AND t.strCUSTOMER LIKE ?8 AND t.strCUSTOMER=p.lgTIERSPAYANTID  AND t.lgFACTUREID=d.lgFACTUREID.lgFACTUREID  AND pc.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=d.strREF AND pr.lgPREENREGISTREMENTID=pc.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID AND ( t.template <> TRUE OR t.template IS NULL)").
-                       setParameter(1, lg_FACTURE_ID)
+                        setParameter(1, lg_FACTURE_ID)
                         .setParameter(2, search_value + "%")
                         .setParameter(6, dt_debut)
                         .setParameter(7, dt_fin)
@@ -1931,6 +1922,25 @@ public class factureManagement extends bll.bllBase {
 
         }
         return code;
+    }
+
+    private int getRemise(double tauxRemise, List<TPreenregistrementDetail> lstTPreenregistrementDetail) {
+
+        double sumRemise = 0;
+        for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
+            TFamille famille = x.getLgFAMILLEID();
+            if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2") && !famille.getStrCODEREMISE().equals("3")) {
+                sumRemise += (Double.valueOf(x.getIntPRICE()) * tauxRemise);
+            }
+        }
+        return (int) Math.round(sumRemise);
+
+    }
+
+    private int getRemise(double tauxRemise, int amount) {
+
+        return (int) Math.round(Double.valueOf(amount) * tauxRemise);
+
     }
 
 }
