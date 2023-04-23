@@ -908,7 +908,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     @Override
     public JSONObject ticketZ(Params params) throws JSONException {
-        return this.buildTicketZ(params);
+        if (useTicketZParamLastVersion()) {
+            return this.buildTicketZ(params);
+        }
+
+        return oldPrinter(params);
     }
 
     private JSONObject oldPrinter(Params params) {
@@ -2729,6 +2733,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             return Integer.parseInt(getEntityManager().find(TParameters.class, "BREAKING_TICKET_Z").getStrVALUE().trim());
         } catch (Exception e) {
             return 40;
+        }
+    }
+
+    private boolean useTicketZParamLastVersion() {
+        try {
+
+            return Integer.parseInt(getEntityManager().find(TParameters.class, "TICKET_Z_V2").getStrVALUE().trim()) == 1;
+        } catch (Exception e) {
+            return false;
         }
     }
 }
