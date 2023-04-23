@@ -395,10 +395,7 @@ public class TUser implements Serializable {
             return false;
         }
         TUser other = (TUser) object;
-        if ((this.lgUSERID == null && other.lgUSERID != null) || (this.lgUSERID != null && !this.lgUSERID.equals(other.lgUSERID))) {
-            return false;
-        }
-        return true;
+        return !((this.lgUSERID == null && other.lgUSERID != null) || (this.lgUSERID != null && !this.lgUSERID.equals(other.lgUSERID)));
     }
 
     @Override
