@@ -2210,11 +2210,16 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         q.setParameter("dtStart", java.sql.Timestamp.valueOf(dtStart), TemporalType.TIMESTAMP);
         q.setParameter("dtEnd", java.sql.Timestamp.valueOf(dtEnd), TemporalType.TIMESTAMP);
+        if (StringUtils.isNotEmpty(params.getUserId())) {
+            q.setParameter("userId", params.getUserId());
+        }
     }
 
     List<MvtTransaction> ticketZVenteData(Params params) {
+        String sql = "SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac {userId}";
+
         try {
-            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac", MvtTransaction.class);
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery(replaceSql(params, sql), MvtTransaction.class);
             q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT));
             updateParameters(q, params);
             return q.getResultList();
@@ -2225,8 +2230,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     List<MvtTransaction> ticketZSortieData(Params params) {
+        String sql = "SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac {userId}";
+
         try {
-            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac", MvtTransaction.class);
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery(replaceSql(params, sql), MvtTransaction.class);
             q.setParameter("typetransac", TypeTransaction.SORTIE);
             updateParameters(q, params);
             return q.getResultList();
@@ -2236,9 +2243,20 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
     }
 
+    private String replaceSql(Params params, String sql) {
+        if (StringUtils.isNotEmpty(params.getUserId())) {
+            return sql.replace("{userId}", " AND o.caisse.lgUSERID=:userId");
+        } else {
+            return sql.replace("{userId}", "");
+        }
+
+    }
+
     List<MvtTransaction> ticketZEntreesData(Params params) {
+        String sql = "SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac {userId}";
+
         try {
-            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac", MvtTransaction.class);
+            TypedQuery<MvtTransaction> q = getEntityManager().createQuery(replaceSql(params, sql), MvtTransaction.class);
             q.setParameter("typetransac", TypeTransaction.ENTREE);
             updateParameters(q, params);
             return q.getResultList();
@@ -2261,6 +2279,9 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                         if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
                             ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
                         }
+                    }
+                    if (Objects.nonNull(b.getMontantRestant()) && b.getMontantRestant() > 0) {
+                        ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
                     }
                     ticket.setTotalEsp(ticket.getTotalEsp() + b.getMontantRegle());
 

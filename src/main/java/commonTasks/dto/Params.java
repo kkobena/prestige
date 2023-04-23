@@ -27,6 +27,7 @@ public class Params implements Serializable {
     private TUser operateur;
     boolean scheduled;
     boolean checkug;
+    private String userId;
 
     public String getHrEnd() {
         return hrEnd;
@@ -138,6 +139,14 @@ public class Params implements Serializable {
 
     public void setValueFour(Integer valueFour) {
         this.valueFour = valueFour;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     @Override

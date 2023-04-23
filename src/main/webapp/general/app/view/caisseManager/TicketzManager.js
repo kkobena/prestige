@@ -14,7 +14,20 @@ Ext.define('testextjs.view.caisseManager.TicketzManager', {
         msgTarget: 'side'
     },
     initComponent: function () {
-
+    const storeUser = new Ext.data.Store({
+            model: 'testextjs.model.caisse.User',
+            pageSize: 99,
+            autoLoad: true,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/common/users',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+            }
+        });
         const store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
             data: [{str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous les mouvements'}, {str_TYPE_TRANSACTION: 'VENTE', str_desc: 'Ventes uniquements'}]
@@ -44,6 +57,24 @@ Ext.define('testextjs.view.caisseManager.TicketzManager', {
                             queryMode: 'local',
                             emptyText: 'Choisir une option...'
                         },
+                        
+                         {
+                            xtype: 'combobox',
+                            fieldLabel: 'Utilisateur',
+                            itemId: 'userId',
+                            name: 'userId',
+                            store: storeUser,
+                            pageSize: 999,
+                            valueField: 'lgUSERID',
+                            displayField: 'fullName',
+                            typeAhead: false,
+                            flex: 2,
+                            minChars: 2,
+                           queryMode: 'local',
+                            emptyText: 'Choisir un utilisateur...'
+
+                        },
+                        
                         {
                             xtype: 'datefield',
                             fieldLabel: 'Date debut',
