@@ -21,8 +21,8 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.print.PrintService;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
@@ -39,7 +39,6 @@ import util.DateConverter;
  */
 public class ImpressionServiceImpl implements Printable {
 
-    private static final Logger LOG = Logger.getLogger(ImpressionServiceImpl.class.getName());
     SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     private PrintService service;
     private int limit = 0, intBegin = 0, nombreCopie = 1, fontSize = 0;
@@ -66,6 +65,15 @@ public class ImpressionServiceImpl implements Printable {
     private int columnOne = 0, columnTwo = 0, columnThree = 0, columnFour = 0;
     private PrinterJob printerJob;
     private List<String> tierspayantSectionDeux = new ArrayList<>();
+    private LinkedList<String> ticketZdatas;
+
+    public LinkedList<String> getTicketZdatas() {
+        return ticketZdatas;
+    }
+
+    public void setTicketZdatas(LinkedList<String> ticketZdatas) {
+        this.ticketZdatas = ticketZdatas;
+    }
 
     public List<String> getDatas() {
         return datas;
@@ -308,7 +316,7 @@ public class ImpressionServiceImpl implements Printable {
     }
 
     public void printTicketVente(int copies) throws PrinterException {
-         
+
         PrinterJob printerjob = findPrinterJob();
         TImprimante oImprimante = this.getoTImprimante();
         if (oImprimante != null) {
@@ -373,7 +381,7 @@ public class ImpressionServiceImpl implements Printable {
                 this.buildInfoSeller(g2d, scale_texte, limit, this.getInfoSellers());
             }
 
-            this.buildContent(g2d, scale_texte, limit, this.getDatas()); //definition du corps du ticket
+            this.buildContent(g2d, scale_texte, limit); //definition du corps du ticket
 
             if (!this.getSubtotal().isEmpty()) {
                 this.buildSubTotal(g2d, scale_texte, limit, this.getSubtotal());
@@ -426,12 +434,13 @@ public class ImpressionServiceImpl implements Printable {
         limit = start + (scale_texte * ++i);
 
         if (intBegin == 0) {
-            graphics.drawImage(logo, 155, 85,  Lw,  Lh, null); // A decommenter pour les imprimantes thermique
+            graphics.drawImage(logo, 155, 85, Lw, Lh, null); // A decommenter pour les imprimantes thermique
         }
     }
 
-    public void buildContent(Graphics2D graphics, int scale_texte, int start, List<String> datas) {
-
+    public void buildContent(Graphics2D graphics, int scale_texte, int start) {
+        List<String> curDatas = this.getDatas();
+        int dataSize=curDatas.size();
         switch (this.getTypeTicket()) {
             case DateConverter.TICKET_VENTE: {
                 Font font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
@@ -440,8 +449,9 @@ public class ImpressionServiceImpl implements Printable {
                 graphics.drawString("P.U", 125 + columnThree, start);
                 graphics.drawString("MONTANT", 158 + columnFour, start);
                 graphics.setFont(font);
-                for (int i = 0; i < datas.size(); i++) {
-                    String[] parts = datas.get(i).split(";");
+
+                for (int i = 0; i < curDatas.size(); i++) {
+                    String[] parts = curDatas.get(i).split(";");
                     graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
                     graphics.drawString(parts[1], 10 + columnOne, start + (scale_texte * (i + 1)));
                     graphics.drawString(parts[2], 25 + columnTwo, start + (scale_texte * (i + 1)));
@@ -452,8 +462,41 @@ public class ImpressionServiceImpl implements Printable {
             }
             case DateConverter.TICKET_Z: {
                 Font font;
-                for (int i = 0; i < datas.size(); i++) {
-                    String[] parts = datas.get(i).split(";");
+                for (int i = 0; i < curDatas.size(); i++) {
+                    String[] parts = curDatas.get(i).split(";");
+                    if (parts[4].equals(commonparameter.PROCESS_SUCCESS)) {
+                        font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
+                    } else {
+                        font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
+                    }
+
+                    graphics.setFont(font);
+                    if (parts[5].equalsIgnoreCase(commonparameter.PROCESS_FAILED)) {
+                        graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                    } else {
+
+                        if (parts.length > 6) {
+                            graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[1], 85 + columnTwo, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[2], 130 + columnThree, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[3], 140 + columnFour, start + (scale_texte * (i + 1)));
+                        } else {
+                            graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[1], 65 + columnTwo, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[2], 130 + columnThree, start + (scale_texte * (i + 1)));
+                            graphics.drawString(parts[3], 140 + columnFour, start + (scale_texte * (i + 1)));
+                        }
+
+                    }
+
+                }
+                break;
+            }case DateConverter.TICKET_ZZ: {
+                LinkedList<String> ticketDatas=this.getTicketZdatas();
+                dataSize=ticketDatas.size();
+                Font font;
+                for (int i = 0; i < ticketDatas.size(); i++) {
+                    String[] parts = ticketDatas.get(i).split(";");
                     if (parts[4].equals(commonparameter.PROCESS_SUCCESS)) {
                         font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
                     } else {
@@ -483,9 +526,10 @@ public class ImpressionServiceImpl implements Printable {
                 break;
             }
             
+
             default:
-                for (int i = 0; i < datas.size(); i++) {
-                    String[] parts = datas.get(i).split(";");
+                for (int i = 0; i < curDatas.size(); i++) {
+                    String[] parts = curDatas.get(i).split(";");
                     graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
                     graphics.drawString(parts[1], 100 + columnThree, start + (scale_texte * (i + 1)));
                     graphics.drawString(parts[2], 150 + columnFour, start + (scale_texte * (i + 1)));
@@ -493,10 +537,8 @@ public class ImpressionServiceImpl implements Printable {
                 break;
         }
 
-        limit = start + (scale_texte * datas.size());
+        limit = start + (scale_texte * dataSize);
     }
-
-   
 
     public void buildSubCommentaire(Graphics2D graphics, int scale_texte, int start) {
         List<String> _commentaires = this.getCommentaires();
@@ -573,5 +615,4 @@ public class ImpressionServiceImpl implements Printable {
 
     }
 
- 
 }
