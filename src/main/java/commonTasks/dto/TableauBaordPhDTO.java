@@ -21,7 +21,7 @@ import util.DateConverter;
 public class TableauBaordPhDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+   
     private boolean vente;
     private String dateOperation;
     private Integer montantTTC = 0;
@@ -55,7 +55,7 @@ public class TableauBaordPhDTO implements Serializable {
     public String getDateOperation() {
         try {
             if (dateOperation == null) {
-                this.dateOperation = mvtDate.format(dateFormat);
+                this.dateOperation = mvtDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             }
 
         } catch (Exception e) {
@@ -100,11 +100,7 @@ public class TableauBaordPhDTO implements Serializable {
     }
 
     public void setMvtDate(LocalDate mvtDate) {
-        /*    try {
-              this.dateOperation=mvtDate.format(dateFormat);
-        } catch (Exception e) {
-        }
-         */
+       
         this.mvtDate = mvtDate;
     }
 
@@ -296,7 +292,6 @@ public class TableauBaordPhDTO implements Serializable {
     }
 
     public TableauBaordPhDTO(Date dateOp, long montantTTC, long montantRemise, long montantEsp, long montantCredit, long montantDiff) {
-//        System.out.println("montantTTC -- "+montantTTC+" montantRemise --"+montantRemise+" "+montantEsp+" montantCredit "+montantCredit);
         this.montantRemise -= (int) montantRemise;
         this.montantTTC -= (int) montantTTC;
         this.montantCredit -= (int) (montantCredit + montantDiff);
