@@ -1393,7 +1393,7 @@ public class bonLivraisonManagement extends bllBase implements Bonlivraisonmanag
 
     private long getDetailsAmount(List<TBonLivraisonDetail> bonLivraisonDetails) {
         return bonLivraisonDetails.stream().mapToLong((value) -> {
-            return (value.getIntPAF() * value.getIntQTERECUE());
+            return (value.getIntPAF() * value.getIntQTECMDE());
         }).sum();
     }
 

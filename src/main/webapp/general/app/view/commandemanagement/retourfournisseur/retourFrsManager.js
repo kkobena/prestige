@@ -255,7 +255,7 @@ Ext.define('testextjs.view.commandemanagement.retourfournisseur.retourFrsManager
             },
             tbar: [
                 {
-                    text: 'Ajouter',
+                    text: 'NOUVEAU RETOUR',
                     scope: this,
                     handler: this.onAddClick
                 }, '-', {
