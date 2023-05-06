@@ -18,11 +18,6 @@
         <servlet-class>smsgateway.Incoming</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>JobServlet</servlet-name>
-        <servlet-class>job.JobServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet>
         <servlet-name>InvoiceServlet</servlet-name>
         <servlet-class>job.InvoiceServlet</servlet-class>
     </servlet>
@@ -74,7 +69,7 @@
         <servlet-name>EtatControlStockServlet</servlet-name>
         <servlet-class>rest.report.pdf.EtatControlStockServlet</servlet-class>
     </servlet>
-      <servlet>
+    <servlet>
         <servlet-name>StatProduitServlet</servlet-name>
         <servlet-class>rest.report.pdf.StatProduitServlet</servlet-class>
     </servlet>
@@ -93,10 +88,6 @@
     <servlet-mapping>
         <servlet-name>Incoming</servlet-name>
         <url-pattern>/Incoming</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>JobServlet</servlet-name>
-        <url-pattern>/JobServlet</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>InvoiceServlet</servlet-name>
