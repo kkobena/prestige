@@ -50,7 +50,7 @@
           <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
-            <version>3.7.2</version>
+            <version>3.9.0</version>
         </dependency> 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20190722</version>
+            <version>20230227</version>
         </dependency>
         <dependency> 
             <groupId>org.apache.xmlgraphics</groupId> 
@@ -90,7 +90,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.6</version>
+            <version>2.7</version>    
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -106,12 +106,12 @@
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>itextpdf</artifactId>
-            <version>5.0.6</version>
+            <version>5.5.12</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.4</version>
+            <version>1.5</version>
         </dependency>
          
         <dependency>
@@ -160,7 +160,7 @@
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.3.1</version>
+            <version>2.3.2</version>
         </dependency>
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
