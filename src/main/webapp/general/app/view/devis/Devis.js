@@ -46,7 +46,7 @@ Ext.define('testextjs.view.devis.Devis', {
                     dock: 'top',
                     items: [
                         {
-                            text: 'Nouveau dévis',
+                            text: 'Nouvelle PROFORMA',
                             scope: this,
                             itemId: 'addBtn',
                             iconCls: 'addicon'
