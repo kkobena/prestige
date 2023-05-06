@@ -532,7 +532,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                         name: 'int_TOTAL',
                         id: 'int_TOTAL',
                         renderer: amountformatbis,
-                        fieldStyle: "color:blue;",
+                        fieldStyle: "color:white;", /* mise en couleur blanche pour cacher sur l'ecran */
                         value: 0
                     }],
                 listeners: {
