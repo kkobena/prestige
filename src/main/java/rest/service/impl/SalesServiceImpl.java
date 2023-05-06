@@ -252,7 +252,8 @@ public class SalesServiceImpl implements SalesService {
             Integer montantPaye, Integer marge, boolean diff, String typeReglement) throws Exception {
         Integer montantClient = tp.getIntCUSTPART() - tp.getIntPRICEREMISE();
         MvtTransaction transactionNew = new MvtTransaction();
-        Integer montantPaid = 0, montantRestant = montantClient;
+        Integer montantPaid = 0;
+        int montantRestant = montantClient;
         if (typeReglement.equals(DateConverter.MODE_ESP) || typeReglement.equals(DateConverter.REGL_DIFF)) {
             if (montantVerse > 0 && montantClient > 0) {
                 int compare = montantClient.compareTo(montantVerse);
@@ -286,7 +287,8 @@ public class SalesServiceImpl implements SalesService {
         transactionNew.setReglement(reglement);
         transactionNew.setMontantRestant(0);
         transactionNew.setPreenregistrement(tp);
-        if (diff && typeReglement.equals(DateConverter.MODE_ESP)) {
+    
+        if (diff) {
             transactionNew.setMontantRestant(montantRestant > 4 ? montantRestant : 0);
         }
 
@@ -1849,18 +1851,17 @@ public class SalesServiceImpl implements SalesService {
         return OTReglement;
     }
 
-    public void addDiffere(TCompteClient OTCompteClient, TClient c, TPreenregistrement OTPreenregistrement, Integer int_PRICE, Integer reste, TUser user, EntityManager emg) {
+    public void addDiffere(TCompteClient oTCompteClient, TPreenregistrement p, Integer montantPaye, TUser user) {
         TPreenregistrementCompteClient oTPreenregistrementCompteClient = new TPreenregistrementCompteClient(UUID.randomUUID().toString());
         oTPreenregistrementCompteClient.setDtCREATED(new Date());
         oTPreenregistrementCompteClient.setDtUPDATED(oTPreenregistrementCompteClient.getDtCREATED());
-        oTPreenregistrementCompteClient.setLgCOMPTECLIENTID(OTCompteClient);
-        oTPreenregistrementCompteClient.setLgPREENREGISTREMENTID(OTPreenregistrement);
+        oTPreenregistrementCompteClient.setLgCOMPTECLIENTID(oTCompteClient);
+        oTPreenregistrementCompteClient.setLgPREENREGISTREMENTID(p);
         oTPreenregistrementCompteClient.setLgUSERID(user);
-        oTPreenregistrementCompteClient.setIntPRICE(int_PRICE);
-        oTPreenregistrementCompteClient.setIntPRICERESTE(reste);
-//        oTPreenregistrementCompteClient.setClient(c);
+        oTPreenregistrementCompteClient.setIntPRICE(p.getIntCUSTPART() == 0 ? p.getIntPRICE() - p.getIntPRICEREMISE() : p.getIntCUSTPART() - p.getIntPRICEREMISE());
+        oTPreenregistrementCompteClient.setIntPRICERESTE(oTPreenregistrementCompteClient.getIntPRICE() - montantPaye);
         oTPreenregistrementCompteClient.setStrSTATUT(commonparameter.statut_is_Closed);
-        emg.persist(oTPreenregistrementCompteClient);
+        this.getEm().persist(oTPreenregistrementCompteClient);
     }
 
     public TRecettes addRecette(Integer MONTANT, String str_DESCRIPTION, String str_REF_FACTURE, TUser user, EntityManager emg) {
@@ -1943,7 +1944,7 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    private Optional<TTypeMvtCaisse> getOne(String id, EntityManager emg) {//Parameter.KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE
+    private Optional<TTypeMvtCaisse> getOne(String id, EntityManager emg) {
         try {
             return Optional.ofNullable(emg.find(TTypeMvtCaisse.class, id));
         } catch (Exception e) {
@@ -1990,7 +1991,7 @@ public class SalesServiceImpl implements SalesService {
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
             TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
-            Optional<TParameters> KEY_TAKE_INTO_ACCOUNT = findParamettre("KEY_TAKE_INTO_ACCOUNT");
+            Optional<TParameters> takeInAcount = findParamettre("KEY_TAKE_INTO_ACCOUNT");
             Optional<TClient> client = findClientById(clotureVenteParams.getClientId());
             if (tp.getMedecin() == null && gererOrdoncier()) {
                 boolean isOrdonnancier = checkOrdonnancier(lstTPreenregistrementDetail);
@@ -2029,7 +2030,7 @@ public class SalesServiceImpl implements SalesService {
 
             if (clotureVenteParams.getTypeRegleId().equals(DateConverter.REGL_DIFF)) {
                 isDiff = true;
-                addDiffere(compteClient, client.orElse(null), tp, amount, amount - clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId(), emg);
+                addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
 
             }
             TTypeVente OTTypeVente = typeVenteFromId(clotureVenteParams.getTypeVenteId(), emg);
@@ -2053,7 +2054,7 @@ public class SalesServiceImpl implements SalesService {
             tp.setCompletionDate(new Date());
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
 
-            boolean key_account = test.test(KEY_TAKE_INTO_ACCOUNT);
+            boolean key_account = test.test(takeInAcount);
             if (key_account) {
                 tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             }
@@ -2179,7 +2180,7 @@ public class SalesServiceImpl implements SalesService {
             });
             if (clotureVenteParams.getTypeRegleId().equals(DateConverter.REGL_DIFF)) {
                 client.ifPresent(c -> {
-                    addDiffere(compteClient, c, tp, amount, amount - clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId(), emg);
+                    addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
                 });
             }
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement,
@@ -3311,7 +3312,7 @@ public class SalesServiceImpl implements SalesService {
             if (clotureVenteParams.getTypeRegleId().equals(DateConverter.REGL_DIFF)) {
                 findClientById(clotureVenteParams.getClientId()).ifPresent(c -> {
                     tp.setClient(c);
-                    addDiffere(compteClient, c, tp, amount, amount - clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId(), emg);
+                    addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
                 });
             }
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement,
