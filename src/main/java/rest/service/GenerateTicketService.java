@@ -86,5 +86,5 @@ public interface GenerateTicketService {
 
     JSONObject ticketReglementCarnet(String idDossier) throws JSONException;
     
-     JSONObject buildTicketZ(Params params) ;
+  
 }
