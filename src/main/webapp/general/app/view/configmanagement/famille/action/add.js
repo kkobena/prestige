@@ -477,6 +477,19 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     margin: '0 12 0 0',
                                     value: 0
                                 }
+                                ,
+                                {
+                                    xtype: 'numberfield',
+                                    fieldLabel: 'Prix CMU',
+                                    maskRe: /[0-9.]/,
+                                    width: 350,
+                                    emptyText: 'PRIX CMU',
+                                    labelWidth: 110,
+                                    name: 'cmu_price',
+                                    id: 'cmu_price',
+                                    margin: '0 0 0 0'
+                                 
+                                }
 
 
                             ]
@@ -538,7 +551,9 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     emptyText: 'Code EAN 13',
                                     name: 'int_EAN13',
                                     id: 'int_EAN13'
-                                },
+                                }/*
+ 
+                                 ,
                                
                                  {
                                     xtype: 'numberfield',
@@ -549,7 +564,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                       width: 400,
                                     margin: '0 0 0 0'
                                  
-                                }
+                                }*/
                             ]
                         }]
                 }, {
