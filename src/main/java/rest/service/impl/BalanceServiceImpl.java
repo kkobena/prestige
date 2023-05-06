@@ -15,11 +15,14 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -29,6 +32,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,7 +51,7 @@ public class BalanceServiceImpl implements BalanceService {
 
     private static final Logger LOG = Logger.getLogger(BalanceServiceImpl.class.getName());
     private static final String BALANCE_SQL_QUERY = "SELECT %s %s m.`typeTransaction`  AS typeVente, m.`typeReglementId` AS typeReglement ,SUM(m.montant) AS montantTTC,"
-            + "SUM(m.`montantNet`) AS montantNet,SUM(m.`montantCredit`) AS montantCredit,SUM(m.`montantRemise`) AS montantRemise,"
+            + "SUM(m.`montantNet`) AS montantNet,SUM(m.`montantCredit`) AS montantCredit,SUM(m.`montantRemise`) AS montantRemise, SUM(CASE WHEN m.flag_id IS NOT NULL THEN m.`montantAcc` ELSE 0 END) AS flagedAmount,"
             + " SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantAChat) AS montantAChat, "
             + " SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantTTCDetatilToRemove) AS montantTTCDetatilToRemove,SUM(sqlQ.montantTva) AS montantTva,SUM(sqlQ.montantAchatUg) AS montantAchatUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail, SUM(sqlQ.montantTvaUg) AS montantTvaUg,"
             + " SUM(CASE WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc "
@@ -56,7 +60,7 @@ public class BalanceServiceImpl implements BalanceService {
             + ",SUM(d.`int_UG`*d.`prixAchat`) AS montantAchatUg,SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail,SUM(d.montanttvaug) AS montantTvaUg , SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,\n"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove "
             + " FROM t_preenregistrement_detail d  GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN "
-            + " ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 {excludeStatement} {flagStatement} GROUP BY typeVente,typeReglement %s %s";
+            + " ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 {excludeStatement} GROUP BY typeVente,typeReglement %s %s";
     private static final String REMISE_SQL_QUERY = "SELECT %s p.`lg_TYPE_VENTE_ID` AS typeVente,SUM(d.`int_PRICE_REMISE`) AS montantRemise FROM  t_preenregistrement_detail d,t_preenregistrement p,t_user u,t_famille f WHERE   d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID`  AND d.`lg_FAMILLE_ID`=f.`lg_FAMILLE_ID` AND f.`bool_ACCOUNT`=?1 "
             + "  AND p.`lg_USER_ID`=u.`lg_USER_ID` AND u.`lg_EMPLACEMENT_ID`=?2  AND p.`str_STATUT`='is_Closed' AND %s  AND p.`lg_TYPE_VENTE_ID` <> ?3 AND DATE(p.`dt_UPDATED`) BETWEEN ?4 AND ?5 AND d.`int_PRICE_REMISE` <>0 GROUP BY typeVente %s";
 
@@ -64,9 +68,8 @@ public class BalanceServiceImpl implements BalanceService {
 
     private static final String BONS_SQL_QUERY = "SELECT  SUM(m.montant) AS montant FROM  mvttransaction m WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` =2  AND m.`lg_EMPLACEMENT_ID` =?3 ";
     private static final String EXCLUDE_STATEMENT = " AND  p.`lg_PREENREGISTREMENT_ID` NOT IN (SELECT v.preenregistrement_id FROM vente_exclu v) ";
-    private static final String FLAG_STATEMENT = " AND  m.flag_id IS NULL ";
 
-    private static final String TVAS_SQL = "SELECT {byDay} SUM(d.int_PRICE) AS montantTTC,SUM(d.int_UG*d.int_PRICE_UNITAIR) AS montantUg,d.valeurTva AS valeurTva FROM t_preenregistrement_detail d,t_preenregistrement p,t_user u ,mvttransaction m WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND p.`lg_PREENREGISTREMENT_ID`=m.pkey AND m.flag_id IS NULL AND  d.`bool_ACCOUNT` "
+    private static final String TVAS_SQL = "SELECT {byDay} SUM(d.int_PRICE) AS montantTTC,SUM(d.int_UG*d.int_PRICE_UNITAIR) AS montantUg,d.valeurTva AS valeurTva FROM t_preenregistrement_detail d,t_preenregistrement p,t_user u ,mvttransaction m WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND p.`lg_PREENREGISTREMENT_ID`=m.pkey  AND  d.`bool_ACCOUNT` "
             + " AND p.lg_TYPE_VENTE_ID <> ?1 AND p.str_STATUT='is_Closed' AND DATE(p.dt_UPDATED)  BETWEEN ?2 AND ?3 AND p.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?4 {excludeStatement} {tvaVnoOnly} GROUP BY d.`valeurTva` {groupByDay}";
     private static final String AMOUNT_TO_REMOVE = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc, COALESCE(SUM(m.`montant`),0) AS montant FROM mvttransaction m,t_preenregistrement p WHERE m.flag IS TRUE AND m.flag_id IS NULL AND m.`typeTransaction` =0 AND p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.`dt_UPDATED`) BETWEEN  ?1 AND ?2 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?3 AND m.`lg_EMPLACEMENT_ID` =?4 ";
     private static final String TVA_BALANCE_LAST_UPDATE = "TVA_BALANCE_LAST_UPDATE";
@@ -75,13 +78,17 @@ public class BalanceServiceImpl implements BalanceService {
     private static final String GROUP_BY_DAY = " ,mvtDate ";
     private static final String TVA_DATE_PATERN = "dd/MM/yyyy";
 
-    private static final String TABLEAU_BOARD_SQL = "SELECT DATE_FORMAT(p.`dt_UPDATED`,'%Y-%m-%d' ) AS mvtDate , SUM(m.montant) AS montantTTC,SUM(m.`montantNet`) AS montantNet,SUM(m.`montantCredit`) AS montantCredit,SUM(m.`montantRemise`) AS montantRemise,"
+    private static final String TABLEAU_BOARD_SQL = "SELECT DATE_FORMAT(p.`dt_UPDATED`,'%Y-%m-%d' ) AS mvtDate , SUM(m.montant) AS montantTTC,SUM(m.`montantNet`) AS montantNet,SUM(m.`montantCredit`) AS montantCredit,SUM(m.`montantRemise`) AS montantRemise,SUM(CASE WHEN m.flag_id IS NOT NULL THEN m.`montantAcc` ELSE 0 END) AS flagedAmount,"
             + "SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantTTCDetatilToRemove) AS montantTTCDetatilToRemove,SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail,  SUM(CASE  WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p,(SELECT d.`lg_PREENREGISTREMENT_ID` AS idVente, SUM(d.`int_PRICE`) AS montantTTCDetatilReal,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,"
-            + " SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,\n"
+            + " SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove,"
-            + " SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail FROM t_preenregistrement_detail d WHERE   d.`bool_ACCOUNT` GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2  AND  p.`lg_PREENREGISTREMENT_ID` NOT IN (SELECT v.preenregistrement_id FROM vente_exclu v)   AND  m.flag_id IS NULL  GROUP BY mvtDate";
+            + " SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail FROM t_preenregistrement_detail d WHERE   d.`bool_ACCOUNT` GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2  {excludeStatement}  GROUP BY mvtDate";
     private static final String TABLEAU_BOARD_SQL_ACHATS = "SELECT m.mvtdate AS mvtDate ,SUM(m.montant) AS montant,gf.libelle FROM  mvttransaction m,t_grossiste g,groupefournisseur gf WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` =2 "
             + " AND m.`lg_EMPLACEMENT_ID` =?3 AND m.`grossisteId`=g.`lg_GROSSISTE_ID` AND g.`groupeId`=gf.id GROUP BY gf.id,mvtdate ORDER BY mvtDate";
+
+    private static final String FLAGED_AMOUNT = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL";
+    private static final String FLAGED_AMOUNT_GROUP_BY_DAY = "SELECT m.mvtdate AS mvtdate,COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL GROUP BY mvtdate";
+
     private final Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
 
     @PersistenceContext(unitName = "JTA_UNIT")
@@ -107,7 +114,7 @@ public class BalanceServiceImpl implements BalanceService {
             BalanceDTO balanceVno = buildVenteBalance(vnoData, checkUg);
             balanceVno.setTypeVente(DateConverter.VENTE_COMPTANT);
             balanceVno.setBalanceId(balanceVno.getTypeVente());
-            balanceVno.setMontantTTC(balanceVno.getMontantTTC() - this.montantToRemove(balanceParams));
+            balanceVno.setMontantTTC((balanceVno.getMontantTTC() - this.montantToRemove(balanceParams)));
             balances.add(balanceVno);
         }
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_CREDIT)) {
@@ -199,15 +206,21 @@ public class BalanceServiceImpl implements BalanceService {
         long nbreVente = 0;
         long panierMoyen = 0;
         long montantCredit = 0;
+       
+        long montantTTCReel = 0;
+        long montantNetReel = 0;
         Map<String, List<BalanceVenteItemDTO>> mapByTypeReglemement = venteData.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeReglement));
         for (Map.Entry<String, List<BalanceVenteItemDTO>> entry : mapByTypeReglemement.entrySet()) {
             String typeReglemement = entry.getKey();
             List<BalanceVenteItemDTO> values = entry.getValue();
             for (BalanceVenteItemDTO balanceVenteItem : values) {
                 montantTTC += balanceVenteItem.getMontantTTCDetatil().longValue();
+                montantTTCReel+= balanceVenteItem.getMontantTTCDetatil().longValue();
                 if (checkUg) {
                     montantTTC -= balanceVenteItem.getMontantUg().longValue();
                 }
+              
+                montantTTC -= balanceVenteItem.getFlagedAmount().longValue();
                 montantTva += balanceVenteItem.getMontantTva().longValue();
                 montantAchat += balanceVenteItem.getMontantAchat().longValue();
                 montantRemise += balanceVenteItem.getMontantRemiseDetail().longValue();
@@ -217,21 +230,26 @@ public class BalanceServiceImpl implements BalanceService {
                 switch (typeReglemement) {
                     case DateConverter.MODE_ESP:
                         montantEsp += balanceVenteItem.getMontantRegle().longValue();
+                        montantEsp -= balanceVenteItem.getFlagedAmount().longValue();
                         break;
                     case DateConverter.MODE_CHEQUE:
                         montantCheque += balanceVenteItem.getMontantRegle().longValue();
+                        montantCheque -= balanceVenteItem.getFlagedAmount().longValue();
                         break;
                     case DateConverter.MODE_CB:
                         montantCB += balanceVenteItem.getMontantRegle().longValue();
+                        montantCB -= balanceVenteItem.getFlagedAmount().longValue();
                         break;
                     case DateConverter.MODE_VIREMENT:
                         montantVirement += balanceVenteItem.getMontantRegle().longValue();
+                        montantVirement -= balanceVenteItem.getFlagedAmount().longValue();
                         break;
                     case DateConverter.MODE_MOOV:
                     case DateConverter.TYPE_REGLEMENT_ORANGE:
                     case DateConverter.MODE_MTN:
                     case DateConverter.MODE_WAVE:
                         montantMobilePayment += balanceVenteItem.getMontantRegle().longValue();
+                        montantMobilePayment -= balanceVenteItem.getFlagedAmount().longValue();
                         break;
                     default:
                         break;
@@ -248,7 +266,8 @@ public class BalanceServiceImpl implements BalanceService {
             balance.setNbreVente(nbreVente);
         }
         montantNet += (montantTTC - montantRemise);
-        marge += (montantNet - montantTva) - montantAchat;
+        montantNetReel += (montantTTCReel - montantRemise);
+        marge += (montantNetReel - montantTva) - montantAchat;
 
         balance.setMarge(marge);
         balance.setMontantDiff(montantDiff);
@@ -267,20 +286,21 @@ public class BalanceServiceImpl implements BalanceService {
         return balance;
     }
 
-    private List<Tuple> fetchPreenregistrements(BalanceParamsDTO balanceParams, String subQueryMvtDate, String subQueryGroupBy, String typeMvtCaisse, String typeMvtCaisseGroupBy) { //AND p.`int_PRICE`>?0
-
-        String sql = String.format(BALANCE_SQL_QUERY, subQueryMvtDate, typeMvtCaisse, subQueryGroupBy, typeMvtCaisseGroupBy);
+    private String replacePlaceHolder(String sql, BalanceParamsDTO balanceParams) {
         if (balanceParams.isExcludeStatement()) {
             sql = sql.replace("{excludeStatement}", EXCLUDE_STATEMENT);
         } else {
             sql = sql.replace("{excludeStatement}", "");
         }
-        if (balanceParams.isFlagedStatement()) {
-            sql = sql.replace("{flagStatement}", FLAG_STATEMENT);
-        } else {
-            sql = sql.replace("{flagStatement}", "");
-        }
 
+        return sql;
+    }
+
+    private List<Tuple> fetchPreenregistrements(BalanceParamsDTO balanceParams, String subQueryMvtDate, String subQueryGroupBy, String typeMvtCaisse, String typeMvtCaisseGroupBy) { //AND p.`int_PRICE`>?0
+
+        String sql = String.format(BALANCE_SQL_QUERY, subQueryMvtDate, typeMvtCaisse, subQueryGroupBy, typeMvtCaisseGroupBy);
+
+        sql = replacePlaceHolder(sql, balanceParams);
         LOG.log(Level.INFO, "sql--- balance vente {0}", sql);
         try {
             Query query = em.createNativeQuery(sql, Tuple.class)
@@ -305,13 +325,9 @@ public class BalanceServiceImpl implements BalanceService {
 
     private List<Tuple> findTvas(BalanceParamsDTO balanceParams) {
 
-        String sql = TVAS_SQL;
+        String sql = replacePlaceHolder(TVAS_SQL, balanceParams);
         try {
-            if (balanceParams.isExcludeStatement()) {
-                sql = sql.replace("{excludeStatement}", EXCLUDE_STATEMENT);
-            } else {
-                sql = sql.replace("{excludeStatement}", "");
-            }
+
             if (balanceParams.isVnoOnly()) {
                 sql = sql.replace("{tvaVnoOnly}", TVA_VNO_ONLY);
             } else {
@@ -444,6 +460,7 @@ public class BalanceServiceImpl implements BalanceService {
                 .montantRemiseDetail(tuple.get("montantRemiseDetail", BigDecimal.class))
                 .montantTvaUg(tuple.get("montantTvaUg", BigDecimal.class))
                 .montantTTCDetatilToRemove(tuple.get("montantTTCDetatilToRemove", BigDecimal.class))
+                .flagedAmount(tuple.get("flagedAmount", BigDecimal.class))
                 .build();
     }
 
@@ -551,8 +568,8 @@ public class BalanceServiceImpl implements BalanceService {
         }
         if (montantAchat > 0) {
 
-            ratioVA = new BigDecimal(Double.valueOf(montantTTC) / montantAchat).setScale(2, RoundingMode.HALF_UP).doubleValue();
-            rationAV = new BigDecimal(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP).doubleValue();
+            ratioVA = BigDecimal.valueOf(Double.valueOf(montantTTC) / montantAchat).setScale(2, RoundingMode.HALF_UP).doubleValue();
+            rationAV = BigDecimal.valueOf(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP).doubleValue();
         }
         if (nbreVente > 0) {
             panierMoyen = montantTTC / nbreVente;
@@ -589,10 +606,24 @@ public class BalanceServiceImpl implements BalanceService {
 
     }
 
+    private Pair<Long, Long> computeFlagedAmount(long montantTTC, long flagedAmount) {
+        if (montantTTC >= flagedAmount) {
+            montantTTC -= flagedAmount;
+            flagedAmount = 0;
+
+        } else {
+            montantTTC = 0;
+            flagedAmount = flagedAmount - montantTTC;
+        }
+        return Pair.of(montantTTC, flagedAmount);
+    }
+
     private List<TvaDTO> statistiqueTvaPeriodique(BalanceParamsDTO balanceParams) {
         List<TvaDTO> tvas = new ArrayList<>();
         List<TvaDTO> datas = findTvaDatas(balanceParams);
         boolean checkUg = checkUg();
+        long flagedAmount = flagedAmount(balanceParams);
+
         for (TvaDTO data : datas) {
             TvaDTO o = new TvaDTO();
             Double valeurTva = 1 + (Double.valueOf(data.getTaux()) / 100);
@@ -603,6 +634,10 @@ public class BalanceServiceImpl implements BalanceService {
                     montantTTC -= data.getMontantUg();
                 }
             }
+            Pair<Long, Long> compute = computeFlagedAmount(montantTTC, flagedAmount);
+            montantTTC = compute.getLeft();
+            flagedAmount = compute.getRight();
+
             long htAmont = (long) Math.ceil(montantTTC / valeurTva);
             long montantTva = montantTTC - htAmont;
             o.setMontantTva(montantTva);
@@ -627,21 +662,38 @@ public class BalanceServiceImpl implements BalanceService {
         List<TvaDTO> tvas = new ArrayList<>();
         balanceParams.setByDay(true);
         List<TvaDTO> datas = findTvaDatas(balanceParams);
+        Set<FlagedAmount> amounts = buildFlagedAmount(flagedAmountByDay(balanceParams));
+        LocalDate lastFoundDay = null;
+        long flagedAmount = 0;
         boolean checkUg = checkUg();
         for (TvaDTO data : datas) {
+            String mvtDate = data.getLocalOperation().toString();
+            balanceParams.setDtStart(mvtDate);
+            balanceParams.setDtEnd(mvtDate);
             TvaDTO o = new TvaDTO();
             Double valeurTva = 1 + (Double.valueOf(data.getTaux()) / 100);
             long montantTTC = data.getMontantTtc();
-            if (data.getTaux() == 0) {
-                String mvtDate = data.getLocalOperation().toString();
-                balanceParams.setDtStart(mvtDate);
-                balanceParams.setDtEnd(mvtDate);
 
+            if (data.getTaux() == 0) {
                 montantTTC -= montantToRemove(balanceParams);
                 if (checkUg) {
                     montantTTC -= data.getMontantUg();
                 }
             }
+            if (!amounts.isEmpty()) {
+                if (Objects.isNull(lastFoundDay) || (!data.getLocalOperation().isEqual(lastFoundDay))) {
+                    Optional<FlagedAmount> fl = amounts.stream().filter(e -> e.getMvtDate().isEqual(data.getLocalOperation())).findFirst();
+                    if (fl.isPresent()) {
+                        FlagedAmount fa = fl.get();
+                        lastFoundDay = fa.getMvtDate();
+                        flagedAmount = fa.getAmount();
+                    }
+                }
+                Pair<Long, Long> compute = computeFlagedAmount(montantTTC, flagedAmount);
+                montantTTC = compute.getLeft();
+                flagedAmount = compute.getRight();
+            }
+
             long htAmont = (long) Math.ceil(montantTTC / valeurTva);
             long montantTva = montantTTC - htAmont;
             o.setMontantTva(montantTva);
@@ -719,9 +771,10 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     private List<Tuple> fetchPreenregistrements(BalanceParamsDTO balanceParams) {
-        LOG.log(Level.INFO, "sql--- tableau vente {0}", TABLEAU_BOARD_SQL);
+        String sqlQ = replacePlaceHolder(TABLEAU_BOARD_SQL, balanceParams);
+        LOG.log(Level.INFO, "sql--- tableau vente {0}", sqlQ);
         try {
-            Query query = em.createNativeQuery(TABLEAU_BOARD_SQL, Tuple.class)
+            Query query = em.createNativeQuery(sqlQ, Tuple.class)
                     .setParameter(1, DateConverter.DEPOT_EXTENSION)
                     .setParameter(2, balanceParams.getEmplacementId())
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
@@ -887,10 +940,11 @@ public class BalanceServiceImpl implements BalanceService {
                 int montantEsp = t.get("montantRegle", BigDecimal.class).intValue();
                 int totalVente = t.get("totalVente", BigDecimal.class).intValue();
                 int montantUg = checkUg ? t.get("montantUg", BigDecimal.class).intValue() : 0;
-                o.setMontantTTC(montantTTC - montantUg);
-                o.setMontantNet(montantNet - montantUg);
+                int flagedAmount = t.get("flagedAmount", BigDecimal.class).intValue();
+                o.setMontantTTC((montantTTC - montantUg) - flagedAmount);
+                o.setMontantNet((montantNet - montantUg) - flagedAmount);
                 o.setMontantRemise(montantRemise);
-                o.setMontantEsp(montantEsp - montantUg);
+                o.setMontantEsp((montantEsp - montantUg) - flagedAmount);
                 o.setMontantCredit(montantCredit + montantDiffere);
                 o.setNbreVente(totalVente);
 
@@ -902,4 +956,78 @@ public class BalanceServiceImpl implements BalanceService {
         return list;
     }
 
+    private long flagedAmount(BalanceParamsDTO balanceParams) {
+
+        try {
+            Query query = em.createNativeQuery(FLAGED_AMOUNT, Tuple.class)
+                    .setParameter(1, java.sql.Date.valueOf(balanceParams.getDtStart()))
+                    .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtEnd()));
+            Tuple tuple = (Tuple) query.getSingleResult();
+            return tuple.get("montantAcc", BigDecimal.class).longValue();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private final class FlagedAmount {
+
+        private final LocalDate mvtDate;
+        private final int amount;
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 37 * hash + Objects.hashCode(this.mvtDate);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final FlagedAmount other = (FlagedAmount) obj;
+            return Objects.equals(this.mvtDate, other.mvtDate);
+        }
+
+        public FlagedAmount(LocalDate mvtDate, int amount) {
+            this.mvtDate = mvtDate;
+            this.amount = amount;
+        }
+
+        public LocalDate getMvtDate() {
+            return mvtDate;
+        }
+
+        public int getAmount() {
+            return amount;
+        }
+
+    }
+
+    private List<Tuple> flagedAmountByDay(BalanceParamsDTO balanceParams) {
+
+        try {
+            Query query = em.createNativeQuery(FLAGED_AMOUNT_GROUP_BY_DAY, Tuple.class)
+                    .setParameter(1, java.sql.Date.valueOf(balanceParams.getDtStart()))
+                    .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtEnd()));
+            return query.getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private Set<FlagedAmount> buildFlagedAmount(List<Tuple> ts) {
+        return ts.stream().map(t -> new FlagedAmount(LocalDate.parse(t.get("mvtDate", String.class)), t.get("montantAcc", BigDecimal.class).intValue())).collect(Collectors.toSet());
+    }
 }
