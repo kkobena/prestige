@@ -60,7 +60,8 @@ public class BalanceServiceImpl implements BalanceService {
             + ",SUM(d.`int_UG`*d.`prixAchat`) AS montantAchatUg,SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail,SUM(d.montanttvaug) AS montantTvaUg , SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,\n"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove "
             + " FROM t_preenregistrement_detail d  GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN "
-            + " ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 {excludeStatement} GROUP BY typeVente,typeReglement %s %s";
+            + " ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement} GROUP BY typeVente,typeReglement %s %s";
+
     private static final String REMISE_SQL_QUERY = "SELECT %s p.`lg_TYPE_VENTE_ID` AS typeVente,SUM(d.`int_PRICE_REMISE`) AS montantRemise FROM  t_preenregistrement_detail d,t_preenregistrement p,t_user u,t_famille f WHERE   d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID`  AND d.`lg_FAMILLE_ID`=f.`lg_FAMILLE_ID` AND f.`bool_ACCOUNT`=?1 "
             + "  AND p.`lg_USER_ID`=u.`lg_USER_ID` AND u.`lg_EMPLACEMENT_ID`=?2  AND p.`str_STATUT`='is_Closed' AND %s  AND p.`lg_TYPE_VENTE_ID` <> ?3 AND DATE(p.`dt_UPDATED`) BETWEEN ?4 AND ?5 AND d.`int_PRICE_REMISE` <>0 GROUP BY typeVente %s";
 
@@ -70,8 +71,8 @@ public class BalanceServiceImpl implements BalanceService {
     private static final String EXCLUDE_STATEMENT = " AND  p.`lg_PREENREGISTREMENT_ID` NOT IN (SELECT v.preenregistrement_id FROM vente_exclu v) ";
 
     private static final String TVAS_SQL = "SELECT {byDay} SUM(d.int_PRICE) AS montantTTC,SUM(d.int_UG*d.int_PRICE_UNITAIR) AS montantUg,d.valeurTva AS valeurTva FROM t_preenregistrement_detail d,t_preenregistrement p,t_user u ,mvttransaction m WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND p.`lg_PREENREGISTREMENT_ID`=m.pkey  AND  d.`bool_ACCOUNT` "
-            + " AND p.lg_TYPE_VENTE_ID <> ?1 AND p.str_STATUT='is_Closed' AND DATE(p.dt_UPDATED)  BETWEEN ?2 AND ?3 AND p.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?4 {excludeStatement} {tvaVnoOnly} GROUP BY d.`valeurTva` {groupByDay}";
-    private static final String AMOUNT_TO_REMOVE = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc, COALESCE(SUM(m.`montant`),0) AS montant FROM mvttransaction m,t_preenregistrement p WHERE m.flag IS TRUE AND m.flag_id IS NULL AND m.`typeTransaction` =0 AND p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.`dt_UPDATED`) BETWEEN  ?1 AND ?2 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?3 AND m.`lg_EMPLACEMENT_ID` =?4 ";
+            + " AND p.lg_TYPE_VENTE_ID <> ?1 AND p.str_STATUT='is_Closed'  AND p.imported=0 AND DATE(p.dt_UPDATED)  BETWEEN ?2 AND ?3 AND p.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?4 {excludeStatement} {tvaVnoOnly} GROUP BY d.`valeurTva` {groupByDay}";
+    private static final String AMOUNT_TO_REMOVE = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc, COALESCE(SUM(m.`montant`),0) AS montant FROM mvttransaction m,t_preenregistrement p WHERE m.flag IS TRUE AND m.flag_id IS NULL AND m.`typeTransaction` =0  AND p.imported=0 AND p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.`dt_UPDATED`) BETWEEN  ?1 AND ?2 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?3 AND m.`lg_EMPLACEMENT_ID` =?4 ";
     private static final String TVA_BALANCE_LAST_UPDATE = "TVA_BALANCE_LAST_UPDATE";
     private static final String TVA_VNO_ONLY = " AND m.`typeTransaction` =0 ";
     private static final String BY_DAY = " DATE_FORMAT(p.`dt_UPDATED`,'%Y-%m-%d' ) AS mvtDate ,";
@@ -82,12 +83,12 @@ public class BalanceServiceImpl implements BalanceService {
             + "SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantTTCDetatilToRemove) AS montantTTCDetatilToRemove,SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail,  SUM(CASE  WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p,(SELECT d.`lg_PREENREGISTREMENT_ID` AS idVente, SUM(d.`int_PRICE`) AS montantTTCDetatilReal,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove,"
-            + " SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail FROM t_preenregistrement_detail d WHERE   d.`bool_ACCOUNT` GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2  {excludeStatement}  GROUP BY mvtDate";
+            + " SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail FROM t_preenregistrement_detail d WHERE   d.`bool_ACCOUNT` GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND p.`str_STATUT`='is_Closed'  AND p.imported=0 AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2  {excludeStatement}  GROUP BY mvtDate";
     private static final String TABLEAU_BOARD_SQL_ACHATS = "SELECT m.mvtdate AS mvtDate ,SUM(m.montant) AS montant,gf.libelle FROM  mvttransaction m,t_grossiste g,groupefournisseur gf WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` =2 "
             + " AND m.`lg_EMPLACEMENT_ID` =?3 AND m.`grossisteId`=g.`lg_GROSSISTE_ID` AND g.`groupeId`=gf.id GROUP BY gf.id,mvtdate ORDER BY mvtDate";
 
-    private static final String FLAGED_AMOUNT = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL";
-    private static final String FLAGED_AMOUNT_GROUP_BY_DAY = "SELECT m.mvtdate AS mvtdate,COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL GROUP BY mvtdate";
+    private static final String FLAGED_AMOUNT = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL AND p.imported=0 ";
+    private static final String FLAGED_AMOUNT_GROUP_BY_DAY = "SELECT m.mvtdate AS mvtdate,COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL  AND p.imported=0 GROUP BY mvtdate";
 
     private final Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
 
@@ -206,7 +207,7 @@ public class BalanceServiceImpl implements BalanceService {
         long nbreVente = 0;
         long panierMoyen = 0;
         long montantCredit = 0;
-       
+
         long montantTTCReel = 0;
         long montantNetReel = 0;
         Map<String, List<BalanceVenteItemDTO>> mapByTypeReglemement = venteData.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeReglement));
@@ -215,11 +216,11 @@ public class BalanceServiceImpl implements BalanceService {
             List<BalanceVenteItemDTO> values = entry.getValue();
             for (BalanceVenteItemDTO balanceVenteItem : values) {
                 montantTTC += balanceVenteItem.getMontantTTCDetatil().longValue();
-                montantTTCReel+= balanceVenteItem.getMontantTTCDetatil().longValue();
+                montantTTCReel += balanceVenteItem.getMontantTTCDetatil().longValue();
                 if (checkUg) {
                     montantTTC -= balanceVenteItem.getMontantUg().longValue();
                 }
-              
+
                 montantTTC -= balanceVenteItem.getFlagedAmount().longValue();
                 montantTva += balanceVenteItem.getMontantTva().longValue();
                 montantAchat += balanceVenteItem.getMontantAchat().longValue();
