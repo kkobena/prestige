@@ -184,7 +184,6 @@ public class ProduitServiceImpl implements ProduitService {
         JSONObject json = new JSONObject();
         try {
             TFamille famille = getEntityManager().find(TFamille.class, id);
-//            getEntityManager().getTransaction().begin();
             famille.setStrSTATUT(statut);
             famille.setDtUPDATED(new Date());
             getEntityManager().merge(famille);
@@ -211,10 +210,7 @@ public class ProduitServiceImpl implements ProduitService {
                     .message(desc)
                     .addUser(u));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
-//            if (getEntityManager().getTransaction().isActive()) {
-//                getEntityManager().getTransaction().rollback();
-//            }
+            LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "Erreur ! l'opération n'a pas abouti");
         }
         return json;
@@ -314,7 +310,7 @@ public class ProduitServiceImpl implements ProduitService {
             ).distinct(true)
                     .orderBy(cb.asc(root.get(HMvtProduit_.famille).get(TFamille_.strNAME)));
             predicates.add(cb.and(cb.equal(root.get(HMvtProduit_.emplacement).get(TEmplacement_.lgEMPLACEMENTID), params.getMagasinId())));
-            //   Predicate btw = cb.between(root.get(HMvtProduit_.mvtDate), params.getDtStart(), params.getDtEnd());
+          
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(HMvtProduit_.mvtDate)), java.sql.Date.valueOf(params.getDtStart()),
                     java.sql.Date.valueOf(params.getDtEnd()));
             predicates.add(cb.and(btw));
@@ -332,7 +328,7 @@ public class ProduitServiceImpl implements ProduitService {
                 predicates.add(cb.and(cb.equal(fa.get(TFamille_.lgFABRIQUANTID).
                         get(TFabriquant_.lgFABRIQUANTID), params.getFabricantId())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TFamille> q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -340,7 +336,7 @@ public class ProduitServiceImpl implements ProduitService {
             }
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+              LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -351,7 +347,7 @@ public class ProduitServiceImpl implements ProduitService {
             q.setParameter(1, dtStart).setParameter(2, dtEnd).setParameter(3, produitId).setParameter(4, empl);
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -365,8 +361,7 @@ public class ProduitServiceImpl implements ProduitService {
             Join<HMvtProduit, TFamille> fa = root.join(HMvtProduit_.famille, JoinType.INNER);
             cq.select(cb.countDistinct(root.get(HMvtProduit_.famille)));
             predicates.add(cb.and(cb.equal(root.get(HMvtProduit_.emplacement).get(TEmplacement_.lgEMPLACEMENTID), params.getMagasinId())));
-            //    Predicate btw = cb.between(root.get(HMvtProduit_.mvtDate), params.getDtStart(), params.getDtEnd());
-//            predicates.add(cb.and(btw));
+
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(HMvtProduit_.mvtDate)), java.sql.Date.valueOf(params.getDtStart()),
                     java.sql.Date.valueOf(params.getDtEnd()));
             predicates.add(cb.and(btw));
@@ -385,11 +380,11 @@ public class ProduitServiceImpl implements ProduitService {
                 predicates.add(cb.and(cb.equal(fa.get(TFamille_.lgFABRIQUANTID).
                         get(TFabriquant_.lgFABRIQUANTID), params.getFabricantId())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+           LOG.log(Level.SEVERE, null, e);
             return 0;
         }
     }
@@ -409,7 +404,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("data", new JSONArray(data));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -428,7 +423,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("data", geographiques.stream().map(x -> new ComboDTO(x.getLgFAMILLEARTICLEID(), x.getStrLIBELLE())).collect(Collectors.toList()));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -447,7 +442,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("data", geographiques.stream().map(x -> new ComboDTO(x.getLgFABRIQUANTID(), x.getStrNAME())).collect(Collectors.toList()));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -466,7 +461,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("data", geographiques.stream().map(x -> new ComboDTO(x.getLgZONEGEOID(), x.getStrLIBELLEE())).collect(Collectors.toList()));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -485,7 +480,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("metaData", new JSONObject(mvtProduit));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+           LOG.log(Level.SEVERE, null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -544,11 +539,10 @@ public class ProduitServiceImpl implements ProduitService {
                 LongAdder venteStock = new LongAdder();
                 mvt.setDateOperation(k);
                 values.sort(comparatorByDateTime);
-                // Deque<HMvtProduit> queue = new ArrayDeque<>(values);
-                // HMvtProduit first = queue.getFirst();
+               
                 MvtProduitDTO init = findInitialQty(k, values.get(0).getFamille().getLgFAMILLEID());
                 mvt.setStockInit(init.getStockInit());
-                // HMvtProduit last = queue.getLast();
+                
                 MvtProduitDTO stockFinal = findFinalQty(k, values.get(0).getFamille().getLgFAMILLEID());
                 mvt.setStockFinal(stockFinal.getStockInit());
                 Map<String, List<HMvtProduit>> map = values.stream().collect(Collectors.groupingBy(p -> p.getTypemvtproduit().getId()));
@@ -567,7 +561,7 @@ public class ProduitServiceImpl implements ProduitService {
                             venteStock.add(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.INVENTAIRE:
-                            mvt.setEcartInventaire(findEcartInventaire(Long.valueOf(val.get(0).getPkey())));
+                            mvt.setEcartInventaire(findEcartInventaire(Long.parseLong(val.get(0).getPkey())));
                             mvt.setQtyInv(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.DECONDTIONNEMENT_POSITIF:
@@ -622,12 +616,12 @@ public class ProduitServiceImpl implements ProduitService {
             mvtProduit.setQtyRetour(qtyRetour.intValue());
             mvtProduit.setProduits(mvtProduits);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE,null, e);
         }
         return mvtProduit;
     }
     Comparator<MvtProduitDTO> comparatorByLibelle = Comparator.comparing(MvtProduitDTO::getProduitName);
-    Comparator<HMvtProduit> comparatorByDate = Comparator.comparing(HMvtProduit::getMvtDate);
+  
     Comparator<HMvtProduit> comparatorByDateTime = Comparator.comparing(HMvtProduit::getCreatedAt);
     Comparator<MvtProduitDTO> mvtrByDate = Comparator.comparing(MvtProduitDTO::getDateOperation);
 
@@ -654,11 +648,12 @@ public class ProduitServiceImpl implements ProduitService {
                 mvtProduit.setProduitName(v.getStrNAME());
                 mvtProduit.setCurrentStock(getFamilleStockByProduitId(v.getLgFAMILLEID(), params.getMagasinId()));
                 Map<String, List<HMvtProduit>> hmps = suivitMvtArcticle(params.getDtStart(), params.getDtEnd(), v.getLgFAMILLEID(), params.getMagasinId()).stream().collect(Collectors.groupingBy(p -> p.getTypemvtproduit().getId()));
+                
                 hmps.forEach((k, values) -> {
                     switch (k) {
                         case DateConverter.ENTREE_EN_STOCK:
 //                          case  DateConverter.TMVTP_RETOUR_DEPOT:
-                            mvtProduit.setQtyEntree(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyEntree(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.VENTE:
                         case DateConverter.TMVTP_VENTE_DEPOT_EXTENSION:
@@ -667,34 +662,34 @@ public class ProduitServiceImpl implements ProduitService {
                             break;
                         case DateConverter.ANNULATION_DE_VENTE:
                         case DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION:
-                            mvtProduit.setQtyAnnulation(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyAnnulation(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
 
                         case DateConverter.INVENTAIRE:
-                            mvtProduit.setEcartInventaire(findEcartInventaire(Long.valueOf(values.get(0).getPkey())));
-                            mvtProduit.setQtyInv(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setEcartInventaire(findEcartInventaire(Long.parseLong(values.get(0).getPkey())));
+                            mvtProduit.setQtyInv(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.DECONDTIONNEMENT_POSITIF:
-                            mvtProduit.setQtyDeconEntrant(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyDeconEntrant(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.DECONDTIONNEMENT_NEGATIF:
-                            mvtProduit.setQtyDecondSortant(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyDecondSortant(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
 
                         case DateConverter.AJUSTEMENT_NEGATIF:
-                            mvtProduit.setQtyAjustSortie(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyAjustSortie(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.AJUSTEMENT_POSITIF:
-                            mvtProduit.setQtyAjust(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyAjust(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.RETOUR_FOURNISSEUR:
-                            mvtProduit.setQtyRetour(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyRetour(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.PERIME:
-                            mvtProduit.setQtyPerime(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyPerime(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         case DateConverter.TMVTP_RETOUR_DEPOT:
-                            mvtProduit.setQtyRetourDepot(values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            mvtProduit.setQtyRetourDepot(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
                             break;
                         default:
                             break;
@@ -706,7 +701,7 @@ public class ProduitServiceImpl implements ProduitService {
             mvtProduits.sort(comparatorByLibelle);
             return mvtProduits;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             return Collections.emptyList();
         }
     }
@@ -729,7 +724,7 @@ public class ProduitServiceImpl implements ProduitService {
 
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+           LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -757,7 +752,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("data", new JSONArray(data));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -784,7 +779,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("data", new JSONArray(data));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -809,7 +804,7 @@ public class ProduitServiceImpl implements ProduitService {
 
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -832,7 +827,7 @@ public class ProduitServiceImpl implements ProduitService {
 
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -856,7 +851,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("data", new JSONArray(data));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -872,7 +867,7 @@ public class ProduitServiceImpl implements ProduitService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             return null;
         }
     }
@@ -895,7 +890,7 @@ public class ProduitServiceImpl implements ProduitService {
             }
             return suivitEclateEntreeDepot(dtStart, dtEnd, produitId, empl);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -919,7 +914,7 @@ public class ProduitServiceImpl implements ProduitService {
 
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -941,7 +936,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("data", new JSONArray(data));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -966,7 +961,7 @@ public class ProduitServiceImpl implements ProduitService {
 
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             json.put("total", 0);
             json.put("data", new JSONArray());
             return json;
@@ -1046,7 +1041,7 @@ public class ProduitServiceImpl implements ProduitService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             return new Params(0, 0);
         }
 
@@ -1141,7 +1136,7 @@ public class ProduitServiceImpl implements ProduitService {
 //            q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             return new Params(0, 0);
         }
     }
@@ -1296,7 +1291,7 @@ public class ProduitServiceImpl implements ProduitService {
             valorisation.setTvas(tvas);
             return valorisation;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             return new ValorisationDTO();
         }
     }
@@ -1427,7 +1422,7 @@ public class ProduitServiceImpl implements ProduitService {
             valorisation.setMontantPmd(pmp.intValue());
             return valorisation;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             return new ValorisationDTO();
         }
     }
@@ -1584,7 +1579,7 @@ public class ProduitServiceImpl implements ProduitService {
             valorisation.setTvas(tvas);
             return valorisation;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             return new ValorisationDTO();
         }
     }
@@ -1716,7 +1711,7 @@ public class ProduitServiceImpl implements ProduitService {
 
             return valorisation;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE,null, e);
             return new ValorisationDTO();
         }
     }

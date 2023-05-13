@@ -247,6 +247,14 @@ Ext.define('testextjs.view.produits.mvtproduit.MonitoringArticle', {
                             itemId: 'rechercher',
                             scope: this,
                             iconCls: 'searchicon'
+                        }, {
+                            xtype: 'tbseparator'
+                        }, {
+                            text: 'imprimer',
+                            itemId: 'imprimer',
+                            iconCls: 'printable',
+                            tooltip: 'imprimer',
+                            scope: this
                         }
 
                     ]
@@ -393,7 +401,7 @@ Ext.define('testextjs.view.produits.mvtproduit.MonitoringArticle', {
                             align: 'right',
                             format: '0,000.'
                         },
-                         {
+                        {
                             text: 'écart.Inv',
                             xtype: 'numbercolumn',
                             dataIndex: 'ecartInventaire',
@@ -401,8 +409,7 @@ Ext.define('testextjs.view.produits.mvtproduit.MonitoringArticle', {
                             align: 'right',
                             format: '0,000.'
                         },
-                        
-                        
+
                         {
                             text: 'Stock',
                             xtype: 'numbercolumn',

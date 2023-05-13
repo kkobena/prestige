@@ -5,6 +5,8 @@
  */
 package rest.report.pdf;
 
+import commonTasks.dto.MvtArticleParams;
+import commonTasks.dto.MvtProduitDTO;
 import commonTasks.dto.RuptureDetailDTO;
 import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.ValorisationDTO;
@@ -52,7 +54,7 @@ public class Stock {
     @EJB
     private SalesStatsService salesStatsService;
 
-    public String valorisation(TUser tu, int mode, LocalDate dtSt, String lgGROSSISTEID, String lgFAMILLEARTICLEID, String lgZONEGEOID, String END, String BEGIN, String emplacementId) throws IOException {
+    public String valorisation(TUser tu, int mode, LocalDate dtSt, String lgGROSSISTEID, String lgFAMILLEARTICLEID, String lgZONEGEOID, String end, String begin, String emplacementId) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_valorisation_stock_produit2";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
@@ -76,7 +78,7 @@ public class Stock {
 
         parameters.put("P_H_CLT_INFOS", P_SUBTITLE + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        ValorisationDTO o = produitService.getValeurStockPdf(mode, dtSt, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, emplacementId);
+        ValorisationDTO o = produitService.getValeurStockPdf(mode, dtSt, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, end, begin, emplacementId);
 
         ValorisationDTO tva = o.getTvas();
         parameters.put("totalpa", o.getMontantFacture());
@@ -176,5 +178,24 @@ public class Stock {
 
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "articlesvendus" + report_generate_file, data);
         return "/data/reports/pdf/articlesvendus" + report_generate_file;
+    }
+
+    public String suivitMvtArcticle(MvtArticleParams params, TUser user) {
+
+        TOfficine oTOfficine = commonService.findOfficine();
+        LocalDate dtStart = params.getDtStart();
+        LocalDate dtEnd = params.getDtEnd();
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        String periode = dtStart.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        if (!dtStart.isEqual(dtEnd)) {
+            periode += " AU " + dtEnd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+        String reportName = "rp_suivit_mvt_article";
+
+        parameters.put("P_H_CLT_INFOS", "SUIVI MOUVEMENT ARTICLE \n DU  " + periode);
+        List<MvtProduitDTO> datas = produitService.suivitMvtArcticle(params);
+
+        return reportUtil.buildReport(parameters, reportName, datas);
+
     }
 }
