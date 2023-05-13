@@ -5,6 +5,7 @@
  */
 package rest.report.pdf;
 
+import commonTasks.dto.MvtArticleParams;
 import commonTasks.dto.SalesStatsParams;
 import dal.TUser;
 import java.io.IOException;
@@ -30,76 +31,79 @@ public class SockServlet extends HttpServlet {
 
     private enum Action {
         VALORISATION, RUPTURE_PHARMAML, UG, VENTE_TIERS_PAYANT_GROUP, VENTE_TIERS_PAYANT,
-        ARTICLE_VENDUS_DETAIL, ARTICLE_VENDUS_RECAP
+        ARTICLE_VENDUS_DETAIL, ARTICLE_VENDUS_RECAP, SUIVI_MVT_PRODUIT
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/pdf");
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
         String groupeId = request.getParameter("groupeId");
         String tiersPayantId = request.getParameter("tiersPayantId");
         String query = request.getParameter("query");
-          String typeTp = request.getParameter("typeTp");
+        String typeTp = request.getParameter("typeTp");
         String file = "";
-
+        String end = request.getParameter("END");
+        String begin = request.getParameter("BEGIN");
+        String rayonId = request.getParameter("rayonId");
+        String search = request.getParameter("search");
         switch (SockServlet.Action.valueOf(action)) {
             case VALORISATION:
-                int mode = Integer.valueOf(request.getParameter("action"));
+                int mode = Integer.parseInt(request.getParameter("action"));
                 String lgGROSSISTEID = request.getParameter("lgGROSSISTEID");
                 String lgZONEGEOID = request.getParameter("lgZONEGEOID");
-                String END = request.getParameter("END");
-                String BEGIN = request.getParameter("BEGIN");
+
                 String lgFAMILLEARTICLEID = request.getParameter("lgFAMILLEARTICLEID");
-                file = stock.valorisation(OTUser, mode, LocalDate.parse(dtStart), lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+                file = stock.valorisation(tUser, mode, LocalDate.parse(dtStart), lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, end, begin, tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
                 break;
+
             case RUPTURE_PHARMAML:
                 query = request.getParameter("query");
                 String grossisteId = request.getParameter("grossisteId");
-                file = stock.rupturePharmaMl(OTUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, grossisteId, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+                file = stock.rupturePharmaMl(tUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, grossisteId, tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
                 break;
 
             case UG:
-                file = stock.venteUgDTO(OTUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
+                file = stock.venteUgDTO(tUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
                 break;
             case VENTE_TIERS_PAYANT_GROUP:
-                file = stock.ventesTiersPayants(OTUser, "rp_ventetpGroup", query, dtStart, dtEnd, tiersPayantId, groupeId,typeTp);
+                file = stock.ventesTiersPayants(tUser, "rp_ventetpGroup", query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp);
                 break;
             case VENTE_TIERS_PAYANT:
-                file = stock.ventesTiersPayants(OTUser, "rp_ventetp", query, dtStart, dtEnd, tiersPayantId, groupeId,typeTp);
+                file = stock.ventesTiersPayants(tUser, "rp_ventetp", query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp);
                 break;
             case ARTICLE_VENDUS_DETAIL:
             case ARTICLE_VENDUS_RECAP:
                 String user = request.getParameter("user");
                 int stock_ = 0;
-                  int nbre =0;
-                  Integer qteVendu = null;
+                int nbre = 0;
+                Integer qteVendu = null;
                 try {
-                    stock_ = Integer.valueOf(request.getParameter("stock"));
+                    stock_ = Integer.parseInt(request.getParameter("stock"));
                 } catch (Exception e) {
                 }
                 try {
-                 nbre=   Integer.valueOf(request.getParameter("nbre"));
+                    nbre = Integer.parseInt(request.getParameter("nbre"));
                 } catch (Exception e) {
                 }
-                 try {
+                try {
                     qteVendu = Integer.valueOf(request.getParameter("qteVendu"));
                 } catch (Exception e) {
                 }
-                String rayonId = request.getParameter("rayonId");
+
                 String typeTransaction = request.getParameter("typeTransaction");
                 String stockFiltre = request.getParameter("stockFiltre");
                 String prixachatFiltre = request.getParameter("prixachatFiltre");
-              
+
                 String hEnd = request.getParameter("hEnd");
                 String hStart = request.getParameter("hStart");
                 String type = request.getParameter("type");
                 SalesStatsParams body = new SalesStatsParams();
-                body.setUserId(OTUser);
+                body.setUserId(tUser);
                 body.setUser(user);
                 body.setQuery(query);
                 body.setStatut(commonparameter.statut_is_Closed);
@@ -129,6 +133,19 @@ public class SockServlet extends HttpServlet {
                 } catch (Exception e) {
                 }
                 file = stock.articlesVendusRecap(body, action, type);
+                break;
+            case SUIVI_MVT_PRODUIT:
+                String categorieId = request.getParameter("categorieId");
+                String fabricantId = request.getParameter("fabricantId");
+                MvtArticleParams articleParams = new MvtArticleParams();
+                articleParams.setAll(true);
+                articleParams.setDtStart(LocalDate.parse(dtStart));
+                articleParams.setDtEnd(LocalDate.parse(dtEnd));
+                articleParams.setSearch(search);
+                articleParams.setFabricantId(fabricantId);
+                articleParams.setCategorieId(categorieId);
+                 articleParams.setMagasinId(tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+                file = stock.suivitMvtArcticle(articleParams, tUser);
                 break;
 
             default:
