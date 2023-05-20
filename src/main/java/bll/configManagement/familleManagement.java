@@ -5109,7 +5109,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
 
     public JSONArray getAllArticle(String search_value, String lg_DCI_ID, TEmplacement emp, String str_TYPE_TRANSACTION, boolean all, int maxResults, int firstResult) {
         JSONArray jsonarray = new JSONArray();
-        String lg_EMPLACEMENT_ID = "";
+        String lg_EMPLACEMENT_ID ;
         SnapshotManager OSnapshotManager = new SnapshotManager(this.getOdataManager(), this.getOTUser());
         boolean ACTION_DESACTIVE_PRODUIT = DateConverter.hasAuthorityByName(getUsersPrivileges(), DateConverter.ACTION_DESACTIVE_PRODUIT);
         try {
@@ -5300,13 +5300,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                     try {
 
                         String dateEntree = dateEntree(t.getLgFAMILLEID());
-                        if ("".equals(dateEntree)) {
-                            try {
-
-                                dateEntree = date.DateToString(t.getDtDATELASTENTREE(), date.formatterShort);
-                            } catch (Exception e) {
-                            }
-                        }
+                      
                         json.put("dt_LAST_ENTREE", dateEntree);
 
                     } catch (Exception e) {
