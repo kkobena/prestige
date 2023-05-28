@@ -1,0 +1,10 @@
+
+E
+java:S1066Z"/Merge this if statement with the enclosing one.(ˆø¶ª
+t	java:S115%"ZRename this constant name to match the regular expression '^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$'.(ˆ€„Šûÿÿÿÿ
+—
+java:S1186P"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(‚“¶î
+œ
+java:S1186,"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(µ¼î†øÿÿÿÿ
+>	java:S108y")Either remove or fill this block of code.(Ãôş•
+?	java:S108")Either remove or fill this block of code.(Ãôş•
