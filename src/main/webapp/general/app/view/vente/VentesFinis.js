@@ -18,11 +18,11 @@ Ext.define('testextjs.view.vente.VentesFinis', {
         type: 'fit'
     },
     initComponent: function () {
-        var store = Ext.create('Ext.data.ArrayStore', {
+        const store = Ext.create('Ext.data.ArrayStore', {
             data: [['VNO'], ['VO']],
             fields: [{name: 'typeVente', type: 'string'}]
         });
-         var natureventeStore = new Ext.data.Store({
+         const natureventeStore = new Ext.data.Store({
             model: 'testextjs.model.caisse.Nature',
             pageSize: null,
             autoLoad: false,
@@ -36,7 +36,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                 }
             }
         });
-        var vente = Ext.create('Ext.data.Store', {
+        const vente = Ext.create('Ext.data.Store', {
             model: 'testextjs.model.caisse.Vente',
             autoLoad: false,
             pageSize: 15,
@@ -51,7 +51,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
 
             }
         });
-        var me = this;
+        const me = this;
         Ext.applyIf(me, {
             dockedItems: [
                 {

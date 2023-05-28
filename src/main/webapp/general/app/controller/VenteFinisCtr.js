@@ -306,7 +306,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                             xtype: 'button',
                                             text: 'Enregistrer',
                                             handler: function (btn) {
-                                                var formulaire = btn.up('form');
+                                                const formulaire = btn.up('form');
                                                 me.updateInfosvente(form, formulaire, rec, linkUrl);
                                             }
                                         },
@@ -327,9 +327,9 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 });
     },
     onFacture: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var me = this;
-        var client = rec.get('clientFullName');
-        var linkUrl = '../webservices/sm_user/detailsvente/ws_generate_facture_pdf.jsp?lg_PREENREGISTREMENT_ID=' + rec.get('lgPREENREGISTREMENTID');
+        const me = this;
+        const client = rec.get('clientFullName');
+        const linkUrl = '../webservices/sm_user/detailsvente/ws_generate_facture_pdf.jsp?lg_PREENREGISTREMENT_ID=' + rec.get('lgPREENREGISTREMENTID');
         if (client !== '') {
             window.open(linkUrl);
         } else {
@@ -340,15 +340,15 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
     },
     onbtnexportCsv: function (view, rowIndex, colIndex, item, e, rec, row) {
         if (rec.get('lgTYPEVENTEID') === "5") {
-            var liste_param = "search_value:" + rec.get('lgPREENREGISTREMENTID');
-            var extension = "csv";
+            const liste_param = "search_value:" + rec.get('lgPREENREGISTREMENTID');
+            const extension = "csv";
             window.location = '../MigrationServlet?table_name=TABLE_MISEAJOUR_STOCKDEPOT' + "&extension=" + extension + "&liste_param=" + liste_param;
 
         }
 
     },
     onSuggestion: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var me = this;
+        const me = this;
         if (rec.get('intPRICE') > 0 && !rec.get('cancel')) {
             Ext.MessageBox.confirm('Message',
                     'Voulez-vous envoyer la vente ' + rec.get('strREF') + ' en suggestion',
@@ -363,8 +363,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                 },
                                 success: function (response)
                                 {
-                                    var object = Ext.JSON.decode(response.responseText, false);
-                                    // Ext.MessageBox.alert('Error Message', object.errors);
+                                    const object = Ext.JSON.decode(response.responseText, false);
+                                   
                                     if (object.success == "0") {
                                         Ext.MessageBox.alert('Error Message', object.errors);
                                     } else {
@@ -385,15 +385,15 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
 
     },
     printTicketR: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var me = this;
+        const me = this;
         me.onPrintTicket(rec.get('lgPREENREGISTREMENTID'), rec.get('lgTYPEVENTEID'), false);
     },
     printTicket: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var me = this;
+        const me = this;
         if (me.getDatemisajour()) {
             let dateVente = new Date(rec.get('mvdate'));
             if (dateVente.getTime() < me.getDatemisajour().getTime()) {
-                var url_services_pdf_ticket = '../webservices/sm_user/detailsvente/ws_generate_pdf.jsp?lg_PREENREGISTREMENT_ID=' + rec.get('lgPREENREGISTREMENTID');
+                const url_services_pdf_ticket = '../webservices/sm_user/detailsvente/ws_generate_pdf.jsp?lg_PREENREGISTREMENT_ID=' + rec.get('lgPREENREGISTREMENTID');
                 Ext.Ajax.request({
                     url: url_services_pdf_ticket
                 });
@@ -406,23 +406,20 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         }
     },
     onPrintTicket: function (id, lgTYPEVENTEID, copy) {
-        var url = (lgTYPEVENTEID === '1') ? '../api/v1/vente/ticket/vno/' + id : '../api/v1/vente/ticket/vo/' + id;
+        let url = (lgTYPEVENTEID === '1') ? '../api/v1/vente/ticket/vno/' + id : '../api/v1/vente/ticket/vo/' + id;
         if (copy) {
             url = '../api/v1/vente/copy/' + id;
         }
         if (lgTYPEVENTEID === '5') {
             url = '../api/v1/vente/ticket/depot/' + id;
         }
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        let progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             headers: {'Content-Type': 'application/json'},
             method: 'POST',
             url: url,
             success: function (response, options) {
                 progress.hide();
-                var result = Ext.JSON.decode(response.responseText, true);
-
-
             },
             failure: function (response, options) {
                 progress.hide();
@@ -431,12 +428,12 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         });
     },
     onRemoveClick: function (rec) {
-        var me = this;
+        const me = this;
         Ext.MessageBox.confirm('Message',
                 'Voulez-Vous Annuler La Vente',
                 function (btn) {
                     if (btn === 'yes') {
-                        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                        let progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
                         Ext.Ajax.request({
                             timeout: 240000,
                             method: 'GET',
@@ -444,16 +441,13 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                             success: function (response)
                             {
                                 progress.hide();
-                                var object = Ext.JSON.decode(response.responseText, false);
+                                const object = Ext.JSON.decode(response.responseText, false);
                                 if (object.success) {
 
                                     Ext.MessageBox.confirm('Message',
                                             'Confirmer l\'impression du ticket',
                                             function (btn) {
                                                 if (btn === 'yes') {
-
-                                                    //  var url_services_pdf_ticket = '../webservices/sm_user/detailsvente/ws_generate_pdf.jsp?lg_PREENREGISTREMENT_ID=' + object.ref;
-
                                                     me.onPrintTicket(object.ref, rec.get('lgTYPEVENTEID'));
                                                 }
                                             });
@@ -474,8 +468,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 });
     },
     doBeforechange: function (page, currentPage) {
-        var me = this;
-        var myProxy = me.getVentemanagerGrid().getStore().getProxy();
+        const me = this;
+        const myProxy = me.getVentemanagerGrid().getStore().getProxy();
         myProxy.params = {
             query: null,
             typeVenteId: null,
@@ -499,18 +493,18 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         myProxy.setExtraParam('nature', me.getNature().getValue());
     },
     doInitStore: function () {
-        var me = this;
+        const me = this;
         me.doSearch();
         me.checkIfODVersion();
     },
     onSpecialKey: function (field, e, options) {
         if (e.getKey() === e.ENTER) {
-            var me = this;
+            const me = this;
             me.doSearch();
         }
     },
     doSearch: function () {
-        var me = this;
+        const me = this;
         me.getVentemanagerGrid().getStore().load({
             params: {
                 "query": me.getQueryField().getValue(),
@@ -529,12 +523,12 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         window.location = '../api/v1/vente-depot/as/order/' + rec.get('lgPREENREGISTREMENTID');
     },
     goto: function (view, rowIndex, colIndex, item, e, rec, row) {
-        var me = this;
+
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/ventestats/find-one/' + rec.get('lgPREENREGISTREMENTID'),
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 Ext.create('testextjs.view.vente.DetailVente', {vente: result.data}).show();
             }
 
