@@ -33,4 +33,5 @@ public class BalanceParamsDTO {
     private boolean vnoOnly;
     private boolean byDay;
     private boolean byMonth;
+    private boolean showAllAmount;
 }

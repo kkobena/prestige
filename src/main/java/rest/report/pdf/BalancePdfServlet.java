@@ -86,10 +86,10 @@ public class BalancePdfServlet extends HttpServlet {
         params.setCheckug(checkug);
         switch (Action.valueOf(action)) {
               case BALANCE_CARNET:
-                file = balance.generatepdf(params,false);
+                file = balance.generatepdf(params,false,true);
                 break;
             case BALANCE:
-                file = balance.generatepdf(params,true);
+                file = balance.generatepdf(params,true,false);
                 break;
             case BALANCE_PARA:
                 file = balance.tbalancePara(params);
