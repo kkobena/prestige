@@ -45,8 +45,8 @@ public final class EtatControlBonBuilder extends CommonBuilder {
                 .montantAvoir(computeAvoirAmount(bonLivraisonDetails))
                 .user(user(oUser))
                 .fournisseurLibelle(grossiste.getStrLIBELLE())
-                .userName(oUser.getStrFIRSTNAME().substring(1).concat(".").concat(oUser.getStrLASTNAME()))
-                .dateLivraison(DateUtil.convertDateTo_ISO(bonLivraison.getDtDATELIVRAISON()))
+                .userName(oUser.getStrFIRSTNAME().charAt(0)+".".concat(oUser.getStrLASTNAME()))
+                .dateLivraison(DateUtil.convertDateToISO(bonLivraison.getDtDATELIVRAISON()))
                 .build();
     }
 

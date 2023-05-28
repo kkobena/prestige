@@ -44,7 +44,7 @@ public final class DateUtil {
             return "";
         }
     }
-        public static String convertDateTo_ISO(Date date) {
+        public static String convertDateToISO(Date date) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         if (date != null) {
             return dateFormat.format(date);
