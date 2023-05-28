@@ -16,7 +16,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashCarnet', {
         padding: 10
     },
     initComponent: function () {
-        var store = Ext.create('Ext.data.Store', {
+        let store = Ext.create('Ext.data.Store', {
             fields:
                     [
                         {name: 'typeVente',
@@ -82,7 +82,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashCarnet', {
 
             proxy: {
                 type: 'ajax',
-                url: '../api/v1/caisse/balancesalecash',
+                url: '../api/v1/caisse/balancesalecash/carnet-depot',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -93,12 +93,9 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashCarnet', {
 
             }
         });
-        var me = this;
+        const me = this;
         Ext.applyIf(me, {
-            /*tools: [{
-             type: 'refresh',
-             tooltip: 'Actualiser'
-             }],*/
+           
             dockedItems: [
 
                 {
@@ -366,7 +363,6 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashCarnet', {
                     xtype: 'gridpanel',
                     itemId: 'balanceGrid',
                     store: store,
-//                    height: 150,
                     viewConfig: {
                         forceFit: true,
                         columnLines: true

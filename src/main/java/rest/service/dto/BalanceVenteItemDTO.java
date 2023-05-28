@@ -47,5 +47,6 @@ public class BalanceVenteItemDTO {
     private BigDecimal margeUg;
     private BigDecimal montantTTCDetatilToRemove;
     private BigDecimal flagedAmount;
+    private BigDecimal montantTTCDetatilReal;
 
 }

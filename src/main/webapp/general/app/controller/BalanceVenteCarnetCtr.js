@@ -124,13 +124,13 @@ Ext.define('testextjs.controller.BalanceVenteCarnetCtr', {
         window.open(linkUrl);
     },
     doMetachange: function (store, meta) {
-        var me = this;
+        const me = this;
         me.buildSummary(meta);
 
     },
     doBeforechange: function (page, currentPage) {
-        var me = this;
-        var myProxy = me.getBalanceGrid().getStore().getProxy();
+        const me = this;
+        const myProxy = me.getBalanceGrid().getStore().getProxy();
         myProxy.params = {
             dtEnd: null,
             dtStart: null
@@ -145,13 +145,13 @@ Ext.define('testextjs.controller.BalanceVenteCarnetCtr', {
     },
 
     doInitStore: function () {
-        var me = this;
+        const me = this;
         me.getBalanceGrid().getStore().addListener('metachange', this.doMetachange, this);
         me.doSearch();
     },
 
     doSearch: function () {
-        var me = this;
+        const me = this;
         let store = me.getBalanceGrid().getStore();
       
             store.getProxy().url = '../api/v1/caisse/balancesalecash/carnet';
@@ -165,7 +165,7 @@ Ext.define('testextjs.controller.BalanceVenteCarnetCtr', {
         });
     },
     buildSummary: function (rec) {
-        var me = this;
+        const me = this;
         me.getMontantTTC().setValue(rec.montantTTC);
         me.getMontantAchat().setValue(rec.montantAchat);
         me.getRatioVA().setValue(rec.ratioVA);
@@ -184,12 +184,12 @@ Ext.define('testextjs.controller.BalanceVenteCarnetCtr', {
 
     },
     oncheckUg: function () {
-        var me = this;
+        const me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/common/checkug',
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.checkUg = result.data;
                 }
@@ -198,7 +198,7 @@ Ext.define('testextjs.controller.BalanceVenteCarnetCtr', {
         });
     },
     onReady: function () {
-        var me = this;
+        const me = this;
         me.oncheckUg();
     }
 });
