@@ -58,6 +58,10 @@ public class CaisseRessource {
     @EJB
     private BalanceService balanceService;
 
+    public TUser getUser() {
+        return  Utils.getConnectedUser(servletRequest);
+    }
+
     @GET
     @Path("listecaisse")
     public Response geListeCaisse(
@@ -418,4 +422,27 @@ public class CaisseRessource {
         JSONObject json = caisseService.balanceVenteCaisse(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), false);
         return Response.ok().entity(json.toString()).build();
     }
+
+    @GET
+    @Path("balancesalecash/carnet-depot")
+    public Response balanceCaisseCarnetDepot(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd
+    ) {
+     
+        TUser tu =  getUser();
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
+                .dtStart(dtStart)
+                .dtEnd(dtEnd)
+                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                .showAllAmount(true)
+                .build());
+
+        return Response.ok().entity(json.toString()).build();
+    }
+
 }

@@ -81,7 +81,7 @@ public class Balance {
     @EJB
     private BalanceService balanceService;
 
-    public String generatepdf(Params parasm, boolean exludeSome) throws IOException {
+    public String generatepdf(Params parasm, boolean exludeSome,boolean showAllAmount) throws IOException {
         TUser tu = parasm.getOperateur();
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_balancevente_caissev2";
@@ -90,7 +90,7 @@ public class Balance {
         String P_FOOTER_RC = "";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         String pdfscr_report_pdf = jdom.scr_report_pdf + "balancevente_caisse" + report_generate_file;
-        Map<String, Object> parameters = new HashMap();
+        Map<String, Object> parameters = new HashMap<>();
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(parasm.getDtStart());
@@ -104,6 +104,7 @@ public class Balance {
             generic = this.balanceService.getBalanceVenteCaisseData(BalanceParamsDTO.builder()
                     .dtEnd(parasm.getDtEnd())
                     .dtStart(parasm.getDtStart())
+                    .showAllAmount(showAllAmount)
                     .emplacementId(parasm.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID())
                     .build());
         } else {
