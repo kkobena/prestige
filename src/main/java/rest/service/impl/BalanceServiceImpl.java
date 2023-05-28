@@ -52,12 +52,12 @@ public class BalanceServiceImpl implements BalanceService {
     private static final Logger LOG = Logger.getLogger(BalanceServiceImpl.class.getName());
     private static final String BALANCE_SQL_QUERY = "SELECT %s %s m.`typeTransaction`  AS typeVente, m.`typeReglementId` AS typeReglement ,SUM(m.montant) AS montantTTC,"
             + "SUM(m.`montantNet`) AS montantNet,SUM(m.`montantCredit`) AS montantCredit,SUM(m.`montantRemise`) AS montantRemise, SUM(CASE WHEN m.flag_id IS NOT NULL THEN m.`montantAcc` ELSE 0 END) AS flagedAmount,"
-            + " SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantAChat) AS montantAChat, "
+            + " SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantTTCDetatilReal) AS montantTTCDetatilReal,SUM(sqlQ.montantAChat) AS montantAChat, "
             + " SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantTTCDetatilToRemove) AS montantTTCDetatilToRemove,SUM(sqlQ.montantTva) AS montantTva,SUM(sqlQ.montantAchatUg) AS montantAchatUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail, SUM(sqlQ.montantTvaUg) AS montantTvaUg,"
             + " SUM(CASE WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc "
             + " FROM  mvttransaction m,t_preenregistrement p,(SELECT d.`lg_PREENREGISTREMENT_ID` AS idVente,"
-            + " SUM(d.`int_PRICE`) AS montantTTCDetatilReal,SUM(d.`int_QUANTITY`*d.`prixAchat`) AS montantAChat,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,SUM(d.`montantTva`) AS montantTva\n"
-            + ",SUM(d.`int_UG`*d.`prixAchat`) AS montantAchatUg,SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail,SUM(d.montanttvaug) AS montantTvaUg , SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,\n"
+            + " SUM(d.`int_PRICE`) AS montantTTCDetatilReal,SUM(d.`int_QUANTITY`*d.`prixAchat`) AS montantAChat,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,SUM(d.`montantTva`) AS montantTva "
+            + ",SUM(d.`int_UG`*d.`prixAchat`) AS montantAchatUg,SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail,SUM(d.montanttvaug) AS montantTvaUg , SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove "
             + " FROM t_preenregistrement_detail d  GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN "
             + " ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement} GROUP BY typeVente,typeReglement %s %s";
@@ -110,9 +110,9 @@ public class BalanceServiceImpl implements BalanceService {
 
         Map<TypeTransaction, List<BalanceVenteItemDTO>> groupByTypeVente = dataVentes.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeTransaction));
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_COMPTANT)) {
-            boolean checkUg = checkUg();
+            boolean checkUg = checkUg() && !balanceParams.isShowAllAmount();
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_COMPTANT);
-            BalanceDTO balanceVno = buildVenteBalance(vnoData, checkUg);
+            BalanceDTO balanceVno = buildVenteBalance(vnoData, checkUg, balanceParams.isShowAllAmount());
             balanceVno.setTypeVente(DateConverter.VENTE_COMPTANT);
             balanceVno.setBalanceId(balanceVno.getTypeVente());
             balanceVno.setMontantTTC((balanceVno.getMontantTTC() - this.montantToRemove(balanceParams)));
@@ -120,7 +120,7 @@ public class BalanceServiceImpl implements BalanceService {
         }
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_CREDIT)) {
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_CREDIT);
-            BalanceDTO balanceVo = buildVenteBalance(vnoData, false);
+            BalanceDTO balanceVo = buildVenteBalance(vnoData, false, balanceParams.isShowAllAmount());
             balanceVo.setTypeVente(DateConverter.VENTE_ASSURANCE);
             balanceVo.setBalanceId(balanceVo.getTypeVente());
             balances.add(balanceVo);
@@ -191,7 +191,14 @@ public class BalanceServiceImpl implements BalanceService {
         return this.statistiqueTvaPeriodique(balanceParams);
     }
 
-    private BalanceDTO buildVenteBalance(List<BalanceVenteItemDTO> venteData, boolean checkUg) {
+    private long getFlagedAmount(boolean showAllAmount, BigDecimal flagedAmount) {
+        if (showAllAmount) {
+            return 0;
+        }
+        return flagedAmount.longValue();
+    }
+
+    private BalanceDTO buildVenteBalance(List<BalanceVenteItemDTO> venteData, boolean checkUg, boolean showAllAmount) {
         long montantTTC = 0;
         long montantNet = 0;
         long montantEsp = 0;
@@ -210,18 +217,20 @@ public class BalanceServiceImpl implements BalanceService {
 
         long montantTTCReel = 0;
         long montantNetReel = 0;
+
         Map<String, List<BalanceVenteItemDTO>> mapByTypeReglemement = venteData.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeReglement));
         for (Map.Entry<String, List<BalanceVenteItemDTO>> entry : mapByTypeReglemement.entrySet()) {
             String typeReglemement = entry.getKey();
             List<BalanceVenteItemDTO> values = entry.getValue();
             for (BalanceVenteItemDTO balanceVenteItem : values) {
-                montantTTC += balanceVenteItem.getMontantTTCDetatil().longValue();
+
+                montantTTC += showAllAmount ? balanceVenteItem.getMontantTTCDetatilReal().longValue() : balanceVenteItem.getMontantTTCDetatil().longValue();
                 montantTTCReel += balanceVenteItem.getMontantTTCDetatil().longValue();
                 if (checkUg) {
                     montantTTC -= balanceVenteItem.getMontantUg().longValue();
                 }
 
-                montantTTC -= balanceVenteItem.getFlagedAmount().longValue();
+                montantTTC -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
                 montantTva += balanceVenteItem.getMontantTva().longValue();
                 montantAchat += balanceVenteItem.getMontantAchat().longValue();
                 montantRemise += balanceVenteItem.getMontantRemiseDetail().longValue();
@@ -231,7 +240,7 @@ public class BalanceServiceImpl implements BalanceService {
                 switch (typeReglemement) {
                     case DateConverter.MODE_ESP:
                         montantEsp += balanceVenteItem.getMontantRegle().longValue();
-                        montantEsp -= balanceVenteItem.getFlagedAmount().longValue();
+                        montantEsp -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
                         break;
                     case DateConverter.MODE_CHEQUE:
                         montantCheque += balanceVenteItem.getMontantRegle().longValue();
@@ -239,18 +248,18 @@ public class BalanceServiceImpl implements BalanceService {
                         break;
                     case DateConverter.MODE_CB:
                         montantCB += balanceVenteItem.getMontantRegle().longValue();
-                        montantCB -= balanceVenteItem.getFlagedAmount().longValue();
+                        montantCB -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
                         break;
                     case DateConverter.MODE_VIREMENT:
                         montantVirement += balanceVenteItem.getMontantRegle().longValue();
-                        montantVirement -= balanceVenteItem.getFlagedAmount().longValue();
+                        montantVirement -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
                         break;
                     case DateConverter.MODE_MOOV:
                     case DateConverter.TYPE_REGLEMENT_ORANGE:
                     case DateConverter.MODE_MTN:
                     case DateConverter.MODE_WAVE:
                         montantMobilePayment += balanceVenteItem.getMontantRegle().longValue();
-                        montantMobilePayment -= balanceVenteItem.getFlagedAmount().longValue();
+                        montantMobilePayment -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
                         break;
                     default:
                         break;
@@ -462,6 +471,7 @@ public class BalanceServiceImpl implements BalanceService {
                 .montantTvaUg(tuple.get("montantTvaUg", BigDecimal.class))
                 .montantTTCDetatilToRemove(tuple.get("montantTTCDetatilToRemove", BigDecimal.class))
                 .flagedAmount(tuple.get("flagedAmount", BigDecimal.class))
+                .montantTTCDetatilReal(tuple.get("montantTTCDetatilReal", BigDecimal.class))
                 .build();
     }
 
@@ -711,9 +721,10 @@ public class BalanceServiceImpl implements BalanceService {
 
     @Override
     public long montantToRemove(BalanceParamsDTO balanceParams) {
-        if (isNormalUse()) {
+        if (isNormalUse() || balanceParams.isShowAllAmount()) {
             return 0;
         }
+
         try {
             Query query = em.createNativeQuery(AMOUNT_TO_REMOVE, Tuple.class)
                     .setParameter(4, balanceParams.getEmplacementId())
