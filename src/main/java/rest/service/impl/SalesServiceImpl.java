@@ -40,7 +40,6 @@ import dal.TFamilleStock_;
 import dal.TFamille_;
 import dal.TGrilleRemise;
 import dal.TModeReglement;
-import dal.TMotifReglement;
 import dal.TMouvement;
 import dal.TMouvementSnapshot;
 import dal.TNatureVente;
@@ -90,9 +89,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.jms.JMSContext;
-import javax.jms.Queue;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -117,6 +114,7 @@ import toolkits.parameters.commonparameter;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import util.Afficheur;
 import util.DateConverter;
+import static util.Constant.STATUT_IS_CLOSED;
 
 /**
  * @author Kobena
@@ -125,17 +123,8 @@ import util.DateConverter;
 
 @SalesPrimary
 public class SalesServiceImpl implements SalesService {
-//qry.setHint("javax.persistence.cache.retrieveMode", CacheRetrieveMode.
-//BYPASS);
-//    ypedQuery<Object[]> qry = em.createQuery("select a.name, a.genre,
-//a.description " +
-//"from BookStore s JOIN TREAT(s.categories as ItCategory) a",
-//Object[].class);
-//    
 
     private static final Logger LOG = Logger.getLogger(SalesServiceImpl.class.getName());
-    @Inject
-    JMSContext ctx;
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -147,9 +136,8 @@ public class SalesServiceImpl implements SalesService {
     MouvementProduitService mouvementProduitService;
     @EJB
     SalesStatsService salesStatsService;
-    @Resource(lookup = "java:global/queue/clientjms")
-    Queue clientjms;
-
+    @Resource(name = "concurrent/__defaultManagedExecutorService")
+    ManagedExecutorService managedExecutorService;
     @EJB
     MedecinService medecinService;
     @EJB
@@ -178,10 +166,6 @@ public class SalesServiceImpl implements SalesService {
 
     public EntityManager getEm() {
         return em;
-    }
-
-    void sendMessageClientJmsQueue(String venteId) {
-        ctx.createProducer().send(clientjms, venteId);
     }
 
     public MvtTransaction addTransaction(TUser ooTUser, TPreenregistrement tp,
@@ -531,7 +515,6 @@ public class SalesServiceImpl implements SalesService {
             String idVente = tp.getLgPREENREGISTREMENTID();
             TPreenregistrement newItem = createPreventeCopy(ooTUser, tp, emg);
             ref = newItem.getLgPREENREGISTREMENTID();
-            MvtTransaction mtv = transaction(idVente, emg).orElse(null);
 
             LongAdder montantRestant = new LongAdder();
             findOptionalCmt(tp, emg).ifPresent(cp -> {
@@ -566,13 +549,15 @@ public class SalesServiceImpl implements SalesService {
                 copyRecette(newItem, re, ooTUser, emg);
             });
 
-            findClientTiersPayents(tp.getLgPREENREGISTREMENTID(), emg).forEach(action -> {
-                action.setStrSTATUT(commonparameter.statut_delete);
-                action.setDtUPDATED(new Date());
-                emg.merge(action);
-                TTiersPayant p = action.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID();
+            findClientTiersPayents(tp.getLgPREENREGISTREMENTID(), emg).forEach(cpClient -> {
+                cpClient.setStrSTATUT(commonparameter.statut_delete);
+                cpClient.setDtUPDATED(new Date());
+                emg.merge(cpClient);
+                TTiersPayant p = cpClient.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID();
                 if (p.getToBeExclude() || p.getIsDepot()) {
-                    payantExclusService.updateTiersPayantAccount(p, (-1) * action.getIntPRICE());
+                    payantExclusService.updateTiersPayantAccount(p, (-1) * cpClient.getIntPRICE());
+                } else {
+                    updateClientAccount(cpClient);
                 }
 
             });
@@ -607,7 +592,7 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", true);
             json.put("msg", "L'opération effectuée avec success");
             json.put("ref", newItem.getLgPREENREGISTREMENTID());
-            sendMessageClientJmsQueue(newItem.getLgPREENREGISTREMENTID());
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             json.put("success", false);
@@ -1636,10 +1621,6 @@ public class SalesServiceImpl implements SalesService {
         return emg.find(TTypeRecette.class, "1");
     }
 
-    private TMotifReglement findMotifReglement(EntityManager emg) {
-        return emg.find(TMotifReglement.class, DateConverter.MOTIF_VENTE);
-    }
-
     private String statutDiff(String v) {
         if (!v.equals("4")) {
             return commonparameter.statut_nondiffere;
@@ -1861,15 +1842,13 @@ public class SalesServiceImpl implements SalesService {
             if (!tp.getCopy()) {
                 tp.setDtUPDATED(new Date());
             }
-            tp.setCompletionDate(new Date());
+
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
 
             boolean key_account = test.test(takeInAcount);
             if (key_account) {
                 tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             }
-//            cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
-
             if (amount > 0) {
 
                 addRecette(clotureVenteParams.getMontantPaye(), "Vente VO", tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
@@ -1888,8 +1867,9 @@ public class SalesServiceImpl implements SalesService {
                     .put("msg", "Opération effectuée avec success")
                     .put("ref", tp.getLgPREENREGISTREMENTID());
             mvtProduitService.updateVenteStock(tp, lstTPreenregistrementDetail);
+            tp.setCompletionDate(new Date());
             emg.merge(tp);
-            sendMessageClientJmsQueue(clotureVenteParams.getVenteId());
+//            sendMessageClientJmsQueue(clotureVenteParams.getVenteId());
             if (clotureVenteParams.getMontantRemis() > 0) {
                 afficheurMontantAPayer(clotureVenteParams.getMontantRemis(), " MONNAIE:");
             }
@@ -2009,7 +1989,7 @@ public class SalesServiceImpl implements SalesService {
             if (!tp.getCopy()) {
                 tp.setDtUPDATED(new Date());
             }
-            tp.setCompletionDate(new Date());
+
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
             java.util.function.Predicate<Optional<TParameters>> testP = e -> {
                 if (e.isPresent()) {
@@ -2036,6 +2016,7 @@ public class SalesServiceImpl implements SalesService {
                     .put("ref", tp.getLgPREENREGISTREMENTID());
 
             this.mvtProduitService.updateVenteStock(tp, lstTPreenregistrementDetail);
+            tp.setCompletionDate(new Date());
             emg.merge(tp);
             afficheurMontantAPayer(clotureVenteParams.getMontantRemis(), " MONNAIE:");
         } catch (Exception e) {
@@ -2118,6 +2099,8 @@ public class SalesServiceImpl implements SalesService {
                         if (payant.getToBeExclude() || payant.getIsDepot()) {
                             this.setTiersPayant(payant);
                             payantExclusService.updateTiersPayantAccount(payant, item.getIntPRICE());
+                        } else {
+                            updateClientAccount(item);
                         }
 
                     }
@@ -2133,7 +2116,7 @@ public class SalesServiceImpl implements SalesService {
 
         } catch (Exception e) {
             try {
-                e.printStackTrace(System.err);
+
                 json.put("success", false).put("msg", "Erreur:: La validation a échouée");
             } catch (JSONException ex) {
             }
@@ -2365,7 +2348,7 @@ public class SalesServiceImpl implements SalesService {
             }
             afficheurMontantAPayer(montantAPaye.getMontantNet(), "NET A PAYER: ");
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
             json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
         }
         return json;
@@ -4140,7 +4123,6 @@ public class SalesServiceImpl implements SalesService {
             String desc = "Modification de la vente " + tp.getStrREF() + " montant : " + tp.getIntPRICE() + " par " + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
             logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.MODIFICATION_INFO_VENTE, tp, clonedPreen.getDtUPDATED());
 
-            sendMessageClientJmsQueue(clonedPreen.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
 
@@ -4163,7 +4145,7 @@ public class SalesServiceImpl implements SalesService {
         newVente.setDtUPDATED(tp.getDtUPDATED());
         newVente.setCompletionDate(newVente.getDtCREATED());
         newVente.setLgPARENTID(tp.getLgPREENREGISTREMENTID());
-        newVente.setStrSTATUT(commonparameter.statut_is_Closed);
+        newVente.setStrSTATUT(STATUT_IS_CLOSED);
         newVente.setLgUSERVENDEURID(tp.getLgUSERVENDEURID());
         newVente.setLgUSERCAISSIERID(tp.getLgUSERCAISSIERID());
         newVente.setBISAVOIR(tp.getBISAVOIR());
@@ -4218,8 +4200,8 @@ public class SalesServiceImpl implements SalesService {
             newItem.setStrSTATUTFACTURE(a.getStrSTATUTFACTURE());
             newItem.setStrLASTTRANSACTION(a.getStrLASTTRANSACTION());
             getEm().persist(newItem);
-
-            TCompteClient OTCompteClient = OTCompteClientTiersPayant.getLgCOMPTECLIENTID();
+            updateCompteClientTiersPayantEncourAndPlafond(a);
+            /* TCompteClient OTCompteClient = OTCompteClientTiersPayant.getLgCOMPTECLIENTID();
             if (OTCompteClient != null && OTCompteClientTiersPayant.getDblPLAFOND() != null && OTCompteClientTiersPayant.getDblPLAFOND() != 0) {
                 OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE((OTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() != null ? OTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE());
                 OTCompteClientTiersPayant.setDtUPDATED(new Date());
@@ -4229,7 +4211,7 @@ public class SalesServiceImpl implements SalesService {
                 OTCompteClient.setDblQUOTACONSOMENSUELLE((OTCompteClient.getDblQUOTACONSOMENSUELLE() != null ? OTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE());
                 OTCompteClient.setDtUPDATED(new Date());
                 getEm().merge(OTCompteClient);
-            }
+            }*/
         }
 
     }
@@ -4848,5 +4830,29 @@ public class SalesServiceImpl implements SalesService {
 
     private boolean diffAmount(int venteAmount, List<TPreenregistrementDetail> details) {
         return computeVenteAmount(details) != venteAmount;
+    }
+
+    public void updateCompteClientTiersPayantEncourAndPlafond(TPreenregistrementCompteClientTiersPayent x) {
+        try {
+
+            TCompteClientTiersPayant tc = x.getLgCOMPTECLIENTTIERSPAYANTID();
+            TTiersPayant tp = tc.getLgTIERSPAYANTID();
+            tc.setDbCONSOMMATIONMENSUELLE(tc.getDbCONSOMMATIONMENSUELLE() != null ? tc.getDbCONSOMMATIONMENSUELLE() + x.getIntPRICE() : x.getIntPRICE());
+            tp.setDbCONSOMMATIONMENSUELLE(tp.getDbCONSOMMATIONMENSUELLE() != null ? tp.getDbCONSOMMATIONMENSUELLE() + x.getIntPRICE() : x.getIntPRICE());
+            if (tc.getDbPLAFONDENCOURS() != null && tc.getDbPLAFONDENCOURS() > 0) {
+                tc.setBCANBEUSE(tc.getDbPLAFONDENCOURS().compareTo(tc.getDbCONSOMMATIONMENSUELLE()) > 0);
+            }
+            if (tp.getDblPLAFONDCREDIT() != null && tp.getDblPLAFONDCREDIT().intValue() > 0) {
+                tp.setBCANBEUSE(tp.getDblPLAFONDCREDIT().intValue() > tp.getDbCONSOMMATIONMENSUELLE());
+            }
+            getEm().merge(tc);
+            getEm().merge(tp);
+
+        } catch (Exception e) {
+        }
+    }
+
+    private void updateClientAccount(TPreenregistrementCompteClientTiersPayent payent) {
+        managedExecutorService.submit(() -> updateCompteClientTiersPayantEncourAndPlafond(payent));
     }
 }

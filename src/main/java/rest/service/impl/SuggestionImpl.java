@@ -49,7 +49,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SuggestionService;
-import toolkits.parameters.commonparameter;
+
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -94,7 +95,7 @@ public class SuggestionImpl implements SuggestionService {
 //            int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now().minusMonths(mois_histo)).parallelStream().map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
                 if (OTCodeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("1")) {
                     int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now().minusMonths(mois_histo), emg).stream().map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
-//                    OTCalendrier = getTCalendrier(String.valueOf(LocalDate.now().minusMonths(i)), LocalDate.now().getYear());
+//                    oTCalendrier = getTCalendrier(String.valueOf(LocalDate.now().minusMonths(i)), LocalDate.now().getYear());
                     qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(mois_histo), LocalDate.now(), famille.getLgFAMILLEID(), emg);
 
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
@@ -157,13 +158,13 @@ public class SuggestionImpl implements SuggestionService {
                     qteReappro = qteVenteJour * result;
                     qteReappro = (int_SEUIL_MIN_CALCULE - OTFamilleStock.getIntNUMBERAVAILABLE()) + qteReappro;
 
-                    Double _qteReappro = Math.ceil(qteReappro + ((famille.getLgGROSSISTEID().getIntCOEFSECURITY() * qteReappro) / 100));
-                    qteReappro = _qteReappro.intValue();
+                    Double qteReappro2 = Math.ceil(qteReappro + ((famille.getLgGROSSISTEID().getIntCOEFSECURITY() * qteReappro) / 100));
+                    qteReappro = qteReappro2.intValue();
                 }
             } else {
                 if (OTFamilleStock.getLgFAMILLEID().getIntSEUILMIN() > OTFamilleStock.getIntNUMBERAVAILABLE()) {
-                    Double _qteReappro = Math.ceil((famille.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE()) + int_SEUIL_MIN_CALCULE);
-                    qteReappro = _qteReappro.intValue();
+                    Double qteReapp = Math.ceil((famille.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE()) + int_SEUIL_MIN_CALCULE);
+                    qteReappro = qteReapp.intValue();
                 }
             }
         } catch (Exception e) {
@@ -175,7 +176,7 @@ public class SuggestionImpl implements SuggestionService {
         List<TCoefficientPonderation> lst = new ArrayList<>();
         try {
             lst = emg.createQuery("SELECT t FROM TCoefficientPonderation t WHERE t.lgCODEGESTIONID.lgCODEGESTIONID = ?1 AND t.strSTATUT = ?2 ORDER BY t.intINDICEMONTH ASC")
-                    .setParameter(1, lg_CODE_GESTION_ID).setParameter(2, commonparameter.statut_enable).getResultList();
+                    .setParameter(1, lg_CODE_GESTION_ID).setParameter(2, Constant.STATUT_ENABLE).getResultList();
         } catch (Exception e) {
 
         }
@@ -183,14 +184,14 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     public TCalendrier getTCalendrier(String lg_MONTH_ID, int int_ANNEE, EntityManager emg) {
-        TCalendrier OTCalendrier = null;
+        TCalendrier oTCalendrier = null;
         try {
-            OTCalendrier = (TCalendrier) emg.createQuery("SELECT t FROM TCalendrier t WHERE t.lgMONTHID.lgMONTHID = ?1 AND t.intANNEE = ?2")
+            oTCalendrier = (TCalendrier) emg.createQuery("SELECT t FROM TCalendrier t WHERE t.lgMONTHID.lgMONTHID = ?1 AND t.intANNEE = ?2")
                     .setParameter(1, lg_MONTH_ID).setParameter(2, int_ANNEE).getSingleResult();
         } catch (Exception e) {
 //      
         }
-        return OTCalendrier;
+        return oTCalendrier;
     }
 
     public TSuggestionOrder createSuggestionOrder(TGrossiste OTGrossiste, String str_STATUT, EntityManager emg) {
@@ -221,7 +222,7 @@ public class SuggestionImpl implements SuggestionService {
 
             q.setMaxResults(1)
                     .setParameter(1, lg_GROSSISTE_ID)
-                    .setParameter(2, commonparameter.statut_is_Auto);
+                    .setParameter(2, Constant.STATUT_AUTO);
             return q
                     .getSingleResult();
 
@@ -385,7 +386,7 @@ public class SuggestionImpl implements SuggestionService {
                     if (statut == 0) {
                         int_QTE_A_SUGGERE = calcQteReappro(OTFamilleStock, famille, emg);
                         if (OTSuggestionOrder == null) {
-                            OTSuggestionOrder = createSuggestionOrder(grossiste, commonparameter.statut_is_Auto, emg);
+                            OTSuggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_AUTO, emg);
                             createTSuggestionOrderDetails(OTSuggestionOrder, famille, grossiste, int_QTE_A_SUGGERE, emg);
                         } else {
                             addToTSuggestionOrderDetails(famille, grossiste, OTSuggestionOrder, int_QTE_A_SUGGERE, emg);
@@ -409,7 +410,7 @@ public class SuggestionImpl implements SuggestionService {
             Query qry = emg.createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgGROSSISTEID.lgGROSSISTEID = ?2 OR t.lgGROSSISTEID.strDESCRIPTION = ?2) AND t.strSTATUT = ?3 ").
                     setParameter(1, lg_FAMILLE_ID.getLgFAMILLEID())
                     .setParameter(2, lg_GROSSISTE_ID.getLgGROSSISTEID())
-                    .setParameter(3, commonparameter.statut_enable);
+                    .setParameter(3, Constant.STATUT_ENABLE);
             qry.setMaxResults(1);
             OTFamilleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
 
@@ -423,7 +424,7 @@ public class SuggestionImpl implements SuggestionService {
             OTFamilleGrossiste.setBlRUPTURE(Boolean.TRUE);
             OTFamilleGrossiste.setStrCODEARTICLE(lg_FAMILLE_ID.getIntCIP());
             OTFamilleGrossiste.setIntPAF(lg_FAMILLE_ID.getIntPAF());
-            OTFamilleGrossiste.setStrSTATUT(commonparameter.statut_enable);
+            OTFamilleGrossiste.setStrSTATUT(Constant.STATUT_ENABLE);
             OTFamilleGrossiste.setIntPRICE(lg_FAMILLE_ID.getIntPRICE());
             emg.persist(OTFamilleGrossiste);
 
@@ -445,7 +446,7 @@ public class SuggestionImpl implements SuggestionService {
             OTSuggestionOrderDetails.setIntPRICE((OTFamilleGrossiste != null && OTFamilleGrossiste.getIntPAF() != null && OTFamilleGrossiste.getIntPAF() != 0) ? OTFamilleGrossiste.getIntPAF() * int_NUMBER : OTFamille.getIntPAF() * int_NUMBER);
             OTSuggestionOrderDetails.setIntPAFDETAIL((OTFamilleGrossiste != null && OTFamilleGrossiste.getIntPAF() != null && OTFamilleGrossiste.getIntPAF() != 0) ? OTFamilleGrossiste.getIntPAF() : OTFamille.getIntPAF());
             OTSuggestionOrderDetails.setIntPRICEDETAIL((OTFamilleGrossiste != null && OTFamilleGrossiste.getIntPRICE() != null && OTFamilleGrossiste.getIntPRICE() != 0) ? OTFamilleGrossiste.getIntPRICE() : OTFamille.getIntPRICE());
-            OTSuggestionOrderDetails.setStrSTATUT(commonparameter.statut_is_Process);
+            OTSuggestionOrderDetails.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
             OTSuggestionOrderDetails.setDtCREATED(new Date());
             OTSuggestionOrderDetails.setDtUPDATED(OTSuggestionOrderDetails.getDtCREATED());
             emg.persist(OTSuggestionOrderDetails);
@@ -490,7 +491,7 @@ public class SuggestionImpl implements SuggestionService {
                     cb.sum(root.get(TPreenregistrementDetail_.intQUANTITY))
             );
             predicates.add(cb.and(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get("lgFAMILLEID"), produitId)));
-            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementDetail_.strSTATUT), commonparameter.statut_is_Closed)));
+            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementDetail_.strSTATUT), Constant.STATUT_IS_CLOSED)));
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementDetail_.dtCREATED)), java.sql.Date.valueOf(dtDEBUT),
                     java.sql.Date.valueOf(dtFin));
             predicates.add(cb.and(btw));
@@ -504,21 +505,21 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     public Integer calcQteReappro(TFamilleStock OTFamilleStock, TFamille tf, EntityManager emg) {
-        int QTE_REAPPRO = 1;
+        int qtyReappro = 1;
         try {
             TCodeGestion codeGestion = tf.getLgCODEGESTIONID();
             if (codeGestion != null && (!codeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("0"))) {
-                QTE_REAPPRO = getQuantityReapportByCodeGestionArticle(OTFamilleStock, tf, emg);
+                qtyReappro = getQuantityReapportByCodeGestionArticle(OTFamilleStock, tf, emg);
 
             } else if (Objects.nonNull(tf.getIntQTEREAPPROVISIONNEMENT()) && Objects.nonNull(tf.getIntSEUILMIN()) && tf.getIntSEUILMIN() >= OTFamilleStock.getIntNUMBERAVAILABLE()) {
 
-                QTE_REAPPRO = (tf.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE()) + tf.getIntQTEREAPPROVISIONNEMENT();
+                qtyReappro = (tf.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE()) + tf.getIntQTEREAPPROVISIONNEMENT();
 
             }
         } catch (Exception e) {
         }
 
-        return (QTE_REAPPRO > 0 ? QTE_REAPPRO : 1);
+        return (qtyReappro > 0 ? qtyReappro : 1);
     }
 
     public Integer quantiteDeconditionnesVentes(LocalDate dtDEBUT, LocalDate dtFin, TFamille produitId, EntityManager emg) {
@@ -532,7 +533,7 @@ public class SuggestionImpl implements SuggestionService {
                     cb.sum(root.get(TPreenregistrementDetail_.intQUANTITY))
             );
             predicates.add(cb.and(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEPARENTID).get("lgFAMILLEID"), produitId.getLgFAMILLEID())));
-            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementDetail_.strSTATUT), commonparameter.statut_is_Closed)));
+            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementDetail_.strSTATUT), Constant.STATUT_IS_CLOSED)));
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementDetail_.dtCREATED)), java.sql.Date.valueOf(dtDEBUT),
                     java.sql.Date.valueOf(dtFin));
             predicates.add(cb.and(btw));
@@ -582,9 +583,9 @@ public class SuggestionImpl implements SuggestionService {
         try {
             TypedQuery<TSuggestionOrderDetails> q = getEmg().createQuery("SELECT o FROM TSuggestionOrderDetails o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND ( o.strSTATUT=?2 OR o.strSTATUT=?3 OR o.strSTATUT=?4  ) ", TSuggestionOrderDetails.class);
             q.setParameter(1, famille.getLgFAMILLEID());
-            q.setParameter(2, DateConverter.STATUT_AUTO);
-            q.setParameter(3, DateConverter.STATUT_PROCESS);
-            q.setParameter(4, DateConverter.STATUT_PENDING);
+            q.setParameter(2, Constant.STATUT_AUTO);
+            q.setParameter(3, Constant.STATUT_IS_PROGRESS);
+            q.setParameter(4, Constant.STATUT_PENDING);
             q.setMaxResults(1);
             return q.getSingleResult() != null ? 1 : 0;
 
@@ -603,13 +604,13 @@ public class SuggestionImpl implements SuggestionService {
             if (detail == null) {
                 return 0;
             }
-            if (detail.getStrSTATUT().equals(DateConverter.STATUT_PROCESS)) {
+            if (detail.getStrSTATUT().equals(Constant.STATUT_IS_PROGRESS)) {
                 return 2;
             }
-            if (detail.getStrSTATUT().equals(DateConverter.STATUT_PASSED)) {
+            if (detail.getStrSTATUT().equals(Constant.STATUT_PASSED)) {
                 return 3;
             }
-            if (detail.getStrSTATUT().equals(DateConverter.STATUT_IS_CLOSED)) {
+            if (detail.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)) {
                 return 4;
             }
             return 0;

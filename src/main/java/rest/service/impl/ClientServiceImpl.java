@@ -990,7 +990,7 @@ public class ClientServiceImpl implements ClientService {
             json.put("success", true).put("data", new JSONObject(data));
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+           
             json.put("success", false).put("msg", "Erreur de création du client");
             return json;
 
