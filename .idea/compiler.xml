@@ -9,8 +9,5 @@
         <module name="prestige" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="prestige" target="1.8" />
-    </bytecodeTargetLevel>
   </component>
 </project>

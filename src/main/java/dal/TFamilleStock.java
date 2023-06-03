@@ -38,7 +38,7 @@ import toolkits.parameters.commonparameter;
      @NamedQuery(name = "TFamilleStock.findStock", query = "SELECT t.intNUMBERAVAILABLE FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID =:lgFAMILLEID AND t.lgEMPLACEMENTID.lgEMPLACEMENTID =:lgEMPLACEMENTID AND t.strSTATUT ='enable' "),
       @NamedQuery(name = "TFamilleStock.findStockUg", query = "SELECT t.intUG FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID =:lgFAMILLEID AND t.lgEMPLACEMENTID.lgEMPLACEMENTID =:lgEMPLACEMENTID AND t.strSTATUT ='enable' ")
 })
-//@Cacheable(false)
+
 public class TFamilleStock implements Serializable {
 
     private static final long serialVersionUID = 1L;

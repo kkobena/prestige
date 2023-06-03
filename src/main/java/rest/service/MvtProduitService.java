@@ -16,13 +16,11 @@ import dal.TEmplacement;
 import dal.TFamille;
 import dal.TFamilleStock;
 import dal.TMotifRetour;
-import dal.TMouvement;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import dal.TRetourFournisseur;
 import dal.TUser;
 import java.util.List;
-import java.util.Optional;
 import javax.ejb.Local;
 import javax.persistence.EntityManager;
 import org.json.JSONException;
@@ -37,11 +35,7 @@ public interface MvtProduitService {
 
     void updatefamillenbvente(TFamille famille, int qty, boolean updatable, EntityManager emg);
 
-    Optional<TMouvement> findMouvement(TFamille OTFamille, String action, String typeAction, String emplacementId, EntityManager emg);
-
-    void createSnapshotMouvementArticle(TFamille OTFamille, int qty, TUser ooTUser, TFamilleStock familleStock, String emplacementId, EntityManager emg);
-
-    void saveMvtArticle(TFamille tf, TUser ooTUser, TFamilleStock familleStock, int qty, String emplacementId, EntityManager emg);
+    void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list);
 
     void updateVenteStock(String idVente);
 
@@ -50,8 +44,6 @@ public interface MvtProduitService {
     public void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg, TEmplacement depot) throws Exception;
 
     void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement, EntityManager emg) throws Exception;
-
-    void saveMvtArticleAddProduct(TFamille tf, TUser ooTUser, TFamilleStock familleStock, Integer qty, Integer initStock, TEmplacement emplacementId, EntityManager emg) throws Exception;
 
     JSONObject creerAjustement(Params params) throws JSONException;
 
@@ -70,10 +62,6 @@ public interface MvtProduitService {
     JSONObject ajsutements(SalesStatsParams params) throws JSONException;
 
     JSONObject ajsutementsDetails(SalesStatsParams params, String idAjustement) throws JSONException;
-
-    void saveMvtArticle(String action, String typeAction, TFamille tf, TUser ooTUser, TFamilleStock familleStock, Integer qty, Integer intiQty, TEmplacement emplacementId, EntityManager emg);
-
-    void saveMvtArticle(String action, String typeAction, TFamille tf, TUser ooTUser, Integer qty, Integer intiQty, Integer finalQty, TEmplacement emplacementId, EntityManager emg);
 
     JSONObject deconditionner(Params params) throws JSONException;
 
