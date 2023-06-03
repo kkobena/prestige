@@ -22,8 +22,6 @@ import dal.TFamille;
 import dal.TFamilleStock;
 import dal.TFamille_;
 import dal.TGrossiste_;
-import dal.TMouvement;
-import dal.TMouvementSnapshot;
 import dal.TMouvementprice;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
@@ -52,19 +50,19 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -104,9 +102,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     private EntityManager em;
     @EJB
     NotificationService notificationService;
-
-    public MvtProduitServiceImpl() {
-    }
+    @Resource(name = "concurrent/__defaultManagedExecutorService")
+    ManagedExecutorService managedExecutorService;
 
     public EntityManager getEmg() {
         return em;
@@ -142,100 +139,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         emg.persist(mouvementprice);
     }
 
-    @Override
-    public void saveMvtArticle(TFamille tf, TUser ooTUser, TFamilleStock familleStock, int qty, String emplacementId, EntityManager emg) {
-        Optional<TMouvement> tm = findMouvement(tf, commonparameter.REMOVE, commonparameter.str_ACTION_VENTE, emplacementId, emg);
-        if (tm.isPresent()) {
-            TMouvement OTMouvement = tm.get();
-            OTMouvement.setIntNUMBERTRANSACTION(1 + OTMouvement.getIntNUMBERTRANSACTION());
-            OTMouvement.setIntNUMBER(qty + OTMouvement.getIntNUMBER());
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setDtUPDATED(new Date());
-            emg.merge(OTMouvement);
-        } else {
-            TMouvement OTMouvement = new TMouvement();
-            OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
-            OTMouvement.setIntNUMBERTRANSACTION(1);
-            OTMouvement.setDtDAY(new Date());
-            OTMouvement.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvement.setIntNUMBER(qty);
-            OTMouvement.setLgFAMILLEID(tf);
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setPKey("");
-            OTMouvement.setStrACTION(commonparameter.str_ACTION_VENTE);
-            OTMouvement.setStrTYPEACTION(commonparameter.REMOVE);
-            OTMouvement.setDtCREATED(new Date());
-            OTMouvement.setDtUPDATED(new Date());
-            OTMouvement.setLgEMPLACEMENTID(emplacementFromId(emplacementId, emg));
-            emg.persist(OTMouvement);
-        }
-        createSnapshotMouvementArticle(tf, qty, ooTUser, familleStock, emplacementId, emg);
-    }
-
     private TEmplacement emplacementFromId(String lgEMPLACEMENTID, EntityManager emg) {
         return emg.find(TEmplacement.class, lgEMPLACEMENTID);
-    }
-
-    @Override
-    public Optional<TMouvement> findMouvement(TFamille OTFamille, String action, String typeAction, String emplacementId, EntityManager emg) {
-        try {
-            TypedQuery<TMouvement> query = emg.createQuery("SELECT t FROM TMouvement t WHERE    t.dtDAY  = ?1   AND t.lgFAMILLEID.lgFAMILLEID = ?2 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?3 AND t.strACTION = ?4 AND t.strTYPEACTION = ?5 ", TMouvement.class);
-            query.setParameter(1, new Date(), TemporalType.DATE).
-                    setParameter(2, OTFamille.getLgFAMILLEID()).
-                    setParameter(3, emplacementId).
-                    setParameter(4, action).
-                    setParameter(5, typeAction);
-
-            return Optional.ofNullable(query.getSingleResult());
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-    }
-
-    public Optional<TMouvementSnapshot> findTMouvementSnapshot(String lg_FAMILLE_ID, String emplacementId, EntityManager emg) {
-        try {
-            TypedQuery<TMouvementSnapshot> query = emg.createQuery("SELECT t FROM TMouvementSnapshot t WHERE    t.dtDAY  = ?1   AND t.lgFAMILLEID.lgFAMILLEID = ?2 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?3  ", TMouvementSnapshot.class);
-            query.setParameter(1, new Date(), TemporalType.DATE).
-                    setParameter(2, lg_FAMILLE_ID).
-                    setParameter(3, emplacementId);
-            return Optional.ofNullable(query.getSingleResult());
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-    }
-
-    @Override
-    public void createSnapshotMouvementArticle(TFamille OTFamille, int qty, TUser ooTUser, TFamilleStock familleStock, String emplacementId, EntityManager emg) {
-
-        Optional<TMouvementSnapshot> tm = findTMouvementSnapshot(OTFamille.getLgFAMILLEID(), emplacementId, emg);
-        if (tm.isPresent()) {
-            TMouvementSnapshot mouvementSnapshot = tm.get();
-            mouvementSnapshot.setDtUPDATED(new Date());
-            mouvementSnapshot.setIntNUMBERTRANSACTION(mouvementSnapshot.getIntNUMBERTRANSACTION() + 1);
-            mouvementSnapshot.setIntSTOCKJOUR(familleStock.getIntNUMBERAVAILABLE() - qty);
-            emg.merge(mouvementSnapshot);
-            familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - qty);
-            familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
-            familleStock.setDtUPDATED(new Date());
-            emg.merge(familleStock);
-        } else {
-            TMouvementSnapshot OTMouvementSnapshot = new TMouvementSnapshot();
-            OTMouvementSnapshot.setLgMOUVEMENTSNAPSHOTID(UUID.randomUUID().toString());
-            OTMouvementSnapshot.setLgFAMILLEID(OTFamille);
-            OTMouvementSnapshot.setDtDAY(new Date());
-            OTMouvementSnapshot.setDtCREATED(new Date());
-            OTMouvementSnapshot.setDtUPDATED(new Date());
-            OTMouvementSnapshot.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvementSnapshot.setIntNUMBERTRANSACTION(1);
-            OTMouvementSnapshot.setIntSTOCKJOUR(familleStock.getIntNUMBERAVAILABLE() - qty);
-            OTMouvementSnapshot.setIntSTOCKDEBUT(familleStock.getIntNUMBERAVAILABLE());
-            OTMouvementSnapshot.setLgEMPLACEMENTID(emplacementFromId(emplacementId, emg));
-            emg.persist(OTMouvementSnapshot);
-            familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - qty);
-            familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
-            familleStock.setDtUPDATED(new Date());
-            emg.merge(familleStock);
-        }
     }
 
     public List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp, EntityManager emg) {
@@ -295,9 +200,9 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
         final String emplacementId = emplacement.getLgEMPLACEMENTID();
         final boolean isDepot = !("1".equals(emplacementId));
-        //
+
         final Typemvtproduit typemvtproduit = tp.getChecked() ? getTypemvtproduitByID(DateConverter.VENTE) : getTypemvtproduitByID(DateConverter.TMVTP_VENTE_DEPOT_EXTENSION);
-        final Typemvtproduit __typemvtproduit = getTypemvtproduitByID(DateConverter.ENTREE_EN_STOCK);
+        final Typemvtproduit typeMvtProduit = getTypemvtproduitByID(DateConverter.ENTREE_EN_STOCK);
         list.stream().forEach(it -> {
             it.setStrSTATUT(commonparameter.statut_is_Closed);
             TFamille tFamille = it.getLgFAMILLEID();
@@ -314,20 +219,11 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             }
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
             int initStock = familleStock.getIntNUMBERAVAILABLE();
-            if (tFamille.getBoolDECONDITIONNE() == 1) {
-                //LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité produit  {1} \n quantie de la vente {2}", new Object[]{tFamille.getIntCIP(), familleStock.getIntNUMBERAVAILABLE(), it.getIntQUANTITY()});
-                if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-                    TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
-                    TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
-                    //  LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité parent  {1}", new Object[]{OTFamilleParent.getIntCIP(), stockParent.getIntNUMBERAVAILABLE()});
-                    deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
+            if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
+                TFamille oTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
+                TFamilleStock stockParent = findByProduitId(oTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
+                deconditionner(tu, emplacement, tFamille, oTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
 
-                } else {
-                    saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
-                }
-            } else {
-                //  LOG.log(Level.INFO, "updateVenteStock *********************************   {0}\n quantité produit  {1} \n quantie de la vente {2}", new Object[]{tFamille.getIntCIP(), familleStock.getIntNUMBERAVAILABLE(), it.getIntQUANTITY()});
-                saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
             }
 
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
@@ -336,7 +232,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg, it.getValeurTva(), tp.getChecked(), it.getIntUG());
 
             emg.merge(it);
-            updateStockDepot(__typemvtproduit, tu, tFamille, it.getIntQUANTITYSERVED(), depot, emg);
+            updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITYSERVED(), depot, emg);
             suggestionService.makeSuggestionAuto(familleStock, tFamille);
         });
 
@@ -362,20 +258,11 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                         .addUser(tu));
             }
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
-            if (tFamille.getBoolDECONDITIONNE() == 1) {
-                //LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité produit  {1} \n quantie de la vente {2}", new Object[]{tFamille.getIntCIP(), familleStock.getIntNUMBERAVAILABLE(), it.getIntQUANTITY()});
-                if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-                    TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
-                    TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
-                    //  LOG.log(Level.INFO, "updateVenteStock -------------------- {0}\n quantité parent  {1}", new Object[]{OTFamilleParent.getIntCIP(), stockParent.getIntNUMBERAVAILABLE()});
-                    deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
+            if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
 
-                } else {
-                    saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
-                }
-            } else {
-                //  LOG.log(Level.INFO, "updateVenteStock *********************************   {0}\n quantité produit  {1} \n quantie de la vente {2}", new Object[]{tFamille.getIntCIP(), familleStock.getIntNUMBERAVAILABLE(), it.getIntQUANTITY()});
-                saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
+                TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
+                TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
+                deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
             }
 
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
@@ -392,7 +279,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     private void updateQtyUg(TFamilleStock familleStock, TPreenregistrement tp, TPreenregistrementDetail it) {
         try {
             if (tp.getStrTYPEVENTE().equals(DateConverter.VENTE_COMPTANT) && familleStock.getIntUG() > 0) {
-                int ugVendue = 0;
+                int ugVendue;
                 int stockUg = familleStock.getIntUG();
                 int qtyVendue = it.getIntQUANTITYSERVED();
                 if (qtyVendue <= stockUg) {
@@ -406,6 +293,52 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         } catch (Exception e) {
         }
 
+    }
+
+    @Override
+    public void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list) {
+        EntityManager emg = this.getEmg();
+        try {
+
+            TUser tu = tp.getLgUSERID();
+            final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
+            final String emplacementId = emplacement.getLgEMPLACEMENTID();
+            final boolean isDepot = !("1".equals(emplacementId));
+            final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.VENTE);
+            final String statut = "is_Closed";
+            list.stream().forEach(it -> {
+                it.setStrSTATUT(statut);
+                TFamille tFamille = it.getLgFAMILLEID();
+                if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
+                    saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0, commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
+                    String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de " + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
+                    logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tFamille, emg);
+                    notificationService.save(new Notification()
+                            .canal(Canal.EMAIL)
+                            .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT)
+                            .message(desc)
+                            .addUser(tu));
+                }
+                TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
+                Integer initStock = familleStock.getIntNUMBERAVAILABLE();
+                updateQtyUg(familleStock, tp, it);
+                if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
+
+                    TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
+                    TFamilleStock stockParent = findByProduitId(otFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
+                    deconditionner(tu, emplacement, tFamille, otFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
+
+                }
+                updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
+                mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it,
+                        typemvtproduit, tFamille, tu, emplacement,
+                        it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg, it.getValeurTva(), true, it.getIntUG());
+                emg.merge(it);
+               makeSuggestionAutoAsync(familleStock, tFamille);
+            });
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
     }
 
     @Override
@@ -434,16 +367,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
                 Integer initStock = familleStock.getIntNUMBERAVAILABLE();
                 updateQtyUg(familleStock, tp, it);
-                if (tFamille.getBoolDECONDITIONNE() == 1) {
-                    if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-                        TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
-                        TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
-                        deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
-                    } else {
-                        saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
-                    }
-                } else {
-                    saveMvtArticle(tFamille, tu, familleStock, it.getIntQUANTITY(), emplacementId, emg);
+                if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
+
+                    TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
+                    TFamilleStock stockParent = findByProduitId(otFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(), emg);
+                    deconditionner(tu, emplacement, tFamille, otFamilleParent, stockParent, familleStock, it.getIntQUANTITY(), emg);
+
                 }
                 updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
                 mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it,
@@ -470,7 +399,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             familleStock.setDtUPDATED(new Date());
             emg.merge(familleStock);
 
-        } else if (familleStock == null) {
+        } else {
 
             if (isDetail) {
                 familleStock = findByParent(OTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID(), emg);
@@ -483,8 +412,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     familleStock.setDtUPDATED(new Date());
                     emg.merge(familleStock);
                 }
-                TFamilleStock _familleStock = findByProduitId(OTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID(), emg);
-                if (_familleStock == null) {
+                TFamilleStock familleStock2 = findByProduitId(OTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID(), emg);
+                if (familleStock2 == null) {
                     TFamille p = findProduitById(OTFamille.getLgFAMILLEPARENTID(), emg);
                     if (p != null) {
                         createStock(p, 0, OTEmplacement, emg);
@@ -501,7 +430,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 typemvtproduit, OTFamille, ooTUser, OTEmplacement,
                 qty, initStock, initStock - qty, emg, 0, false, 0);
 
-        saveMvtArticleAddProduct(OTFamille, ooTUser, familleStock, qty, initStock, OTEmplacement, emg);
     }
 
     public TFamilleStock findByParent(String parentId, String emplecementId, EntityManager emg) {
@@ -515,7 +443,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             query.setMaxResults(1);
             familleStock = query.getSingleResult();
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
         }
         return familleStock;
     }
@@ -567,49 +494,9 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     }
 
-    @Override
-    public void saveMvtArticleAddProduct(TFamille tf, TUser ooTUser, TFamilleStock familleStock, Integer qty, Integer initStock, TEmplacement emplacementId, EntityManager emg) {
-        Optional<TMouvement> tm = findMouvement(tf, commonparameter.ADD, commonparameter.str_ACTION_ENTREESTOCK, emplacementId.getLgEMPLACEMENTID(), emg);
-        if (tm.isPresent()) {
-            TMouvement OTMouvement = tm.get();
-            OTMouvement.setIntNUMBERTRANSACTION(1 + OTMouvement.getIntNUMBERTRANSACTION());
-            OTMouvement.setIntNUMBER(qty + OTMouvement.getIntNUMBER());
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setDtUPDATED(new Date());
-            emg.merge(OTMouvement);
-        } else {
-            TMouvement OTMouvement = new TMouvement();
-            OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
-            OTMouvement.setIntNUMBERTRANSACTION(1);
-            OTMouvement.setDtDAY(new Date());
-            OTMouvement.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvement.setIntNUMBER(qty);
-            OTMouvement.setLgFAMILLEID(tf);
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setPKey("");
-            OTMouvement.setStrACTION(commonparameter.str_ACTION_ENTREESTOCK);
-            OTMouvement.setStrTYPEACTION(commonparameter.ADD);
-            OTMouvement.setDtCREATED(new Date());
-            OTMouvement.setDtUPDATED(new Date());
-            OTMouvement.setLgEMPLACEMENTID(emplacementId);
-            emg.persist(OTMouvement);
-        }
-        createSnapshotMvtArticle(tf, familleStock, initStock, emplacementId, emg);
-//        createSnapshotMouvementArticle(tf, qty, ooTUser, familleStock, emplacementId, emg);
-    }
-
     public boolean checkIsVentePossible(TFamilleStock OTFamilleStock, int qte
     ) {
         return OTFamilleStock.getIntNUMBERAVAILABLE() >= qte;
-    }
-
-    public void updateTMouvement(TMouvement OTMouvement, Integer int_NUMBER, EntityManager emg) {
-        OTMouvement.setStrSTATUT(commonparameter.statut_enable);
-        OTMouvement.setDtUPDATED(new Date());
-        OTMouvement.setIntNUMBERTRANSACTION(OTMouvement.getIntNUMBERTRANSACTION() + 1);
-        OTMouvement.setIntNUMBER(OTMouvement.getIntNUMBER() + int_NUMBER);
-        emg.merge(OTMouvement);
-
     }
 
     private void deconditionner(TUser tu, TEmplacement te, TFamille OTFamilleChild, TFamille OTFamilleParent, TFamilleStock OTFamilleStockParent, TFamilleStock OTFamilleStockChild, Integer qteVendue, EntityManager emg) {
@@ -620,8 +507,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         Integer stockInit = OTFamilleStockParent.getIntNUMBERAVAILABLE();
         Integer stockVirtuel = stockInitDetail + (stockInit * qtyDetail);
         int compare = stockVirtuel.compareTo(qteVendue);
-//        LOG.log(Level.INFO, "------------  deconditionner >>>>>>>> compare {0} \n stockVirtuel {1} \n qtyDetail {2} \n stockInitDetail {3} stock parent {4}",
-//                new Object[]{compare, stockVirtuel, qtyDetail, stockInitDetail, stockInit});
         if (compare >= 0) {
             while (stockInitDetail < qteVendue) {
                 numberToDecondition++;
@@ -638,31 +523,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             emg.merge(OTFamilleStockChild);
             TDeconditionnement parent = createDecondtionne(OTFamilleParent, numberToDecondition, tu, emg);
             TDeconditionnement child = createDecondtionne(OTFamilleChild, (numberToDecondition * qtyDetail), tu, emg);
-            Optional<TMouvement> opChild = findByDay(OTFamilleChild, te.getLgEMPLACEMENTID(), emg);
-            if (opChild.isPresent()) {
-                updateTMouvement(opChild.get(), (numberToDecondition * qtyDetail), emg);
-            } else {
-                createTMouvementDecon(OTFamilleChild, te, commonparameter.ADD, commonparameter.str_ACTION_DECONDITIONNEMENT, (numberToDecondition * qtyDetail), tu, emg);
-            }
-            saveMvtArticle(OTFamilleChild, tu, OTFamilleStockChild, stockDetailInit, qteVendue, te, emg);
-            Optional<TMouvement> opParent = findByDay(OTFamilleParent, te.getLgEMPLACEMENTID(), emg);
-            if (opParent.isPresent()) {
-                updateTMouvement(opParent.get(), numberToDecondition, emg);
-            } else {
-                createTMouvementDecon(OTFamilleParent, te, commonparameter.REMOVE, commonparameter.str_ACTION_DECONDITIONNEMENT, numberToDecondition, tu, emg);
-            }
-            Optional<TMouvementSnapshot> mvtChild = findMouvementSnapshotByDay(OTFamilleChild, te.getLgEMPLACEMENTID(), emg);
-            if (mvtChild.isPresent()) {
-                updateSnapshotMouvementArticle(mvtChild.get(), OTFamilleStockChild, emg);
-            } else {
-                createSnapshotMouvementDecon(OTFamilleChild, OTFamilleStockChild.getIntNUMBERAVAILABLE(), stockInitDetail, te, emg);
-            }
-            Optional<TMouvementSnapshot> mvtparent = findMouvementSnapshotByDay(OTFamilleParent, te.getLgEMPLACEMENTID(), emg);
-            if (mvtparent.isPresent()) {
-                updateSnapshotMouvementArticle(mvtparent.get(), OTFamilleStockParent, emg);
-            } else {
-                createSnapshotMouvementDecon(OTFamilleParent, OTFamilleStockParent.getIntNUMBERAVAILABLE(), stockInit, te, emg);
-            }
+
             mouvementProduitService.saveMvtProduit(child.getLgDECONDITIONNEMENTID(), DateConverter.DECONDTIONNEMENT_POSITIF, OTFamilleChild, tu, OTFamilleStockParent.getLgEMPLACEMENTID(), (numberToDecondition * qtyDetail), stockInitDetail, stockInitDetail + (numberToDecondition * qtyDetail) - qteVendue, emg, 0);
             mouvementProduitService.saveMvtProduit(parent.getLgDECONDITIONNEMENTID(), DateConverter.DECONDTIONNEMENT_NEGATIF, OTFamilleParent, tu, OTFamilleStockParent.getLgEMPLACEMENTID(), numberToDecondition, stockInit, stockInit - numberToDecondition, emg, 0);
             String desc = "Déconditionnement du produit [ " + OTFamilleParent.getIntCIP() + " ] de " + OTFamilleParent.getIntPRICE() + " stock initial " + stockInit + " quantité déconditionnée " + numberToDecondition + " stock finale " + (stockInit - numberToDecondition) + " stock détail initial  " + stockInitDetail + " stock détail final = " + (stockInitDetail + (numberToDecondition * qtyDetail) - qteVendue) + " . Opérateur : " + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
@@ -677,57 +538,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         }
     }
 
-    private Optional<TMouvement> findByDay(TFamille OTFamille, String lgEmpl, EntityManager emg) {
-        try {
-            TypedQuery<TMouvement> query = emg.createQuery("SELECT o FROM TMouvement o  WHERE o.dtDAY =?1 AND o.lgFAMILLEID.lgFAMILLEID =?2 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?3 AND o.strACTION =?4", TMouvement.class);
-            query.setParameter(1, new Date(), TemporalType.DATE);
-            query.setParameter(2, OTFamille.getLgFAMILLEID());
-            query.setParameter(3, lgEmpl);
-            query.setParameter(4, commonparameter.str_ACTION_DECONDITIONNEMENT);
-            query.setFirstResult(0).setMaxResults(1);
-            return Optional.ofNullable(query.getSingleResult());
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-
-    }
-
-    private Optional<TMouvementSnapshot> findMouvementSnapshotByDay(TFamille OTFamille, String lgEmpl, EntityManager emg) {
-        try {
-            TypedQuery<TMouvementSnapshot> query = emg.createQuery("SELECT o FROM TMouvementSnapshot o  WHERE o.dtDAY =?1 AND o.lgFAMILLEID.lgFAMILLEID =?2 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?3 AND o.strSTATUT='enable' ", TMouvementSnapshot.class);
-            query.setParameter(1, new Date(), TemporalType.DATE);
-            query.setParameter(2, OTFamille.getLgFAMILLEID());
-            query.setParameter(3, lgEmpl);
-            query.setFirstResult(0).setMaxResults(1);
-            return Optional.ofNullable(query.getSingleResult());
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-
-    }
-
-    public void updateSnapshotMouvementArticle(TMouvementSnapshot OTMouvementSnapshot, TFamilleStock stock, EntityManager emg) {
-        OTMouvementSnapshot.setDtUPDATED(new Date());
-        OTMouvementSnapshot.setIntNUMBERTRANSACTION(OTMouvementSnapshot.getIntNUMBERTRANSACTION() + 1);
-        OTMouvementSnapshot.setIntSTOCKJOUR(stock.getIntNUMBERAVAILABLE());
-        emg.merge(OTMouvementSnapshot);
-    }
-
-    private void createSnapshotMouvementDecon(TFamille OTFamille, int int_NUMBER, int int_STOCK_DEBUT, TEmplacement OTEmplacement, EntityManager emg) {
-        TMouvementSnapshot OTMouvementSnapshot = new TMouvementSnapshot();
-        OTMouvementSnapshot.setLgMOUVEMENTSNAPSHOTID(UUID.randomUUID().toString());
-        OTMouvementSnapshot.setLgFAMILLEID(OTFamille);
-        OTMouvementSnapshot.setDtDAY(new Date());
-        OTMouvementSnapshot.setDtCREATED(new Date());
-        OTMouvementSnapshot.setDtUPDATED(new Date());
-        OTMouvementSnapshot.setStrSTATUT(commonparameter.statut_enable);
-        OTMouvementSnapshot.setIntNUMBERTRANSACTION(1);
-        OTMouvementSnapshot.setIntSTOCKJOUR(int_NUMBER);
-        OTMouvementSnapshot.setIntSTOCKDEBUT(int_STOCK_DEBUT);
-        OTMouvementSnapshot.setLgEMPLACEMENTID(OTEmplacement);
-        emg.persist(OTMouvementSnapshot);
-    }
-
     private TDeconditionnement createDecondtionne(TFamille OTFamille, int int_NUMBER, TUser tUser, EntityManager emg) {
         TDeconditionnement OTDeconditionnement = new TDeconditionnement();
         OTDeconditionnement.setLgDECONDITIONNEMENTID(UUID.randomUUID().toString());
@@ -740,105 +550,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         return OTDeconditionnement;
     }
 
-    public void createTMouvementDecon(TFamille OTFamille, TEmplacement OTEmplacement, String str_TYPE_ACTION, String str_ACTION, Integer int_NUMBER, TUser user, EntityManager emg) {
-        TMouvement OTMouvement = new TMouvement();
-        OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
-        OTMouvement.setDtDAY(new Date());
-        OTMouvement.setStrSTATUT(commonparameter.statut_enable);
-        OTMouvement.setLgFAMILLEID(OTFamille);
-        OTMouvement.setLgUSERID(user);
-        OTMouvement.setPKey("");
-        OTMouvement.setStrACTION(str_ACTION);
-        OTMouvement.setStrTYPEACTION(str_TYPE_ACTION);
-        OTMouvement.setDtCREATED(new Date());
-        OTMouvement.setDtUPDATED(new Date());
-        OTMouvement.setLgEMPLACEMENTID(OTEmplacement);
-        OTMouvement.setIntNUMBERTRANSACTION(1);
-        OTMouvement.setIntNUMBER(int_NUMBER);
-        emg.persist(OTMouvement);
-
-    }
-
-    private void createSnapshotMvtArticle(TFamille OTFamille, TFamilleStock familleStock, Integer initStock, TEmplacement emplacementId, EntityManager emg) {
-
-        Optional<TMouvementSnapshot> tm = findTMouvementSnapshot(OTFamille.getLgFAMILLEID(), emplacementId.getLgEMPLACEMENTID(), emg);
-        if (tm.isPresent()) {
-            TMouvementSnapshot mouvementSnapshot = tm.get();
-            mouvementSnapshot.setDtUPDATED(new Date());
-            mouvementSnapshot.setIntNUMBERTRANSACTION(mouvementSnapshot.getIntNUMBERTRANSACTION() + 1);
-            mouvementSnapshot.setIntSTOCKJOUR(familleStock.getIntNUMBERAVAILABLE());
-            emg.merge(mouvementSnapshot);
-        } else {
-            TMouvementSnapshot OTMouvementSnapshot = new TMouvementSnapshot();
-            OTMouvementSnapshot.setLgMOUVEMENTSNAPSHOTID(UUID.randomUUID().toString());
-            OTMouvementSnapshot.setLgFAMILLEID(OTFamille);
-            OTMouvementSnapshot.setDtDAY(new Date());
-            OTMouvementSnapshot.setDtCREATED(new Date());
-            OTMouvementSnapshot.setDtUPDATED(new Date());
-            OTMouvementSnapshot.setIntNUMBERTRANSACTION(1);
-            OTMouvementSnapshot.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvementSnapshot.setIntSTOCKJOUR(familleStock.getIntNUMBERAVAILABLE());
-            OTMouvementSnapshot.setIntSTOCKDEBUT(initStock);
-            OTMouvementSnapshot.setLgEMPLACEMENTID(emplacementId);
-            emg.persist(OTMouvementSnapshot);
-
-        }
-    }
-
-    private void createSnapshotMvtArticle(TFamille OTFamille, Integer qty, TUser ooTUser, Integer initStock, Integer finalStock, TEmplacement emplacementId, EntityManager emg) {
-        Optional<TMouvementSnapshot> tm = findTMouvementSnapshot(OTFamille.getLgFAMILLEID(), emplacementId.getLgEMPLACEMENTID(), emg);
-        if (tm.isPresent()) {
-            TMouvementSnapshot mouvementSnapshot = tm.get();
-            mouvementSnapshot.setDtUPDATED(new Date());
-            mouvementSnapshot.setIntNUMBERTRANSACTION(mouvementSnapshot.getIntNUMBERTRANSACTION() + 1);
-            mouvementSnapshot.setIntSTOCKJOUR(finalStock);
-            emg.merge(mouvementSnapshot);
-        } else {
-            TMouvementSnapshot OTMouvementSnapshot = new TMouvementSnapshot();
-            OTMouvementSnapshot.setLgMOUVEMENTSNAPSHOTID(UUID.randomUUID().toString());
-            OTMouvementSnapshot.setLgFAMILLEID(OTFamille);
-            OTMouvementSnapshot.setDtDAY(new Date());
-            OTMouvementSnapshot.setDtCREATED(new Date());
-            OTMouvementSnapshot.setDtUPDATED(new Date());
-            OTMouvementSnapshot.setIntNUMBERTRANSACTION(1);
-            OTMouvementSnapshot.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvementSnapshot.setIntSTOCKJOUR(finalStock);
-            OTMouvementSnapshot.setIntSTOCKDEBUT(initStock);
-            OTMouvementSnapshot.setLgEMPLACEMENTID(emplacementId);
-            emg.persist(OTMouvementSnapshot);
-
-        }
-    }
-
-    public void saveMvtArticle(TFamille tf, TUser ooTUser, TFamilleStock familleStock, Integer qtyInit, int qty, TEmplacement emplacementId, EntityManager emg) {
-        Optional<TMouvement> tm = findMouvement(tf, commonparameter.REMOVE, commonparameter.str_ACTION_VENTE, emplacementId.getLgEMPLACEMENTID(), emg);
-        if (tm.isPresent()) {
-            TMouvement OTMouvement = tm.get();
-            OTMouvement.setIntNUMBERTRANSACTION(1 + OTMouvement.getIntNUMBERTRANSACTION());
-            OTMouvement.setIntNUMBER(qty + OTMouvement.getIntNUMBER());
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setDtUPDATED(new Date());
-            emg.merge(OTMouvement);
-        } else {
-            TMouvement OTMouvement = new TMouvement();
-            OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
-            OTMouvement.setIntNUMBERTRANSACTION(1);
-            OTMouvement.setDtDAY(new Date());
-            OTMouvement.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvement.setIntNUMBER(qty);
-            OTMouvement.setLgFAMILLEID(tf);
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setPKey("");
-            OTMouvement.setStrACTION(commonparameter.str_ACTION_VENTE);
-            OTMouvement.setStrTYPEACTION(commonparameter.REMOVE);
-            OTMouvement.setDtCREATED(new Date());
-            OTMouvement.setDtUPDATED(new Date());
-            OTMouvement.setLgEMPLACEMENTID(emplacementId);
-            emg.persist(OTMouvement);
-        }
-        createSnapshotMvtArticle(tf, familleStock, qtyInit, emplacementId, emg);
-    }
-
     private MotifAjustement getOneTypeAjustement(Integer value) {
         return getEmg().find(MotifAjustement.class, value);
     }
@@ -849,18 +560,18 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         JSONObject json = new JSONObject();
         try {
             String desc = "Ajustement du " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy H:mm"));
-            TAjustement OTAjustement = new TAjustement();
-            OTAjustement.setLgAJUSTEMENTID(UUID.randomUUID().toString());
-            OTAjustement.setLgUSERID(params.getOperateur());
-            OTAjustement.setStrNAME(desc);
-            OTAjustement.setStrCOMMENTAIRE(params.getDescription());
-            OTAjustement.setDtCREATED(new Date());
-            OTAjustement.setDtUPDATED(OTAjustement.getDtCREATED());
-            OTAjustement.setStrSTATUT(commonparameter.statut_is_Process);
-            emg.persist(OTAjustement);
-            ajusterProduitAjustement(params, OTAjustement, emg);
+            TAjustement ajustement = new TAjustement();
+            ajustement.setLgAJUSTEMENTID(UUID.randomUUID().toString());
+            ajustement.setLgUSERID(params.getOperateur());
+            ajustement.setStrNAME(desc);
+            ajustement.setStrCOMMENTAIRE(params.getDescription());
+            ajustement.setDtCREATED(new Date());
+            ajustement.setDtUPDATED(ajustement.getDtCREATED());
+            ajustement.setStrSTATUT(commonparameter.statut_is_Process);
+            emg.persist(ajustement);
+            ajusterProduitAjustement(params, ajustement, emg);
             json.put("success", true).put("msg", "L'opération effectuée avec success");
-            json.put("data", new JSONObject().put("lgAJUSTEMENTID", OTAjustement.getLgAJUSTEMENTID()));
+            json.put("data", new JSONObject().put("lgAJUSTEMENTID", ajustement.getLgAJUSTEMENTID()));
         } catch (Exception e) {
             e.printStackTrace(System.err);
             json.put("success", false).put("msg", "L'opération a échoué");
@@ -886,23 +597,23 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     private void ajusterProduitAjustement(Params params, TAjustement ajustement, EntityManager emg) {
-        TAjustementDetail OTAjustementDetail = updateAjustementDetail(params);
-        if (OTAjustementDetail == null) {
+        TAjustementDetail ajustementDetail = updateAjustementDetail(params);
+        if (ajustementDetail == null) {
             TEmplacement emplacement = ajustement.getLgUSERID().getLgEMPLACEMENTID();
             TFamilleStock familleStock = findByProduitId(params.getRefTwo(), emplacement.getLgEMPLACEMENTID(), emg);
             Integer currentStock = familleStock.getIntNUMBERAVAILABLE();
-            OTAjustementDetail = new TAjustementDetail();
-            OTAjustementDetail.setLgAJUSTEMENTDETAILID(UUID.randomUUID().toString());
-            OTAjustementDetail.setLgAJUSTEMENTID(ajustement);
-            OTAjustementDetail.setLgFAMILLEID(familleStock.getLgFAMILLEID());
-            OTAjustementDetail.setIntNUMBER(params.getValue());
-            OTAjustementDetail.setIntNUMBERCURRENTSTOCK(currentStock);
-            OTAjustementDetail.setIntNUMBERAFTERSTOCK(params.getValue() + currentStock);
-            OTAjustementDetail.setDtCREATED(new Date());
-            OTAjustementDetail.setDtUPDATED(OTAjustementDetail.getDtCREATED());
-            OTAjustementDetail.setTypeAjustement(getOneTypeAjustement(params.getValueFour()));
-            OTAjustementDetail.setStrSTATUT(commonparameter.statut_is_Process);
-            emg.persist(OTAjustementDetail);
+            ajustementDetail = new TAjustementDetail();
+            ajustementDetail.setLgAJUSTEMENTDETAILID(UUID.randomUUID().toString());
+            ajustementDetail.setLgAJUSTEMENTID(ajustement);
+            ajustementDetail.setLgFAMILLEID(familleStock.getLgFAMILLEID());
+            ajustementDetail.setIntNUMBER(params.getValue());
+            ajustementDetail.setIntNUMBERCURRENTSTOCK(currentStock);
+            ajustementDetail.setIntNUMBERAFTERSTOCK(params.getValue() + currentStock);
+            ajustementDetail.setDtCREATED(new Date());
+            ajustementDetail.setDtUPDATED(ajustementDetail.getDtCREATED());
+            ajustementDetail.setTypeAjustement(getOneTypeAjustement(params.getValueFour()));
+            ajustementDetail.setStrSTATUT(commonparameter.statut_is_Process);
+            emg.persist(ajustementDetail);
         }
     }
 
@@ -971,10 +682,10 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 familleStock.setDtUPDATED(new Date());
                 emg.merge(familleStock);
                 int compare = initStock.compareTo(it.getIntNUMBERAFTERSTOCK());
-                String action = (compare < 0) ? commonparameter.ADD : commonparameter.REMOVE;
-                String _action = (compare < 0) ? DateConverter.AJUSTEMENT_POSITIF : DateConverter.AJUSTEMENT_NEGATIF;
-                saveMvtArticle(commonparameter.str_ACTION_AJUSTEMENT, action, famille, tUser, familleStock, it.getIntNUMBER(), initStock, emplacement, emg);
-                mouvementProduitService.saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), _action, famille, tUser, emplacement, it.getIntNUMBER(), initStock, initStock + it.getIntNUMBER(), emg, 0);
+
+                String action2 = (compare < 0) ? DateConverter.AJUSTEMENT_POSITIF : DateConverter.AJUSTEMENT_NEGATIF;
+
+                mouvementProduitService.saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), action2, famille, tUser, emplacement, it.getIntNUMBER(), initStock, initStock + it.getIntNUMBER(), emg, 0);
                 suggestionService.makeSuggestionAuto(familleStock, famille);
                 String desc = "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME() + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER() + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
                 logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
@@ -1014,66 +725,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public void saveMvtArticle(String action, String typeAction, TFamille tf, TUser ooTUser, TFamilleStock familleStock, Integer qty, Integer intiQty, TEmplacement emplacementId, EntityManager emg) {
-        Optional<TMouvement> tm = findMouvement(tf, action, typeAction, emplacementId.getLgEMPLACEMENTID(), emg);
-        if (tm.isPresent()) {
-            TMouvement OTMouvement = tm.get();
-            OTMouvement.setIntNUMBERTRANSACTION(1 + OTMouvement.getIntNUMBERTRANSACTION());
-            OTMouvement.setIntNUMBER(qty + OTMouvement.getIntNUMBER());
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setDtUPDATED(new Date());
-            emg.merge(OTMouvement);
-        } else {
-            TMouvement OTMouvement = new TMouvement();
-            OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
-            OTMouvement.setIntNUMBERTRANSACTION(1);
-            OTMouvement.setDtDAY(new Date());
-            OTMouvement.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvement.setIntNUMBER(qty);
-            OTMouvement.setLgFAMILLEID(tf);
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setPKey("");
-            OTMouvement.setStrACTION(action);
-            OTMouvement.setStrTYPEACTION(typeAction);
-            OTMouvement.setDtCREATED(new Date());
-            OTMouvement.setDtUPDATED(new Date());
-            OTMouvement.setLgEMPLACEMENTID(emplacementId);
-            emg.persist(OTMouvement);
-        }
-        createSnapshotMvtArticle(tf, familleStock, intiQty, emplacementId, emg);
-    }
-
-    @Override
-    public void saveMvtArticle(String action, String typeAction, TFamille tf, TUser ooTUser, Integer qty, Integer intiQty, Integer finalQty, TEmplacement emplacementId, EntityManager emg) {
-        Optional<TMouvement> tm = findMouvement(tf, action, typeAction, emplacementId.getLgEMPLACEMENTID(), emg);
-        if (tm.isPresent()) {
-            TMouvement OTMouvement = tm.get();
-            OTMouvement.setIntNUMBERTRANSACTION(1 + OTMouvement.getIntNUMBERTRANSACTION());
-            OTMouvement.setIntNUMBER(qty + OTMouvement.getIntNUMBER());
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setDtUPDATED(new Date());
-            emg.merge(OTMouvement);
-        } else {
-            TMouvement OTMouvement = new TMouvement();
-            OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
-            OTMouvement.setIntNUMBERTRANSACTION(1);
-            OTMouvement.setDtDAY(new Date());
-            OTMouvement.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvement.setIntNUMBER(qty);
-            OTMouvement.setLgFAMILLEID(tf);
-            OTMouvement.setLgUSERID(ooTUser);
-            OTMouvement.setPKey("");
-            OTMouvement.setStrACTION(action);
-            OTMouvement.setStrTYPEACTION(typeAction);
-            OTMouvement.setDtCREATED(new Date());
-            OTMouvement.setDtUPDATED(new Date());
-            OTMouvement.setLgEMPLACEMENTID(emplacementId);
-            emg.persist(OTMouvement);
-        }
-        createSnapshotMvtArticle(tf, qty, ooTUser, intiQty, finalQty, emplacementId, emg);
-    }
-
-    @Override
     public JSONObject findOneAjustement(String idAjustement) throws JSONException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -1100,7 +751,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             if (StringUtils.isNotEmpty(params.getTypeFiltre())) {
                 predicates.add(cb.equal(root.get(TAjustementDetail_.typeAjustement).get(MotifAjustement_.id), Integer.valueOf(params.getTypeFiltre())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
@@ -1131,15 +782,15 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         if (!params.isShowAll()) {
             predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
         }
-        cq.where(predicates.toArray(new Predicate[predicates.size()]));
+        cq.where(predicates.toArray(new Predicate[0]));
         Query q = getEmg().createQuery(cq);
         if (!params.isAll()) {
             q.setFirstResult(params.getStart());
             q.setMaxResults(params.getLimit());
         }
         List<TAjustement> list = q.getResultList();
-        List<AjustementDTO> data = list.stream().map(v -> new AjustementDTO(v, findAjustementDetailsByParenId(v.getLgAJUSTEMENTID(), getEmg()), params.isCanCancel())).collect(Collectors.toList());
-        return data;
+        return list.stream().map(v -> new AjustementDTO(v, findAjustementDetailsByParenId(v.getLgAJUSTEMENTID(), getEmg()), params.isCanCancel())).collect(Collectors.toList());
+
     }
 
     @Override
@@ -1197,7 +848,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 Predicate predicate = cb.and(cb.or(cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%")));
                 predicates.add(predicate);
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             return ((Number) q.getSingleResult()).longValue();
 
@@ -1230,7 +881,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 Predicate predicate = cb.and(cb.or(cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"), cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%")));
                 predicates.add(predicate);
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -1295,8 +946,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 emg.merge(d);
                 mouvementProduitService.saveMvtProduit(0, d.getIntPAF(), d.getLgRETOURFRSDETAIL(),
                         DateConverter.RETOUR_FOURNISSEUR, tf, params.getOperateur(), empl, d.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
-                saveMvtArticle(commonparameter.str_ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, tf,
-                        params.getOperateur(), stock, d.getIntNUMBERRETURN(), sockInit, empl, emg);
+
                 suggestionService.makeSuggestionAuto(stock, tf);
                 String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + fournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + params.getOperateur().getStrFIRSTNAME() + " " + params.getOperateur().getStrLASTNAME();
                 logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
@@ -1370,7 +1020,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     @Override
     public JSONObject loadetourFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query, boolean cunRemove, String filtre) throws JSONException {
-        List<RetourFournisseurDTO> data = loadretoursFournisseur(dtStart, dtEnd, start, limit, fourId, query, cunRemove,filtre);
+        List<RetourFournisseurDTO> data = loadretoursFournisseur(dtStart, dtEnd, start, limit, fourId, query, cunRemove, filtre);
         return new JSONObject().put("total", data.size()).put("results", new JSONArray(data));
     }
 
@@ -1393,21 +1043,21 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 List<Predicate> subpr = new ArrayList<>();
                 Subquery<TRetourFournisseur> sub = cq.subquery(TRetourFournisseur.class);
                 Root<TRetourFournisseurDetail> pr = sub.from(TRetourFournisseurDetail.class);
-                if(StringUtils.isNotEmpty(query)){
-                    subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%"))); 
+                if (StringUtils.isNotEmpty(query)) {
+                    subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
                 }
-                 if(StringUtils.isNotEmpty(filtre)){
-                     switch (filtre) {
-                         case DateConverter.NOT:
-                             subpr.add(cb.equal(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0));
-                             break;
-                         case DateConverter.WITH:
-                              subpr.add(cb.greaterThan(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0)); 
-                             break;
-                         default:
-                          break;
-                     }
-                 }
+                if (StringUtils.isNotEmpty(filtre)) {
+                    switch (filtre) {
+                        case DateConverter.NOT:
+                            subpr.add(cb.equal(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0));
+                            break;
+                        case DateConverter.WITH:
+                            subpr.add(cb.greaterThan(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0));
+                            break;
+                        default:
+                            break;
+                    }
+                }
                 sub.select(pr.get(TRetourFournisseurDetail_.lgRETOURFRSID)).where(cb.and(subpr.toArray(new Predicate[0])));
                 predicates.add(cb.in(root).value(sub));
             }
@@ -1422,13 +1072,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public List<RetourDetailsDTO> loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query,String filtre) {
+    public List<RetourDetailsDTO> loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query, String filtre) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEmg().getCriteriaBuilder();
             CriteriaQuery<TRetourFournisseur> cq = cb.createQuery(TRetourFournisseur.class);
             Root<TRetourFournisseur> root = cq.from(TRetourFournisseur.class);
-         
+
             cq.select(root).distinct(true);
             predicates.add(cb.equal(root.get(TRetourFournisseur_.strSTATUT), DateConverter.STATUT_ENABLE));
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TRetourFournisseur_.dtUPDATED)), java.sql.Date.valueOf(dtStart),
@@ -1441,52 +1091,50 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 List<Predicate> subpr = new ArrayList<>();
                 Subquery<TRetourFournisseur> sub = cq.subquery(TRetourFournisseur.class);
                 Root<TRetourFournisseurDetail> pr = sub.from(TRetourFournisseurDetail.class);
-                if(StringUtils.isNotEmpty(query)){
-                  subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
+                if (StringUtils.isNotEmpty(query)) {
+                    subpr.add(cb.or(cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intCIP), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.strNAME), query + "%"), cb.like(pr.get(TRetourFournisseurDetail_.lgFAMILLEID).get(TFamille_.intEAN13), query + "%")));
                 }
-                 if(StringUtils.isNotEmpty(filtre)){
-                     switch (filtre) {
-                         case DateConverter.NOT:
-                             subpr.add(cb.equal(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0));
-                             break;
-                         case DateConverter.WITH:
-                              subpr.add(cb.greaterThan(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0)); 
-                             break;
-                         default:
-                          break;
-                     }
-                 }
-                
+                if (StringUtils.isNotEmpty(filtre)) {
+                    switch (filtre) {
+                        case DateConverter.NOT:
+                            subpr.add(cb.equal(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0));
+                            break;
+                        case DateConverter.WITH:
+                            subpr.add(cb.greaterThan(pr.get(TRetourFournisseurDetail_.intNUMBERANSWER), 0));
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
                 sub.select(pr.get(TRetourFournisseurDetail_.lgRETOURFRSID)).where(cb.and(subpr.toArray(new Predicate[0])));
                 predicates.add(cb.in(root).value(sub));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TRetourFournisseur> q = getEmg().createQuery(cq);
-              if(StringUtils.isNotEmpty(filtre)){
-                     switch (filtre) {
-                         case DateConverter.NOT:
-                            return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection()
-                                    
-                                    .stream())
-                                    .filter((t) -> {
-                                        return t.getIntNUMBERANSWER()==0; 
-                                    })
-                                    .map(RetourDetailsDTO::new).collect(Collectors.toList());
-                    
-                         case DateConverter.WITH:
-                                return q.getResultList().stream()
-                                        
-                                        .flatMap(e -> e.getTRetourFournisseurDetailCollection().stream())
-                                         .filter((t) -> {
-                                        return t.getIntNUMBERANSWER()>0; 
-                                    })
-                                        .map(RetourDetailsDTO::new).collect(Collectors.toList());
-                           
-                         default:
-                                return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection().stream()).map(RetourDetailsDTO::new).collect(Collectors.toList());
-                     
-                     }
-                 }
+            if (StringUtils.isNotEmpty(filtre)) {
+                switch (filtre) {
+                    case DateConverter.NOT:
+                        return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection()
+                                .stream())
+                                .filter((t) -> {
+                                    return t.getIntNUMBERANSWER() == 0;
+                                })
+                                .map(RetourDetailsDTO::new).collect(Collectors.toList());
+
+                    case DateConverter.WITH:
+                        return q.getResultList().stream()
+                                .flatMap(e -> e.getTRetourFournisseurDetailCollection().stream())
+                                .filter((t) -> {
+                                    return t.getIntNUMBERANSWER() > 0;
+                                })
+                                .map(RetourDetailsDTO::new).collect(Collectors.toList());
+
+                    default:
+                        return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection().stream()).map(RetourDetailsDTO::new).collect(Collectors.toList());
+
+                }
+            }
             return q.getResultList().stream().flatMap(e -> e.getTRetourFournisseurDetailCollection().stream()).map(RetourDetailsDTO::new).collect(Collectors.toList());
 
         } catch (Exception e) {
@@ -1565,13 +1213,11 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             mouvementProduitService.saveMvtProduit(0, f.getIntPAF(), retourdepotdetail.getLgRETOURDEPOTDETAILID(),
                     DateConverter.TMVTP_RETOUR_DEPOT, f, user, officine.getLgEMPLACEMENTID(),
                     ODRetourdepot.getIntNUMBERRETURN(), ofStockInit, ofFinale, this.getEmg(), 0);
-            saveMvtArticle(DateConverter.ACTION_ENTREE_RETOUR_DEPOT, commonparameter.ADD, f,
-                    user, of, retourdepotdetail.getIntNUMBERRETURN(), ofStockInit, officine.getLgEMPLACEMENTID(), this.getEmg());
+
             mouvementProduitService.saveMvtProduit(0, f.getIntPAF(), ODRetourdepot.getLgRETOURDEPOTDETAILID(),
                     DateConverter.RETOUR_FOURNISSEUR, f, user, retourdepot.getLgEMPLACEMENTID(),
                     ODRetourdepot.getIntNUMBERRETURN(), deStockInit, deFinale, this.getEmg(), 0);
-            saveMvtArticle(DateConverter.ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, f,
-                    user, depot, retourdepotdetail.getIntNUMBERRETURN(), deStockInit, retourdepot.getLgEMPLACEMENTID(), this.getEmg());
+
         }
         retourdepot.setDblAMOUNT(total);
         officine.setDblAMOUNT(total);
@@ -1611,98 +1257,94 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         return q.getResultList().stream().map(AjustementDetailDTO::new).collect(Collectors.toList());
 
     }
- @Override
-    public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur)  {
-       
+
+    @Override
+    public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur) {
+
         EntityManager emg = this.getEmg();
-            List<TRetourFournisseurDetail> details = new ArrayList<>(retourFournisseur.getTRetourFournisseurDetailCollection()) ;
-            DoubleAdder amount = new DoubleAdder();
-            TUser user=retourFournisseur.getLgUSERID();
-            final TEmplacement empl = user.getLgEMPLACEMENTID();
-            final String emplecementId = empl.getLgEMPLACEMENTID();
-            details.forEach(d -> {
-                TFamille tf = d.getLgFAMILLEID();
-                TFamilleStock stock = findByProduitId(tf.getLgFAMILLEID(), emplecementId, emg);
-                int sockInit = stock.getIntNUMBERAVAILABLE();
-                int finalQty = sockInit - d.getIntNUMBERRETURN();
-                amount.add(d.getIntNUMBERRETURN() * d.getIntPAF());
-                d.setStrSTATUT(DateConverter.STATUT_ENABLE);
-                stock.setIntNUMBERAVAILABLE(finalQty);
-                stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
-                stock.setDtUPDATED(new Date());
-                emg.merge(stock);
-                emg.persist(d);
-                mouvementProduitService.saveMvtProduit(0, d.getIntPAF(), d.getLgRETOURFRSDETAIL(),
-                        DateConverter.RETOUR_FOURNISSEUR, tf, user, empl, d.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
-                saveMvtArticle(commonparameter.str_ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, tf,
-                        user, stock, d.getIntNUMBERRETURN(), sockInit, empl, emg);
-                suggestionService.makeSuggestionAuto(stock, tf);
-                String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-                logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
-                notificationService.save(new Notification()
-                        .canal(Canal.SMS)
-                        .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
-                        .message(desc)
-                        .addUser(user)
-                );
-            });
-   
-            retourFournisseur.setDlAMOUNT(amount.doubleValue());
-       
-            emg.persist(retourFournisseur);
+        List<TRetourFournisseurDetail> details = new ArrayList<>(retourFournisseur.getTRetourFournisseurDetailCollection());
+        DoubleAdder amount = new DoubleAdder();
+        TUser user = retourFournisseur.getLgUSERID();
+        final TEmplacement empl = user.getLgEMPLACEMENTID();
+        final String emplecementId = empl.getLgEMPLACEMENTID();
+        details.forEach(d -> {
+            TFamille tf = d.getLgFAMILLEID();
+            TFamilleStock stock = findByProduitId(tf.getLgFAMILLEID(), emplecementId, emg);
+            int sockInit = stock.getIntNUMBERAVAILABLE();
+            int finalQty = sockInit - d.getIntNUMBERRETURN();
+            amount.add(d.getIntNUMBERRETURN() * d.getIntPAF());
+            d.setStrSTATUT(DateConverter.STATUT_ENABLE);
+            stock.setIntNUMBERAVAILABLE(finalQty);
+            stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
+            stock.setDtUPDATED(new Date());
+            emg.merge(stock);
+            emg.persist(d);
+            mouvementProduitService.saveMvtProduit(0, d.getIntPAF(), d.getLgRETOURFRSDETAIL(),
+                    DateConverter.RETOUR_FOURNISSEUR, tf, user, empl, d.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
 
+            suggestionService.makeSuggestionAuto(stock, tf);
+            String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+            logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
+            notificationService.save(new Notification()
+                    .canal(Canal.SMS)
+                    .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
+                    .message(desc)
+                    .addUser(user)
+            );
+        });
 
-     
+        retourFournisseur.setDlAMOUNT(amount.doubleValue());
+
+        emg.persist(retourFournisseur);
 
     }
 
+    @Override
+    public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur, TMotifRetour motifRetour, List<TBonLivraisonDetail> bonLivraisonDetails) {
 
- @Override
-    public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur,TMotifRetour motifRetour,List<TBonLivraisonDetail> bonLivraisonDetails)  {
-       
         EntityManager emg = this.getEmg();
-         Set<TRetourFournisseurDetail> retourFournisseurDetails=new HashSet<>();
-            DoubleAdder amount = new DoubleAdder();
-            TUser user=retourFournisseur.getLgUSERID();
-            final TEmplacement empl = user.getLgEMPLACEMENTID();
-            final String emplecementId = empl.getLgEMPLACEMENTID();
-            for (TBonLivraisonDetail bonLivraisonDetail : bonLivraisonDetails) {
-                bonLivraisonDetail.setIntQTERETURN(bonLivraisonDetail.getIntQTERECUE());
-                TFamille tf = bonLivraisonDetail.getLgFAMILLEID();
-                TFamilleStock stock = findByProduitId(tf.getLgFAMILLEID(), emplecementId, emg);
-                int sockInit = stock.getIntNUMBERAVAILABLE();
-                int finalQty = sockInit - bonLivraisonDetail.getIntQTERECUE();
-                amount.add(bonLivraisonDetail.getIntQTERECUE() * bonLivraisonDetail.getIntPAF());
-                stock.setIntNUMBERAVAILABLE(finalQty);
-                stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
-                stock.setDtUPDATED(new Date());
-                TRetourFournisseurDetail retourFournisseurDetail= createRetourDetail( bonLivraisonDetail, sockInit, motifRetour,  retourFournisseur);
-               retourFournisseurDetails.add(retourFournisseurDetail);
-                emg.merge(stock);
+        Set<TRetourFournisseurDetail> retourFournisseurDetails = new HashSet<>();
+        DoubleAdder amount = new DoubleAdder();
+        TUser user = retourFournisseur.getLgUSERID();
+        final TEmplacement empl = user.getLgEMPLACEMENTID();
+        final String emplecementId = empl.getLgEMPLACEMENTID();
+        for (TBonLivraisonDetail bonLivraisonDetail : bonLivraisonDetails) {
+            bonLivraisonDetail.setIntQTERETURN(bonLivraisonDetail.getIntQTERECUE());
+            TFamille tf = bonLivraisonDetail.getLgFAMILLEID();
+            TFamilleStock stock = findByProduitId(tf.getLgFAMILLEID(), emplecementId, emg);
+            int sockInit = stock.getIntNUMBERAVAILABLE();
+            int finalQty = sockInit - bonLivraisonDetail.getIntQTERECUE();
+            amount.add(bonLivraisonDetail.getIntQTERECUE() * bonLivraisonDetail.getIntPAF());
+            stock.setIntNUMBERAVAILABLE(finalQty);
+            stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
+            stock.setDtUPDATED(new Date());
+            TRetourFournisseurDetail retourFournisseurDetail = createRetourDetail(bonLivraisonDetail, sockInit, motifRetour, retourFournisseur);
+            retourFournisseurDetails.add(retourFournisseurDetail);
+            emg.merge(stock);
 //                emg.persist(retourFournisseurDetail);
-                mouvementProduitService.saveMvtProduit(0, retourFournisseurDetail.getIntPAF(), retourFournisseurDetail.getLgRETOURFRSDETAIL(),
-                        DateConverter.RETOUR_FOURNISSEUR, tf, user, empl, retourFournisseurDetail.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
-                saveMvtArticle(commonparameter.str_ACTION_RETOURFOURNISSEUR, commonparameter.REMOVE, tf,
-                        user, stock, retourFournisseurDetail.getIntNUMBERRETURN(), sockInit, empl, emg);
-                suggestionService.makeSuggestionAuto(stock, tf);
-                String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + retourFournisseurDetail.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-                logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
-                notificationService.save(new Notification()
-                        .canal(Canal.SMS)
-                        .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
-                        .message(desc)
-                        .addUser(user)
-                );
-                this.getEmg().merge(bonLivraisonDetail);
-            }
-   
-            retourFournisseur.setDlAMOUNT(amount.doubleValue());
-       
-            emg.persist(retourFournisseur);
-            retourFournisseurDetails.forEach(this.getEmg()::persist);
+            mouvementProduitService.saveMvtProduit(0, retourFournisseurDetail.getIntPAF(), retourFournisseurDetail.getLgRETOURFRSDETAIL(),
+                    DateConverter.RETOUR_FOURNISSEUR, tf, user, empl, retourFournisseurDetail.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
+
+            suggestionService.makeSuggestionAuto(stock, tf);
+            String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  " + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= " + retourFournisseurDetail.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+            logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
+            notificationService.save(new Notification()
+                    .canal(Canal.SMS)
+                    .typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
+                    .message(desc)
+                    .addUser(user)
+            );
+            this.getEmg().merge(bonLivraisonDetail);
+        }
+
+        retourFournisseur.setDlAMOUNT(amount.doubleValue());
+
+        emg.persist(retourFournisseur);
+        retourFournisseurDetails.forEach(this.getEmg()::persist);
     }
-   private TRetourFournisseurDetail createRetourDetail(TBonLivraisonDetail bonLivraisonDetail,int sockInit,TMotifRetour motifRetour, TRetourFournisseur retourFournisseur) {
-       TFamille famille=bonLivraisonDetail.getLgFAMILLEID();
+
+    private TRetourFournisseurDetail createRetourDetail(TBonLivraisonDetail bonLivraisonDetail, int sockInit, TMotifRetour motifRetour, TRetourFournisseur retourFournisseur) {
+        TFamille famille = bonLivraisonDetail.getLgFAMILLEID();
         TRetourFournisseurDetail oTRetourFournisseurDetail = new TRetourFournisseurDetail(UUID.randomUUID().toString());
         oTRetourFournisseurDetail.setLgRETOURFRSID(retourFournisseur);
         oTRetourFournisseurDetail.setIntNUMBERRETURN(bonLivraisonDetail.getIntQTERECUE());
@@ -1716,6 +1358,11 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         oTRetourFournisseurDetail.setIntSTOCK(sockInit);
         oTRetourFournisseurDetail.setLgMOTIFRETOUR(motifRetour);
         return oTRetourFournisseurDetail;
-       
+
+    }
+    
+    private void makeSuggestionAutoAsync(TFamilleStock familleStock, TFamille tFamille){
+        managedExecutorService.submit(()->this.suggestionService.makeSuggestionAuto(familleStock, tFamille));
+
     }
 }
