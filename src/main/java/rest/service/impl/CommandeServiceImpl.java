@@ -372,8 +372,7 @@ public class CommandeServiceImpl implements CommandeService {
 
         mouvementProduitService.saveMvtProduit(prixU, prixA, key, DateConverter.ENTREE_EN_STOCK, OTFamille,
                 u, u.getLgEMPLACEMENTID(), qty, initStock, finalQty, em, 0);
-        mvtProduitService.saveMvtArticle(DateConverter.ACTION_ENTREE_STOCK, DateConverter.TYPE_ACTION_ADD,
-                OTFamille, u, qty, initStock, finalQty, u.getLgEMPLACEMENTID(), em);
+       
     }
 
     public TEtiquette createEtiquette(TBonLivraisonDetail bn, TUser u, TTypeetiquette OTTypeetiquette, TWarehouse OTWarehouse, TFamille OFamille, String int_NUMBER, EntityManager em) {
@@ -544,9 +543,7 @@ public class CommandeServiceImpl implements CommandeService {
 
                 saveMvtProduit(s.getLgINVENTAIREFAMILLEID() + "", typemvtproduit, s.getLgFAMILLEID(),
                         user, emplacement, s.getIntNUMBER(), s.getIntNUMBERINIT(), s.getIntNUMBER());
-                mvtProduitService.saveMvtArticle(DateConverter.ACTION_INVENTAIRE, DateConverter.OTHER,
-                        s.getLgFAMILLEID(), user, s.getIntNUMBER(), s.getIntNUMBERINIT(),
-                        s.getIntNUMBER(), emplacement, emg);
+              
                 count2.increment();
                 if (count2.intValue() > 0 && count2.intValue() % 10 == 0) {
                     emg.flush();

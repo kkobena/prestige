@@ -229,8 +229,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Query q = getEntityManager().createQuery(cq);
 
             List<TPreenregistrement> list = q.getResultList();
-            List<VenteDTO> data = list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), findByVente(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
-            return data;
+          return  list.stream().map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()), findByParent(v.getLgPREENREGISTREMENTID()), findByVente(v.getLgPREENREGISTREMENTID()))).collect(Collectors.toList());
+          
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
@@ -544,7 +544,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     private boolean findpermission() {
         try {
             TParameters parameters = getEntityManager().find(TParameters.class, "KEY_EXPORT_VENTE_AS_STOCK");
-            return Integer.valueOf(parameters.getStrVALUE().trim()) == 1;
+            return Integer.parseInt(parameters.getStrVALUE().trim()) == 1;
         } catch (Exception e) {
             return false;
         }
