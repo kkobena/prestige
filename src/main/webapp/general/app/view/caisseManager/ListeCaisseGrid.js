@@ -28,11 +28,7 @@ Ext.define('testextjs.view.caisseManager.ListeCaisseGrid', {
         var me = this;
         Ext.applyIf(me, 
         {
-            /*tools: [{
-             type: 'refresh',
-             tooltip: 'Actualiser'
-             }],*/
-
+           
             store: store,
             viewConfig: {
                 forceFit: true,
