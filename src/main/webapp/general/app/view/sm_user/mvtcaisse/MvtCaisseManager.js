@@ -50,6 +50,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
             proxy: {
                 type: 'ajax',
                 url: url_services_data_mvtcaisse,
+                timeout: 2400000,
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -142,15 +143,12 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                 });
 
 
-        this.cellEditing = new Ext.grid.plugin.CellEditing({
-            clicksToEdit: 1
-        });
-
+     
         Ext.apply(this, {
             width: '98%',
             height: 580,
             id: 'gridmvtcaisseid',
-            plugins: [this.cellEditing],
+          
             store: store,
             columns: [{
                     header: 'Type Mouvement',
@@ -216,39 +214,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                 selType: 'cellmodel'
             },
             tbar: [
-                /*{
-                 xtype: 'datefield',
-                 fieldLabel: 'Du',
-                 name: 'dt_debut',
-                 id: 'dt_debut',
-                 allowBlank: false,
-                 submitFormat: 'Y-m-d',
-                 maxValue: new Date(),
-                 format: 'd/m/Y',
-                 listeners: {
-                 'change': function (me) {
-                 // alert(me.getSubmitValue());
-                 dt_Date_Debut = me.getSubmitValue();
-                 Ext.getCmp('dt_fin').setMinValue(me.getValue());
-                 }
-                 }
-                 }, {
-                 xtype: 'datefield',
-                 fieldLabel: 'Au',
-                 name: 'dt_fin',
-                 id: 'dt_fin',
-                 allowBlank: false,
-                 maxValue: new Date(),
-                 submitFormat: 'Y-m-d',
-                 format: 'd/m/Y',
-                 listeners: {
-                 'change': function (me) {
-                 dt_Date_Fin = me.getSubmitValue();
-                 Ext.getCmp('dt_debut').setMaxValue(me.getValue());
-                 }
-                 }
-                 }*/
-
+          
                 {
                     text: 'Creer',
                     tooltip: 'Cr&eacute;er',
@@ -353,8 +319,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
             
             ],
             bbar: {
-                /*xtype: 'pagingtoolbar',
-                 store: store, // same store GridPanel is using*/
+               
                 dock: 'bottom',
                 items: [
                     {
@@ -382,11 +347,6 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
             single: true
         });
 
-
-
-        this.on('edit', function(editor, e) {
-
-        });
 
 
     },
@@ -425,25 +385,12 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
         Ext.getCmp('int_TOTAL').setValue(int_TOTAL);
     },
     onRechClick: function() {
-//        var dt_Date_Debut = "";
-//        var dt_Date_Fin = "";
-//        var lg_USER_ID = "";
-//        if (Ext.getCmp('dt_debut_journal').getSubmitValue() != null) {
-//            dt_Date_Debut = Ext.getCmp('dt_debut_journal').getSubmitValue();
-//        }
-//
-//        if (Ext.getCmp('dt_fin_journal').getSubmitValue() != null) {
-//            dt_Date_Fin = Ext.getCmp('dt_fin_journal').getSubmitValue();
-//        }
+
         if (new Date(dt_Date_Debut) > new Date(dt_Date_Fin)) {
             Ext.MessageBox.alert('Erreur au niveau date', 'La date de d&eacute;but doit &ecirc;tre inf&eacute;rieur &agrave; la date fin');
             return;
         }
 
-
-//        if (Ext.getCmp('lg_USER_ID').getValue() != null) {
-//            lg_USER_ID = Ext.getCmp('lg_USER_ID').getValue();
-//        }
 
         this.getStore().load({
             params: {
@@ -455,14 +402,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
     onPdfClick: function() {
         var dt_Date_Debut_search_val = Ext.Date.format(Ext.getCmp('dt_debut').getValue(), 'Y-m-d');
         var dt_Date_Fin_search_val = Ext.Date.format(Ext.getCmp('dt_fin').getValue(), 'Y-m-d');
-        //var h_debut_search_val = Ext.getCmp('h_debut').getValue();
-        // var h_fin_search_val = Ext.getCmp('h_fin').getValue();
-
-        /*  alert('dt_Date_Debut_search_val ' + dt_Date_Debut_search_val);
-         alert('dt_Date_Fin_search_val ' + dt_Date_Fin_search_val);
-         alert('h_debut_search_val ' + h_debut_search_val);*/
-
-        // alert(onPdfClick);
+        
         var chaine = location.pathname;
         var reg = new RegExp("[/]+", "g");
         var tableau = chaine.split(reg);
@@ -487,7 +427,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
             parentview: this,
             mode: "update",
             titre: "Modification Mouvement  [" + rec.get('str_ref') + "]"
-            //titre: "Modification Mouvement  [" + rec.get('str_NUM_PIECE_COMPTABLE') + "]"
+       
         });
 
 
@@ -541,5 +481,5 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
 
 
 
-    },
+    }
 });
