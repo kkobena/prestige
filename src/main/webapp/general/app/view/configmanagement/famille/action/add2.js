@@ -297,6 +297,19 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
 //                            allowBlank: false,
 
                         }
+                        //Ajout ligne code remise
+                        //,
+                        //{
+                        //    fieldLabel: 'Code Remise',
+                        //    xtype: 'textfield',
+//                            maskRe: /[0-9.]/,
+                        //    width: 350,
+                        //    emptyText: 'CODE REMISE',
+                        //    name: 'str_CODE_REMISE',
+                        //    id: 'str_CODE_REMISE'
+//                            allowBlank: false,
+
+                        //}
 
                     ]
                 }]
@@ -324,6 +337,10 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
             Ext.getCmp('lg_CODE_TVA_ID').setValue(this.getOdatasource().lg_CODE_TVA_ID);
 
             Ext.getCmp('lg_CODE_TVA_ID').hide();
+            
+            //Ext.getCmp('str_CODE_REMISE').setValue(this.getOdatasource().str_CODE_REMISE);
+            //
+            //
             //alert(this.getOdatasource().bool_RESERVE);
 
 
@@ -382,7 +399,13 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                 Ext.MessageBox.alert('Impossible', 'Le prix d\'achat doit etre inferieur au prix de vente');
                 return;
             }
-
+            
+            //controle sur la zone code remise qui sera ajouté
+           // if (parseInt(Ext.getCmp('int_PAF').getValue()) > parseInt(Ext.getCmp('int_PAF').getValue())) {
+           //   Ext.MessageBox.alert('Impossible', 'Le prix d\'achat doit etre inferieur au prix de vente');
+           //     return;
+            // } 
+            
             var str_DESCRIPTION = Ext.getCmp('str_DESCRIPTION').getValue();
 
             Ext.Ajax.request({

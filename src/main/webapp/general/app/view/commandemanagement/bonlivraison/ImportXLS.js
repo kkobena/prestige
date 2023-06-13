@@ -28,7 +28,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
         var _this = this;
         storetype = new Ext.data.Store({
             fields: ['name', 'value'],
-            data: [{name: 'LABOREX', value: 'Laborex'}, {name: 'COPHARMED', value: 'Copharmed'}, {name: 'TEDIS', value: 'Tedis'},{name: 'DPCI', value: 'DPCI'}
+            data: [{name: 'LABOREX', value: 'UBIPHARM'}, {name: 'COPHARMED', value: 'COPHARMED'}, {name: 'TEDIS', value: 'TEDIS'},{name: 'DPCI', value: 'DPCI'}
             ,{name: 'CIP_QTE', value: 'MODEL CIP-QTE'}
             ,{name: 'CIP_QTE_CIP_QTER_PA', value: 'MODEL CIP_QTE_PRIX_ACHAT'}
             ]
@@ -85,7 +85,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
                         displayField: 'value',
                         queryMode: 'local',
                         width: '100%',
-                        emptyText: 'Choisir le modèle'
+                        emptyText: 'Choisir le modèle du BL'
                      
                     },
                     {
