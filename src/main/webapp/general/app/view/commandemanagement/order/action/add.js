@@ -264,7 +264,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             let value = cmp.getValue();
                                             let record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
-                                            if (value === "0" || value === "Ajouter un nouvel article") {
+                                            if (value === "0" || value === "Inexistant, Cliquez ici pour creer un article") {
                                                 Me_Window.onbtnaddArticle();
                                             } else {
                                                 Ext.getCmp('int_QUANTITE').focus(true, 100, function () {
