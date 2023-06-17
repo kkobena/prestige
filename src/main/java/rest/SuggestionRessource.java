@@ -5,6 +5,7 @@
  */
 package rest;
 
+import dal.GammeProduit;
 import dal.TFamille;
 import dal.TSuggestionOrderDetails;
 import dal.TUser;
@@ -22,7 +23,9 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -36,8 +39,10 @@ import org.apache.commons.csv.CSVPrinter;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SuggestionService;
+import rest.service.dto.SuggestionOrderDetailDTO;
 import toolkits.parameters.commonparameter;
 import util.Constant;
+
 /**
  *
  * @author kkoffi
@@ -61,13 +66,13 @@ public class SuggestionRessource {
                 List<TSuggestionOrderDetails> detailses = suggestionService.findFamillesBySuggestion(suggestionId);
                 Writer writer = new OutputStreamWriter(out, "UTF-8");
 
-                try ( CSVPrinter printer = CSVFormat.EXCEL
+                try (CSVPrinter printer = CSVFormat.EXCEL
                         .withDelimiter(';').withHeader(ArticleHeader.class).print(writer)) {
 
                     detailses.forEach(f -> {
                         try {
-                            TFamille OFamille = f.getLgFAMILLEID();
-                            printer.printRecord(OFamille.getIntCIP(), f.getIntNUMBER());
+                            TFamille famille = f.getLgFAMILLEID();
+                            printer.printRecord(famille.getIntCIP(), f.getIntNUMBER());
                         } catch (IOException ex) {
                             Logger.getLogger(SuggestionRessource.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -102,4 +107,87 @@ public class SuggestionRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    @DELETE
+    @Path("item/{id}")
+    public Response delete(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.removeItem(id);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("amount/{id}")
+    public Response getSuggestionAmount(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        return Response.ok().entity(new JSONObject(this.suggestionService.getSuggestionAmount(id)).toString()).build();
+    }
+
+    @POST
+    @Path("item/add")
+    public Response addItem(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.addItem(suggestionOrderDetail);
+        return Response.ok().entity(ResultFactory.getFailResult()).build();
+    }
+
+    @POST
+    @Path("item/update-seuil")
+    public Response updateItemSeuil(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.updateItemSeuil(suggestionOrderDetail);
+        return Response.ok().entity(ResultFactory.getFailResult()).build();
+    }
+
+    @POST
+    @Path("item/update-qte-cmde")
+    public Response updateItemQteCmde(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.updateItemQteCmde(suggestionOrderDetail);
+        return Response.ok().entity(ResultFactory.getFailResult()).build();
+    }
+
+    @POST
+    @Path("item/update-prixachat")
+    public Response updateItemQtePrixPaf(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.updateItemQtePrixPaf(suggestionOrderDetail);
+        return Response.ok().entity(ResultFactory.getFailResult()).build();
+    }
+
+    @POST
+    @Path("item/update-prixvente")
+    public Response updateItemQtePrixVente(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.updateItemQtePrixVente(suggestionOrderDetail);
+        return Response.ok().entity(ResultFactory.getFailResult()).build();
+    }
 }

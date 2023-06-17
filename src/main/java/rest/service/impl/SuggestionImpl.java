@@ -45,10 +45,13 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SuggestionService;
+import rest.service.dto.SuggestionDTO;
+import rest.service.dto.SuggestionOrderDetailDTO;
 
 import util.Constant;
 import util.DateConverter;
@@ -66,9 +69,6 @@ public class SuggestionImpl implements SuggestionService {
 
     public EntityManager getEmg() {
         return em;
-    }
-
-    public SuggestionImpl() {
     }
 
     @Override
@@ -233,12 +233,12 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-    private TSuggestionOrderDetails isProductExistInSomeSuggestion(String lg_famille_id, String OTSuggestionOrder, EntityManager emg) {
+    private TSuggestionOrderDetails isProductExistInSomeSuggestion(String lgFamilleId, String suggestionOrderId) {
         TSuggestionOrderDetails OTSuggestionOrderDetails = null;
         try {
-            OTSuggestionOrderDetails = (TSuggestionOrderDetails) emg.createQuery("SELECT t FROM TSuggestionOrderDetails t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgSUGGESTIONORDERID.lgSUGGESTIONORDERID = ?2").
-                    setParameter(1, lg_famille_id).
-                    setParameter(2, OTSuggestionOrder).setMaxResults(1).
+            OTSuggestionOrderDetails = (TSuggestionOrderDetails) getEmg().createQuery("SELECT t FROM TSuggestionOrderDetails t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgSUGGESTIONORDERID.lgSUGGESTIONORDERID = ?2").
+                    setParameter(1, lgFamilleId).
+                    setParameter(2, suggestionOrderId).setMaxResults(1).
                     getSingleResult();
 
         } catch (Exception e) {
@@ -247,21 +247,21 @@ public class SuggestionImpl implements SuggestionService {
         return OTSuggestionOrderDetails;
     }
 
-    public TSuggestionOrderDetails addToTSuggestionOrderDetails(TFamille OTFamille, TGrossiste OTGrossiste, TSuggestionOrder OTSuggestionOrder, int int_QTE_A_SUGGERE, EntityManager emg) {
+    public TSuggestionOrderDetails addToTSuggestionOrderDetails(TFamille famille, TGrossiste oTGrossiste, TSuggestionOrder oTSuggestionOrder, int qteSuggere, EntityManager emg) {
         TSuggestionOrderDetails OTSuggestionOrderDetails = null;
         try {
-            OTSuggestionOrderDetails = isProductExistInSomeSuggestion(OTFamille.getLgFAMILLEID(), OTSuggestionOrder.getLgSUGGESTIONORDERID(), emg);
+            OTSuggestionOrderDetails = isProductExistInSomeSuggestion(famille.getLgFAMILLEID(), oTSuggestionOrder.getLgSUGGESTIONORDERID());
             if (OTSuggestionOrderDetails == null) {
-                createTSuggestionOrderDetails(OTSuggestionOrder, OTFamille, OTGrossiste, int_QTE_A_SUGGERE, emg);
+                createTSuggestionOrderDetails(oTSuggestionOrder, famille, oTGrossiste, qteSuggere, emg);
             } else {
-                OTSuggestionOrderDetails.setIntNUMBER(int_QTE_A_SUGGERE);
-                OTSuggestionOrderDetails.setIntPRICE(int_QTE_A_SUGGERE * OTSuggestionOrderDetails.getIntPAFDETAIL());
+                OTSuggestionOrderDetails.setIntNUMBER(qteSuggere);
+                OTSuggestionOrderDetails.setIntPRICE(qteSuggere * OTSuggestionOrderDetails.getIntPAFDETAIL());
                 OTSuggestionOrderDetails.setDtUPDATED(new Date());
 
                 emg.merge(OTSuggestionOrderDetails);
             }
-            OTSuggestionOrder.setDtUPDATED(new Date());
-            emg.merge(OTSuggestionOrder);
+            oTSuggestionOrder.setDtUPDATED(new Date());
+            emg.merge(oTSuggestionOrder);
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -418,8 +418,8 @@ public class SuggestionImpl implements SuggestionService {
             OTFamilleGrossiste = new TFamilleGrossiste(UUID.randomUUID().toString());
             OTFamilleGrossiste.setLgFAMILLEID(lg_FAMILLE_ID);
             OTFamilleGrossiste.setLgGROSSISTEID(lg_GROSSISTE_ID);
-            OTFamilleGrossiste.setDtUPDATED(new Date());
             OTFamilleGrossiste.setDtCREATED(new Date());
+            OTFamilleGrossiste.setDtUPDATED(OTFamilleGrossiste.getDtCREATED());
             OTFamilleGrossiste.setIntNBRERUPTURE(0);
             OTFamilleGrossiste.setBlRUPTURE(Boolean.TRUE);
             OTFamilleGrossiste.setStrCODEARTICLE(lg_FAMILLE_ID.getIntCIP());
@@ -433,10 +433,10 @@ public class SuggestionImpl implements SuggestionService {
         return OTFamilleGrossiste;
     }
 
-    private TSuggestionOrderDetails initTSuggestionOrderDetail(TSuggestionOrder OTSuggestionOrder, TFamille OTFamille, TGrossiste OTGrossiste, int int_NUMBER, EntityManager emg) {
+    private TSuggestionOrderDetails initTSuggestionOrderDetail(TSuggestionOrder OTSuggestionOrder, TFamille OTFamille, TGrossiste OTGrossiste, int int_NUMBER) {
 
         try {
-            TFamilleGrossiste OTFamilleGrossiste = findOrFamilleGrossiste(OTFamille, OTGrossiste, emg);
+            TFamilleGrossiste OTFamilleGrossiste = findOrFamilleGrossiste(OTFamille, OTGrossiste, this.getEmg());
             TSuggestionOrderDetails OTSuggestionOrderDetails = new TSuggestionOrderDetails();
             OTSuggestionOrderDetails.setLgSUGGESTIONORDERDETAILSID(UUID.randomUUID().toString());
             OTSuggestionOrderDetails.setLgSUGGESTIONORDERID(OTSuggestionOrder);
@@ -449,9 +449,7 @@ public class SuggestionImpl implements SuggestionService {
             OTSuggestionOrderDetails.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
             OTSuggestionOrderDetails.setDtCREATED(new Date());
             OTSuggestionOrderDetails.setDtUPDATED(OTSuggestionOrderDetails.getDtCREATED());
-            emg.persist(OTSuggestionOrderDetails);
-//         
-
+            getEmg().persist(OTSuggestionOrderDetails);
             return OTSuggestionOrderDetails;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -475,7 +473,7 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     public void createTSuggestionOrderDetails(TSuggestionOrder OTSuggestionOrder, TFamille OTFamille, TGrossiste OTGrossiste, int int_NUMBER, EntityManager emg) {
-        initTSuggestionOrderDetail(OTSuggestionOrder, OTFamille, OTGrossiste, int_NUMBER, emg);
+        initTSuggestionOrderDetail(OTSuggestionOrder, OTFamille, OTGrossiste, int_NUMBER);
 
     }
 
@@ -629,7 +627,7 @@ public class SuggestionImpl implements SuggestionService {
                 TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, DateConverter.STATUT_PROCESS, getEmg());
                 v.forEach(o -> {
                     TFamille OTFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
-                    initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, o.getIntQUANTITY(), getEmg());
+                    initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, o.getIntQUANTITY());
                     count.increment();
                 });
 
@@ -652,7 +650,7 @@ public class SuggestionImpl implements SuggestionService {
                 TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, DateConverter.STATUT_PROCESS, getEmg());
                 v.forEach(o -> {
                     TFamille OTFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
-                    initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, o.getIntQUANTITY(), getEmg());
+                    initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, o.getIntQUANTITY());
                     count.increment();
                 });
 
@@ -677,7 +675,7 @@ public class SuggestionImpl implements SuggestionService {
                     TFamille OTFamille = getEmg().find(TFamille.class, o.getId());
                     TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), u.getLgEMPLACEMENTID(), this.getEmg());
                     if (OTFamille.getBoolDECONDITIONNE().compareTo(Short.valueOf("0")) == 0 && familleStock != null) {
-                        initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, (OTFamille.getIntQTEREAPPROVISIONNEMENT() > 0 ? OTFamille.getIntQTEREAPPROVISIONNEMENT() : 0), getEmg());
+                        initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, (OTFamille.getIntQTEREAPPROVISIONNEMENT() > 0 ? OTFamille.getIntQTEREAPPROVISIONNEMENT() : 0));
                         count.increment();
                     }
 
@@ -710,4 +708,129 @@ public class SuggestionImpl implements SuggestionService {
         }
     }
 
+    @Override
+    public void removeItem(String itemId) {
+        TSuggestionOrderDetails item = getItem(itemId);
+        TSuggestionOrder suggestion = item.getLgSUGGESTIONORDERID();
+        if (CollectionUtils.isNotEmpty(suggestion.getTSuggestionOrderDetailsCollection()) && suggestion.getTSuggestionOrderDetailsCollection().size() == 1) {
+            getEmg().remove(item);
+            getEmg().remove(suggestion);
+        } else {
+            getEmg().remove(item);
+            suggestion.setDtUPDATED(new Date());
+            getEmg().persist(suggestion);
+        }
+
+    }
+
+    @Override
+    public SuggestionDTO getSuggestionAmount(String suggestionId) {
+        long montantAchat = 0;
+        long montantVente = 0;
+        try {
+            TSuggestionOrder order = getEmg().find(TSuggestionOrder.class, suggestionId);
+
+            for (TSuggestionOrderDetails item : order.getTSuggestionOrderDetailsCollection()) {
+                montantAchat += item.getIntPRICE();
+                montantVente += (item.getIntPRICEDETAIL() * item.getIntNUMBER());
+            }
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+
+        }
+        return SuggestionDTO.builder()
+                .montantAchat(montantAchat)
+                .montantVente(montantVente)
+                .build();
+
+    }
+
+    @Override
+    public void addItem(SuggestionOrderDetailDTO suggestionOrderDetail) {
+
+        Objects.requireNonNull(suggestionOrderDetail.getQte(), "La quantité ne doit pas être null");
+        TSuggestionOrder order = getEmg().find(TSuggestionOrder.class, suggestionOrderDetail.getSuggestionId());
+        TGrossiste grossiste = order.getLgGROSSISTEID();
+        TFamille famille = getEmg().find(TFamille.class, suggestionOrderDetail.getFamilleId());
+        TSuggestionOrderDetails suggestionOrderDetails = isProductExist(famille.getLgFAMILLEID(), order.getLgSUGGESTIONORDERID());
+        if (Objects.isNull(suggestionOrderDetails)) {
+            initTSuggestionOrderDetail(order, famille, grossiste, suggestionOrderDetail.getQte());
+            famille.setIntORERSTATUS((short) 1);
+            getEmg().merge(famille);
+        } else {
+            suggestionOrderDetails.setIntNUMBER(suggestionOrderDetail.getQte() + suggestionOrderDetails.getIntNUMBER());
+            suggestionOrderDetails.setIntPRICE(suggestionOrderDetails.getIntNUMBER() * suggestionOrderDetails.getIntPAFDETAIL());
+            getEmg().merge(suggestionOrderDetails);
+        }
+
+    }
+
+    private TSuggestionOrderDetails isProductExist(String lgFamilleId, String suggId) {
+        TSuggestionOrderDetails suggestionOrderDetails = null;
+        try {
+            suggestionOrderDetails = (TSuggestionOrderDetails) this.getEmg().createQuery("SELECT t FROM TSuggestionOrderDetails t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgSUGGESTIONORDERID.lgSUGGESTIONORDERID = ?2").
+                    setParameter(1, lgFamilleId).
+                    setParameter(2, suggId).setMaxResults(1).
+                    getSingleResult();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, " *** Desoleeeeeee OTSuggestionOrderDetails   5555 *** ", e);
+
+        }
+        return suggestionOrderDetails;
+    }
+
+    @Override
+    public void updateItemSeuil(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        Objects.requireNonNull(suggestionOrderDetail.getSeuil(), "Le seuil ne doit pas être null");
+        TSuggestionOrderDetails suggestionOrderDetails = getItem(suggestionOrderDetail.getItemId());
+        if (Objects.nonNull(suggestionOrderDetails)) {
+            TFamille famille = suggestionOrderDetails.getLgFAMILLEID();
+            famille.setIntSEUILMIN(suggestionOrderDetail.getSeuil());
+            famille.setDtUPDATED(new Date());
+            getEmg().merge(famille);
+        }
+
+    }
+
+    @Override
+    public void updateItemQteCmde(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        Objects.requireNonNull(suggestionOrderDetail.getQte(), "Le quantité ne doit pas être null");
+        TSuggestionOrderDetails suggestionOrderDetails = getItem(suggestionOrderDetail.getItemId());
+        if (Objects.nonNull(suggestionOrderDetails)) {
+            suggestionOrderDetails.setIntNUMBER(suggestionOrderDetail.getQte());
+            suggestionOrderDetails.setIntPRICE(suggestionOrderDetail.getQte() * suggestionOrderDetails.getIntPAFDETAIL());
+            suggestionOrderDetails.setDtUPDATED(new Date());
+            getEmg().merge(suggestionOrderDetails);
+        }
+
+    }
+
+    @Override
+    public void updateItemQtePrixPaf(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        Objects.requireNonNull(suggestionOrderDetail.getPrixPaf(), "Le prix achat ne doit pas être null");
+        TSuggestionOrderDetails suggestionOrderDetails = getItem(suggestionOrderDetail.getItemId());
+        if (Objects.nonNull(suggestionOrderDetails)) {
+            suggestionOrderDetails.setIntPAFDETAIL(suggestionOrderDetail.getPrixPaf());
+            suggestionOrderDetails.setIntPRICE(suggestionOrderDetails.getIntNUMBER() * suggestionOrderDetails.getIntPAFDETAIL());
+            suggestionOrderDetails.setDtUPDATED(new Date());
+            getEmg().merge(suggestionOrderDetails);
+        }
+    }
+
+    @Override
+    public void updateItemQtePrixVente(SuggestionOrderDetailDTO suggestionOrderDetail) {
+        Objects.requireNonNull(suggestionOrderDetail.getPrixVente(), "Le prix de vente ne doit pas être null");
+        TSuggestionOrderDetails suggestionOrderDetails = getItem(suggestionOrderDetail.getItemId());
+        if (Objects.nonNull(suggestionOrderDetails)) {
+            suggestionOrderDetails.setIntPRICEDETAIL(suggestionOrderDetail.getPrixVente());
+            suggestionOrderDetails.setDtUPDATED(new Date());
+            getEmg().merge(suggestionOrderDetails);
+        }
+    }
+
+    private TSuggestionOrderDetails getItem(String id) {
+        return getEmg().find(TSuggestionOrderDetails.class, id);
+    }
 }

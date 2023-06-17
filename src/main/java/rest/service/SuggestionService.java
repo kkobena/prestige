@@ -20,6 +20,8 @@ import javax.ejb.Local;
 import javax.persistence.EntityManager;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.SuggestionDTO;
+import rest.service.dto.SuggestionOrderDetailDTO;
 
 /**
  *
@@ -29,11 +31,11 @@ import org.json.JSONObject;
 //@Remote
 public interface SuggestionService {
 
-    void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille);
+    void makeSuggestionAuto(TFamilleStock familleStock, TFamille famille);
 
-    void makeSuggestionAuto(String OTPreenregistrement);
+    void makeSuggestionAuto(String preenregistrement);
 
-    Integer getQuantityReapportByCodeGestionArticle(TFamilleStock OTFamilleStock, TFamille famille, EntityManager emg);
+    Integer getQuantityReapportByCodeGestionArticle(TFamilleStock familleStock, TFamille famille, EntityManager emg);
 
     Integer quantiteVendue(LocalDate dtDEBUT, LocalDate dtFin, String produitId, EntityManager emg);
 
@@ -59,5 +61,19 @@ public interface SuggestionService {
     JSONObject findCHDetailStock(String idProduit, String emplacement);
 
     void proccessSuggetion(TFamille famille, TEmplacement emplacementId);
+
+    void removeItem(String itemId);
+
+    SuggestionDTO getSuggestionAmount(String suggestionId);
+
+    void addItem(SuggestionOrderDetailDTO suggestionOrderDetail);
+
+    void updateItemSeuil(SuggestionOrderDetailDTO suggestionOrderDetail);
+
+    void updateItemQteCmde(SuggestionOrderDetailDTO suggestionOrderDetail);
+
+    void updateItemQtePrixPaf(SuggestionOrderDetailDTO suggestionOrderDetail);
+
+    void updateItemQtePrixVente(SuggestionOrderDetailDTO suggestionOrderDetail);
 
 }
