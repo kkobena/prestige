@@ -59,7 +59,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
             items: [{
                     xtype: 'fieldset',
                     //   width: 55,
-                    title: 'Saisie du bon de livraison',
+                    title: 'Enregistrement infos du bon de livraison',
                     defaultType: 'textfield',
                     defaults: {
                         anchor: '100%'
@@ -82,15 +82,15 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
                             value: "0"
                         },
                         {
-                            fieldLabel: 'REF BL',
-                            emptyText: 'REF BL',
+                            fieldLabel: 'Numero du BL',
+                            emptyText: 'Numero du BL',
                             name: 'str_REF_LIVRAISON',
                             allowBlank: false,
                             id: 'str_REF_LIVRAISON'
                         },
                         {
                             xtype: 'datefield',
-                            fieldLabel: 'Date BL',
+                            fieldLabel: 'Date du BL',
                             name: 'dt_DATE_LIVRAISON',
                             id: 'dt_DATE_LIVRAISON',
                             submitFormat: 'Y-m-d',
@@ -110,12 +110,13 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
                         },
                         {
                             fieldLabel: 'Montant TVA',
-                            emptyText: 'Montant TVA',
+                            emptyText: 'Montant TVA / 0 si pas de TVA',
                             name: 'int_TVA',
                             allowBlank: false,
                             id: 'int_TVA',
                             maskRe: /[0-9.]/,
                             minValue: 0
+                            
                         }
                     ]
                 }]
@@ -146,7 +147,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
             plain: true,
             items: form,
             buttons: [{
-                    text: 'Enregistrer',
+                    text: 'Creation du BL',
                     handler: this.onbtncreerbl
 //                    handler: this.onbtnsave
                 }, {
@@ -198,7 +199,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
         if (Omode == "create") {
             if (int_MHT != montantachat) {
                 Ext.MessageBox.confirm('Attention!',
-                        'Le prix d\'achat du bon de livraision est different du prix d\'achat machine. Voulez-vous continuer',
+                        'Le prix d\'achat du bon de livraison est different du prix d\'achat machine. Voulez-vous continuer ?',
                         function (btn) {
                             if (btn == 'yes') {
                                 Me.doCreateBL(button, url_transaction, Ext.getCmp('lg_ORDER_ID').getValue(), str_REF_LIVRAISON, dt_DATE_LIVRAISON, int_MHT, int_TVA);
