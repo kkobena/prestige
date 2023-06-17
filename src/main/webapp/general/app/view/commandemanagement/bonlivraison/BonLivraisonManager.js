@@ -164,12 +164,14 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
                             tooltip: 'Detail livraison',
                             scope: this,
                             handler: this.onManageDetailsClick
-                        }, '-', {
+                        },/* '-', {
                             icon: 'resources/images/icons/fam/printer.png',
                             tooltip: 'Edition de bon de livraison',
                             scope: this,
+                            hidden: true
                             handler: this.onPdfDetailClick
-                        }, '-', {
+                            
+                        },*/ '-', {
                             icon: 'resources/images/icons/fam/delete.png',
                             tooltip: 'Supprimer',
                             scope: this,
@@ -323,18 +325,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
                 });
 
     },
-    onPrintClick: function () {
-
-        window.print();
-        body :{
-            visibility:visible
-        }
-        print: {
-            visibility:visible
-        }
-
-
-    },
+   
     onRechClick: function () {
         var val = Ext.getCmp('rechecher');
         this.getStore().load({
