@@ -2,7 +2,6 @@
 
 var url_services_transaction_suggerercde = '../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=';
 var url_services_data_grossiste_suggerer = '../webservices/configmanagement/grossiste/ws_data.jsp';
-var url_services_data_detailssuggerer = '../webservices/sm_user/suggerercde/ws_data.jsp';
 var url_services_pdf_liste_suggerercde = '../webservices/sm_user/suggerercde/ws_generate_pdf.jsp';
 var url_services_data_famille_select_suggestion = '../webservices/sm_user/famille/ws_data_initial.jsp';
 
@@ -510,7 +509,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
                                         return amountformat(v);
                                     },
-                                    flex: 1,
                                     editor: {
                                         xtype: 'numberfield',
                                         minValue: 1,
@@ -543,7 +541,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     }
                                 },
                                 {
-//                                    header: 'MOIS EN COURS',
                                     header: AppController.getMonthToDisplay(0, currentMonth),
                                     dataIndex: 'int_VALUE0',
                                     align: 'center',
@@ -561,7 +558,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     }
                                 },
                                 {
-//                                    header: 'MOIS (-1)',
                                     header: AppController.getMonthToDisplay(1, currentMonth),
                                     dataIndex: 'int_VALUE1',
                                     align: 'center',
@@ -579,7 +575,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     flex: 0.7
                                 },
                                 {
-//                                    header: 'MOIS (-2)',
                                     header: AppController.getMonthToDisplay(2, currentMonth),
                                     dataIndex: 'int_VALUE2',
                                     align: 'center',
@@ -597,7 +592,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     flex: 0.7
                                 },
                                 {
-//                                    header: 'MOIS (-3)',
                                     header: AppController.getMonthToDisplay(3, currentMonth),
                                     dataIndex: 'int_VALUE3',
                                     align: 'center',
@@ -614,11 +608,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     },
                                     flex: 0.7
                                 },
-                                /*{
-                                 header: 'Q.REASSORT',
-                                 dataIndex: 'int_QTE_REASSORT',
-                                 flex: 1
-                                 },*/ {
+                                {
                                     xtype: 'actioncolumn',
                                     width: 30,
                                     sortable: false,
@@ -695,7 +685,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                 plugins: new Ext.ux.ProgressBarPager(), // same store GridPanel is using
                                 listeners: {
                                     beforechange: function (page, currentPage) {
-                                        var myProxy = this.store.getProxy();
+                                        const myProxy = this.store.getProxy();
                                         myProxy.params = {
                                             search_value: '', lg_SUGGESTION_ORDER_ID: ''
                                         };
@@ -744,7 +734,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             single: true
         });
         if (titre === "Suggerer une commande") {
-            var OgridpanelSuggestionID = Ext.getCmp('gridpanelSuggestionID');
+            const OgridpanelSuggestionID = Ext.getCmp('gridpanelSuggestionID');
             Ext.getCmp('lg_GROSSISTE_ID').setValue(this.getOdatasource().lg_GROSSISTE_ID);
             Ext.getCmp('btn_print').show();
 
@@ -753,78 +743,63 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
             Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
             Ext.getCmp('int_DATE_BUTOIR_ARTICLE').setValue(this.getOdatasource().int_DATE_BUTOIR_ARTICLE);
-            // var url = '../webservices/sm_user/suggerercde/ws_data.jsp?lg_SUGGESTION_ORDER_ID=' + ref;
-            var url = '../suggestion?lg_SUGGESTION_ORDER_ID=' + ref;
-//             alert("url "+url);
+            const url = '../suggestion?lg_SUGGESTION_ORDER_ID=' + ref;
             OgridpanelSuggestionID.getStore().getProxy().url = url;
             OgridpanelSuggestionID.getStore().load();
-            //  Ext.getCmp('gridpanelSuggestionID').getStore().load();
+
 
         }
 
         Ext.getCmp('gridpanelSuggestionID').on('edit', function (editor, e) {
-            var OGrid = Ext.getCmp('gridpanelSuggestionID');
-            if (e.field !== 'int_SEUIL') {
+            const OGrid = Ext.getCmp('gridpanelSuggestionID');
+            let  datas;
+            let url;
+            const suggId = e.record.data.lg_SUGGESTION_ORDER_ID;
+            if (e.field === 'int_NUMBER') {
                 const qte = Number(e.record.data.int_NUMBER);
+                url = '../api/v1/suggestion/item/update-qte-cmde';
+                datas = {
+                    itemId: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
+                    qte};
 
-                Ext.Ajax.request({
-                    url: url_services_transaction_suggerercde + 'update',
-
-                    params: {
-                        lg_SUGGESTION_ORDER_DETAILS_ID: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
-                        lg_SUGGESTION_ORDER_ID: ref,
-                        str_STATUT: e.record.data.str_STATUT,
-                        lg_FAMILLE_ID: e.record.data.lg_FAMILLE_ID,
-                        lg_GROSSISTE_ID: Ext.getCmp('lg_GROSSISTE_ID').getValue(),
-                        int_NUMBER: qte,
-                        int_PRIX_REFERENCE: e.record.data.int_PRIX_REFERENCE,
-                        int_PAF: e.record.data.int_PAF_SUGG,
-                        lg_FAMILLE_PRIX_ACHAT: e.record.data.lg_FAMILLE_PRIX_ACHAT,
-                        lg_FAMILLE_PRIX_VENTE: e.record.data.lg_FAMILLE_PRIX_VENTE
-                    },
-                    success: function (response)
-                    {
-                        var object = Ext.JSON.decode(response.responseText, false);
-                        if (object.success == "0") {
-                            Ext.MessageBox.alert('Error Message', object.errors);
-                            return;
-                        }
-
-                        e.record.commit();
-                        int_montant_achat = Ext.util.Format.number(object.int_TOTAL_ACHAT, '0,000.');
-                        int_montant_vente = Ext.util.Format.number(object.int_TOTAL_VENTE, '0,000.');
-                        Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
-                        Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
-
-                        OGrid.getStore().reload();
-                        Ext.getCmp('str_NAME').setValue("");
-
-                    },
-                    failure: function (response)
-                    {
-                        console.log("Bug " + response.responseText);
-                        Ext.MessageBox.alert('Error Message', response.responseText);
-                    }
-                });
             } else if (e.field === 'int_SEUIL') {
+                url = '../api/v1/suggestion/item/update-seuil';
                 const qtySeuil = Number(e.record.data.int_SEUIL);
+                datas = {
+                    itemId: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
+                    seuil: qtySeuil};
+            } else if (e.field === 'lg_FAMILLE_PRIX_VENTE') {
+                url = '../api/v1/suggestion/item/update-prixvente';
+                const prixVente = Number(e.record.data.lg_FAMILLE_PRIX_VENTE);
+                datas = {
+                    itemId: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
+                    prixVente};
+            } else if (e.field === 'int_PAF_SUGG') {
+                url = '../api/v1/suggestion/item/update-prixachat';
+                const prixPaf = Number(e.record.data.int_PAF_SUGG);
+                datas = {
+                    itemId: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
+                    prixPaf};
+            } else {
+                datas = null;
+                url = null;
+            }
+            
+            if (datas !== null && url !== null) {
                 Ext.Ajax.request({
-                url: '../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=QTY_SEUIL',
-                      params: {
-                          produitId:e.record.data.lg_FAMILLE_ID,
-                          qtySeuil
-                      },
-                    success: function (response)
-                    {
-                      e.record.commit();
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    url: url,
+                    params: Ext.JSON.encode(datas),
+                    success: function (response, options) {
+                        e.record.commit();
                         OGrid.getStore().load();
 
-
+                        Me_Window.getSuggestionAmount(OGrid, suggId);
                     },
-                    failure: function (response)
-                    {
-                        console.log("Bug " + response.responseText);
-                        Ext.MessageBox.alert('Error Message', response.responseText);
+                    failure: function (response, options) {
+
+                        Ext.Msg.alert("Message", 'server-side failure with status code ' + response.status);
                     }
                 });
             }
@@ -834,13 +809,9 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
     },
     loadStore: function () {
-//        Ext.getCmp('gridpanelSuggestionID').getStore().load({
-//            callback: this.onStoreLoad
-//        });
+
     },
-    onStoreLoad: function () {
-        // alert("Quantite "+Ext.getCmp('gridpanelSuggestionID').getStore().getCount());
-    },
+
     onbtnprint: function () {
         Ext.MessageBox.confirm('Message',
                 'Confirmation de l\'impression de cette suggestion',
@@ -858,7 +829,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         var tableau = chaine.split(reg);
         var sitename = tableau[1];
         var linkUrl = url_services_pdf_liste_suggerercde + "?lg_SUGGESTION_ORDER_ID=" + lg_SUGGESTION_ORDER_ID;
-        //  alert('linkUrl'+ linkUrl);
+
         window.open(linkUrl);
     },
     checkIfGridIsEmpty: function () {
@@ -867,12 +838,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     },
     setTitleFrame: function (str_data) {
         this.title = this.title + " :: Ref " + str_data;
-        ref = str_data;
-        url_services_data_detailssuggerer = '../webservices/sm_user/suggerercde/ws_data.jsp?lg_SUGGESTION_ORDER_ID=' + ref;
-        var OGrid = Ext.getCmp('gridpanelSuggestionID');
-        url_services_data_detailssuggerer = '../webservices/sm_user/suggerercde/ws_data.jsp?lg_SUGGESTION_ORDER_ID=' + ref;
-        OGrid.getStore().getProxy().url = url_services_data_detailssuggerer;
-        OGrid.getStore().reload();
+
     },
     onfiltercheck: function () {
         var str_name = Ext.getCmp('str_NAME').getValue();
@@ -1071,9 +1037,9 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     ref = object.ref;
                 }
                 var OgridpanelSuggestionID = Ext.getCmp('gridpanelSuggestionID');
-                OgridpanelSuggestionID.getStore().getProxy().url = url_services_data_detailssuggerer + "?lg_SUGGESTION_ORDER_ID=" + ref;
+
                 OgridpanelSuggestionID.getStore().reload();
-                OgridpanelSuggestionID.getStore().getProxy().url = url_services_data_detailssuggerer;
+
             },
             failure: function (response)
             {
@@ -1218,42 +1184,23 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
     onRemoveClick: function (grid, rowIndex) {
-
-        var mode = "delete_suggestion_order_detail";
-
-
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
+        const idSugg = rec.get('lg_SUGGESTION_ORDER_ID');
         Ext.Ajax.request({
-            url: url_services_transaction_suggerercde + mode,
-            params: {
-                lg_SUGGESTION_ORDER_DETAILS_ID: rec.get('lg_SUGGESTION_ORDER_DETAILS_ID'),
-                lg_SUGGESTION_ORDER_ID: ref
-            },
+            method: 'DELETE',
+
+            url: '../api/v1/suggestion/item/' + rec.get('lg_SUGGESTION_ORDER_DETAILS_ID'),
+
             success: function (response)
             {
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.success === 0) {
-                    Ext.MessageBox.alert('Error Message', object.errors);
-                    return;
-                }
-
-                if (object.int_TOTAL_ACHAT == 0) {
-                    Me_Window.onbtncancel();
-                    return;
-                }
                 grid.getStore().reload();
+                Me_Window.getSuggestionAmount(grid, idSugg);
 
-                int_montant_achat = Ext.util.Format.number(object.int_TOTAL_ACHAT, '0,000.');
-                int_montant_vente = Ext.util.Format.number(object.int_TOTAL_VENTE, '0,000.');
-                Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
-                Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
-//    
             },
             failure: function (response)
             {
 
-                var object = Ext.JSON.decode(response.responseText, false);
-                console.log("Bug " + response.responseText);
+
                 Ext.MessageBox.alert('Error Message', response.responseText);
             }
         });
@@ -1279,6 +1226,27 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             params: {
                 search_value: val.getValue()
             }
-        }, url_services_data_detailssuggerer);
+        });
+    },
+
+    getSuggestionAmount: function (grid, id) {
+
+        Ext.Ajax.request({
+            method: 'GET',
+            headers: {'Content-Type': 'application/json'},
+            url: '../api/v1/suggestion/amount/' + id,
+            success: function (response, options) {
+                var data = Ext.JSON.decode(response.responseText, true);
+                if (data.montantAchat === 0) {
+                    Me_Window.onbtncancel();
+                    return;
+                }
+                int_montant_achat = Ext.util.Format.number(data.montantAchat, '0,000.');
+                int_montant_vente = Ext.util.Format.number(data.montantVente, '0,000.');
+                Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
+                Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
+            }
+        });
+
     }
 });

@@ -15,7 +15,6 @@ import dal.TSuggestionOrder;
 import dal.TSuggestionOrderDetails;
 import dal.TSuggestionOrder_;
 import dal.TUser;
-import dal.dataManager;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
@@ -24,6 +23,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -50,44 +50,45 @@ public class Suggestion extends HttpServlet {
 
     static final Logger LOGGER = Logger.getLogger(Suggestion.class.getName());
     TUser OTUser = null;
-    dataManager OdataManager = null;
+    @PersistenceContext(unitName = "JTA_UNIT")
+    private EntityManager em;
 
     public TFamilleStock getTProductItemStock(String lg_FAMILLE_ID, String lg_EMPLACEMENT_ID) {
         TFamilleStock OTProductItemStock = null;
-        EntityManager em = OdataManager.getEm();
+
         try {
             OTProductItemStock = em.
                     createQuery("SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable'", TFamilleStock.class).
                     setParameter(1, lg_FAMILLE_ID).setParameter(2, lg_EMPLACEMENT_ID).setFirstResult(0).setMaxResults(1).getSingleResult();
-            em.refresh(OTProductItemStock);
+          //  em.refresh(OTProductItemStock);
         } catch (Exception e) {
-                 LOGGER.log(Level.INFO, "findFamilleGrossiste id produit {0} lg_EMPLACEMENT_ID {1}", new Object[]{lg_FAMILLE_ID, lg_EMPLACEMENT_ID});
+            LOGGER.log(Level.INFO, "findFamilleGrossiste id produit {0} lg_EMPLACEMENT_ID {1}", new Object[]{lg_FAMILLE_ID, lg_EMPLACEMENT_ID});
             LOGGER.log(Level.SEVERE, null, e);
         }
         return OTProductItemStock;
     }
 
     public TFamilleGrossiste findFamilleGrossiste(String lg_FAMILLE_ID, String lg_GROSSISTE_ID) {
-        TFamilleGrossiste OTFamilleGrossiste = null;
-        EntityManager em = OdataManager.getEm();
+        TFamilleGrossiste familleGrossiste = null;
+
         try {
             Query qry = em.createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2  AND t.strSTATUT = ?3 ").
                     setParameter(1, lg_FAMILLE_ID)
                     .setParameter(2, lg_GROSSISTE_ID)
                     .setParameter(3, commonparameter.statut_enable);
             qry.setMaxResults(1);
-            OTFamilleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
+            familleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
 
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "findFamilleGrossiste id produit {0} grossiste {1}", new Object[]{lg_FAMILLE_ID, lg_GROSSISTE_ID});
             LOGGER.log(Level.SEVERE, null, e);
         }
 
-        return OTFamilleGrossiste;
+        return familleGrossiste;
     }
 
     public int isOnAnotherSuggestion(String lgFamilleID) {
-        EntityManager em = OdataManager.getEm();
+
         int status = 0;
         try {
 
@@ -120,8 +121,7 @@ public class Suggestion extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        OdataManager = new dataManager();
-        OdataManager.initEntityManager();
+
         response.setContentType("application/json;charset=UTF-8");
         HttpSession session = request.getSession();
         OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
@@ -134,8 +134,8 @@ public class Suggestion extends HttpServlet {
             lg_SUGGESTION_ORDER_ID = request.getParameter("lg_SUGGESTION_ORDER_ID");
 
         }
-        int start = Integer.valueOf(request.getParameter("start"));
-        int limit = Integer.valueOf(request.getParameter("limit"));
+        int start = Integer.parseInt(request.getParameter("start"));
+        int limit = Integer.parseInt(request.getParameter("limit"));
         List<TSuggestionOrderDetails> detailses = listeSuggestionOrderDetails(search_value, lg_SUGGESTION_ORDER_ID, start, limit);
         int count = listeSuggestionOrderDetails(search_value, lg_SUGGESTION_ORDER_ID);
         JSONObject data = new JSONObject();
@@ -149,7 +149,7 @@ public class Suggestion extends HttpServlet {
         LocalDate nMoinsUn = moisUn.minusMonths(1);
         LocalDate nMoinsDeux = moisUn.minusMonths(2);
         LocalDate nMoinsTrois = moisUn.minusMonths(3);
-        try ( PrintWriter out = response.getWriter()) {
+        try (PrintWriter out = response.getWriter()) {
             data.put("total", count);
             for (TSuggestionOrderDetails order : detailses) {
                 JSONObject json = new JSONObject();
@@ -176,6 +176,7 @@ public class Suggestion extends HttpServlet {
                 json.put("lg_FAMILLE_PRIX_ACHAT", order.getLgFAMILLEID().getIntPAT());
                 json.put("int_PAF_SUGG", order.getIntPAFDETAIL());
                 json.put("int_PRIX_REFERENCE", order.getLgFAMILLEID().getIntPRICETIPS());
+                json.put("lg_SUGGESTION_ORDER_ID", order.getLgSUGGESTIONORDERID().getLgSUGGESTIONORDERID());
 
                 int int_QTE_REASSORT = 0;
                 try {
@@ -229,10 +230,10 @@ public class Suggestion extends HttpServlet {
     }// </editor-fold>
 
     private List<TSuggestionOrderDetails> listeSuggestionOrderDetails(String search_value, String lg_SUGGESTION_ORDER_ID, int start, int limit) {
-        EntityManager em = OdataManager.getEm();
+
         List<TSuggestionOrderDetails> detailses = new ArrayList<>();
         try {
-            System.out.println("search_value  " + search_value + "  lg_SUGGESTION_ORDER_ID " + lg_SUGGESTION_ORDER_ID);
+
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<TSuggestionOrderDetails> cq = cb.createQuery(TSuggestionOrderDetails.class);
             Root<TSuggestionOrderDetails> root = cq.from(TSuggestionOrderDetails.class);
@@ -263,7 +264,7 @@ public class Suggestion extends HttpServlet {
     }
 
     private int listeSuggestionOrderDetails(String search_value, String lg_SUGGESTION_ORDER_ID) {
-        EntityManager em = OdataManager.getEm();
+
         try {
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -293,7 +294,7 @@ public class Suggestion extends HttpServlet {
     }
 
     private int quantity(String lgFamille, int month, int year, String empl) {
-        EntityManager em = OdataManager.getEm();
+
         try {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
