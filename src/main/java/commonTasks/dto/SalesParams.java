@@ -17,19 +17,23 @@ import util.DateConverter;
  */
 public class SalesParams implements Serializable {
 
-    private String typeVenteId, natureVenteId, remiseId, userVendeurId, stockId, produitId,typeDepoId;
-    private int qte, qteServie, qteUg=0;
-    private String  bonRef="";
-    private boolean sansBon,checkUg=false;
+    private String typeVenteId, natureVenteId, remiseId, userVendeurId, stockId, produitId, typeDepoId;
+    private int qte, qteServie, qteUg = 0;
+    private String bonRef = "";
+    private boolean sansBon, checkUg = false;
     private TUser userId;
     private String venteId;
     private String itemId;
-    private Integer itemPu,remiseDepot=0;
-    private boolean devis=false,depot=false,prevente=false;
+    private Integer itemPu;
+    private Integer remiseDepot = 0;
+    private boolean devis = false;
+    private boolean depot = false;
+    private boolean prevente = false;
     private String clientId;
     private String ayantDroitId;
-    private Integer montantTp,totalRecap;
-    private String statut=DateConverter.STATUT_PROCESS;
+    private Integer montantTp;
+    private Integer totalRecap;
+    private String statut = DateConverter.STATUT_PROCESS;
     private String emplacementId;
     private String medecinId;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
@@ -65,7 +69,7 @@ public class SalesParams implements Serializable {
     public void setDepot(boolean depot) {
         this.depot = depot;
     }
-    
+
     public String getAyantDroitId() {
         return ayantDroitId;
     }

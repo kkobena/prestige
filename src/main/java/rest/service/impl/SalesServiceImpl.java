@@ -1069,7 +1069,7 @@ public class SalesServiceImpl implements SalesService {
             afficheurProduit(dp.getLgFAMILLEID().getStrNAME(), dp.getIntQUANTITY(), dp.getIntPRICEUNITAIR(), dp.getIntPRICE());
             return json;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             LOG.log(Level.SEVERE, "createPreVenteVo", e);
             try {
                 json.put("success", false).put("msg", "Erreur :: l'opération a échouée");
@@ -2538,7 +2538,6 @@ public class SalesServiceImpl implements SalesService {
                     montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
 
                     cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
-                    //  montantvente = montantAPaye.getMontant();
                     montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
                     montantVariable = montantvente;
                     remiseCarnet = montantAPaye.getRemise();
@@ -2855,7 +2854,7 @@ public class SalesServiceImpl implements SalesService {
             q.setParameter(1, venteId);
             return ((Long) q.getSingleResult()).intValue();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return 0;
         }
     }
@@ -2867,7 +2866,7 @@ public class SalesServiceImpl implements SalesService {
             q.setParameter(1, venteId);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return 0;
         }
     }
@@ -3112,7 +3111,7 @@ public class SalesServiceImpl implements SalesService {
             tp.setClient(client);
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
         }
         return json;
@@ -3241,7 +3240,7 @@ public class SalesServiceImpl implements SalesService {
             return new JSONObject().put("success", true).put("typeVenteId", params.getTypeVenteId());
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false).put("msg", "Imposible de modifier la vente ").put("typeVenteId", DateConverter.VENTE_COMPTANT_ID);
         }
     }
@@ -3267,7 +3266,7 @@ public class SalesServiceImpl implements SalesService {
             getEm().merge(OTPreenregistrement);
             return new JSONObject().put("success", true);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
         }
     }
@@ -3504,7 +3503,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public JSONObject shownetpayVoWithEncour(SalesParams params) throws JSONException {
+    public JSONObject shownetpayVoWithEncour(SalesParams params) {
         JSONObject json = new JSONObject();
         try {
             TPreenregistrement preenregistrement = getEm().find(TPreenregistrement.class, params.getVenteId());
@@ -3531,18 +3530,24 @@ public class SalesServiceImpl implements SalesService {
             Integer montantToBePaid) {
 
         TCompteClientTiersPayant tc = this.getEm().find(TCompteClientTiersPayant.class, compteTp);
-        TTiersPayant tiersPayant = tc.getLgTIERSPAYANTID();
-        String tierspayantName = tiersPayant.getStrFULLNAME();
-        Integer plafondClient = (tc.getDblPLAFOND() == null || tc.getDblPLAFOND() <= 0 ? Integer.MAX_VALUE : tc.getDblPLAFOND().intValue());
+        TTiersPayant tiersPayant2 = tc.getLgTIERSPAYANTID();
+        String tierspayantName = tiersPayant2.getStrFULLNAME();
+        Integer plafondClient = (tc.getDblPLAFOND() == null || tc.getDblPLAFOND() <= 0 ? null : tc.getDblPLAFOND().intValue());
         Integer encoursClient = (tc.getDbPLAFONDENCOURS() == null || tc.getDbPLAFONDENCOURS() <= 0 ? Integer.MAX_VALUE : tc.getDbPLAFONDENCOURS());
-        Integer plafondTierPayant = (tiersPayant.getDblPLAFONDCREDIT() == null || tiersPayant.getDblPLAFONDCREDIT() <= 0 ? Integer.MAX_VALUE : tiersPayant.getDblPLAFONDCREDIT().intValue());
+        Integer plafondTierPayant = (tiersPayant2.getDblPLAFONDCREDIT() == null || tiersPayant2.getDblPLAFONDCREDIT() <= 0 ? null
+                : tiersPayant2.getDblPLAFONDCREDIT().intValue());
         Integer consoMensuelleClient = (tc.getDbCONSOMMATIONMENSUELLE() == null || tc.getDbCONSOMMATIONMENSUELLE() < 0 ? 0 : tc.getDbCONSOMMATIONMENSUELLE());
-        Integer consoMensuelleTierPayant = (tiersPayant.getDbCONSOMMATIONMENSUELLE() == null || tiersPayant.getDbCONSOMMATIONMENSUELLE() < 0 ? 0 : tiersPayant.getDbCONSOMMATIONMENSUELLE());
+        Integer consoMensuelleTierPayant = (tiersPayant2.getDbCONSOMMATIONMENSUELLE() == null || tiersPayant2.getDbCONSOMMATIONMENSUELLE() < 0 ? 0 : tiersPayant2.getDbCONSOMMATIONMENSUELLE());
         JSONObject json = chechTiersPayantConsumption(plafondTierPayant, consoMensuelleTierPayant, montantToBePaid, tierspayantName);
+        System.err.println("chechTiersPayantConsumption 11 ::: " + json);
+        System.err.println("plafond " + plafondClient);
+        System.err.println("encoursClient " + encoursClient);
+        System.err.println("plafondTierPayant " + plafondTierPayant);
         String msg = json.getString("msg");
         boolean hasRestructuring = json.getBoolean("hasRestructuring");
         montantToBePaid = json.getInt("montantToBePaid");
         json = chechCustomerConsumption(plafondClient, encoursClient, consoMensuelleClient, montantToBePaid, tierspayantName);
+        System.err.println("chechTiersPayantConsumption 77777  ::: " + json);
         montantToBePaid = json.getInt("montantToBePaid");
         if (json.getBoolean("hasRestructuring")) {
             msg = json.getString("msg");
@@ -3557,6 +3562,11 @@ public class SalesServiceImpl implements SalesService {
             Integer consoMensuelleClient, Integer montantToBePaid, String tierspayantName) {
         boolean hasRestructuring = false;
         String msg = "";
+        if (Objects.isNull(plafondClient)) {
+            return new JSONObject().put("msg", msg)
+                    .put("hasRestructuring", hasRestructuring)
+                    .put("montantToBePaid", montantToBePaid);
+        }
         if ((montantToBePaid > plafondClient) || (encoursClient < consoMensuelleClient + montantToBePaid)) {
             hasRestructuring = true;
             if (encoursClient < consoMensuelleClient + montantToBePaid) {
@@ -3579,6 +3589,11 @@ public class SalesServiceImpl implements SalesService {
             Integer consoMensuelleTierPayant, Integer montantToBePaid, String tierspayantName) {
         boolean hasRestructuring = false;
         String msg = "";
+        if (Objects.isNull(plafondTierPayant)) {
+            return new JSONObject().put("msg", msg)
+                    .put("hasRestructuring", hasRestructuring)
+                    .put("montantToBePaid", montantToBePaid);
+        }
         if (plafondTierPayant < (consoMensuelleTierPayant + montantToBePaid)) {
             hasRestructuring = true;
             montantToBePaid = plafondTierPayant - consoMensuelleTierPayant;
@@ -3590,11 +3605,11 @@ public class SalesServiceImpl implements SalesService {
                 .put("montantToBePaid", montantToBePaid);
     }
 
-    public MontantAPaye calculVoNetAvecPlafondVente(TPreenregistrement OTPreenregistrement, List<TiersPayantParams> tierspayants) {
+    public MontantAPaye calculVoNetAvecPlafondVente(TPreenregistrement oreenregistrement, List<TiersPayantParams> tierspayants) {
         try {
             String msg = " ";
             boolean hasRestructuring = false;
-            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, this.getEm());
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(oreenregistrement, this.getEm());
             int remiseCarnet = 0;
             int montantvente;
             int totalTp = 0;
@@ -3604,12 +3619,12 @@ public class SalesServiceImpl implements SalesService {
             int cmuAmount = 0;
             boolean isCmu = tierspayants.stream().allMatch(TiersPayantParams::isCmu);
             List<TiersPayantParams> resultat = new ArrayList<>();
-            TClient client = OTPreenregistrement.getClient();
-            if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
-                TRemise remise = OTPreenregistrement.getRemise();
+            TClient client = oreenregistrement.getClient();
+            if (oreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
+                TRemise remise = oreenregistrement.getRemise();
                 remise = remise != null ? remise : client.getRemise();
                 if (remise != null) {
-                    montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
+                    montantAPaye = getRemiseVno(oreenregistrement, remise, oreenregistrement.getIntPRICE());
                     montantvente = montantAPaye.getMontant();
                     remiseCarnet = montantAPaye.getRemise();
                 } else {
@@ -3621,6 +3636,7 @@ public class SalesServiceImpl implements SalesService {
                 int tpnet = montantvente - remiseCarnet;
                 totalTp = tpnet;
                 JSONObject json = chechCustomerTiersPayantConsumption(tierspayants.get(0).getCompteTp(), tpnet);
+
                 if (json.getBoolean("hasRestructuring")) {
                     msg = json.getString("msg");
                     hasRestructuring = json.getBoolean("hasRestructuring");
@@ -3641,10 +3657,10 @@ public class SalesServiceImpl implements SalesService {
                 netCustomer = montantvente - totalTp;
             } else {
                 int montantVariable;
-                TRemise remise = OTPreenregistrement.getRemise();
+                TRemise remise = oreenregistrement.getRemise();
 
                 if (remise != null) {
-                    montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
+                    montantAPaye = getRemiseVno(oreenregistrement, remise, oreenregistrement.getIntPRICE());
                     cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
                     //   montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() : montantAPaye.getMontant();
                     montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
@@ -3665,6 +3681,7 @@ public class SalesServiceImpl implements SalesService {
                     Integer tpnet = (int) Math.ceil(montantTp);
                     int taux2 = 0;
                     JSONObject json = chechCustomerTiersPayantConsumption(tierspayant.getCompteTp(), tpnet);
+                    System.err.println("chechCustomerTiersPayantConsumption =====>> " + json);
                     if (json.getBoolean("hasRestructuring")) {
                         msg += json.getString("msg") + " ";
                         hasRestructuring = json.getBoolean("hasRestructuring");
@@ -3769,7 +3786,7 @@ public class SalesServiceImpl implements SalesService {
             return json.put("success", true).put("clientExist", p.getClient() != null)
                     .put("medecinId", m.getId());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return json.put("success", false);
         }
     }
@@ -3785,7 +3802,7 @@ public class SalesServiceImpl implements SalesService {
             return json.put("success", true).put("clientExist", p.getClient() != null)
                     .put("medecinId", m.getId());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return json.put("success", false);
         }
     }
@@ -3794,7 +3811,7 @@ public class SalesServiceImpl implements SalesService {
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = getEm().find(TParameters.class, key);
-            return (Integer.valueOf(parameters.getStrVALUE().trim()) == 1);
+            return (Integer.parseInt(parameters.getStrVALUE().trim()) == 1);
         } catch (Exception e) {
             return false;
         }
@@ -3822,7 +3839,7 @@ public class SalesServiceImpl implements SalesService {
                     .put("refId", tp.getLgPREENREGISTREMENTID());
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false).put("msg", "l'opération a échoué");
         }
     }
@@ -3854,7 +3871,7 @@ public class SalesServiceImpl implements SalesService {
                     .build();
             return new JSONObject().put("data", new JSONObject(request)).put("success", true);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("data", new JSONObject()).put("success", false);
         }
     }
@@ -4231,7 +4248,7 @@ public class SalesServiceImpl implements SalesService {
                     getSingleResult();
             return Optional.ofNullable(list);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Optional.empty();
 
         }
@@ -4723,7 +4740,7 @@ public class SalesServiceImpl implements SalesService {
             tq.setMaxResults(1);
             return tq.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
     }
