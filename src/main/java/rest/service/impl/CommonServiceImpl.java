@@ -88,13 +88,14 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    private TOfficine officine;
     private PrintService service;
-    private TImprimante OTImprimante;
+    private TImprimante imprimante;
     private Boolean afficheeurActif;
     private LocalDate dateUpdat;
     private Integer maximunproduit;
-    private Boolean voirNumeroTicket, sansBon, plafondVenteIsActive;
+    private Boolean voirNumeroTicket;
+    private Boolean sansBon;
+    private Boolean plafondVenteIsActive;
 
     public LocalDate getDateUpdat() {
         return dateUpdat;
@@ -132,15 +133,12 @@ public class CommonServiceImpl implements Serializable, CommonService {
         return em;
     }
 
-    public CommonServiceImpl() {
+    public TImprimante getImprimante() {
+        return imprimante;
     }
 
-    public TImprimante getOTImprimante() {
-        return OTImprimante;
-    }
-
-    public void setOTImprimante(TImprimante OTImprimante) {
-        this.OTImprimante = OTImprimante;
+    public void setImprimante(TImprimante imprimante) {
+        this.imprimante = imprimante;
     }
 
     public Boolean getAfficheeurActif() {
@@ -292,7 +290,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.or(cb.like(root.get(TUser_.strFIRSTNAME), query + "%"), cb.like(root.get(TUser_.strLASTNAME), query + "%"), cb.like(cb.concat(cb.concat(root.get(TUser_.strFIRSTNAME), " "), root.get(TUser_.strLASTNAME)), query + "%")));
             }
-            CriteriaQuery<UserDTO> where = cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             q.setFirstResult(start);
             q.setMaxResults(limit);
@@ -305,15 +303,15 @@ public class CommonServiceImpl implements Serializable, CommonService {
     }
 
     @Override
-    public boolean hasAuthority(List<TPrivilege> LstTPrivilege, String authorityName) {
+    public boolean hasAuthority(List<TPrivilege> lstTPrivilege, String authorityName) {
         java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(authorityName);
-        return LstTPrivilege.stream().anyMatch(p);
+        return lstTPrivilege.stream().anyMatch(p);
     }
 
     @Override
-    public boolean canShowAllSales(List<TPrivilege> LstTPrivilege) {
+    public boolean canShowAllSales(List<TPrivilege> lstTPrivilege) {
         java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(Parameter.P_SHOW_ALL_ACTIVITY);
-        return LstTPrivilege.stream().anyMatch(p);
+        return lstTPrivilege.stream().anyMatch(p);
     }
     private Integer nombreTickets;
 
@@ -404,21 +402,19 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     @Override
     public TImprimante findImprimanteByName() {
-        if (OTImprimante == null) {
-            if (service != null) {
+        if (imprimante == null && service != null) {
                 try {
 
                     Query qry = getEntityManager().createQuery("SELECT t FROM TImprimante t WHERE t.strNAME = ?1 ")
                             .setParameter(1, service.getName());
                     if (!qry.getResultList().isEmpty()) {
-                        OTImprimante = (TImprimante) qry.getSingleResult();
+                        imprimante = (TImprimante) qry.getSingleResult();
                     }
                 } catch (Exception e) {
                 }
-            }
         }
 
-        return OTImprimante;
+        return imprimante;
     }
 
     @Override
@@ -505,7 +501,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
                 TParameters tp = getEntityManager().find(TParameters.class, "KEY_ACTIVATION_PLAFOND_VENTE");
                 plafondVenteIsActive = (tp != null && tp.getStrVALUE().trim().equals("1"));
             } catch (Exception e) {
-         
+
             }
         }
         return plafondVenteIsActive;
@@ -695,7 +691,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
                 }
                 return new JSONObject().put("success", false);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.log(Level.SEVERE, null, e);
                 return new JSONObject().put("success", false);
             }
         }
