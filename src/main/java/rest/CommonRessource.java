@@ -336,8 +336,8 @@ public class CommonRessource {
     @Path("autorisations/showstock")
     public Response autorisationAfficherStock() {
         HttpSession hs = servletRequest.getSession();
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean afficherStockVente = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.P_AFFICHER_STOCK_A_LA_VENTE);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+        boolean afficherStockVente = DateConverter.hasAuthorityByName(lstTPrivilege, DateConverter.P_AFFICHER_STOCK_A_LA_VENTE);
         return Response.ok().entity(ResultFactory.getSuccessResult(afficherStockVente, 1)).build();
     }
 

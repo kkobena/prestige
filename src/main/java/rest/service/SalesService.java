@@ -107,7 +107,7 @@ public interface SalesService {
 
     JSONObject modificationVentetierpayantprincipal(String venteId, ClotureVenteParams params) throws JSONException;
 
-    JSONObject shownetpayVoWithEncour(SalesParams params) throws JSONException;
+    JSONObject shownetpayVoWithEncour(SalesParams params) ;
 
     JSONObject updateMedecin(String idVente, MedecinDTO medecinDTO) throws JSONException;
 
