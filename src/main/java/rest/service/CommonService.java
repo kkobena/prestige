@@ -32,7 +32,7 @@ import org.json.JSONObject;
  * @author Kobena
  */
 @Local
-//@Remote
+
 public interface CommonService {
 
     List<ReglementDTO> findReglements();
@@ -57,9 +57,9 @@ public interface CommonService {
 
     List<TNatureVente> findNatureVente();
 
-    boolean hasAuthority(List<TPrivilege> LstTPrivilege, String authorityName);
+    boolean hasAuthority(List<TPrivilege> lstTPrivilege, String authorityName);
 
-    boolean canShowAllSales(List<TPrivilege> LstTPrivilege);
+    boolean canShowAllSales(List<TPrivilege> lstTPrivilege);
 
     int nombreTickets(String param);
 
