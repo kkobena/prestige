@@ -436,15 +436,16 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
                 query = query + "%";
             }
 
-            Query q = getEntityManager().createNativeQuery("SELECT prd.int_CIP,prd.str_NAME,prd.int_PRICE,prd.int_PAF,prd.lg_FAMILLE_ID  FROM   t_preenregistrement_detail d,t_famille prd, t_preenregistrement p,t_preenregistrement_compte_client_tiers_payent cpl,t_compte_client_tiers_payant cp,t_tiers_payant tp "
+            /*  Query q = getEntityManager().createNativeQuery("SELECT prd.int_CIP,prd.str_NAME,prd.int_PRICE,prd.int_PAF,prd.lg_FAMILLE_ID  FROM   t_preenregistrement_detail d,t_famille prd, t_preenregistrement p,t_preenregistrement_compte_client_tiers_payent cpl,t_compte_client_tiers_payant cp,t_tiers_payant tp "
                     + "WHERE d.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID AND d.lg_FAMILLE_ID=prd.lg_FAMILLE_ID AND p.lg_PREENREGISTREMENT_ID=cpl.lg_PREENREGISTREMENT_ID AND p.int_PRICE >0 AND p.b_IS_CANCEL=0 AND "
                     + " cpl.lg_COMPTE_CLIENT_TIERS_PAYANT_ID=cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID AND  cp.lg_TIERS_PAYANT_ID=tp.lg_TIERS_PAYANT_ID AND tp.lg_TIERS_PAYANT_ID=?1 AND DATE(p.dt_UPDATED) BETWEEN ?3 AND ?4 "
-                    + "  AND (prd.int_CIP LIKE ?2 OR prd.str_NAME LIKE ?2) ", Tuple.class);
+                    + "  AND (prd.int_CIP LIKE ?2 OR prd.str_NAME LIKE ?2) ", Tuple.class);*/
+            Query q = getEntityManager().createNativeQuery("SELECT prd.int_CIP,prd.str_NAME,prd.int_PRICE,prd.int_PAF,prd.lg_FAMILLE_ID  FROM  t_famille prd WHERE (prd.int_CIP LIKE ?1 OR prd.str_NAME LIKE ?1) AND prd.`str_STATUT`='enable' ", Tuple.class);
 
-            q.setParameter(1, tierspayantId);
-            q.setParameter(2, query);
-            q.setParameter(3, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
-            q.setParameter(4, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
+            // q.setParameter(1, tierspayantId);
+            q.setParameter(1, query);
+            //q.setParameter(3, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
+            // q.setParameter(4, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
             List<Tuple> list = q.getResultList();
             return list.stream().map(ProduitVenduDTO::new).collect(Collectors.toList());
 
