@@ -87,7 +87,7 @@
     json.put("dt_CREATED", date.DateToString(new Date(), date.formatterShort));
     arrayObj.put(json);
 
-    System.out.println(arrayObj.toString());
+ 
 
 %>
 

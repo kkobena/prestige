@@ -96,39 +96,7 @@
             //code ajouté 04/09/2016
             if (OcaisseManagement.getMessage().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
                 OcaisseManagement.sendNotification("%%");
-              //  OcaisseManagement.sendSmsChiffreAffaireByCaisse(new Date(), new Date(), "%%"); //a decommenter apres et supprimer le code ci-dessous
-
-                //code a retirer apres decommentaire le code ci-dessus
-                /*List<TResumeCaisse> lstTResumeCaisse = new ArrayList<TResumeCaisse>();
-                List<TAlertEventUserFone> lstTAlertEventUserFone = new ArrayList<TAlertEventUserFone>();
-                String message = "Récapitulatif de caisse " + date.DateToString(new Date(), date.formatterShort) + "\n";
-                Double totalAmount = 0.0;
-                ServicesNotifCustomer OServicesNotifCustomer = new ServicesNotifCustomer(OdataManager, OTUser);
-                Date dt_Date_Debut, dt_Date_Fin;
-                try {
-                    dt_Date_Debut = date.getDate(date.DateToString(new Date(), date.formatterMysqlShort2), "00:00");
-                    dt_Date_Fin = date.getDate(date.DateToString(new Date(), date.formatterMysqlShort2), "23:59");
-                     lstTResumeCaisse = OdataManager.getEm().createQuery("SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1 AND (t.dtUPDATED >= ?3 AND t.dtUPDATED <= ?4) AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?5 ORDER BY t.dtCREATED DESC")
-                    .setParameter(1, "%%").setParameter(3, dt_Date_Debut).setParameter(4, dt_Date_Fin).setParameter(5, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).getResultList();
-            
-                    for (TResumeCaisse OTResumeCaisse : lstTResumeCaisse) {
-                        totalAmount += OTResumeCaisse.getIntSOLDESOIR();
-                        message += "- " + OTResumeCaisse.getLgUSERID().getStrFIRSTNAME() + " " + OTResumeCaisse.getLgUSERID().getStrLASTNAME() + ": " + conversion.AmountFormat(OTResumeCaisse.getIntSOLDESOIR(), '.') + "\n";
-                    }
-                    message += "Total Caisse: " + conversion.AmountFormat(totalAmount.intValue(), '.');
-                   // new logger().OCategory.info("lstTResumeCaisse taille :" +lstTResumeCaisse.size());
-                    if (lstTResumeCaisse.size() > 0) {
-                        lstTAlertEventUserFone = OdataManager.getEm().createQuery("SELECT t FROM TAlertEventUserFone t WHERE t.strEvent.strEvent LIKE ?1")
-                                .setParameter(1, "N_GET_SOLDE_CAISSE").getResultList();
-                       // new logger().OCategory.info("lstTAlertEventUserFone taille :" +lstTAlertEventUserFone.size());
-                        for (TAlertEventUserFone OTAlertEventUserFone : lstTAlertEventUserFone) {
-                            OServicesNotifCustomer.doservice(message, OTAlertEventUserFone.getLgUSERFONEID().getStrPHONE(), OcaisseManagement.getKey().getShortId(10)+OTAlertEventUserFone.getLgUSERFONEID().getLgUSERID());
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }*/
-                //fin code a retirer apres decommentaire le code ci-dessus
+          
             }
             //fin code ajouté 04/09/2016
 
