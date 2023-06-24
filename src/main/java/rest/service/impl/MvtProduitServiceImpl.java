@@ -315,7 +315,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.VENTE);
             final String statut = "is_Closed";
             list.stream().forEach(it -> {
-                System.err.println("update vente stock " + it.getIntQUANTITY());
+                
                 it.setStrSTATUT(statut);
                 TFamille tFamille = it.getLgFAMILLEID();
                 if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
@@ -331,7 +331,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
                 Integer initStock = familleStock.getIntNUMBERAVAILABLE();
 
-                System.err.println("initStock " + initStock);
+          
                 if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
                     TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
                     TFamilleStock stockParent = findStockByProduitId(otFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID());
