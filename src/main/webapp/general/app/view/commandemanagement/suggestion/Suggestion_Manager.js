@@ -38,7 +38,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
         _myAppController = Ext.create('testextjs.controller.App', {});
         Me = this;
 
-        const itemsPerPage = 20;
+        const itemsPerPage = 10;
         const store_suggestion = new Ext.data.Store({
 
             fields: [

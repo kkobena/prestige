@@ -454,6 +454,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
             });
         }
 
-        ;
+
     }
 });

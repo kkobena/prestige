@@ -820,7 +820,15 @@ public class SuggestionImpl implements SuggestionService {
                 .montantVente((long) details.getIntPRICEDETAIL() * details.getIntNUMBER())
                 .build();
     }
+    private TSuggestionOrderDetails addItem(SuggestionOrderDetailDTO suggestionOrderDetail, TSuggestionOrder order) {
+        Objects.requireNonNull(suggestionOrderDetail.getQte(), "La quantité ne doit pas être null");
+        TGrossiste grossiste = order.getLgGROSSISTEID();
+        TFamille famille = getEmg().find(TFamille.class, suggestionOrderDetail.getFamilleId());
+        famille.setIntORERSTATUS((short) 1);
+        getEmg().merge(famille);
+        return initTSuggestionOrderDetail(order, famille, grossiste, suggestionOrderDetail.getQte());
 
+    }
     @Override
     public JSONObject fetch(String search, int start, int limit) {
         long count = count(search);
@@ -874,15 +882,7 @@ public class SuggestionImpl implements SuggestionService {
         return getEmg().find(TSuggestionOrderDetails.class, id);
     }
 
-    private TSuggestionOrderDetails addItem(SuggestionOrderDetailDTO suggestionOrderDetail, TSuggestionOrder order) {
-        Objects.requireNonNull(suggestionOrderDetail.getQte(), "La quantité ne doit pas être null");
-        TGrossiste grossiste = order.getLgGROSSISTEID();
-        TFamille famille = getEmg().find(TFamille.class, suggestionOrderDetail.getFamilleId());
-        famille.setIntORERSTATUS((short) 1);
-        getEmg().merge(famille);
-        return initTSuggestionOrderDetail(order, famille, grossiste, suggestionOrderDetail.getQte());
 
-    }
 
     private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TSuggestionOrder> root, Join<TSuggestionOrder, TSuggestionOrderDetails> join, String search) {
         List<Predicate> predicates = new ArrayList<>();
@@ -893,7 +893,7 @@ public class SuggestionImpl implements SuggestionService {
 
         if (StringUtils.isNotEmpty(search)) {
             search = search + "%";
-            predicates.add(cb.or(cb.like(root.get(TSuggestionOrder_.strSTATUT), search),
+            predicates.add(cb.or(cb.like(root.get(TSuggestionOrder_.strREF), search),
                     cb.like(join.get(TSuggestionOrderDetails_.lgFAMILLEID).get(TFamille_.intCIP), search),
                     cb.like(join.get(TSuggestionOrderDetails_.lgFAMILLEID).get(TFamille_.strNAME), search)
             ));
@@ -915,22 +915,6 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-    private int isOnAnotherSuggestion(TFamille lgFamilleID) {
-        int status = (lgFamilleID.getIntORERSTATUS() == 2 ? 2 : 0);
-        try {
-            long count = (long) getEmg().createQuery("SELECT COUNT(o)  FROM TSuggestionOrderDetails o WHERE  o.lgFAMILLEID.lgFAMILLEID =?1 ").setParameter(1, lgFamilleID.getLgFAMILLEID())
-                    .setMaxResults(1)
-                    .getSingleResult();
-            if (count > 1) {
-                return 1;
-
-            }
-        } catch (Exception e) {
-
-        }
-
-        return status;
-    }
 
     private TFamilleGrossiste findFamilleGrossiste(String familleId, String grossisteId) {
 
@@ -949,4 +933,21 @@ public class SuggestionImpl implements SuggestionService {
 
 
     }
+    private int isOnAnotherSuggestion(TFamille lgFamilleID) {
+        int status = (lgFamilleID.getIntORERSTATUS() == 2 ? 2 : 0);
+        try {
+            long count = (long) getEmg().createQuery("SELECT COUNT(o)  FROM TSuggestionOrderDetails o WHERE  o.lgFAMILLEID.lgFAMILLEID =?1 ").setParameter(1, lgFamilleID.getLgFAMILLEID())
+                    .setMaxResults(1)
+                    .getSingleResult();
+            if (count > 1) {
+                return 1;
+
+            }
+        } catch (Exception e) {
+
+        }
+
+        return status;
+    }
+
 }

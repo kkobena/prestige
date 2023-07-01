@@ -1167,9 +1167,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         const idSugg = rec.get('lg_SUGGESTION_ORDER_ID');
         Ext.Ajax.request({
             method: 'DELETE',
-
             url: '../api/v1/suggestion/item/' + rec.get('lg_SUGGESTION_ORDER_DETAILS_ID'),
-
             success: function (response) {
                 grid.getStore().reload();
                 Me_Window.getSuggestionAmount(idSugg);

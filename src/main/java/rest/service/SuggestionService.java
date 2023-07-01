@@ -7,22 +7,17 @@ package rest.service;
 
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
-import dal.TCalendrier;
-import dal.TEmplacement;
-import dal.TFamille;
-import dal.TFamilleStock;
-import dal.TSuggestionOrderDetails;
-import dal.TUser;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
-import javax.ejb.Local;
-import javax.persistence.EntityManager;
+import dal.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
-import rest.service.dto.SuggestionsDTO;
+
+import javax.ejb.Local;
+import javax.persistence.EntityManager;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
 /**
  *

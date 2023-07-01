@@ -23,8 +23,7 @@ import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.service.dto.CommandeEncourDetailDTO;
-import rest.service.dto.CommandeFiltre;
+import rest.service.dto.*;
 
 /**
  *
@@ -92,4 +91,10 @@ public interface OrderService {
     JSONObject fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit);
 
     String modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto, TUser user);
+
+    JSONObject fetch(String query, int start, int limit);
+    void removeItem(String itemId);
+    JSONObject getCommandeAmount(String commandeId);
+
+    void addItem(OrderDetailDTO orderDetail,TUser user);
 }
