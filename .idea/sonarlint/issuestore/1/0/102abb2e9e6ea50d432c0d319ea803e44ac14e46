@@ -1,72 +1,82 @@
 
-h
-java:S1192Í"QDefine a constant instead of duplicating this literal "Connexion reussi" 3 times.(þí‹˜
-k	java:S117K"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ûÕæ€ÿÿÿÿÿ
-k	java:S117U"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ù¤Â½þÿÿÿÿ
-k	java:S117Y"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ŽÏ¡¸ûÿÿÿÿ
-k	java:S117]"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÆ–Äþÿÿÿÿ
-f	java:S117a"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Äð§Ô
-k	java:S117e"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(šŸ„Šúÿÿÿÿ
-k	java:S117i"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(°Š¸«ùÿÿÿÿ
-k	java:S117q"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(·˜éØúÿÿÿÿ
-k	java:S117s"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(îôõæùÿÿÿÿ
-k	java:S117}"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¥‚ù…ùÿÿÿÿ
-l	java:S117ï"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(‰­Äïüÿÿÿÿ
-i
-java:S1104%"SMake message a static final constant or non-public and provide accessors if needed.(ÕÃØ·
-b	java:S101"MRename this class name to match the regular expression '^[A-Z][a-zA-Z0-9]*$'.(²²ÝÌ
-^
-java:S2095€"GUse try-with-resources or close this "Statement" in a "finally" clause.(©º®Ï
-]
-java:S2095u"GUse try-with-resources or close this "Statement" in a "finally" clause.(©º®Ï
-i	java:S116"ORename this field "Host" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÍÉÚ§ýÿÿÿÿ
-d	java:S116"ORename this field "User" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¼üøË
-m	java:S116"SRename this field "Password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¬›™Âûÿÿÿÿ
-h	java:S116"SRename this field "Database" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(„” 
-k	java:S116 "VRename this field "DatabaseSID" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(òûÃŠ
-f	java:S116!"QRename this field "Driver" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ƒ°çð
-t	java:S116""ZRename this field "StringConnexion" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(êÉØÉúÿÿÿÿ
-l	java:S116#"WRename this field "UrlConnexion" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(†ÅÇ¢
-€
-java:S1149}"eReplace the synchronized class "Vector" by an unsynchronized one such as "ArrayList" or "LinkedList".(¥‚ù…ùÿÿÿÿ
-C	java:S108,")Either remove or fill this block of code.(“Çæ³ýÿÿÿÿ
-c	java:S100>"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ù¡¦ƒ
-c	java:S100G"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(àéá»
-h	java:S100K"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ûÕæ€ÿÿÿÿÿ
-c	java:S100P"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¿™ùÆ
-h	java:S100U"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ù¤Â½þÿÿÿÿ
-h	java:S100Y"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ŽÏ¡¸ûÿÿÿÿ
-h	java:S100]"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÆ–Äþÿÿÿÿ
-c	java:S100a"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Äð§Ô
-h	java:S100e"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(šŸ„Šúÿÿÿÿ
-h	java:S100i"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(°Š¸«ùÿÿÿÿ
-c	java:S100m"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ê¶œü
-h	java:S100q"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(·˜éØúÿÿÿÿ
-;
-java:S2129s" Remove this "String" constructor(îôõæùÿÿÿÿ
-V	java:S125v"<This block of commented-out lines of code should be removed.(ÖÁ¼ýÿÿÿÿ
-S	java:S106y"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ
-h	java:S100}"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¥‚ù…ùÿÿÿÿ
-T	java:S106‘"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ
-d	java:S100–"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(žÓ¿€
-i	java:S100›"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(µº›ñûÿÿÿÿ
-c	java:S100¤"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ó‘Óo
-d	java:S100¬"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Øá¿
-d	java:S100²"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ËÂÙ‹
-i	java:S100¸"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(âèëßþÿÿÿÿ
-c	java:S100½"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(®Ë¨P
-I
-java:S1874¿"3Remove this use of "newInstance"; it is deprecated.(•‡†
-T	java:S106Á"9Replace this use of System.out or System.err by a logger.(øºÑûúÿÿÿÿ
-T	java:S106Ã"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ
-d	java:S100É"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(é…ý±
+o
+java:S1192é"QDefine a constant instead of duplicating this literal "Connexion reussi" 3 times.(þí‹˜8ÎÊ“Ž‘1
+r	java:S117K"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ûÕæ€ÿÿÿÿÿ8ÜÊ“Ž‘1
+r	java:S117U"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ù¤Â½þÿÿÿÿ8ÞÊ“Ž‘1
+r	java:S117Y"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ŽÏ¡¸ûÿÿÿÿ8àÊ“Ž‘1
+r	java:S117]"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÆ–Äþÿÿÿÿ8âÊ“Ž‘1
+m	java:S117a"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Äð§Ô8ãÊ“Ž‘1
+r	java:S117e"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(šŸ„Šúÿÿÿÿ8äÊ“Ž‘1
+r	java:S117i"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(°Š¸«ùÿÿÿÿ8åÊ“Ž‘1
+r	java:S117q"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(·˜éØúÿÿÿÿ8æÊ“Ž‘1
+r	java:S117s"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(îôõæùÿÿÿÿ8èÊ“Ž‘1
+r	java:S117}"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¥‚ù…ùÿÿÿÿ8îÊ“Ž‘1
+s	java:S117•"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(×Þòëÿÿÿÿÿ8ïÊ“Ž‘1
+s	java:S117‹"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(‰­Äïüÿÿÿÿ8ïÊ“Ž‘1
+p
+java:S1104%"SMake message a static final constant or non-public and provide accessors if needed.(ÕÃØ·8òÊ“Ž‘1
+i	java:S101"MRename this class name to match the regular expression '^[A-Z][a-zA-Z0-9]*$'.(²²ÝÌ8öÊ“Ž‘1
 d
-java:S1871Ñ"MThis branch's code block is the same as the block for the branch on line 206.(êžÁá
-T	java:S106Ù"9Replace this use of System.out or System.err by a logger.(øºÑûúÿÿÿÿ
-T	java:S106Ü"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ
-i	java:S100ä"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Œè¿¾ùÿÿÿÿ
-T	java:S106î"9Replace this use of System.out or System.err by a logger.(øºÑûúÿÿÿÿ
-T	java:S106ò"9Replace this use of System.out or System.err by a logger.(øºÑûúÿÿÿÿ
-W	java:S125ñ"<This block of commented-out lines of code should be removed.(¥Îïãûÿÿÿÿ
-N
-java:S1144K"3Remove this unused private "set_Connection" method.(ûÕæ€ÿÿÿÿÿ
+java:S2095u"GUse try-with-resources or close this "Statement" in a "finally" clause.(©º®Ï8ˆÎ“Ž‘1
+e
+java:S2095€"GUse try-with-resources or close this "Statement" in a "finally" clause.(©º®Ï8ˆÎ“Ž‘1
+e
+java:S2095˜"GUse try-with-resources or close this "Statement" in a "finally" clause.(©º®Ï8‰Î“Ž‘1
+p	java:S116"ORename this field "Host" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÍÉÚ§ýÿÿÿÿ8ŠÎ“Ž‘1
+k	java:S116"ORename this field "User" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¼üøË8‹Î“Ž‘1
+t	java:S116"SRename this field "Password" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¬›™Âûÿÿÿÿ8‹Î“Ž‘1
+o	java:S116"SRename this field "Database" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(„” 8‹Î“Ž‘1
+r	java:S116 "VRename this field "DatabaseSID" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(òûÃŠ8‹Î“Ž‘1
+m	java:S116!"QRename this field "Driver" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ƒ°çð8‹Î“Ž‘1
+{	java:S116""ZRename this field "StringConnexion" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(êÉØÉúÿÿÿÿ8‹Î“Ž‘1
+s	java:S116#"WRename this field "UrlConnexion" to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(†ÅÇ¢8‹Î“Ž‘1
+‡
+java:S1149}"eReplace the synchronized class "Vector" by an unsynchronized one such as "ArrayList" or "LinkedList".(¥‚ù…ùÿÿÿÿ8‘Î“Ž‘1
+ˆ
+java:S1149•"eReplace the synchronized class "Vector" by an unsynchronized one such as "ArrayList" or "LinkedList".(×Þòëÿÿÿÿÿ8‘Î“Ž‘1
+J	java:S108,")Either remove or fill this block of code.(“Çæ³ýÿÿÿÿ8•Î“Ž‘1
+j	java:S100>"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Ù¡¦ƒ8™Î“Ž‘1
+j	java:S100G"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(àéá»8›Î“Ž‘1
+o	java:S100K"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ûÕæ€ÿÿÿÿÿ8œÎ“Ž‘1
+j	java:S100P"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¿™ùÆ8œÎ“Ž‘1
+o	java:S100U"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ù¤Â½þÿÿÿÿ8žÎ“Ž‘1
+o	java:S100Y"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ŽÏ¡¸ûÿÿÿÿ8ŸÎ“Ž‘1
+o	java:S100]"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ÖÆ–Äþÿÿÿÿ8ŸÎ“Ž‘1
+j	java:S100a"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Äð§Ô8ŸÎ“Ž‘1
+o	java:S100e"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(šŸ„Šúÿÿÿÿ8 Î“Ž‘1
+o	java:S100i"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(°Š¸«ùÿÿÿÿ8 Î“Ž‘1
+j	java:S100m"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ê¶œü8¡Î“Ž‘1
+o	java:S100q"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(·˜éØúÿÿÿÿ8£Î“Ž‘1
+B
+java:S2129s" Remove this "String" constructor(îôõæùÿÿÿÿ8©Î“Ž‘1
+]	java:S125v"<This block of commented-out lines of code should be removed.(ÖÁ¼ýÿÿÿÿ8­Î“Ž‘1
+Z	java:S106y"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ8®Î“Ž‘1
+o	java:S100}"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(¥‚ù…ùÿÿÿÿ8®Î“Ž‘1
+[	java:S106‘"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ8¼Î“Ž‘1
+p	java:S100•"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(×Þòëÿÿÿÿÿ8¼Î“Ž‘1
+Y	java:S125™"<This block of commented-out lines of code should be removed.(°§œû8¿Î“Ž‘1
+Y	java:S125¤"<This block of commented-out lines of code should be removed.(˜á€…8ÄÎ“Ž‘1
+Y	java:S125©"<This block of commented-out lines of code should be removed.(ëùª£8ÅÎ“Ž‘1
+[	java:S106®"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ8ÆÎ“Ž‘1
+k	java:S100²"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(žÓ¿€8ÆÎ“Ž‘1
+p	java:S100·"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(µº›ñûÿÿÿÿ8ÇÎ“Ž‘1
+j	java:S100À"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ó‘Óo8ÈÎ“Ž‘1
+k	java:S100È"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Øá¿8ÉÎ“Ž‘1
+k	java:S100Î"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(ËÂÙ‹8ÉÎ“Ž‘1
+p	java:S100Ô"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(âèëßþÿÿÿÿ8ÊÎ“Ž‘1
+j	java:S100Ù"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(®Ë¨P8ËÎ“Ž‘1
+P
+java:S1874Û"3Remove this use of "newInstance"; it is deprecated.(•‡†8ÎÎ“Ž‘1
+[	java:S106Ý"9Replace this use of System.out or System.err by a logger.(øºÑûúÿÿÿÿ8ÏÎ“Ž‘1
+[	java:S106ß"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ8ÏÎ“Ž‘1
+k	java:S100å"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(é…ý±8ÐÎ“Ž‘1
+k
+java:S1871í"MThis branch's code block is the same as the block for the branch on line 234.(êžÁá8ÔÎ“Ž‘1
+[	java:S106õ"9Replace this use of System.out or System.err by a logger.(øºÑûúÿÿÿÿ8ÝÎ“Ž‘1
+[	java:S106ø"9Replace this use of System.out or System.err by a logger.(ý™øøÿÿÿÿ8ßÎ“Ž‘1
+p	java:S100€"NRename this method name to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(Œè¿¾ùÿÿÿÿ8áÎ“Ž‘1
+[	java:S106Š"9Replace this use of System.out or System.err by a logger.(øºÑûúÿÿÿÿ8ãÎ“Ž‘1
+[	java:S106Ž"9Replace this use of System.out or System.err by a logger.(øºÑûúÿÿÿÿ8åÎ“Ž‘1
+^	java:S125"<This block of commented-out lines of code should be removed.(¥Îïãûÿÿÿÿ8åÎ“Ž‘1
+U
+java:S1144K"3Remove this unused private "set_Connection" method.(ûÕæ€ÿÿÿÿÿ8êÎ“Ž‘1

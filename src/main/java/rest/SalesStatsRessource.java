@@ -85,9 +85,9 @@ public class SalesStatsRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
+        List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+        boolean asAuthority = DateConverter.hasAuthorityByName(hsAttribute, commonparameter.str_SHOW_VENTE);
+        boolean allActivitis = DateConverter.hasAuthorityByName(hsAttribute, Parameter.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);
@@ -120,9 +120,9 @@ public class SalesStatsRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
+        List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+        boolean asAuthority = DateConverter.hasAuthorityByName(hsAttribute, commonparameter.str_SHOW_VENTE);
+        boolean allActivitis = DateConverter.hasAuthorityByName(hsAttribute, Parameter.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);

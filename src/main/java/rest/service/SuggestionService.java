@@ -22,13 +22,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
+import rest.service.dto.SuggestionsDTO;
 
 /**
  *
  * @author Kobena
  */
 @Local
-//@Remote
+
 public interface SuggestionService {
 
     void makeSuggestionAuto(TFamilleStock familleStock, TFamille famille);
@@ -75,5 +76,9 @@ public interface SuggestionService {
     void updateItemQtePrixPaf(SuggestionOrderDetailDTO suggestionOrderDetail);
 
     void updateItemQtePrixVente(SuggestionOrderDetailDTO suggestionOrderDetail);
+
+    SuggestionDTO create(SuggestionDTO suggestion);
+
+    JSONObject fetch(String query, int start, int limit);
 
 }

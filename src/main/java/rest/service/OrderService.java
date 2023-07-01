@@ -75,7 +75,7 @@ public interface OrderService {
 
     TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto, TUser user);
 
-    JSONObject supprimerProduitCommandeEncours(String idCommande) throws JSONException;
+   
 
     TFamilleGrossiste finFamilleGrossisteByByFamilleAndIdGrossiste(String idFamille, String grossisteId);
 

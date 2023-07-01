@@ -709,26 +709,23 @@ public class OrderServiceImpl implements OrderService {
         return detail;
     }
 
-    @Override
-    public JSONObject supprimerProduitCommandeEncours(String idCommande) throws JSONException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+  
 
     private void saveMouvementPrice(TFamille OTFamille, int int_PRICE, int int_PRICE_OLD, String str_REF, TUser u) {
 
         try {
-            TMouvementprice OTMouvementprice = new TMouvementprice(UUID.randomUUID().toString());
-            OTMouvementprice.setLgUSERID(u);
-            OTMouvementprice.setStrACTION(commonparameter.code_action_commande);
-            OTMouvementprice.setDtUPDATED(new Date());
-            OTMouvementprice.setDtCREATED(new Date());
-            OTMouvementprice.setIntPRICENEW(int_PRICE);
-            OTMouvementprice.setIntPRICEOLD(int_PRICE_OLD);
-            OTMouvementprice.setStrREF(str_REF);
-            OTMouvementprice.setDtDAY(new Date());
-            OTMouvementprice.setStrSTATUT(commonparameter.statut_enable);
-            OTMouvementprice.setLgFAMILLEID(OTFamille);
-            this.getEmg().persist(OTMouvementprice);
+            TMouvementprice mouvementprice = new TMouvementprice(UUID.randomUUID().toString());
+            mouvementprice.setLgUSERID(u);
+            mouvementprice.setStrACTION(commonparameter.code_action_commande);
+            mouvementprice.setDtUPDATED(new Date());
+            mouvementprice.setDtCREATED(new Date());
+            mouvementprice.setIntPRICENEW(int_PRICE);
+            mouvementprice.setIntPRICEOLD(int_PRICE_OLD);
+            mouvementprice.setStrREF(str_REF);
+            mouvementprice.setDtDAY(new Date());
+            mouvementprice.setStrSTATUT(commonparameter.statut_enable);
+            mouvementprice.setLgFAMILLEID(OTFamille);
+            this.getEmg().persist(mouvementprice);
         } catch (Exception e) {
             e.printStackTrace(System.err);
 
@@ -753,7 +750,7 @@ public class OrderServiceImpl implements OrderService {
             this.getEmg().persist(familleGrossiste);
             return familleGrossiste;
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "findOrCreateFamilleGrossisteByFamilleAndGrossiste ---->>> {0}", e);
+            LOG.log(Level.SEVERE,null, e);
             return null;
         }
     }
@@ -767,7 +764,7 @@ public class OrderServiceImpl implements OrderService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "finFamilleGrossisteByByFamilleAndIdGrossiste ---->>> {0}", e);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
     }
@@ -780,7 +777,7 @@ public class OrderServiceImpl implements OrderService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "findFamilleByCipOrEan ---->>> {0}", e);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
     }
@@ -798,7 +795,7 @@ public class OrderServiceImpl implements OrderService {
             getEmg().merge(famille);
             return new JSONObject().put("success", true);
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "updateScheduled ---->>> {0}", e);
+          LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
         }
     }

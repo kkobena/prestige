@@ -19,10 +19,9 @@ var store_famille_dovente = null;
 var int_montant_achat;
 
 
-
-
 Ext.util.Format.decimalSeparator = ',';
 Ext.util.Format.thousandSeparator = '.';
+
 function amountformat(val) {
     return Ext.util.Format.number(val, '0,000.');
 }
@@ -304,11 +303,10 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                                     Me_Window.onEdit();
                                                 } else {
                                                     Ext.MessageBox.alert('Error Message', 'Verifiez votre selection svp');
-                                                    return;
+
                                                 }
                                             }
                                         }
-
 
 
                                     }
@@ -630,7 +628,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                         }
 
 
-
                                     ]
                                 },
 
@@ -752,7 +749,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
         Ext.getCmp('gridpanelSuggestionID').on('edit', function (editor, e) {
             const OGrid = Ext.getCmp('gridpanelSuggestionID');
-            let  datas;
+            let datas;
             let url;
             const suggId = e.record.data.lg_SUGGESTION_ORDER_ID;
             if (e.field === 'int_NUMBER') {
@@ -760,42 +757,46 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 url = '../api/v1/suggestion/item/update-qte-cmde';
                 datas = {
                     itemId: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
-                    qte};
+                    qte
+                };
 
             } else if (e.field === 'int_SEUIL') {
                 url = '../api/v1/suggestion/item/update-seuil';
                 const qtySeuil = Number(e.record.data.int_SEUIL);
                 datas = {
                     itemId: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
-                    seuil: qtySeuil};
+                    seuil: qtySeuil
+                };
             } else if (e.field === 'lg_FAMILLE_PRIX_VENTE') {
                 url = '../api/v1/suggestion/item/update-prixvente';
                 const prixVente = Number(e.record.data.lg_FAMILLE_PRIX_VENTE);
                 datas = {
                     itemId: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
-                    prixVente};
+                    prixVente
+                };
             } else if (e.field === 'int_PAF_SUGG') {
                 url = '../api/v1/suggestion/item/update-prixachat';
                 const prixPaf = Number(e.record.data.int_PAF_SUGG);
                 datas = {
                     itemId: e.record.data.lg_SUGGESTION_ORDER_DETAILS_ID,
-                    prixPaf};
+                    prixPaf
+                };
             } else {
                 datas = null;
                 url = null;
             }
-            
+
             if (datas !== null && url !== null) {
                 Ext.Ajax.request({
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
                     url: url,
+                    headers: {'Content-Type': 'application/json'},
                     params: Ext.JSON.encode(datas),
                     success: function (response, options) {
                         e.record.commit();
                         OGrid.getStore().load();
 
-                        Me_Window.getSuggestionAmount(OGrid, suggId);
+                        Me_Window.getSuggestionAmount(suggId);
                     },
                     failure: function (response, options) {
 
@@ -876,8 +877,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     int_NUMBER: Ext.getCmp('int_QUANTITE').getValue()
 
                 },
-                success: function (response)
-                {
+                success: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
                     var object = Ext.JSON.decode(response.responseText, false);
 
@@ -907,8 +907,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
 
                 },
-                failure: function (response)
-                {
+                failure: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
                     var object = Ext.JSON.decode(response.responseText, false);
                     console.log("Bug " + response.responseText);
@@ -920,70 +919,57 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     },
 
     onEdit: function () {
+        const me = this;
+        const suggestionId = me.getNameintern();
+
         if (Ext.getCmp('lg_GROSSISTE_ID').getValue() === null) {
 
             Ext.MessageBox.alert('Error Message', 'Renseignez le Grossiste ', function () {
                 Ext.getCmp('lg_GROSSISTE_ID').focus();
             });
         } else {
-
             testextjs.app.getController('App').ShowWaitingProcess();
+            const data = {
+                "qte": Ext.getCmp('int_QUANTITE').getValue(),
+                "familleId": Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
+                suggestionId
+
+            };
             Ext.Ajax.request({
-                url: url_services_transaction_suggerercde + 'onEdit',
-                params: {
-//                    lg_FAMILLE_ID: Ext.getCmp('str_NAME').getValue(), ancienne bonne version
-                    lg_FAMILLE_ID: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
-                    lg_SUGGESTION_ORDER_ID: ref,
-                    int_NUMBER: Ext.getCmp('int_QUANTITE').getValue()
-
-                },
-                success: function (response)
-                {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                url: '../api/v1/suggestion/item/add',
+                params: Ext.JSON.encode(data),
+                success: function (response, options) {
                     testextjs.app.getController('App').StopWaitingProcess();
-                    var object = Ext.JSON.decode(response.responseText, false);
-
-
-                    if (object.errors_code == "0") {
-                        Ext.MessageBox.alert('Error Message', object.errors);
-                        return;
-                    } else {
-                        ref = object.ref;
-                        Me_Window.setTitleFrame(object.ref);
-                        var OGrid = Ext.getCmp('gridpanelSuggestionID');
-                        OGrid.getStore().reload();
-                        Ext.getCmp('str_NAME').setValue("");
-                        Ext.getCmp('int_QUANTITE').setValue(1);
-
-
-                        int_montant_achat = Ext.util.Format.number(object.int_TOTAL_ACHAT, '0,000.');
-                        int_montant_vente = Ext.util.Format.number(object.int_TOTAL_VENTE, '0,000.');
-
-                        Ext.getCmp('btn_detail').disable();
-
-                        Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
-                        Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
-                        Ext.getCmp('str_NAME').focus();
-
-                    }
-
-
+                    Me_Window.getSuggestionAmount(suggestionId);
+                    me.updateAmountFields(response.data);
+                    const OGrid = Ext.getCmp('gridpanelSuggestionID');
+                    OGrid.getStore().reload();
                 },
-                failure: function (response)
-                {
-                    testextjs.app.getController('App').StopWaitingProcess();
-                    var object = Ext.JSON.decode(response.responseText, false);
+                failure: function (response) {
                     console.log("Bug " + response.responseText);
                     Ext.MessageBox.alert('Error Message', response.responseText);
+                    testextjs.app.getController('App').StopWaitingProcess();
                 }
             });
+
         }
 
     },
+    updateAmountFields: function (data) {
+        if (data) {
+            int_montant_achat = Ext.util.Format.number(data.montantAchat, '0,000.');
+            int_montant_vente = Ext.util.Format.number(data.montantVente, '0,000.');
+            Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
+            Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
+        }
 
+    },
     onchangeGrossiste: function () {
 
-        var lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
-        var url_transaction = "../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=";
+        let lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
+        let url_transaction = "../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=";
         myAppController.ShowWaitingProcess();
         Ext.Ajax.request({
             url: url_transaction + 'changeGrossiste',
@@ -992,8 +978,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 lg_SUGGESTION_ORDER_ID: ref,
                 lg_GROSSISTE_ID: lg_GROSSISTE_ID
             },
-            success: function (response)
-            {
+            success: function (response) {
                 myAppController.StopWaitingProcess();
                 var object = Ext.JSON.decode(response.responseText, false);
                 if (object.errors_code == "0") {
@@ -1007,14 +992,13 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     } else {
                         myAppController.StopWaitingProcess();
                         Ext.MessageBox.alert('Error Message', object.errors);
-                        return;
+
                     }
 
                 }
 
             },
-            failure: function (response)
-            {
+            failure: function (response) {
 
                 console.log("Bug " + response.responseText);
                 Ext.MessageBox.alert('Error Message', response.responseText);
@@ -1023,15 +1007,14 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         });
     },
     onIsGrossisteExist: function (valeur) {
-        var url_transaction = "../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=";
+        let url_transaction = "../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=";
         ref = "0";
         Ext.Ajax.request({
             url: url_transaction + 'onIsGrossisteExist',
             params: {
                 lg_GROSSISTE_ID: valeur
             },
-            success: function (response)
-            {
+            success: function (response) {
                 var object = Ext.JSON.decode(response.responseText, false);
                 if (object.errors_code == "0") {
                     ref = object.ref;
@@ -1041,8 +1024,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 OgridpanelSuggestionID.getStore().reload();
 
             },
-            failure: function (response)
-            {
+            failure: function (response) {
                 console.log("Bug " + response.responseText);
                 Ext.MessageBox.alert('Error Message', response.responseText);
             }
@@ -1058,20 +1040,18 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 lg_SUGGESTION_ORDER_ID: lg_SUGGESTION_ORDER_ID,
                 lg_GROSSISTE_ID: lg_GROSSISTE_ID
             },
-            success: function (response)
-            {
+            success: function (response) {
                 myAppController.StopWaitingProcess();
                 var object = Ext.JSON.decode(response.responseText, false);
                 if (object.success == "0") {
                     Ext.MessageBox.alert('Error Message', object.errors);
-                    return;
+
                 } else {
                     Ext.MessageBox.alert('Confirmation', object.errors);
                     Me_Window.onbtncancel();
                 }
             },
-            failure: function (response)
-            {
+            failure: function (response) {
                 myAppController.StopWaitingProcess();
                 var object = Ext.JSON.decode(response.responseText, false);
                 console.log("Bug " + response.responseText);
@@ -1080,7 +1060,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         });
     },
     onDetailClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.configmanagement.famille.action.detailArticleOther({
             odatasource: rec.get('lg_FAMILLE_ID'),
             parentview: this,
@@ -1090,7 +1070,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     },
 
     onQtyDetail: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         Ext.Ajax.request({
             method: 'GET',
             headers: {'Content-Type': 'application/json'},
@@ -1179,8 +1159,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     },
     onbtncancel: function () {
 
-        var xtype = "";
-        xtype = "i_sugg_manager";
+        const xtype = "i_sugg_manager";
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
     onRemoveClick: function (grid, rowIndex) {
@@ -1191,22 +1170,18 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
             url: '../api/v1/suggestion/item/' + rec.get('lg_SUGGESTION_ORDER_DETAILS_ID'),
 
-            success: function (response)
-            {
+            success: function (response) {
                 grid.getStore().reload();
-                Me_Window.getSuggestionAmount(grid, idSugg);
+                Me_Window.getSuggestionAmount(idSugg);
 
             },
-            failure: function (response)
-            {
-
-
+            failure: function (response) {
                 Ext.MessageBox.alert('Error Message', response.responseText);
             }
         });
     },
     onSelectionChange: function (model, records) {
-        var rec = records[0];
+        const rec = records[0];
         if (rec) {
             this.getForm().loadRecord(rec);
         }
@@ -1221,7 +1196,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         });
     },
     onRechClick: function () {
-        var val = Ext.getCmp('rechercherDetail');
+        const val = Ext.getCmp('rechercherDetail');
         Ext.getCmp('gridpanelSuggestionID').getStore().load({
             params: {
                 search_value: val.getValue()
@@ -1229,22 +1204,20 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         });
     },
 
-    getSuggestionAmount: function (grid, id) {
+    getSuggestionAmount: function (id) {
 
         Ext.Ajax.request({
             method: 'GET',
             headers: {'Content-Type': 'application/json'},
             url: '../api/v1/suggestion/amount/' + id,
             success: function (response, options) {
-                var data = Ext.JSON.decode(response.responseText, true);
+                const data = Ext.JSON.decode(response.responseText, true);
                 if (data.montantAchat === 0) {
                     Me_Window.onbtncancel();
-                    return;
+
                 }
-                int_montant_achat = Ext.util.Format.number(data.montantAchat, '0,000.');
-                int_montant_vente = Ext.util.Format.number(data.montantVente, '0,000.');
-                Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
-                Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
+                Me_Window.updateAmountFields(data);
+
             }
         });
 
