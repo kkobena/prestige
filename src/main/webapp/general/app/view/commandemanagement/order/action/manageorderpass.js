@@ -1,10 +1,9 @@
 /* global Ext, rec */
 
-var url_services_data_order = '../webservices/commandemanagement/order/ws_data.jsp';
+
 var url_services_data_passation = '../webservices/configmanagement/typepassation/ws_data.jsp';
 var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
 var url_services_data_orderdet = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=';
-var url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
 var oGridParen;
 var Oview;
 var Omode;
@@ -52,7 +51,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
 
         });
         url_services_data_orderdet = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
-        url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
+    
         store_details_order = new Ext.data.Store({
             model: 'testextjs.model.OrderDetail',
             pageSize: itemsPerPageGrid,
@@ -185,7 +184,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                     emptyText: 'Choisir le mode de passation...',
                                     listeners: {
                                         select: function (cmp) {
-                                          
+
                                             var value = cmp.getValue();
                                             if (value === '01') {
 
@@ -360,7 +359,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                 INFORMATION,
                                 str_GROSSISTE_TELEPHONE,
                                 str_GROSSISTE_MOBILE,
-                               
+
                                 {
                                     xtype: 'container',
                                     layout: 'hbox',
@@ -375,7 +374,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                             handler: this.onbtnexport,
                                             hidden: true
                                         }
-                                    
+
                                     ]
                                 },
                                 URL,
@@ -457,15 +456,11 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                             },
                             failure: function (response)
                             {
-
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                //  alert(object);
-
                                 console.log("Bug " + response.responseText);
                                 Ext.MessageBox.alert('Error Message', response.responseText);
                             }
                         });
-                        return;
+
                     }
                 });
     },
@@ -473,43 +468,43 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
 
     },
     onbtnexport: function () {
-
+        const me = Me;
         Ext.MessageBox.confirm('Message',
                 'Voulez-vous generer le fichier CSV de la commande?',
                 function (btn) {
                     if (btn === 'yes') {
 
-                        var Maref = rec.get('lg_ORDER_ID');
-                        if (Maref === null) {
-                            Maref = "";
+                        let maref = me.getOdatasource().lg_ORDER_ID;
+                        if (maref === null) {
+                            maref = "";
                         } else {
-                            Maref = rec.get('lg_ORDER_ID');
+                            maref = me.getOdatasource().lg_ORDER_ID;
                         }
 
-                        window.location = '../DownloadFileServlet?lg_ORDER_ID=' + Maref + '&str_TYPE_ACTION=COMMANDE';
+                        window.location = '../DownloadFileServlet?lg_ORDER_ID=' + maref + '&str_TYPE_ACTION=COMMANDE';
                     }
                 });
     },
     onbtnsave: function () {
-    var commandetype="";
-    if(Ext.getCmp('lg_TYPE_PASSATION_ID').getValue()!=null){
-        commandetype=Ext.getCmp('lg_TYPE_PASSATION_ID').getValue();
-    }
+        const me = Me;
+        console.log(me, 'me ----');
+        var commandetype = "";
+        if (Ext.getCmp('lg_TYPE_PASSATION_ID').getValue() != null) {
+            commandetype = Ext.getCmp('lg_TYPE_PASSATION_ID').getValue();
+        }
         Ext.MessageBox.confirm('Message',
                 'Confirme la passation',
-                
-               
                 function (btn) {
-                 
+
                     if (btn === 'yes') {
                         testextjs.app.getController('App').ShowWaitingProcess();
-                      
+
                         Ext.Ajax.request({
                             url: url_services_transaction_order + 'passeorder',
                             params: {
-                                lg_ORDER_ID: rec.get('lg_ORDER_ID'),
-                                str_STATUT: rec.get('str_STATUT')/*,
-                                lg_TYPE_PASSATION_ID: Ext.getCmp('lg_TYPE_PASSATION_ID').getValue()*/
+                                lg_ORDER_ID: me.getOdatasource().lg_ORDER_ID,
+                                str_STATUT: me.getOdatasource().lg_ORDER_IDstr_STATUT/*,
+                                 lg_TYPE_PASSATION_ID: Ext.getCmp('lg_TYPE_PASSATION_ID').getValue()*/
                             },
                             timeout: 2400000,
                             success: function (response)
@@ -522,7 +517,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                 }
 
                                 oGridParent.getStore().reload();
-                                
+
                                 Ext.MessageBox.confirm('Message',
                                         'Imprimer le bon de commande?',
                                         function (btn) {
@@ -532,7 +527,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                             }
                                         });
                             },
-                            
+
                             failure: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
@@ -541,13 +536,13 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                 Ext.MessageBox.alert('Error Message', response.responseText);
                             }
                         });
-                   /* } fin else */
+                        /* } fin else */
                     }
                 });
         this.up('window').close();
     },
     onSelectionChange: function (model, records) {
-        var rec = records[0];
+        const rec = records[0];
         if (rec) {
             this.getForm().loadRecord(rec);
         }
@@ -562,18 +557,11 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
 
     },
     oncancel: function () {
-
-        var xtype = "";
-        xtype = "i_order_manager";
+        const xtype = "i_order_manager";
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
     onPdfClick: function (lg_ORDER_ID) {
-        var chaine = location.pathname;
-        var reg = new RegExp("[/]+", "g");
-        var tableau = chaine.split(reg);
-        var sitename = tableau[1];
-        var linkUrl = url_services_pdf + '?lg_ORDER_ID=' + lg_ORDER_ID;
-        //alert("Ok ca marche " + linkUrl);
+        const linkUrl =  '../webservices/commandemanagement/order/ws_generate_pdf.jsp?lg_ORDER_ID=' + lg_ORDER_ID;
         window.open(linkUrl);
     }
 });

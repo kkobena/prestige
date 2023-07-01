@@ -51,7 +51,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 reader: {
                     type: 'json',
                     root: 'data',
-                    totalProperty: 'total',
+                    totalProperty: 'total'
                 },
                 timeout: 180000
             }
@@ -517,10 +517,6 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                         },
                         failure: function (response) {
                             testextjs.app.getController('App').StopWaitingProcess();
-                            var object = Ext.JSON.decode(response.responseText, false);
-                            //  alert(object);
-
-                            console.log("Bug " + response.responseText);
                             Ext.MessageBox.alert('Error Message', response.responseText);
 
                         }

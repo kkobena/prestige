@@ -1,18 +1,16 @@
-
 package rest.service.dto;
-
 
 import dal.TGrossiste;
 import dal.TOrder;
-import dal.TSuggestionOrder;
+import dal.TUser;
 import org.json.JSONPropertyName;
 import util.DateCommonUtils;
 
 /**
  * @author koben
  */
-
 public class CommandeDTO {
+
     private int montantAchat;
     private int montantVente;
     private int nbreLigne;
@@ -50,12 +48,11 @@ public class CommandeDTO {
         this.montantAchat = montantAchat;
         return this;
     }
+
     @JSONPropertyName("PRIX_VENTE_TOTAL")
     public int getMontantVente() {
         return montantVente;
     }
-
-
 
     public CommandeDTO setMontantVente(int montantVente) {
         this.montantVente = montantVente;
@@ -71,6 +68,7 @@ public class CommandeDTO {
         this.strRefOrder = strRefOrder;
         return this;
     }
+
     @JSONPropertyName("lg_ORDER_ID")
     public String getLgORDERID() {
         return lgORDERID;
@@ -80,6 +78,7 @@ public class CommandeDTO {
         this.lgORDERID = lgORDERID;
         return this;
     }
+
     @JSONPropertyName("lg_USER_ID")
     public String getUserFullName() {
         return userFullName;
@@ -89,6 +88,7 @@ public class CommandeDTO {
         this.userFullName = userFullName;
         return this;
     }
+
     @JSONPropertyName("str_GROSSISTE_LIBELLE")
     public String getLibelleGrossiste() {
         return libelleGrossiste;
@@ -98,6 +98,7 @@ public class CommandeDTO {
         this.libelleGrossiste = libelleGrossiste;
         return this;
     }
+
     @JSONPropertyName("str_GROSSISTE_TELEPHONE")
     public String getTelephone() {
         return telephone;
@@ -107,6 +108,7 @@ public class CommandeDTO {
         this.telephone = telephone;
         return this;
     }
+
     @JSONPropertyName("str_GROSSISTE_MOBILE")
     public String getMobile() {
         return mobile;
@@ -116,6 +118,7 @@ public class CommandeDTO {
         this.mobile = mobile;
         return this;
     }
+
     @JSONPropertyName("str_GROSSISTE_URLPHARMAML")
     public String getUrlPharma() {
         return urlPharma;
@@ -125,6 +128,7 @@ public class CommandeDTO {
         this.urlPharma = urlPharma;
         return this;
     }
+
     @JSONPropertyName("str_GROSSISTE_URLEXTRANET")
     public String getUrlExtranet() {
         return urlExtranet;
@@ -144,6 +148,7 @@ public class CommandeDTO {
         this.strSTATUT = strSTATUT;
         return this;
     }
+
     @JSONPropertyName("dt_UPDATED")
     public String getDtUPDATED() {
         return dtUPDATED;
@@ -153,6 +158,7 @@ public class CommandeDTO {
         this.dtUPDATED = dtUPDATED;
         return this;
     }
+
     @JSONPropertyName("dt_CREATED")
     public String getDtCREATED() {
         return dtCREATED;
@@ -167,6 +173,7 @@ public class CommandeDTO {
     public String getDetails() {
         return details;
     }
+
     @JSONPropertyName("int_LINE")
     public int getNbreLigne() {
         return nbreLigne;
@@ -176,6 +183,7 @@ public class CommandeDTO {
         this.nbreLigne = nbreLigne;
         return this;
     }
+
     @JSONPropertyName("int_NBRE_PRODUIT")
     public int getTotalQty() {
         return totalQty;
@@ -192,7 +200,8 @@ public class CommandeDTO {
     }
 
     public CommandeDTO(TOrder order, String items, int montantAchat, int montantVente, int nbreLigne, int totalQty) {
-        TGrossiste grossiste=order.getLgGROSSISTEID();
+        TGrossiste grossiste = order.getLgGROSSISTEID();
+        TUser user = order.getLgUSERID();
         this.montantAchat = montantAchat;
         this.montantVente = montantVente;
         this.nbreLigne = nbreLigne;
@@ -201,7 +210,15 @@ public class CommandeDTO {
         this.lgGROSSISTEID = grossiste.getLgGROSSISTEID();
         this.strSTATUT = order.getStrSTATUT();
         this.dtCREATED = DateCommonUtils.formatDate(order.getDtCREATED());
-        this.dtUPDATED =  DateCommonUtils.formatToHour(order.getDtCREATED());;
+        this.dtUPDATED = DateCommonUtils.formatToHour(order.getDtCREATED());
+        this.userFullName = user.getStrFIRSTNAME().charAt(0) + "." + user.getStrLASTNAME();
+        this.strRefOrder = order.getStrREFORDER();
+        this.lgORDERID = order.getLgORDERID();
+        this.libelleGrossiste = grossiste.getStrLIBELLE();
+        this.telephone = grossiste.getStrTELEPHONE();
+        this.mobile = grossiste.getStrMOBILE();
+        this.urlPharma = grossiste.getStrURLPHARMAML();
+        this.urlExtranet = grossiste.getStrURLEXTRANET();
 
     }
 }

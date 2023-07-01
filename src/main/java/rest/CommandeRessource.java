@@ -7,10 +7,9 @@ package rest;
 
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.Params;
-import dal.TOrderDetail;
 import dal.TUser;
+import java.util.Set;
 
-import java.util.concurrent.atomic.LongAdder;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +23,6 @@ import rest.service.CommandeService;
 import rest.service.OrderService;
 import rest.service.dto.CommandeFiltre;
 import rest.service.dto.OrderDetailDTO;
-import rest.service.dto.SuggestionOrderDetailDTO;
 import toolkits.parameters.commonparameter;
 import util.Constant;
 
@@ -142,7 +140,6 @@ public class CommandeRessource {
         return Response.ok().entity(jsono.toString()).build();
     }
 
-
     @POST
     @Path("orderitem-prix-vente")
     public Response modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto) throws JSONException {
@@ -168,9 +165,9 @@ public class CommandeRessource {
             @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
 
-        return Response.ok().entity(this.orderService.fetch(query, start, limit).toString()).build();
+        return Response.ok().entity(this.orderService.fetch(query, Set.of(Constant.STATUT_IS_PROGRESS,
+                Constant.STATUT_PHARMA), start, limit).toString()).build();
     }
-
 
     @DELETE
     @Path("item/{id}")
@@ -194,6 +191,7 @@ public class CommandeRessource {
         }
         return Response.ok().entity(this.orderService.getCommandeAmount(id).toString()).build();
     }
+
     @POST
     @Path("item/add")
     public Response addItem(OrderDetailDTO orderDetail) {
@@ -202,8 +200,16 @@ public class CommandeRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        this.orderService.addItem(orderDetail,tu);
-        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
+       ;
+        return Response.ok().entity( this.orderService.addItem(orderDetail, tu).toString()).build();
+    }
+
+    @GET
+    @Path("list/passees")
+    public Response findCommandePassees(
+            @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
+        return Response.ok().entity(this.orderService.fetch(query, Set.of(Constant.STATUT_PASSED), start, limit).toString()).build();
     }
 
 }

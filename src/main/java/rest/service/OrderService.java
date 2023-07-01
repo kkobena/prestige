@@ -20,6 +20,7 @@ import dal.TOrderDetail;
 import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,8 +75,6 @@ public interface OrderService {
 
     TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto, TUser user);
 
-   
-
     TFamilleGrossiste finFamilleGrossisteByByFamilleAndIdGrossiste(String idFamille, String grossisteId);
 
     TFamilleGrossiste findOrCreateFamilleGrossisteByFamilleAndGrossiste(TFamille famille, TGrossiste grossiste);
@@ -92,9 +91,11 @@ public interface OrderService {
 
     String modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto, TUser user);
 
-    JSONObject fetch(String query, int start, int limit);
+    JSONObject fetch(String query,Set<String> status, int start, int limit);
+
     void removeItem(String itemId);
+
     JSONObject getCommandeAmount(String commandeId);
 
-    void addItem(OrderDetailDTO orderDetail,TUser user);
+    JSONObject  addItem(OrderDetailDTO orderDetail, TUser user);
 }

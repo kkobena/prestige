@@ -392,7 +392,7 @@ public class SuggestionImpl implements SuggestionService {
     private TFamilleGrossiste findOrCreateFamilleGrossiste(TFamille lg_FAMILLE_ID, TGrossiste lg_GROSSISTE_ID) {
         TFamilleGrossiste OTFamilleGrossiste;
         try {
-            Query qry = getEmg().createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgGROSSISTEID.lgGROSSISTEID = ?2 OR t.lgGROSSISTEID.strDESCRIPTION = ?2) AND t.strSTATUT = ?3 ").
+            Query qry = getEmg().createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2  AND t.strSTATUT = ?3 ").
                     setParameter(1, lg_FAMILLE_ID.getLgFAMILLEID())
                     .setParameter(2, lg_GROSSISTE_ID.getLgGROSSISTEID())
                     .setParameter(3, Constant.STATUT_ENABLE);

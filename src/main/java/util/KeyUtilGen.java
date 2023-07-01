@@ -2,7 +2,6 @@ package util;
 
 import toolkits.security.Md5;
 import toolkits.utils.conversion;
-import toolkits.utils.date;
 import toolkits.utils.logger;
 
 import java.text.SimpleDateFormat;
@@ -97,7 +96,7 @@ public class KeyUtilGen {
     public int getKeyYear() {
         Calendar now = Calendar.getInstance();
         this.annee = now.get(1);
-        return this.annee - 2010;
+        return this.annee - 2015;
     }
 
     public int getYear() {
@@ -248,23 +247,23 @@ public class KeyUtilGen {
         return actuelle;
     }
 
-    public static String GetDateNow(SimpleDateFormat Sformat) {
+    public static String getDateNow(SimpleDateFormat format) {
         Date actuelle = new Date();
         Calendar cal = Calendar.getInstance();
         cal.setTime(actuelle);
         actuelle = cal.getTime();
-        String dat = Sformat.format(actuelle);
+        String dat = format.format(actuelle);
         return dat;
     }
 
-    public static String DateToString(Date actuelle, SimpleDateFormat Sformat) {
+    public static String dateToString(Date actuelle, SimpleDateFormat Sformat) {
         String dat = "";
 
         try {
             dat = Sformat.format(actuelle);
         } catch (Exception var4) {
-            new date();
-            dat = GetDateNow(Sformat);
+         
+            dat = getDateNow(Sformat);
         }
 
         return dat;
@@ -280,54 +279,7 @@ public class KeyUtilGen {
         (new logger()).OCategory.info("date " + dat);
         return dat;
     }
-
-    public static Date GetNewDate(int nb_day) {
-        Date actuelle = new Date();
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(actuelle);
-        cal.add(5, nb_day);
-        actuelle = cal.getTime();
-        return actuelle;
-    }
-
-    public static Date GetNewDate(Date ODate, int nb_day) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(ODate);
-        cal.add(5, nb_day);
-        Date actuelle = cal.getTime();
-        return actuelle;
-    }
-
-    public static Date GetNewDate(Date ODate, int nb_heure, int nb_minute) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(ODate);
-        cal.add(10, nb_heure);
-        cal.add(12, nb_minute);
-        Date actuelle = cal.getTime();
-        return actuelle;
-    }
-
-    public static int GetDayToSeparate(Date odate_before, Date odate_after) {
-        long lg_day = (odate_after.getTime() - odate_before.getTime()) / 3600000L;
-        lg_day /= 24L;
-        return Integer.parseInt(Long.toString(lg_day));
-    }
-
-    public static int GetHourToSeparate(Date odate_before, Date odate_after) {
-        long lg_day = (odate_after.getTime() - odate_before.getTime()) / 3600000L;
-        return Integer.parseInt(Long.toString(lg_day));
-    }
-
-    public static int GetMinuteToSeparate(Date odate_before, Date odate_after) {
-        long lg_day = (odate_after.getTime() - odate_before.getTime()) / 60000L;
-        return Integer.parseInt(Long.toString(lg_day));
-    }
-
-    public static int GetSecToSeparate(Date odate_before, Date odate_after) {
-        long lg_day = (odate_after.getTime() - odate_before.getTime()) / 1000L;
-        return Integer.parseInt(Long.toString(lg_day));
-    }
-
+    
     public static String getDateForLimitSearch(Date actuelle, int nb_day) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(actuelle);
@@ -381,56 +333,8 @@ public class KeyUtilGen {
         return tempDate;
     }
 
-    public static Date TransactionIdToDate(String TransactionId) {
-        Date tempDate = null;
-        String YYYY = "";
-        String MM = "";
-        String DD = "";
-        String HH = "";
-        String MN = "";
-        String SS = "";
 
-        try {
-            YYYY = TransactionId.substring(1, 3);
-            MM = TransactionId.substring(3, 5);
-            DD = TransactionId.substring(5, 7);
-            HH = TransactionId.substring(8, 10);
-            MN = TransactionId.substring(10, 12);
-            tempDate = stringToDate("20" + YYYY + "-" + MM + "-" + DD + " " + HH + ":" + MN + ":00", formatterMysql);
-            System.out.println("20" + YYYY + "-" + MM + "-" + DD + " " + HH + ":" + MN + ":00");
-            System.out.println(tempDate);
-        } catch (Exception var9) {
-            System.out.println(var9.getMessage());
-        }
-
-        return tempDate;
-    }
-
-    public static Date TransferNumberToDate(String TransferNumber) {
-        Date tempDate = null;
-        String YYYY = "";
-        String MM = "";
-        String DD = "";
-        String HH = "";
-        String MN = "";
-        String SS = "";
-
-        try {
-            YYYY = TransferNumber.substring(2, 4);
-            MM = TransferNumber.substring(4, 6);
-            DD = TransferNumber.substring(6, 8);
-            HH = TransferNumber.substring(9, 11);
-            MN = TransferNumber.substring(11, 13);
-            tempDate = stringToDate("20" + YYYY + "-" + MM + "-" + DD + " " + HH + ":" + MN + ":00", formatterMysql);
-            System.out.println("20" + YYYY + "-" + MM + "-" + DD + " " + HH + ":" + MN + ":00");
-            System.out.println(tempDate);
-        } catch (Exception var9) {
-            System.out.println(var9.getMessage());
-        }
-
-        return tempDate;
-    }
-
+  
     public static Date stringToDate(String sDate, SimpleDateFormat Format) {
         Date tempDate = null;
 
@@ -478,84 +382,6 @@ public class KeyUtilGen {
         return var;
     }
 
-    public static Date GetDebutMois(Date Odate) {
-        String TempDate = GetDateNow(formatterMysql);
-        String[] temp_day = null;
-        String[] temp = null;
-        temp = TempDate.split(" ");
-        temp_day = temp[0].split("-");
-        int mois = Integer.parseInt(temp_day[1]);
-        String StrMois = String.valueOf(mois);
-        if (mois < 10) {
-            StrMois = "0" + StrMois;
-        }
-
-        temp_day[2] = "01";
-        TempDate = temp_day[0] + "-" + StrMois + "-" + temp_day[2] + " " + temp[1];
-        Odate = stringToDate(TempDate, formatterMysql);
-        return Odate;
-    }
-
-    public static Date GetFinMois(int Year, int Mount) {
-        Calendar calendar = Calendar.getInstance();
-        int date = 5;
-        System.out.println("date: " + date);
-        calendar.set(Year, Mount, date);
-        int maxDay = calendar.getActualMaximum(5);
-        System.out.println("Max Day: " + maxDay);
-        String StrMois = "";
-        StrMois = "" + Mount;
-        if (Mount < 10) {
-            StrMois = "0" + Mount;
-        }
-
-        String ODate = Year + "-" + StrMois + "-" + maxDay + " 00:00:00";
-        System.out.println("ODate: " + ODate);
-        return stringToDate(ODate, formatterMysql);
-    }
-
-    public static Date GetDebutMois(int Year, int Mount) {
-        String TempDate = GetDateNow(formatterMysql);
-        String[] temp_day = null;
-        String[] temp = null;
-        temp = TempDate.split(" ");
-        temp_day = temp[0].split("-");
-        int mois = Integer.parseInt(temp_day[1]);
-        String StrMois = String.valueOf(mois);
-        StrMois = "" + Mount;
-        if (Mount < 10) {
-            StrMois = "0" + Mount;
-        }
-
-        if (mois < 10) {
-            StrMois = "0" + StrMois;
-        }
-
-        temp_day[2] = "01";
-        String ODate = Year + "-" + StrMois + "-" + temp_day[2] + " 00:00:00";
-        (new StringBuilder()).append(Year).append("-").append(StrMois).append("-").append(temp_day[2]).append(" ").append(temp[1]).toString();
-        return stringToDate(ODate, formatterMysql);
-    }
-
-    public static Date GetDebutMois() {
-        new Date();
-        String TempDate = GetDateNow(formatterMysql);
-        String[] temp_day = null;
-        String[] temp = null;
-        temp = TempDate.split(" ");
-        temp_day = temp[0].split("-");
-        int mois = Integer.parseInt(temp_day[1]);
-        String StrMois = String.valueOf(mois);
-        if (mois < 10) {
-            StrMois = "0" + StrMois;
-        }
-
-        temp_day[2] = "01";
-        TempDate = temp_day[0] + "-" + StrMois + "-" + temp_day[2] + " " + temp[1];
-        Date Odate = stringToDate(TempDate, formatterMysql);
-        System.out.println(Odate);
-        return Odate;
-    }
 
     public static String getDay(Date Odate) {
         Calendar cal = Calendar.getInstance();
@@ -620,7 +446,7 @@ public class KeyUtilGen {
 
     public static String getTime(Date ODate) {
         String result = "";
-        String Str_O_Date = DateToString(ODate, formatterMysql);
+        String Str_O_Date = dateToString(ODate, formatterMysql);
         String[] temp = null;
         temp = Str_O_Date.split(" ");
         result = temp[1];
@@ -635,11 +461,11 @@ public class KeyUtilGen {
 
     public static String GetNumberRandom(int debut, int fin) {
         int rand;
-        for(rand = Integer.valueOf(GetNumberRandom(fin)); rand < debut; rand = Integer.valueOf(GetNumberRandom(fin))) {
+        for(rand = Integer.parseInt(GetNumberRandom(fin)); rand < debut; rand = Integer.parseInt(GetNumberRandom(fin))) {
         }
 
         while(rand == debut) {
-            rand = Integer.valueOf(GetNumberRandom(fin));
+            rand = Integer.parseInt(GetNumberRandom(fin));
         }
 
         (new logger()).OCategory.fatal(rand);
@@ -664,21 +490,6 @@ public class KeyUtilGen {
         return lastDateOfPreviousMonth;
     }
 
-    public int compareTwoDate(Date date1, Date date2) {
-        int result = date1.compareTo(date2);
-        if (result > 0) {
-            System.out.println("Date1 is after Date2");
-        } else if (result < 0) {
-            System.out.println("Date1 is before Date2");
-        } else if (result == 0) {
-            System.out.println("Date1 is equal to Date2");
-        } else {
-            System.out.println("How to get here?");
-        }
-
-        (new logger()).OCategory.info("result " + result);
-        return result;
-    }
 
     public Date getFirstDayofNextMonth() {
         Calendar cal = Calendar.getInstance();
@@ -703,180 +514,5 @@ public class KeyUtilGen {
         diffenrece = diffenrece / 1000L / 60L / 60L / 24L;
         (new logger()).OCategory.info("diffenrece " + diffenrece);
         return diffenrece;
-    }
-
-    public static Date getFirstDayofSomeMonth(int i) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(2, i);
-        cal.set(5, 1);
-        Date firstDateOfSomeMonth = cal.getTime();
-        (new logger()).OCategory.info("firstDateOfSomeMonth " + firstDateOfSomeMonth);
-        return firstDateOfSomeMonth;
-    }
-
-    public Date getLastDayofPreviousMonth(int i) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(2, i);
-        cal.set(5, cal.getActualMaximum(5));
-        Date lastDateOfPreviousMonth = cal.getTime();
-        (new logger()).OCategory.info("lastDateOfPreviousMonth " + lastDateOfPreviousMonth);
-        return lastDateOfPreviousMonth;
-    }
-
-    public static Date getLastDayofSomeMonth(int i) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(2, i);
-        cal.set(5, cal.getActualMaximum(5));
-        Date lastDateOfSomeMonth = cal.getTime();
-        (new logger()).OCategory.info("lastDateOfSomeMonth " + lastDateOfSomeMonth);
-        return lastDateOfSomeMonth;
-    }
-
-    public Date getDayofSomeMonth(int i, int j) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(2, i);
-        cal.set(5, j);
-        Date dateOfSomeMonth = cal.getTime();
-        (new logger()).OCategory.info("dateOfSomeMonth " + dateOfSomeMonth);
-        return dateOfSomeMonth;
-    }
-
-    public void checkDate(Date date) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.get(5);
-    }
-
-    public Date getDayofSomeMonthAndYear(int i, int j, int k) {
-        Calendar cal = Calendar.getInstance();
-        cal.set(5, i);
-        cal.set(2, j - 1);
-        cal.set(1, k);
-        Date dateOfSomeMonth = cal.getTime();
-        (new logger()).OCategory.info("dateOfSomeMonth " + dateOfSomeMonth);
-        return dateOfSomeMonth;
-    }
-
-    public static Date getPreviousMonth(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        cal.add(2, -1);
-        return cal.getTime();
-    }
-
-    public static Date getPreviousMonth2(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        cal.add(2, -1);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMinimum(5);
-        cal.set(year, month, day);
-        return cal.getTime();
-    }
-
-    public static Date getPreviousQuarter(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        cal.add(2, -3);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMinimum(5);
-        cal.set(year, month, day);
-        return cal.getTime();
-    }
-
-    public static Date getPreviousHalfYear(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        cal.add(2, -6);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMinimum(5);
-        cal.set(year, month, day);
-        return cal.getTime();
-    }
-
-    public static Date getPreviousHalfYearIncludeCurrentMonth(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        cal.add(2, -6);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMaximum(5);
-        cal.set(year, month, day);
-        return cal.getTime();
-    }
-
-    public static Date getPreviousCurrenrHalfYear() {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.add(2, -5);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMaximum(5);
-        cal.set(year, month, day);
-        return cal.getTime();
-    }
-
-    public static Date getHalfYear(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        cal.add(2, 5);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMaximum(5);
-        cal.set(year, month, day, 23, 59, 59);
-        return cal.getTime();
-    }
-
-    public static Date getQuarter(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        cal.add(2, 2);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMaximum(5);
-        cal.set(year, month, day, 23, 59, 59);
-        return cal.getTime();
-    }
-
-    public static Date getPreviousYear(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        cal.add(1, -1);
-        return cal.getTime();
-    }
-
-    public static Date getcurrentMonthWithMaximunDays(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMaximum(5);
-        cal.set(year, month, day);
-        return cal.getTime();
-    }
-
-    public static Date getcurrentMonthWithMinimunDays(Date datevalue) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datevalue);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMinimum(5);
-        cal.set(year, month, day, 0, 0, 0);
-        return cal.getTime();
-    }
-
-    public static Date getPreviousMonth(int i) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(2, -i);
-        int year = cal.get(1);
-        int month = cal.get(2);
-        int day = cal.getActualMinimum(5);
-        cal.set(year, month, day);
-        return cal.getTime();
     }
 }

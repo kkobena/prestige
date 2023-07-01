@@ -43,7 +43,6 @@ import rest.service.NotificationService;
 import rest.service.OrderService;
 import rest.service.dto.*;
 import toolkits.parameters.commonparameter;
-import toolkits.utils.logger;
 import util.*;
 
 /**
@@ -514,8 +513,8 @@ public class OrderServiceImpl implements OrderService {
             rupture.setGrossiste(grossiste);
             rupture.setReference(genererReferenceCommande());
             getEmg().persist(rupture);
-            datas.getDatas().forEach(s ->
-                    ruptureDetails.addAll(ruptureDetaisDtoByRupture(s))
+            datas.getDatas().forEach(s
+                    -> ruptureDetails.addAll(ruptureDetaisDtoByRupture(s))
             );
             Map<TFamille, List<RuptureDetail>> map = ruptureDetails.stream().collect(Collectors.groupingBy(RuptureDetail::getProduit));
             map.forEach((k, v) -> {
@@ -609,7 +608,7 @@ public class OrderServiceImpl implements OrderService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "finFamilleGrossisteByFamilleCipAndIdGrossiste ---->>> {0}", e);
+  
             return null;
         }
     }
@@ -623,7 +622,6 @@ public class OrderServiceImpl implements OrderService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-//            LOG.log(Level.SEVERE, "finFamilleGrossisteByIdFamilleAndIdGrossiste ---->>> {0}", e);
             return null;
         }
     }
@@ -678,7 +676,6 @@ public class OrderServiceImpl implements OrderService {
         this.getEmg().merge(order);
         return detail;
     }
-
 
     private void saveMouvementPrice(TFamille OTFamille, int int_PRICE, int int_PRICE_OLD, String str_REF, TUser u) {
 
@@ -862,7 +859,7 @@ public class OrderServiceImpl implements OrderService {
             Root<TOrderDetail> root = cq.from(TOrderDetail.class);
             cq.select(cb.count(root));
             List<Predicate> predicates = fetchOrderItemsPredicats(cb, root, orderId, filtre, query);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Long> q = getEmg().createQuery(cq);
 
             return q.getSingleResult().intValue();
@@ -872,21 +869,20 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-
     @Override
-    public JSONObject fetch(String search, int start, int limit) {
-        long count = count(search);
-        return FunctionUtils.returnData(getSuggestions(search, start, limit), count);
+    public JSONObject fetch(String search, Set<String> status, int start, int limit) {
+        long count = count(search, status);
+        return FunctionUtils.returnData(getCommandes(search, status, start, limit), count);
 
     }
 
-    private List<CommandeDTO> getSuggestions(String search, int start, int limit) {
+    private List<CommandeDTO> getCommandes(String search, Set<String> status, int start, int limit) {
         CriteriaBuilder cb = getEmg().getCriteriaBuilder();
         CriteriaQuery<TOrder> cq = cb.createQuery(TOrder.class);
         Root<TOrder> root = cq.from(TOrder.class);
         Join<TOrder, TOrderDetail> join = root.join(TOrder_.tOrderDetailCollection);
         cq.select(root).distinct(true).orderBy(cb.desc(root.get(TOrder_.dtUPDATED)));
-        List<Predicate> predicates = listPredicates(cb, root, join, search);
+        List<Predicate> predicates = listPredicates(cb, root, join, search, status);
         cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<TOrder> q = getEmg().createQuery(cq);
         q.setFirstResult(start);
@@ -915,12 +911,10 @@ public class OrderServiceImpl implements OrderService {
         return new CommandeDTO(order, items, montantAchat, montantVente, nbreLigne, totalQty);
     }
 
-
-    private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TOrder> root, Join<TOrder, TOrderDetail> join, String search) {
+    private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TOrder> root, Join<TOrder, TOrderDetail> join, String search, Set<String> status) {
         List<Predicate> predicates = new ArrayList<>();
-
-        predicates.add(root.get(TOrder_.strSTATUT).in(Set.of(Constant.STATUT_IS_PROGRESS,
-                Constant.STATUT_PHARMA)));
+        predicates.add(root.get(TOrder_.strSTATUT).in(status));
+      
 
         if (StringUtils.isNotEmpty(search)) {
             search = search + "%";
@@ -932,25 +926,24 @@ public class OrderServiceImpl implements OrderService {
         return predicates;
     }
 
-    private long count(String search) {
+    private long count(String search, Set<String> status) {
         CriteriaBuilder cb = getEmg().getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         Root<TOrder> root = cq.from(TOrder.class);
         Join<TOrder, TOrderDetail> join = root.join(TOrder_.tOrderDetailCollection);
         cq.select(cb.countDistinct(root));
         List<Predicate> predicates = listPredicates(cb, root,
-                join, search);
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+                join, search, status);
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<Long> q = getEmg().createQuery(cq);
         return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
 
     }
 
-
     private TFamilleGrossiste findFamilleGrossiste(String familleId, String grossisteId) {
 
         try {
-            Query qry = getEmg().createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgGROSSISTEID.lgGROSSISTEID = ?2 OR t.lgGROSSISTEID.strDESCRIPTION = ?2) AND t.strSTATUT = ?3 ").
+            Query qry = getEmg().createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2  AND t.strSTATUT = ?3 ").
                     setParameter(1, familleId)
                     .setParameter(2, grossisteId)
                     .setParameter(3, Constant.STATUT_ENABLE);
@@ -962,7 +955,6 @@ public class OrderServiceImpl implements OrderService {
 
         }
     }
-
 
     @Override
     public void removeItem(String itemId) {
@@ -1000,10 +992,17 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void addItem(OrderDetailDTO orderDetail, TUser user) {
+    public JSONObject addItem(OrderDetailDTO orderDetail, TUser user) {
         Objects.requireNonNull(orderDetail.getQte(), "La quantité ne doit pas être null");
-        find(orderDetail.getOrderId()).ifPresentOrElse(order -> createOrUpdate(orderDetail, order), () -> createOrder(orderDetail, user));
-
+        JSONObject json = new JSONObject();
+        find(orderDetail.getOrderId()).ifPresentOrElse(order -> {
+            createOrUpdate(orderDetail, order);
+            json.put("orderId", order.getLgORDERID());
+        }, () -> {
+            TOrder tOrder = createOrder(orderDetail, user);
+            json.put("orderId", tOrder.getLgORDERID());
+        });
+        return json;
     }
 
     private TOrder createOrder(OrderDetailDTO orderDetail, TUser user) {
@@ -1035,13 +1034,12 @@ public class OrderServiceImpl implements OrderService {
             int_last_code = Integer.parseInt(jsonObject.getString("int_last_code"));
             Date dt_last_date = keyUtilGen.stringToDate(jsonObject.getString("str_last_date"), keyUtilGen.formatterMysqlShort2);
 
-            String str_lasd = keyUtilGen.DateToString(dt_last_date, keyUtilGen.formatterMysqlShort2);
-            String str_actd = keyUtilGen.DateToString(date, keyUtilGen.formatterMysqlShort2);
+            String str_lasd = keyUtilGen.dateToString(dt_last_date, keyUtilGen.formatterMysqlShort2);
+            String str_actd = keyUtilGen.dateToString(date, keyUtilGen.formatterMysqlShort2);
 
             if (!str_lasd.equals(str_actd)) {
                 int_last_code = 0;
             }
-
 
         } catch (Exception e) {
 
@@ -1070,7 +1068,7 @@ public class OrderServiceImpl implements OrderService {
         JSONObject json = new JSONObject();
         JSONArray arrayObj = new JSONArray();
         json.put("int_last_code", str_last_code);
-        json.put("str_last_date", keyUtilGen.DateToString(date, keyUtilGen.formatterMysqlShort2));
+        json.put("str_last_date", keyUtilGen.dateToString(date, keyUtilGen.formatterMysqlShort2));
         arrayObj.put(json);
         String jsonData = arrayObj.toString();
 
