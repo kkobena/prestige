@@ -39,6 +39,7 @@ import rest.service.dto.EtatControlAnnuelDTO;
 import rest.service.dto.EtatControlAnnuelWrapperDTO;
 import rest.service.dto.EtatControlBon;
 import rest.service.dto.builder.EtatControlBonBuilder;
+import util.Constant;
 import util.FunctionUtils;
 
 /**
@@ -100,6 +101,7 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
         
         Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TBonLivraison_.dtDATELIVRAISON)),
                 java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
+       predicates.add(cb.equal(root.get(TBonLivraison_.strSTATUT), Constant.STATUT_IS_CLOSED)) ;
         predicates.add(btw);
         if (StringUtils.isNotEmpty(grossisteId)) {
             predicates.add(cb.equal(root.get(TBonLivraison_.lgORDERID).get(TOrder_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), grossisteId));
