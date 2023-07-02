@@ -67,7 +67,7 @@ public final class Parameter {
     public static final String KEY_TABLE_TFAMILLE = "TFamille";
     public static final String KEY_AUTRE = "Autres";
     public static final String ID_COMPTABLEFUNCASH = "10800000000";
-
+    public static final String STATUST_IS_CLOSE = "is_Closed";
     public static final String KEY_TYPEREGLEMENT_CHEQUE = "2";
     public static final String KEY_TYPEREGLEMENT_ESPECE = "1";
     public static final String KEY_TYPEREGLEMENT_VIREMENT = "6";
