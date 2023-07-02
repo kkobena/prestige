@@ -203,7 +203,7 @@ public class SuggestionImpl implements SuggestionService {
         try {
             TypedQuery<TSuggestionOrder> q
                     = emg
-                    .createQuery("SELECT t FROM TSuggestionOrder t WHERE t.lgGROSSISTEID.lgGROSSISTEID =?1  AND t.strSTATUT = ?2 ORDER BY t.dtUPDATED DESC ", TSuggestionOrder.class);
+                            .createQuery("SELECT t FROM TSuggestionOrder t WHERE t.lgGROSSISTEID.lgGROSSISTEID =?1  AND t.strSTATUT = ?2 ORDER BY t.dtUPDATED DESC ", TSuggestionOrder.class);
 
             q.setMaxResults(1)
                     .setParameter(1, lg_GROSSISTE_ID)
@@ -745,7 +745,6 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-
     private TSuggestionOrderDetails isProductExist(String lgFamilleId, String suggId) {
         TSuggestionOrderDetails suggestionOrderDetails = null;
         try {
@@ -755,7 +754,7 @@ public class SuggestionImpl implements SuggestionService {
                     getSingleResult();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE,  e.getMessage());
+            LOG.log(Level.SEVERE, e.getMessage());
 
         }
         return suggestionOrderDetails;
@@ -820,6 +819,7 @@ public class SuggestionImpl implements SuggestionService {
                 .montantVente((long) details.getIntPRICEDETAIL() * details.getIntNUMBER())
                 .build();
     }
+
     private TSuggestionOrderDetails addItem(SuggestionOrderDetailDTO suggestionOrderDetail, TSuggestionOrder order) {
         Objects.requireNonNull(suggestionOrderDetail.getQte(), "La quantité ne doit pas être null");
         TGrossiste grossiste = order.getLgGROSSISTEID();
@@ -829,6 +829,7 @@ public class SuggestionImpl implements SuggestionService {
         return initTSuggestionOrderDetail(order, famille, grossiste, suggestionOrderDetail.getQte());
 
     }
+
     @Override
     public JSONObject fetch(String search, int start, int limit) {
         long count = count(search);
@@ -882,8 +883,6 @@ public class SuggestionImpl implements SuggestionService {
         return getEmg().find(TSuggestionOrderDetails.class, id);
     }
 
-
-
     private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TSuggestionOrder> root, Join<TSuggestionOrder, TSuggestionOrderDetails> join, String search) {
         List<Predicate> predicates = new ArrayList<>();
 
@@ -915,7 +914,6 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-
     private TFamilleGrossiste findFamilleGrossiste(String familleId, String grossisteId) {
 
         try {
@@ -931,8 +929,8 @@ public class SuggestionImpl implements SuggestionService {
 
         }
 
-
     }
+
     private int isOnAnotherSuggestion(TFamille lgFamilleID) {
         int status = (lgFamilleID.getIntORERSTATUS() == 2 ? 2 : 0);
         try {
@@ -948,6 +946,14 @@ public class SuggestionImpl implements SuggestionService {
         }
 
         return status;
+    }
+
+    @Override
+    public void setToPending(String id) {
+        TSuggestionOrder order = this.getEmg().find(TSuggestionOrder.class, id);
+        order.setStrSTATUT(Constant.STATUT_PENDING);
+        this.getEmg().merge(order);
+
     }
 
 }

@@ -281,11 +281,8 @@
             }
             ObllBase.setMessage(OsuggestionManagement.getMessage());
             ObllBase.setDetailmessage(OsuggestionManagement.getDetailmessage());
-        } else if (request.getParameter("mode").equals(commonparameter.statut_pending)) {
-            OsuggestionManagement.setToPending(lg_SUGGESTION_ORDER_ID);
-            ObllBase.setMessage("1");
-            ObllBase.setDetailmessage("");
-        } else if (request.getParameter("mode").equals("sendProductSellToSuggestion")) {
+        } 
+        else if (request.getParameter("mode").equals("sendProductSellToSuggestion")) {
 
             if (request.getParameter("lg_USER_ID") != null && !"".equals(request.getParameter("lg_USER_ID"))) {
                 lg_USER_ID = request.getParameter("lg_USER_ID");

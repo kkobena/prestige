@@ -46,12 +46,12 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                     name: 'lg_SUGGESTION_ORDER_ID',
                     type: 'string'
                 },
-            
+
                 {
                     name: 'str_REF',
                     type: 'string'
                 },
-               
+
                 {
                     name: 'int_NOMBRE_ARTICLES',
                     type: 'string'
@@ -107,7 +107,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
             autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url:'../api/v1/suggestion/list',
+                url: '../api/v1/suggestion/list',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -134,10 +134,10 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                     xtype: 'rownumberer',
                     text: 'LG',
                     width: 45
-                 
-                    
+
+
                 },
-             
+
                 {
                     header: 'REF',
                     dataIndex: 'str_REF',
@@ -148,7 +148,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                     dataIndex: 'lg_GROSSISTE_ID',
                     flex: 1
                 },
-              
+
                 {
                     header: 'NOMBRE.LIGNE',
                     dataIndex: 'int_NOMBRE_ARTICLES',
@@ -159,7 +159,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                     dataIndex: 'int_NUMBER',
                     flex: 1
                 },
-                
+
                 {
                     header: 'STATUT',
                     dataIndex: 'str_STATUT',
@@ -294,7 +294,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                     scope: this,
                     handler: this.onRechClick
                 }
-                
+
             ],
             bbar: {
                 xtype: 'pagingtoolbar',
@@ -332,13 +332,13 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
 
     },
     onPdfClick: function (lg_SUGGESTION_ORDER_ID) {
-       
-        let linkUrl =  "../webservices/sm_user/suggerercde/ws_generate_pdf.jsp?lg_SUGGESTION_ORDER_ID=" + lg_SUGGESTION_ORDER_ID;
+
+        let linkUrl = "../webservices/sm_user/suggerercde/ws_generate_pdf.jsp?lg_SUGGESTION_ORDER_ID=" + lg_SUGGESTION_ORDER_ID;
         window.open(linkUrl);
     },
     onMakeOrderClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
-       
+
         testextjs.app.getController('App').ShowWaitingProcess();
         Ext.Ajax.request({
             url: url_services_transaction_suggerercmde + 'makeorder',
@@ -362,7 +362,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
             failure: function (response)
             {
                 testextjs.app.getController('App').StopWaitingProcess();
-             
+
                 console.log("Bug " + response.responseText);
                 Ext.MessageBox.alert('Error Message', response.responseText);
 
@@ -372,13 +372,9 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
     onManageDetailsClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
         const xtype = "suggerercdemanager";
-   
-        Ext.Ajax.request({
-            url: '../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=pending',
 
-            params: {
-                lg_SUGGESTION_ORDER_ID: rec.get('lg_SUGGESTION_ORDER_ID')
-            },
+        Ext.Ajax.request({
+            url: '../api/v1/suggestion/set-pending/' + rec.get('lg_SUGGESTION_ORDER_ID'),
             success: function (response)
             {
                 testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Suggerer une commande", rec.get('lg_SUGGESTION_ORDER_ID'), rec.data);
@@ -390,17 +386,14 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
             }
         });
 
-
-
-
     },
     onAddClick: function () {
         const xtype = "suggerercdemanager";
-      
+
         testextjs.app.getController('App').onLoadNewComponent(xtype, "Ajouter detail commande", "0");
 
     },
-   
+
     onRemoveClick: function (grid, rowIndex) {
 
         Ext.MessageBox.confirm('Message',
@@ -428,19 +421,19 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                             failure: function (response)
                             {
                                 _myAppController.StopWaitingProcess();
-                            
+
                                 Ext.MessageBox.alert('Error Message', response.responseText);
 
                             }
                         });
-                       
+
                     }
                 });
 
 
     },
     onEditClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.sm_user.preenregistrement.action.add({
             odatasource: rec.data,
             parentview: this,

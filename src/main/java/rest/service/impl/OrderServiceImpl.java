@@ -156,7 +156,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private TBonLivraisonDetail createBLDetail(TBonLivraison OTBonLivraison, TGrossiste OTGrossiste,
-                                               TFamille OTFamille, TOrderDetail d, TZoneGeographique OTZoneGeographique, int initStock) {
+            TFamille OTFamille, TOrderDetail d, TZoneGeographique OTZoneGeographique, int initStock) {
         TBonLivraisonDetail OTBonLivraisonDetail = new TBonLivraisonDetail();
         OTBonLivraisonDetail.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
         OTBonLivraisonDetail.setLgBONLIVRAISONID(OTBonLivraison);
@@ -608,7 +608,7 @@ public class OrderServiceImpl implements OrderService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-  
+
             return null;
         }
     }
@@ -914,7 +914,6 @@ public class OrderServiceImpl implements OrderService {
     private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TOrder> root, Join<TOrder, TOrderDetail> join, String search, Set<String> status) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(root.get(TOrder_.strSTATUT).in(status));
-      
 
         if (StringUtils.isNotEmpty(search)) {
             search = search + "%";
@@ -1156,5 +1155,28 @@ public class OrderServiceImpl implements OrderService {
 
         }
 
+    }
+
+    private CommandeCsvDTO buildFromOrderDetail(TOrderDetail d) {
+        TFamille famille = d.getLgFAMILLEID();
+        String code = famille.getIntEAN13();
+        if (StringUtils.isEmpty(code)) {
+            TFamilleGrossiste tfg = findFamilleGrossiste(d.getLgFAMILLEID().getLgFAMILLEID(), d.getLgORDERID().getLgGROSSISTEID().getLgGROSSISTEID());
+            if (Objects.nonNull(tfg) && StringUtils.isNotEmpty(tfg.getStrCODEARTICLE())) {
+                code = tfg.getStrCODEARTICLE();
+            } else {
+                code = famille.getIntCIP();
+            }
+
+        }
+        return new CommandeCsvDTO(code, d.getIntNUMBER());
+
+    }
+
+    @Override
+    public Map<String, List<CommandeCsvDTO>> commandeEncoursCsv(String idCommande) {
+        TOrder order=this.getEmg().find(TOrder.class, idCommande);
+      return Map.of(order.getStrREFORDER(),  order.getTOrderDetailCollection().stream().map(this::buildFromOrderDetail).collect(Collectors.toList()));
+       
     }
 }

@@ -8,19 +8,34 @@ package rest;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.Params;
 import dal.TUser;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CommandeService;
 import rest.service.OrderService;
+import rest.service.dto.CommandeCsvDTO;
 import rest.service.dto.CommandeFiltre;
 import rest.service.dto.OrderDetailDTO;
 import toolkits.parameters.commonparameter;
@@ -200,8 +215,8 @@ public class CommandeRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-       ;
-        return Response.ok().entity( this.orderService.addItem(orderDetail, tu).toString()).build();
+
+        return Response.ok().entity(this.orderService.addItem(orderDetail, tu).toString()).build();
     }
 
     @GET
@@ -212,4 +227,43 @@ public class CommandeRessource {
         return Response.ok().entity(this.orderService.fetch(query, Set.of(Constant.STATUT_PASSED), start, limit).toString()).build();
     }
 
+    @GET
+    @Path("export-csv")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response exportToCsv(@QueryParam("id") String commandId) {
+           Map<String, List<CommandeCsvDTO>> map = orderService.commandeEncoursCsv(commandId);
+        StreamingOutput output = (OutputStream out) -> {
+            try {
+             
+                Writer writer = new OutputStreamWriter(out, "UTF-8");
+
+                try (CSVPrinter printer = CSVFormat.EXCEL
+                        .withDelimiter(';').print(writer)) {
+
+                    map.forEach((k, v) -> {
+                        v.forEach(o -> {
+                            try {
+                                printer.printRecord(o.getCode(), o.getQte());
+                            } catch (IOException ex) {
+                                Logger.getLogger(CommandeRessource.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        });
+
+                    });
+
+                }
+            } catch (IOException ex) {
+                throw new WebApplicationException("File Not Found !!");
+            }
+        };
+       
+        String filename = "commande_" + map.keySet().stream().findFirst().get() + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("H_mm_ss")) + ".csv";
+        return Response
+                .ok(output, MediaType.APPLICATION_OCTET_STREAM)
+                .header("content-disposition", "attachment; filename = " + filename)
+                .build();
+
+    }
+
+  
 }

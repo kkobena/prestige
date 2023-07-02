@@ -833,10 +833,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
         window.open(linkUrl);
     },
-    checkIfGridIsEmpty: function () {
-        var gridTotalCount = Ext.getCmp('gridpanelSuggestionID').getStore().getTotalCount();
-        return gridTotalCount;
-    },
+
     setTitleFrame: function (str_data) {
         this.title = this.title + " :: Ref " + str_data;
 
@@ -879,16 +876,16 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 },
                 success: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
-                    var object = Ext.JSON.decode(response.responseText, false);
+                    let object = Ext.JSON.decode(response.responseText, false);
 
 
                     if (object.errors_code == "0") {
                         Ext.MessageBox.alert('Error Message', object.errors);
-                        return;
+
                     } else {
                         ref = object.ref;
                         Me_Window.setTitleFrame(object.ref);
-                        var OGrid = Ext.getCmp('gridpanelSuggestionID');
+                        const OGrid = Ext.getCmp('gridpanelSuggestionID');
                         OGrid.getStore().reload();
                         Ext.getCmp('str_NAME').setValue("");
                         Ext.getCmp('int_QUANTITE').setValue(1);
@@ -909,7 +906,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 },
                 failure: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
-                    var object = Ext.JSON.decode(response.responseText, false);
+
                     console.log("Bug " + response.responseText);
                     Ext.MessageBox.alert('Error Message', response.responseText);
                 }
@@ -946,6 +943,12 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     me.updateAmountFields(response.data);
                     const OGrid = Ext.getCmp('gridpanelSuggestionID');
                     OGrid.getStore().reload();
+                    Ext.getCmp('str_NAME').setValue("");
+                    Ext.getCmp('int_QUANTITE').setValue(1);
+                    Ext.getCmp('btn_detail').disable();
+                    Ext.getCmp('str_NAME').focus();
+
+
                 },
                 failure: function (response) {
                     console.log("Bug " + response.responseText);

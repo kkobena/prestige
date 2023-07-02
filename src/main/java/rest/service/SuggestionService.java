@@ -76,4 +76,6 @@ public interface SuggestionService {
 
     JSONObject fetch(String query, int start, int limit);
 
+    void setToPending(String id);
+
 }

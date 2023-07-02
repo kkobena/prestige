@@ -57,7 +57,7 @@ public class SuggestionRessource {
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
- private    SuggestionService suggestionService;
+    private SuggestionService suggestionService;
 
     @GET
     @Path("csv")
@@ -204,13 +204,25 @@ public class SuggestionRessource {
         SuggestionDTO result = this.suggestionService.create(suggestion);
         return Response.ok().entity(new JSONObject(result).toString()).build();
     }
+
     @GET
     @Path("list")
     public Response findAll(
             @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
 
-        return Response.ok().entity(this.suggestionService.fetch(query,start,limit).toString()).build();
+        return Response.ok().entity(this.suggestionService.fetch(query, start, limit).toString()).build();
     }
 
+    @GET
+    @Path("set-pending/{id}")
+    public Response setToPending(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.setToPending(id);
+        return Response.ok().build();
+    }
 }

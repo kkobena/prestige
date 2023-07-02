@@ -20,6 +20,7 @@ import dal.TOrderDetail;
 import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.ejb.Local;
 import org.json.JSONException;
@@ -91,11 +92,13 @@ public interface OrderService {
 
     String modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto, TUser user);
 
-    JSONObject fetch(String query,Set<String> status, int start, int limit);
+    JSONObject fetch(String query, Set<String> status, int start, int limit);
 
     void removeItem(String itemId);
 
     JSONObject getCommandeAmount(String commandeId);
 
-    JSONObject  addItem(OrderDetailDTO orderDetail, TUser user);
+    JSONObject addItem(OrderDetailDTO orderDetail, TUser user);
+
+    Map<String,List<CommandeCsvDTO>> commandeEncoursCsv(String idCommande);
 }

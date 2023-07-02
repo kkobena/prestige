@@ -25,16 +25,16 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
     closable: false,
     requires: ['testextjs.view.commandemanagement.bonlivraison.ImportXLS'],
     plugins: [{
-        ptype: 'rowexpander',
-        rowBodyTpl: new Ext.XTemplate(
-            '<p> {str_FAMILLE_ITEM}</p>',
-            {
-                formatChange: function (v) {
-                    var color = v >= 0 ? 'green' : 'red';
-                    return '<span style="color: ' + color + ';">' + Ext.util.Format.usMoney(v) + '</span>';
-                }
-            })
-    }],
+            ptype: 'rowexpander',
+            rowBodyTpl: new Ext.XTemplate(
+                    '<p> {str_FAMILLE_ITEM}</p>',
+                    {
+                        formatChange: function (v) {
+                            var color = v >= 0 ? 'green' : 'red';
+                            return '<span style="color: ' + color + ';">' + Ext.util.Format.usMoney(v) + '</span>';
+                        }
+                    })
+        }],
     initComponent: function () {
 
         Me = this;
@@ -158,7 +158,6 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                             hidden: true,
                             handler: this.envoiPharmaML
                         }, '-',
-
 
                         {
                             icon: 'resources/images/icons/fam/folder_go.png',
@@ -318,7 +317,6 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         this.getStore().load();
     },
 
-
     onbtncheckimport: function () {
         new testextjs.view.commandemanagement.order.action.importOrder({
             odatasource: 'TABLE_ORDER',
@@ -327,7 +325,6 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
             titre: "Verification de l'importation des differents articles de l'officine"
         });
     },
-
 
     onEditOrderByImportClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
@@ -349,13 +346,13 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         const rec = grid.getStore().getAt(rowIndex);
 
         Ext.MessageBox.confirm('Message',
-            'Imprimer la commande en cours?',
-            function (btn) {
-                if (btn === 'yes') {
-                    Me.onPdfClick(rec.get('lg_ORDER_ID'));
+                'Imprimer la commande en cours?',
+                function (btn) {
+                    if (btn === 'yes') {
+                        Me.onPdfClick(rec.get('lg_ORDER_ID'));
 
-                }
-            });
+                    }
+                });
 
     },
     onPdfClick: function (lg_ORDER_ID) {
@@ -472,58 +469,51 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         });
     },
 
-    onbtnexportCsv: function () {
-
-        let lg_ORDER_ID = "";
-        if (Ext.getCmp('lg_ORDER_ID').getValue() !== null) {
-            lg_ORDER_ID = Ext.getCmp('lg_ORDER_ID').getValue();
-        }
-
-        window.location = '../DownloadFileServlet?lg_ORDER_ID=' + lg_ORDER_ID + "&str_TYPEREPORT=csv";
-    },
+   
     onbtnexport: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
-            'Voulez-vous generer le fichier CSV de la commande?',
-            function (btn) {
-                if (btn === 'yes') {
-                    var rec = grid.getStore().getAt(rowIndex);//
-                    window.location = '../DownloadFileServlet?lg_ORDER_ID=' + rec.get('lg_ORDER_ID') + '&str_TYPE_ACTION=COMMANDE';
-                }
-            });
+                'Voulez-vous generer le fichier CSV de la commande?',
+                function (btn) {
+                    if (btn === 'yes') {
+                        const rec = grid.getStore().getAt(rowIndex);//
+                         window.location = '../api/v1/commande/export-csv?id=' +  rec.get('lg_ORDER_ID');
+                       
+                    }
+                });
     },
     onRemoveClick: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
-            'Confirmer la suppresssion',
-            function (btn) {
-                if (btn === 'yes') {
-                    var rec = grid.getStore().getAt(rowIndex);
-                    testextjs.app.getController('App').ShowWaitingProcess();
-                    Ext.Ajax.request({
-                        url: url_services_transaction_order + 'delete',
-                        params: {
-                            lg_ORDER_ID: rec.get('lg_ORDER_ID')
-                        },
-                        success: function (response) {
+                'Confirmer la suppresssion',
+                function (btn) {
+                    if (btn === 'yes') {
+                        var rec = grid.getStore().getAt(rowIndex);
+                        testextjs.app.getController('App').ShowWaitingProcess();
+                        Ext.Ajax.request({
+                            url: url_services_transaction_order + 'delete',
+                            params: {
+                                lg_ORDER_ID: rec.get('lg_ORDER_ID')
+                            },
+                            success: function (response) {
 
-                            testextjs.app.getController('App').StopWaitingProcess();
-                            var object = Ext.JSON.decode(response.responseText, false);
-                            if (object.success === "0") {
-                                Ext.MessageBox.alert('Error Message', object.errors);
-                                return;
-                            } else {
-                                Ext.MessageBox.alert('Confirmation', object.errors);
-                                grid.getStore().reload();
+                                testextjs.app.getController('App').StopWaitingProcess();
+                                var object = Ext.JSON.decode(response.responseText, false);
+                                if (object.success === "0") {
+                                    Ext.MessageBox.alert('Error Message', object.errors);
+                                    return;
+                                } else {
+                                    Ext.MessageBox.alert('Confirmation', object.errors);
+                                    grid.getStore().reload();
+                                }
+                            },
+                            failure: function (response) {
+                                testextjs.app.getController('App').StopWaitingProcess();
+                                Ext.MessageBox.alert('Error Message', response.responseText);
+
                             }
-                        },
-                        failure: function (response) {
-                            testextjs.app.getController('App').StopWaitingProcess();
-                            Ext.MessageBox.alert('Error Message', response.responseText);
+                        });
 
-                        }
-                    });
-
-                }
-            });
+                    }
+                });
 
     },
     onRechClick: function () {

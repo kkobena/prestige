@@ -51,7 +51,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
 
         });
         url_services_data_orderdet = '../webservices/commandemanagement/orderdetail/ws_data.jsp?lg_ORDER_ID=' + ref;
-    
+
         store_details_order = new Ext.data.Store({
             model: 'testextjs.model.OrderDetail',
             pageSize: itemsPerPageGrid,
@@ -363,7 +363,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                 {
                                     xtype: 'container',
                                     layout: 'hbox',
-                                    //defaultType: 'textfield',
+                                
                                     margin: '0 0 5 0',
                                     items: [
                                         {
@@ -439,7 +439,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                 'Mettre en rupture?',
                 function (btn) {
                     if (btn === 'yes') {
-                        var rec = grid.getStore().getAt(rowIndex);
+                        let rec = grid.getStore().getAt(rowIndex);
                         Ext.Ajax.request({
                             url: url_services_transaction_order + 'rupture',
                             params: {
@@ -447,7 +447,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                             },
                             success: function (response)
                             {
-                                var object = Ext.JSON.decode(response.responseText, false);
+                                let object = Ext.JSON.decode(response.responseText, false);
                                 if (object.success === 0) {
                                     Ext.MessageBox.alert('Error Message', object.errors);
                                     return;
@@ -464,9 +464,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                     }
                 });
     },
-    onbtnimport: function () {
-
-    },
+   
     onbtnexport: function () {
         const me = Me;
         Ext.MessageBox.confirm('Message',
@@ -480,15 +478,15 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                         } else {
                             maref = me.getOdatasource().lg_ORDER_ID;
                         }
-
-                        window.location = '../DownloadFileServlet?lg_ORDER_ID=' + maref + '&str_TYPE_ACTION=COMMANDE';
+                        window.location = '../api/v1/commande/export-csv?id=' + maref;
+                       
                     }
                 });
     },
     onbtnsave: function () {
         const me = Me;
-        console.log(me, 'me ----');
-        var commandetype = "";
+
+        let commandetype = "";
         if (Ext.getCmp('lg_TYPE_PASSATION_ID').getValue() != null) {
             commandetype = Ext.getCmp('lg_TYPE_PASSATION_ID').getValue();
         }
@@ -510,7 +508,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                             success: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
+                                let object = Ext.JSON.decode(response.responseText, false);
                                 if (object.success === 0) {
                                     Ext.MessageBox.alert('Error Message', object.errors);
                                     return;
@@ -523,7 +521,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                         function (btn) {
                                             if (btn === 'yes') {
                                                 Me.onPdfClick(rec.get('lg_ORDER_ID'));
-                                                return;
+                                              
                                             }
                                         });
                             },
@@ -531,12 +529,12 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                             failure: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
+                            
                                 console.log("Bug " + response.responseText);
                                 Ext.MessageBox.alert('Error Message', response.responseText);
                             }
                         });
-                        /* } fin else */
+                      
                     }
                 });
         this.up('window').close();
@@ -561,7 +559,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
     onPdfClick: function (lg_ORDER_ID) {
-        const linkUrl =  '../webservices/commandemanagement/order/ws_generate_pdf.jsp?lg_ORDER_ID=' + lg_ORDER_ID;
+        const linkUrl = '../webservices/commandemanagement/order/ws_generate_pdf.jsp?lg_ORDER_ID=' + lg_ORDER_ID;
         window.open(linkUrl);
     }
 });
