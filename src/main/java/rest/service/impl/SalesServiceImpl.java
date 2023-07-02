@@ -1824,18 +1824,18 @@ public class SalesServiceImpl implements SalesService {
                 addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
 
             }
-            TTypeVente OTTypeVente = typeVenteFromId(clotureVenteParams.getTypeVenteId(), emg);
+            TTypeVente oTTypeVente = typeVenteFromId(clotureVenteParams.getTypeVenteId(), emg);
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement,
                     "", tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getBanque(), clotureVenteParams.getLieux(), clotureVenteParams.getCommentaire(), commonparameter.statut_is_Closed, "", emg);
             tp.setBWITHOUTBON(clotureVenteParams.isSansBon());
-            tp.setLgTYPEVENTEID(OTTypeVente);
+            tp.setLgTYPEVENTEID(oTTypeVente);
             tp.setLgREGLEMENTID(tReglement);
             tp.setLgUSERID(clotureVenteParams.getUserId());
             tp.setLgUSERVENDEURID(vendeur != null ? vendeur : clotureVenteParams.getUserId());
             tp.setLgUSERCAISSIERID(tp.getLgUSERID());
             tp.setStrREFTICKET(DateConverter.getShortId(10));
             tp.setBISAVOIR(isAvoir);
-            tp.setStrSTATUT(commonparameter.statut_is_Closed);
+            tp.setStrSTATUT(Parameter.STATUST_IS_CLOSE);
             tp.setStrTYPEVENTE(Parameter.KEY_VENTE_ORDONNANCE);
             tp.setStrSTATUTVENTE(statut);
             tp.setIntPRICEOTHER(tp.getIntPRICE());
@@ -1845,8 +1845,8 @@ public class SalesServiceImpl implements SalesService {
 
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
 
-            boolean key_account = test.test(takeInAcount);
-            if (key_account) {
+            boolean keyAccount = test.test(takeInAcount);
+            if (keyAccount) {
                 tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             }
             if (amount > 0) {
@@ -1960,7 +1960,7 @@ public class SalesServiceImpl implements SalesService {
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
             Integer amount = montant - tp.getIntPRICEREMISE();
             TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
-            Optional<TParameters> KEY_TAKE_INTO_ACCOUNT = findParamettre("KEY_TAKE_INTO_ACCOUNT");
+            Optional<TParameters> toInAccount = findParamettre("KEY_TAKE_INTO_ACCOUNT");
             Optional<TClient> client = findClientById(clotureVenteParams.getClientId());
             client.ifPresent(c -> {
                 tp.setStrFIRSTNAMECUSTOMER(c.getStrFIRSTNAME());
@@ -1997,8 +1997,8 @@ public class SalesServiceImpl implements SalesService {
                 }
                 return false;
             };
-            boolean key_account = testP.test(KEY_TAKE_INTO_ACCOUNT);
-            if (key_account) {
+            boolean keyAccount = testP.test(toInAccount);
+            if (keyAccount) {
                 tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             }
 
@@ -2032,14 +2032,14 @@ public class SalesServiceImpl implements SalesService {
         return json;
     }
 
-    public boolean checkRefBonIsUse(String Ref_Bon, TCompteClientTiersPayant oTCompteClientTiersPayant, EntityManager emg) {
+    public boolean checkRefBonIsUse(String refBon, TCompteClientTiersPayant oTCompteClientTiersPayant, EntityManager emg) {
 
         try {
 
-            if (!"".equals(Ref_Bon)) {
-                TPreenregistrementCompteClientTiersPayent OPreenregistrementCompteClientTiersPayent = (TPreenregistrementCompteClientTiersPayent) emg.createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID = ?1 AND t.strREFBON = ?2 AND t.strSTATUT = ?3")
-                        .setParameter(1, oTCompteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID()).setParameter(2, Ref_Bon).setParameter(3, commonparameter.statut_is_Closed).getSingleResult();
-                return (OPreenregistrementCompteClientTiersPayent != null);
+            if (!"".equals(refBon)) {
+                TPreenregistrementCompteClientTiersPayent op =emg.createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID = ?1 AND t.strREFBON = ?2 AND t.strSTATUT = ?3",TPreenregistrementCompteClientTiersPayent.class)
+                        .setParameter(1, oTCompteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID()).setParameter(2, refBon).setParameter(3, commonparameter.statut_is_Closed).getSingleResult();
+                return (op != null);
 
             }
             return false;
