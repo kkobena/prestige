@@ -424,7 +424,7 @@ Ext.define('testextjs.controller.DoRetourCarnetCtr', {
         me.goBack();
     },
     goBack: function () {
-        var xtype = 'retourcarnetdepot';
+        const xtype = 'retourcarnetdepot';
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
 
