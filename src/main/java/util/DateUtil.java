@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- *
  * @author koben
  */
 public final class DateUtil {
@@ -28,7 +27,8 @@ public final class DateUtil {
         LocalDate lastMonth = LocalDate.now().minusMonths(nthnMoth);
         return LocalDate.of(lastMonth.getYear(), lastMonth.getMonth(), 1);
     }
-   public static String convertDateToDD_MM_YYYY(Date date) {
+
+    public static String convertDateToDD_MM_YYYY(Date date) {
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
         if (date != null) {
             return dateFormat.format(date);
@@ -36,6 +36,7 @@ public final class DateUtil {
             return "";
         }
     }
+
     public static String convertDateToDD_MM_YYYY_HH_mm(Date date) {
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         if (date != null) {
@@ -44,10 +45,19 @@ public final class DateUtil {
             return "";
         }
     }
-        public static String convertDateToISO(Date date) {
+
+    public static String convertDateToISO(Date date) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         if (date != null) {
             return dateFormat.format(date);
+        } else {
+            return "";
+        }
+    }
+    public static String convertDate(Date date,SimpleDateFormat simpleDateFormat) {
+
+        if (date != null) {
+            return simpleDateFormat.format(date);
         } else {
             return "";
         }

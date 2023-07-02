@@ -48,7 +48,7 @@ Ext.application({
         'testextjs.view.sm_user.role.action.addPrivilegeItem',
         'testextjs.model.Notification',
         'testextjs.view.sm_user.notification.NotificationManager',
-        'testextjs.view.sm_user.myaccount.MyaccountManager',
+
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.UserPhone',
         'testextjs.view.sm_user.user_phone.action.add',
@@ -86,7 +86,6 @@ Ext.application({
         'testextjs.view.sm_user.role.action.addPrivilegeItem',
         'testextjs.model.Notification',
         'testextjs.view.sm_user.notification.NotificationManager',
-        'testextjs.view.sm_user.myaccount.MyaccountManager',
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.Preenregistrement',
         'testextjs.view.sm_user.detailsvente.DetailsVenteManager',
