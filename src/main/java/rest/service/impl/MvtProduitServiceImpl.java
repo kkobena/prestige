@@ -181,7 +181,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.ENTREE_EN_STOCK);
         for (TPreenregistrementDetail d : list) {
             TFamille tFamille = d.getLgFAMILLEID();
-            updateStockDepot(typemvtproduit, user, tFamille, d.getIntQUANTITYSERVED(), OTEmplacement, emg);
+            updateStockDepot(typemvtproduit, user, tFamille, d.getIntQUANTITY(), OTEmplacement, emg);
         }
     }
 
@@ -232,7 +232,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg, it.getValeurTva(), tp.getChecked(), it.getIntUG());
 
             emg.merge(it);
-            updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITYSERVED(), depot, emg);
+            updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITY(), depot, emg);
             suggestionService.makeSuggestionAuto(familleStock, tFamille);
         });
 
@@ -281,7 +281,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             if (tp.getStrTYPEVENTE().equals(DateConverter.VENTE_COMPTANT) && familleStock.getIntUG() > 0) {
                 int ugVendue;
                 int stockUg = familleStock.getIntUG();
-                int qtyVendue = it.getIntQUANTITYSERVED();
+                int qtyVendue = it.getIntQUANTITY();
                 if (qtyVendue <= stockUg) {
                     ugVendue = qtyVendue;
                 } else {
@@ -297,7 +297,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     private void updateStock(TFamilleStock familleStock, TPreenregistrement tp, TPreenregistrementDetail it) {
         updateQtyUg(familleStock, tp, it);
-        familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITYSERVED());
+        familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY());
         familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
         familleStock.setDtUPDATED(new Date());
 
