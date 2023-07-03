@@ -92,7 +92,7 @@ public class Suggestion extends HttpServlet {
         int status = 0;
         try {
 
-            long count = (long) em.createQuery("SELECT COUNT(o)  FROM TSuggestionOrderDetails o WHERE o.strSTATUT='is_Process' AND o.lgFAMILLEID.lgFAMILLEID =?1 ").setParameter(1, lgFamilleID)
+            long count = (long) em.createQuery("SELECT COUNT(o)  FROM TSuggestionOrderDetails o WHERE  o.lgFAMILLEID.lgFAMILLEID =?1 ").setParameter(1, lgFamilleID)
                     .setMaxResults(1)
                     .getSingleResult();
 
@@ -275,7 +275,6 @@ public class Suggestion extends HttpServlet {
             cq.select(cb.count(root));
             Predicate predicate = cb.conjunction();
 
-//        predicate = cb.and(predicate, cb.or(cb.like(join.get(TSuggestionOrder_.strSTATUT), commonparameter.statut_is_Process), cb.like(join.get(TSuggestionOrder_.strSTATUT), commonparameter.statut_is_Auto)));
             predicate = cb.and(predicate, cb.equal(join.get(TSuggestionOrder_.lgSUGGESTIONORDERID), lg_SUGGESTION_ORDER_ID));
             if (!"".equals(search_value)) {
 

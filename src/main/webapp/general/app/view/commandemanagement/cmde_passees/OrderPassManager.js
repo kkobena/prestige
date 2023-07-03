@@ -1,6 +1,4 @@
 var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
-var url_services_data_order_list = '../webservices/commandemanagement/order/ws_data_order_passed.jsp';
-
 var url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
 
 var Me;
@@ -34,20 +32,21 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
                     })
         }],
     initComponent: function () {
-        url_services_data_order_list = '../webservices/commandemanagement/order/ws_data_order_passed.jsp';
+
         url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
         Me = this;
-        var itemsPerPage = 20;
-        var store_order = new Ext.data.Store({
+        let itemsPerPage = 20;
+        const store_order = new Ext.data.Store({
             model: 'testextjs.model.Order',
             pageSize: itemsPerPage,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../order',
+
+                url: '../api/v1/commande/list/passees',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 },
                 timeout: 240000
@@ -258,34 +257,13 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
             single: true
         });
 
-        this.on('edit', function (editor, e) {
-            Ext.Ajax.request({
-                url: url_services_transaction_order + 'update',
-                timeout: 2400000,
-                params: {
-                    lg_ORDER_ID: e.record.data.lg_ORDER_ID,
-                    str_REF_ORDER: e.record.data.str_REF_ORDER,
-                    lg_GROSSISTE_ID: e.record.data.lg_GROSSISTE_ID,
-                    int_NUMBER: e.record.data.int_NUMBER
-                },
-                success: function (response)
-                {
-                    e.record.commit();
-                    store_order.reload();
-                },
-                failure: function (response)
-                {
-                    console.log("Bug " + response.responseText);
-                    Ext.MessageBox.alert('Error Message', object.errors);
-                }
-            });
-        });
+
 
     },
     loadStore: function () {
         this.getStore().load();
     },
-   
+
     onEditOrderByImportClick: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.commandemanagement.order.action.importOrder({
@@ -315,7 +293,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
         var alias = 'widget.' + xtype;
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Ajouter les articles a une commande", "0", "is_Waiting");
     },
-    
+
     onRemoveClick: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
                 'Confirmer l\'annulation de cette commande',
@@ -348,41 +326,38 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
 
                             }
                         });
-                        return;
+
                     }
                 });
 
     },
     onRechClick: function () {
-        var val = Ext.getCmp('rechecher');
+        const val = Ext.getCmp('rechecher');
         this.getStore().load({
-//            timeout: 240000,
+            timeout: 240000,
             params: {
-                search_value: val.getValue()
+                query: val.getValue()
             }
-        }, url_services_data_order_list);
+        });
     },
     onbtnprint: function (grid, rowIndex) {
 
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
 
         Ext.MessageBox.confirm('Message',
                 'Imprimer le bon de commande?',
                 function (btn) {
                     if (btn == 'yes') {
                         Me.onPdfClick(rec.get('lg_ORDER_ID'));
-                        return;
+
                     }
                 });
 
     },
     onPdfClick: function (lg_ORDER_ID) {
-        var chaine = location.pathname;
-        var reg = new RegExp("[/]+", "g");
-        var tableau = chaine.split(reg);
-        var sitename = tableau[1];
-        var linkUrl = url_services_pdf + '?lg_ORDER_ID=' + lg_ORDER_ID;
-        //alert("Ok ca marche " + linkUrl);
+
+        const linkUrl = url_services_pdf + '?lg_ORDER_ID=' + lg_ORDER_ID;
+
         window.open(linkUrl);
 
     }

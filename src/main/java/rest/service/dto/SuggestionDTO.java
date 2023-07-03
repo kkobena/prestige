@@ -9,7 +9,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- *
  * @author koben
  */
 @NoArgsConstructor
@@ -19,6 +18,9 @@ import lombok.ToString;
 @Getter
 @Setter
 public class SuggestionDTO {
-  private long montantAchat;
-  private  long montantVente;
+    private long montantAchat;
+    private long montantVente;
+    private String id;
+    private String grossisteId;
+    private SuggestionOrderDetailDTO item;
 }
