@@ -19,7 +19,7 @@
 <% String str_NAME = "", lg_CODE_ACTE_ID = "0", lg_CODE_GESTION_ID = "", lg_CODE_TVA_ID = "", lg_FORME_ARTICLE_ID = "", lg_FABRIQUANT_ID = "",
             lg_TYPEETIQUETTE_ID = "2", str_CODE_TAUX_REMBOURSEMENT = "0", lg_ZONE_GEO_ID = Parameter.DEFAUL_ZONE_GEOGRAPHIQUE, lg_REMISE_ID = "",
             int_CIP2 = "", int_CIP3 = "", int_CIP4 = "", lg_FAMILLEARTICLE_ID = "", str_DESCRIPTION = "", lg_FAMILLE_PARENT_ID = "", dt_Peremtion = "",
-            lg_FAMILLE_ID = "", lg_GROSSISTE_ID = "", int_CIP = "", int_EAN13 = "", str_CODE_REMISE = "", int_T = "";
+            lg_FAMILLE_ID = "", lg_GROSSISTE_ID = "", int_CIP = "", int_EAN13 = "", str_CODE_REMISE = "0", int_T = "";
     int int_PRICE = 0, int_STOCK_REAPROVISONEMENT = 0, int_PAF = 0, int_PAT = 0, int_S = 0, int_PRICE_TIPS = 0,
             int_TAUX_MARQUE = 0, int_SEUIL_MIN = 0, int_NUMBER_AVAILABLE = 0, int_QTEDETAIL = 0,
             int_PRICE_DETAIL = 0, int_SEUIL_RESERVE = 0, int_QTE_REAPPROVISIONNEMENT = 0, int_QUANTITY_STOCK = 0;

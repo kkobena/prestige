@@ -141,21 +141,21 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
 
         });
         
-        var store_remisearticle = new Ext.data.Store({
-            model: 'testextjs.model.Workflowremisearticle',
-            pageSize: itemsPerPage,
-            autoLoad: true,
-            proxy: {
-                type: 'ajax',
-                url: url_services_data_remise_article,
-                reader: {
-                    type: 'json',
-                    root: 'results',
-                    totalProperty: 'total'
-                }
-            }
+      //  var store_remisearticle = new Ext.data.Store({
+     //       model: 'testextjs.model.Workflowremisearticle',
+      //      pageSize: itemsPerPage,
+      //      autoLoad: true,
+      //      proxy: {
+      //          type: 'ajax',
+      //          url: url_services_data_remise_article,
+      //          reader: {
+      //              type: 'json',
+      //              root: 'results',
+     //               totalProperty: 'total'
+      //          }
+      //      }
 
-        });
+      //  });
 
 
 
@@ -243,20 +243,20 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                             emptyText: 'Choisir un code TVA...'
                         },
                         
-                        {
-                            xtype: 'combobox',
-                            fieldLabel: 'Code Remise',
-                            name: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
-                            width: 400,
-                            id: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
-                            store: store_remisearticle,
-                            valueField: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
-                            displayField: 'str_CODE_REMISE_ARTICLE',
-                            typeAhead: true,
-                            allowBlank: false,
-                            queryMode: 'remote',
-                            emptyText: 'Choisir un code remise...'
-                        },
+                        //{
+                      //      xtype: 'combobox',
+                      //    fieldLabel: 'Code Remise',
+                      //      name: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
+                     //       width: 400,
+                     //       id: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
+                    //        store: store_remisearticle,
+                     //       valueField: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
+                     //       displayField: 'str_CODE_REMISE_ARTICLE',
+                     //       typeAhead: true,
+                     //       allowBlank: false,
+                    //        queryMode: 'remote',
+                    //        emptyText: 'Choisir un code remise...'
+                      //  },
                         
                         {
                             fieldLabel: 'Prix Achat Facture',
@@ -330,19 +330,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
 //                            allowBlank: false,
 
                         }
-                        //Ajout ligne code remise
-                        //,
-                        //{
-                        //    fieldLabel: 'Code Remise',
-                        //    xtype: 'textfield',
-//                            maskRe: /[0-9.]/,
-                        //    width: 350,
-                        //    emptyText: 'CODE REMISE',
-                        //    name: 'str_CODE_REMISE',
-                        //    id: 'str_CODE_REMISE'
-//                            allowBlank: false,
-
-                        //}
 
                     ]
                 }]
@@ -369,7 +356,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
 
             Ext.getCmp('lg_CODE_TVA_ID').hide();
             
-            Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').setValue(this.getOdatasource().lg_WORKFLOW_REMISE_ARTICLE_ID);
+        //    Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').setValue(this.getOdatasource().lg_WORKFLOW_REMISE_ARTICLE_ID);
             //
             //
             //alert(this.getOdatasource().bool_RESERVE);
@@ -388,7 +375,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
             autoShow: true,
             title: this.getTitre(),
             width: 600,
-            height: 410,
+            height: 431,
             minWidth: 300,
             minHeight: 200,
             layout: 'fit',
@@ -432,10 +419,10 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
             }
             
             //controle sur la zone code remise qui sera ajouté
-            if (parseInt(Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').getValue()) === "") {
-              Ext.MessageBox.alert('Impossible', 'ou est la remise');
-                return;
-             } 
+         //   if (parseInt(Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').getValue()) === "") {
+         //     Ext.MessageBox.alert('Impossible', 'ou est la remise');
+         //       return;
+         //    } 
             
             var str_DESCRIPTION = Ext.getCmp('str_DESCRIPTION').getValue();
 
@@ -452,7 +439,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                     str_DESCRIPTION: Ext.getCmp('str_DESCRIPTION').getValue(),
                     int_CIP: Ext.getCmp('int_CIP').getValue(),
                     lg_CODE_TVA_ID: Ext.getCmp('lg_CODE_TVA_ID').getValue(),
-                    lg_WORKFLOW_REMISE_ARTICLE_ID: Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').getValue(),
+                 //   lg_WORKFLOW_REMISE_ARTICLE_ID: Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').getValue(),
                     int_T: Ext.getCmp('int_T').getValue(),
                     int_EAN13: Ext.getCmp('EAN').getValue()
                 },
