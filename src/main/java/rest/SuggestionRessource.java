@@ -5,10 +5,11 @@
  */
 package rest;
 
-import dal.GammeProduit;
+import dal.Laboratoire;
 import dal.TFamille;
 import dal.TSuggestionOrderDetails;
 import dal.TUser;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -34,17 +35,18 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SuggestionService;
+import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
 import toolkits.parameters.commonparameter;
 import util.Constant;
 
 /**
- *
  * @author kkoffi
  */
 @Path("v1/suggestion")
@@ -55,7 +57,7 @@ public class SuggestionRessource {
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
-    SuggestionService suggestionService;
+    private SuggestionService suggestionService;
 
     @GET
     @Path("csv")
@@ -140,7 +142,7 @@ public class SuggestionRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         this.suggestionService.addItem(suggestionOrderDetail);
-        return Response.ok().entity(ResultFactory.getFailResult()).build();
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
 
     @POST
@@ -152,7 +154,7 @@ public class SuggestionRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         this.suggestionService.updateItemSeuil(suggestionOrderDetail);
-        return Response.ok().entity(ResultFactory.getFailResult()).build();
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
 
     @POST
@@ -164,7 +166,7 @@ public class SuggestionRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         this.suggestionService.updateItemQteCmde(suggestionOrderDetail);
-        return Response.ok().entity(ResultFactory.getFailResult()).build();
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
 
     @POST
@@ -176,7 +178,7 @@ public class SuggestionRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         this.suggestionService.updateItemQtePrixPaf(suggestionOrderDetail);
-        return Response.ok().entity(ResultFactory.getFailResult()).build();
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
 
     @POST
@@ -188,6 +190,39 @@ public class SuggestionRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         this.suggestionService.updateItemQtePrixVente(suggestionOrderDetail);
-        return Response.ok().entity(ResultFactory.getFailResult()).build();
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
+    }
+
+    @POST
+    @Path("add")
+    public Response create(SuggestionDTO suggestion) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        SuggestionDTO result = this.suggestionService.create(suggestion);
+        return Response.ok().entity(new JSONObject(result).toString()).build();
+    }
+
+    @GET
+    @Path("list")
+    public Response findAll(
+            @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
+
+        return Response.ok().entity(this.suggestionService.fetch(query, start, limit).toString()).build();
+    }
+
+    @GET
+    @Path("set-pending/{id}")
+    public Response setToPending(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.setToPending(id);
+        return Response.ok().build();
     }
 }

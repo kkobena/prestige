@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "TFamille.findByStrSTATUT", query = "SELECT t FROM TFamille t WHERE t.strSTATUT = :strSTATUT")
 
 })
-//@Cacheable(false)
+
 public class TFamille implements Serializable {
 
     private static final long serialVersionUID = 1L;
