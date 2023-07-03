@@ -10,6 +10,8 @@ import dal.TOfficine;
 import dal.TPrivilege;
 import dal.TRoleUser;
 import dal.TUser;
+import rest.service.dto.AccountInfoDTO;
+
 import java.util.List;
 import javax.ejb.Local;
 import javax.servlet.http.HttpServletRequest;
@@ -30,4 +32,8 @@ public interface UserService {
     TOfficine getOfficine();
 
     List<TPrivilege> getAllPrivilege(TUser oTUser);
+
+    AccountInfoDTO getAccount(TUser oTUser);
+
+    TUser updateProfilUser(AccountInfoDTO accountInfo);
 }

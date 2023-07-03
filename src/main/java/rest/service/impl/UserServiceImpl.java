@@ -7,17 +7,15 @@ package rest.service.impl;
 
 import com.kstruct.gethostname4j.Hostname;
 import commonTasks.dto.ManagedUserVM;
-import dal.TOfficine;
-import dal.TParameters;
-import dal.TPrivilege;
-import dal.TRolePrivelege;
-import dal.TRoleUser;
-import dal.TUser;
+import dal.*;
 import dal.enumeration.TypeLog;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import org.apache.commons.lang3.StringUtils;
+import rest.service.LogService;
+import rest.service.UserService;
+import rest.service.dto.AccountInfoDTO;
+import toolkits.utils.StringComplexUtils.DataStringManager;
+import util.*;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -25,20 +23,19 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import rest.service.LogService;
-import rest.service.UserService;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import toolkits.security.Md5;
-import toolkits.utils.StringComplexUtils.DataStringManager;
-import util.Afficheur;
-import util.DateConverter;
 
 /**
- *
  * @author koben
  */
 @Stateless
 public class UserServiceImpl implements UserService {
 
+    private static final Logger LOG = Logger.getLogger(UserServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
@@ -61,7 +58,7 @@ public class UserServiceImpl implements UserService {
             afficheur("Caisse: " + OTUser.getStrLASTNAME());
             return OTUser;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
     }
@@ -88,6 +85,7 @@ public class UserServiceImpl implements UserService {
                 afficheur.affichage(DataStringManager.subStringData(getOfficine().getStrNOMABREGE(), 0, 20));
                 afficheur.affichage(DataStringManager.subStringData(test, 0, 20));
             } catch (Exception e) {
+                LOG.log(Level.SEVERE, null, e);
             }
         }
 
@@ -97,18 +95,6 @@ public class UserServiceImpl implements UserService {
     public TOfficine getOfficine() {
         return getEm().find(TOfficine.class, DateConverter.OFFICINE);
 
-    }
-
-    private TUser findByLogin(String login) {
-        try {
-            TypedQuery<TUser> q = getEm().createQuery("SELECT t FROM TUser t WHERE t.strLOGIN = ?1", TUser.class).
-                    setParameter(1, login)
-                    .setMaxResults(1);
-            return q.getSingleResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     @Override
@@ -138,7 +124,7 @@ public class UserServiceImpl implements UserService {
             return q.getSingleResult();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
 
@@ -177,11 +163,40 @@ public class UserServiceImpl implements UserService {
 
                 }
             }
-        } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
         }
 
         return LstTPrivilege;
+    }
+
+    @Override
+    public AccountInfoDTO getAccount(TUser tu) {
+
+        if (Objects.isNull(tu)) {
+            throw new RuntimeException();
+        }
+        TRoleUser roleUser = this.getTRoleUser(tu.getLgUSERID());
+        TRole role = roleUser.getLgROLEID();
+
+        String roleName = (role != null ? role.getStrDESIGNATION() : "");
+        String xtypeload = "mainmenumanager";
+        if (role != null && (role.getStrNAME().equalsIgnoreCase(Constant.ROLE_SUPERADMIN) || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_PHARMACIEN))) {
+            xtypeload = "dashboard";
+        }
+
+        TLanguage tLanguage = tu.getLgLanguageID();
+        return new AccountInfoDTO()
+                .setLgUSERID(tu.getLgUSERID())
+                .setStrLOGIN(tu.getStrLOGIN())
+                .setStrFIRSTNAME(tu.getStrFIRSTNAME())
+                .setStrLASTNAME(tu.getStrLASTNAME())
+                .setStrLASTCONNECTIONDATE(DateUtil.convertDate(tu.getStrLASTCONNECTIONDATE(), new SimpleDateFormat("yyyy/MM/dd")))
+                .setStrSTATUT(tu.getStrSTATUT())
+                .setLgLanguageID(Objects.nonNull(tLanguage) ? tLanguage.getStrDescription() : "")
+                .setRole(roleName)
+                .setXtypeload(xtypeload);
+
     }
 
     private String getHostName(HttpServletRequest request) {
@@ -191,5 +206,19 @@ public class UserServiceImpl implements UserService {
             return Hostname.getHostname();
         }
         return request.getRemoteHost();
+    }
+
+    @Override
+    public TUser updateProfilUser(AccountInfoDTO accountInfo) {
+        TUser usr = this.em.find(TUser.class, accountInfo.getLgUSERID());
+        usr.setStrFIRSTNAME(accountInfo.getStrFIRSTNAME());
+        usr.setStrLASTNAME(accountInfo.getStrLASTNAME());
+        if (StringUtils.isNotEmpty(accountInfo.getStrPASSWORD())) {
+            usr.setStrPASSWORD(Md5.encode(accountInfo.getStrPASSWORD()));
+
+        }
+
+        return this.em.merge(usr);
+
     }
 }

@@ -48,7 +48,7 @@ Ext.application({
         'testextjs.view.sm_user.role.action.addPrivilegeItem',
         'testextjs.model.Notification',
         'testextjs.view.sm_user.notification.NotificationManager',
-        'testextjs.view.sm_user.myaccount.MyaccountManager',
+
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.UserPhone',
         'testextjs.view.sm_user.user_phone.action.add',
@@ -86,7 +86,6 @@ Ext.application({
         'testextjs.view.sm_user.role.action.addPrivilegeItem',
         'testextjs.model.Notification',
         'testextjs.view.sm_user.notification.NotificationManager',
-        'testextjs.view.sm_user.myaccount.MyaccountManager',
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.Preenregistrement',
         'testextjs.view.sm_user.detailsvente.DetailsVenteManager',
@@ -763,22 +762,9 @@ Ext.application({
         'testextjs.view.configmanagement.company.company',
         'testextjs.view.actions.Doublons',
         'testextjs.view.caisseManager.TicketzManager',
-        'testextjs.view.sm_user.ventecaisse.VentecaisseManager',
         'testextjs.view.Report.resultatstva.TvaManager',
         'testextjs.view.sm_user.vente.VenteHistoriqueDepotManager',
-//        'testextjs.view.Report.TableauBordPharmacien.tableauBordPharmacienManager',
         'testextjs.view.produits.mvtproduit.*',
-
-//        'testextjs.view.actions.Balance',
-//        'testextjs.view.actions.TvaManager',
-//        'testextjs.view.sm_user.listecaisse.ListeCaisseManager'
-//        'testextjs.view.sm_user.visualisercaisse.VisualiserCaisseManager',
-
-        // Devis
-//        'testextjs.view.sm_user.devis.DevisManager',
-        // Entré en stock
-//        , 'testextjs.view.sm_user.balancevente.Balanceventemanager',
-//        'testextjs.view.Report.BalanceVenteCaisse.BalanceVenteCaisseManager',
         'testextjs.view.facturation.ModelFacture',
         'testextjs.view.facturation.FactureProvisoire',
         'testextjs.view.caisseManager.Importation',
@@ -787,11 +773,6 @@ Ext.application({
         'testextjs.view.depot.Export',
         'testextjs.view.depot.Import',
         'testextjs.view.depot.Export'
-
-
-// 'testextjs.view.sm_user.gestcaisse.GestCaisseManager',
-
-//'testextjs.view.configmanagement.famille.FamilleStockComparaisonManager'
     ],
     controllers: [
         'App',

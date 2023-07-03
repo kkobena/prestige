@@ -10,23 +10,23 @@ import commonTasks.dto.ManagedUserVM;
 import dal.TPrivilege;
 import dal.TRoleUser;
 import dal.TUser;
+
 import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+
 import org.json.JSONObject;
 import rest.service.UserService;
+import rest.service.dto.AccountInfoDTO;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 import util.DateConverter;
 
 /**
- *
  * @author koben
  */
 @Path("v1/user")
@@ -42,7 +42,7 @@ public class AccountResource {
     @POST
     @Path("auth")
     public Response auth(ManagedUserVM managedUser) {
-        
+
         JSONObject json = new JSONObject();
         TUser tu = userService.connexion(managedUser, request);
         if (tu == null) {
@@ -87,5 +87,29 @@ public class AccountResource {
         return Response.ok().entity(json.toString()).build();
 
     }
-  
+
+    @GET
+    @Path("account")
+    public Response account() {
+        HttpSession hs = request.getSession();
+        TUser tu = (TUser) hs.getAttribute(DateConverter.AIRTIME_USER);
+        JSONObject json = new JSONObject();
+        return Response.ok().entity(json.put("accountInfo", new JSONObject(this.userService.getAccount(tu))).toString()).build();
+    }
+
+    @POST
+    @Path("account")
+    public Response updateAccount(
+            AccountInfoDTO accountInfo
+    ) {
+        HttpSession hs = request.getSession();
+        TUser tu = (TUser) hs.getAttribute(DateConverter.AIRTIME_USER);
+        if (tu == null) {
+            throw new RuntimeException(Constant.DECONNECTED_MESSAGE);
+        }
+
+        tu = this.userService.updateProfilUser(accountInfo);
+        hs.setAttribute(Constant.AIRTIME_USER, tu);
+        return Response.ok().build();
+    }
 }

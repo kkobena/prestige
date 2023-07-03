@@ -1,18 +1,14 @@
 /* global Ext */
 
-var url_services_data_order_list = '../webservices/commandemanagement/order/ws_data.jsp';
+
 var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
-var url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
-
-
-
 var Me;
-//var store_order;
 var val;
 var listOrderSelected;
 var listGrossisteSelected;
 Ext.util.Format.decimalSeparator = ',';
 Ext.util.Format.thousandSeparator = '.';
+
 function amountformat(val) {
     return Ext.util.Format.number(val, '0,000.');
 }
@@ -22,10 +18,8 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
     xtype: 'i_order_manager',
     id: 'i_order_managerID',
     frame: true,
-//    collapsible: true,
     animCollapse: false,
     title: 'Liste des commandes en cours ',
-//    iconCls: 'icon-grid',
     plain: true,
     maximizable: true,
     closable: false,
@@ -42,23 +36,21 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     })
         }],
     initComponent: function () {
-     
-        url_services_data_order_list = '../webservices/commandemanagement/order/ws_data.jsp?';
-        url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp?str_STATUT=is_Process';
+
         Me = this;
         listOrderSelected = [];
         listGrossisteSelected = [];
-        var itemsPerPage = 20;
-        var store_order = new Ext.data.Store({
+        let itemsPerPage = 10;
+        const store_order = new Ext.data.Store({
             model: 'testextjs.model.Order',
             pageSize: itemsPerPage,
-            autoLoad: false,
+            autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_order_list,
+                url: '../api/v1/commande/list',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 },
                 timeout: 180000
@@ -82,7 +74,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     }
 
                 },
-               
+
                 {
                     header: '',
                     dataIndex: 'lg_GROSSISTE_ID',
@@ -99,14 +91,14 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     dataIndex: 'str_GROSSISTE_LIBELLE',
                     flex: 1
                 },
-                // int_LINE
+
                 {
                     header: 'Nbre.Ligne',
                     dataIndex: 'int_LINE',
                     align: 'right',
                     flex: 0.5
                 },
-                // int_NBRE_PRODUIT
+
                 {
                     header: 'Nbre.Produits',
                     dataIndex: 'int_NBRE_PRODUIT',
@@ -136,7 +128,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 {
                     header: 'Date',
                     dataIndex: 'dt_CREATED',
-                    flex:0.7
+                    flex: 0.7
                 }, {
                     header: 'Heure',
                     dataIndex: 'dt_UPDATED',
@@ -163,13 +155,11 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                             icon: 'resources/images/icons/order_tracking.png',
                             tooltip: 'ENVOI PAR PHARMAML',
                             scope: this,
-                            hidden:true,
+                            hidden: true,
                             handler: this.envoiPharmaML
                         }, '-',
-                        
-                        
+
                         {
-//                            icon: 'resources/images/icons/fam/passed.png',
                             icon: 'resources/images/icons/fam/folder_go.png',
                             tooltip: 'Commander',
                             scope: this,
@@ -256,7 +246,6 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 {
                     text: 'VERIFICATION DU FICHIER IMPORTE',
                     tooltip: 'Vérification du fichier importé',
-//                        iconCls: 'printable',
                     iconCls: 'importicon',
                     scope: this,
                     menu: [
@@ -295,7 +284,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     scope: this,
                     handler: this.funsionCommande
                 },
-                
+
                 '-', {
                     text: 'Verifier l\'importation',
                     tooltip: 'Verifier l\'importation',
@@ -308,7 +297,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
             ],
             bbar: {
                 xtype: 'pagingtoolbar',
-                pageSize: 10,
+                pageSize: itemsPerPage,
                 store: store_order,
                 displayInfo: true,
                 plugins: new Ext.ux.ProgressBarPager()
@@ -323,48 +312,9 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         });
 
 
-        this.on('edit', function (editor, e) {
-            Ext.Ajax.request({
-                url: url_services_data_order_list + 'update',
-                params: {
-                    lg_ORDER_ID: e.record.data.lg_ORDER_ID,
-                    str_REF_ORDER: e.record.data.str_REF_ORDER,
-                    lg_GROSSISTE_ID: e.record.data.lg_GROSSISTE_ID,
-                    int_NUMBER: e.record.data.int_NUMBER
-                },
-                success: function (response)
-                {
-                    console.log(response.responseText);
-                    e.record.commit();
-                    store_order.reload();
-                },
-                failure: function (response)
-                {
-                    console.log("Bug " + response.responseText);
-
-                }
-            });
-        });
-
     },
     loadStore: function () {
-        this.getStore().load({
-            callback: this.onStoreLoad
-        });
-    },
-    onStoreLoad: function () {
-    },
-    onImportOrderClick1: function () {
-        Me.onImportOrderClick("format1");
-    },
-    onImportOrderClick2: function () {
-        Me.onImportOrderClick("format2");
-    },
-    onVerifyExcelFormat: function () {
-        Me.onVerifyImportedFile("format2");
-    },
-    onVerifyCSVFormat: function () {
-        Me.onVerifyImportedCSVFile("format1");
+        this.getStore().load();
     },
 
     onbtncheckimport: function () {
@@ -375,37 +325,9 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
             titre: "Verification de l'importation des differents articles de l'officine"
         });
     },
-    onImportOrderClick: function (type) {
-        new testextjs.view.commandemanagement.order.action.importOrder({
-            odatasource: '',
-            parentview: this,
-            mode: "importfileCreate",
-            titre: "Cr&eacute;er une nouvelle commande",
-            type: type
-        });
-    },
-
-    onVerifyImportedFile: function (type) {
-        new testextjs.view.commandemanagement.order.action.importOrder({
-            odatasource: 'TABLE_ORDER',
-            parentview: this,
-            mode: "importfileUpdate",
-            titre: "V&eacute;rifier les lignes du fichier qui ne sont pas import&eacute;es",
-            type: type
-        });
-    },
-    onVerifyImportedCSVFile: function (type) {
-        new testextjs.view.commandemanagement.order.action.importOrder({
-            odatasource: 'TABLE_ORDER',
-            parentview: this,
-            mode: "importfileUpdate",
-            titre: "V&eacute;rifier les lignes du fichier qui ne sont pas import&eacute;es",
-            type: type
-        });
-    },
 
     onEditOrderByImportClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.commandemanagement.order.action.importOrder({
             odatasource: rec.data,
             parentview: this,
@@ -414,37 +336,36 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         });
     },
     onManageDetailsClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
-        var xtype = "ordermanagerlist";
-        var alias = 'widget.' + xtype;
+        const rec = grid.getStore().getAt(rowIndex);
+        const xtype = "ordermanagerlist";
+
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Modifier les informations de la commande", rec.get('lg_ORDER_ID'), rec.data);
     },
     onbtnprint: function (grid, rowIndex) {
 
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
 
         Ext.MessageBox.confirm('Message',
                 'Imprimer la commande en cours?',
                 function (btn) {
                     if (btn === 'yes') {
                         Me.onPdfClick(rec.get('lg_ORDER_ID'));
-                        return;
+
                     }
                 });
 
     },
     onPdfClick: function (lg_ORDER_ID) {
-        var linkUrl = url_services_pdf + '&lg_ORDER_ID=' + lg_ORDER_ID;
+        const linkUrl = '../webservices/commandemanagement/order/ws_generate_pdf.jsp?str_STATUT=is_Process&lg_ORDER_ID=' + lg_ORDER_ID;
         window.open(linkUrl);
 
     },
     onAddClick: function () {
-        var xtype = "ordermanagerlist";
-        var alias = 'widget.' + xtype;
+        const xtype = "ordermanagerlist";
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Ajouter les articles a une commande", "0", "is_Process");
     },
     onPasseOrderClick: function (grid, rowIndex) {
-        rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.commandemanagement.order.action.manageorderpass({
             odatasource: rec.data,
             nameintern: "Passation de commande",
@@ -454,8 +375,8 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         });
     },
     envoiPharmaML: function (grid, rowIndex) {
-        var record = grid.getStore().getAt(rowIndex);
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        const record = grid.getStore().getAt(rowIndex);
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             method: 'PUT',
             timeout: 240000,
@@ -463,11 +384,11 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
             url: '../api/v1/pharma/' + record.get('lg_ORDER_ID'),
             success: function (response, options) {
 
-                var runnerPharmaMl = new Ext.util.TaskRunner();
-                var result = Ext.JSON.decode(response.responseText, true);
+                let runnerPharmaMl = new Ext.util.TaskRunner();
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    var count = 0;
-                    var task = runnerPharmaMl.newTask({
+                    let count = 0;
+                    let task = runnerPharmaMl.newTask({
                         run: function () {
                             Ext.Ajax.request({
                                 method: 'GET',
@@ -479,7 +400,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
 
                                     const _result = Ext.JSON.decode(response.responseText, true);
                                     if (_result.success) {
-                                         task.stop();
+                                        task.stop();
                                         progress.hide();
                                         grid.getStore().reload();
                                         Ext.MessageBox.show({
@@ -488,7 +409,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                                             msg: "<span style='color: green;'> " + _result.nbreproduit + "</span> produit(s) pris en compte ; <span style='color:red;'>" + _result.nbrerupture + "</span> produit(s) en rupture",
                                             buttons: Ext.MessageBox.OK,
                                             icon: Ext.MessageBox.INFO
-                                           
+
                                         });
                                     } else {
                                         if (_result.status === 'responseNotFound') {
@@ -504,7 +425,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                                                     msg: "Aucune réponse de la part du client PharmaMl après une minute d'attente",
                                                     buttons: Ext.MessageBox.OK,
                                                     icon: Ext.MessageBox.WARNING
-                                                    
+
                                                 });
                                             }
 
@@ -526,7 +447,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     });
                     task.start();
                     count++;
-                   
+
                 } else {
                     progress.hide();
                     Ext.MessageBox.show({
@@ -548,24 +469,15 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         });
     },
 
-    onbtnexportCsv: function () {
-        var str_TYPEREPORT = "csv";
-
-        if (Ext.getCmp('lg_ORDER_ID').getValue() === null) {
-            lg_ORDER_ID = "";
-        } else {
-            lg_ORDER_ID = Ext.getCmp('lg_ORDER_ID').getValue();
-        }
-
-        window.location = '../DownloadFileServlet?lg_ORDER_ID=' + lg_ORDER_ID + "&str_TYPEREPORT=" + str_TYPEREPORT;
-    },
+   
     onbtnexport: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
                 'Voulez-vous generer le fichier CSV de la commande?',
                 function (btn) {
                     if (btn === 'yes') {
-                        var rec = grid.getStore().getAt(rowIndex);//
-                        window.location = '../DownloadFileServlet?lg_ORDER_ID=' + rec.get('lg_ORDER_ID') + '&str_TYPE_ACTION=COMMANDE';
+                        const rec = grid.getStore().getAt(rowIndex);//
+                         window.location = '../api/v1/commande/export-csv?id=' +  rec.get('lg_ORDER_ID');
+                       
                     }
                 });
     },
@@ -581,8 +493,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                             params: {
                                 lg_ORDER_ID: rec.get('lg_ORDER_ID')
                             },
-                            success: function (response)
-                            {
+                            success: function (response) {
 
                                 testextjs.app.getController('App').StopWaitingProcess();
                                 var object = Ext.JSON.decode(response.responseText, false);
@@ -594,30 +505,23 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                                     grid.getStore().reload();
                                 }
                             },
-                            failure: function (response)
-                            {
+                            failure: function (response) {
                                 testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                //  alert(object);
-
-                                console.log("Bug " + response.responseText);
                                 Ext.MessageBox.alert('Error Message', response.responseText);
 
                             }
                         });
-                        return;
+
                     }
                 });
 
     },
     onRechClick: function () {
-
-        val = Ext.getCmp('rechecher');
         this.getStore().load({
             params: {
-                search_value: val.value
+                query: Ext.getCmp('rechecher').value
             }
-        }, url_services_data_order_list);
+        });
 
     },
     onCheckChange: function (column, rowIndex, checked, eOpts) {
@@ -627,8 +531,8 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 this.splice(index, 1);
             }
         };
-        var store = Ext.getCmp('OderGrid').getStore();
-        var rec = store.getAt(rowIndex); // on recupere la ligne courante de la grid
+        const store = Ext.getCmp('OderGrid').getStore();
+        const rec = store.getAt(rowIndex);
 
         if (checked === true) {
             if (listOrderSelected.length === 0) {
@@ -661,8 +565,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     mode: 'mergeOrder',
                     checkedList: Ext.encode(listOrderSelected)
                 },
-                success: function (response)
-                {
+                success: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
                     var object = Ext.JSON.decode(response.responseText, false);
 
@@ -679,8 +582,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     Ext.getCmp('OderGrid').getStore().load();
 
                 },
-                failure: function (response)
-                {
+                failure: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
                     listGrossisteSelected = [];
                     listOrderSelected = [];
@@ -689,7 +591,6 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 }
 
             });
-//                checkedList: Ext.encode(checkedList),
         } else {
             Ext.MessageBox.alert('Avertissement', "Veuillez s&eacute;lectionner au moins deux commandes du m&ecirc;me grossiste");
         }

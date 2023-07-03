@@ -122,10 +122,6 @@ public class TUser implements Serializable {
     @ManyToOne
     private TLanguage lgLanguageID;
  
-  
- 
-
-
 
     public TUser() {
     }

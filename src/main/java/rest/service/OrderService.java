@@ -20,11 +20,12 @@ import dal.TOrderDetail;
 import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.service.dto.CommandeEncourDetailDTO;
-import rest.service.dto.CommandeFiltre;
+import rest.service.dto.*;
 
 /**
  *
@@ -75,8 +76,6 @@ public interface OrderService {
 
     TOrderDetail modificationProduitCommandeEncours(ArticleDTO dto, TUser user);
 
-    JSONObject supprimerProduitCommandeEncours(String idCommande) throws JSONException;
-
     TFamilleGrossiste finFamilleGrossisteByByFamilleAndIdGrossiste(String idFamille, String grossisteId);
 
     TFamilleGrossiste findOrCreateFamilleGrossisteByFamilleAndGrossiste(TFamille famille, TGrossiste grossiste);
@@ -92,4 +91,14 @@ public interface OrderService {
     JSONObject fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit);
 
     String modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto, TUser user);
+
+    JSONObject fetch(String query, Set<String> status, int start, int limit);
+
+    void removeItem(String itemId);
+
+    JSONObject getCommandeAmount(String commandeId);
+
+    JSONObject addItem(OrderDetailDTO orderDetail, TUser user);
+
+    Map<String,List<CommandeCsvDTO>> commandeEncoursCsv(String idCommande);
 }
