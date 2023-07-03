@@ -1765,16 +1765,7 @@ public class suggestionManagement extends bllBase {
 
     }
 
-    public void setToPending(String lg_SUGGESTION_ORDER_ID) {
-        try {
-            TSuggestionOrder order = this.getOdataManager().getEm().find(TSuggestionOrder.class, lg_SUGGESTION_ORDER_ID);
-            order.setStrSTATUT(commonparameter.statut_pending);
-            this.merge(order);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
+   
 
     public TFamilleGrossiste findOrFamilleGrossiste(TFamille lg_FAMILLE_ID, TGrossiste lg_GROSSISTE_ID) {
         TFamilleGrossiste OTFamilleGrossiste = null;

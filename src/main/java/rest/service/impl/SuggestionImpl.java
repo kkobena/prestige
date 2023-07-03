@@ -7,22 +7,8 @@ package rest.service.impl;
 
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
-import dal.TCalendrier;
-import dal.TCodeGestion;
-import dal.TCoefficientPonderation;
-import dal.TEmplacement;
-import dal.TFamille;
-import dal.TFamilleGrossiste;
-import dal.TFamilleStock;
-import dal.TFamille_;
-import dal.TGrossiste;
-import dal.TOrderDetail;
-import dal.TPreenregistrement;
-import dal.TPreenregistrementDetail;
-import dal.TPreenregistrementDetail_;
-import dal.TSuggestionOrder;
-import dal.TSuggestionOrderDetails;
-import dal.TUser;
+import dal.*;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,10 +27,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
@@ -53,11 +37,13 @@ import rest.service.SuggestionService;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
 
+import rest.service.dto.SuggestionsDTO;
 import util.Constant;
 import util.DateConverter;
+import util.FunctionUtils;
+import util.NumberUtils;
 
 /**
- *
  * @author Kobena
  */
 @Stateless
@@ -92,17 +78,16 @@ public class SuggestionImpl implements SuggestionService {
                     result = OTCodeGestion.getIntJOURSCOUVERTURESTOCK();
                 }
 
-//            int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now().minusMonths(mois_histo)).parallelStream().map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
+//
                 if (OTCodeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("1")) {
                     int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now().minusMonths(mois_histo), emg).stream().map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
-//                    oTCalendrier = getTCalendrier(String.valueOf(LocalDate.now().minusMonths(i)), LocalDate.now().getYear());
                     qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(mois_histo), LocalDate.now(), famille.getLgFAMILLEID(), emg);
 
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
 
                         try {
-                            Double finalQty = Math.ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(mois_histo), LocalDate.now(), famille, emg) / famille.getIntNUMBERDETAIL());
-                            qteVenteArticle += finalQty.intValue();
+                            double finalQty = Math.ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(mois_histo), LocalDate.now(), famille, emg) / famille.getIntNUMBERDETAIL());
+                            qteVenteArticle += (int) finalQty;
                         } catch (Exception e) {
                         }
 
@@ -119,8 +104,8 @@ public class SuggestionImpl implements SuggestionService {
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
 
                         try {
-                            Double finalQty = Math.ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(mois_histo), LocalDate.now(), famille, emg) / famille.getIntNUMBERDETAIL());
-                            qteVenteArticle += finalQty.intValue();
+                            double finalQty = Math.ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(mois_histo), LocalDate.now(), famille, emg) / famille.getIntNUMBERDETAIL());
+                            qteVenteArticle += (int) finalQty;
                         } catch (Exception e) {
                         }
 
@@ -194,17 +179,17 @@ public class SuggestionImpl implements SuggestionService {
         return oTCalendrier;
     }
 
-    public TSuggestionOrder createSuggestionOrder(TGrossiste OTGrossiste, String str_STATUT, EntityManager emg) {
+    public TSuggestionOrder createSuggestionOrder(TGrossiste grossiste, String strSTATUT) {
         try {
-            TSuggestionOrder OTSuggestionOrder = new TSuggestionOrder();
-            OTSuggestionOrder.setLgSUGGESTIONORDERID(UUID.randomUUID().toString());
-            OTSuggestionOrder.setStrREF("REF_" + DateConverter.getShortId(7));
-            OTSuggestionOrder.setLgGROSSISTEID(OTGrossiste);
-            OTSuggestionOrder.setStrSTATUT(str_STATUT);
-            OTSuggestionOrder.setDtCREATED(new Date());
-            OTSuggestionOrder.setDtUPDATED(new Date());
-            emg.persist(OTSuggestionOrder);
-            return OTSuggestionOrder;
+            TSuggestionOrder suggestionOrder = new TSuggestionOrder();
+            suggestionOrder.setLgSUGGESTIONORDERID(UUID.randomUUID().toString());
+            suggestionOrder.setStrREF("REF_" + DateConverter.getShortId(7));
+            suggestionOrder.setLgGROSSISTEID(grossiste);
+            suggestionOrder.setStrSTATUT(strSTATUT);
+            suggestionOrder.setDtCREATED(new Date());
+            suggestionOrder.setDtUPDATED(suggestionOrder.getDtCREATED());
+            getEmg().persist(suggestionOrder);
+            return suggestionOrder;
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -252,7 +237,7 @@ public class SuggestionImpl implements SuggestionService {
         try {
             OTSuggestionOrderDetails = isProductExistInSomeSuggestion(famille.getLgFAMILLEID(), oTSuggestionOrder.getLgSUGGESTIONORDERID());
             if (OTSuggestionOrderDetails == null) {
-                createTSuggestionOrderDetails(oTSuggestionOrder, famille, oTGrossiste, qteSuggere, emg);
+                createTSuggestionOrderDetails(oTSuggestionOrder, famille, oTGrossiste, qteSuggere);
             } else {
                 OTSuggestionOrderDetails.setIntNUMBER(qteSuggere);
                 OTSuggestionOrderDetails.setIntPRICE(qteSuggere * OTSuggestionOrderDetails.getIntPAFDETAIL());
@@ -386,8 +371,8 @@ public class SuggestionImpl implements SuggestionService {
                     if (statut == 0) {
                         int_QTE_A_SUGGERE = calcQteReappro(OTFamilleStock, famille, emg);
                         if (OTSuggestionOrder == null) {
-                            OTSuggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_AUTO, emg);
-                            createTSuggestionOrderDetails(OTSuggestionOrder, famille, grossiste, int_QTE_A_SUGGERE, emg);
+                            OTSuggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_AUTO);
+                            createTSuggestionOrderDetails(OTSuggestionOrder, famille, grossiste, int_QTE_A_SUGGERE);
                         } else {
                             addToTSuggestionOrderDetails(famille, grossiste, OTSuggestionOrder, int_QTE_A_SUGGERE, emg);
                         }
@@ -404,10 +389,10 @@ public class SuggestionImpl implements SuggestionService {
         }
     }
 
-    public TFamilleGrossiste findOrFamilleGrossiste(TFamille lg_FAMILLE_ID, TGrossiste lg_GROSSISTE_ID, EntityManager emg) {
+    private TFamilleGrossiste findOrCreateFamilleGrossiste(TFamille lg_FAMILLE_ID, TGrossiste lg_GROSSISTE_ID) {
         TFamilleGrossiste OTFamilleGrossiste;
         try {
-            Query qry = emg.createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgGROSSISTEID.lgGROSSISTEID = ?2 OR t.lgGROSSISTEID.strDESCRIPTION = ?2) AND t.strSTATUT = ?3 ").
+            Query qry = getEmg().createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2  AND t.strSTATUT = ?3 ").
                     setParameter(1, lg_FAMILLE_ID.getLgFAMILLEID())
                     .setParameter(2, lg_GROSSISTE_ID.getLgGROSSISTEID())
                     .setParameter(3, Constant.STATUT_ENABLE);
@@ -426,36 +411,30 @@ public class SuggestionImpl implements SuggestionService {
             OTFamilleGrossiste.setIntPAF(lg_FAMILLE_ID.getIntPAF());
             OTFamilleGrossiste.setStrSTATUT(Constant.STATUT_ENABLE);
             OTFamilleGrossiste.setIntPRICE(lg_FAMILLE_ID.getIntPRICE());
-            emg.persist(OTFamilleGrossiste);
+            getEmg().persist(OTFamilleGrossiste);
 
         }
 
         return OTFamilleGrossiste;
     }
 
-    private TSuggestionOrderDetails initTSuggestionOrderDetail(TSuggestionOrder OTSuggestionOrder, TFamille OTFamille, TGrossiste OTGrossiste, int int_NUMBER) {
+    private TSuggestionOrderDetails initTSuggestionOrderDetail(TSuggestionOrder suggestionOrder, TFamille famille, TGrossiste grossiste, int intNumber) {
+        TFamilleGrossiste familleGrossiste = findOrCreateFamilleGrossiste(famille, grossiste);
+        TSuggestionOrderDetails orderDetails = new TSuggestionOrderDetails();
+        orderDetails.setLgSUGGESTIONORDERDETAILSID(UUID.randomUUID().toString());
+        orderDetails.setLgSUGGESTIONORDERID(suggestionOrder);
+        orderDetails.setLgFAMILLEID(famille);
+        orderDetails.setLgGROSSISTEID(grossiste);
+        orderDetails.setIntNUMBER(intNumber);
+        orderDetails.setIntPRICE((familleGrossiste != null && familleGrossiste.getIntPAF() != null && familleGrossiste.getIntPAF() != 0) ? familleGrossiste.getIntPAF() * intNumber : famille.getIntPAF() * intNumber);
+        orderDetails.setIntPAFDETAIL((familleGrossiste != null && familleGrossiste.getIntPAF() != null && familleGrossiste.getIntPAF() != 0) ? familleGrossiste.getIntPAF() : famille.getIntPAF());
+        orderDetails.setIntPRICEDETAIL((familleGrossiste != null && familleGrossiste.getIntPRICE() != null && familleGrossiste.getIntPRICE() != 0) ? familleGrossiste.getIntPRICE() : famille.getIntPRICE());
+        orderDetails.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        orderDetails.setDtCREATED(new Date());
+        orderDetails.setDtUPDATED(orderDetails.getDtCREATED());
+        getEmg().persist(orderDetails);
+        return orderDetails;
 
-        try {
-            TFamilleGrossiste OTFamilleGrossiste = findOrFamilleGrossiste(OTFamille, OTGrossiste, this.getEmg());
-            TSuggestionOrderDetails OTSuggestionOrderDetails = new TSuggestionOrderDetails();
-            OTSuggestionOrderDetails.setLgSUGGESTIONORDERDETAILSID(UUID.randomUUID().toString());
-            OTSuggestionOrderDetails.setLgSUGGESTIONORDERID(OTSuggestionOrder);
-            OTSuggestionOrderDetails.setLgFAMILLEID(OTFamille);
-            OTSuggestionOrderDetails.setLgGROSSISTEID(OTGrossiste);
-            OTSuggestionOrderDetails.setIntNUMBER(int_NUMBER);
-            OTSuggestionOrderDetails.setIntPRICE((OTFamilleGrossiste != null && OTFamilleGrossiste.getIntPAF() != null && OTFamilleGrossiste.getIntPAF() != 0) ? OTFamilleGrossiste.getIntPAF() * int_NUMBER : OTFamille.getIntPAF() * int_NUMBER);
-            OTSuggestionOrderDetails.setIntPAFDETAIL((OTFamilleGrossiste != null && OTFamilleGrossiste.getIntPAF() != null && OTFamilleGrossiste.getIntPAF() != 0) ? OTFamilleGrossiste.getIntPAF() : OTFamille.getIntPAF());
-            OTSuggestionOrderDetails.setIntPRICEDETAIL((OTFamilleGrossiste != null && OTFamilleGrossiste.getIntPRICE() != null && OTFamilleGrossiste.getIntPRICE() != 0) ? OTFamilleGrossiste.getIntPRICE() : OTFamille.getIntPRICE());
-            OTSuggestionOrderDetails.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
-            OTSuggestionOrderDetails.setDtCREATED(new Date());
-            OTSuggestionOrderDetails.setDtUPDATED(OTSuggestionOrderDetails.getDtCREATED());
-            getEmg().persist(OTSuggestionOrderDetails);
-            return OTSuggestionOrderDetails;
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-
-            return null;
-        }
     }
 
     public TSuggestionOrderDetails findFamilleInTSuggestionOrderDetails(String lg_SUGGESTION_ORDER_ID, String lg_famille_id, EntityManager emg) {
@@ -472,7 +451,7 @@ public class SuggestionImpl implements SuggestionService {
         return OTSuggestionOrderDetails;
     }
 
-    public void createTSuggestionOrderDetails(TSuggestionOrder OTSuggestionOrder, TFamille OTFamille, TGrossiste OTGrossiste, int int_NUMBER, EntityManager emg) {
+    public void createTSuggestionOrderDetails(TSuggestionOrder OTSuggestionOrder, TFamille OTFamille, TGrossiste OTGrossiste, int int_NUMBER) {
         initTSuggestionOrderDetail(OTSuggestionOrder, OTFamille, OTGrossiste, int_NUMBER);
 
     }
@@ -624,7 +603,7 @@ public class SuggestionImpl implements SuggestionService {
             Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream().collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
             groupingByGrossisteId.forEach((k, v) -> {
                 TGrossiste OTGrossiste = getEmg().find(TGrossiste.class, k);
-                TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, DateConverter.STATUT_PROCESS, getEmg());
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, Constant.STATUT_IS_PROGRESS);
                 v.forEach(o -> {
                     TFamille OTFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
                     initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, o.getIntQUANTITY());
@@ -647,7 +626,7 @@ public class SuggestionImpl implements SuggestionService {
             Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream().collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
             groupingByGrossisteId.forEach((k, v) -> {
                 TGrossiste OTGrossiste = getEmg().find(TGrossiste.class, k);
-                TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, DateConverter.STATUT_PROCESS, getEmg());
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, Constant.STATUT_IS_PROGRESS);
                 v.forEach(o -> {
                     TFamille OTFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
                     initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, o.getIntQUANTITY());
@@ -669,13 +648,13 @@ public class SuggestionImpl implements SuggestionService {
             LongAdder count = new LongAdder();
             Map<String, List<ArticleDTO>> groupingByGrossisteId = datas.stream().collect(Collectors.groupingBy(ArticleDTO::getGrossisteId));
             groupingByGrossisteId.forEach((k, v) -> {
-                TGrossiste OTGrossiste = getEmg().find(TGrossiste.class, k);
-                TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, DateConverter.STATUT_PROCESS, getEmg());
+                TGrossiste grossiste = getEmg().find(TGrossiste.class, k);
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_IS_PROGRESS);
                 v.forEach(o -> {
-                    TFamille OTFamille = getEmg().find(TFamille.class, o.getId());
-                    TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), u.getLgEMPLACEMENTID(), this.getEmg());
-                    if (OTFamille.getBoolDECONDITIONNE().compareTo(Short.valueOf("0")) == 0 && familleStock != null) {
-                        initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, (OTFamille.getIntQTEREAPPROVISIONNEMENT() > 0 ? OTFamille.getIntQTEREAPPROVISIONNEMENT() : 0));
+                    TFamille otfamille = getEmg().find(TFamille.class, o.getId());
+                    TFamilleStock familleStock = findStock(otfamille.getLgFAMILLEID(), u.getLgEMPLACEMENTID(), this.getEmg());
+                    if (otfamille.getBoolDECONDITIONNE().compareTo(Short.valueOf("0")) == 0 && familleStock != null) {
+                        initTSuggestionOrderDetail(suggestionOrder, otfamille, grossiste, (otfamille.getIntQTEREAPPROVISIONNEMENT() > 0 ? otfamille.getIntQTEREAPPROVISIONNEMENT() : 0));
                         count.increment();
                     }
 
@@ -732,7 +711,7 @@ public class SuggestionImpl implements SuggestionService {
 
             for (TSuggestionOrderDetails item : order.getTSuggestionOrderDetailsCollection()) {
                 montantAchat += item.getIntPRICE();
-                montantVente += (item.getIntPRICEDETAIL() * item.getIntNUMBER());
+                montantVente += ((long) item.getIntPRICEDETAIL() * item.getIntNUMBER());
             }
 
         } catch (Exception e) {
@@ -775,7 +754,7 @@ public class SuggestionImpl implements SuggestionService {
                     getSingleResult();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, " *** Desoleeeeeee OTSuggestionOrderDetails   5555 *** ", e);
+            LOG.log(Level.SEVERE, e.getMessage());
 
         }
         return suggestionOrderDetails;
@@ -830,7 +809,151 @@ public class SuggestionImpl implements SuggestionService {
         }
     }
 
+    @Override
+    public SuggestionDTO create(SuggestionDTO suggestion) {
+        TGrossiste grossiste = this.getEmg().find(TGrossiste.class, suggestion.getGrossisteId());
+        TSuggestionOrder suggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_IS_PROGRESS);
+        TSuggestionOrderDetails details = addItem(suggestion.getItem(), suggestionOrder);
+        return SuggestionDTO.builder()
+                .montantAchat(details.getIntPRICE())
+                .montantVente((long) details.getIntPRICEDETAIL() * details.getIntNUMBER())
+                .build();
+    }
+
+    private TSuggestionOrderDetails addItem(SuggestionOrderDetailDTO suggestionOrderDetail, TSuggestionOrder order) {
+        Objects.requireNonNull(suggestionOrderDetail.getQte(), "La quantité ne doit pas être null");
+        TGrossiste grossiste = order.getLgGROSSISTEID();
+        TFamille famille = getEmg().find(TFamille.class, suggestionOrderDetail.getFamilleId());
+        famille.setIntORERSTATUS((short) 1);
+        getEmg().merge(famille);
+        return initTSuggestionOrderDetail(order, famille, grossiste, suggestionOrderDetail.getQte());
+
+    }
+
+    @Override
+    public JSONObject fetch(String search, int start, int limit) {
+        long count = count(search);
+        return FunctionUtils.returnData(getSuggestions(search, start, limit), count);
+
+    }
+
+    private List<SuggestionsDTO> getSuggestions(String search, int start, int limit) {
+        CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+        CriteriaQuery<TSuggestionOrder> cq = cb.createQuery(TSuggestionOrder.class);
+        Root<TSuggestionOrder> root = cq.from(TSuggestionOrder.class);
+        Join<TSuggestionOrder, TSuggestionOrderDetails> join = root.join(TSuggestionOrder_.tSuggestionOrderDetailsCollection);
+        cq.select(root).distinct(true).orderBy(cb.desc(root.get(TSuggestionOrder_.dtUPDATED)));
+        List<Predicate> predicates = listPredicates(cb, root, join, search);
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+        TypedQuery<TSuggestionOrder> q = getEmg().createQuery(cq);
+        q.setFirstResult(start);
+        q.setMaxResults(limit);
+        return q.getResultList().stream().map(this::buildSuggestionsDTO).collect(Collectors.toList());
+    }
+
+    private SuggestionsDTO buildSuggestionsDTO(TSuggestionOrder suggestionOrder) {
+        int montantAchat = 0;
+        int montantVente = 0;
+        int nbreLigne = 0;
+        int totalQty = 0;
+        String items = " ";
+
+        for (TSuggestionOrderDetails item : suggestionOrder.getTSuggestionOrderDetailsCollection()) {
+            montantAchat += item.getIntPRICE();
+            montantVente += (item.getIntPRICEDETAIL() * item.getIntNUMBER());
+            nbreLigne++;
+            totalQty += item.getIntNUMBER();
+            int status = isOnAnotherSuggestion(item.getLgFAMILLEID());
+            TFamille famille = item.getLgFAMILLEID();
+            TFamilleGrossiste familleGrossiste = findFamilleGrossiste(famille.getLgFAMILLEID(), suggestionOrder.getLgGROSSISTEID().getLgGROSSISTEID());
+            if (status == 1) {
+
+                items += "<span style='background-color:#73C774;'> <b><span style='display:inline-block;width: 7%;'>" + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP()) + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION() + "</span><span style='display:inline-block;width: 10%;'>(" + item.getIntNUMBER() + ")</span><span style='display:inline-block;width: 15%;'>" + NumberUtils.formatLongToString(item.getIntPAFDETAIL()) + " F CFA </span><span style='display:inline-block;width: 15%;'>" + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA " + "</span></b></span><br> ";
+            } else if (status == 2) {
+                items += "<span style='background-color:#5fa2dd;'> <b><span style='display:inline-block;width: 7%;'>" + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP()) + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION() + "</span><span style='display:inline-block;width: 10%;'>(" + item.getIntNUMBER() + ")</span><span style='display:inline-block;width: 15%;'>" + NumberUtils.formatLongToString(item.getIntPAFDETAIL()) + " F CFA </span><span style='display:inline-block;width: 15%;'>" + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA " + "</span></b></span><br> ";
+            } else {
+                items += " <b><span style='display:inline-block;width: 7%;'>" + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP()) + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION() + "</span><span style='display:inline-block;width: 10%;'>(" + item.getIntNUMBER() + ")</span><span style='display:inline-block;width: 15%;'>" + NumberUtils.formatLongToString(item.getIntPAFDETAIL()) + " F CFA </span><span style='display:inline-block;width: 15%;'>" + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA " + "</span></b><br> ";
+            }
+
+        }
+        return new SuggestionsDTO(suggestionOrder, items, montantAchat, montantVente, nbreLigne, totalQty);
+    }
+
     private TSuggestionOrderDetails getItem(String id) {
         return getEmg().find(TSuggestionOrderDetails.class, id);
     }
+
+    private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TSuggestionOrder> root, Join<TSuggestionOrder, TSuggestionOrderDetails> join, String search) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(root.get(TSuggestionOrder_.strSTATUT).in(Set.of(Constant.STATUT_IS_PROGRESS,
+                Constant.STATUT_AUTO,
+                Constant.STATUT_PENDING)));
+
+        if (StringUtils.isNotEmpty(search)) {
+            search = search + "%";
+            predicates.add(cb.or(cb.like(root.get(TSuggestionOrder_.strREF), search),
+                    cb.like(join.get(TSuggestionOrderDetails_.lgFAMILLEID).get(TFamille_.intCIP), search),
+                    cb.like(join.get(TSuggestionOrderDetails_.lgFAMILLEID).get(TFamille_.strNAME), search)
+            ));
+        }
+        return predicates;
+    }
+
+    private long count(String search) {
+        CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<TSuggestionOrder> root = cq.from(TSuggestionOrder.class);
+        Join<TSuggestionOrder, TSuggestionOrderDetails> join = root.join(TSuggestionOrder_.tSuggestionOrderDetailsCollection);
+        cq.select(cb.countDistinct(root));
+        List<Predicate> predicates = listPredicates(cb, root,
+                join, search);
+        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        TypedQuery<Long> q = getEmg().createQuery(cq);
+        return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
+
+    }
+
+    private TFamilleGrossiste findFamilleGrossiste(String familleId, String grossisteId) {
+
+        try {
+            Query qry = getEmg().createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgGROSSISTEID.lgGROSSISTEID = ?2 OR t.lgGROSSISTEID.strDESCRIPTION = ?2) AND t.strSTATUT = ?3 ").
+                    setParameter(1, familleId)
+                    .setParameter(2, grossisteId)
+                    .setParameter(3, Constant.STATUT_ENABLE);
+            qry.setMaxResults(1);
+            return (TFamilleGrossiste) qry.getSingleResult();
+
+        } catch (Exception e) {
+            return null;
+
+        }
+
+    }
+
+    private int isOnAnotherSuggestion(TFamille lgFamilleID) {
+        int status = (lgFamilleID.getIntORERSTATUS() == 2 ? 2 : 0);
+        try {
+            long count = (long) getEmg().createQuery("SELECT COUNT(o)  FROM TSuggestionOrderDetails o WHERE  o.lgFAMILLEID.lgFAMILLEID =?1 ").setParameter(1, lgFamilleID.getLgFAMILLEID())
+                    .setMaxResults(1)
+                    .getSingleResult();
+            if (count > 1) {
+                return 1;
+
+            }
+        } catch (Exception e) {
+
+        }
+
+        return status;
+    }
+
+    @Override
+    public void setToPending(String id) {
+        TSuggestionOrder order = this.getEmg().find(TSuggestionOrder.class, id);
+        order.setStrSTATUT(Constant.STATUT_PENDING);
+        this.getEmg().merge(order);
+
+    }
+
 }

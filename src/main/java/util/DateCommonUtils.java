@@ -16,13 +16,17 @@ import javax.validation.constraints.NotNull;
 public final class DateCommonUtils {
 
     private static final String DATE_FORMAT_DD_MM_YYYY_HH_MM_SS = "dd/MM/yyyy HH:mm:ss";
-
+    private static final String HH_MM_SS = "HH:mm:ss";
     public static String formatDate(@NotNull Date date) {
         Objects.requireNonNull(date);
 
         return new SimpleDateFormat(DATE_FORMAT_DD_MM_YYYY_HH_MM_SS).format(date);
     }
+    public static String formatToHour(@NotNull Date date) {
+        Objects.requireNonNull(date);
 
+        return new SimpleDateFormat(HH_MM_SS).format(date);
+    }
     public static String formatDate(Date date,@NotBlank String dateFormat) {
         Objects.requireNonNull(date);
         Objects.requireNonNull(dateFormat);

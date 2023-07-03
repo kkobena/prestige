@@ -1,5 +1,4 @@
 var url_services_data_famille_select_dovente_suggerer = '../webservices/sm_user/famille/ws_data.jsp';
-var url_services_transaction_suggerercde = '../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=';
 var url_services_data_grossiste_suggerer = '../webservices/configmanagement/grossiste/ws_data.jsp';
 
 var Me;
@@ -18,7 +17,7 @@ function amountformat(val) {
 
 
 var type;
-//            testextjs.view.commandemanagement.suggestion.action.add
+
 Ext.define('testextjs.view.commandemanagement.suggestion.action.add', {
     extend: 'Ext.window.Window',
     xtype: 'addsuggestion',
@@ -102,7 +101,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.action.add', {
                     totalProperty: 'total'
                 }
             },
-            autoLoad: true
+
 
         });
         
