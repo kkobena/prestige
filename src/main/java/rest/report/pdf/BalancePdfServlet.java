@@ -54,7 +54,7 @@ public class BalancePdfServlet extends HttpServlet {
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, TABLEAUOLD, RECAP, TVA_JOUR,
         STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS,
-        BALANCE_PARA, SAISIE_PERIMES, STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE,BALANCE_CARNET
+        BALANCE_PARA, SAISIE_PERIMES, STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE,BALANCE_CARNET,TABLEAU_CARNET
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -66,6 +66,8 @@ public class BalancePdfServlet extends HttpServlet {
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
         boolean checkug = false;
+        boolean ration=false;
+        boolean    monthly=false;
         try {
             checkug = Boolean.parseBoolean(request.getParameter("checkug"));
         } catch (Exception e) {
@@ -103,9 +105,14 @@ public class BalancePdfServlet extends HttpServlet {
                 file = balance.gestionCaissepdf(params, LstTPrivilege);
                 break;
             case TABLEAU:
-                boolean ration = Boolean.parseBoolean(request.getParameter("ration"));
-                boolean monthly = Boolean.parseBoolean(request.getParameter("monthly"));
-                file = balance.tableauBordPharmation(params, ration, monthly);
+                ration = Boolean.parseBoolean(request.getParameter("ration"));
+                 monthly = Boolean.parseBoolean(request.getParameter("monthly"));
+                file = balance.tableauBordPharmation(params, ration, monthly,false);
+                break;
+            case TABLEAU_CARNET:
+                 ration = Boolean.parseBoolean(request.getParameter("ration"));
+                 monthly = Boolean.parseBoolean(request.getParameter("monthly"));
+                file = balance.tableauBordPharmation(params, ration, monthly,true);
                 break;
             case TABLEAUOLD:
                 boolean _ration = Boolean.parseBoolean(request.getParameter("ration"));

@@ -1,6 +1,4 @@
 
-g	java:S112s"FDefine and throw a dedicated exception instead of using a generic one.(μηϊ΄ÿÿÿÿÿ8°¶ΞΊ‘1
+g	java:S112l"FDefine and throw a dedicated exception instead of using a generic one.(μηϊ΄ÿÿÿÿÿ8°¶ΞΊ‘1
 e
-java:S11926"HDefine a constant instead of duplicating this literal "success" 3 times.(τΊΛ—8°¶ΞΊ‘1
-r	java:S117A"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(έÿÿÿÿÿ8±¶ΞΊ‘1
-m	java:S117J"QRename this local variable to match the regular expression '^[a-z][a-zA-Z0-9]*$'.(θ―8±¶ΞΊ‘1
+java:S11921"HDefine a constant instead of duplicating this literal "success" 3 times.(τΊΛ—8°¶ΞΊ‘1
