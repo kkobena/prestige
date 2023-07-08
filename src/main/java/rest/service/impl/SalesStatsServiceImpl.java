@@ -186,7 +186,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)).distinct(true).orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
             List<Predicate> predicates = predicatesVentesAnnulees(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
