@@ -672,7 +672,7 @@ public class SalesServiceImpl implements SalesService {
         newTp.setDtCREATED(new Date());
         newTp.setDtUPDATED(newTp.getDtCREATED());
         newTp.setLgPARENTID(tp.getLgPREENREGISTREMENTID());
-        newTp.setStrSTATUT(commonparameter.statut_is_Closed);
+        newTp.setStrSTATUT(Constant.STATUT_IS_CLOSED);
         newTp.setLgUSERVENDEURID(tp.getLgUSERVENDEURID());
         newTp.setLgUSERCAISSIERID(tp.getLgUSERCAISSIERID());
         newTp.setBISAVOIR(tp.getBISAVOIR());
@@ -698,7 +698,7 @@ public class SalesServiceImpl implements SalesService {
         newTp.setMedecin(tp.getMedecin());
         newTp.setStrREF(buildRef(LocalDate.now(), ooTUser.getLgEMPLACEMENTID()).getReference());
         tp.setBISCANCEL(true);
-        tp.setDtANNULER(tp.getDtCREATED());
+        tp.setDtANNULER(newTp.getDtCREATED());
         tp.setLgUSERID(ooTUser);
         newTp.setChecked(Boolean.FALSE);
         tp.setChecked(Boolean.FALSE);
@@ -820,11 +820,7 @@ public class SalesServiceImpl implements SalesService {
         return tp;
     }
 
-    private ArrayList<TCashTransaction> lstTCashTransaction(String idVente, EntityManager emg) {
-        ArrayList<TCashTransaction> list = new ArrayList<>();
-        list.addAll(emg.createQuery("SELECT o FROM TCashTransaction o WHERE o.strRESSOURCEREF=?1 ").setParameter(1, idVente).getResultList());
-        return list;
-    }
+
 
     private void createAnnulleSnapshot(TPreenregistrement preenregistrement, int montantRestant, Integer montantPaye, TUser o, TTypeReglement tTypeReglement) {
         AnnulationSnapshot as = new AnnulationSnapshot();
@@ -889,10 +885,10 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void updateReelStockAnnulationDepot(TFamille OTFamille, int int_qte, String empl, EntityManager emg) {
+    public void updateReelStockAnnulationDepot(TFamille famille, int int_qte, String empl, EntityManager emg) {
         try {
             TEmplacement emplacement = emg.find(TEmplacement.class, empl);
-            TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), emplacement, emg);
+            TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacement, emg);
             familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() + int_qte);
             familleStock.setIntNUMBER(familleStock.getIntNUMBER());
             familleStock.setDtUPDATED(new Date());

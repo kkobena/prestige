@@ -931,63 +931,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     }
 
-    //@Override
-    public List<TvaDTO> tvasRapport0__(Params params) {
-        List<TvaDTO> datas = new ArrayList<>();
-        try {
-            long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
 
-            List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            Map<Integer, List<HMvtProduit>> tvamap = details.stream().collect(Collectors.groupingBy(HMvtProduit::getValeurTva));
-            LongAdder adder = new LongAdder();
-            tvamap.forEach((k, v) -> {
-                TvaDTO otva = new TvaDTO();
-                otva.setTaux(k);
-                LongAdder ht = new LongAdder();
-                LongAdder ttc = new LongAdder();
-                LongAdder tva = new LongAdder();
-                v.stream().forEach(l -> {
-                    long mttc = l.getPrixUn() * (l.getQteMvt() /*- l.getUg()*/);
-                    Double valeurTva = 1 + (Double.valueOf(k) / 100);
-                    long htAmont = (long) Math.ceil(mttc / valeurTva);
-                    long montantTva = mttc - htAmont;
-                    ht.add(htAmont);
-                    ttc.add(mttc);
-                    adder.add(mttc);
-                    tva.add(montantTva);
-
-                });
-
-                otva.setMontantHt(ht.longValue());
-                otva.setMontantTtc(ttc.longValue());
-                otva.setMontantTva(tva.longValue());
-                datas.add(otva);
-            });
-
-//            long mtn = adder.longValue() - montant;
-            if (montant != 0) {
-                ListIterator listIterator = datas.listIterator();
-                while (listIterator.hasNext()) {
-                    TvaDTO next = (TvaDTO) listIterator.next();
-                    if (next.getTaux() == 0) {
-                        TvaDTO e = new TvaDTO();
-                        e.setTaux(next.getTaux());
-                        e.setMontantHt(next.getMontantHt() - montant);
-                        e.setMontantTtc(next.getMontantTtc() - montant);
-                        e.setMontantTva(next.getMontantTva());
-                        listIterator.set(e);
-
-                    }
-
-                }
-            }
-
-            return datas;
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return Collections.emptyList();
-        }
-    }
 
     @Override
     public JSONObject findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd, String query, int start, int limit) throws JSONException {
