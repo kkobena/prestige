@@ -11,13 +11,13 @@ Ext.define('testextjs.view.Dashboard.Recap', {
 
     },
     initComponent: function () {
-        var achats = new Ext.data.Store({
+        const achats = new Ext.data.Store({
             fields: [
                 {
                     name: 'libelleGroupeGrossiste',
                     type: 'string'
                 },
-                
+
                 {
                     name: 'montantTTC',
                     type: 'number'
@@ -41,26 +41,27 @@ Ext.define('testextjs.view.Dashboard.Recap', {
 
             }
         });
-        var credits = new Ext.data.Store({
+
+        const credits = new Ext.data.Store({
             fields: [
                 {
-                    name: 'description',
+                    name: 'libelleTiersPayant',
                     type: 'string'
                 },
                 {
-                    name: 'ref',
+                    name: 'libelleTypeTiersPayant',
                     type: 'string'
                 },
                 {
-                    name: 'value',
+                    name: 'montant',
                     type: 'number'
                 },
                 {
-                    name: 'valueTwo',
+                    name: 'nbreClient',
                     type: 'number'
                 },
                 {
-                    name: 'valueThree',
+                    name: 'nbreBons',
                     type: 'number'
                 }
             ],
@@ -78,7 +79,7 @@ Ext.define('testextjs.view.Dashboard.Recap', {
                 timeout: 2400000
             }
         });
-        var reglements = new Ext.data.Store({
+        const reglements = new Ext.data.Store({
             fields: [
                 {
                     name: 'description',
@@ -118,7 +119,7 @@ Ext.define('testextjs.view.Dashboard.Recap', {
                 timeout: 2400000
             }
         });
-        var me = this;
+        const me = this;
         Ext.applyIf(me, {
             dockedItems: [
                 {
@@ -403,7 +404,7 @@ Ext.define('testextjs.view.Dashboard.Recap', {
                                     flex: 1.5
 
                                 },
-                               
+
                                 {
                                     header: 'Montant HT',
                                     xtype: 'numbercolumn',
@@ -429,14 +430,14 @@ Ext.define('testextjs.view.Dashboard.Recap', {
                                     flex: 1
                                 }
                             ]/*,
-                            bbar: {
-                                xtype: 'pagingtoolbar',
-                                store: achats,
-                                dock: 'bottom',
-                                pageSize: 999,
-                                displayInfo: true
-
-                            }*/
+                             bbar: {
+                             xtype: 'pagingtoolbar',
+                             store: achats,
+                             dock: 'bottom',
+                             pageSize: 999,
+                             displayInfo: true
+                             
+                             }*/
                         }
                     ]
 
@@ -457,13 +458,13 @@ Ext.define('testextjs.view.Dashboard.Recap', {
                             store: credits,
                             columns: [{
                                     header: 'Nom TP',
-                                    dataIndex: 'description',
-                                    flex: 1
+                                    dataIndex: 'libelleTiersPayant',
+                                    flex: 1.5
 
                                 },
                                 {
                                     header: 'Type',
-                                    dataIndex: 'ref',
+                                    dataIndex: 'libelleTypeTiersPayant',
                                     flex: 1
 
                                 },
@@ -471,15 +472,15 @@ Ext.define('testextjs.view.Dashboard.Recap', {
                                     header: 'Nb.Bons',
                                     xtype: 'numbercolumn',
                                     format: '0,000.',
-                                    dataIndex: 'valueThree',
+                                    dataIndex: 'nbreBons',
                                     align: 'right',
-                                    flex: 1
+                                    flex: 0.5
                                 },
                                 {
                                     header: 'Montant',
                                     xtype: 'numbercolumn',
                                     format: '0,000.',
-                                    dataIndex: 'value',
+                                    dataIndex: 'montant',
                                     align: 'right',
                                     flex: 1
                                 },
@@ -487,9 +488,9 @@ Ext.define('testextjs.view.Dashboard.Recap', {
                                     header: 'Nb.Clients',
                                     xtype: 'numbercolumn',
                                     format: '0,000.',
-                                    dataIndex: 'valueTwo',
+                                    dataIndex: 'nbreClient',
                                     align: 'right',
-                                    flex: 1
+                                    flex: 0.5
                                 }
                             ],
                             bbar: {

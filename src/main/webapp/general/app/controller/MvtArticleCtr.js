@@ -266,7 +266,6 @@ Ext.define('testextjs.controller.MvtArticleCtr', {
             }
         });
         storeProduits.addListener('metachange', function (store, rec) {
-//            console.log(form.query('#imprimer'));
             form.query('#qtyEntree')[0].setValue(rec.qtyEntree);
             form.query('#qtyDecondSortant')[0].setValue(rec.qtyDecondSortant);
             form.query('#qtyDeconEntrant')[0].setValue(rec.qtyDeconEntrant);
