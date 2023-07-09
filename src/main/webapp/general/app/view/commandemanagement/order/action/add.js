@@ -1047,8 +1047,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             success: function (response, options) {
                 const data = Ext.JSON.decode(response.responseText, true);
                 if (data.prixAchat === 0) {
-                    me.onbtncancel();
-
+//                    me.onbtncancel();
+///laborex/webservices/sm_user/famille/ws_transaction.jsp
                 }
                 me.updateAmountFields(data);
 
