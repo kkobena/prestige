@@ -54,7 +54,7 @@ public class BalancePdfServlet extends HttpServlet {
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, TABLEAUOLD, RECAP, TVA_JOUR,
         STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS,
-        BALANCE_PARA, SAISIE_PERIMES, STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE,BALANCE_CARNET,TABLEAU_CARNET
+        BALANCE_PARA, SAISIE_PERIMES, STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE, BALANCE_CARNET,TABLEAU_CARNET
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -87,11 +87,11 @@ public class BalancePdfServlet extends HttpServlet {
         }
         params.setCheckug(checkug);
         switch (Action.valueOf(action)) {
-              case BALANCE_CARNET:
-                file = balance.generatepdf(params,false,true);
+            case BALANCE_CARNET:
+                file = balance.generatepdf(params, false, true);
                 break;
             case BALANCE:
-                file = balance.generatepdf(params,true,false);
+                file = balance.generatepdf(params, true, false);
                 break;
             case BALANCE_PARA:
                 file = balance.tbalancePara(params);
@@ -167,6 +167,7 @@ public class BalancePdfServlet extends HttpServlet {
                 file = balance.suivMvtArticle(LocalDate.parse(dtSt), LocalDate.parse(dtEn), produitId, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), OTUser);
                 break;
             case RECAP:
+                params.setDescription(request.getParameter("query"));
                 file = balance.recap(params);
                 break;
             case STAT_FAMILLE_ARTICLE:

@@ -13,7 +13,9 @@ import commonTasks.dto.GenericDTO;
 import commonTasks.dto.MvtProduitDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.RapportDTO;
+import commonTasks.dto.RecapActiviteCreditDTO;
 import commonTasks.dto.RecapActiviteDTO;
+import commonTasks.dto.RecapActiviteReglementDTO;
 import commonTasks.dto.ResumeCaisseDTO;
 import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.SummaryDTO;
@@ -53,6 +55,7 @@ import rest.service.TvaService;
 import rest.service.dto.BalanceParamsDTO;
 import toolkits.utils.jdom;
 import util.DateConverter;
+import util.NumberUtils;
 
 /**
  * @author DICI
@@ -978,58 +981,60 @@ public class Balance {
         parameters.put("P_H_CLT_INFOS", "RAPPORT PERIODIQUE D'ACTIVITE" + P_PERIODE);
         String report_generate_file
                 = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<Params> reglements = new ArrayList<>();
-        List<Params> mvtsCaisse = new ArrayList<>();
-        List<Params> totaux = new ArrayList<>();
-        List<Params> chiffres = new ArrayList<>();
+
+        List<RecapActiviteReglementDTO> totaux = new ArrayList<>();
+        List<RecapActiviteReglementDTO> chiffres = new ArrayList<>();
         List<AchatDTO> achats = new ArrayList<>();
         RecapActiviteDTO o
                 = dashBoardService.donneesRecapActivite(
-                        dtSt, dtEn, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, null);
+                        dtSt, dtEn, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu);
         List<Params> factures
                 = dashBoardService.donneesReglementsTp(
-                        dtSt, dtEn, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, null, 0, 0, true);
-        List<Params> credits
+                        dtSt, dtEn, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, parasm.getDescription(), 0, 0, true);
+        List<RecapActiviteCreditDTO> credits
                 = dashBoardService.donneesCreditAccordes(
-                        dtSt, dtEn, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, null, 0, 0, true);
+                        dtSt, dtEn, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, parasm.getDescription(), 0, 0, true);
         List<Params> ratios
                 = Arrays.asList(
                         new Params(
                                 "Total comptant",
-                                DateConverter.amountFormat(o.getMontantEsp()) + "(" + o.getPourcentageEsp() + "%)"),
+                                NumberUtils.formatLongToString(o.getMontantEsp()) + "(" + o.getPourcentageEsp() + "%)"),
                         new Params(
                                 "Total crédit",
-                                DateConverter.amountFormat(o.getMontantCredit())
+                                NumberUtils.formatLongToString(o.getMontantCredit())
                                 + " ("
                                 + o.getPourcentageCredit()
                                 + "%)"),
                         new Params("Ratio V/A", o.getRatio() + ""));
         totaux.addAll(
                 Arrays.asList(
-                        new Params("Total HT", o.getMontantTotalHT()),
-                        new Params("Total TVA", o.getMontantTotalTVA()),
-                        new Params("Total TTC", o.getMontantTotalTTC()),
-                        new Params("Marge ", o.getMarge())));
+                        new RecapActiviteReglementDTO("Total HT", o.getMontantTotalHT()),
+                        new RecapActiviteReglementDTO("Total TVA", o.getMontantTotalTVA()),
+                        new RecapActiviteReglementDTO("Total TTC", o.getMontantTotalTTC()),
+                        new RecapActiviteReglementDTO("Marge ", o.getMarge())));
         chiffres.addAll(
                 Arrays.asList(
-                        new Params("Montant TTC", o.getMontantTTC()),
-                        new Params("Montant remise", o.getMontantRemise()),
-                        new Params("Montant net", o.getMontantNet()),
-                        new Params("Montant TVA", o.getMontantTVA()),
-                        new Params("Montant HT", o.getMontantHT()),
-                        new Params("Total comptant", o.getMontantEsp()),
-                        new Params("Total crédit", o.getMontantCredit())));
+                        new RecapActiviteReglementDTO("Montant TTC", o.getMontantTTC()),
+                        new RecapActiviteReglementDTO("Montant remise", o.getMontantRemise()),
+                        new RecapActiviteReglementDTO("Montant net", o.getMontantNet()),
+                        new RecapActiviteReglementDTO("Montant TVA", o.getMontantTVA()),
+                        new RecapActiviteReglementDTO("Montant HT", o.getMontantHT()),
+                        new RecapActiviteReglementDTO("Total comptant", o.getMontantEsp()),
+                        new RecapActiviteReglementDTO("Total crédit", o.getMontantCredit())));
         achats.addAll(o.getAchats());
-        reglements.addAll(o.getReglements());
-        mvtsCaisse.addAll(o.getMvtsCaisse());
+        RecapActiviteCreditDTO summary = dashBoardService.donneesRecapTotataux(dtSt, dtEn, tu, parasm.getDescription());
         parameters.put("factures", factures);
         parameters.put("credits", credits);
-        parameters.put("mvtsCaisse", mvtsCaisse);
-        parameters.put("reglements", reglements);
+        parameters.put("mvtsCaisse", o.getMvtsCaisse());
+        parameters.put("reglements", o.getReglements());
         parameters.put("achats", achats);
         parameters.put("totaux", totaux);
         parameters.put("ratios", ratios);
         parameters.put("chiffres", chiffres);
+
+        parameters.put("nbreClient", summary.getNbreClient());
+        parameters.put("nbreBons", summary.getNbreBons());
+        parameters.put("montant", summary.getMontant());
         reportUtil.buildReportEmptyDs(
                 parameters,
                 scr_report_file,
@@ -1037,8 +1042,6 @@ public class Balance {
                 jdom.scr_report_pdf + "recap_" + report_generate_file);
         return "/data/reports/pdf/recap_" + report_generate_file;
     }
-
-    Comparator<TvaDTO> comparatorTvaDTO = Comparator.comparing(TvaDTO::getLocalOperation);
 
     public String tvaJourpdf(Params parasm) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;

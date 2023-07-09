@@ -37,4 +37,8 @@ public interface BalanceService {
     Map<TableauBaordSummary, List<TableauBaordPhDTO>> getTableauBoardData(BalanceParamsDTO balanceParams);
 
     JSONObject tableauBoardDatas(BalanceParamsDTO balanceParams);
+
+    List<TvaDTO> statistiqueTvaPeriodique(BalanceParamsDTO balanceParams);
+
+    List<BalanceDTO> recapBalance(BalanceParamsDTO balanceParams);
 }
