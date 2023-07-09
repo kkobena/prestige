@@ -121,23 +121,12 @@ public class CaisseRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
-            dtSt = LocalDate.parse(dtStart);
-            dtEn = LocalDate.parse(dtEnd);
-        } catch (Exception e) {
-        }
-        JSONObject json;
-        if (!this.balanceService.useLastUpdateStats()) {
-            json = caisseService.balanceVenteCaisse(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), true);
-        } else {
-            json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
+
+        JSONObject    json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
                     .dtStart(dtStart)
                     .dtEnd(dtEnd)
                     .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
                     .build());
-        }
-
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -413,13 +402,13 @@ public class CaisseRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
-            dtSt = LocalDate.parse(dtStart);
-            dtEn = LocalDate.parse(dtEnd);
-        } catch (Exception e) {
-        }
-        JSONObject json = caisseService.balanceVenteCaisse(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), false);
+
+        JSONObject    json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
+                .dtStart(dtStart)
+                .dtEnd(dtEnd)
+                        .showAllAmount(true)
+                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
+                .build());
         return Response.ok().entity(json.toString()).build();
     }
 

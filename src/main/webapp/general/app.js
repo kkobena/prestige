@@ -836,7 +836,8 @@ Ext.application({
         'SuiviPerimesCtr',
         'BalanceVenteCarnetCtr',
         'MotifReglementCtr',
-        'EtatControlAnnuelCtr'
+        'EtatControlAnnuelCtr',
+        'TableauBoardCarnetCtr'
         
     ],
     stores: [

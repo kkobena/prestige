@@ -297,10 +297,11 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     private String replacePlaceHolder(String sql, BalanceParamsDTO balanceParams) {
-        if (balanceParams.isExcludeStatement()) {
-            sql = sql.replace("{excludeStatement}", EXCLUDE_STATEMENT);
-        } else {
+        if (balanceParams.isShowAllAmount()) {
             sql = sql.replace("{excludeStatement}", "");
+
+        } else {
+            sql = sql.replace("{excludeStatement}", EXCLUDE_STATEMENT);
         }
 
         return sql;
@@ -755,7 +756,8 @@ public class BalanceServiceImpl implements BalanceService {
 
     @Override
     public boolean useLastUpdateStats() {
-        return findParam(TVA_BALANCE_LAST_UPDATE);
+        return true;
+      //  return findParam(TVA_BALANCE_LAST_UPDATE);
     }
 
     private boolean checkUg() {
