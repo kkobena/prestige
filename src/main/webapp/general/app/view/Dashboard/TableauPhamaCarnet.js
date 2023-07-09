@@ -1,19 +1,17 @@
 /* global Ext */
 
-Ext.define('testextjs.view.Dashboard.TableauPhama', {
+Ext.define('testextjs.view.Dashboard.TableauPhamaCarnet', {
     extend: 'Ext.tab.Panel',
-    xtype: 'tableauPhama',
+    xtype: 'tableauPhamaCarnet',
 
     frame: true,
     width: '97%',
     height: 'auto',
     minHeight: 570,
     fullscreen: true,
-    // border:1,
-//    cls: 'custompanel',
     tabPosition: "top",
     initComponent: function () {
-        var data = new Ext.data.Store({
+        const data = new Ext.data.Store({
             fields: [
                 {
                     name: 'dateOperation',
@@ -85,7 +83,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../api/v1/tableau-board/tableau',
+                url: '../api/v1/tableau-board/carnet',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -95,7 +93,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                 timeout: 2400000
             }
         });
-        var me = this;
+        const me = this;
         Ext.applyIf(me, {
             dockedItems: [
                 {
