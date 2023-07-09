@@ -52,7 +52,24 @@ public class DashBoardRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = dashBoardService.donneesCreditAccordesView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),  tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, query, start, limit, false);
+        JSONObject jsono = dashBoardService.donneesCreditAccordesView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, query, start, limit, false);
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    @GET
+    @Path("credits/totaux")
+    public Response donneesRecapTotataux(
+            @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "query") String query
+    ) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject jsono = new JSONObject(dashBoardService.donneesRecapTotataux(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tu, query));
         return Response.ok().entity(jsono.toString()).build();
     }
 
@@ -75,13 +92,12 @@ public class DashBoardRessource {
         JSONObject jsono = dashBoardService.donneesReglementsTpView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, query, start, limit, false);
         return Response.ok().entity(jsono.toString()).build();
     }
-    
-     @GET
+
+    @GET
     @Path("dashboard")
     public Response donneesRecaps(
             @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd
-           
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
