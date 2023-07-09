@@ -994,30 +994,46 @@ public class OrderServiceImpl implements OrderService {
     public JSONObject addItem(OrderDetailDTO orderDetail, TUser user) {
         Objects.requireNonNull(orderDetail.getQte(), "La quantité ne doit pas être null");
         JSONObject json = new JSONObject();
-        find(orderDetail.getOrderId()).ifPresentOrElse(order -> {
+        if(StringUtils.isNotEmpty(orderDetail.getOrderId())){
+              find(orderDetail.getOrderId()).ifPresent(order -> {
+            createOrUpdate(orderDetail, order);
+            json.put("orderId", order.getLgORDERID());
+        });
+        }else{
+            TOrder tOrder = createOrder(orderDetail, user);
+            json.put("orderId", tOrder.getLgORDERID());
+        }
+       /* find(orderDetail.getOrderId()).ifPresentOrElse(order -> {
             createOrUpdate(orderDetail, order);
             json.put("orderId", order.getLgORDERID());
         }, () -> {
             TOrder tOrder = createOrder(orderDetail, user);
             json.put("orderId", tOrder.getLgORDERID());
-        });
+        });*/
         return json;
     }
 
     private TOrder createOrder(OrderDetailDTO orderDetail, TUser user) {
-        TGrossiste OTGrossiste = this.getEmg().find(TGrossiste.class, orderDetail.getGrossisteId());
+
+        TGrossiste grossiste = this.getEmg().find(TGrossiste.class, orderDetail.getGrossisteId());
         KeyUtilGen keyUtilGen = new KeyUtilGen();
-        TOrder order = new TOrder();
-        order.setLgORDERID(keyUtilGen.getComplexId());
-        order.setLgUSERID(user);
-        order.setLgGROSSISTEID(OTGrossiste);
-        order.setStrREFORDER(this.buildCommandeRef(new Date(), keyUtilGen));
-        order.setStrSTATUT(orderDetail.getStatut());
-        order.setDtCREATED(new Date());
-        order.setDtUPDATED(order.getDtCREATED());
-        this.getEmg().persist(order);
-        createOrderItem(order, orderDetail, keyUtilGen);
-        return order;
+        try {
+            TOrder order = new TOrder();
+            order.setLgORDERID(keyUtilGen.getComplexId());
+            order.setLgUSERID(user);
+            order.setLgGROSSISTEID(grossiste);
+            order.setStrREFORDER(this.buildCommandeRef(new Date(), keyUtilGen));
+            order.setStrSTATUT(orderDetail.getStatut());
+            order.setDtCREATED(new Date());
+            order.setDtUPDATED(order.getDtCREATED());
+            this.getEmg().persist(order);
+            createOrderItem(order, orderDetail, keyUtilGen);
+            return order;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            throw e;
+        }
+
     }
 
     private String buildCommandeRef(Date date, KeyUtilGen keyUtilGen) {
@@ -1104,26 +1120,32 @@ public class OrderServiceImpl implements OrderService {
 
     private void createOrderItem(TOrder order, OrderDetailDTO orderDetailDTO, KeyUtilGen keyUtilGen) {
         TFamilleGrossiste familleGrossiste = createIfNotExist(orderDetailDTO, order);
-        TFamille famille = familleGrossiste.getLgFAMILLEID();
-        TOrderDetail detail = new TOrderDetail();
-        detail.setLgORDERDETAILID(keyUtilGen.getComplexId());
-        detail.setLgORDERID(order);
-        detail.setIntNUMBER(orderDetailDTO.getQte());
-        detail.setIntQTEREPGROSSISTE(detail.getIntNUMBER());
-        detail.setIntQTEMANQUANT(detail.getIntNUMBER());
-        detail.setIntPAFDETAIL(familleGrossiste.getIntPAF());
-        detail.setIntPRICEDETAIL(familleGrossiste.getIntPRICE());
-        detail.setIntPRICE(detail.getIntPAFDETAIL() * detail.getIntNUMBER());
-        detail.setLgFAMILLEID(famille);
-        detail.setLgGROSSISTEID(order.getLgGROSSISTEID());
-        detail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
-        detail.setDtCREATED(new Date());
-        detail.setDtUPDATED(detail.getDtCREATED());
-        detail.setIntORERSTATUS((short) 2);
-        detail.setPrixAchat(familleGrossiste.getIntPAF());
-        this.getEmg().persist(detail);
-        famille.setBCODEINDICATEUR((short) 1);
-        this.getEmg().merge(famille);
+        System.err.println("grossi " + familleGrossiste);
+        try {
+            TFamille famille = familleGrossiste.getLgFAMILLEID();
+            TOrderDetail detail = new TOrderDetail();
+            detail.setLgORDERDETAILID(keyUtilGen.getComplexId());
+            detail.setLgORDERID(order);
+            detail.setIntNUMBER(orderDetailDTO.getQte());
+            detail.setIntQTEREPGROSSISTE(detail.getIntNUMBER());
+            detail.setIntQTEMANQUANT(detail.getIntNUMBER());
+            detail.setIntPAFDETAIL(familleGrossiste.getIntPAF());
+            detail.setIntPRICEDETAIL(familleGrossiste.getIntPRICE());
+            detail.setIntPRICE(detail.getIntPAFDETAIL() * detail.getIntNUMBER());
+            detail.setLgFAMILLEID(famille);
+            detail.setLgGROSSISTEID(order.getLgGROSSISTEID());
+            detail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+            detail.setDtCREATED(new Date());
+            detail.setDtUPDATED(detail.getDtCREATED());
+            detail.setIntORERSTATUS((short) 2);
+            detail.setPrixAchat(familleGrossiste.getIntPAF());
+            this.getEmg().persist(detail);
+            famille.setBCODEINDICATEUR((short) 1);
+            this.getEmg().merge(famille);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            throw e;
+        }
 
     }
 
@@ -1175,8 +1197,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Map<String, List<CommandeCsvDTO>> commandeEncoursCsv(String idCommande) {
-        TOrder order=this.getEmg().find(TOrder.class, idCommande);
-      return Map.of(order.getStrREFORDER(),  order.getTOrderDetailCollection().stream().map(this::buildFromOrderDetail).collect(Collectors.toList()));
-       
+        TOrder order = this.getEmg().find(TOrder.class, idCommande);
+        return Map.of(order.getStrREFORDER(), order.getTOrderDetailCollection().stream().map(this::buildFromOrderDetail).collect(Collectors.toList()));
+
     }
 }
