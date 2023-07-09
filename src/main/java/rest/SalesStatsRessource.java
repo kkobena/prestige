@@ -115,19 +115,19 @@ public class SalesStatsRessource {
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(hsAttribute, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(hsAttribute, Parameter.P_SHOW_ALL_ACTIVITY);
+        List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean asAuthority = DateConverter.hasAuthorityByName(hsAttribute, Constant.str_SHOW_VENTE);
+        boolean allActivitis = DateConverter.hasAuthorityByName(hsAttribute, Constant.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);
         body.setQuery(query);
-        body.setStatut(commonparameter.statut_is_Closed);
+        body.setStatut(Constant.STATUT_IS_CLOSED);
         body.setAll(false);
         body.setShowAll(asAuthority);
         body.setShowAllActivities(allActivitis);
@@ -210,7 +210,7 @@ public class SalesStatsRessource {
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -237,7 +237,7 @@ public class SalesStatsRessource {
     public Response getDepot(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -250,7 +250,7 @@ public class SalesStatsRessource {
     public Response findOne(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -274,7 +274,7 @@ public class SalesStatsRessource {
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -290,7 +290,7 @@ public class SalesStatsRessource {
         body.setStart(start);
         body.setQuery(query);
         body.setTypeVenteId(typeVenteId);
-        body.setStatut(commonparameter.statut_is_Closed);
+        body.setStatut(Constant.STATUT_IS_CLOSED);
         body.setAll(false);
         body.setSansBon(sansBon);
         body.setNature(nature);
@@ -343,7 +343,7 @@ public class SalesStatsRessource {
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -359,7 +359,7 @@ public class SalesStatsRessource {
         body.setQuery(query);
         body.setTypeVenteId(null);
         body.setNature(nature);
-        body.setStatut(commonparameter.statut_is_Closed);
+        body.setStatut(Constant.STATUT_IS_CLOSED);
         body.setAll(false);
         body.setSansBon(false);
         body.setOnlyAvoir(true);
@@ -412,7 +412,7 @@ public class SalesStatsRessource {
     @Path("modifiertierspayant/{id}")
     public Response modifiertpayantvente(@PathParam("id") String venteId, ClotureVenteParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -424,7 +424,7 @@ public class SalesStatsRessource {
     @Path("venteTierspayantData/{id}")
     public Response venteTierspayantData(@PathParam("id") String venteId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -468,7 +468,7 @@ public class SalesStatsRessource {
     ) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -479,7 +479,7 @@ public class SalesStatsRessource {
         body.setStart(start);
         body.setQuery(query);
         body.setTypeVenteId(null);
-        body.setStatut(commonparameter.statut_is_Closed);
+        body.setStatut(Constant.STATUT_IS_CLOSED);
         body.setAll(false);
         body.setStock(stock);
         body.setRayonId(rayonId);
@@ -530,7 +530,7 @@ public class SalesStatsRessource {
     ) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -541,7 +541,7 @@ public class SalesStatsRessource {
         body.setStart(start);
         body.setQuery(query);
         body.setTypeVenteId(null);
-        body.setStatut(commonparameter.statut_is_Closed);
+        body.setStatut(Constant.STATUT_IS_CLOSED);
         body.setAll(false);
         body.setStock(stock);
         body.setRayonId(rayonId);
@@ -603,7 +603,7 @@ public class SalesStatsRessource {
         body.setStart(start);
         body.setQuery(query);
         body.setTypeVenteId(null);
-        body.setStatut(commonparameter.statut_is_Closed);
+        body.setStatut(Constant.STATUT_IS_CLOSED);
         body.setAll(false);
         body.setStock(stock);
         body.setRayonId(rayonId);

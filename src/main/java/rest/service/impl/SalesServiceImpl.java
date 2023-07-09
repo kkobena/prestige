@@ -113,6 +113,7 @@ import rest.service.*;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import util.Afficheur;
+import util.Constant;
 import util.DateConverter;
 import static util.Constant.STATUT_IS_CLOSED;
 
@@ -359,10 +360,10 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public JSONObject annulerVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID) {
-        TPreenregistrement OTPreenregistrement = this.getEm().find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
+    public JSONObject annulerVente(TUser ooTUser, String id) {
+        TPreenregistrement preenregistrement = this.getEm().find(TPreenregistrement.class, id);
         JSONObject json;
-        if (OTPreenregistrement == null) {
+        if (preenregistrement == null) {
             try {
                 json = new JSONObject();
                 json.put("success", false);
@@ -373,7 +374,7 @@ public class SalesServiceImpl implements SalesService {
             }
         }
         try {
-            return annulerVNO(ooTUser, OTPreenregistrement);
+            return annulerVente(ooTUser, preenregistrement);
         } catch (JSONException ex) {
             return new JSONObject();
         }
@@ -490,7 +491,7 @@ public class SalesServiceImpl implements SalesService {
         return getEm().find(Typemvtproduit.class, id);
     }
 
-    private JSONObject annulerVNO(TUser ooTUser, TPreenregistrement tp) throws JSONException {
+    private JSONObject annulerVente(TUser ooTUser, TPreenregistrement tp) throws JSONException {
         EntityManager emg = this.getEm();
         JSONObject json = new JSONObject();
         final boolean checked = tp.getChecked();
@@ -521,7 +522,7 @@ public class SalesServiceImpl implements SalesService {
                 montantRestant.add(cp.getIntPRICERESTE());
                 cp.setIntPRICE(0);
                 cp.setIntPRICERESTE(0);
-                cp.setStrSTATUT(commonparameter.statut_delete);
+                cp.setStrSTATUT(Constant.STATUT_DELETE);
                 cp.setDtUPDATED(new Date());
                 emg.merge(cp);
             });
@@ -545,12 +546,10 @@ public class SalesServiceImpl implements SalesService {
                 }
             });
 
-            oprectte.ifPresent(re -> {
-                copyRecette(newItem, re, ooTUser, emg);
-            });
+            oprectte.ifPresent(re -> copyRecette(newItem, re, ooTUser));
 
             findClientTiersPayents(tp.getLgPREENREGISTREMENTID(), emg).forEach(cpClient -> {
-                cpClient.setStrSTATUT(commonparameter.statut_delete);
+                cpClient.setStrSTATUT(Constant.STATUT_DELETE);
                 cpClient.setDtUPDATED(new Date());
                 emg.merge(cpClient);
                 TTiersPayant p = cpClient.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID();
@@ -673,7 +672,7 @@ public class SalesServiceImpl implements SalesService {
         newTp.setDtCREATED(new Date());
         newTp.setDtUPDATED(newTp.getDtCREATED());
         newTp.setLgPARENTID(tp.getLgPREENREGISTREMENTID());
-        newTp.setStrSTATUT(commonparameter.statut_is_Closed);
+        newTp.setStrSTATUT(Constant.STATUT_IS_CLOSED);
         newTp.setLgUSERVENDEURID(tp.getLgUSERVENDEURID());
         newTp.setLgUSERCAISSIERID(tp.getLgUSERCAISSIERID());
         newTp.setBISAVOIR(tp.getBISAVOIR());
@@ -699,7 +698,7 @@ public class SalesServiceImpl implements SalesService {
         newTp.setMedecin(tp.getMedecin());
         newTp.setStrREF(buildRef(LocalDate.now(), ooTUser.getLgEMPLACEMENTID()).getReference());
         tp.setBISCANCEL(true);
-        tp.setDtANNULER(tp.getDtCREATED());
+        tp.setDtANNULER(newTp.getDtCREATED());
         tp.setLgUSERID(ooTUser);
         newTp.setChecked(Boolean.FALSE);
         tp.setChecked(Boolean.FALSE);
@@ -821,11 +820,7 @@ public class SalesServiceImpl implements SalesService {
         return tp;
     }
 
-    private ArrayList<TCashTransaction> lstTCashTransaction(String idVente, EntityManager emg) {
-        ArrayList<TCashTransaction> list = new ArrayList<>();
-        list.addAll(emg.createQuery("SELECT o FROM TCashTransaction o WHERE o.strRESSOURCEREF=?1 ").setParameter(1, idVente).getResultList());
-        return list;
-    }
+
 
     private void createAnnulleSnapshot(TPreenregistrement preenregistrement, int montantRestant, Integer montantPaye, TUser o, TTypeReglement tTypeReglement) {
         AnnulationSnapshot as = new AnnulationSnapshot();
@@ -846,7 +841,7 @@ public class SalesServiceImpl implements SalesService {
         getEm().persist(as);
     }
 
-    private void copyRecette(TPreenregistrement newPreen, TRecettes old, TUser o, EntityManager emg) {
+    private void copyRecette(TPreenregistrement newPreen, TRecettes old, TUser o) {
         TRecettes tr = old;
         LOG.log(Level.INFO, "tr {0} ", new Object[]{tr});
         tr.setLgUSERID(o);
@@ -856,8 +851,8 @@ public class SalesServiceImpl implements SalesService {
         tr.setStrREFFACTURE(newPreen.getLgPREENREGISTREMENTID());
         tr.setIntAMOUNT((-1) * old.getIntAMOUNT());
         tr.setIdRecette(UUID.randomUUID().toString());
-        emg.detach(old);
-        emg.persist(tr);
+        getEm().detach(old);
+        getEm().persist(tr);
     }
 
     public void updateFamilleStockApresAnnulation(int qty, TFamilleStock familleStock) {
@@ -890,37 +885,10 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public Optional<TMouvement> findMouvement(TFamille OTFamille, String action, String typeAction, TUser ooTUser, EntityManager emg) {
-        try {
-            TypedQuery<TMouvement> query = emg.createQuery("SELECT t FROM TMouvement t WHERE    t.dtDAY  = ?1   AND t.lgFAMILLEID.lgFAMILLEID = ?2 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?3 AND t.strACTION = ?4 AND t.strTYPEACTION = ?5 ", TMouvement.class);
-            query.setParameter(1, new Date(), TemporalType.DATE).
-                    setParameter(2, OTFamille.getLgFAMILLEID()).
-                    setParameter(3, ooTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).
-                    setParameter(4, action).
-                    setParameter(5, typeAction);
-
-            return Optional.ofNullable(query.getSingleResult());
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-    }
-
-    public Optional<TMouvementSnapshot> findTMouvementSnapshot(String lg_FAMILLE_ID, TUser ooTUser, EntityManager emg) {
-        try {
-            TypedQuery<TMouvementSnapshot> query = emg.createQuery("SELECT t FROM TMouvementSnapshot t WHERE    t.dtDAY  = ?1   AND t.lgFAMILLEID.lgFAMILLEID = ?2 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?3  ", TMouvementSnapshot.class);
-            query.setParameter(1, new Date(), TemporalType.DATE).
-                    setParameter(2, lg_FAMILLE_ID).
-                    setParameter(3, ooTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            return Optional.ofNullable(query.getSingleResult());
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-    }
-
-    public void updateReelStockAnnulationDepot(TFamille OTFamille, int int_qte, String empl, EntityManager emg) {
+    public void updateReelStockAnnulationDepot(TFamille famille, int int_qte, String empl, EntityManager emg) {
         try {
             TEmplacement emplacement = emg.find(TEmplacement.class, empl);
-            TFamilleStock familleStock = findStock(OTFamille.getLgFAMILLEID(), emplacement, emg);
+            TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacement, emg);
             familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() + int_qte);
             familleStock.setIntNUMBER(familleStock.getIntNUMBER());
             familleStock.setDtUPDATED(new Date());
@@ -951,9 +919,9 @@ public class SalesServiceImpl implements SalesService {
 
     private Optional<TAyantDroit> findAyantDroit(String id, EntityManager emg) {
         try {
-            TAyantDroit OTAyantDroit = emg.find(TAyantDroit.class, id);
+            TAyantDroit ayantDroit = emg.find(TAyantDroit.class, id);
 
-            return (OTAyantDroit != null ? Optional.of(OTAyantDroit) : Optional.empty());
+            return Optional.ofNullable(ayantDroit);
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -2037,7 +2005,7 @@ public class SalesServiceImpl implements SalesService {
         try {
 
             if (!"".equals(refBon)) {
-                TPreenregistrementCompteClientTiersPayent op =emg.createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID = ?1 AND t.strREFBON = ?2 AND t.strSTATUT = ?3",TPreenregistrementCompteClientTiersPayent.class)
+                TPreenregistrementCompteClientTiersPayent op = emg.createQuery("SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID = ?1 AND t.strREFBON = ?2 AND t.strSTATUT = ?3", TPreenregistrementCompteClientTiersPayent.class)
                         .setParameter(1, oTCompteClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID()).setParameter(2, refBon).setParameter(3, commonparameter.statut_is_Closed).getSingleResult();
                 return (op != null);
 
@@ -4106,12 +4074,11 @@ public class SalesServiceImpl implements SalesService {
                 clonePreenregistrementTp(clonedPreen, idVente, ooTUser);
             }
 
-            transaction(idVente, emg).ifPresent(tr -> {
-                cloneMvtTransaction(ooTUser, tr, clonedPreen, tp);
-            });
+            transaction(idVente, emg).ifPresent(tr
+                    -> cloneMvtTransaction(ooTUser, tr, clonedPreen, tp));
 
             oprectte.ifPresent(re -> {
-                copyRecette(clonedPreen, re, ooTUser, emg);
+                copyRecette(clonedPreen, re, ooTUser);
             });
 
             findClientTiersPayents(tp.getLgPREENREGISTREMENTID(), emg).forEach(action -> {
