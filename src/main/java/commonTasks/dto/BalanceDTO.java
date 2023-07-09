@@ -19,25 +19,26 @@ public class BalanceDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private String balanceId = UUID.randomUUID().toString();
     private String typeVente;
-    String reglement;
-    long montantTTC = 0;
-    long montantNet = 0;
-    long montantRemise = 0;
-    long pourcentage = 0;
-    long panierMoyen = 0;
-
-    long montantEsp = 0;
-    long montantCheque = 0;
-    long marge = 0;
-    long montantTva = 0;
-    long montantCB = 0;
-    long montantTp = 0;
-    long montantDiff = 0;
-    long nbreVente = 0;
-    long montantMobilePayment = 0;
+    private String reglement;
+    private long montantTTC = 0;
+    private long montantNet = 0;
+    private long montantRemise = 0;
+    private long pourcentage = 0;
+    private long panierMoyen = 0;
+    private long montantEsp = 0;
+    private long montantCheque = 0;
+    private long marge = 0;
+    private long montantTva = 0;
+    private long montantCB = 0;
+    private long montantTp = 0;
+    private long montantDiff = 0;
+    private long nbreVente = 0;
+    private long montantMobilePayment = 0;
     private TypeTransaction typeTransaction;
     private long montantVirement = 0;
     private long montantAchat;
+    private long montantPaye = 0;
+    private long montantRegle = 0;
 
     public String getBalanceId() {
         return balanceId;
@@ -85,6 +86,22 @@ public class BalanceDTO implements Serializable {
 
     public void setMontantNet(long montantNet) {
         this.montantNet = montantNet;
+    }
+
+    public long getMontantPaye() {
+        return montantPaye;
+    }
+
+    public void setMontantPaye(long montantPaye) {
+        this.montantPaye = montantPaye;
+    }
+
+    public long getMontantRegle() {
+        return montantRegle;
+    }
+
+    public void setMontantRegle(long montantRegle) {
+        this.montantRegle = montantRegle;
     }
 
     public long getMontantRemise() {

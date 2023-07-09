@@ -19,7 +19,9 @@ public class TvaDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private Integer taux = 0;
-    private long montantHt = 0, montantTva = 0, montantTtc = 0;
+    private long montantHt = 0;
+    private long montantTva = 0;
+    private long montantTtc = 0;
     private long montantUg;
     private LocalDate localOperation;
     private String dateOperation;
