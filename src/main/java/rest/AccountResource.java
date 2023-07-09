@@ -56,7 +56,7 @@ public class AccountResource {
             json.put("str_FIRST_NAME", tu.getStrFIRSTNAME());
             json.put("str_LAST_NAME", tu.getStrLASTNAME());
             json.put("str_PHONE", tu.getStrPHONE());
-            hs.setAttribute(DateConverter.AIRTIME_USER, tu);
+            hs.setAttribute(Constant.AIRTIME_USER, tu);
             TRoleUser OTRoleUser = userService.getTRoleUser(tu.getLgUSERID());
             if (OTRoleUser != null && OTRoleUser.getLgROLEID() != null) {
                 xtypeuser = (OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_PHARMACIEN) || OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN) || OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_ADMIN) ? "dashboard" : "mainmenumanager");
@@ -81,7 +81,7 @@ public class AccountResource {
     public Response deconnection() {
         JSONObject json = new JSONObject();
         HttpSession hs = request.getSession();
-        TUser tu = (TUser) hs.getAttribute(DateConverter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         boolean invalide = userService.deConnexion(request, tu);
         json.put("success", invalide);
         return Response.ok().entity(json.toString()).build();
@@ -92,7 +92,7 @@ public class AccountResource {
     @Path("account")
     public Response account() {
         HttpSession hs = request.getSession();
-        TUser tu = (TUser) hs.getAttribute(DateConverter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         JSONObject json = new JSONObject();
         return Response.ok().entity(json.put("accountInfo", new JSONObject(this.userService.getAccount(tu))).toString()).build();
     }
@@ -103,7 +103,7 @@ public class AccountResource {
             AccountInfoDTO accountInfo
     ) {
         HttpSession hs = request.getSession();
-        TUser tu = (TUser) hs.getAttribute(DateConverter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             throw new RuntimeException(Constant.DECONNECTED_MESSAGE);
         }

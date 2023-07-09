@@ -1,7 +1,6 @@
 package util;
 
 /**
- *
  * @author koben
  */
 public final class Constant {
@@ -19,8 +18,12 @@ public final class Constant {
     public static final String PARAMETER_ADMIN = "ADMIN";
     public static final String ROLE_PHARMACIEN = "Pharmacien";
     public static final String ROLE_ADMIN = "Administrateur";
-    public static final String STATUT_WAITING= "is_Waiting";
-
+    public static final String STATUT_WAITING = "is_Waiting";
+    public static final String USER_LIST_PRIVILEGE = "USER_LIST_PRIVILEGE";
+    public static String str_SHOW_VENTE = "str_SHOW_VENTE";
+    public static final String P_SHOW_ALL_ACTIVITY = "P_SHOW_ALL_ACTIVITY";
+    public static final String STATUT_DELETE = "delete";
+    public static final String STATUT_CANCEL = "cancel";
 
     private Constant() {
     }
