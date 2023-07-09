@@ -12,7 +12,6 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashCarnet', {
     cls: 'custompanel',
     layout: {
         type: 'fit',
-//        align: 'stretch',
         padding: 10
     },
     initComponent: function () {
@@ -82,7 +81,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashCarnet', {
 
             proxy: {
                 type: 'ajax',
-                url: '../api/v1/caisse/balancesalecash/carnet-depot',
+                url: '../api/v1/balance/balancesalecash/carnet-depot',
                 reader: {
                     type: 'json',
                     root: 'data',

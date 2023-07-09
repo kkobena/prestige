@@ -7,6 +7,7 @@ import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -22,7 +23,7 @@ public class Utils {
 
     public boolean hasConnectedUser() {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         return Objects.nonNull(tu);
     }
 
@@ -37,7 +38,7 @@ public class Utils {
     
       public static TUser getConnectedUser(HttpServletRequest request) {
         HttpSession hs = request.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if( Objects.nonNull(tu)) return tu;
         return null;
     }
