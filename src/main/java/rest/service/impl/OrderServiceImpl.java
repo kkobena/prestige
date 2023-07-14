@@ -994,7 +994,7 @@ public class OrderServiceImpl implements OrderService {
     public JSONObject addItem(OrderDetailDTO orderDetail, TUser user) {
         Objects.requireNonNull(orderDetail.getQte(), "La quantité ne doit pas être null");
         JSONObject json = new JSONObject();
-        if(StringUtils.isNotEmpty(orderDetail.getOrderId())){
+        if(StringUtils.isNotEmpty(orderDetail.getOrderId()) && !orderDetail.getOrderId().equals("0")){
               find(orderDetail.getOrderId()).ifPresent(order -> {
             createOrUpdate(orderDetail, order);
             json.put("orderId", order.getLgORDERID());
@@ -1003,13 +1003,7 @@ public class OrderServiceImpl implements OrderService {
             TOrder tOrder = createOrder(orderDetail, user);
             json.put("orderId", tOrder.getLgORDERID());
         }
-       /* find(orderDetail.getOrderId()).ifPresentOrElse(order -> {
-            createOrUpdate(orderDetail, order);
-            json.put("orderId", order.getLgORDERID());
-        }, () -> {
-            TOrder tOrder = createOrder(orderDetail, user);
-            json.put("orderId", tOrder.getLgORDERID());
-        });*/
+      
         return json;
     }
 
@@ -1120,7 +1114,7 @@ public class OrderServiceImpl implements OrderService {
 
     private void createOrderItem(TOrder order, OrderDetailDTO orderDetailDTO, KeyUtilGen keyUtilGen) {
         TFamilleGrossiste familleGrossiste = createIfNotExist(orderDetailDTO, order);
-        System.err.println("grossi " + familleGrossiste);
+       
         try {
             TFamille famille = familleGrossiste.getLgFAMILLEID();
             TOrderDetail detail = new TOrderDetail();
