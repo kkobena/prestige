@@ -59,7 +59,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         famille_id_search = "";
 
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
-        ref = this.getNameintern();
+        ref = Me_Window.getNameintern();
         if (ref === "0") {
             str_STATUT = this.getOdatasource();
         }
@@ -623,12 +623,12 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                         myProxy.params = {
                                             query: '',
                                             filtre: 'ALL',
-                                            orderId: ref
+                                            orderId: Me_Window.getNameintern()
 
                                         };
                                         myProxy.setExtraParam('query', val.getValue());
                                         myProxy.setExtraParam('filtre', filtre.getValue());
-                                        myProxy.setExtraParam('orderId', ref);
+                                        myProxy.setExtraParam('orderId', Me_Window.getNameintern());
                                     }
 
                                 }
@@ -726,7 +726,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                         Ext.getCmp('str_NAME').selectText(0, 1);
                     });
 
-                    Me_Window.getCommandeAmount(ref);
+                    Me_Window.getCommandeAmount(Me_Window.getNameintern());
                 },
                 failure: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
@@ -753,7 +753,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         Ext.Ajax.request({
             url: '../webservices/commandemanagement/order/ws_transaction.jsp?mode=changeGrossiste',
             params: {
-                lg_ORDER_ID: ref,
+                lg_ORDER_ID: Me_Window.getNameintern(),
                 lg_GROSSISTE_ID: Ext.getCmp('lgGROSSISTEID').getValue()
             },
             success: function (response) {
@@ -970,7 +970,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 Ext.getCmp('str_NAME').focus(true, 100, function () {
                                     Ext.getCmp('str_NAME').selectText(0, 1);
                                 });
-                                Me_Window.getCommandeAmount(ref);
+                                Me_Window.getCommandeAmount(Me_Window.getNameintern());
 
                             },
                             failure: function (response) {
@@ -994,7 +994,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                         Ext.Ajax.request({
                             url: url_services_transaction_order + 'passeorder',
                             params: {
-                                lg_ORDER_ID: ref
+                                lg_ORDER_ID: Me_Window.getNameintern()
                             },
                             success: function (response) {
                                 let object = Ext.JSON.decode(response.responseText, false);
@@ -1004,7 +1004,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 }
                             },
                             failure: function (response) {
-                                let object = Ext.JSON.decode(response.responseText, false);
+                              
                                 console.log("Bug " + response.responseText);
                                 Ext.MessageBox.alert('Error Message', response.responseText);
                             }
@@ -1013,7 +1013,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                 });
     },
     onDetailClick: function (grid, rowIndex) {
-        let rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.configmanagement.famille.action.detailArticleOther({
             odatasource: rec.get('lg_FAMILLE_ID'),
             parentview: this,
@@ -1021,19 +1021,16 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             titre: "Detail sur l'article [" + rec.get('lg_FAMILLE_NAME') + "]"
         });
     },
-    onPdfClick: function (lg_ORDER_ID) {
-        const linkUrl = url_services_pdf + '?lg_ORDER_ID=' + lg_ORDER_ID;
-        window.open(linkUrl);
-        Me_Window.onbtncancel();
-    },
+  
     onRechClick: function () {
+        const me = this;
         const val = Ext.getCmp('rechercherDetail');
         const filtre = Ext.getCmp('str_TYPE_TRANSACTION');
         Ext.getCmp('gridpanelID').getStore().load({
             params: {
                 query: val.getValue(),
                 filtre: filtre.getValue(),
-                orderId: ref
+                orderId: me.getNameintern()
             }
         });
     },
@@ -1078,22 +1075,23 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                 url: '../api/v1/commande/item/add',
                 params: Ext.JSON.encode({
                     familleId: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
-                    orderId: ref,
+                    orderId: me.getNameintern(),
                     grossisteId: Ext.getCmp('lgGROSSISTEID').getValue(),
                     statut: str_STATUT,
                     qte: Ext.getCmp('int_QUANTITE').getValue()
                 }),
 
                 success: function (response) {
-                     const data = Ext.JSON.decode(response.responseText, true);
-                    ref=data.orderId;
+                    const data = Ext.JSON.decode(response.responseText, true);
+                    me.nameintern = data.orderId;
+
                     testextjs.app.getController('App').StopWaitingProcess();
                     me.onRechClick();
                     Ext.getCmp('int_QUANTITE').setValue(1);
                     Ext.getCmp('str_NAME').focus(true, 100, function () {
                         Ext.getCmp('str_NAME').setValue("");
                         Ext.getCmp('str_NAME').selectText(0, 1);
-                        me.getCommandeAmount(ref);
+                        me.getCommandeAmount(data.orderId);
                     });
 
                 },
