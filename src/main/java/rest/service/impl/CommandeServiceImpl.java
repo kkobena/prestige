@@ -173,17 +173,17 @@ public class CommandeServiceImpl implements CommandeService {
         EntityManager emg = this.getEm();
         try {
             TParameters tp = findParameter(DateConverter.KEY_ACTIVATE_PEREMPTION_DATE, emg);
-            TBonLivraison OTBonLivraison = emg.find(TBonLivraison.class, id);
+            TBonLivraison bonLivraison = emg.find(TBonLivraison.class, id);
             List<TPreenregistrementDetail> avoirs = getAvoirs();
-            Set<TPreenregistrementDetail> _avoirs = new HashSet<>();
+            Set<TPreenregistrementDetail> avoirs0 = new HashSet<>();
             TOfficine officine = getEm().find(TOfficine.class, DateConverter.OFFICINE);
             userTransaction.begin();
             if (tp == null) {
                 return json.put("success", false).put("msg", "Paramètre d'autorisation de saisie de produit sans date de péremption inexistant");
             }
-            TOrder order = OTBonLivraison.getLgORDERID();
+            TOrder order = bonLivraison.getLgORDERID();
             TGrossiste grossiste = order.getLgGROSSISTEID();
-            if (OTBonLivraison.getStrSTATUT().equals(DateConverter.STATUT_IS_CLOSED)) {
+            if (bonLivraison.getStrSTATUT().equals(DateConverter.STATUT_IS_CLOSED)) {
                 return json.put("success", false).put("msg", "Impossible de trouver ce bon. Verifier s'il ce bon n'est pas deja cloturé");
             }
             List<TBonLivraisonDetail> lstTBonLivraisonDetail = bonLivraisonDetail(id, emg);
@@ -197,9 +197,9 @@ public class CommandeServiceImpl implements CommandeService {
                 
 
                 boolean isTableau = StringUtils.isNotEmpty(OFamille.getIntT()) || (diff == FunctionUtils.VALEUR_TABLEAU);
-                List<Object[]> lst = listLot(OTBonLivraison.getStrREFLIVRAISON(), emg, OFamille.getLgFAMILLEID());
+                List<Object[]> lst = listLot(bonLivraison.getStrREFLIVRAISON(), emg, OFamille.getLgFAMILLEID());
                 if (lst.isEmpty()) {
-                    createTLot(bn, user, OFamille, bn.getIntQTECMDE(), OTBonLivraison.getStrREFLIVRAISON(), grossiste, order.getStrREFORDER(), 0, emg);
+                    createTLot(bn, user, OFamille, bn.getIntQTECMDE(), bonLivraison.getStrREFLIVRAISON(), grossiste, order.getStrREFORDER(), 0, emg);
                     addToStock(bn.getIntPRIXVENTE(), bn.getIntPAF(), bn.getLgBONLIVRAISONDETAIL(), user, bn.getIntQTECMDE(), 0, emg, OFamille);
                     bn.setIntQTERECUE(bn.getIntQTECMDE());
                     bn.setIntQTEMANQUANT(0);
@@ -218,8 +218,8 @@ public class CommandeServiceImpl implements CommandeService {
                         addToStock(bn.getIntPRIXVENTE(), bn.getIntPAF(), bn.getLgBONLIVRAISONDETAIL(), user, cmde, qu, emg, OFamille);
 
                         if (qu > 0) {
-                            String comm = "ENTREE UG Num BL :  " + OTBonLivraison.getStrREFLIVRAISON() + " PRODUIT : " + bn.getLgFAMILLEID().getIntCIP() + " " + bn.getLgFAMILLEID().getStrNAME() + " QUANTITE " + qu + "  PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-                            logService.updateItem(user, OTBonLivraison.getStrREFLIVRAISON(), comm, TypeLog.QUANTITE_UG, bn, emg);
+                            String comm = "ENTREE UG Num BL :  " + bonLivraison.getStrREFLIVRAISON() + " PRODUIT : " + bn.getLgFAMILLEID().getIntCIP() + " " + bn.getLgFAMILLEID().getStrNAME() + " QUANTITE " + qu + "  PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+                            logService.updateItem(user, bonLivraison.getStrREFLIVRAISON(), comm, TypeLog.QUANTITE_UG, bn, emg);
                             notificationService.save(new Notification()
                                     .canal(Canal.EMAIL)
                                     .typeNotification(TypeNotification.QUANTITE_UG)
@@ -256,18 +256,18 @@ public class CommandeServiceImpl implements CommandeService {
                 }
 
                 avoirs.stream().filter(e -> e.getLgFAMILLEID().equals(OFamille))
-                        .forEach(s -> _avoirs.add(s));
+                        .forEach(s -> avoirs0.add(s));
 
             }
 
             closureOrder(order, emg);
-            OTBonLivraison.setStrSTATUT(commonparameter.statut_is_Closed);
-            OTBonLivraison.setDtUPDATED(new Date());
-            OTBonLivraison.setLgUSERID(user);
-            emg.merge(OTBonLivraison);
-            transactionService.addTransactionBL(user, OTBonLivraison, emg);
-            String comm = "ENTREE EN STOCK DU BL " + OTBonLivraison.getStrREFLIVRAISON() + " PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-            logService.updateItem(user, OTBonLivraison.getStrREFLIVRAISON(), comm, TypeLog.ENTREE_EN_STOCK, OTBonLivraison, emg);
+            bonLivraison.setStrSTATUT(commonparameter.statut_is_Closed);
+            bonLivraison.setDtUPDATED(new Date());
+            bonLivraison.setLgUSERID(user);
+            emg.merge(bonLivraison);
+            transactionService.addTransactionBL(user, bonLivraison, emg);
+            String comm = "ENTREE EN STOCK DU BL " + bonLivraison.getStrREFLIVRAISON() + " PAR " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+            logService.updateItem(user, bonLivraison.getStrREFLIVRAISON(), comm, TypeLog.ENTREE_EN_STOCK, bonLivraison, emg);
             notificationService.save(new Notification()
                     .canal(Canal.EMAIL)
                     .typeNotification(TypeNotification.ENTREE_EN_STOCK)
@@ -275,7 +275,7 @@ public class CommandeServiceImpl implements CommandeService {
                     .addUser(user)
             );
 
-            Map<TClient, List<TPreenregistrementDetail>> map = _avoirs.stream().filter(e -> Objects.nonNull(e.getLgPREENREGISTREMENTID().getClient())).collect(Collectors.groupingBy(e -> e.getLgPREENREGISTREMENTID().getClient()));
+            Map<TClient, List<TPreenregistrementDetail>> map = avoirs0.stream().filter(e -> Objects.nonNull(e.getLgPREENREGISTREMENTID().getClient())).collect(Collectors.groupingBy(e -> e.getLgPREENREGISTREMENTID().getClient()));
             map.forEach((k, v) -> {
                 if (k != null) {
                     StringBuilder sb = new StringBuilder();
