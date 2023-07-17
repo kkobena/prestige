@@ -345,8 +345,9 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 updateStock(familleStock, tp, it);
                 emg.merge(familleStock);
                 emg.merge(it);
-                makeSuggestionAutoAsync(familleStock, tFamille);
+              
             });
+              makeSuggestionAutoAsync(list, emplacement);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
         }
@@ -1412,8 +1413,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         }
     }
 
-    private void makeSuggestionAutoAsync(TFamilleStock familleStock, TFamille tFamille) {
-        managedExecutorService.submit(() -> this.suggestionService.makeSuggestionAuto(familleStock, tFamille));
+    private void makeSuggestionAutoAsync(List<TPreenregistrementDetail> list, TEmplacement emplacement ) {
+        managedExecutorService.submit(() -> this.suggestionService.makeSuggestionAuto(list, emplacement));
 
     }
 }

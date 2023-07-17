@@ -198,15 +198,15 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-    public TSuggestionOrder checkSuggestionGrossiteExiste(String lg_GROSSISTE_ID, EntityManager emg) {
+    private TSuggestionOrder checkSuggestionGrossiteExiste(String lgGROSSISTEID) {
 
         try {
             TypedQuery<TSuggestionOrder> q
-                    = emg
+                    = this.getEmg()
                             .createQuery("SELECT t FROM TSuggestionOrder t WHERE t.lgGROSSISTEID.lgGROSSISTEID =?1  AND t.strSTATUT = ?2 ORDER BY t.dtUPDATED DESC ", TSuggestionOrder.class);
 
             q.setMaxResults(1)
-                    .setParameter(1, lg_GROSSISTE_ID)
+                    .setParameter(1, lgGROSSISTEID)
                     .setParameter(2, Constant.STATUT_AUTO);
             return q
                     .getSingleResult();
@@ -219,9 +219,9 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     private TSuggestionOrderDetails isProductExistInSomeSuggestion(String lgFamilleId, String suggestionOrderId) {
-        TSuggestionOrderDetails OTSuggestionOrderDetails = null;
+        TSuggestionOrderDetails oTSuggestionOrderDetails = null;
         try {
-            OTSuggestionOrderDetails = (TSuggestionOrderDetails) getEmg().createQuery("SELECT t FROM TSuggestionOrderDetails t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgSUGGESTIONORDERID.lgSUGGESTIONORDERID = ?2").
+            oTSuggestionOrderDetails = (TSuggestionOrderDetails) getEmg().createQuery("SELECT t FROM TSuggestionOrderDetails t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgSUGGESTIONORDERID.lgSUGGESTIONORDERID = ?2").
                     setParameter(1, lgFamilleId).
                     setParameter(2, suggestionOrderId).setMaxResults(1).
                     getSingleResult();
@@ -229,21 +229,21 @@ public class SuggestionImpl implements SuggestionService {
         } catch (Exception e) {
 
         }
-        return OTSuggestionOrderDetails;
+        return oTSuggestionOrderDetails;
     }
 
     public TSuggestionOrderDetails addToTSuggestionOrderDetails(TFamille famille, TGrossiste oTGrossiste, TSuggestionOrder oTSuggestionOrder, int qteSuggere, EntityManager emg) {
-        TSuggestionOrderDetails OTSuggestionOrderDetails = null;
+        TSuggestionOrderDetails oTSuggestionOrderDetails = null;
         try {
-            OTSuggestionOrderDetails = isProductExistInSomeSuggestion(famille.getLgFAMILLEID(), oTSuggestionOrder.getLgSUGGESTIONORDERID());
-            if (OTSuggestionOrderDetails == null) {
+            oTSuggestionOrderDetails = isProductExistInSomeSuggestion(famille.getLgFAMILLEID(), oTSuggestionOrder.getLgSUGGESTIONORDERID());
+            if (oTSuggestionOrderDetails == null) {
                 createTSuggestionOrderDetails(oTSuggestionOrder, famille, oTGrossiste, qteSuggere);
             } else {
-                OTSuggestionOrderDetails.setIntNUMBER(qteSuggere);
-                OTSuggestionOrderDetails.setIntPRICE(qteSuggere * OTSuggestionOrderDetails.getIntPAFDETAIL());
-                OTSuggestionOrderDetails.setDtUPDATED(new Date());
+                oTSuggestionOrderDetails.setIntNUMBER(qteSuggere);
+                oTSuggestionOrderDetails.setIntPRICE(qteSuggere * oTSuggestionOrderDetails.getIntPAFDETAIL());
+                oTSuggestionOrderDetails.setDtUPDATED(new Date());
 
-                emg.merge(OTSuggestionOrderDetails);
+                emg.merge(oTSuggestionOrderDetails);
             }
             oTSuggestionOrder.setDtUPDATED(new Date());
             emg.merge(oTSuggestionOrder);
@@ -253,7 +253,7 @@ public class SuggestionImpl implements SuggestionService {
 
         }
 
-        return OTSuggestionOrderDetails;
+        return oTSuggestionOrderDetails;
     }
 
     public List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp, EntityManager emg) {
@@ -272,10 +272,10 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     @Override
-    public void makeSuggestionAuto(String OTPreenregistrement) {
+    public void makeSuggestionAuto(String oTPreenregistrement) {
         EntityManager emg = this.getEmg();
         try {
-            TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, OTPreenregistrement);
+            TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, oTPreenregistrement);
             TUser user = preenregistrement.getLgUSERID();
             List<TPreenregistrementDetail> list = getTPreenregistrementDetail(preenregistrement, emg);
             makeSuggestionAuto(list, user.getLgEMPLACEMENTID());
@@ -285,12 +285,12 @@ public class SuggestionImpl implements SuggestionService {
         }
     }
 
-    public TFamilleStock findStock(String OTFamille, TEmplacement emplacement, EntityManager emg) {
+    public TFamilleStock findStock(String oTFamille, TEmplacement emplacement) {
 
         try {
-            Query query = emg.createQuery("SELECT t FROM TFamilleStock t WHERE  t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2");
+            Query query = this.getEmg().createQuery("SELECT t FROM TFamilleStock t WHERE  t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2");
             query.
-                    setParameter(1, OTFamille);
+                    setParameter(1, oTFamille);
             query.
                     setParameter(2, emplacement.getLgEMPLACEMENTID());
             TFamilleStock familleStock = (TFamilleStock) query.getSingleResult();
@@ -303,13 +303,13 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-    public void makeSuggestionAuto(List<TPreenregistrementDetail> list, TEmplacement emplacementId, EntityManager emg) {
+    public void makeSuggestionAuto0(List<TPreenregistrementDetail> list, TEmplacement emplacementId) {
 
         try {
 
             list.forEach(item -> {
                 TFamille famille = item.getLgFAMILLEID();
-                TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, emg);
+                TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId);
                 if (familleStock != null) {
                     makeSuggestionAuto(familleStock, famille);
                 }
@@ -321,6 +321,7 @@ public class SuggestionImpl implements SuggestionService {
         }
     }
 
+    @Override
     public void makeSuggestionAuto(List<TPreenregistrementDetail> list, TEmplacement emplacementId) {
 
         try {
@@ -328,9 +329,9 @@ public class SuggestionImpl implements SuggestionService {
             list.forEach(item -> {
                 TFamille famille = item.getLgFAMILLEID();
                 if (StringUtils.isNotEmpty(famille.getLgFAMILLEPARENTID()) && famille.getBoolDECONDITIONNE() == 1) {
-                    famille = em.find(TFamille.class, famille.getLgFAMILLEPARENTID());
+                    famille = this.getEmg().find(TFamille.class, famille.getLgFAMILLEPARENTID());
                 }
-                TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, getEmg());
+                TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId);
                 if (familleStock != null) {
                     makeSuggestionAuto(familleStock, famille);
                 }
@@ -346,9 +347,9 @@ public class SuggestionImpl implements SuggestionService {
     public void proccessSuggetion(TFamille famille, TEmplacement emplacementId) {
 
         if (StringUtils.isNotEmpty(famille.getLgFAMILLEPARENTID()) && famille.getBoolDECONDITIONNE() == 1) {
-            famille = em.find(TFamille.class, famille.getLgFAMILLEPARENTID());
+            famille = this.getEmg().find(TFamille.class, famille.getLgFAMILLEPARENTID());
         }
-        TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId, getEmg());
+        TFamilleStock familleStock = findStock(famille.getLgFAMILLEID(), emplacementId);
         if (familleStock != null) {
             makeSuggestionAuto(familleStock, famille);
         }
@@ -356,30 +357,30 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     @Override
-    public void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille) {
+    public void makeSuggestionAuto(TFamilleStock oFamilleStock, TFamille famille) {
 
         EntityManager emg = getEmg();
-        if (Objects.nonNull(famille.getIntSEUILMIN()) && OTFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN() && famille.getBoolDECONDITIONNE() == 0 && famille.getStrSTATUT().equals(DateConverter.STATUT_ENABLE)) {
+        if (Objects.nonNull(famille.getIntSEUILMIN()) && oFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN() && famille.getBoolDECONDITIONNE() == 0 && famille.getStrSTATUT().equals(DateConverter.STATUT_ENABLE)) {
 
             int statut = verifierProduitDansLeProcessusDeCommande(famille);
             if (statut == 0 || statut == 1) {
-                TSuggestionOrder OTSuggestionOrder;
-                Integer int_QTE_A_SUGGERE;
+                TSuggestionOrder oSuggestionOrder;
+                Integer intQTEASUGGERE;
                 TGrossiste grossiste = famille.getLgGROSSISTEID();
                 if (grossiste != null) {
-                    OTSuggestionOrder = checkSuggestionGrossiteExiste(grossiste.getLgGROSSISTEID(), emg);
+                    oSuggestionOrder = checkSuggestionGrossiteExiste(grossiste.getLgGROSSISTEID());
                     if (statut == 0) {
-                        int_QTE_A_SUGGERE = calcQteReappro(OTFamilleStock, famille, emg);
-                        if (OTSuggestionOrder == null) {
-                            OTSuggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_AUTO);
-                            createTSuggestionOrderDetails(OTSuggestionOrder, famille, grossiste, int_QTE_A_SUGGERE);
+                        intQTEASUGGERE = calcQteReappro(oFamilleStock, famille, emg);
+                        if (oSuggestionOrder == null) {
+                            oSuggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_AUTO);
+                            createTSuggestionOrderDetails(oSuggestionOrder, famille, grossiste, intQTEASUGGERE);
                         } else {
-                            addToTSuggestionOrderDetails(famille, grossiste, OTSuggestionOrder, int_QTE_A_SUGGERE, emg);
+                            addToTSuggestionOrderDetails(famille, grossiste, oSuggestionOrder, intQTEASUGGERE, emg);
                         }
                     } else {
-                        if (OTSuggestionOrder != null) {
-                            int_QTE_A_SUGGERE = calcQteReappro(OTFamilleStock, famille, emg);
-                            addToTSuggestionOrderDetails(famille, grossiste, OTSuggestionOrder, int_QTE_A_SUGGERE, emg);
+                        if (oSuggestionOrder != null) {
+                            intQTEASUGGERE = calcQteReappro(oFamilleStock, famille, emg);
+                            addToTSuggestionOrderDetails(famille, grossiste, oSuggestionOrder, intQTEASUGGERE, emg);
                         }
 
                     }
@@ -389,33 +390,33 @@ public class SuggestionImpl implements SuggestionService {
         }
     }
 
-    private TFamilleGrossiste findOrCreateFamilleGrossiste(TFamille lg_FAMILLE_ID, TGrossiste lg_GROSSISTE_ID) {
-        TFamilleGrossiste OTFamilleGrossiste;
+    private TFamilleGrossiste findOrCreateFamilleGrossiste(TFamille lgFAMILLEID, TGrossiste lgGROSSISTEID) {
+        TFamilleGrossiste oTFamilleGrossiste;
         try {
             Query qry = getEmg().createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2  AND t.strSTATUT = ?3 ").
-                    setParameter(1, lg_FAMILLE_ID.getLgFAMILLEID())
-                    .setParameter(2, lg_GROSSISTE_ID.getLgGROSSISTEID())
+                    setParameter(1, lgFAMILLEID.getLgFAMILLEID())
+                    .setParameter(2, lgGROSSISTEID.getLgGROSSISTEID())
                     .setParameter(3, Constant.STATUT_ENABLE);
             qry.setMaxResults(1);
-            OTFamilleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
+            oTFamilleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
 
         } catch (Exception e) {
-            OTFamilleGrossiste = new TFamilleGrossiste(UUID.randomUUID().toString());
-            OTFamilleGrossiste.setLgFAMILLEID(lg_FAMILLE_ID);
-            OTFamilleGrossiste.setLgGROSSISTEID(lg_GROSSISTE_ID);
-            OTFamilleGrossiste.setDtCREATED(new Date());
-            OTFamilleGrossiste.setDtUPDATED(OTFamilleGrossiste.getDtCREATED());
-            OTFamilleGrossiste.setIntNBRERUPTURE(0);
-            OTFamilleGrossiste.setBlRUPTURE(Boolean.TRUE);
-            OTFamilleGrossiste.setStrCODEARTICLE(lg_FAMILLE_ID.getIntCIP());
-            OTFamilleGrossiste.setIntPAF(lg_FAMILLE_ID.getIntPAF());
-            OTFamilleGrossiste.setStrSTATUT(Constant.STATUT_ENABLE);
-            OTFamilleGrossiste.setIntPRICE(lg_FAMILLE_ID.getIntPRICE());
-            getEmg().persist(OTFamilleGrossiste);
+            oTFamilleGrossiste = new TFamilleGrossiste(UUID.randomUUID().toString());
+            oTFamilleGrossiste.setLgFAMILLEID(lgFAMILLEID);
+            oTFamilleGrossiste.setLgGROSSISTEID(lgGROSSISTEID);
+            oTFamilleGrossiste.setDtCREATED(new Date());
+            oTFamilleGrossiste.setDtUPDATED(oTFamilleGrossiste.getDtCREATED());
+            oTFamilleGrossiste.setIntNBRERUPTURE(0);
+            oTFamilleGrossiste.setBlRUPTURE(Boolean.TRUE);
+            oTFamilleGrossiste.setStrCODEARTICLE(lgFAMILLEID.getIntCIP());
+            oTFamilleGrossiste.setIntPAF(lgFAMILLEID.getIntPAF());
+            oTFamilleGrossiste.setStrSTATUT(Constant.STATUT_ENABLE);
+            oTFamilleGrossiste.setIntPRICE(lgFAMILLEID.getIntPRICE());
+            getEmg().persist(oTFamilleGrossiste);
 
         }
 
-        return OTFamilleGrossiste;
+        return oTFamilleGrossiste;
     }
 
     private TSuggestionOrderDetails initTSuggestionOrderDetail(TSuggestionOrder suggestionOrder, TFamille famille, TGrossiste grossiste, int intNumber) {
@@ -437,22 +438,22 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-    public TSuggestionOrderDetails findFamilleInTSuggestionOrderDetails(String lg_SUGGESTION_ORDER_ID, String lg_famille_id, EntityManager emg) {
-        TSuggestionOrderDetails OTSuggestionOrderDetails = null;
+    public TSuggestionOrderDetails findFamilleInTSuggestionOrderDetails(String lgSUGGESTIONORDERID, String lgfamilleId) {
+        TSuggestionOrderDetails oTSuggestionOrderDetails = null;
         try {
-            Query qry = emg.createQuery("SELECT t FROM TSuggestionOrderDetails t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgSUGGESTIONORDERID.lgSUGGESTIONORDERID = ?2 ").
-                    setParameter(2, lg_SUGGESTION_ORDER_ID).
-                    setParameter(1, lg_famille_id).setMaxResults(1);
-            OTSuggestionOrderDetails = (TSuggestionOrderDetails) qry.getSingleResult();
+            Query qry = this.getEmg().createQuery("SELECT t FROM TSuggestionOrderDetails t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgSUGGESTIONORDERID.lgSUGGESTIONORDERID = ?2 ").
+                    setParameter(2, lgSUGGESTIONORDERID).
+                    setParameter(1, lgfamilleId).setMaxResults(1);
+            oTSuggestionOrderDetails = (TSuggestionOrderDetails) qry.getSingleResult();
 
         } catch (Exception e) {
 
         }
-        return OTSuggestionOrderDetails;
+        return oTSuggestionOrderDetails;
     }
 
-    public void createTSuggestionOrderDetails(TSuggestionOrder OTSuggestionOrder, TFamille OTFamille, TGrossiste OTGrossiste, int int_NUMBER) {
-        initTSuggestionOrderDetail(OTSuggestionOrder, OTFamille, OTGrossiste, int_NUMBER);
+    public void createTSuggestionOrderDetails(TSuggestionOrder suggestionOrder, TFamille oTFamille, TGrossiste oTGrossiste, int intNUMBER) {
+        initTSuggestionOrderDetail(suggestionOrder, oTFamille, oTGrossiste, intNUMBER);
 
     }
 
@@ -472,7 +473,7 @@ public class SuggestionImpl implements SuggestionService {
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementDetail_.dtCREATED)), java.sql.Date.valueOf(dtDEBUT),
                     java.sql.Date.valueOf(dtFin));
             predicates.add(cb.and(btw));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = emg.createQuery(cq);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
@@ -481,23 +482,25 @@ public class SuggestionImpl implements SuggestionService {
         return qty;
     }
 
-    public Integer calcQteReappro(TFamilleStock OTFamilleStock, TFamille tf, EntityManager emg) {
-        int qtyReappro = 1;
+   public Integer calcQteReappro(TFamilleStock oFamilleStock, TFamille tf, EntityManager emg) {
+        int qteReappro = 1;
         try {
             TCodeGestion codeGestion = tf.getLgCODEGESTIONID();
             if (codeGestion != null && (!codeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("0"))) {
-                qtyReappro = getQuantityReapportByCodeGestionArticle(OTFamilleStock, tf, emg);
+                qteReappro = getQuantityReapportByCodeGestionArticle(oFamilleStock, tf, emg);
 
-            } else if (Objects.nonNull(tf.getIntQTEREAPPROVISIONNEMENT()) && Objects.nonNull(tf.getIntSEUILMIN()) && tf.getIntSEUILMIN() >= OTFamilleStock.getIntNUMBERAVAILABLE()) {
+            } else if (Objects.nonNull(tf.getIntQTEREAPPROVISIONNEMENT())   && Objects.nonNull( tf.getIntSEUILMIN()) && tf.getIntSEUILMIN() >= oFamilleStock.getIntNUMBERAVAILABLE()) {
+                
+                    qteReappro = (tf.getIntSEUILMIN() - oFamilleStock.getIntNUMBERAVAILABLE()) + tf.getIntQTEREAPPROVISIONNEMENT();
 
-                qtyReappro = (tf.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE()) + tf.getIntQTEREAPPROVISIONNEMENT();
-
+                
             }
         } catch (Exception e) {
         }
 
-        return (qtyReappro > 0 ? qtyReappro : 1);
+        return (qteReappro > 0 ? qteReappro : 1);
     }
+
 
     public Integer quantiteDeconditionnesVentes(LocalDate dtDEBUT, LocalDate dtFin, TFamille produitId, EntityManager emg) {
         Integer qty = 0;
@@ -514,7 +517,7 @@ public class SuggestionImpl implements SuggestionService {
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementDetail_.dtCREATED)), java.sql.Date.valueOf(dtDEBUT),
                     java.sql.Date.valueOf(dtFin));
             predicates.add(cb.and(btw));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = emg.createQuery(cq);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
@@ -652,7 +655,7 @@ public class SuggestionImpl implements SuggestionService {
                 TSuggestionOrder suggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_IS_PROGRESS);
                 v.forEach(o -> {
                     TFamille otfamille = getEmg().find(TFamille.class, o.getId());
-                    TFamilleStock familleStock = findStock(otfamille.getLgFAMILLEID(), u.getLgEMPLACEMENTID(), this.getEmg());
+                    TFamilleStock familleStock = findStock(otfamille.getLgFAMILLEID(), u.getLgEMPLACEMENTID());
                     if (otfamille.getBoolDECONDITIONNE().compareTo(Short.valueOf("0")) == 0 && familleStock != null) {
                         initTSuggestionOrderDetail(suggestionOrder, otfamille, grossiste, (otfamille.getIntQTEREAPPROVISIONNEMENT() > 0 ? otfamille.getIntQTEREAPPROVISIONNEMENT() : 0));
                         count.increment();
@@ -908,7 +911,7 @@ public class SuggestionImpl implements SuggestionService {
         cq.select(cb.countDistinct(root));
         List<Predicate> predicates = listPredicates(cb, root,
                 join, search);
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<Long> q = getEmg().createQuery(cq);
         return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
 
