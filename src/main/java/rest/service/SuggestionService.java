@@ -78,4 +78,6 @@ public interface SuggestionService {
 
     void setToPending(String id);
 
+    void makeSuggestionAuto(List<TPreenregistrementDetail> list, TEmplacement emplacementId);
+
 }
