@@ -22,45 +22,45 @@ public final class PharmaMlUtils {
     public static final int DEF_COUNT = 6;
     public static final String PATTERN_DATE_LIVRAISON_SOUHAITE = "yyyy-MM-dd";
     /*
-    Ligne repartiteur suivi du l'identifiant
+     * Ligne repartiteur suivi du l'identifiant
      */
     public static final String R = "R";
     /*
-    la lettre P indique le type de travail
+     * la lettre P indique le type de travail
      */
     public static final String P = "P";
     /*
-    Type de commande
+     * Type de commande
      */
     public static final String TYPE_TRAVAIL_COMMANDE = "C";
     /*
-    Date de livraison souhaitee
+     * Date de livraison souhaitee
      */
     public static final String L = "L";
     /*
-    Ligne de produits
+     * Ligne de produits
      */
     public static final String E = "E";
     /*
-    Commentaire
+     * Commentaire
      */
     public static final String W = "W";
     /*
-    Fin de la commande
+     * Fin de la commande
      */
     public static final String Z = "Z";
     /*
-    Commande normale
+     * Commande normale
      */
     public static final int COMMANDE_NORMALE = 0;
 
     /*
-    Commande package
+     * Commande package
      */
     public static final int COMMANDE_PACKAGE = 1;
 
     /*
-    Commande speciale
+     * Commande speciale
      */
     public static final int COMMANDE_SPECIALE = 2;
 
@@ -68,7 +68,7 @@ public final class PharmaMlUtils {
     public static final String NON = "N";
     public static final String SEPARATEUR_COMMANDE_SP_PAC = "C";
     /*
-    Type de codification CIP 
+     * Type de codification CIP
      */
     public static final String TYPE_CODIFICATION_CIP = "C1";
     public static final String TYPE_CODIFICATION_EAN13 = "C2";
@@ -100,21 +100,22 @@ public final class PharmaMlUtils {
     }
 
     public static String finCommande() {
-        return Z + StringUtils.leftPad(NOMBRE_LIGNE_CODE + "", 4, '0') + StringUtils.leftPad(NOMBRE_LIGNE_CLAIRE + "", 4, '0');
+        return Z + StringUtils.leftPad(NOMBRE_LIGNE_CODE + "", 4, '0')
+                + StringUtils.leftPad(NOMBRE_LIGNE_CLAIRE + "", 4, '0');
 
     }
 
     public static String buildCommandeLine(final int typeCommande, final String codeCommande, String commandeId) {
 
-        /* switch (typeCommande) {
-            case COMMANDE_PACKAGE:
-            case COMMANDE_SPECIALE:
-                return TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + StringUtils.rightPad(RandomStringUtils.randomNumeric(DEF_COUNT), 20, StringUtils.SPACE)
-                        + SEPARATEUR_COMMANDE_SP_PAC + StringUtils.rightPad(codeCommande, 15, StringUtils.SPACE);
-            default:
-//                return TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + StringUtils.rightPad(RandomStringUtils.randomNumeric(DEF_COUNT), 20, StringUtils.SPACE);
-                return TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + commandeId;
-        }*/
+        /*
+         * switch (typeCommande) { case COMMANDE_PACKAGE: case COMMANDE_SPECIALE: return TYPE_TRAVAIL_COMMANDE +
+         * StringUtils.leftPad(typeCommande + "", 3, "0") + R +
+         * StringUtils.rightPad(RandomStringUtils.randomNumeric(DEF_COUNT), 20, StringUtils.SPACE) +
+         * SEPARATEUR_COMMANDE_SP_PAC + StringUtils.rightPad(codeCommande, 15, StringUtils.SPACE); default: // return
+         * TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R +
+         * StringUtils.rightPad(RandomStringUtils.randomNumeric(DEF_COUNT), 20, StringUtils.SPACE); return
+         * TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + commandeId; }
+         */
         return TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + commandeId;
     }
 
@@ -155,20 +156,22 @@ public final class PharmaMlUtils {
         String ligne = E + StringUtils.leftPad(e.getQuantite() + "", 4, '0');
         String code;
         switch (e.getTypeCodification()) {
-            case TYPE_CODIFICATION_EAN13:
-                code = TYPE_CODIFICATION_EAN13 + e.getEan();
-                NOMBRE_LIGNE_CODE++;
-                break;
-            case TYPE_CODIFICATION_LIBELLE_PRODUIT:
-                code = TYPE_CODIFICATION_LIBELLE_PRODUIT + e.getLibelle();
-                NOMBRE_LIGNE_CLAIRE++;
-                break;
-            default:
-                code = TYPE_CODIFICATION_CIP + e.getCip();
-                NOMBRE_LIGNE_CODE++;
-                break;
+        case TYPE_CODIFICATION_EAN13:
+            code = TYPE_CODIFICATION_EAN13 + e.getEan();
+            NOMBRE_LIGNE_CODE++;
+            break;
+        case TYPE_CODIFICATION_LIBELLE_PRODUIT:
+            code = TYPE_CODIFICATION_LIBELLE_PRODUIT + e.getLibelle();
+            NOMBRE_LIGNE_CLAIRE++;
+            break;
+        default:
+            code = TYPE_CODIFICATION_CIP + e.getCip();
+            NOMBRE_LIGNE_CODE++;
+            break;
         }
-        return ligne + StringUtils.rightPad(code, 52, StringUtils.SPACE) + returnOorN(e.isLivraisonPartielle()) + returnOorN(e.isReliquats()) + returnOorN(e.isLivraisonEquivalente()) + StringUtils.leftPad(index + "", 4, '0');
+        return ligne + StringUtils.rightPad(code, 52, StringUtils.SPACE) + returnOorN(e.isLivraisonPartielle())
+                + returnOorN(e.isReliquats()) + returnOorN(e.isLivraisonEquivalente())
+                + StringUtils.leftPad(index + "", 4, '0');
     }
 
     public static String buildTypeTravailLine(String typeTravail) {
@@ -195,18 +198,18 @@ public final class PharmaMlUtils {
         String ligne = E + StringUtils.leftPad(e.getQuantite() + "", 4, '0');
         String code;
         switch (e.getTypeCodification()) {
-            case TYPE_CODIFICATION_EAN13:
-                code = TYPE_CODIFICATION_EAN13 + e.getEan();
-                NOMBRE_LIGNE_CODE++;
-                break;
-            case TYPE_CODIFICATION_LIBELLE_PRODUIT:
-                code = TYPE_CODIFICATION_LIBELLE_PRODUIT + e.getLibelle();
-                NOMBRE_LIGNE_CLAIRE++;
-                break;
-            default:
-                code = TYPE_CODIFICATION_CIP + e.getCip();
-                NOMBRE_LIGNE_CODE++;
-                break;
+        case TYPE_CODIFICATION_EAN13:
+            code = TYPE_CODIFICATION_EAN13 + e.getEan();
+            NOMBRE_LIGNE_CODE++;
+            break;
+        case TYPE_CODIFICATION_LIBELLE_PRODUIT:
+            code = TYPE_CODIFICATION_LIBELLE_PRODUIT + e.getLibelle();
+            NOMBRE_LIGNE_CLAIRE++;
+            break;
+        default:
+            code = TYPE_CODIFICATION_CIP + e.getCip();
+            NOMBRE_LIGNE_CODE++;
+            break;
         }
         return ligne + StringUtils.rightPad(code, 52, StringUtils.SPACE) + StringUtils.leftPad(index + "", 4, '0');
     }

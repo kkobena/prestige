@@ -4,14 +4,12 @@
  */
 package dal;
 
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 
 import toolkits.utils.jdom;
-
 
 /**
  *
@@ -22,7 +20,7 @@ public class dataManager {
     public boolean isConected = false;
     private EntityManagerFactory emf;
     private EntityManager em;
-    private static final  String PERSISTENCE_UNIT_NAME = "DALPU";
+    private static final String PERSISTENCE_UNIT_NAME = "DALPU";
     private EntityTransaction Transaction;
     private boolean bTransactionGroupe = false;
     // début transaction
@@ -39,20 +37,23 @@ public class dataManager {
         jdom.InitRessource();
         jdom.LoadRessource();
     }
-   /*public static void main(String[]ars) {
-	   dataManager m=new dataManager();
-	   m.initEntityManager();
-	   System.exit(0);
-	
-}*/
+
+    /*
+     * public static void main(String[]ars) { dataManager m=new dataManager(); m.initEntityManager(); System.exit(0);
+     *
+     * }
+     */
     public void initEntityManager() {
-//        Map<String,Object> parameters = new HashMap<>();
-//        parameters.put("javax.persistence.jdbc.user", jdom.ars_database_user_name);
-//        parameters.put("javax.persistence.jdbc.password", jdom.ars_database_user_password);
-//        parameters.put("javax.persistence.jdbc.url", "jdbc:mysql://" + jdom.ars_database_host + ":" + jdom.ars_database_port + "/" + jdom.ars_database_name);
-////        parameters.put("javax.persistence.jdbc.url", "jdbc:mysql://" + jdom.ars_database_host + ":" + jdom.ars_database_port + "/" + jdom.ars_database_name+"?zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=UTC");
-//        parameters.put("javax.persistence.jdbc.driver", "com.mysql.jdbc.Driver");
-//      
+        // Map<String,Object> parameters = new HashMap<>();
+        // parameters.put("javax.persistence.jdbc.user", jdom.ars_database_user_name);
+        // parameters.put("javax.persistence.jdbc.password", jdom.ars_database_user_password);
+        // parameters.put("javax.persistence.jdbc.url", "jdbc:mysql://" + jdom.ars_database_host + ":" +
+        // jdom.ars_database_port + "/" + jdom.ars_database_name);
+        //// parameters.put("javax.persistence.jdbc.url", "jdbc:mysql://" + jdom.ars_database_host + ":" +
+        // jdom.ars_database_port + "/" +
+        // jdom.ars_database_name+"?zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=UTC");
+        // parameters.put("javax.persistence.jdbc.driver", "com.mysql.jdbc.Driver");
+        //
 
         setEmf(Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME));
         setEm(getEmf().createEntityManager());
@@ -106,13 +107,14 @@ public class dataManager {
      * @return the emf
      */
     public EntityManagerFactory getEmf() {
- 
+
         return emf;
 
     }
 
     /**
-     * @param emf the emf to set
+     * @param emf
+     *            the emf to set
      */
     public void setEmf(EntityManagerFactory emf) {
         this.emf = emf;
@@ -126,11 +128,11 @@ public class dataManager {
     }
 
     /**
-     * @param em the em to set
+     * @param em
+     *            the em to set
      */
     public void setEm(EntityManager em) {
         this.em = em;
     }
 
-    
 }

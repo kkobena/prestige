@@ -230,7 +230,13 @@ public class ClotureVenteParams implements Serializable {
 
     @Override
     public String toString() {
-        return "ClotureVenteParams {" + "typeRegleId=" + typeRegleId + ", compteClientId=" + compteClientId + ", remiseId=" + remiseId + ", userVendeurId=" + userVendeurId + ", commentaire=" + commentaire + ", clientId=" + clientId + ", ayantDroitId=" + ayantDroitId + ", banque=" + banque + ", lieux=" + lieux + ", nom=" + nom + ", montantRecu=" + montantRecu + ", montantRemis=" + montantRemis + ", totalRecap=" + totalRecap + ", montantPaye=" + montantPaye + ", partTP=" + partTP + ", userId=" + userId + ", venteId=" + venteId + ", sansBon=" + sansBon + ", typeVenteId=" + typeVenteId + ", natureVenteId=" + natureVenteId + '}';
+        return "ClotureVenteParams {" + "typeRegleId=" + typeRegleId + ", compteClientId=" + compteClientId
+                + ", remiseId=" + remiseId + ", userVendeurId=" + userVendeurId + ", commentaire=" + commentaire
+                + ", clientId=" + clientId + ", ayantDroitId=" + ayantDroitId + ", banque=" + banque + ", lieux="
+                + lieux + ", nom=" + nom + ", montantRecu=" + montantRecu + ", montantRemis=" + montantRemis
+                + ", totalRecap=" + totalRecap + ", montantPaye=" + montantPaye + ", partTP=" + partTP + ", userId="
+                + userId + ", venteId=" + venteId + ", sansBon=" + sansBon + ", typeVenteId=" + typeVenteId
+                + ", natureVenteId=" + natureVenteId + '}';
     }
 
 }

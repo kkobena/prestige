@@ -22,7 +22,7 @@ import util.DateConverter;
 public class RuptureDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private String id, details = " ", libelleGrossiste, reference,grossisteId;
+    private String id, details = " ", libelleGrossiste, reference, grossisteId;
     private Integer prixAchat = 0;
     private Integer prixVente = 0;
     private Integer qty = 0;
@@ -144,7 +144,7 @@ public class RuptureDTO implements Serializable {
         this.id = r.getId();
         TGrossiste g = r.getGrossiste();
         this.libelleGrossiste = g.getStrLIBELLE();
-        this.grossisteId=g.getLgGROSSISTEID();
+        this.grossisteId = g.getLgGROSSISTEID();
         this.reference = r.getReference();
         this.dtCreated = r.getDtCreated();
         this.commandeDate = r.getDtCreated().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -157,7 +157,12 @@ public class RuptureDTO implements Serializable {
             _prixAchat.add(tpd.getPrixAchat());
             _qty.add(tpd.getQty());
             _prixVente.add(tpd.getPrixVente());
-            this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getCodeCip() + "</span><span style='display:inline-block;width: 25%;'>" + tpd.getLibelle() + "</span><span style='display:inline-block;width: 10%;'>(" + tpd.getQty() + ")</span><span style='display:inline-block;width: 15%;'>" + DateConverter.amountFormat(tpd.getPrixAchat(), '.') + " F CFA " + "</span></b><br> " + this.details;
+            this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getCodeCip()
+                    + "</span><span style='display:inline-block;width: 25%;'>" + tpd.getLibelle()
+                    + "</span><span style='display:inline-block;width: 10%;'>(" + tpd.getQty()
+                    + ")</span><span style='display:inline-block;width: 15%;'>"
+                    + DateConverter.amountFormat(tpd.getPrixAchat(), '.') + " F CFA " + "</span></b><br> "
+                    + this.details;
         });
         this.qty = _qty.intValue();
         this.prixAchat = _prixAchat.intValue();

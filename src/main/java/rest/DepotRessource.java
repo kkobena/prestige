@@ -59,14 +59,12 @@ public class DepotRessource {
 
     @GET
     @Path("historiques")
-    @Produces("application/json") 
-    public Response listeHistoriques(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) throws JSONException {
-        List<HistoriqueImportationDTO> data = importationVente.listHistoriqueImportation(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
-        JSONObject json = new JSONObject().put("total", data.size())
-                .put("data", new JSONArray(data));
+    @Produces("application/json")
+    public Response listeHistoriques(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+        List<HistoriqueImportationDTO> data = importationVente.listHistoriqueImportation(LocalDate.parse(dtStart),
+                LocalDate.parse(dtEnd), null);
+        JSONObject json = new JSONObject().put("total", data.size()).put("data", new JSONArray(data));
         return Response.ok().entity(json.toString()).build();
     }
 }

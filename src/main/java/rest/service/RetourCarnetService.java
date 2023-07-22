@@ -21,7 +21,8 @@ import rest.service.dto.RetourCarnetDetailDTO;
 @Local
 public interface RetourCarnetService {
 
-    RetourCarnet createRetourCarnet(RetourCarnetDTO retourCarnetDTO, int qty, Integer motifId, String produitId) throws Exception;
+    RetourCarnet createRetourCarnet(RetourCarnetDTO retourCarnetDTO, int qty, Integer motifId, String produitId)
+            throws Exception;
 
     void updateRetourCarnet(Integer id, String libelle);
 
@@ -35,14 +36,18 @@ public interface RetourCarnetService {
 
     RetourCarnetDetailDTO retourCarnetSummary(String idTierspayant, LocalDate dtStart, LocalDate dtEnd, String query);
 
-    List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit, boolean all);
+    List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart,
+            LocalDate dtEnd, int start, int limit, boolean all);
 
-    JSONObject listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit) throws JSONException;
+    JSONObject listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart,
+            LocalDate dtEnd, int start, int limit) throws JSONException;
 
     JSONObject findByRetourCarnetId(Integer retourCarnetId, String query, int start, int limit);
 
-    List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd);
+    List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart,
+            LocalDate dtEnd);
 
-    List<RetourCarnetDTO> fetchRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd);
+    List<RetourCarnetDTO> fetchRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart,
+            LocalDate dtEnd);
 
 }

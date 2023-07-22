@@ -40,7 +40,8 @@ public class OrderItem implements Serializable {
         this.cip = cip;
         return this;
     }
-  public OrderItem prixAchat(Integer prixAchat) {
+
+    public OrderItem prixAchat(Integer prixAchat) {
         this.prixAchat = prixAchat;
         return this;
     }
@@ -160,8 +161,8 @@ public class OrderItem implements Serializable {
     public void setDateBl(String dateBl) {
         this.dateBl = dateBl;
     }
-//String cip, String ean, String libelle, Integer cmde, Integer cmdeL, String refBl, String dateBl
-    //dpc1 3
+    // String cip, String ean, String libelle, Integer cmde, Integer cmdeL, String refBl, String dateBl
+    // dpc1 3
 
     public OrderItem(String refBl, String dateBl, String cip, String libelle, Integer cmdeL, Double montant) {
         this.cip = cip;
@@ -180,7 +181,7 @@ public class OrderItem implements Serializable {
         this.montant = montant;
     }
 
-    //tedis csv
+    // tedis csv
     public OrderItem(String cip, Integer cmde, String ean, Integer cmdeL, Double montant) {
         this.cip = cip;
         this.cmde = cmde;
@@ -190,7 +191,8 @@ public class OrderItem implements Serializable {
 
     }
 
-    public OrderItem(String cip, Double montant, Integer cmdeL, Integer ug, Integer prixUn, String refBl, String dateBl) {
+    public OrderItem(String cip, Double montant, Integer cmdeL, Integer ug, Integer prixUn, String refBl,
+            String dateBl) {
         this.cip = cip;
         this.prixUn = prixUn;
         this.dateBl = dateBl;
@@ -200,7 +202,7 @@ public class OrderItem implements Serializable {
         this.refBl = refBl;
 
     }
-//cophamed
+    // cophamed
 
     public OrderItem() {
 
@@ -252,9 +254,11 @@ public class OrderItem implements Serializable {
     public void setFacture(String facture) {
         this.facture = facture;
     }
-//   printer.printRecord("N° Facture", "N° ligne", "CIP/EAN13", "Libellé du produit", "Qté commandée","Qté livrée","Prix de cession","Prix public","N° commande","Tva");
+    // printer.printRecord("N° Facture", "N° ligne", "CIP/EAN13", "Libellé du produit", "Qté commandée","Qté
+    // livrée","Prix de cession","Prix public","N° commande","Tva");
 
-    public OrderItem(String facture, Integer ligne, String cip, String libelle, Integer cmde, Integer cmdeL, Double montant, Double prixUn, String refBl, Double tva) {
+    public OrderItem(String facture, Integer ligne, String cip, String libelle, Integer cmde, Integer cmdeL,
+            Double montant, Double prixUn, String refBl, Double tva) {
         this.cip = cip;
         this.libelle = libelle;
         this.cmde = cmde;

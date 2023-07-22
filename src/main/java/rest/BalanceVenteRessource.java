@@ -31,54 +31,40 @@ public class BalanceVenteRessource {
     @EJB
     private BalanceService balanceService;
 
-
     @GET
     @Path("/balancesalecash")
-    public Response balanceCaisse(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response balanceCaisse(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        JSONObject    json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
-                .dtStart(dtStart)
-                .dtEnd(dtEnd)
-                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                .build());
+        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart)
+                .dtEnd(dtEnd).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         return Response.ok().entity(json.toString()).build();
     }
 
     @GET
     @Path("/balancesalecash/carnet")
-    public Response balanceCaisseCarnet(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response balanceCaisseCarnet(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        JSONObject    json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
-                .dtStart(dtStart)
-                .dtEnd(dtEnd)
-                .showAllAmount(true)
-                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                .build());
+        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart)
+                .dtEnd(dtEnd).showAllAmount(true).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         return Response.ok().entity(json.toString()).build();
     }
 
     @GET
     @Path("/balancesalecash/carnet-depot")
-    public Response balanceCaisseCarnetDepot(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response balanceCaisseCarnetDepot(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
 
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -86,12 +72,8 @@ public class BalanceVenteRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
-                .dtStart(dtStart)
-                .dtEnd(dtEnd)
-                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                .showAllAmount(true)
-                .build());
+        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart)
+                .dtEnd(dtEnd).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).showAllAmount(true).build());
 
         return Response.ok().entity(json.toString()).build();
     }

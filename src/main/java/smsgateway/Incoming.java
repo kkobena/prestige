@@ -22,49 +22,54 @@ import toolkits.utils.logger;
 public class Incoming extends HttpServlet {
 
     /**
-     * Processes requests for both HTTP
-     * <code>GET</code> and
-     * <code>POST</code> methods.
+     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
      *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @param request
+     *            servlet request
+     * @param response
+     *            servlet response
+     *
+     * @throws ServletException
+     *             if a servlet-specific error occurs
+     * @throws IOException
+     *             if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         PrintWriter out = response.getWriter();
         try {
-   
+
             jdom.InitRessource();
             jdom.LoadRessource();
             dataManager odataManager = new dataManager();
             odataManager.initEntityManager();
-            
-            
-            
-            new logger().OCategory.info("text :"+request.getParameter("text"));
-            new logger().OCategory.info("phone :"+request.getParameter("phone"));
-            
-            
-            
-            new gatewayManager(odataManager).processMessage(request.getParameter("text"), request.getParameter("phone"));
-            
-        } finally {            
+
+            new logger().OCategory.info("text :" + request.getParameter("text"));
+            new logger().OCategory.info("phone :" + request.getParameter("phone"));
+
+            new gatewayManager(odataManager).processMessage(request.getParameter("text"),
+                    request.getParameter("phone"));
+
+        } finally {
             out.close();
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the
+    // code.">
     /**
-     * Handles the HTTP
-     * <code>GET</code> method.
+     * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @param request
+     *            servlet request
+     * @param response
+     *            servlet response
+     *
+     * @throws ServletException
+     *             if a servlet-specific error occurs
+     * @throws IOException
+     *             if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -73,13 +78,17 @@ public class Incoming extends HttpServlet {
     }
 
     /**
-     * Handles the HTTP
-     * <code>POST</code> method.
+     * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @param request
+     *            servlet request
+     * @param response
+     *            servlet response
+     *
+     * @throws ServletException
+     *             if a servlet-specific error occurs
+     * @throws IOException
+     *             if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

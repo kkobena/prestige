@@ -184,23 +184,23 @@ public final class DateConverter {
     public static final String CHARGED = "charged";
     public static final String TYPE_VENTE_VNO = "1";
     public static final String KEY_CHECK_UG = "KEY_CHECK_UG";
-      public static final String TICKET_ZZ = "TICKET_ZZ";
+    public static final String TICKET_ZZ = "TICKET_ZZ";
     /*
-    parametre nombre de mois à considerer
+     * parametre nombre de mois à considerer
      */
     public static final String Q3 = "Q3";
     /*
-   QTE DE REAPPRO  (EN NOMBRE DE SEMAINES) A DEFINIR
+     * QTE DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFINIR
      */
     public static final String Q2 = "Q2";
     /*
-   SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
+     * SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
      */
     public static final String Q1 = "Q1";
 
-//    Runtime.getRuntime().totalMemory() -
-//Runtime.getRuntime().freeMemory()
-//String path = System.getProperty("user.home") 
+    // Runtime.getRuntime().totalMemory() -
+    // Runtime.getRuntime().freeMemory()
+    // String path = System.getProperty("user.home")
     private DateConverter() {
     }
 
@@ -302,32 +302,22 @@ public final class DateConverter {
         if (dateToConvert == null) {
             return LocalDate.now();
         }
-        return dateToConvert.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+        return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     public static Date convertLocalDateToDate(LocalDate dateToConvert) {
-        return java.util.Date.from(dateToConvert.atStartOfDay()
-                .atZone(ZoneId.systemDefault())
-                .toInstant());
+        return java.util.Date.from(dateToConvert.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public static LocalDateTime convertDateToLocalDateTime(Date dateToConvert) {
         if (dateToConvert == null) {
-            return new Date().toInstant()
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDateTime();
+            return new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         }
-        return dateToConvert.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+        return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     public static Date convertLocalDateTimeToDate(LocalDateTime dateToConvert) {
-        return java.util.Date.from(dateToConvert
-                .atZone(ZoneId.systemDefault())
-                .toInstant());
+        return java.util.Date.from(dateToConvert.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public static String amountFormat(Integer Amount) {
@@ -401,7 +391,7 @@ public final class DateConverter {
             File f = new File(file);
             ImageIO.write(bi, "png", f);
         } catch (IOException ex) {
-//            LOG.log(Level.SEVERE, null, ex);
+            // LOG.log(Level.SEVERE, null, ex);
         }
         return file;
 
@@ -414,14 +404,16 @@ public final class DateConverter {
 
     }
 
-    public static Integer getRemise(double tauxRemise, int taux, List<TPreenregistrementDetail> lstTPreenregistrementDetail) {
+    public static Integer getRemise(double tauxRemise, int taux,
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail) {
         if (taux < 100 || tauxRemise <= 0.0) {
             return 0;
         }
         double sumRemise = 0;
         for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
             TFamille famille = x.getLgFAMILLEID();
-            if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2") && !famille.getStrCODEREMISE().equals("3")) {
+            if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
+                    && !famille.getStrCODEREMISE().equals("3")) {
                 sumRemise += (Double.valueOf(x.getIntPRICE()) * tauxRemise);
 
             }
@@ -436,13 +428,13 @@ public final class DateConverter {
 
             out = new FileOutputStream(new File(str_file_name));
             AbstractBarcodeBean barcode = new Code128Bean();
-            //     barcode.setBarHeight(50.0);
+            // barcode.setBarHeight(50.0);
             barcode.setFontName("Calibri (Corps)");
             barcode.setFontSize(15.0);
             barcode.setMsgPosition(HumanReadablePlacement.HRP_NONE);
             barcode.setModuleWidth(0.8);
-            BitmapCanvasProvider canvas
-                    = new BitmapCanvasProvider(out, "image/x-png", 160, BufferedImage.TYPE_BYTE_BINARY, false, 0);
+            BitmapCanvasProvider canvas = new BitmapCanvasProvider(out, "image/x-png", 160,
+                    BufferedImage.TYPE_BYTE_BINARY, false, 0);
             barcode.generateBarcode(canvas, data);
             try {
                 canvas.finish();
@@ -463,16 +455,20 @@ public final class DateConverter {
 
     /**
      *
-     * @param Q1 SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
-     * @param Q2 QTE DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFINIR
-     * @param Q3 SOMME DE LA CONSOMMATION SUR LA VALEUR DU PARAMETRE GENERAL Q3
-     * @param Q3_parametre VALEUR DU PARAMETRE GENERAL
-     * @return ON RETOURNE UNE PAIR DE VALEUR
-     * <b>seuilReappo</b>,<b>qteReappro</b>
+     * @param Q1
+     *            SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
+     * @param Q2
+     *            QTE DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFINIR
+     * @param Q3
+     *            SOMME DE LA CONSOMMATION SUR LA VALEUR DU PARAMETRE GENERAL Q3
+     * @param Q3_parametre
+     *            VALEUR DU PARAMETRE GENERAL
+     *
+     * @return ON RETOURNE UNE PAIR DE VALEUR <b>seuilReappo</b>,<b>qteReappro</b>
      */
     public static JSONObject calculSeuiQteReappro(int Q1, int Q2, double Q3, int Q3_parametre) {
         /*
-      valeur calculee de la consommation du produit sur une semaine
+         * valeur calculee de la consommation du produit sur une semaine
          */
         double divente = (Double.valueOf(Q3_parametre) * 4);
         double Q4 = 0.5;
@@ -565,18 +561,14 @@ public final class DateConverter {
         if (dateToConvert == null) {
             return null;
         }
-        return dateToConvert.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+        return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     public static LocalDateTime convertDateToLocalDateTimeElseNull(Date dateToConvert) {
         if (dateToConvert == null) {
             return null;
         }
-        return dateToConvert.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
+        return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
 }

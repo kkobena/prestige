@@ -70,12 +70,14 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     public EntityManager getEntityManager() {
         return em;
     }
+
     Comparator<FamilleArticleStatDTO> comparator = Comparator.comparing(FamilleArticleStatDTO::getCode);
     Comparator<VenteDetailsDTO> comparatorQty = Comparator.comparingInt(VenteDetailsDTO::getIntQUANTITY);
     Comparator<VenteDetailsDTO> comparatorPrice = Comparator.comparingInt(VenteDetailsDTO::getIntPRICE);
 
     @Override
-    public Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParFamilleArticle(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) {
+    public Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParFamilleArticle(String dtStart,
+            String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) {
         List<FamilleArticleStatDTO> list = new ArrayList<>();
         FamilleArticleStatDTO summary = new FamilleArticleStatDTO();
         try {
@@ -85,30 +87,31 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             LongAdder montantAchat = new LongAdder();
             final LocalDate periode = LocalDate.parse(dtStart);
             Period period = Period.between(LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
-            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
+            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query,
+                    codeFamile, u, codeRayon, codeGrossiste);
             if (period.getMonths() > 0) {
-                findPreenregistrementDetails(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
-                        .sorted(comparator)
-                        .forEach(x -> {
+                findPreenregistrementDetails(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u,
+                        codeRayon, codeGrossiste).stream().sorted(comparator).forEach(x -> {
                             montantMarge.add(x.getMontantMarge());
                             montantTTC.add(x.getMontantTTC());
                             montantAchat.add(x.getMontantAchat());
                             montantHT.add(x.getMontantHT());
-                            Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                            Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt)
+                                    .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
                             x.setPourcentageTH(p.longValue());
                             list.add(x);
 
                         });
             } else {
-                findPreenregistrementDetails(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
-                        .sorted(comparator)
-                        .forEach(x -> {
+                findPreenregistrementDetails(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u,
+                        codeRayon, codeGrossiste).stream().sorted(comparator).forEach(x -> {
                             montantMarge.add(x.getMontantMarge());
                             montantTTC.add(x.getMontantTTC());
                             montantAchat.add(x.getMontantAchat());
                             montantHT.add(x.getMontantHT());
                             cumulFamilleArticles(periode, x, u);
-                            Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                            Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt)
+                                    .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
                             x.setPourcentageTH(p.longValue());
                             list.add(x);
 
@@ -120,7 +123,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             summary.setMontantCumulMarge(montantMarge.longValue());
             summary.setMontantCumulTTC(montantTTC.longValue());
             summary.setPourcentageTH((montanttotalHt / montanttotalHt) * 100);
-            Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+            Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT())
+                    .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
             summary.setPourcentageCumulMage(ux.longValue());
         } catch (Exception e) {
         }
@@ -129,9 +133,11 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     }
 
     @Override
-    public JSONObject statistiqueParFamilleArticleView(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) throws JSONException {
+    public JSONObject statistiqueParFamilleArticleView(String dtStart, String dtEnd, String codeFamile, String query,
+            TUser u, String codeRayon, String codeGrossiste) throws JSONException {
         JSONObject json = new JSONObject();
-        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = statistiqueParFamilleArticle(dtStart, dtEnd, codeFamile, query, u, codeRayon, codeGrossiste);
+        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = statistiqueParFamilleArticle(dtStart, dtEnd,
+                codeFamile, query, u, codeRayon, codeGrossiste);
         List<FamilleArticleStatDTO> l = pair.getRight();
         json.put("success", true);
         json.put("total", l.size());
@@ -147,17 +153,21 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<HMvtProduit> cq = cb.createQuery(HMvtProduit.class);
             Root<HMvtProduit> root = cq.from(HMvtProduit.class);
-            Predicate btw = cb.between(
-                    root.get(HMvtProduit_.mvtDate), dtStart,
-                    dtEnd);
+            Predicate btw = cb.between(root.get(HMvtProduit_.mvtDate), dtStart, dtEnd);
             predicates.add(btw);
             predicates.add(cb.equal(root.get(HMvtProduit_.emplacement), emp));
-            predicates.add(root.get(HMvtProduit_.typemvtproduit).get(Typemvtproduit_.id).in(Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE)));
+            predicates.add(root.get(HMvtProduit_.typemvtproduit).get(Typemvtproduit_.id)
+                    .in(Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE)));
             if (!StringUtils.isEmpty(query)) {
-                predicates.add(cb.or(cb.like(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE), query + "%"), cb.like(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE), query + "%")));
+                predicates.add(cb.or(
+                        cb.like(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID)
+                                .get(TFamillearticle_.strCODEFAMILLE), query + "%"),
+                        cb.like(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID)
+                                .get(TFamillearticle_.strLIBELLE), query + "%")));
             }
             if (!StringUtils.isEmpty(codeFamillle)) {
-                predicates.add(cb.equal(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamillle));
+                predicates.add(cb.equal(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID)
+                        .get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamillle));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<HMvtProduit> q = getEntityManager().createQuery(cq);
@@ -168,7 +178,9 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         }
     }
 
-    private List<Predicate> famillePredicats(CriteriaBuilder cb, Root<TPreenregistrementDetail> root, Join<TPreenregistrementDetail, TPreenregistrement> join, LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    private List<Predicate> famillePredicats(CriteriaBuilder cb, Root<TPreenregistrementDetail> root,
+            Join<TPreenregistrementDetail, TPreenregistrement> join, LocalDate dtStart, LocalDate dtEnd, String query,
+            String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
         List<Predicate> predicates = new ArrayList<>();
         TEmplacement emp = u.getLgEMPLACEMENTID();
         Predicate btw = cb.between(cb.function("DATE", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
@@ -178,39 +190,55 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
         predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
         predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
-        predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
+        predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
+                DateConverter.DEPOT_EXTENSION));
         if (!StringUtils.isEmpty(query)) {
-            predicates.add(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE), query + "%"),
-                    cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE), query + "%")));
+            predicates.add(cb.or(
+                    cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                            .get(TFamillearticle_.strCODEFAMILLE), query + "%"),
+                    cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                            .get(TFamillearticle_.strLIBELLE), query + "%")));
         }
         if (!StringUtils.isEmpty(codeFamillle) && !codeFamillle.equals("ALL")) {
-            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamillle));
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                    .get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamillle));
         }
         if (!StringUtils.isEmpty(codeRayon) && !codeRayon.equals("ALL")) {
-            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), codeRayon));
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
+                    .get(TZoneGeographique_.lgZONEGEOID), codeRayon));
         }
         if (!StringUtils.isEmpty(codeGrossiste) && !codeGrossiste.equals("ALL")) {
-            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                    .get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
         }
         return predicates;
     }
 
-    List<FamilleArticleStatDTO> findPreenregistrementDetails(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    List<FamilleArticleStatDTO> findPreenregistrementDetails(LocalDate dtStart, LocalDate dtEnd, String query,
+            String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
         try {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<FamilleArticleStatDTO> cq = cb.createQuery(FamilleArticleStatDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.construct(FamilleArticleStatDTO.class, root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE),
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
-                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat), root.get(TPreenregistrementDetail_.intQUANTITY))),
-                    cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE)),
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID)
-            )).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID));
-            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(
+                    cb.construct(FamilleArticleStatDTO.class,
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                                    .get(TFamillearticle_.strCODEFAMILLE),
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                                    .get(TFamillearticle_.strLIBELLE),
+                            cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                            cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat),
+                                    root.get(TPreenregistrementDetail_.intQUANTITY))),
+                            cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
+                            cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE)),
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                                    .get(TFamillearticle_.lgFAMILLEARTICLEID)))
+                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID));
+            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
+                    codeRayon, codeGrossiste);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
@@ -220,21 +248,23 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         }
     }
 
-    FamilleArticleStatDTO cumulFamilleArticles(LocalDate periode, FamilleArticleStatDTO familleArticleStatDTO, TUser u) {
+    FamilleArticleStatDTO cumulFamilleArticles(LocalDate periode, FamilleArticleStatDTO familleArticleStatDTO,
+            TUser u) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             TEmplacement emp = u.getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<FamilleArticleStatDTO> cq = cb.createQuery(FamilleArticleStatDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.construct(FamilleArticleStatDTO.class,
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
-                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat), root.get(TPreenregistrementDetail_.intQUANTITY))),
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(cb.construct(FamilleArticleStatDTO.class, cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat),
+                            root.get(TPreenregistrementDetail_.intQUANTITY))),
                     cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))
-            ));
-            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), familleArticleStatDTO.getFamilleId()));
+                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))));
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                    .get(TFamillearticle_.lgFAMILLEARTICLEID), familleArticleStatDTO.getFamilleId()));
             Predicate btw = cb.equal(cb.function("YEAR", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
                     periode.getYear());
             predicates.add(btw);
@@ -242,7 +272,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
             predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
-            predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
+            predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
+                    DateConverter.DEPOT_EXTENSION));
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
@@ -251,7 +282,10 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             familleArticleStatDTO.setMontantCumulTTC(t.getMontantCumulTTC());
             familleArticleStatDTO.setMontantCumulTva(t.getMontantCumulTva());
             familleArticleStatDTO.setMontantCumulHT(t.getMontantCumulHT());
-            Double p = new BigDecimal(Double.valueOf(familleArticleStatDTO.getMontantHT()) / familleArticleStatDTO.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+            Double p = new BigDecimal(
+                    Double.valueOf(familleArticleStatDTO.getMontantHT()) / familleArticleStatDTO.getMontantCumulHT())
+                            .setScale(2, RoundingMode.HALF_UP).doubleValue()
+                    * 100;
             familleArticleStatDTO.setValeurPeriode(p.intValue());
             return familleArticleStatDTO;
         } catch (Exception e) {
@@ -260,51 +294,56 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         }
     }
 
-    long totalMontantHT(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    long totalMontantHT(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u,
+            String codeRayon, String codeGrossiste) {
         try {
             // List<Predicate> predicates = new ArrayList<>();
-            //  TEmplacement emp = u.getLgEMPLACEMENTID();
+            // TEmplacement emp = u.getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Number> cq = cb.createQuery(Number.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.diff(cb.diff(cb.sum(root.get(TPreenregistrementDetail_.intPRICE)), cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))), cb.sum(root.get(TPreenregistrementDetail_.montantTva)))
-            );
-            /* Predicate btw = cb.between(cb.function("DATE", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
-                    java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
-            predicates.add(btw);
-            predicates.add(cb.equal(join.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID), emp));
-            predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-            predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
-            predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
-            if (!StringUtils.isEmpty(query)) {
-                predicates.add(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE), query + "%"),
-                        cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE), query + "%")));
-            }
-            if (!StringUtils.isEmpty(codeFamillle)) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamillle));
-            }
-            if (!StringUtils.isEmpty(codeRayon)) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), codeRayon));
-            }
-            if (!StringUtils.isEmpty(codeGrossiste)) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
-            }*/
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(cb.diff(
+                    cb.diff(cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                            cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))),
+                    cb.sum(root.get(TPreenregistrementDetail_.montantTva))));
+            /*
+             * Predicate btw = cb.between(cb.function("DATE", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
+             * java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)); predicates.add(btw);
+             * predicates.add(cb.equal(join.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID), emp));
+             * predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
+             * predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
+             * predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0)); if
+             * (!StringUtils.isEmpty(query)) {
+             * predicates.add(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.
+             * lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE), query + "%"),
+             * cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(
+             * TFamillearticle_.strLIBELLE), query + "%"))); } if (!StringUtils.isEmpty(codeFamillle)) {
+             * predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+             * .get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamillle)); } if (!StringUtils.isEmpty(codeRayon)) {
+             * predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(
+             * TZoneGeographique_.lgZONEGEOID), codeRayon)); } if (!StringUtils.isEmpty(codeGrossiste)) {
+             * predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(
+             * TGrossiste_.lgGROSSISTEID), codeGrossiste)); }
+             */
             // famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
-            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
+                    codeRayon, codeGrossiste);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             return ((Number) q.getSingleResult()).longValue();
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
+            // e.printStackTrace(System.err);
             return 0;
         }
     }
 
     @Override
-    public List<VenteDetailsDTO> geVingtQuatreVingt(String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all, boolean qtyOrCa) {
+    public List<VenteDetailsDTO> geVingtQuatreVingt(String dtStart, String dtEnd, TUser u, String codeFamile,
+            String codeRayon, String codeGrossiste, int start, int limit, boolean all, boolean qtyOrCa) {
         int valeur = valeurVinghtQuarteVinght(dtStart, dtEnd, u, codeFamile, codeRayon, codeGrossiste, qtyOrCa);
         try {
             List<Predicate> predicates = new ArrayList<>();
@@ -312,7 +351,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
             if (qtyOrCa) {
                 cq.select(cb.construct(VenteDetailsDTO.class,
                         root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP),
@@ -320,9 +360,12 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                         cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)),
                         cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)),
                         root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE)
-                )).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID)).orderBy(cb.desc(cb.sum(root.get(TPreenregistrementDetail_.intQUANTITY))));
+                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                                .get(TGrossiste_.lgGROSSISTEID),
+                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                                .get(TFamillearticle_.strLIBELLE)))
+                        .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID))
+                        .orderBy(cb.desc(cb.sum(root.get(TPreenregistrementDetail_.intQUANTITY))));
 
             } else {
                 cq.select(cb.construct(VenteDetailsDTO.class,
@@ -331,9 +374,12 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                         cb.sumAsLong(root.get(TPreenregistrementDetail_.intPRICE)),
                         cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)),
                         root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID),
-                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE)
-                )).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID)).orderBy(cb.desc(cb.sum(root.get(TPreenregistrementDetail_.intPRICE))));
+                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                                .get(TGrossiste_.lgGROSSISTEID),
+                        root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                                .get(TFamillearticle_.strLIBELLE)))
+                        .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID))
+                        .orderBy(cb.desc(cb.sum(root.get(TPreenregistrementDetail_.intPRICE))));
 
             }
 
@@ -345,13 +391,16 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
             if (!StringUtils.isEmpty(codeFamile) && !codeFamile.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamile));
+                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID)
+                        .get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamile));
             }
             if (!StringUtils.isEmpty(codeRayon) && !codeRayon.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), codeRayon));
+                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
+                        .get(TZoneGeographique_.lgZONEGEOID), codeRayon));
             }
             if (!StringUtils.isEmpty(codeGrossiste) && !codeGrossiste.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
+                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                        .get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
@@ -390,7 +439,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
 
     private Integer stockProduit(String idProduit, String empl) {
         try {
-            Query q = getEntityManager().createQuery("SELECT o.intNUMBERAVAILABLE FROM TFamilleStock o WHERE o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?1 AND o.lgFAMILLEID.lgFAMILLEID=?2 ");
+            Query q = getEntityManager().createQuery(
+                    "SELECT o.intNUMBERAVAILABLE FROM TFamilleStock o WHERE o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?1 AND o.lgFAMILLEID.lgFAMILLEID=?2 ");
             q.setMaxResults(1);
             q.setParameter(1, empl);
             q.setParameter(2, idProduit);
@@ -402,8 +452,10 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     }
 
     @Override
-    public JSONObject geVingtQuatreVingt(String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean qtyOrCa) {
-        List<VenteDetailsDTO> _f = geVingtQuatreVingt(dtStart, dtEnd, u, codeFamile, codeRayon, codeGrossiste, start, limit, false, qtyOrCa);
+    public JSONObject geVingtQuatreVingt(String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon,
+            String codeGrossiste, int start, int limit, boolean qtyOrCa) {
+        List<VenteDetailsDTO> _f = geVingtQuatreVingt(dtStart, dtEnd, u, codeFamile, codeRayon, codeGrossiste, start,
+                limit, false, qtyOrCa);
         int total = _f.size();
         if (qtyOrCa) {
             _f.sort(comparatorQty.reversed());
@@ -414,14 +466,16 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         return new JSONObject().put("total", total).put("data", new JSONArray(_f));
     }
 
-    private int valeurVinghtQuarteVinght(String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, boolean qtyOrCa) {
+    private int valeurVinghtQuarteVinght(String dtStart, String dtEnd, TUser u, String codeFamile, String codeRayon,
+            String codeGrossiste, boolean qtyOrCa) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             TEmplacement emp = u.getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
             if (qtyOrCa) {
                 cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)));
             } else {
@@ -435,40 +489,51 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
             if (!StringUtils.isEmpty(codeFamile) && !codeFamile.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamile));
+                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID)
+                        .get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamile));
             }
             if (!StringUtils.isEmpty(codeRayon) && !codeRayon.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), codeRayon));
+                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
+                        .get(TZoneGeographique_.lgZONEGEOID), codeRayon));
             }
             if (!StringUtils.isEmpty(codeGrossiste) && !codeGrossiste.equals("ALL")) {
-                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
+                predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                        .get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             return (int) Math.ceil(q.getSingleResult() * 0.8);
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
+            // e.printStackTrace(System.err);
             return 0;
         }
     }
 
-    List<FamilleArticleStatDTO> fetchDataForStatisticVenteRayons(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    List<FamilleArticleStatDTO> fetchDataForStatisticVenteRayons(LocalDate dtStart, LocalDate dtEnd, String query,
+            String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<FamilleArticleStatDTO> cq = cb.createQuery(FamilleArticleStatDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.construct(FamilleArticleStatDTO.class,
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strCODE),
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.strLIBELLEE),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
-                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat), root.get(TPreenregistrementDetail_.intQUANTITY))),
-                    cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE)),
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID)
-            )).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID));
-            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(
+                    cb.construct(FamilleArticleStatDTO.class,
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
+                                    .get(TZoneGeographique_.strCODE),
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
+                                    .get(TZoneGeographique_.strLIBELLEE),
+                            cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                            cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat),
+                                    root.get(TPreenregistrementDetail_.intQUANTITY))),
+                            cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
+                            cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE)),
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
+                                    .get(TZoneGeographique_.lgZONEGEOID)))
+                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID));
+            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
+                    codeRayon, codeGrossiste);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
@@ -478,22 +543,29 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         }
     }
 
-    List<FamilleArticleStatDTO> fetchDataForStatisticVenteGrossistes(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    List<FamilleArticleStatDTO> fetchDataForStatisticVenteGrossistes(LocalDate dtStart, LocalDate dtEnd, String query,
+            String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<FamilleArticleStatDTO> cq = cb.createQuery(FamilleArticleStatDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
             cq.select(cb.construct(FamilleArticleStatDTO.class,
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strCODE),
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.strLIBELLE),
+                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                            .get(TGrossiste_.strCODE),
+                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                            .get(TGrossiste_.strLIBELLE),
                     cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
-                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat), root.get(TPreenregistrementDetail_.intQUANTITY))),
+                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat),
+                            root.get(TPreenregistrementDetail_.intQUANTITY))),
                     cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
                     cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE)),
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID)
-            )).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID));
-            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                            .get(TGrossiste_.lgGROSSISTEID)))
+                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID));
+            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
+                    codeRayon, codeGrossiste);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
@@ -504,7 +576,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     }
 
     @Override
-    public Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParRayons(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) {
+    public Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParRayons(String dtStart, String dtEnd,
+            String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) {
         List<FamilleArticleStatDTO> list = new ArrayList<>();
         FamilleArticleStatDTO summary = new FamilleArticleStatDTO();
         try {
@@ -513,16 +586,17 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             LongAdder montantHT = new LongAdder();
             LongAdder montantAchat = new LongAdder();
             final LocalDate periode = LocalDate.parse(dtStart);
-            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
-            fetchDataForStatisticVenteRayons(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
-                    .sorted(comparator)
-                    .forEach(x -> {
+            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query,
+                    codeFamile, u, codeRayon, codeGrossiste);
+            fetchDataForStatisticVenteRayons(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u,
+                    codeRayon, codeGrossiste).stream().sorted(comparator).forEach(x -> {
                         montantMarge.add(x.getMontantMarge());
                         montantTTC.add(x.getMontantTTC());
                         montantAchat.add(x.getMontantAchat());
                         montantHT.add(x.getMontantHT());
                         cumulStatisticRayons(periode, x, u);
-                        Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                        Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt)
+                                .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
                         x.setPourcentageTH(p.longValue());
                         list.add(x);
 
@@ -536,7 +610,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             } catch (ArithmeticException e) {
             }
 
-            Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+            Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT())
+                    .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
             summary.setPourcentageCumulMage(ux.longValue());
         } catch (Exception e) {
             e.printStackTrace(System.err);
@@ -546,7 +621,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     }
 
     @Override
-    public Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParGrossistes(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) {
+    public Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParGrossistes(String dtStart,
+            String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) {
         List<FamilleArticleStatDTO> list = new ArrayList<>();
         FamilleArticleStatDTO summary = new FamilleArticleStatDTO();
         try {
@@ -555,16 +631,17 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             LongAdder montantHT = new LongAdder();
             LongAdder montantAchat = new LongAdder();
             final LocalDate periode = LocalDate.parse(dtStart);
-            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
-            fetchDataForStatisticVenteGrossistes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
-                    .sorted(comparator)
-                    .forEach(x -> {
+            final long montanttotalHt = totalMontantHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query,
+                    codeFamile, u, codeRayon, codeGrossiste);
+            fetchDataForStatisticVenteGrossistes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u,
+                    codeRayon, codeGrossiste).stream().sorted(comparator).forEach(x -> {
                         montantMarge.add(x.getMontantMarge());
                         montantTTC.add(x.getMontantTTC());
                         montantAchat.add(x.getMontantAchat());
                         montantHT.add(x.getMontantHT());
                         cumulStatisticGrossistes(periode, x, u);
-                        Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                        Double p = new BigDecimal(Double.valueOf(x.getMontantHT()) / montanttotalHt)
+                                .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
                         x.setPourcentageTH(p.longValue());
                         list.add(x);
 
@@ -574,7 +651,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             summary.setMontantCumulMarge(montantMarge.longValue());
             summary.setMontantCumulTTC(montantTTC.longValue());
             summary.setPourcentageTH((montanttotalHt / montanttotalHt) * 100);
-            Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+            Double ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT())
+                    .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
             summary.setPourcentageCumulMage(ux.longValue());
         } catch (Exception e) {
             e.printStackTrace(System.err);
@@ -584,9 +662,11 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     }
 
     @Override
-    public JSONObject statistiqueParRayonsView(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) throws JSONException {
+    public JSONObject statistiqueParRayonsView(String dtStart, String dtEnd, String codeFamile, String query, TUser u,
+            String codeRayon, String codeGrossiste) throws JSONException {
         JSONObject json = new JSONObject();
-        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = statistiqueParRayons(dtStart, dtEnd, codeFamile, query, u, codeRayon, codeGrossiste);
+        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = statistiqueParRayons(dtStart, dtEnd, codeFamile,
+                query, u, codeRayon, codeGrossiste);
         List<FamilleArticleStatDTO> l = pair.getRight();
         json.put("success", true);
         json.put("total", l.size());
@@ -596,9 +676,11 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     }
 
     @Override
-    public JSONObject statistiqueParGrossistesView(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) throws JSONException {
+    public JSONObject statistiqueParGrossistesView(String dtStart, String dtEnd, String codeFamile, String query,
+            TUser u, String codeRayon, String codeGrossiste) throws JSONException {
         JSONObject json = new JSONObject();
-        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = statistiqueParGrossistes(dtStart, dtEnd, codeFamile, query, u, codeRayon, codeGrossiste);
+        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = statistiqueParGrossistes(dtStart, dtEnd,
+                codeFamile, query, u, codeRayon, codeGrossiste);
         List<FamilleArticleStatDTO> l = pair.getRight();
         json.put("success", true);
         json.put("total", l.size());
@@ -607,21 +689,23 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         return json;
     }
 
-    FamilleArticleStatDTO cumulStatisticRayons(LocalDate periode, FamilleArticleStatDTO familleArticleStatDTO, TUser u) {
+    FamilleArticleStatDTO cumulStatisticRayons(LocalDate periode, FamilleArticleStatDTO familleArticleStatDTO,
+            TUser u) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             TEmplacement emp = u.getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<FamilleArticleStatDTO> cq = cb.createQuery(FamilleArticleStatDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.construct(FamilleArticleStatDTO.class,
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
-                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat), root.get(TPreenregistrementDetail_.intQUANTITY))),
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(cb.construct(FamilleArticleStatDTO.class, cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat),
+                            root.get(TPreenregistrementDetail_.intQUANTITY))),
                     cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))
-            ));
-            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), familleArticleStatDTO.getFamilleId()));
+                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))));
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
+                    .get(TZoneGeographique_.lgZONEGEOID), familleArticleStatDTO.getFamilleId()));
             Predicate btw = cb.equal(cb.function("YEAR", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
                     periode.getYear());
             predicates.add(btw);
@@ -629,7 +713,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
             predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
-            predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
+            predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
+                    DateConverter.DEPOT_EXTENSION));
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
@@ -638,7 +723,10 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             familleArticleStatDTO.setMontantCumulTTC(t.getMontantCumulTTC());
             familleArticleStatDTO.setMontantCumulTva(t.getMontantCumulTva());
             familleArticleStatDTO.setMontantCumulHT(t.getMontantCumulHT());
-            Double p = new BigDecimal(Double.valueOf(familleArticleStatDTO.getMontantHT()) / familleArticleStatDTO.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+            Double p = new BigDecimal(
+                    Double.valueOf(familleArticleStatDTO.getMontantHT()) / familleArticleStatDTO.getMontantCumulHT())
+                            .setScale(2, RoundingMode.HALF_UP).doubleValue()
+                    * 100;
             familleArticleStatDTO.setValeurPeriode(p.intValue());
             return familleArticleStatDTO;
         } catch (Exception e) {
@@ -647,21 +735,23 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         }
     }
 
-    FamilleArticleStatDTO cumulStatisticGrossistes(LocalDate periode, FamilleArticleStatDTO familleArticleStatDTO, TUser u) {
+    FamilleArticleStatDTO cumulStatisticGrossistes(LocalDate periode, FamilleArticleStatDTO familleArticleStatDTO,
+            TUser u) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             TEmplacement emp = u.getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<FamilleArticleStatDTO> cq = cb.createQuery(FamilleArticleStatDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.construct(FamilleArticleStatDTO.class,
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
-                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat), root.get(TPreenregistrementDetail_.intQUANTITY))),
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(cb.construct(FamilleArticleStatDTO.class, cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat),
+                            root.get(TPreenregistrementDetail_.intQUANTITY))),
                     cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))
-            ));
-            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), familleArticleStatDTO.getFamilleId()));
+                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))));
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
+                    .get(TGrossiste_.lgGROSSISTEID), familleArticleStatDTO.getFamilleId()));
             Predicate btw = cb.equal(cb.function("YEAR", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
                     periode.getYear());
             predicates.add(btw);
@@ -669,7 +759,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
             predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
-            predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
+            predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
+                    DateConverter.DEPOT_EXTENSION));
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
@@ -678,7 +769,10 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             familleArticleStatDTO.setMontantCumulTTC(t.getMontantCumulTTC());
             familleArticleStatDTO.setMontantCumulTva(t.getMontantCumulTva());
             familleArticleStatDTO.setMontantCumulHT(t.getMontantCumulHT());
-            Double p = new BigDecimal(Double.valueOf(familleArticleStatDTO.getMontantHT()) / familleArticleStatDTO.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+            Double p = new BigDecimal(
+                    Double.valueOf(familleArticleStatDTO.getMontantHT()) / familleArticleStatDTO.getMontantCumulHT())
+                            .setScale(2, RoundingMode.HALF_UP).doubleValue()
+                    * 100;
             familleArticleStatDTO.setValeurPeriode(p.intValue());
             return familleArticleStatDTO;
         } catch (Exception e) {
@@ -687,23 +781,33 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         }
     }
 
-    List<FamilleArticleStatDTO> findPreenregistrementDetailsVeto(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    List<FamilleArticleStatDTO> findPreenregistrementDetailsVeto(LocalDate dtStart, LocalDate dtEnd, String query,
+            String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
         try {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<FamilleArticleStatDTO> cq = cb.createQuery(FamilleArticleStatDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.construct(FamilleArticleStatDTO.class, root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE),
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.strLIBELLE),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
-                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat), root.get(TPreenregistrementDetail_.intQUANTITY))),
-                    cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE)),
-                    root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID),
-                    join.get(TPreenregistrement_.strTYPEVENTE)
-            )).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID), join.get(TPreenregistrement_.strTYPEVENTE));
-            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(
+                    cb.construct(FamilleArticleStatDTO.class,
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                                    .get(TFamillearticle_.strCODEFAMILLE),
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                                    .get(TFamillearticle_.strLIBELLE),
+                            cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                            cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat),
+                                    root.get(TPreenregistrementDetail_.intQUANTITY))),
+                            cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
+                            cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE)),
+                            root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(
+                                    TFamillearticle_.lgFAMILLEARTICLEID),
+                            join.get(TPreenregistrement_.strTYPEVENTE)))
+                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID),
+                            join.get(TPreenregistrement_.strTYPEVENTE));
+            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
+                    codeRayon, codeGrossiste);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             List<FamilleArticleStatDTO> results = q.getResultList();
@@ -715,22 +819,24 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         }
     }
 
-    FamilleArticleStatDTO cumulFamilleArticlesVeto(LocalDate periode, FamilleArticleStatDTO familleArticleStatDTO, TUser u) {
+    FamilleArticleStatDTO cumulFamilleArticlesVeto(LocalDate periode, FamilleArticleStatDTO familleArticleStatDTO,
+            TUser u) {
         try {
             List<Predicate> predicates = new ArrayList<>();
             TEmplacement emp = u.getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<FamilleArticleStatDTO> cq = cb.createQuery(FamilleArticleStatDTO.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.construct(FamilleArticleStatDTO.class,
-                    cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
-                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat), root.get(TPreenregistrementDetail_.intQUANTITY))),
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(cb.construct(FamilleArticleStatDTO.class, cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                    cb.sum(cb.prod(root.get(TPreenregistrementDetail_.prixAchat),
+                            root.get(TPreenregistrementDetail_.intQUANTITY))),
                     cb.sum(root.get(TPreenregistrementDetail_.montantTva)),
                     cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE)),
-                    cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY))
-            ));
-            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(TFamillearticle_.lgFAMILLEARTICLEID), familleArticleStatDTO.getFamilleId()));
+                    cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY))));
+            predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
+                    .get(TFamillearticle_.lgFAMILLEARTICLEID), familleArticleStatDTO.getFamilleId()));
             Predicate btw = cb.equal(cb.function("YEAR", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
                     periode.getYear());
             predicates.add(btw);
@@ -738,7 +844,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
             predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
-            predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
+            predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
+                    DateConverter.DEPOT_EXTENSION));
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
@@ -747,7 +854,10 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             familleArticleStatDTO.setMontantCumulTTC(t.getMontantCumulTTC());
             familleArticleStatDTO.setMontantCumulTva(t.getMontantCumulTva());
             familleArticleStatDTO.setMontantCumulHT(t.getMontantCumulHT());
-            Double p = new BigDecimal(Double.valueOf(familleArticleStatDTO.getMontantHT()) / familleArticleStatDTO.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+            Double p = new BigDecimal(
+                    Double.valueOf(familleArticleStatDTO.getMontantHT()) / familleArticleStatDTO.getMontantCumulHT())
+                            .setScale(2, RoundingMode.HALF_UP).doubleValue()
+                    * 100;
             familleArticleStatDTO.setValeurPeriode(p.intValue());
             return familleArticleStatDTO;
         } catch (Exception e) {
@@ -757,9 +867,11 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     }
 
     @Override
-    public JSONObject statistiqueParFamilleArticleViewVeto(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) throws JSONException {
+    public JSONObject statistiqueParFamilleArticleViewVeto(String dtStart, String dtEnd, String codeFamile,
+            String query, TUser u, String codeRayon, String codeGrossiste) throws JSONException {
         JSONObject json = new JSONObject();
-        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = statistiqueParFamilleArticleVeto(dtStart, dtEnd, codeFamile, query, u, codeRayon, codeGrossiste);
+        Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> pair = statistiqueParFamilleArticleVeto(dtStart, dtEnd,
+                codeFamile, query, u, codeRayon, codeGrossiste);
         List<FamilleArticleStatDTO> l = pair.getRight();
         json.put("success", true);
         json.put("total", l.size());
@@ -769,7 +881,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
     }
 
     @Override
-    public Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParFamilleArticleVeto(String dtStart, String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) {
+    public Pair<FamilleArticleStatDTO, List<FamilleArticleStatDTO>> statistiqueParFamilleArticleVeto(String dtStart,
+            String dtEnd, String codeFamile, String query, TUser u, String codeRayon, String codeGrossiste) {
         List<FamilleArticleStatDTO> list = new ArrayList<>();
         FamilleArticleStatDTO summary = new FamilleArticleStatDTO();
         try {
@@ -790,106 +903,132 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             LongAdder totalCaVeto = new LongAdder();
             final LocalDate periode = LocalDate.parse(dtStart);
             long period = ChronoUnit.MONTHS.between(LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
-            final long montanttotalHt = totalMontantBrutHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste) - montantHtAnnulation(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
+            final long montanttotalHt = totalMontantBrutHT(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query,
+                    codeFamile, u, codeRayon, codeGrossiste)
+                    - montantHtAnnulation(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u,
+                            codeRayon, codeGrossiste);
 
             if (period > 0) {
-                findPreenregistrementDetailsVeto(LocalDate.parse(dtStart),
-                        LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
-                        .collect(Collectors.groupingBy(FamilleArticleStatDTO::getFamilleId))
-                        .forEach((key, v) -> {
-                            FamilleArticleStatDTO familleArticleStat = new FamilleArticleStatDTO();
-                            familleArticleStat.setCode(v.get(0).getCode());
-                            familleArticleStat.setFamilleId(key);
-                            familleArticleStat.setLibelle(v.get(0).getLibelle());
-                            LongAdder montantHT_ = new LongAdder();
-                            v.forEach(x -> {
-                                montantMarge.add(x.getMontantMarge());
-                                montantTTC.add(x.getMontantTTC());
-                                montantAchat.add(x.getMontantAchat());
-                                montantHT.add(x.getMontantHT());
-                                montantHT_.add(x.getMontantHT());
-                                montantCumulRemise.add(x.getMontantRemise());
-                                familleArticleStat.setMontantTTC(familleArticleStat.getMontantTTC() + x.getMontantTTC());
-                                familleArticleStat.setMontantAchat(familleArticleStat.getMontantAchat() + x.getMontantAchat());
-                                familleArticleStat.setMontantTva(familleArticleStat.getMontantTva() + x.getMontantTva());
-                                familleArticleStat.setMontantRemise(familleArticleStat.getMontantRemise() + x.getMontantRemise());
-                                familleArticleStat.setMontantHT(familleArticleStat.getMontantHT() + x.getMontantHT());
-                                if (x.getTypeVente().equals(DateConverter.VENTE_ASSURANCE)) {
-                                    if (x.getFamilleId().equals(DateConverter.VETERINAIRE)) {
-                                        totalRemiseVetoVO.add(x.getMontantRemise());
-                                        totalRemiseVeto.add(x.getMontantRemise());
-                                        totalCaVeto.add(x.getMontantTTC());
-                                        totalCaVetoVO.add(x.getMontantTTC());
-                                    }
-                                    totalCaVO.add(x.getMontantTTC());
-                                    totalRemiseVO.add(x.getMontantRemise());
-                                } else {
-                                    if (x.getFamilleId().equals(DateConverter.VETERINAIRE)) {
-                                        totalRemiseVetoVNO.add(x.getMontantRemise());
-                                        totalRemiseVeto.add(x.getMontantRemise());
-                                        totalCaVeto.add(x.getMontantTTC());
-                                        totalCaVetoVNO.add(x.getMontantTTC());
-                                    }
-                                    totalCaVNO.add(x.getMontantTTC());
-                                    totalRemiseVNO.add(x.getMontantRemise());
-                                }
-                            });
-                            Double p = new BigDecimal(Double.valueOf(montantHT_.longValue()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-                            familleArticleStat.setPourcentageTH(p.longValue());
-                            Double ma = new BigDecimal(Double.valueOf(familleArticleStat.getMontantHT() - familleArticleStat.getMontantAchat()) / familleArticleStat.getMontantHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-                            familleArticleStat.setMontantMarge(familleArticleStat.getMontantHT() - familleArticleStat.getMontantAchat());
-                            familleArticleStat.setPourcentageMage(ma.intValue());
-                            list.add(familleArticleStat);
-                        });
+                findPreenregistrementDetailsVeto(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u,
+                        codeRayon, codeGrossiste).stream()
+                                .collect(Collectors.groupingBy(FamilleArticleStatDTO::getFamilleId))
+                                .forEach((key, v) -> {
+                                    FamilleArticleStatDTO familleArticleStat = new FamilleArticleStatDTO();
+                                    familleArticleStat.setCode(v.get(0).getCode());
+                                    familleArticleStat.setFamilleId(key);
+                                    familleArticleStat.setLibelle(v.get(0).getLibelle());
+                                    LongAdder montantHT_ = new LongAdder();
+                                    v.forEach(x -> {
+                                        montantMarge.add(x.getMontantMarge());
+                                        montantTTC.add(x.getMontantTTC());
+                                        montantAchat.add(x.getMontantAchat());
+                                        montantHT.add(x.getMontantHT());
+                                        montantHT_.add(x.getMontantHT());
+                                        montantCumulRemise.add(x.getMontantRemise());
+                                        familleArticleStat
+                                                .setMontantTTC(familleArticleStat.getMontantTTC() + x.getMontantTTC());
+                                        familleArticleStat.setMontantAchat(
+                                                familleArticleStat.getMontantAchat() + x.getMontantAchat());
+                                        familleArticleStat
+                                                .setMontantTva(familleArticleStat.getMontantTva() + x.getMontantTva());
+                                        familleArticleStat.setMontantRemise(
+                                                familleArticleStat.getMontantRemise() + x.getMontantRemise());
+                                        familleArticleStat
+                                                .setMontantHT(familleArticleStat.getMontantHT() + x.getMontantHT());
+                                        if (x.getTypeVente().equals(DateConverter.VENTE_ASSURANCE)) {
+                                            if (x.getFamilleId().equals(DateConverter.VETERINAIRE)) {
+                                                totalRemiseVetoVO.add(x.getMontantRemise());
+                                                totalRemiseVeto.add(x.getMontantRemise());
+                                                totalCaVeto.add(x.getMontantTTC());
+                                                totalCaVetoVO.add(x.getMontantTTC());
+                                            }
+                                            totalCaVO.add(x.getMontantTTC());
+                                            totalRemiseVO.add(x.getMontantRemise());
+                                        } else {
+                                            if (x.getFamilleId().equals(DateConverter.VETERINAIRE)) {
+                                                totalRemiseVetoVNO.add(x.getMontantRemise());
+                                                totalRemiseVeto.add(x.getMontantRemise());
+                                                totalCaVeto.add(x.getMontantTTC());
+                                                totalCaVetoVNO.add(x.getMontantTTC());
+                                            }
+                                            totalCaVNO.add(x.getMontantTTC());
+                                            totalRemiseVNO.add(x.getMontantRemise());
+                                        }
+                                    });
+                                    Double p = new BigDecimal(Double.valueOf(montantHT_.longValue()) / montanttotalHt)
+                                            .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                                    familleArticleStat.setPourcentageTH(p.longValue());
+                                    Double ma = new BigDecimal(Double.valueOf(
+                                            familleArticleStat.getMontantHT() - familleArticleStat.getMontantAchat())
+                                            / familleArticleStat.getMontantHT()).setScale(2, RoundingMode.HALF_UP)
+                                                    .doubleValue()
+                                            * 100;
+                                    familleArticleStat.setMontantMarge(
+                                            familleArticleStat.getMontantHT() - familleArticleStat.getMontantAchat());
+                                    familleArticleStat.setPourcentageMage(ma.intValue());
+                                    list.add(familleArticleStat);
+                                });
             } else {
-                findPreenregistrementDetailsVeto(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste).stream()
-                        .collect(Collectors.groupingBy(FamilleArticleStatDTO::getFamilleId))
-                        .forEach((key, v) -> {
-                            FamilleArticleStatDTO familleArticleStat = new FamilleArticleStatDTO();
-                            familleArticleStat.setCode(v.get(0).getCode());
-                            familleArticleStat.setFamilleId(key);
-                            familleArticleStat.setLibelle(v.get(0).getLibelle());
-                            LongAdder montantHT_ = new LongAdder();
-                            v.forEach(x -> {
-                                montantMarge.add(x.getMontantMarge());
-                                montantTTC.add(x.getMontantTTC());
-                                montantAchat.add(x.getMontantAchat());
-                                montantHT.add(x.getMontantHT());
-                                montantCumulRemise.add(x.getMontantRemise());
-                                montantHT_.add(x.getMontantHT());
-                                familleArticleStat.setMontantTTC(familleArticleStat.getMontantTTC() + x.getMontantTTC());
-                                familleArticleStat.setMontantAchat(familleArticleStat.getMontantAchat() + x.getMontantAchat());
-                                familleArticleStat.setMontantTva(familleArticleStat.getMontantTva() + x.getMontantTva());
-                                familleArticleStat.setMontantRemise(familleArticleStat.getMontantRemise() + x.getMontantRemise());
-                                familleArticleStat.setMontantHT(familleArticleStat.getMontantHT() + x.getMontantHT());
-                                if (x.getTypeVente().equals(DateConverter.VENTE_ASSURANCE)) {
-                                    if (x.getFamilleId().equals(DateConverter.VETERINAIRE)) {
-                                        totalRemiseVetoVO.add(x.getMontantRemise());
-                                        totalRemiseVeto.add(x.getMontantRemise());
-                                        totalCaVeto.add(x.getMontantTTC());
-                                        totalCaVetoVO.add(x.getMontantTTC());
-                                    }
-                                    totalCaVO.add(x.getMontantTTC());
-                                    totalRemiseVO.add(x.getMontantRemise());
-                                } else {
-                                    if (x.getFamilleId().equals(DateConverter.VETERINAIRE)) {
-                                        totalRemiseVetoVNO.add(x.getMontantRemise());
-                                        totalRemiseVeto.add(x.getMontantRemise());
-                                        totalCaVeto.add(x.getMontantTTC());
-                                        totalCaVetoVNO.add(x.getMontantTTC());
-                                    }
-                                    totalCaVNO.add(x.getMontantTTC());
-                                    totalRemiseVNO.add(x.getMontantRemise());
-                                }
-                            });
-                            Double p = new BigDecimal(Double.valueOf(montantHT_.longValue()) / montanttotalHt).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-                            familleArticleStat.setPourcentageTH(p.longValue());
-                            Double ma = new BigDecimal(Double.valueOf(familleArticleStat.getMontantHT() - familleArticleStat.getMontantAchat()) / familleArticleStat.getMontantHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
-                            familleArticleStat.setMontantMarge(familleArticleStat.getMontantHT() - familleArticleStat.getMontantAchat());
-                            familleArticleStat.setPourcentageMage(ma.intValue());
-                            list.add(familleArticleStat);
-                            cumulFamilleArticlesVeto(periode, familleArticleStat, u);
-                        });
+                findPreenregistrementDetailsVeto(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, codeFamile, u,
+                        codeRayon, codeGrossiste).stream()
+                                .collect(Collectors.groupingBy(FamilleArticleStatDTO::getFamilleId))
+                                .forEach((key, v) -> {
+                                    FamilleArticleStatDTO familleArticleStat = new FamilleArticleStatDTO();
+                                    familleArticleStat.setCode(v.get(0).getCode());
+                                    familleArticleStat.setFamilleId(key);
+                                    familleArticleStat.setLibelle(v.get(0).getLibelle());
+                                    LongAdder montantHT_ = new LongAdder();
+                                    v.forEach(x -> {
+                                        montantMarge.add(x.getMontantMarge());
+                                        montantTTC.add(x.getMontantTTC());
+                                        montantAchat.add(x.getMontantAchat());
+                                        montantHT.add(x.getMontantHT());
+                                        montantCumulRemise.add(x.getMontantRemise());
+                                        montantHT_.add(x.getMontantHT());
+                                        familleArticleStat
+                                                .setMontantTTC(familleArticleStat.getMontantTTC() + x.getMontantTTC());
+                                        familleArticleStat.setMontantAchat(
+                                                familleArticleStat.getMontantAchat() + x.getMontantAchat());
+                                        familleArticleStat
+                                                .setMontantTva(familleArticleStat.getMontantTva() + x.getMontantTva());
+                                        familleArticleStat.setMontantRemise(
+                                                familleArticleStat.getMontantRemise() + x.getMontantRemise());
+                                        familleArticleStat
+                                                .setMontantHT(familleArticleStat.getMontantHT() + x.getMontantHT());
+                                        if (x.getTypeVente().equals(DateConverter.VENTE_ASSURANCE)) {
+                                            if (x.getFamilleId().equals(DateConverter.VETERINAIRE)) {
+                                                totalRemiseVetoVO.add(x.getMontantRemise());
+                                                totalRemiseVeto.add(x.getMontantRemise());
+                                                totalCaVeto.add(x.getMontantTTC());
+                                                totalCaVetoVO.add(x.getMontantTTC());
+                                            }
+                                            totalCaVO.add(x.getMontantTTC());
+                                            totalRemiseVO.add(x.getMontantRemise());
+                                        } else {
+                                            if (x.getFamilleId().equals(DateConverter.VETERINAIRE)) {
+                                                totalRemiseVetoVNO.add(x.getMontantRemise());
+                                                totalRemiseVeto.add(x.getMontantRemise());
+                                                totalCaVeto.add(x.getMontantTTC());
+                                                totalCaVetoVNO.add(x.getMontantTTC());
+                                            }
+                                            totalCaVNO.add(x.getMontantTTC());
+                                            totalRemiseVNO.add(x.getMontantRemise());
+                                        }
+                                    });
+                                    Double p = new BigDecimal(Double.valueOf(montantHT_.longValue()) / montanttotalHt)
+                                            .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                                    familleArticleStat.setPourcentageTH(p.longValue());
+                                    Double ma = new BigDecimal(Double.valueOf(
+                                            familleArticleStat.getMontantHT() - familleArticleStat.getMontantAchat())
+                                            / familleArticleStat.getMontantHT()).setScale(2, RoundingMode.HALF_UP)
+                                                    .doubleValue()
+                                            * 100;
+                                    familleArticleStat.setMontantMarge(
+                                            familleArticleStat.getMontantHT() - familleArticleStat.getMontantAchat());
+                                    familleArticleStat.setPourcentageMage(ma.intValue());
+                                    list.add(familleArticleStat);
+                                    cumulFamilleArticlesVeto(periode, familleArticleStat, u);
+                                });
             }
 
             summary.setMontantCumulAchat(montantAchat.longValue());
@@ -902,7 +1041,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             }
             Double ux = 0d;
             try {
-                ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT()).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                ux = new BigDecimal(Double.valueOf(summary.getMontantCumulMarge()) / summary.getMontantCumulHT())
+                        .setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
             } catch (Exception e) {
             }
 
@@ -925,16 +1065,19 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
 
     }
 
-    long totalMontantBrutHT(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    long totalMontantBrutHT(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u,
+            String codeRayon, String codeGrossiste) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Number> cq = cb.createQuery(Number.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> join = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.diff(cb.sum(root.get(TPreenregistrementDetail_.intPRICE)), cb.sum(root.get(TPreenregistrementDetail_.montantTva)))
-            );
+            Join<TPreenregistrementDetail, TPreenregistrement> join = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(cb.diff(cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
+                    cb.sum(root.get(TPreenregistrementDetail_.montantTva))));
 
-            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+            List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
+                    codeRayon, codeGrossiste);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
@@ -947,7 +1090,9 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
 
     private List<TPreenregistrementDetail> itemsFromAnnulationAnterieurs(LocalDate dtStart, LocalDate dtEnd) {
         try {
-            TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery("SELECT o FROM TPreenregistrementDetail o WHERE o.lgPREENREGISTREMENTID IN (SELECT e.preenregistrement FROM AnnulationSnapshot e WHERE FUNCTION('DATE',e.createdAt) BETWEEN ?1 AND ?2)", TPreenregistrementDetail.class);
+            TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(
+                    "SELECT o FROM TPreenregistrementDetail o WHERE o.lgPREENREGISTREMENTID IN (SELECT e.preenregistrement FROM AnnulationSnapshot e WHERE FUNCTION('DATE',e.createdAt) BETWEEN ?1 AND ?2)",
+                    TPreenregistrementDetail.class);
             q.setParameter(1, java.sql.Date.valueOf(dtStart));
             q.setParameter(2, java.sql.Date.valueOf(dtEnd));
             return q.getResultList();
@@ -987,24 +1132,31 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
 
     };
 
-    private List<TPreenregistrementDetail> itemsFromAnnulationAnterieurs(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    private List<TPreenregistrementDetail> itemsFromAnnulationAnterieurs(LocalDate dtStart, LocalDate dtEnd,
+            String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
         if (1 == 1) {
             return Collections.emptyList();
         }
         List<TPreenregistrementDetail> details = itemsFromAnnulationAnterieurs(dtStart, dtEnd);
 
         if (StringUtils.isNotEmpty(codeFamillle)) {
-            return details.stream().filter(e -> codeFamilllePredicat.test(e, codeFamillle)).filter(e1 -> codeRayonPredicat.test(e1, codeRayon)).filter(e2 -> codeGrossistePredicat.test(e2, codeGrossiste)).collect(Collectors.toList());
+            return details.stream().filter(e -> codeFamilllePredicat.test(e, codeFamillle))
+                    .filter(e1 -> codeRayonPredicat.test(e1, codeRayon))
+                    .filter(e2 -> codeGrossistePredicat.test(e2, codeGrossiste)).collect(Collectors.toList());
         } else if (StringUtils.isNotEmpty(query)) {
-            return details.stream().filter(e -> queryPredicat.test(e, query)).filter(e1 -> codeRayonPredicat.test(e1, codeRayon)).filter(e2 -> codeGrossistePredicat.test(e2, codeGrossiste)).collect(Collectors.toList());
+            return details.stream().filter(e -> queryPredicat.test(e, query))
+                    .filter(e1 -> codeRayonPredicat.test(e1, codeRayon))
+                    .filter(e2 -> codeGrossistePredicat.test(e2, codeGrossiste)).collect(Collectors.toList());
         }
         return details;
     }
 
-    private long montantHtAnnulation(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+    private long montantHtAnnulation(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u,
+            String codeRayon, String codeGrossiste) {
         long montantttc = 0;
         long montantTva = 0;
-        List<TPreenregistrementDetail> details = itemsFromAnnulationAnterieurs(dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+        List<TPreenregistrementDetail> details = itemsFromAnnulationAnterieurs(dtStart, dtEnd, query, codeFamillle, u,
+                codeRayon, codeGrossiste);
         for (TPreenregistrementDetail detail : details) {
             montantttc += detail.getIntPRICE();
             montantTva += detail.getMontantTva();
@@ -1012,19 +1164,23 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         System.out.println("montantttc------->>>  " + montantttc);
         System.out.println("montantTva------->>>  " + montantTva);
         System.out.println("(montantttc - montantTva)------->>>  " + (montantttc - montantTva));
-//        return (montantttc - montantTva);
+        // return (montantttc - montantTva);
         return 0;
     }
 
-    private List<FamilleArticleStatDTO> buildArticleStatDTOs(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
-        List<TPreenregistrementDetail> details = itemsFromAnnulationAnterieurs(dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+    private List<FamilleArticleStatDTO> buildArticleStatDTOs(LocalDate dtStart, LocalDate dtEnd, String query,
+            String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
+        List<TPreenregistrementDetail> details = itemsFromAnnulationAnterieurs(dtStart, dtEnd, query, codeFamillle, u,
+                codeRayon, codeGrossiste);
         System.out.println("buildArticleStatDTOs=====>>> " + details.size());
-        Map<TFamillearticle, List<TPreenregistrementDetail>> groupeByFamille = details.stream().collect(Collectors.groupingBy(e -> e.getLgFAMILLEID().getLgFAMILLEARTICLEID()));
+        Map<TFamillearticle, List<TPreenregistrementDetail>> groupeByFamille = details.stream()
+                .collect(Collectors.groupingBy(e -> e.getLgFAMILLEID().getLgFAMILLEARTICLEID()));
         List<FamilleArticleStatDTO> results = new ArrayList<>();
         for (Map.Entry<TFamillearticle, List<TPreenregistrementDetail>> entry : groupeByFamille.entrySet()) {
             TFamillearticle key = entry.getKey();
             List<TPreenregistrementDetail> val = entry.getValue();
-            Map<String, List<TPreenregistrementDetail>> groupeTypeVente = val.stream().collect(Collectors.groupingBy(e -> e.getLgPREENREGISTREMENTID().getStrTYPEVENTE()));
+            Map<String, List<TPreenregistrementDetail>> groupeTypeVente = val.stream()
+                    .collect(Collectors.groupingBy(e -> e.getLgPREENREGISTREMENTID().getStrTYPEVENTE()));
             for (Map.Entry<String, List<TPreenregistrementDetail>> entry1 : groupeTypeVente.entrySet()) {
                 String typeVente = entry1.getKey();
                 List<TPreenregistrementDetail> itemsByTypeVente = entry1.getValue();
@@ -1050,7 +1206,8 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                 o.setMontantRemise(montantRemise * (-1));
                 long marge = (montantTTC - montantTva) - montantAchat;
                 o.setMontantMarge(marge * (-1));
-                Double p = new BigDecimal(Double.valueOf(marge) / montantHT).setScale(2, RoundingMode.HALF_UP).doubleValue() * 100;
+                Double p = new BigDecimal(Double.valueOf(marge) / montantHT).setScale(2, RoundingMode.HALF_UP)
+                        .doubleValue() * 100;
                 o.setPourcentageMage(p.intValue() * (-1));
                 results.add(o);
             }

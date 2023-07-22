@@ -4,14 +4,12 @@
  */
 package commonTasks.ws;
 
-
-
 /**
  *
  * @author koben
  */
 public class TiersPayantDto {
-    
+
     private String name;
     private String fullName;
     private Integer nbreBons;
@@ -31,9 +29,6 @@ public class TiersPayantDto {
     private Long remiseForfaitaire;
     private Integer nbreBordereaux;
     private String groupeTiersPayantName;
-    
-
-  
 
     public String getName() {
         return name;
@@ -67,7 +62,6 @@ public class TiersPayantDto {
         this.montantMaxParFcture = montantMaxParFcture;
     }
 
-  
     public String getCodeOrganisme() {
         return codeOrganisme;
     }
@@ -148,8 +142,6 @@ public class TiersPayantDto {
         this.plafondConso = plafondConso;
     }
 
-   
-
     public String getStatut() {
         return statut;
     }
@@ -190,8 +182,4 @@ public class TiersPayantDto {
         this.groupeTiersPayantName = groupeTiersPayantName;
     }
 
-  
-    
-    
-    
 }

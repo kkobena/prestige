@@ -33,7 +33,7 @@ public class RetourCarnetDetailDTO implements Serializable {
 
     private Integer stockFinal;
 
-    private Integer qtyRetour, prixUni,amount;
+    private Integer qtyRetour, prixUni, amount;
 
     public Integer getPrixUni() {
         return prixUni;
@@ -147,12 +147,15 @@ public class RetourCarnetDetailDTO implements Serializable {
         this.stockFinal = detail.getStockFinal();
         this.qtyRetour = detail.getQtyRetour();
         this.prixUni = detail.getPrixUni();
-        this.amount=detail.getPrixUni()*detail.getQtyRetour();
+        this.amount = detail.getPrixUni() * detail.getQtyRetour();
     }
 
     @Override
     public String toString() {
-        return "RetourCarnetDetailDTO{" + "id=" + id + ", motifRetourCarnet=" + motifRetourCarnet + ", produitCip=" + produitCip + ", produitLib=" + produitLib + ", retourCarnetId=" + retourCarnetId + ", dateOperation=" + dateOperation + ", createdAt=" + createdAt + ", stockInit=" + stockInit + ", stockFinal=" + stockFinal + ", qtyRetour=" + qtyRetour + ", prixUni=" + prixUni + '}';
+        return "RetourCarnetDetailDTO{" + "id=" + id + ", motifRetourCarnet=" + motifRetourCarnet + ", produitCip="
+                + produitCip + ", produitLib=" + produitLib + ", retourCarnetId=" + retourCarnetId + ", dateOperation="
+                + dateOperation + ", createdAt=" + createdAt + ", stockInit=" + stockInit + ", stockFinal=" + stockFinal
+                + ", qtyRetour=" + qtyRetour + ", prixUni=" + prixUni + '}';
     }
 
     public RetourCarnetDetailDTO(Long qtyRetour, Long montant) {

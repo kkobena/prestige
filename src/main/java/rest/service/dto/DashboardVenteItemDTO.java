@@ -16,7 +16,8 @@ public class DashboardVenteItemDTO {
     private final BigDecimal montantTva;
     private final BigDecimal montantUG;
 
-    public DashboardVenteItemDTO(String mvtDate, String typeVente, String typeReglment, BigDecimal montantVenteDetail, BigDecimal montantAchat, BigDecimal montantTva, BigDecimal montantUG) {
+    public DashboardVenteItemDTO(String mvtDate, String typeVente, String typeReglment, BigDecimal montantVenteDetail,
+            BigDecimal montantAchat, BigDecimal montantTva, BigDecimal montantUG) {
         this.mvtDate = mvtDate;
         this.typeVente = typeVente;
         this.typeReglment = typeReglment;

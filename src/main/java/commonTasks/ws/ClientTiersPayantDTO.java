@@ -10,7 +10,6 @@ package commonTasks.ws;
  */
 public class ClientTiersPayantDTO {
 
-  
     private String tiersPayantName;
     private String tiersPayantFullName;
     private String num;
@@ -19,7 +18,7 @@ public class ClientTiersPayantDTO {
     private Integer priorite;
     private String statut;
     private Integer taux;
- private Boolean plafondAbsolu ;
+    private Boolean plafondAbsolu;
 
     public Boolean getPlafondAbsolu() {
         return plafondAbsolu;
@@ -28,7 +27,6 @@ public class ClientTiersPayantDTO {
     public void setPlafondAbsolu(Boolean plafondAbsolu) {
         this.plafondAbsolu = plafondAbsolu;
     }
-   
 
     public String getTiersPayantName() {
         return tiersPayantName;
@@ -45,8 +43,6 @@ public class ClientTiersPayantDTO {
     public void setTiersPayantFullName(String tiersPayantFullName) {
         this.tiersPayantFullName = tiersPayantFullName;
     }
-
-   
 
     public String getNum() {
         return num;
@@ -95,7 +91,5 @@ public class ClientTiersPayantDTO {
     public void setTaux(Integer taux) {
         this.taux = taux;
     }
-    
-    
-    
+
 }

@@ -34,13 +34,13 @@ import toolkits.utils.logger;
  */
 public class user extends bllBase {
 
-
     public user(dataManager OdataManager) {
         this.setOdataManager(OdataManager);
         this.checkDatamanager();
     }
 
-    public void createUser(String str_LOGIN, String str_PASSWORD, int str_IDS, String str_FIRST_NAME, String str_LAST_NAME, String lg_ROLE_ID, String lg_Language_ID, String str_LIEU_TRAVAIL, String str_TYPE) {
+    public void createUser(String str_LOGIN, String str_PASSWORD, int str_IDS, String str_FIRST_NAME,
+            String str_LAST_NAME, String lg_ROLE_ID, String lg_Language_ID, String str_LIEU_TRAVAIL, String str_TYPE) {
         TEmplacement OTEmplacement = null;
         try {
 
@@ -49,7 +49,8 @@ public class user extends bllBase {
             // lg_Language_ID
             TLanguage OTLanguage = this.getOdataManager().getEm().find(TLanguage.class, lg_Language_ID);
             if (OTLanguage == null) {
-                //this.buildErrorTraceMessage("Impossible de creer un " + Otable, "lg_Language_ID : " + lg_Language_ID + "  Invalide ");
+                // this.buildErrorTraceMessage("Impossible de creer un " + Otable, "lg_Language_ID : " + lg_Language_ID
+                // + " Invalide ");
                 this.buildErrorTraceMessage("Echec. Veuillez selectionner une langue valide");
                 return;
             }
@@ -68,7 +69,7 @@ public class user extends bllBase {
             new logger().OCategory.info("Str_Password_MD5  depuis bll   " + Str_Password_MD5);
 
             OTUser.setStrPASSWORD(Str_Password_MD5);
-            // str_FIRST_NAME 
+            // str_FIRST_NAME
             OTUser.setStrFIRSTNAME(str_FIRST_NAME);
             // str_LAST_NAME
             OTUser.setStrLASTNAME(str_LAST_NAME);
@@ -88,20 +89,20 @@ public class user extends bllBase {
 
             TRole OTRole = this.getOdataManager().getEm().find(TRole.class, lg_ROLE_ID);
             if (OTRole == null) {
-                //this.buildErrorTraceMessage("Impossible de creer un " + Otable, "lg_Language_ID : " + lg_Language_ID + "  Invalide ");
+                // this.buildErrorTraceMessage("Impossible de creer un " + Otable, "lg_Language_ID : " + lg_Language_ID
+                // + " Invalide ");
                 this.buildErrorTraceMessage("Echec. Veuillez selectionner un rôle valide");
                 return;
             }
             OTUser.setStrPIC("default.png");
             this.getOdataManager().getEm().persist(OTUser);
-           
-                if (setRoleToUser(OTRole, OTUser)) { //
-                    this.persiste(OTUser);
-                    this.buildSuccesTraceMessage("Utilisateur " + OTUser.getStrFIRSTNAME() + " créé avec succes");
-                } else {
-                    this.buildErrorTraceMessage("Echec de prise en compte du profil de l'utilisateur");
-                }
-           
+
+            if (setRoleToUser(OTRole, OTUser)) { //
+                this.persiste(OTUser);
+                this.buildSuccesTraceMessage("Utilisateur " + OTUser.getStrFIRSTNAME() + " créé avec succes");
+            } else {
+                this.buildErrorTraceMessage("Echec de prise en compte du profil de l'utilisateur");
+            }
 
         } catch (Exception Ex) {
             this.buildErrorTraceMessage("Echec de création de l'utilisateur");
@@ -110,7 +111,8 @@ public class user extends bllBase {
 
     }
 
-    public void updateMyUser(String lg_USER_ID, String str_LOGIN, int str_IDS, String str_FIRST_NAME, String str_LAST_NAME, String lg_Language_ID, String str_LIEU_TRAVAIL, String lg_ROLE_ID) {
+    public void updateMyUser(String lg_USER_ID, String str_LOGIN, int str_IDS, String str_FIRST_NAME,
+            String str_LAST_NAME, String lg_Language_ID, String str_LIEU_TRAVAIL, String lg_ROLE_ID) {
         TEmplacement OTEmplacement = null;
         TUser OTUser = null;
         TLanguage OTLanguage = null;
@@ -126,7 +128,7 @@ public class user extends bllBase {
             // str_IDS
             OTUser.setStrIDS(str_IDS);
 
-            // str_FIRST_NAME 
+            // str_FIRST_NAME
             OTUser.setStrFIRSTNAME(str_FIRST_NAME);
             // str_LAST_NAME
             OTUser.setStrLASTNAME(str_LAST_NAME);
@@ -215,7 +217,7 @@ public class user extends bllBase {
             TRoleUser OTRoleUser = this.getTRoleUser(OTUser.getLgUSERID());
             TRole OTRole = OTRoleUser.getLgROLEID();
             new logger().OCategory.info(OTRoleUser.getLgUSERID().getLgUSERID());
-            //setRoleToUser(TRole OTRole, TUser OTUser) 
+            // setRoleToUser(TRole OTRole, TUser OTUser)
             this.delete(OTRoleUser);
             if (this.delete(OTUser)) {
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
@@ -257,10 +259,9 @@ public class user extends bllBase {
 
     }
 
-
-
-    //mise a jour des informations du compte d'un utilisateur
-    public boolean updateProfilUser(String lg_USER_ID, String str_FIRST_NAME, String str_LAST_NAME, String str_PASSWORD) {
+    // mise a jour des informations du compte d'un utilisateur
+    public boolean updateProfilUser(String lg_USER_ID, String str_FIRST_NAME, String str_LAST_NAME,
+            String str_PASSWORD) {
         boolean result = false;
         TUser OTUser = null;
         try {
@@ -283,8 +284,8 @@ public class user extends bllBase {
         return result;
     }
 
-
-    public List<TRoleUser> showAllOrOneEmplacement(String search_value, String lg_USER_ID, String lg_EMPLACEMENT_ID, String str_NAME_ROLE, boolean etat, int start, int limit) {
+    public List<TRoleUser> showAllOrOneEmplacement(String search_value, String lg_USER_ID, String lg_EMPLACEMENT_ID,
+            String str_NAME_ROLE, boolean etat, int start, int limit) {
         List<TRoleUser> lstTRoleUser = new ArrayList<>();
         try {
 
@@ -294,27 +295,24 @@ public class user extends bllBase {
 
             if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)) {
                 lg_EMPLACEMENT_ID = "%%";
-                lstTRoleUser = this.getOdataManager().getEm().createQuery("SELECT t FROM TRoleUser t WHERE (t.lgUSERID.strFIRSTNAME LIKE ?1 OR t.lgUSERID.strLASTNAME LIKE ?1 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?1) AND t.lgUSERID.lgUSERID LIKE ?2 AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?4 AND t.lgUSERID.strSTATUT LIKE ?3 ORDER BY t.lgUSERID.strFIRSTNAME ASC").
-                        setParameter(1, search_value + "%").
-                        setParameter(2, lg_USER_ID).
-                        setParameter(4, lg_EMPLACEMENT_ID).
-                        setParameter(3, commonparameter.statut_enable).
-                        setFirstResult(start).setMaxResults(limit).
-                        getResultList();
-            } else /*if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_ADMIN))*/ { //a decommenter en cas de besoin
-                if(etat) {
+                lstTRoleUser = this.getOdataManager().getEm().createQuery(
+                        "SELECT t FROM TRoleUser t WHERE (t.lgUSERID.strFIRSTNAME LIKE ?1 OR t.lgUSERID.strLASTNAME LIKE ?1 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?1) AND t.lgUSERID.lgUSERID LIKE ?2 AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?4 AND t.lgUSERID.strSTATUT LIKE ?3 ORDER BY t.lgUSERID.strFIRSTNAME ASC")
+                        .setParameter(1, search_value + "%").setParameter(2, lg_USER_ID)
+                        .setParameter(4, lg_EMPLACEMENT_ID).setParameter(3, commonparameter.statut_enable)
+                        .setFirstResult(start).setMaxResults(limit).getResultList();
+            } else /* if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_ADMIN)) */ { // a decommenter en cas de
+                                                                                           // besoin
+                if (etat) {
                     lg_EMPLACEMENT_ID = "%%";
                 }
-                
-                lstTRoleUser = this.getOdataManager().getEm().createQuery("SELECT t FROM TRoleUser t WHERE (t.lgUSERID.strFIRSTNAME LIKE ?1 OR t.lgUSERID.strLASTNAME LIKE ?1 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?1) AND t.lgUSERID.lgUSERID LIKE ?2 AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?4 AND t.lgUSERID.strSTATUT LIKE ?3 AND t.lgROLEID.strNAME NOT LIKE ?5 ORDER BY t.lgUSERID.strFIRSTNAME ASC").
-                        setParameter(1, search_value + "%").
-                        setParameter(2, lg_USER_ID).
-                        setParameter(4, lg_EMPLACEMENT_ID).
-                        setParameter(5, commonparameter.ROLE_SUPERADMIN).
-                        setParameter(3, commonparameter.statut_enable).
-                        setFirstResult(start).setMaxResults(limit).
-                        getResultList();
-            } 
+
+                lstTRoleUser = this.getOdataManager().getEm().createQuery(
+                        "SELECT t FROM TRoleUser t WHERE (t.lgUSERID.strFIRSTNAME LIKE ?1 OR t.lgUSERID.strLASTNAME LIKE ?1 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?1) AND t.lgUSERID.lgUSERID LIKE ?2 AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?4 AND t.lgUSERID.strSTATUT LIKE ?3 AND t.lgROLEID.strNAME NOT LIKE ?5 ORDER BY t.lgUSERID.strFIRSTNAME ASC")
+                        .setParameter(1, search_value + "%").setParameter(2, lg_USER_ID)
+                        .setParameter(4, lg_EMPLACEMENT_ID).setParameter(5, commonparameter.ROLE_SUPERADMIN)
+                        .setParameter(3, commonparameter.statut_enable).setFirstResult(start).setMaxResults(limit)
+                        .getResultList();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -322,7 +320,8 @@ public class user extends bllBase {
         return lstTRoleUser;
     }
 
-    public List<TRoleUser> showAllOrOneEmplacement(String search_value, String lg_USER_ID, String lg_EMPLACEMENT_ID, String str_NAME_ROLE, boolean etat) {
+    public List<TRoleUser> showAllOrOneEmplacement(String search_value, String lg_USER_ID, String lg_EMPLACEMENT_ID,
+            String str_NAME_ROLE, boolean etat) {
         List<TRoleUser> lstTRoleUser = new ArrayList<TRoleUser>();
         try {
 
@@ -330,28 +329,24 @@ public class user extends bllBase {
                 search_value = "%%";
             }
 
-
-
             if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)) {
                 lg_EMPLACEMENT_ID = "%%";
-                lstTRoleUser = this.getOdataManager().getEm().createQuery("SELECT t FROM TRoleUser t WHERE (t.lgUSERID.strFIRSTNAME LIKE ?1 OR t.lgUSERID.strLASTNAME LIKE ?1 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?1) AND t.lgUSERID.lgUSERID LIKE ?2 AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?4 AND t.lgUSERID.strSTATUT LIKE ?3 ORDER BY t.lgUSERID.strFIRSTNAME ASC").
-                        setParameter(1, search_value + "%").
-                        setParameter(2, lg_USER_ID).
-                        setParameter(4, lg_EMPLACEMENT_ID).
-                        setParameter(3, commonparameter.statut_enable).
-                        getResultList();
-            } else /*if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_ADMIN))*/ { //a decommenter en cas de besoin
-                if(etat) {
+                lstTRoleUser = this.getOdataManager().getEm().createQuery(
+                        "SELECT t FROM TRoleUser t WHERE (t.lgUSERID.strFIRSTNAME LIKE ?1 OR t.lgUSERID.strLASTNAME LIKE ?1 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?1) AND t.lgUSERID.lgUSERID LIKE ?2 AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?4 AND t.lgUSERID.strSTATUT LIKE ?3 ORDER BY t.lgUSERID.strFIRSTNAME ASC")
+                        .setParameter(1, search_value + "%").setParameter(2, lg_USER_ID)
+                        .setParameter(4, lg_EMPLACEMENT_ID).setParameter(3, commonparameter.statut_enable)
+                        .getResultList();
+            } else /* if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_ADMIN)) */ { // a decommenter en cas de
+                                                                                           // besoin
+                if (etat) {
                     lg_EMPLACEMENT_ID = "%%";
                 }
-                
-                lstTRoleUser = this.getOdataManager().getEm().createQuery("SELECT t FROM TRoleUser t WHERE (t.lgUSERID.strFIRSTNAME LIKE ?1 OR t.lgUSERID.strLASTNAME LIKE ?1 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?1) AND t.lgUSERID.lgUSERID LIKE ?2 AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?4 AND t.lgUSERID.strSTATUT LIKE ?3 AND t.lgROLEID.strNAME NOT LIKE ?5 ORDER BY t.lgUSERID.strFIRSTNAME ASC").
-                        setParameter(1, search_value + "%").
-                        setParameter(2, lg_USER_ID).
-                        setParameter(4, lg_EMPLACEMENT_ID).
-                        setParameter(5, commonparameter.ROLE_SUPERADMIN).
-                        setParameter(3, commonparameter.statut_enable).
-                        getResultList();
+
+                lstTRoleUser = this.getOdataManager().getEm().createQuery(
+                        "SELECT t FROM TRoleUser t WHERE (t.lgUSERID.strFIRSTNAME LIKE ?1 OR t.lgUSERID.strLASTNAME LIKE ?1 OR CONCAT(t.lgUSERID.strFIRSTNAME,' ',t.lgUSERID.strLASTNAME) LIKE ?1) AND t.lgUSERID.lgUSERID LIKE ?2 AND t.lgUSERID.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?4 AND t.lgUSERID.strSTATUT LIKE ?3 AND t.lgROLEID.strNAME NOT LIKE ?5 ORDER BY t.lgUSERID.strFIRSTNAME ASC")
+                        .setParameter(1, search_value + "%").setParameter(2, lg_USER_ID)
+                        .setParameter(4, lg_EMPLACEMENT_ID).setParameter(5, commonparameter.ROLE_SUPERADMIN)
+                        .setParameter(3, commonparameter.statut_enable).getResultList();
             }
 
         } catch (Exception e) {
@@ -360,9 +355,9 @@ public class user extends bllBase {
         new logger().OCategory.info("lstTUser taille " + lstTRoleUser.size());
         return lstTRoleUser;
     }
-    //fin liste des utillisateurs d'un emplacements possible de l'office
+    // fin liste des utillisateurs d'un emplacements possible de l'office
 
-    //liste des roles
+    // liste des roles
     public List<TRole> lstTRoles(String search_value, String lg_ROLE_ID, String str_NAME_ROLE) {
         List<TRole> lstTRole = new ArrayList<TRole>();
         try {
@@ -372,14 +367,20 @@ public class user extends bllBase {
             }
 
             if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)) {
-                lstTRole = this.getOdataManager().getEm().createQuery("SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) ORDER BY t.strDESIGNATION").
-                        setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%").getResultList();
+                lstTRole = this.getOdataManager().getEm().createQuery(
+                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) ORDER BY t.strDESIGNATION")
+                        .setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%").getResultList();
             } else if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_ADMIN)) {
-                lstTRole = this.getOdataManager().getEm().createQuery("SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strNAME NOT LIKE ?3 ORDER BY t.strDESIGNATION").
-                        setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%").setParameter(3, commonparameter.ROLE_SUPERADMIN).getResultList();
+                lstTRole = this.getOdataManager().getEm().createQuery(
+                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strNAME NOT LIKE ?3 ORDER BY t.strDESIGNATION")
+                        .setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%")
+                        .setParameter(3, commonparameter.ROLE_SUPERADMIN).getResultList();
             } else {
-                lstTRole = this.getOdataManager().getEm().createQuery("SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strNAME NOT LIKE ?3 AND t.strNAME NOT LIKE ?4 ORDER BY t.strDESIGNATION").
-                        setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%").setParameter(3, commonparameter.ROLE_SUPERADMIN).setParameter(4, commonparameter.ROLE_ADMIN).getResultList();
+                lstTRole = this.getOdataManager().getEm().createQuery(
+                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strNAME NOT LIKE ?3 AND t.strNAME NOT LIKE ?4 ORDER BY t.strDESIGNATION")
+                        .setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%")
+                        .setParameter(3, commonparameter.ROLE_SUPERADMIN).setParameter(4, commonparameter.ROLE_ADMIN)
+                        .getResultList();
 
             }
 
@@ -389,9 +390,9 @@ public class user extends bllBase {
         new logger().OCategory.info("lstTRole taille " + lstTRole.size());
         return lstTRole;
     }
-    //fin liste des roles
+    // fin liste des roles
 
-    //recuperer un role
+    // recuperer un role
     public TRole getRole(String search_value) {
         TRole OTRole = null;
         try {
@@ -400,34 +401,34 @@ public class user extends bllBase {
                 search_value = "%%";
             }
 
-            OTRole = (TRole) this.getOdataManager().getEm().createQuery("SELECT t FROM TRole t WHERE (t.strNAME LIKE ?1 OR t.lgROLEID LIKE ?1 OR t.strDESIGNATION LIKE ?1) AND t.strSTATUT LIKE ?2").
-                    setParameter(1, search_value).
-                    setParameter(2, commonparameter.statut_enable).
-                    getSingleResult();
+            OTRole = (TRole) this.getOdataManager().getEm().createQuery(
+                    "SELECT t FROM TRole t WHERE (t.strNAME LIKE ?1 OR t.lgROLEID LIKE ?1 OR t.strDESIGNATION LIKE ?1) AND t.strSTATUT LIKE ?2")
+                    .setParameter(1, search_value).setParameter(2, commonparameter.statut_enable).getSingleResult();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        new logger().OCategory.info("Role " + OTRole.getStrDESIGNATION());
+        // new logger().OCategory.info("Role " + OTRole.getStrDESIGNATION());
         return OTRole;
     }
-    //fin recuperer un role 
+    // fin recuperer un role
 
-    //recuperer du role d'un user
+    // recuperer du role d'un user
     public TRoleUser getTRoleUser(String lg_USER_ID) {
         TRoleUser OTRoleUser = null;
         try {
-            OTRoleUser = (TRoleUser) this.getOdataManager().getEm().createQuery("SELECT t FROM TRoleUser t WHERE t.lgUSERID.lgUSERID LIKE ?1 AND t.lgUSERID.strSTATUT = ?2 AND t.lgROLEID.strSTATUT = ?2")
+            OTRoleUser = (TRoleUser) this.getOdataManager().getEm().createQuery(
+                    "SELECT t FROM TRoleUser t WHERE t.lgUSERID.lgUSERID LIKE ?1 AND t.lgUSERID.strSTATUT = ?2 AND t.lgROLEID.strSTATUT = ?2")
                     .setParameter(1, lg_USER_ID).setParameter(2, commonparameter.statut_enable).getSingleResult();
-            //new logger().OCategory.info("Role du user " + OTRoleUser.getLgROLEID().getStrNAME());
+            // new logger().OCategory.info("Role du user " + OTRoleUser.getLgROLEID().getStrNAME());
         } catch (Exception e) {
             e.printStackTrace();
         }
         return OTRoleUser;
     }
-    //fin recuperer du role d'un user
+    // fin recuperer du role d'un user
 
-    //mise a jour du role d'un user
+    // mise a jour du role d'un user
     public boolean updateRoleUser(TRoleUser OTRoleUser, TRole OTRole, TUser OTUser) {
         boolean result = false;
         try {
@@ -451,18 +452,19 @@ public class user extends bllBase {
     public TUser getUserById(String lg_USER_ID) {
         TUser OTUser = null;
         try {
-            Query qry = this.getOdataManager().getEm().createQuery("SELECT t FROM TUser t WHERE t.lgUSERID LIKE ?1 OR CONCAT(t.strFIRSTNAME,' ',t.strLASTNAME) LIKE ?1")
+            Query qry = this.getOdataManager().getEm().createQuery(
+                    "SELECT t FROM TUser t WHERE t.lgUSERID LIKE ?1 OR CONCAT(t.strFIRSTNAME,' ',t.strLASTNAME) LIKE ?1")
                     .setParameter(1, lg_USER_ID).setMaxResults(1);
-            if(qry.getResultList().size() > 0) {
+            if (qry.getResultList().size() > 0) {
                 OTUser = (TUser) qry.getSingleResult();
             }
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
         return OTUser;
     }
-    //fin recuperation d'un utilisateur par son id
+    // fin recuperation d'un utilisateur par son id
 
     public boolean createUserPhone(String lg_USER_ID, String str_PHONE) {
         boolean result = false;
@@ -480,7 +482,8 @@ public class user extends bllBase {
             if (this.persiste(OTUserFone)) {
                 lstTAlertEvent = OEventLogManagement.getListeAlertEvent();
                 for (TAlertEvent OTAlertEvent : lstTAlertEvent) {
-                    OEventLogManagement.createAlertEventUserPhone(OTAlertEvent.getStrEvent(), OTUserFone.getLgUSERFONEID());
+                    OEventLogManagement.createAlertEventUserPhone(OTAlertEvent.getStrEvent(),
+                            OTUserFone.getLgUSERFONEID());
                 }
                 this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
             } else {
@@ -506,7 +509,8 @@ public class user extends bllBase {
             if (this.persiste(OTUserFone)) {
                 lstTAlertEventUserFone = OEventLogManagement.getListeAlertEventUserFone(lg_USER_FONE_ID);
                 for (TAlertEventUserFone OTAlertEventUserFone : lstTAlertEventUserFone) {
-                    OEventLogManagement.updateAlertEventUserPhone(OTAlertEventUserFone, OTAlertEventUserFone.getStrEvent(), OTUserFone);
+                    OEventLogManagement.updateAlertEventUserPhone(OTAlertEventUserFone,
+                            OTAlertEventUserFone.getStrEvent(), OTUserFone);
                 }
             }
 
@@ -598,7 +602,5 @@ public class user extends bllBase {
         }
         return result;
     }
-
-
 
 }

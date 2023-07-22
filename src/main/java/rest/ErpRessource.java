@@ -18,7 +18,6 @@ import rest.service.ErpService;
 import rest.service.RetourFournisseurService;
 import rest.service.impl.DataExportService;
 
-
 /**
  *
  * @author koben
@@ -34,51 +33,40 @@ public class ErpRessource {
     private RetourFournisseurService retourFournisseurService;
     @EJB
     private DataExportService dataExportService;
-   
+
     @Resource(name = "concurrent/__defaultManagedExecutorService")
     ManagedExecutorService mes;
 
     @GET
     @Path("valorisation")
-    public Response valorisation(
-            @QueryParam(value = "dtJour") String dtJour
-    ) {
+    public Response valorisation(@QueryParam(value = "dtJour") String dtJour) {
         return Response.ok().entity(erpService.valorisation(dtJour)).build();
     }
 
     @GET
     @Path("ca-comptant")
-    public Response caComptant(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response caComptant(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(erpService.caComptant(dtStart, dtEnd)).build();
     }
 
     @GET
     @Path("ca-credit")
-    public Response caCredis(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response caCredis(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(erpService.rrpTiersPayant(dtStart, dtEnd)).build();
     }
 
     @GET
     @Path("reglements")
-    public Response reglements(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response reglements(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(erpService.erpReglements(dtStart, dtEnd)).build();
     }
 
     @GET
     @Path("factures")
-    public Response erpFactures(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response erpFactures(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(erpService.erpFactures(dtStart, dtEnd)).build();
     }
 
@@ -90,10 +78,8 @@ public class ErpRessource {
 
     @GET
     @Path("achats-fournisseurs")
-    public Response achatsFournisseurs(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response achatsFournisseurs(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(erpService.achatsFournisseurs(dtStart, dtEnd)).build();
     }
 
@@ -111,19 +97,14 @@ public class ErpRessource {
 
     @GET
     @Path("avoirs-fournisseurs")
-    public Response avoirFournisseurs(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response avoirFournisseurs(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(retourFournisseurService.erpAvoirsFournisseurs(dtStart, dtEnd)).build();
     }
 
     @GET
     @Path("whareouse-vno")
-    public Response venteVNO(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response venteVNO(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(dataExportService.listVentes(dtStart, dtEnd, "VNO")).build();
     }
 
@@ -133,21 +114,19 @@ public class ErpRessource {
         return Response.ok().entity(dataExportService.getMaxAndMinDate()).build();
     }
 
-  
-
     @GET
     @Path("ws/groupe-tierspayants")
     public Response allGroupeTiersPayants() {
         return Response.ok().entity(erpService.allGroupeTiersPayants()).build();
     }
-    
-      @GET
+
+    @GET
     @Path("ws/tierspayants")
     public Response allWsTiersPayants() {
         return Response.ok().entity(erpService.allWsTiersPayants()).build();
     }
-    
-      @GET
+
+    @GET
     @Path("ws/clients")
     public Response allWsClients() {
         return Response.ok().entity(erpService.allWsClients()).build();

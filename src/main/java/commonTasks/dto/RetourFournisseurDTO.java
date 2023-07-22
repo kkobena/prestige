@@ -252,7 +252,11 @@ public class RetourFournisseurDTO implements Serializable {
         this.strLIBELLE = tg.getStrLIBELLE();
         int count = 0;
         for (RetourDetailsDTO tpd : details) {
-            this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getIntCIP() + "</span><span style='display:inline-block;width: 25%;'>" + tpd.getStrNAME() + "</span><span style='display:inline-block;width: 10%;'>(" + tpd.getIntNUMBERRETURN() + ")</span><span style='display:inline-block;width: 15%;'>" + DateConverter.amountFormat(tpd.getPrixPaf(), '.') + " F CFA " + "</span></b><br> " + this.details;
+            this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getIntCIP()
+                    + "</span><span style='display:inline-block;width: 25%;'>" + tpd.getStrNAME()
+                    + "</span><span style='display:inline-block;width: 10%;'>(" + tpd.getIntNUMBERRETURN()
+                    + ")</span><span style='display:inline-block;width: 15%;'>"
+                    + DateConverter.amountFormat(tpd.getPrixPaf(), '.') + " F CFA " + "</span></b><br> " + this.details;
             if (tpd.getIntNUMBERRETURN() > tpd.getIntNUMBERANSWER()) {
                 count++;
             }

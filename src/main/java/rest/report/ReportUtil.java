@@ -76,15 +76,16 @@ public class ReportUtil {
         File jasperFile = null;
 
         try {
-//            File jrxmlFile = new File(ReportUtil.class.getResource(reportPath + reportName + ".jrxml").getFile()); 
+            // File jrxmlFile = new File(ReportUtil.class.getResource(reportPath + reportName + ".jrxml").getFile());
             File jrxmlFile = new File(reportPath + reportName + ".jrxml");
             File dir = jrxmlFile.getParentFile();
             jasperFile = new File(dir, reportName + ".jasper");
             in = new FileInputStream(jrxmlFile);
-//            in = ReportUtil.class.getResourceAsStream(reportPath + reportName + ".jrxml");
+            // in = ReportUtil.class.getResourceAsStream(reportPath + reportName + ".jrxml");
             out = new FileOutputStream(jasperFile);
             JasperCompileManager.compileReportToStream(in, out);
-            in2 = new FileInputStream(jasperFile);//ReportUtil.class.getResourceAsStream(reportPath + reportName + ".jasper");
+            in2 = new FileInputStream(jasperFile);// ReportUtil.class.getResourceAsStream(reportPath + reportName +
+                                                  // ".jasper");
             return (JasperReport) JRLoader.loadObject(in2);
 
         } catch (FileNotFoundException | JRException e) {
@@ -181,10 +182,11 @@ public class ReportUtil {
             }
 
             if (StringUtils.isNotEmpty(oTOfficine.getStrPHONE())) {
-                String finalphonestring = oTOfficine.getStrPHONE() != null ? "- Tel: " + DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
+                String finalphonestring = oTOfficine.getStrPHONE() != null
+                        ? "- Tel: " + DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
                 if (!"".equals(oTOfficine.getStrAUTRESPHONES())) {
                     String[] phone = oTOfficine.getStrAUTRESPHONES().split(";");
-                    for (String va  : phone) {
+                    for (String va : phone) {
                         finalphonestring += " / " + DateConverter.phoneNumberFormat(va);
                     }
                 }
@@ -205,7 +207,8 @@ public class ReportUtil {
         return parameters;
     }
 
-    public void buildReport(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
+    public void buildReport(Map<String, Object> parameters, String reportName, String path, String pdfPath,
+            List<?> datas) {
         try {
             JasperReport jasperReport = getReport(reportName, path);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
@@ -261,21 +264,24 @@ public class ReportUtil {
 
     }
 
-    public Map<String, Object> ticketParamsMontantVerse(Map<String, Object> parameters, int montantVerse, int montantRendu) {
+    public Map<String, Object> ticketParamsMontantVerse(Map<String, Object> parameters, int montantVerse,
+            int montantRendu) {
         parameters.put("montantVerse", montantVerse);
         parameters.put("montantRendu", montantRendu);
         return parameters;
 
     }
 
-    public Map<String, Object> ticketParams(Map<String, Object> parameters, String ticketNum, Date dateOperation, String infosCaisse) {
+    public Map<String, Object> ticketParams(Map<String, Object> parameters, String ticketNum, Date dateOperation,
+            String infosCaisse) {
         parameters.put("dateoperation", dateOperation);
         parameters.put("infosCaisse", infosCaisse);
         return parameters;
 
     }
 
-    public Map<String, Object> carnetTpParams(Map<String, Object> parameters, String clientFullName, String matricule, int montantClient, String tierpayantName, int tauxtp, int partTp) {
+    public Map<String, Object> carnetTpParams(Map<String, Object> parameters, String clientFullName, String matricule,
+            int montantClient, String tierpayantName, int tauxtp, int partTp) {
         parameters.put("matricule ", matricule);
         parameters.put("clientFullName", clientFullName);
         parameters.put("montantClient", montantClient);
@@ -286,7 +292,8 @@ public class ReportUtil {
 
     }
 
-    public void printTicket(Map<String, Object> parameters, String reportName, String path, PrintService printService, List<?> datas) {
+    public void printTicket(Map<String, Object> parameters, String reportName, String path, PrintService printService,
+            List<?> datas) {
         try {
 
             PrintRequestAttributeSet printRequestAttributeSet = new HashPrintRequestAttributeSet();
@@ -313,7 +320,8 @@ public class ReportUtil {
         }
     }
 
-    public void buildReportDocx(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
+    public void buildReportDocx(Map<String, Object> parameters, String reportName, String path, String pdfPath,
+            List<?> datas) {
         try {
             JasperReport jasperReport = getReport(reportName, path);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
@@ -330,7 +338,8 @@ public class ReportUtil {
         }
     }
 
-    public void buildReportExcel(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
+    public void buildReportExcel(Map<String, Object> parameters, String reportName, String path, String pdfPath,
+            List<?> datas) {
         try {
             JasperReport jasperReport = getReport(reportName, path);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);
@@ -351,7 +360,8 @@ public class ReportUtil {
         }
     }
 
-    public void buildReportExcelSinglePage(Map<String, Object> parameters, String reportName, String path, String pdfPath, List<?> datas) {
+    public void buildReportExcelSinglePage(Map<String, Object> parameters, String reportName, String path,
+            String pdfPath, List<?> datas) {
         try {
             JasperReport jasperReport = getReport(reportName, path);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(datas);

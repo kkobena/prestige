@@ -112,8 +112,9 @@ public class ClientServiceImpl implements ClientService {
             return new JSONObject().put("success", true);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-//            emg.getTransaction().rollback();
-            return new JSONObject().put("success", false).put("msg", "La mise à jour des infos du client n'a pas abouti");
+            // emg.getTransaction().rollback();
+            return new JSONObject().put("success", false).put("msg",
+                    "La mise à jour des infos du client n'a pas abouti");
         }
     }
 
@@ -146,8 +147,10 @@ public class ClientServiceImpl implements ClientService {
 
         OTCompteClient.setLgCOMPTECLIENTID(UUID.randomUUID().toString());
         OTCompteClient.setStrCODECOMPTECLIENT("");
-//            OTCompteClient.setDblQUOTACONSOMENSUELLE(dbl_QUOTA_CONSO_MENSUELLE); // a decommenter en cas de probleme. 17/08/2016
-        OTCompteClient.setDblQUOTACONSOMENSUELLE(0.0); //forcer l'initialisation de la consommation a 0. La consommation du quota evolue au fur et a mesure de vente
+        // OTCompteClient.setDblQUOTACONSOMENSUELLE(dbl_QUOTA_CONSO_MENSUELLE); // a decommenter en cas de probleme.
+        // 17/08/2016
+        OTCompteClient.setDblQUOTACONSOMENSUELLE(0.0); // forcer l'initialisation de la consommation a 0. La
+                                                       // consommation du quota evolue au fur et a mesure de vente
         OTCompteClient.setDblPLAFOND(-1.0); // code ajouté
         OTCompteClient.setPKey("");
         OTCompteClient.setDblCAUTION(-1.0);
@@ -170,21 +173,19 @@ public class ClientServiceImpl implements ClientService {
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaQuery<ClientLambdaDTO> cq = cb.createQuery(ClientLambdaDTO.class);
             Root<TClient> root = cq.from(TClient.class);
-            cq.select(cb.construct(ClientLambdaDTO.class,
-                    root.get(TClient_.lgCLIENTID),
-                    root.get(TClient_.strFIRSTNAME),
-                    root.get(TClient_.strLASTNAME),
-                    root.get(TClient_.strADRESSE),
-                    root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"),
-                    root.get(TClient_.strSEXE),
-                    root.get(TClient_.email)
-            )
-            ).orderBy(cb.asc(root.get(TClient_.strFIRSTNAME)));
+            cq.select(cb.construct(ClientLambdaDTO.class, root.get(TClient_.lgCLIENTID),
+                    root.get(TClient_.strFIRSTNAME), root.get(TClient_.strLASTNAME), root.get(TClient_.strADRESSE),
+                    root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"), root.get(TClient_.strSEXE),
+                    root.get(TClient_.email))).orderBy(cb.asc(root.get(TClient_.strFIRSTNAME)));
             predicates.add(cb.and(cb.equal(root.get(TClient_.strSTATUT), "enable")));
-            predicates.add(cb.and(cb.equal(root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"), commonparameter.STANDART_CLIENT_ID)));
+            predicates.add(cb.and(cb.equal(root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"),
+                    commonparameter.STANDART_CLIENT_ID)));
 
             if (query != null && !query.equals("")) {
-                predicates.add(cb.or(cb.like(root.get(TClient_.strFIRSTNAME), query + "%"), cb.like(root.get(TClient_.strLASTNAME), query + "%"), cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME), " "), root.get(TClient_.strLASTNAME)), query + "%")));
+                predicates.add(cb.or(cb.like(root.get(TClient_.strFIRSTNAME), query + "%"),
+                        cb.like(root.get(TClient_.strLASTNAME), query + "%"),
+                        cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME), " "),
+                                root.get(TClient_.strLASTNAME)), query + "%")));
             }
 
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
@@ -204,34 +205,47 @@ public class ClientServiceImpl implements ClientService {
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaQuery<TClient> cq = cb.createQuery(TClient.class);
             Root<TClient> root = cq.from(TClient.class);
-            cq.select(root)
-                    .orderBy(cb.asc(root.get(TClient_.strFIRSTNAME)));
+            cq.select(root).orderBy(cb.asc(root.get(TClient_.strFIRSTNAME)));
             predicates.add(cb.and(cb.equal(root.get(TClient_.strSTATUT), "enable")));
             if (!StringUtils.isEmpty(typeClientId)) {
                 predicates.add(cb.and(cb.equal(root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"), typeClientId)));
             }
             if (!StringUtils.isEmpty(query)) {
-                predicates.add(cb.or(cb.like(root.get(TClient_.strNUMEROSECURITESOCIAL), query + "%"), cb.like(root.get(TClient_.strFIRSTNAME), query + "%"), cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME), " "), root.get(TClient_.strLASTNAME)), query + "%")));//, cb.like(root.get(TClient_.strLASTNAME), query + "%"), cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME), " "), root.get(TClient_.strLASTNAME)), query + "%")));
+                predicates.add(cb.or(cb.like(root.get(TClient_.strNUMEROSECURITESOCIAL), query + "%"),
+                        cb.like(root.get(TClient_.strFIRSTNAME), query + "%"),
+                        cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME), " "),
+                                root.get(TClient_.strLASTNAME)), query + "%")));// ,
+                                                                                // cb.like(root.get(TClient_.strLASTNAME),
+                                                                                // query + "%"),
+                                                                                // cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME),
+                                                                                // " "),
+                                                                                // root.get(TClient_.strLASTNAME)),
+                                                                                // query + "%")));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = emg.createQuery(cq);
             q.setMaxResults(100);
             List<TClient> resultat = q.getResultList();
 
-            return resultat.stream().map(cl -> new ClientDTO(cl, findTiersPayantByClientId(cl.getLgCLIENTID(), emg), findAyantDroitByClientId(cl.getLgCLIENTID(), emg))).collect(Collectors.toList());
+            return resultat.stream().map(cl -> new ClientDTO(cl, findTiersPayantByClientId(cl.getLgCLIENTID(), emg),
+                    findAyantDroitByClientId(cl.getLgCLIENTID(), emg))).collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
+
     Comparator<TiersPayantParams> comparator = Comparator.comparingInt(TiersPayantParams::getOrder);
 
     private List<TiersPayantParams> findTiersPayantByClientId(String clientId, EntityManager emg) {
         try {
-            TypedQuery<TCompteClientTiersPayant> query = emg.createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2", TCompteClientTiersPayant.class);
+            TypedQuery<TCompteClientTiersPayant> query = emg.createQuery(
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2",
+                    TCompteClientTiersPayant.class);
             query.setParameter(1, clientId);
             query.setParameter(2, DateConverter.STATUT_ENABLE);
-            return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator).collect(Collectors.toList());
+            return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator)
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
@@ -241,9 +255,12 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public List<TiersPayantParams> findTiersPayantByClientId(String clientId) {
         try {
-            TypedQuery<TCompteClientTiersPayant> query = getEmg().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1", TCompteClientTiersPayant.class);
+            TypedQuery<TCompteClientTiersPayant> query = getEmg().createQuery(
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1",
+                    TCompteClientTiersPayant.class);
             query.setParameter(1, clientId);
-            return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator).collect(Collectors.toList());
+            return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator)
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
@@ -253,9 +270,12 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public List<TiersPayantParams> findTiersPayantByClientIdExcludeRo(String clientId) {
         try {
-            TypedQuery<TCompteClientTiersPayant> query = this.getEmg().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.intPRIORITY >1", TCompteClientTiersPayant.class);
+            TypedQuery<TCompteClientTiersPayant> query = this.getEmg().createQuery(
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.intPRIORITY >1",
+                    TCompteClientTiersPayant.class);
             query.setParameter(1, clientId);
-            return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator).collect(Collectors.toList());
+            return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator)
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
@@ -264,7 +284,8 @@ public class ClientServiceImpl implements ClientService {
 
     private List<AyantDroitDTO> findAyantDroitByClientId(String clientId, EntityManager emg) {
         try {
-            TypedQuery<TAyantDroit> query = emg.createQuery("SELECT o FROM TAyantDroit o WHERE o.lgCLIENTID.lgCLIENTID=?1", TAyantDroit.class);
+            TypedQuery<TAyantDroit> query = emg
+                    .createQuery("SELECT o FROM TAyantDroit o WHERE o.lgCLIENTID.lgCLIENTID=?1", TAyantDroit.class);
             query.setParameter(1, clientId);
             return query.getResultList().stream().map(AyantDroitDTO::new).collect(Collectors.toList());
         } catch (Exception e) {
@@ -281,19 +302,19 @@ public class ClientServiceImpl implements ClientService {
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaQuery<TiersPayantDTO> cq = cb.createQuery(TiersPayantDTO.class);
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
-            cq.select(cb.construct(TiersPayantDTO.class,
-                    root.get(TTiersPayant_.lgTIERSPAYANTID),
-                    root.get(TTiersPayant_.strNAME),
-                    root.get(TTiersPayant_.strFULLNAME)
-            )
-            ).orderBy(cb.asc(root.get(TTiersPayant_.strNAME)));
+            cq.select(cb.construct(TiersPayantDTO.class, root.get(TTiersPayant_.lgTIERSPAYANTID),
+                    root.get(TTiersPayant_.strNAME), root.get(TTiersPayant_.strFULLNAME)))
+                    .orderBy(cb.asc(root.get(TTiersPayant_.strNAME)));
             predicates.add(cb.and(cb.equal(root.get(TTiersPayant_.strSTATUT), "enable")));
             if (type != null && !"".equals(type)) {
-                predicates.add(cb.equal(root.get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), type));
+                predicates.add(cb.equal(
+                        root.get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), type));
             }
 
             if (query != null && !query.equals("")) {
-                predicates.add(cb.or(cb.like(root.get(TTiersPayant_.strCODEORGANISME), query + "%"), cb.like(root.get(TTiersPayant_.strNAME), query + "%"), cb.like(root.get(TTiersPayant_.strFULLNAME), query + "%")));
+                predicates.add(cb.or(cb.like(root.get(TTiersPayant_.strCODEORGANISME), query + "%"),
+                        cb.like(root.get(TTiersPayant_.strNAME), query + "%"),
+                        cb.like(root.get(TTiersPayant_.strFULLNAME), query + "%")));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = emg.createQuery(cq);
@@ -352,7 +373,9 @@ public class ClientServiceImpl implements ClientService {
 
     private boolean doesNumeroSecuriteSocialExist(String str_NUMERO_SECURITE_SOCIAL, TTiersPayant payant) {
         try {
-            TypedQuery<TCompteClientTiersPayant> query = this.getEmg().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.strNUMEROSECURITESOCIAL =?1 AND o.lgTIERSPAYANTID.lgTIERSPAYANTID=?2 ", TCompteClientTiersPayant.class);
+            TypedQuery<TCompteClientTiersPayant> query = this.getEmg().createQuery(
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.strNUMEROSECURITESOCIAL =?1 AND o.lgTIERSPAYANTID.lgTIERSPAYANTID=?2 ",
+                    TCompteClientTiersPayant.class);
             query.setParameter(1, str_NUMERO_SECURITE_SOCIAL);
             query.setParameter(2, payant.getLgTIERSPAYANTID());
             return !(query.getResultList().isEmpty());
@@ -451,8 +474,7 @@ public class ClientServiceImpl implements ClientService {
 
     private TAyantDroit findAyantDroitByNum(String num, EntityManager emg) {
         try {
-            return emg.createNamedQuery("TAyantDroit.findByStrNUMEROSECURITESOCIAL", TAyantDroit.class)
-                    .setMaxResults(1)
+            return emg.createNamedQuery("TAyantDroit.findByStrNUMEROSECURITESOCIAL", TAyantDroit.class).setMaxResults(1)
                     .setParameter("strNUMEROSECURITESOCIAL", num).getSingleResult();
         } catch (Exception e) {
             return null;
@@ -503,7 +525,8 @@ public class ClientServiceImpl implements ClientService {
 
     private TCompteClient findByClientId(String clientId, EntityManager emg) {
         try {
-            return (TCompteClient) emg.createQuery("SELECT o FROM TCompteClient o WHERE o.lgCLIENTID.lgCLIENTID=?1 ").setParameter(1, clientId).setMaxResults(1).getSingleResult();
+            return (TCompteClient) emg.createQuery("SELECT o FROM TCompteClient o WHERE o.lgCLIENTID.lgCLIENTID=?1 ")
+                    .setParameter(1, clientId).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             return null;
         }
@@ -530,7 +553,8 @@ public class ClientServiceImpl implements ClientService {
         return OTCompteClient;
     }
 
-    private void createComptClientTierspayant(ClientDTO cdto, TCompteClient OTCompteClient, EntityManager emg, TTiersPayant p) {
+    private void createComptClientTierspayant(ClientDTO cdto, TCompteClient OTCompteClient, EntityManager emg,
+            TTiersPayant p) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
         OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
         OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
@@ -559,9 +583,11 @@ public class ClientServiceImpl implements ClientService {
         emg.persist(OTCompteClientTiersPayant);
     }
 
-    private void createComptClientTierspayant(List<TiersPayantParams> tiersPayants, TCompteClient OTCompteClient, EntityManager emg) {
+    private void createComptClientTierspayant(List<TiersPayantParams> tiersPayants, TCompteClient OTCompteClient,
+            EntityManager emg) {
         tiersPayants.forEach(p -> {
-            TCompteClientTiersPayant OTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
+            TCompteClientTiersPayant OTCompteClientTiersPayant = new TCompteClientTiersPayant(
+                    UUID.randomUUID().toString());
             OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
             OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(p.getNumSecurity());
             OTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
@@ -614,7 +640,8 @@ public class ClientServiceImpl implements ClientService {
     }
 
     private void updateComptClientTierspayant(ClientDTO cdto, TTiersPayant p) {
-        TCompteClientTiersPayant OTCompteClientTiersPayant = getEmg().find(TCompteClientTiersPayant.class, cdto.getCompteTp());
+        TCompteClientTiersPayant OTCompteClientTiersPayant = getEmg().find(TCompteClientTiersPayant.class,
+                cdto.getCompteTp());
         OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
         OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
         OTCompteClientTiersPayant.setBISRO(Boolean.TRUE);
@@ -645,7 +672,8 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    private void updateComptClientTierspayant(List<TiersPayantParams> tiersPayants, TCompteClient OTCompteClient, EntityManager emg) {
+    private void updateComptClientTierspayant(List<TiersPayantParams> tiersPayants, TCompteClient OTCompteClient,
+            EntityManager emg) {
         tiersPayants.forEach(p -> {
             TCompteClientTiersPayant OTCompteClientTiersPayant = findTCompteClientTiersPayantById(p.getCompteTp(), emg);
             if (OTCompteClientTiersPayant == null) {
@@ -679,7 +707,9 @@ public class ClientServiceImpl implements ClientService {
 
     private boolean compteClientTpHasSales(String id, EntityManager emg) {
         try {
-            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = emg.createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID=?1 AND o.strSTATUT='enable'", TPreenregistrementCompteClientTiersPayent.class);
+            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = emg.createQuery(
+                    "SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID=?1 AND o.strSTATUT='enable'",
+                    TPreenregistrementCompteClientTiersPayent.class);
             tq.setParameter(1, id);
             return !tq.getResultList().isEmpty();
         } catch (Exception e) {
@@ -707,9 +737,13 @@ public class ClientServiceImpl implements ClientService {
         emg.persist(ayantDroit);
     }
 
-    private TCompteClientTiersPayant findByClientTiersPayantId(String clientId, String tiersPayantId, EntityManager emg) {
+    private TCompteClientTiersPayant findByClientTiersPayantId(String clientId, String tiersPayantId,
+            EntityManager emg) {
         try {
-            return emg.createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strNUMEROSECURITESOCIAL =?2 ", TCompteClientTiersPayant.class).setParameter(1, clientId).setParameter(2, tiersPayantId).setMaxResults(1).getSingleResult();
+            return emg.createQuery(
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strNUMEROSECURITESOCIAL =?2 ",
+                    TCompteClientTiersPayant.class).setParameter(1, clientId).setParameter(2, tiersPayantId)
+                    .setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             return null;
         }
@@ -717,11 +751,10 @@ public class ClientServiceImpl implements ClientService {
 
     private TCompteClientTiersPayant findByClientTiersPayantId(String clientId, String statut, int priority) {
         try {
-            return getEmg().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT =?2 AND o.intPRIORITY=?3 ", TCompteClientTiersPayant.class)
-                    .setParameter(1, clientId)
-                    .setParameter(2, statut)
-                    .setParameter(3, priority)
-                    .setMaxResults(1).getSingleResult();
+            return getEmg().createQuery(
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT =?2 AND o.intPRIORITY=?3 ",
+                    TCompteClientTiersPayant.class).setParameter(1, clientId).setParameter(2, statut)
+                    .setParameter(3, priority).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             return null;
         }
@@ -731,6 +764,7 @@ public class ClientServiceImpl implements ClientService {
      *
      * @param clientId
      * @param query
+     *
      * @return
      */
     @Override
@@ -741,12 +775,13 @@ public class ClientServiceImpl implements ClientService {
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaQuery<TAyantDroit> cq = cb.createQuery(TAyantDroit.class);
             Root<TAyantDroit> root = cq.from(TAyantDroit.class);
-            cq.select(root)
-                    .orderBy(cb.asc(root.get(TAyantDroit_.strFIRSTNAME)));
+            cq.select(root).orderBy(cb.asc(root.get(TAyantDroit_.strFIRSTNAME)));
             predicates.add(cb.and(cb.equal(root.get(TAyantDroit_.strSTATUT), "enable")));
             predicates.add(cb.and(cb.equal(root.get(TAyantDroit_.lgCLIENTID).get(TClient_.lgCLIENTID), clientId)));
             if (query != null && !query.equals("")) {
-                predicates.add(cb.or(cb.like(root.get(TAyantDroit_.strFIRSTNAME), query + "%"), cb.like(root.get(TAyantDroit_.strLASTNAME), query + "%"), cb.like(root.get(TAyantDroit_.strNUMEROSECURITESOCIAL), query + "%")));
+                predicates.add(cb.or(cb.like(root.get(TAyantDroit_.strFIRSTNAME), query + "%"),
+                        cb.like(root.get(TAyantDroit_.strLASTNAME), query + "%"),
+                        cb.like(root.get(TAyantDroit_.strNUMEROSECURITESOCIAL), query + "%")));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             Query q = emg.createQuery(cq);
@@ -796,7 +831,10 @@ public class ClientServiceImpl implements ClientService {
         try {
             EntityManager emg = this.getEmg();
             TClient cl = emg.find(TClient.class, clientId);
-            return new JSONObject().put("success", true).put("data", new JSONObject(new ClientDTO(cl, findTiersPayantByClientId(clientId, emg), ventesAssuranceByClientId(clientId, venteId, emg), findAyantDroitByClientId(clientId, emg))));
+            return new JSONObject().put("success", true).put("data",
+                    new JSONObject(new ClientDTO(cl, findTiersPayantByClientId(clientId, emg),
+                            ventesAssuranceByClientId(clientId, venteId, emg),
+                            findAyantDroitByClientId(clientId, emg))));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "-- findClientAssuranceById ---- ", e);
             return new JSONObject().put("success", false).put("msg", "Client avec cet idendifient n'existe pas ");
@@ -805,8 +843,9 @@ public class ClientServiceImpl implements ClientService {
 
     private List<TiersPayantParams> ventesAssuranceByClientId(String clientId, String venteId, EntityManager emg) {
         try {
-            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = emg.createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?2  ", TPreenregistrementCompteClientTiersPayent.class)
-                    .setParameter(1, clientId).setParameter(2, venteId);
+            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = emg.createQuery(
+                    "SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?2  ",
+                    TPreenregistrementCompteClientTiersPayent.class).setParameter(1, clientId).setParameter(2, venteId);
             return tq.getResultList().stream().map(TiersPayantParams::new).collect(Collectors.toList());
         } catch (Exception e) {
             return Collections.emptyList();
@@ -821,12 +860,28 @@ public class ClientServiceImpl implements ClientService {
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaQuery<TClient> cq = cb.createQuery(TClient.class);
             Root<TPreenregistrementCompteClient> root = cq.from(TPreenregistrementCompteClient.class);
-            cq.select(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID)).distinct(true);
-            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
-            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID), empl)));
+            cq.select(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID))
+                    .distinct(true);
+            predicates.add(cb.and(
+                    cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
+            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgUSERID)
+                    .get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID), empl)));
             predicates.add(cb.and(cb.greaterThan(root.get(TPreenregistrementCompteClient_.intPRICERESTE), 0)));
             if (query != null && !query.equals("")) {
-                predicates.add(cb.or(cb.like(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.strFIRSTNAME), query + "%"), cb.like(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME), query + "%"), cb.like(cb.concat(cb.concat(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.strFIRSTNAME), " "), root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME)), query + "%")));
+                predicates
+                        .add(cb.or(
+                                cb.like(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID)
+                                        .get(TCompteClient_.lgCLIENTID).get(TClient_.strFIRSTNAME), query + "%"),
+                                cb.like(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID)
+                                        .get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME), query + "%"),
+                                cb.like(cb.concat(
+                                        cb.concat(
+                                                root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID)
+                                                        .get(TCompteClient_.lgCLIENTID).get(TClient_.strFIRSTNAME),
+                                                " "),
+                                        root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID)
+                                                .get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME)),
+                                        query + "%")));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<TClient> q = emg.createQuery(cq);
@@ -845,12 +900,28 @@ public class ClientServiceImpl implements ClientService {
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaQuery<TClient> cq = cb.createQuery(TClient.class);
             Root<TPreenregistrementCompteClient> root = cq.from(TPreenregistrementCompteClient.class);
-            cq.select(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID)).distinct(true);
-            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
-            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID), empl)));
+            cq.select(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID))
+                    .distinct(true);
+            predicates.add(cb.and(
+                    cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
+            predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgUSERID)
+                    .get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID), empl)));
 
             if (query != null && !query.equals("")) {
-                predicates.add(cb.or(cb.like(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.strFIRSTNAME), query + "%"), cb.like(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME), query + "%"), cb.like(cb.concat(cb.concat(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.strFIRSTNAME), " "), root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME)), query + "%")));
+                predicates
+                        .add(cb.or(
+                                cb.like(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID)
+                                        .get(TCompteClient_.lgCLIENTID).get(TClient_.strFIRSTNAME), query + "%"),
+                                cb.like(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID)
+                                        .get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME), query + "%"),
+                                cb.like(cb.concat(
+                                        cb.concat(
+                                                root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID)
+                                                        .get(TCompteClient_.lgCLIENTID).get(TClient_.strFIRSTNAME),
+                                                " "),
+                                        root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID)
+                                                .get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME)),
+                                        query + "%")));
             }
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<TClient> q = emg.createQuery(cq);
@@ -862,7 +933,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     /*
-    modification du client à la vente avec un tiers payant different
+     * modification du client à la vente avec un tiers payant different
      */
     private TClient updateClientCarnet(ClientDTO client, TClient tc, TTiersPayant p, TCompteClientTiersPayant old) {
         try {
@@ -898,7 +969,10 @@ public class ClientServiceImpl implements ClientService {
             if (tc == null) {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
                     if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
-                        json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
+                        json.put("success", false).put("msg",
+                                "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
+                                        + client.getStrNUMEROSECURITESOCIAL()
+                                        + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
                 }
@@ -912,13 +986,17 @@ public class ClientServiceImpl implements ClientService {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
                     if (!client.getStrNUMEROSECURITESOCIAL().trim().equals(tc.getStrNUMEROSECURITESOCIAL().trim())) {
                         if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
-                            json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
+                            json.put("success", false).put("msg",
+                                    "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
+                                            + client.getStrNUMEROSECURITESOCIAL()
+                                            + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
                     }
                 }
                 String oldNum = tc.getStrNUMEROSECURITESOCIAL();
-                TCompteClientTiersPayant oltp = findByClientTiersPayantId(client.getLgCLIENTID(), DateConverter.STATUT_ENABLE, DateConverter.TIERS_PAYANT_PRINCIPAL);
+                TCompteClientTiersPayant oltp = findByClientTiersPayantId(client.getLgCLIENTID(),
+                        DateConverter.STATUT_ENABLE, DateConverter.TIERS_PAYANT_PRINCIPAL);
                 TTiersPayant oldltp = oltp.getLgTIERSPAYANTID();
                 tc = updateClient(client, tc);
                 TCompteClient OTCompteClient = updateCompteClient(client, tc, emg);
@@ -933,7 +1011,9 @@ public class ClientServiceImpl implements ClientService {
 
                 updateComptClientTierspayant(client.getTiersPayants(), OTCompteClient, emg);
             }
-            ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), findTiersPayantByClientId(tc.getLgCLIENTID(), emg), findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
+            ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID(), emg),
+                    findTiersPayantByClientId(tc.getLgCLIENTID(), emg),
+                    findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
             json.put("success", true).put("data", new JSONObject(data));
             return json;
         } catch (Exception e) {
@@ -961,7 +1041,10 @@ public class ClientServiceImpl implements ClientService {
             if (tc == null) {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
                     if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
-                        json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
+                        json.put("success", false).put("msg",
+                                "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
+                                        + client.getStrNUMEROSECURITESOCIAL()
+                                        + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
                 }
@@ -971,12 +1054,16 @@ public class ClientServiceImpl implements ClientService {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
                     if (!client.getStrNUMEROSECURITESOCIAL().trim().equals(tc.getStrNUMEROSECURITESOCIAL().trim())) {
                         if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
-                            json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
+                            json.put("success", false).put("msg",
+                                    "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
+                                            + client.getStrNUMEROSECURITESOCIAL()
+                                            + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
                     }
                 }
-                TCompteClientTiersPayant oldTpcm = findByClientTiersPayantId(client.getLgCLIENTID(), DateConverter.STATUT_ENABLE, DateConverter.TIERS_PAYANT_PRINCIPAL);
+                TCompteClientTiersPayant oldTpcm = findByClientTiersPayantId(client.getLgCLIENTID(),
+                        DateConverter.STATUT_ENABLE, DateConverter.TIERS_PAYANT_PRINCIPAL);
                 TTiersPayant oltp = oldTpcm.getLgTIERSPAYANTID();
 
                 if (!oltp.equals(p)) {
@@ -986,11 +1073,12 @@ public class ClientServiceImpl implements ClientService {
                 }
 
             }
-            ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), findTiersPayantByClientId(tc.getLgCLIENTID()));
+            ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID(), emg),
+                    findTiersPayantByClientId(tc.getLgCLIENTID()));
             json.put("success", true).put("data", new JSONObject(data));
             return json;
         } catch (Exception e) {
-           
+
             json.put("success", false).put("msg", "Erreur de création du client");
             return json;
 
@@ -1003,8 +1091,10 @@ public class ClientServiceImpl implements ClientService {
             ventesAssuranceByVenteId(venteId).forEach(x -> {
                 TCompteClientTiersPayant tc = x.getLgCOMPTECLIENTTIERSPAYANTID();
                 TTiersPayant tp = tc.getLgTIERSPAYANTID();
-                tc.setDbCONSOMMATIONMENSUELLE(tc.getDbCONSOMMATIONMENSUELLE() != null ? tc.getDbCONSOMMATIONMENSUELLE() + x.getIntPRICE() : x.getIntPRICE());
-                tp.setDbCONSOMMATIONMENSUELLE(tp.getDbCONSOMMATIONMENSUELLE() != null ? tp.getDbCONSOMMATIONMENSUELLE() + x.getIntPRICE() : x.getIntPRICE());
+                tc.setDbCONSOMMATIONMENSUELLE(tc.getDbCONSOMMATIONMENSUELLE() != null
+                        ? tc.getDbCONSOMMATIONMENSUELLE() + x.getIntPRICE() : x.getIntPRICE());
+                tp.setDbCONSOMMATIONMENSUELLE(tp.getDbCONSOMMATIONMENSUELLE() != null
+                        ? tp.getDbCONSOMMATIONMENSUELLE() + x.getIntPRICE() : x.getIntPRICE());
                 if (tc.getDbPLAFONDENCOURS() != null && tc.getDbPLAFONDENCOURS() > 0) {
                     tc.setBCANBEUSE(tc.getDbPLAFONDENCOURS().compareTo(tc.getDbCONSOMMATIONMENSUELLE()) > 0);
                 }
@@ -1020,8 +1110,9 @@ public class ClientServiceImpl implements ClientService {
 
     private List<TPreenregistrementCompteClientTiersPayent> ventesAssuranceByVenteId(String venteId) {
         try {
-            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = this.getEmg().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?1  ", TPreenregistrementCompteClientTiersPayent.class)
-                    .setParameter(1, venteId);
+            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = this.getEmg().createQuery(
+                    "SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?1  ",
+                    TPreenregistrementCompteClientTiersPayent.class).setParameter(1, venteId);
             return tq.getResultList();
         } catch (Exception e) {
             return Collections.emptyList();
@@ -1030,7 +1121,10 @@ public class ClientServiceImpl implements ClientService {
 
     private List<TCompteClientTiersPayant> findTCompteClientTiersPayanCompteClient(String OTCompteClient) {
         try {
-            TypedQuery<TCompteClientTiersPayant> tq = this.getEmg().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCOMPTECLIENTID =?1  ", TCompteClientTiersPayant.class)
+            TypedQuery<TCompteClientTiersPayant> tq = this.getEmg()
+                    .createQuery(
+                            "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCOMPTECLIENTID =?1  ",
+                            TCompteClientTiersPayant.class)
                     .setParameter(1, OTCompteClient);
             return tq.getResultList();
         } catch (Exception e) {
@@ -1046,7 +1140,8 @@ public class ClientServiceImpl implements ClientService {
         });
     }
 
-    private TCompteClientTiersPayant createComptClientTierspayant(TClient cdto, TCompteClient OTCompteClient, int taux, TTiersPayant p, boolean isRO, int order) {
+    private TCompteClientTiersPayant createComptClientTierspayant(TClient cdto, TCompteClient OTCompteClient, int taux,
+            TTiersPayant p, boolean isRO, int order) {
         TCompteClientTiersPayant OTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
         OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
         OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
@@ -1069,7 +1164,8 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant p, int taux) throws Exception {
+    public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant p, int taux)
+            throws Exception {
         TCompteClient compteClient = findByClientId(client.getLgCLIENTID(), this.getEmg());
         updateComptClientTierspayantPriority(compteClient.getLgCOMPTECLIENTID());
         return createComptClientTierspayant(client, compteClient, taux, p, true, 1);
@@ -1077,13 +1173,15 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant p, int taux, TCompteClientTiersPayant old) throws Exception {
+    public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant p, int taux,
+            TCompteClientTiersPayant old) throws Exception {
         TCompteClient compteClient = old.getLgCOMPTECLIENTID();
         return createComptClientTierspayant(client, compteClient, taux, p, old.getBISRO(), old.getIntPRIORITY());
     }
 
     @Override
-    public JSONObject addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, String clientId, String typeTiersPayantId, int taux) throws JSONException {
+    public JSONObject addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, String clientId,
+            String typeTiersPayantId, int taux) throws JSONException {
         try {
             TTiersPayant payant = createTiersPayant(tiersPayantDTO, typeTiersPayantId);
             updateOrCreateClientAssurance(getEmg().find(TClient.class, clientId), payant, taux);
@@ -1146,7 +1244,8 @@ public class ClientServiceImpl implements ClientService {
             payant.setLgTYPETIERSPAYANTID(getEmg().find(TTypeTiersPayant.class, typeTiersPayantId));
             payant.setLgRISQUEID(getEmg().find(TRisque.class, "55181642844215217016"));
             try {
-                payant.setLgGROUPEID(getEmg().find(TGroupeTierspayant.class, Integer.valueOf(tiersPayantDTO.getGroupeId())));
+                payant.setLgGROUPEID(
+                        getEmg().find(TGroupeTierspayant.class, Integer.valueOf(tiersPayantDTO.getGroupeId())));
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }
@@ -1162,7 +1261,9 @@ public class ClientServiceImpl implements ClientService {
     public TCompteClientTiersPayant findCompteClientTiersPayantByClientId(String clientId) {
 
         try {
-            TypedQuery<TCompteClientTiersPayant> query = getEmg().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2", TCompteClientTiersPayant.class);
+            TypedQuery<TCompteClientTiersPayant> query = getEmg().createQuery(
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2",
+                    TCompteClientTiersPayant.class);
             query.setParameter(1, clientId);
             query.setParameter(2, DateConverter.STATUT_ENABLE);
             return query.getResultList().stream().filter(e -> e.getIntPRIORITY().compareTo(1) == 0).findFirst().get();
@@ -1198,7 +1299,8 @@ public class ClientServiceImpl implements ClientService {
         if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
             if (!client.getStrNUMEROSECURITESOCIAL().equals(tc.getStrNUMEROSECURITESOCIAL())) {
                 if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
-                    json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> " + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
+                    json.put("success", false).put("msg", "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
+                            + client.getStrNUMEROSECURITESOCIAL() + " </span>] est déjà utilisé dans le système");
                     return json;
                 }
             }
@@ -1219,12 +1321,14 @@ public class ClientServiceImpl implements ClientService {
             ayantDroit.setStrLASTNAME(client.getStrLASTNAME().toUpperCase());
             ayantDroit.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
             getEmg().merge(ayantDroit);
-            data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(), findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
+            data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(),
+                    findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
         } else {
             data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(), Collections.emptyList());
         }
 
-        data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(), findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
+        data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(),
+                findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
         json.put("success", true).put("data", new JSONObject(data));
         return json;
 
@@ -1247,8 +1351,10 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public JSONObject ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, String typeTp, int start, int limit) {
-        List<VenteTiersPayantsDTO> data = ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp, start, limit, true);
+    public JSONObject ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId,
+            String groupeId, String typeTp, int start, int limit) {
+        List<VenteTiersPayantsDTO> data = ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp,
+                start, limit, true);
         JSONObject json = new JSONObject();
         int nbre = 0;
         long montant = 0;
@@ -1256,29 +1362,31 @@ public class ClientServiceImpl implements ClientService {
             nbre += venteTiersPayantsDTO.getNbreDossier();
             montant += venteTiersPayantsDTO.getMontant();
         }
-        return json.put("total", data.size()).put("data", new JSONArray(data))
-                .put("metaData", new JSONObject().put("nbre", nbre)
-                        .put("montant", montant)
-                );
+        return json.put("total", data.size()).put("data", new JSONArray(data)).put("metaData",
+                new JSONObject().put("nbre", nbre).put("montant", montant));
 
     }
 
     @Override
-    public List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, String typeTp, int start, int limit, boolean all) {
+    public List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd,
+            String tiersPayantId, String groupeId, String typeTp, int start, int limit, boolean all) {
         List<VenteTiersPayantsDTO> data = new ArrayList<>();
         try {
             CriteriaBuilder cb = this.getEmg().getCriteriaBuilder();
             CriteriaQuery<VenteTiersPayantsDTO> cq = cb.createQuery(VenteTiersPayantsDTO.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
             cq.select(cb.construct(VenteTiersPayantsDTO.class,
-                    root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID),
-                    cb.count(root),
-                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)),
-                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICERESTE))
-            ))
-                    .orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)))
-                    .groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID));
-            List<Predicate> predicates = predicateventesTiersPayants(cb, root, query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp);
+                    root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID),
+                    cb.count(root), cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)),
+                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICERESTE))))
+                    .orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)))
+                    .groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID));
+            List<Predicate> predicates = predicateventesTiersPayants(cb, root, query, dtStart, dtEnd, tiersPayantId,
+                    groupeId, typeTp);
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
             TypedQuery<VenteTiersPayantsDTO> q = this.getEmg().createQuery(cq);
             if (!all) {
@@ -1294,42 +1402,62 @@ public class ClientServiceImpl implements ClientService {
         return data;
     }
 
-    List<Predicate> predicateventesTiersPayants(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, String typeTp) {
+    List<Predicate> predicateventesTiersPayants(CriteriaBuilder cb,
+            Root<TPreenregistrementCompteClientTiersPayent> root, String query, String dtStart, String dtEnd,
+            String tiersPayantId, String groupeId, String typeTp) {
         List<Predicate> predicates = new ArrayList<>();
-        Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.dtCREATED)), java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
+        Predicate btw = cb.between(
+                cb.function("DATE", Date.class,
+                        root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID)
+                                .get(TPreenregistrement_.dtCREATED)),
+                java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
-        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-        predicates.add(cb.isFalse(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.bISCANCEL)));
-        predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID).get(TPreenregistrement_.intPRICE), 0));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID)
+                .get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT),
+                DateConverter.STATUT_IS_CLOSED));
+        predicates.add(cb.isFalse(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID)
+                .get(TPreenregistrement_.bISCANCEL)));
+        predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID)
+                .get(TPreenregistrement_.intPRICE), 0));
         predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE), 0));
         if (!StringUtils.isEmpty(query)) {
             query = query.toUpperCase();
-            predicates.add(cb.or(cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)), query + "%"),
-                    cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strNAME)), query + "%")
-            ));
+            predicates.add(cb.or(
+                    cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)),
+                            query + "%"),
+                    cb.like(cb.upper(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strNAME)), query + "%")));
         }
 
         if (!StringUtils.isEmpty(tiersPayantId) || !StringUtils.isEmpty(query) || !StringUtils.isEmpty(groupeId)) {
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> join = root.join(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID, JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> join = root
+                    .join(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID, JoinType.INNER);
             if (!StringUtils.isEmpty(tiersPayantId)) {
-                predicates.add(cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
+                predicates.add(
+                        cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID),
+                                tiersPayantId));
             }
 
             if (!StringUtils.isEmpty(groupeId)) {
-                predicates.add(cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupeId)));
+                predicates.add(cb.equal(join.get(TCompteClientTiersPayant_.lgTIERSPAYANTID)
+                        .get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupeId)));
 
             }
 
         }
         if (!StringUtils.isEmpty(typeTp) && !"ALL".equals(typeTp)) {
-            predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typeTp));
+            predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                    .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTYPETIERSPAYANTID)
+                    .get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typeTp));
         }
         return predicates;
 
     }
 
-    public TCompteClientTiersPayant updateOrCreateClientCarnet(TClient client, TTiersPayant p, int taux) throws Exception {
+    public TCompteClientTiersPayant updateOrCreateClientCarnet(TClient client, TTiersPayant p, int taux)
+            throws Exception {
         TCompteClient compteClient = findByClientId(client.getLgCLIENTID(), this.getEmg());
         updateComptClientTierspayantPriority(compteClient.getLgCOMPTECLIENTID());
         return createComptClientTierspayant(client, compteClient, taux, p, true, 1);

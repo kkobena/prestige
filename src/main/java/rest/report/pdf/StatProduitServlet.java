@@ -50,7 +50,6 @@ public class StatProduitServlet extends HttpServlet {
         processRequest(request, response);
     }
 
-   
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -89,13 +88,14 @@ public class StatProduitServlet extends HttpServlet {
 
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        
-            periode += " AU " + end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        
+
+        periode += " AU " + end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
         String reportName = "rp_qtystat";
 
         parameters.put("P_H_CLT_INFOS", "QUANTITE PRODUITS VENDUS  DU  " + periode);
-        List<StatistiqueProduitAnnuelleDTO> datas = this.statistiqueProduitService.getVenteProduits(period, search, user.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), rayonId, 0, 0, true);
+        List<StatistiqueProduitAnnuelleDTO> datas = this.statistiqueProduitService.getVenteProduits(period, search,
+                user.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), rayonId, 0, 0, true);
 
         return reportUtil.buildReport(parameters, reportName, datas);
 

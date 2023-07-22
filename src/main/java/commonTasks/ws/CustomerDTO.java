@@ -29,9 +29,10 @@ public class CustomerDTO implements Serializable {
     private int encours;
     private String type;
     private String uniqueId;
-    
+
     private List<CustomerDTO> ayantDroits = new ArrayList<>();
     private List<ClientTiersPayantDTO> tiersPayants = new ArrayList<>();
+
     public String getUniqueId() {
         return uniqueId;
     }
@@ -39,8 +40,6 @@ public class CustomerDTO implements Serializable {
     public void setUniqueId(String uniqueId) {
         this.uniqueId = uniqueId;
     }
-    
-
 
     public CustomerDTO() {
     }
@@ -68,8 +67,6 @@ public class CustomerDTO implements Serializable {
     public void setCode(String code) {
         this.code = code;
     }
-
-   
 
     public String getNumAyantDroit() {
         return numAyantDroit;
@@ -143,8 +140,6 @@ public class CustomerDTO implements Serializable {
         this.type = type;
     }
 
-  
-
     public List<CustomerDTO> getAyantDroits() {
         return ayantDroits;
     }
@@ -160,7 +155,5 @@ public class CustomerDTO implements Serializable {
     public void setTiersPayants(List<ClientTiersPayantDTO> tiersPayants) {
         this.tiersPayants = tiersPayants;
     }
-    
-    
-    
+
 }

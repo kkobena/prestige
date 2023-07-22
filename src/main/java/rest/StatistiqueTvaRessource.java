@@ -39,7 +39,8 @@ public class StatistiqueTvaRessource {
 
     @GET
     @Path("tvas/criterion")
-    public Response tvastatCriterion(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+    public Response tvastatCriterion(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -53,10 +54,8 @@ public class StatistiqueTvaRessource {
             params.setOperateur(tu);
             json = dataService.statistiqueTvaViewSomeCriteria(params);
         } else {
-            json = this.balanceService.statistiqueTvaView(BalanceParamsDTO.builder().dtEnd(dtEnd)
-                    .dtStart(dtStart)
-                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                    .build());
+            json = this.balanceService.statistiqueTvaView(BalanceParamsDTO.builder().dtEnd(dtEnd).dtStart(dtStart)
+                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         }
 
         return Response.ok().entity(json.toString()).build();
@@ -64,7 +63,9 @@ public class StatistiqueTvaRessource {
 
     @GET
     @Path("tvas")
-    public Response tvastat(@QueryParam(value = "typeVente") String typeVente, @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+    public Response tvastat(@QueryParam(value = "typeVente") String typeVente,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -73,10 +74,13 @@ public class StatistiqueTvaRessource {
         if (this.balanceService.useLastUpdateStats()) {
             boolean isTvaVNO = StringUtils.isNotBlank(typeVente) && !typeVente.equalsIgnoreCase("TOUT");
 
-            return Response.ok().entity(this.balanceService.statistiqueTvaView(BalanceParamsDTO.builder().dtEnd(dtEnd)
-                    .dtStart(dtStart)
-                    .vnoOnly(isTvaVNO)
-                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build()).toString()).build();
+            return Response.ok()
+                    .entity(this.balanceService
+                            .statistiqueTvaView(
+                                    BalanceParamsDTO.builder().dtEnd(dtEnd).dtStart(dtStart).vnoOnly(isTvaVNO)
+                                            .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build())
+                            .toString())
+                    .build();
         }
         Params params = new Params();
         params.setDtEnd(dtEnd);

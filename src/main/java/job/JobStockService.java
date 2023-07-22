@@ -21,7 +21,7 @@ import org.quartz.impl.StdSchedulerFactory;
  * @author KKOFFI
  */
 public class JobStockService {
-   private static final Logger LOG = Logger.getLogger(JobStockService.class.getName());
+    private static final Logger LOG = Logger.getLogger(JobStockService.class.getName());
 
     // cette fonction met à jour les produits perimes
 
@@ -30,12 +30,8 @@ public class JobStockService {
         try {
             scheduler = StdSchedulerFactory.getDefaultScheduler();
             JobDetail job = newJob(JobLot.class).withIdentity("joblot", "lotjob").build();
-            Trigger trigger = newTrigger().withIdentity("triggerjjoblot", "lotjob")
-                    .startNow()
-                    .withSchedule(simpleSchedule()
-                            .withIntervalInHours(1)
-                            .repeatForever())
-                    .build();
+            Trigger trigger = newTrigger().withIdentity("triggerjjoblot", "lotjob").startNow()
+                    .withSchedule(simpleSchedule().withIntervalInHours(1).repeatForever()).build();
             scheduler.start();
             scheduler.scheduleJob(job, trigger);
         } catch (SchedulerException ex) {

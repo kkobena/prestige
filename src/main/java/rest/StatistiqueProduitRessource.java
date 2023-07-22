@@ -32,23 +32,25 @@ public class StatistiqueProduitRessource {
 
     @GET
     @Path("vente-annuelle")
-    public Response quantiteVendueAnnuelle(@QueryParam(value = "year") Integer year, @QueryParam(value = "search") String search,
-            @QueryParam(value = "rayonId") String rayonId, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit) {
+    public Response quantiteVendueAnnuelle(@QueryParam(value = "year") Integer year,
+            @QueryParam(value = "search") String search, @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
         HttpSession hs = servletRequest.getSession();
-     
+
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject json = this.statistiqueProduitService.getVenteProduits(year, search, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), rayonId, start, limit);
+        JSONObject json = this.statistiqueProduitService.getVenteProduits(year, search,
+                tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), rayonId, start, limit);
 
         return Response.ok().entity(json.toString()).build();
     }
- @GET
+
+    @GET
     @Path("years")
     public Response getYears() {
-      
+
         JSONObject json = this.statistiqueProduitService.getIntervalAnnees();
 
         return Response.ok().entity(json.toString()).build();

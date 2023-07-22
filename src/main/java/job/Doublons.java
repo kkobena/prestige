@@ -62,37 +62,37 @@ public class Doublons extends HttpServlet {
         TEmplacement emplacement = OTUser.getLgEMPLACEMENTID();
         String action = request.getParameter("action");
         String lg_FAMILLE_STOCK_ID = request.getParameter("lg_FAMILLE_STOCK_ID");
-        
-        String lgEMPLACEMENTID="";
-        if(request.getParameter("lgEMPLACEMENTID")!=null){
-            lgEMPLACEMENTID=request.getParameter("lgEMPLACEMENTID");
+
+        String lgEMPLACEMENTID = "";
+        if (request.getParameter("lgEMPLACEMENTID") != null) {
+            lgEMPLACEMENTID = request.getParameter("lgEMPLACEMENTID");
         }
-        String search="";
-         if(request.getParameter("search")!=null){
-            search=request.getParameter("search");
+        String search = "";
+        if (request.getParameter("search") != null) {
+            search = request.getParameter("search");
         }
         JSONObject json;
         try (PrintWriter out = response.getWriter()) {
             switch (action) {
-                case "officine":
-                    json = getDoublonsProducts(emplacement.getLgEMPLACEMENTID(),search);
-                    out.println(json);
-                    break;
-                case "stock":
-                    json = getStockProducts(lgEMPLACEMENTID,search);
-                    out.println(json);
-                    break;
-                case "updateStock":
-                  json=  updateStockProducts(lg_FAMILLE_STOCK_ID);
-                  out.println(json);
-                    break;
-                case "update":
-                   json=  updateFamille(lg_FAMILLE_STOCK_ID);
-                   out.println(json);
-                    break;
+            case "officine":
+                json = getDoublonsProducts(emplacement.getLgEMPLACEMENTID(), search);
+                out.println(json);
+                break;
+            case "stock":
+                json = getStockProducts(lgEMPLACEMENTID, search);
+                out.println(json);
+                break;
+            case "updateStock":
+                json = updateStockProducts(lg_FAMILLE_STOCK_ID);
+                out.println(json);
+                break;
+            case "update":
+                json = updateFamille(lg_FAMILLE_STOCK_ID);
+                out.println(json);
+                break;
 
-                default:
-                    break;
+            default:
+                break;
             }
         }
     }
@@ -118,20 +118,20 @@ public class Doublons extends HttpServlet {
         return OdataManager.getEm();
     }
 
-    private JSONObject getDoublonsProducts(String empl,String search) {
+    private JSONObject getDoublonsProducts(String empl, String search) {
         JSONObject json = new JSONObject();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         EntityManager em = getEntityManager();
         List<TFamille> finalList = new ArrayList<>();
         JSONArray myarray = new JSONArray();
         try {
-            List<String> lg = em.createQuery("SELECT  o.intCIP  FROM TFamille o WHERE o.strSTATUT='enable' AND (o.strNAME LIKE ?1 OR o.intCIP LIKE ?1)   GROUP BY o.intCIP HAVING COUNT(o.intCIP) >1 ")
-                    .setParameter(1, "%"+search+"%")
-                    .getResultList();
+            List<String> lg = em.createQuery(
+                    "SELECT  o.intCIP  FROM TFamille o WHERE o.strSTATUT='enable' AND (o.strNAME LIKE ?1 OR o.intCIP LIKE ?1)   GROUP BY o.intCIP HAVING COUNT(o.intCIP) >1 ")
+                    .setParameter(1, "%" + search + "%").getResultList();
             lg.forEach((t) -> {
-                List<TFamille> myList = em.createQuery("SELECT o FROM TFamille o WHERE o.strSTATUT='enable'  AND o.intCIP=?1 ")
-                        .setParameter(1, t)
-                        .getResultList();
+                List<TFamille> myList = em
+                        .createQuery("SELECT o FROM TFamille o WHERE o.strSTATUT='enable'  AND o.intCIP=?1 ")
+                        .setParameter(1, t).getResultList();
                 if (myList.isEmpty()) {
                     finalList.addAll(myList);
                 }
@@ -182,9 +182,9 @@ public class Doublons extends HttpServlet {
         Integer stock = 0;
         try {
             EntityManager em = getEntityManager();
-            stock = (Integer) em.createQuery("SELECT o.intNUMBERAVAILABLE FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID =?1 AND o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2")
-                    .setParameter(1, id).setParameter(2, empl).setFirstResult(0).setMaxResults(1)
-                    .getSingleResult();
+            stock = (Integer) em.createQuery(
+                    "SELECT o.intNUMBERAVAILABLE FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID =?1 AND o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2")
+                    .setParameter(1, id).setParameter(2, empl).setFirstResult(0).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -201,15 +201,15 @@ public class Doublons extends HttpServlet {
             Join<TPreenregistrementDetail, TPreenregistrement> jp = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             Join<TPreenregistrementDetail, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate predicate = cb.conjunction();
-            predicate = cb.and(predicate, cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+            predicate = cb.and(predicate,
+                    cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
             predicate = cb.and(predicate, cb.equal(jp.get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));
             predicate = cb.and(predicate, cb.equal(jp.get(TPreenregistrement_.strSTATUT), "is_Closed"));
             Predicate ge = cb.greaterThan(jp.get(TPreenregistrement_.intPRICE), 0);
             predicate = cb.and(predicate, ge);
             predicate = cb.and(predicate, cb.equal(jf.get(TFamille_.lgFAMILLEID), lgFAMILLEID));
-            cq.select(
-                    cb.function("DATE_FORMAT", String.class, jp.get(TPreenregistrement_.dtUPDATED),
-                            cb.literal("%d/%m/%Y %H:%i"))).orderBy(cb.desc(jp.get(TPreenregistrement_.dtUPDATED)));
+            cq.select(cb.function("DATE_FORMAT", String.class, jp.get(TPreenregistrement_.dtUPDATED),
+                    cb.literal("%d/%m/%Y %H:%i"))).orderBy(cb.desc(jp.get(TPreenregistrement_.dtUPDATED)));
 
             cq.where(predicate);
             Query q = em.createQuery(cq);
@@ -219,7 +219,7 @@ public class Doublons extends HttpServlet {
             date = (String) q.getSingleResult();
 
         } catch (Exception e) {
-//            e.printStackTrace();
+            // e.printStackTrace();
         }
         return date;
     }
@@ -240,9 +240,8 @@ public class Doublons extends HttpServlet {
             Predicate predicate = cb.conjunction();
             predicate = cb.and(predicate, cb.equal(j.get(TBonLivraison_.strSTATUT), commonparameter.statut_is_Closed));
             predicate = cb.and(predicate, cb.equal(jf.get(TFamille_.lgFAMILLEID), lgFAMILLEID));
-            cq.select(
-                    cb.function("DATE_FORMAT", String.class, j.get(TBonLivraison_.dtUPDATED),
-                            cb.literal("%d/%m/%Y %H:%i"))).orderBy(cb.desc(j.get(TBonLivraison_.dtUPDATED)));
+            cq.select(cb.function("DATE_FORMAT", String.class, j.get(TBonLivraison_.dtUPDATED),
+                    cb.literal("%d/%m/%Y %H:%i"))).orderBy(cb.desc(j.get(TBonLivraison_.dtUPDATED)));
 
             cq.where(predicate);
             Query q = em.createQuery(cq);
@@ -252,7 +251,7 @@ public class Doublons extends HttpServlet {
             date = (String) q.getSingleResult();
 
         } catch (Exception e) {
-//            e.printStackTrace();
+            // e.printStackTrace();
 
         }
         return date;
@@ -268,12 +267,12 @@ public class Doublons extends HttpServlet {
             Join<TInventaireFamille, TInventaire> jp = root.join("lgINVENTAIREID", JoinType.INNER);
             Join<TInventaireFamille, TFamille> jf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate predicate = cb.conjunction();
-            predicate = cb.and(predicate, cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+            predicate = cb.and(predicate,
+                    cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
             predicate = cb.and(predicate, cb.equal(jp.get(TInventaire_.strSTATUT), "is_Closed"));
             predicate = cb.and(predicate, cb.equal(jf.get(TFamille_.lgFAMILLEID), lgFAMILLEID));
-            cq.select(
-                    cb.function("DATE_FORMAT", String.class, jp.get(TInventaire_.dtUPDATED),
-                            cb.literal("%d/%m/%Y %H:%i"))).orderBy(cb.desc(jp.get(TInventaire_.dtUPDATED)));
+            cq.select(cb.function("DATE_FORMAT", String.class, jp.get(TInventaire_.dtUPDATED),
+                    cb.literal("%d/%m/%Y %H:%i"))).orderBy(cb.desc(jp.get(TInventaire_.dtUPDATED)));
 
             cq.where(predicate);
             Query q = em.createQuery(cq);
@@ -283,28 +282,26 @@ public class Doublons extends HttpServlet {
             date = (String) q.getSingleResult();
 
         } catch (Exception e) {
-//            e.printStackTrace();
+            // e.printStackTrace();
         }
         return date;
     }
 
-    private JSONObject getStockProducts(String empl,String search) {
+    private JSONObject getStockProducts(String empl, String search) {
         JSONObject json = new JSONObject();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         EntityManager em = getEntityManager();
         List<TFamilleStock> finalList = new ArrayList<>();
         JSONArray myarray = new JSONArray();
         try {
-            List<String> lg = em.createQuery("SELECT  o.lgFAMILLEID.lgFAMILLEID   FROM TFamilleStock o WHERE o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?1 AND  (o.lgFAMILLEID.strNAME LIKE ?2 OR o.lgFAMILLEID.intCIP LIKE ?2)   GROUP BY o.lgFAMILLEID.lgFAMILLEID HAVING COUNT(o.lgFAMILLEID.lgFAMILLEID) >1 ")
-              .setParameter(2, "%"+search+"%")
-                    .setParameter(1, empl)
-                    .getResultList();
-           // System.out.println("lg  "+lg);
+            List<String> lg = em.createQuery(
+                    "SELECT  o.lgFAMILLEID.lgFAMILLEID   FROM TFamilleStock o WHERE o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?1 AND  (o.lgFAMILLEID.strNAME LIKE ?2 OR o.lgFAMILLEID.intCIP LIKE ?2)   GROUP BY o.lgFAMILLEID.lgFAMILLEID HAVING COUNT(o.lgFAMILLEID.lgFAMILLEID) >1 ")
+                    .setParameter(2, "%" + search + "%").setParameter(1, empl).getResultList();
+            // System.out.println("lg "+lg);
             lg.forEach((t) -> {
-                List<TFamilleStock> myList = em.createQuery("SELECT o FROM TFamilleStock o WHERE o.strSTATUT='enable'  AND o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2 ")
-                        .setParameter(1, t)
-                        .setParameter(2, empl)
-                        .getResultList();
+                List<TFamilleStock> myList = em.createQuery(
+                        "SELECT o FROM TFamilleStock o WHERE o.strSTATUT='enable'  AND o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2 ")
+                        .setParameter(1, t).setParameter(2, empl).getResultList();
                 if (!myList.isEmpty()) {
                     finalList.addAll(myList);
                 }
@@ -347,7 +344,7 @@ public class Doublons extends HttpServlet {
             });
             json.put("data", myarray);
             json.put("total", myarray.length());
-           
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -375,11 +372,12 @@ public class Doublons extends HttpServlet {
             e.printStackTrace();
             em.getTransaction().rollback();
             em.clear();
-//            em.close();
+            // em.close();
         }
         return json;
     }
-  private JSONObject updateFamille( String lg_FAMILLE_ID) {
+
+    private JSONObject updateFamille(String lg_FAMILLE_ID) {
         JSONObject json = new JSONObject();
 
         EntityManager em = getEntityManager();
@@ -400,7 +398,7 @@ public class Doublons extends HttpServlet {
             e.printStackTrace();
             em.getTransaction().rollback();
             em.clear();
-//            em.close();
+            // em.close();
         }
         return json;
     }
@@ -409,9 +407,9 @@ public class Doublons extends HttpServlet {
         TFamilleStock stock = null;
         try {
             EntityManager em = getEntityManager();
-            stock = (TFamilleStock) em.createQuery("SELECT o FROM TFamilleStock o WHERE o.lgFAMILLESTOCKID =?1 AND o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2")
-                    .setParameter(1, id).setParameter(2, empl).setFirstResult(0).setMaxResults(1)
-                    .getSingleResult();
+            stock = (TFamilleStock) em.createQuery(
+                    "SELECT o FROM TFamilleStock o WHERE o.lgFAMILLESTOCKID =?1 AND o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2")
+                    .setParameter(1, id).setParameter(2, empl).setFirstResult(0).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
         }

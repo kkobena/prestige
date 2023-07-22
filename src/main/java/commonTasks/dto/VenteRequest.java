@@ -32,15 +32,13 @@ public class VenteRequest {
     private Integer intPRICE;
     private Integer intPRICEREMISE;
     private String strTYPEVENTE;
-    private Integer intCUSTPART,montantCredit;
-    private Integer montantPaye,montantRegle,montantRestant;
+    private Integer intCUSTPART, montantCredit;
+    private Integer montantPaye, montantRegle, montantRestant;
     private Date dtUPDATED;
     private AyantDroitDTO ayantDroit;
     private ClientDTO client;
     private String strREFBON, lgCLIENTID, typeRemiseId;
     private String lgREMISEID, lgUSERVENDEURID, lgTYPEVENTEID, userFullName, userVendeurName;
     private List<TiersPayantParams> tierspayants;
-
-   
 
 }

@@ -29,22 +29,26 @@ import util.SmsParameters;
  * @author koben
  */
 @Stateless
-public class SmsImpl implements SmsService{
- @PersistenceContext(unitName = "JTA_UNIT")
+public class SmsImpl implements SmsService {
+    @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-     @Override
-     public JSONObject findAccessToken() {
+
+    @Override
+    public JSONObject findAccessToken() {
         try {
             Client client = ClientBuilder.newClient();
             SmsParameters sp = SmsParameters.getInstance();
             MultivaluedMap<String, String> formdata = new MultivaluedHashMap<>();
-//            String auth = "Basic ".concat(new String(Base64.encodeBase64(sp.clientId.concat(":").concat(sp.clientSecret).getBytes())));
+            // String auth = "Basic ".concat(new
+            // String(Base64.encodeBase64(sp.clientId.concat(":").concat(sp.clientSecret).getBytes())));
             formdata.add("grant_type", DateConverter.GRANT_TYPE);
             WebTarget myResource = client.target(sp.pathsmsapitokenendpoint);
-            Response response = myResource.request(MediaType.APPLICATION_JSON).header("Authorization",StringUtils.isNotEmpty(getBasicHeader())?getBasicHeader(): sp.header)
+            Response response = myResource.request(MediaType.APPLICATION_JSON)
+                    .header("Authorization", StringUtils.isNotEmpty(getBasicHeader()) ? getBasicHeader() : sp.header)
                     .post(Entity.entity(formdata, MediaType.APPLICATION_FORM_URLENCODED), Response.class);
             if (response.getStatus() == 200) {
-                return new JSONObject().put("success", true).put("data", new JSONObject(response.readEntity(String.class)));
+                return new JSONObject().put("success", true).put("data",
+                        new JSONObject(response.readEntity(String.class)));
             }
 
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
@@ -54,20 +58,18 @@ public class SmsImpl implements SmsService{
         }
     }
 
-  
-   
     public String getAccessTokend() {
         SmsParameters sp = SmsParameters.getInstance();
         return sp.accesstoken;
     }
 
-    private String getBasicHeader(){
+    private String getBasicHeader() {
         try {
-           return  em.find(SmsToken.class, "sms").getHeader();
-            
+            return em.find(SmsToken.class, "sms").getHeader();
+
         } catch (Exception e) {
-            return  "";
+            return "";
         }
     }
-    
+
 }

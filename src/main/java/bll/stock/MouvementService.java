@@ -21,7 +21,7 @@ public interface MouvementService {
 
     Integer stockVente(TFamille famille, LocalDate debut, LocalDate fin, String empl);
 
-
-     List<TMouvement> listMvt(String lgFamille, String zoneID, String criteria, String dateDebut, String dateEnd, String empl, String LgFamilleArticle,boolean all,int start, int limit );
+    List<TMouvement> listMvt(String lgFamille, String zoneID, String criteria, String dateDebut, String dateEnd,
+            String empl, String LgFamilleArticle, boolean all, int start, int limit);
 
 }

@@ -48,10 +48,10 @@ public class JobCalendar {
         exec();
         removeFacture();
         removeSuggestionO();
-//        updateOrderDetailPrices();
+        // updateOrderDetailPrices();
     }
 
-//    @Schedule(hour = "0", dayOfMonth = "*", persistent = false)
+    // @Schedule(hour = "0", dayOfMonth = "*", persistent = false)
     public void execute() throws InterruptedException {
         exec();
         removeFacture();
@@ -115,8 +115,9 @@ public class JobCalendar {
     public Optional<TCalendrier> getOneByCurrentDay() {
         try {
             LocalDate now = LocalDate.now();
-            TypedQuery<TCalendrier> tq = getEm().
-                    createQuery("SELECT o FROM TCalendrier o WHERE  o.lgMONTHID.lgMONTHID=?1 AND o.intANNEE=?2 ORDER BY o.dtDay DESC ", TCalendrier.class);
+            TypedQuery<TCalendrier> tq = getEm().createQuery(
+                    "SELECT o FROM TCalendrier o WHERE  o.lgMONTHID.lgMONTHID=?1 AND o.intANNEE=?2 ORDER BY o.dtDay DESC ",
+                    TCalendrier.class);
             tq.setParameter(1, now.getMonthValue() + "");
             tq.setParameter(2, now.getYear());
             tq.setMaxResults(1);
@@ -130,8 +131,9 @@ public class JobCalendar {
     public List<TFacture> findFactureProvisoires() {
         try {
 
-            TypedQuery<TFacture> tq = getEm().
-                    createQuery("SELECT o FROM TFacture o WHERE  FUNCTION('DATE',o.dtCREATED) < ?1  AND  o.template = TRUE ", TFacture.class);
+            TypedQuery<TFacture> tq = getEm().createQuery(
+                    "SELECT o FROM TFacture o WHERE  FUNCTION('DATE',o.dtCREATED) < ?1  AND  o.template = TRUE ",
+                    TFacture.class);
             tq.setParameter(1, java.sql.Date.valueOf(LocalDate.now()));
             return tq.getResultList();
         } catch (Exception e) {
@@ -154,7 +156,7 @@ public class JobCalendar {
             q.where(cb.equal(root.get(TFactureDetail_.lgFACTUREID), facture));
             getEm().createQuery(q).executeUpdate();
         } catch (Exception e) {
-          
+
         }
     }
 
@@ -173,8 +175,9 @@ public class JobCalendar {
     public List<TSuggestionOrder> findSuggestionOrders() {
         try {
 
-            TypedQuery<TSuggestionOrder> tq = getEm().
-                    createQuery("SELECT o FROM TSuggestionOrder o WHERE  FUNCTION('DATE',o.dtCREATED) < ?1  AND  o.strSTATUT=?2 ", TSuggestionOrder.class);
+            TypedQuery<TSuggestionOrder> tq = getEm().createQuery(
+                    "SELECT o FROM TSuggestionOrder o WHERE  FUNCTION('DATE',o.dtCREATED) < ?1  AND  o.strSTATUT=?2 ",
+                    TSuggestionOrder.class);
             tq.setParameter(1, java.sql.Date.valueOf(LocalDate.now()));
             tq.setParameter(2, DateConverter.STATUT_ENABLE);
             return tq.getResultList();
@@ -185,8 +188,9 @@ public class JobCalendar {
 
     public List<TSuggestionOrder> findSuggestionOrdersO() {
         try {
-            TypedQuery<TSuggestionOrder> tq = getEm().
-                    createQuery("SELECT o FROM TSuggestionOrder o WHERE  FUNCTION('DATE',o.dtCREATED) < ?1 ", TSuggestionOrder.class);
+            TypedQuery<TSuggestionOrder> tq = getEm().createQuery(
+                    "SELECT o FROM TSuggestionOrder o WHERE  FUNCTION('DATE',o.dtCREATED) < ?1 ",
+                    TSuggestionOrder.class);
             tq.setParameter(1, java.sql.Date.valueOf(LocalDate.now().minusMonths(1)));
             return tq.getResultList();
         } catch (Exception e) {
@@ -203,7 +207,9 @@ public class JobCalendar {
 
     private List<TFamilleGrossiste> listDonPriceIsZero() {
         try {
-            TypedQuery<TFamilleGrossiste> q = this.getEm().createQuery("SELECT o FROM TFamilleGrossiste o WHERE  o.strSTATUT='enable' AND (o.intPAF=0 OR o.intPRICE=0)", TFamilleGrossiste.class);
+            TypedQuery<TFamilleGrossiste> q = this.getEm().createQuery(
+                    "SELECT o FROM TFamilleGrossiste o WHERE  o.strSTATUT='enable' AND (o.intPAF=0 OR o.intPRICE=0)",
+                    TFamilleGrossiste.class);
             return q.getResultList();
         } catch (Exception e) {
             return Collections.emptyList();

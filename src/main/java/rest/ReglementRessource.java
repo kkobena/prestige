@@ -47,13 +47,10 @@ public class ReglementRessource {
 
     @GET
     @Path("liste")
-    public Response searchProduct(
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "userId") String userId,
-            @QueryParam(value = "pairclient") boolean pairclient
-    ) throws JSONException {
+    public Response searchProduct(@QueryParam(value = "query") String query,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "userId") String userId, @QueryParam(value = "pairclient") boolean pairclient)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -104,25 +101,22 @@ public class ReglementRessource {
 
     @GET
     @Path("delayed")
-    public Response listeReglementDifferes(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "clientId") String clientId
-    ) throws JSONException {
+    public Response listeReglementDifferes(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "clientId") String clientId)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = reglementService.reglementsDifferes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), clientId);
+        JSONObject jsono = reglementService.reglementsDifferes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), true,
+                tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), clientId);
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("details")
-    public Response detailsDifferes(
-            @QueryParam(value = "ref") String ref
-    ) throws JSONException {
+    public Response detailsDifferes(@QueryParam(value = "ref") String ref) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -144,7 +138,8 @@ public class ReglementRessource {
         JSONObject json = generateTicketService.ticketReglementDiffere(ref);
         return Response.ok().entity(json.toString()).build();
     }
-     @PUT
+
+    @PUT
     @Path("ticket-carnet/{id}")
     public Response print(@PathParam("id") String ref) throws JSONException {
         HttpSession hs = servletRequest.getSession();

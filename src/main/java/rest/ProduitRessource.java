@@ -53,8 +53,8 @@ public class ProduitRessource {
 
     @GET
     @Path("produit-desactives")
-    public Response produitDesactives(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) throws JSONException {
+    public Response produitDesactives(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -122,39 +122,32 @@ public class ProduitRessource {
 
     @GET
     @Path("fabricants")
-    public Response fabricants(
-            @QueryParam(value = "query") String query) throws JSONException {
+    public Response fabricants(@QueryParam(value = "query") String query) throws JSONException {
         JSONObject jsono = produitService.findAllFabricants(query);
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("familles")
-    public Response familles(
-            @QueryParam(value = "query") String query) throws JSONException {
+    public Response familles(@QueryParam(value = "query") String query) throws JSONException {
         JSONObject jsono = produitService.findAllFamilleArticle(query);
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("rayons")
-    public Response rayons(
-            @QueryParam(value = "query") String query) throws JSONException {
+    public Response rayons(@QueryParam(value = "query") String query) throws JSONException {
         JSONObject jsono = produitService.findAllRayons(query);
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoring")
-    public Response suivitMvtArticles(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "search") String search,
-            @QueryParam(value = "categorieId") String categorieId,
-            @QueryParam(value = "fabricantId") String fabricantId,
-            @QueryParam(value = "rayonId") String rayonId
-    //@QueryParam(value = "produitId") String produitId
+    public Response suivitMvtArticles(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "search") String search, @QueryParam(value = "categorieId") String categorieId,
+            @QueryParam(value = "fabricantId") String fabricantId, @QueryParam(value = "rayonId") String rayonId
+    // @QueryParam(value = "produitId") String produitId
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
@@ -179,195 +172,175 @@ public class ProduitRessource {
 
     @GET
     @Path("monitoringproduct")
-    public Response detailMvt(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+    public Response detailMvt(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateViewDatas(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitEclateViewDatas(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoring-vente")
-    public Response detailVentes(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+    public Response detailVentes(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateVentes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitEclateVentes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoring-ajust")
     public Response detailmonitoringajustpositif(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId,
-            @QueryParam(value = "positif") boolean positif
-    ) throws JSONException {
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "produitId") String produitId,
+            @QueryParam(value = "positif") boolean positif) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateAjustement(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), positif);
+        JSONObject jsono = produitService.suivitEclateAjustement(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), positif);
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoring-decon")
-    public Response monitoringdecon(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId,
-            @QueryParam(value = "positif") boolean positif
-    ) throws JSONException {
+    public Response monitoringdecon(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId, @QueryParam(value = "positif") boolean positif)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateDecond(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), positif);
+        JSONObject jsono = produitService.suivitEclateDecond(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), positif);
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoring-retour")
-    public Response monitoringretour(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+    public Response monitoringretour(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateRetourFour(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitEclateRetourFour(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoringentresbl")
-    public Response monitoringentresbl(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+    public Response monitoringentresbl(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateEntree(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitEclateEntree(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoringinventaire")
-    public Response monitoringinventaire(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+    public Response monitoringinventaire(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateInv(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitEclateInv(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId,
+                tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoring-vente-annule")
     public Response monitoringventeannule(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "produitId") String produitId)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateAnnulation(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitEclateAnnulation(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoringperimes")
-    public Response monitoringperimes(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+    public Response monitoringperimes(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclatePerime(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitEclatePerime(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("monitoring-retourdepot")
     public Response monitoringretourdepot(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "produitId") String produitId)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.suivitEclateRetourDepot(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = produitService.suivitEclateRetourDepot(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                produitId, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(jsono.toString()).build();
     }
 
     @GET
     @Path("valorisation")
-    public Response valorisationStock(
-            @QueryParam(value = "mode") int mode,
+    public Response valorisationStock(@QueryParam(value = "mode") int mode,
             @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "lgFAMILLEARTICLEID") String lgFAMILLEARTICLEID,
             @QueryParam(value = "lgGROSSISTEID") String lgGROSSISTEID,
-            @QueryParam(value = "lgZONEGEOID") String lgZONEGEOID,
-            @QueryParam(value = "END") String END,
-            @QueryParam(value = "BEGIN") String BEGIN
-    ) throws JSONException {
+            @QueryParam(value = "lgZONEGEOID") String lgZONEGEOID, @QueryParam(value = "END") String END,
+            @QueryParam(value = "BEGIN") String BEGIN) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = produitService.valorisationStock(mode, LocalDate.parse(dtStart),
-                lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-        jsono.put("user", tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME()).put("dtCREATED", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+        JSONObject jsono = produitService.valorisationStock(mode, LocalDate.parse(dtStart), lgGROSSISTEID,
+                lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        jsono.put("user", tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME()).put("dtCREATED",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
 
         return Response.ok().entity(jsono.toString()).build();
     }
@@ -375,13 +348,10 @@ public class ProduitRessource {
     @GET
     @Path("retours-data")
     public Response loadRetouFournisseurs(@QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "fourId") String fourId,
-            @QueryParam(value = "query") String query,
-             @QueryParam(value = "filtre") String filtre
-    ) throws JSONException {
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "fourId") String fourId,
+            @QueryParam(value = "query") String query, @QueryParam(value = "filtre") String filtre)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -395,9 +365,9 @@ public class ProduitRessource {
         }
         List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, DateConverter.ACTION_DELETE_RETOUR);
-        JSONObject json = mvtProduitService.loadetourFournisseur(dtStart, dtEnd, start, limit, fourId, query, asAuthority,filtre);
+        JSONObject json = mvtProduitService.loadetourFournisseur(dtStart, dtEnd, start, limit, fourId, query,
+                asAuthority, filtre);
         return Response.ok().entity(json.toString()).build();
     }
 
-   
 }

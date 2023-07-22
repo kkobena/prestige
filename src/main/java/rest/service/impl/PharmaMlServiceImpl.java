@@ -81,20 +81,23 @@ public class PharmaMlServiceImpl implements PharmaMlService {
     }
 
     private List<TOrderDetail> findByOrder(TOrder order) {
-        TypedQuery<TOrderDetail> q = getEntityManager().createNamedQuery("TOrderDetail.findByLgORDERID", TOrderDetail.class);
+        TypedQuery<TOrderDetail> q = getEntityManager().createNamedQuery("TOrderDetail.findByLgORDERID",
+                TOrderDetail.class);
         q.setParameter("lgORDERID", order);
         return q.getResultList();
     }
 
     private TFamilleGrossiste findByGrossisteAndFamille(String idProduit, String grossisteId) {
         try {
-            TypedQuery<TFamilleGrossiste> q = getEntityManager().createQuery("SELECT o FROM TFamilleGrossiste o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgGROSSISTEID.lgGROSSISTEID=?2 AND o.strSTATUT='enable' ", TFamilleGrossiste.class);
+            TypedQuery<TFamilleGrossiste> q = getEntityManager().createQuery(
+                    "SELECT o FROM TFamilleGrossiste o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgGROSSISTEID.lgGROSSISTEID=?2 AND o.strSTATUT='enable' ",
+                    TFamilleGrossiste.class);
             q.setParameter(1, idProduit);
             q.setParameter(2, grossisteId);
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-//            e.printStackTrace(System.err);
+            // e.printStackTrace(System.err);
             return null;
         }
     }
@@ -106,23 +109,27 @@ public class PharmaMlServiceImpl implements PharmaMlService {
      * @param typeCommande
      * @param typeCommandeExecptionel
      * @param commentaire
-     * @return Le code de commande forme a partir de la reference de la commande
-     * sans le separeut <<_>>
+     *
+     * @return Le code de commande forme a partir de la reference de la commande sans le separeut <<_>>
      */
     @Override
-    public JSONObject envoiPharmaCommande(String commandeId, LocalDate dateLivraisonSouhaitee, int typeCommande, String typeCommandeExecptionel, String commentaire) {
+    public JSONObject envoiPharmaCommande(String commandeId, LocalDate dateLivraisonSouhaitee, int typeCommande,
+            String typeCommandeExecptionel, String commentaire) {
         JSONObject json = new JSONObject();
         TOrder order = getEntityManager().find(TOrder.class, commandeId);
         TGrossiste tg = order.getLgGROSSISTEID();
         List<PharmaMLItemDTO> itemDTO = new ArrayList<>();
         findByOrder(order).stream().forEach(d -> {
             TFamille tf = d.getLgFAMILLEID();
-            PharmaMLItemDTO o = new PharmaMLItemDTO(d, tf, findByGrossisteAndFamille(tf.getLgFAMILLEID(), tg.getLgGROSSISTEID()), false, false, false, PharmaMlUtils.TYPE_CODIFICATION_CIP);
+            PharmaMLItemDTO o = new PharmaMLItemDTO(d, tf,
+                    findByGrossisteAndFamille(tf.getLgFAMILLEID(), tg.getLgGROSSISTEID()), false, false, false,
+                    PharmaMlUtils.TYPE_CODIFICATION_CIP);
             itemDTO.add(o);
         });
         try {
-            buildCommande(message_url + order.getStrREFORDER(), tg.getIdRepartiteur(), PharmaMlUtils.TYPE_TRAVAIL_COMMANDE,
-                    dateLivraisonSouhaitee, typeCommande, typeCommandeExecptionel, itemDTO, commentaire, order.getStrREFORDER().replace("_", ""));
+            buildCommande(message_url + order.getStrREFORDER(), tg.getIdRepartiteur(),
+                    PharmaMlUtils.TYPE_TRAVAIL_COMMANDE, dateLivraisonSouhaitee, typeCommande, typeCommandeExecptionel,
+                    itemDTO, commentaire, order.getStrREFORDER().replace("_", ""));
             return json.put("success", true);
         } catch (IOException e) {
             e.printStackTrace(System.err);
@@ -131,8 +138,9 @@ public class PharmaMlServiceImpl implements PharmaMlService {
 
     }
 
-  
-    public void buildCommande(String pathPharmaMl, String idRepartiteur, String typeTravail, LocalDate dateLivraisonSouhaitee, int typeCommande, String codeCommande, List<PharmaMLItemDTO> itemDTO, String commentaire, String commandeRef) throws IOException {
+    public void buildCommande(String pathPharmaMl, String idRepartiteur, String typeTravail,
+            LocalDate dateLivraisonSouhaitee, int typeCommande, String codeCommande, List<PharmaMLItemDTO> itemDTO,
+            String commentaire, String commandeRef) throws IOException {
         NOMBRE_LIGNE_CODE = 0;
         NOMBRE_LIGNE_CLAIRE = 0;
         FileWriter fileWriter = new FileWriter(pathPharmaMl);
@@ -148,7 +156,7 @@ public class PharmaMlServiceImpl implements PharmaMlService {
             printWriter.println(buildComment(null));
             printWriter.println(finCommande());
         }
-       
+
     }
 
     @Override
@@ -159,12 +167,14 @@ public class PharmaMlServiceImpl implements PharmaMlService {
         List<PharmaMLItemDTO> itemDTO = new ArrayList<>();
         findByOrder(order).stream().forEach(d -> {
             TFamille tf = d.getLgFAMILLEID();
-            PharmaMLItemDTO o = new PharmaMLItemDTO(d, tf, findByGrossisteAndFamille(tf.getLgFAMILLEID(), tg.getLgGROSSISTEID()), false, false, false, PharmaMlUtils.TYPE_CODIFICATION_CIP);
+            PharmaMLItemDTO o = new PharmaMLItemDTO(d, tf,
+                    findByGrossisteAndFamille(tf.getLgFAMILLEID(), tg.getLgGROSSISTEID()), false, false, false,
+                    PharmaMlUtils.TYPE_CODIFICATION_CIP);
             itemDTO.add(o);
         });
         try {
-            buildInfoProduits(message_url + order.getStrREFORDER(), tg.getIdRepartiteur(), RandomStringUtils.randomNumeric(PharmaMlUtils.DEF_COUNT),
-                    itemDTO);
+            buildInfoProduits(message_url + order.getStrREFORDER(), tg.getIdRepartiteur(),
+                    RandomStringUtils.randomNumeric(PharmaMlUtils.DEF_COUNT), itemDTO);
             return json.put("success", true);
         } catch (IOException e) {
             e.printStackTrace(System.err);
@@ -173,7 +183,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
 
     }
 
-    private void buildInfoProduits(String pathPharmaMl, String idRepartiteur, String codeRequete, List<PharmaMLItemDTO> itemDTO) throws IOException {
+    private void buildInfoProduits(String pathPharmaMl, String idRepartiteur, String codeRequete,
+            List<PharmaMLItemDTO> itemDTO) throws IOException {
         NOMBRE_LIGNE_CODE = 0;
         NOMBRE_LIGNE_CLAIRE = 0;
         FileWriter fileWriter = new FileWriter(pathPharmaMl);
@@ -187,7 +198,7 @@ public class PharmaMlServiceImpl implements PharmaMlService {
     }
 
     private void processInfoProduit() {
-//https://www.ntppool.org/en/
+        // https://www.ntppool.org/en/
     }
 
     File findCommandeResponse(String filePath) {
@@ -196,7 +207,9 @@ public class PharmaMlServiceImpl implements PharmaMlService {
         if (responses.length == 0) {
             return null;
         }
-        List<File> files = Stream.of(responses).sorted(fileComparator.reversed()).filter(x -> DateConverter.convertLongToLacalDate(x.lastModified()).isEqual(LocalDate.now())).collect(Collectors.toList());
+        List<File> files = Stream.of(responses).sorted(fileComparator.reversed())
+                .filter(x -> DateConverter.convertLongToLacalDate(x.lastModified()).isEqual(LocalDate.now()))
+                .collect(Collectors.toList());
         if (files.isEmpty()) {
             return null;
         }
@@ -256,17 +269,17 @@ public class PharmaMlServiceImpl implements PharmaMlService {
         tO.setTypeCodification(typeCodif);
         tO.setPrixAchat(prixAchatHtaxe);
         switch (typeCodif) {
-            case TYPE_CODIFICATION_CIP:
-                tO.setCip(x.substring(7, lastIndex).trim());
-                break;
-            case TYPE_CODIFICATION_EAN13:
-                tO.setEan(x.substring(7, lastIndex).trim());
-                break;
-            case TYPE_CODIFICATION_LIBELLE_PRODUIT:
-                tO.setLibelle(x.substring(7, lastIndex).trim());
-                break;
-            default:
-                break;
+        case TYPE_CODIFICATION_CIP:
+            tO.setCip(x.substring(7, lastIndex).trim());
+            break;
+        case TYPE_CODIFICATION_EAN13:
+            tO.setEan(x.substring(7, lastIndex).trim());
+            break;
+        case TYPE_CODIFICATION_LIBELLE_PRODUIT:
+            tO.setLibelle(x.substring(7, lastIndex).trim());
+            break;
+        default:
+            break;
 
         }
         return tO;
@@ -336,8 +349,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
                     getEntityManager().remove(order);
                 }
             }
-            return new JSONObject().put("success", true).put("nbreproduit", prisEncompte.size())
-                    .put("nbrerupture", rupture.size());
+            return new JSONObject().put("success", true).put("nbreproduit", prisEncompte.size()).put("nbrerupture",
+                    rupture.size());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
@@ -347,7 +360,7 @@ public class PharmaMlServiceImpl implements PharmaMlService {
 
     public void test() {
         try {
-            String[] id = {"10662031032481273098", "10662033106163354419"};
+            String[] id = { "10662031032481273098", "10662033106163354419" };
             for (int i = 0; i < id.length; i++) {
                 String string = id[i];
                 TOrder order = orderService.findByRef("", string);
@@ -355,7 +368,7 @@ public class PharmaMlServiceImpl implements PharmaMlService {
                 findByOrder(order).forEach(x -> {
                     TOrderDetail o = orderService.findByCipAndOrderId(x.getLgFAMILLEID().getIntCIP(), string);
                     orderService.creerRuptureItem(rupture, o.getLgFAMILLEID(), o.getIntNUMBER());
-//                getEntityManager().remove(o);
+                    // getEntityManager().remove(o);
                 });
             }
 
@@ -365,22 +378,25 @@ public class PharmaMlServiceImpl implements PharmaMlService {
     }
 
     @Override
-    public JSONObject renvoiPharmaCommande(String ruptureId, String grossiste, LocalDate dateLivraisonSouhaitee, int typeCommande, String typeCommandeExecptionel, String commentaire) {
+    public JSONObject renvoiPharmaCommande(String ruptureId, String grossiste, LocalDate dateLivraisonSouhaitee,
+            int typeCommande, String typeCommandeExecptionel, String commentaire) {
         JSONObject json = new JSONObject();
         Rupture order = getEntityManager().find(Rupture.class, ruptureId);
         TGrossiste envoiGr = getEntityManager().find(TGrossiste.class, grossiste);
         order.setGrossiste(envoiGr);
         this.getEntityManager().merge(order);
-//        TGrossiste tg = order.getGrossiste();
+        // TGrossiste tg = order.getGrossiste();
         List<PharmaMLItemDTO> itemDTO = new ArrayList<>();
         orderService.ruptureDetaisDtoByRupture(ruptureId).forEach(d -> {
             TFamille tf = d.getProduit();
-            PharmaMLItemDTO o = new PharmaMLItemDTO(d, tf, orderService.findOrCreateFamilleGrossiste(tf, envoiGr), false, false, false, PharmaMlUtils.TYPE_CODIFICATION_CIP);
+            PharmaMLItemDTO o = new PharmaMLItemDTO(d, tf, orderService.findOrCreateFamilleGrossiste(tf, envoiGr),
+                    false, false, false, PharmaMlUtils.TYPE_CODIFICATION_CIP);
             itemDTO.add(o);
         });
         try {
-            buildCommande(message_url + order.getReference(), envoiGr.getIdRepartiteur(), PharmaMlUtils.TYPE_TRAVAIL_COMMANDE,
-                    dateLivraisonSouhaitee, typeCommande, typeCommandeExecptionel, itemDTO, commentaire, order.getReference().replace("_", ""));
+            buildCommande(message_url + order.getReference(), envoiGr.getIdRepartiteur(),
+                    PharmaMlUtils.TYPE_TRAVAIL_COMMANDE, dateLivraisonSouhaitee, typeCommande, typeCommandeExecptionel,
+                    itemDTO, commentaire, order.getReference().replace("_", ""));
             return json.put("success", true);
         } catch (IOException e) {
             e.printStackTrace(System.err);
@@ -409,8 +425,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
             if (rupture.isEmpty()) {
                 this.getEntityManager().remove(rup);
             }
-            return new JSONObject().put("success", true).put("nbreproduit", prisEncompte.size())
-                    .put("nbrerupture", rupture.size());
+            return new JSONObject().put("success", true).put("nbreproduit", prisEncompte.size()).put("nbrerupture",
+                    rupture.size());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
@@ -422,7 +438,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
         TGrossiste grossiste = order.getLgGROSSISTEID();
         Collection<TOrderDetail> orderDetails = new ArrayList<>(items.size());
         items.forEach(x -> {
-            TFamilleGrossiste o = orderService.finFamilleGrossisteByFamilleCipAndIdGrossiste(x.getCip(), grossiste.getLgGROSSISTEID());
+            TFamilleGrossiste o = orderService.finFamilleGrossisteByFamilleCipAndIdGrossiste(x.getCip(),
+                    grossiste.getLgGROSSISTEID());
             TOrderDetail OTOrderDetail = new TOrderDetail(RandomStringUtils.randomAlphabetic(20));
             OTOrderDetail.setLgORDERID(order);
             OTOrderDetail.setIntNUMBER(x.getQuantite());
@@ -444,7 +461,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
             orderDetails.add(OTOrderDetail);
             getEntityManager().persist(o);
             try {
-                this.getEntityManager().refresh(orderService.ruptureDetaisByRuptureAndProduitId(ruptureId, o.getLgFAMILLEID().getLgFAMILLEID()));
+                this.getEntityManager().refresh(orderService.ruptureDetaisByRuptureAndProduitId(ruptureId,
+                        o.getLgFAMILLEID().getLgFAMILLEID()));
             } catch (Exception e) {
                 e.printStackTrace(System.err);
             }

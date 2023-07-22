@@ -56,7 +56,8 @@ public class KeyUtilGen {
         this.mois = now.get(2) + 1;
         this.jour = now.get(5);
         this.annee = now.get(1);
-        this.catime = this.annee + "" + this.mois + "" + this.jour + "" + this.hh + "" + this.mm + "" + this.ss + "" + this.mls;
+        this.catime = this.annee + "" + this.mois + "" + this.jour + "" + this.hh + "" + this.mm + "" + this.ss + ""
+                + this.mls;
     }
 
     public String getDateTime() {
@@ -125,7 +126,8 @@ public class KeyUtilGen {
         this.mois = now.get(2) + 1;
         this.jour = now.get(5);
         this.annee = now.get(1);
-        this.catime = this.annee + "" + this.mois + "" + this.jour + "" + this.hh + "" + this.mm + "" + this.ss + "" + this.mls;
+        this.catime = this.annee + "" + this.mois + "" + this.jour + "" + this.hh + "" + this.mm + "" + this.ss + ""
+                + this.mls;
         return this.catime + GetNumberRandom();
     }
 
@@ -142,7 +144,8 @@ public class KeyUtilGen {
         this.mois = now.get(2) + 1;
         this.jour = now.get(5);
         this.annee = now.get(1);
-        this.catime = this.getKeyYear() + "" + this.mois + "" + this.jour + "" + this.hh + "" + this.mm + "" + this.ss + "" + this.mls;
+        this.catime = this.getKeyYear() + "" + this.mois + "" + this.jour + "" + this.hh + "" + this.mm + "" + this.ss
+                + "" + this.mls;
         this.catime = this.catime + GetNumberRandom();
         if (this.catime.length() < 20) {
             this.catime = this.catime + GetNumberRandom();
@@ -166,7 +169,7 @@ public class KeyUtilGen {
         this.mls = now.get(14);
         this.catime = this.mm + "" + this.ss + "" + this.mls;
 
-        for(int int_lenght = this.catime.length(); int_lenght < int_size; int_lenght = this.catime.length()) {
+        for (int int_lenght = this.catime.length(); int_lenght < int_size; int_lenght = this.catime.length()) {
             this.catime = this.catime + GetNumberRandom();
         }
 
@@ -196,7 +199,8 @@ public class KeyUtilGen {
         }
 
         this.annee = now.get(1);
-        this.catime = this.getKeyYear() + "" + MOIS + "" + JOUR + "" + this.hh + "" + this.mm + "" + this.ss + "" + GetNumberRandom(9);
+        this.catime = this.getKeyYear() + "" + MOIS + "" + JOUR + "" + this.hh + "" + this.mm + "" + this.ss + ""
+                + GetNumberRandom(9);
         if (this.catime.length() == 9) {
             System.out.println("bad id " + this.catime);
             this.catime = this.catime + GetNumberRandom(9) + GetNumberRandom(9);
@@ -262,7 +266,7 @@ public class KeyUtilGen {
         try {
             dat = Sformat.format(actuelle);
         } catch (Exception var4) {
-         
+
             dat = getDateNow(Sformat);
         }
 
@@ -279,7 +283,7 @@ public class KeyUtilGen {
         (new logger()).OCategory.info("date " + dat);
         return dat;
     }
-    
+
     public static String getDateForLimitSearch(Date actuelle, int nb_day) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(actuelle);
@@ -315,12 +319,10 @@ public class KeyUtilGen {
 
     public double get_double_value(String String_value) {
         double result = 0.0;
-        Integer integer_value =  Integer.valueOf(String_value);
+        Integer integer_value = Integer.valueOf(String_value);
         result = integer_value.doubleValue();
         return result;
     }
-
-
 
     public static Date stringToDate(String sDate) {
         Date tempDate = new Date();
@@ -333,8 +335,6 @@ public class KeyUtilGen {
         return tempDate;
     }
 
-
-  
     public static Date stringToDate(String sDate, SimpleDateFormat Format) {
         Date tempDate = null;
 
@@ -357,7 +357,6 @@ public class KeyUtilGen {
         return tempDate;
     }
 
-
     public static String DoubleToAmount(double db_Amount) {
         String[] temp = null;
         String Str_db_Amount = String.valueOf(db_Amount);
@@ -373,20 +372,19 @@ public class KeyUtilGen {
     }
 
     public static String GetNumberRandom() {
-        return String.valueOf((int)(Math.random() * 10000.0 + 1.0));
+        return String.valueOf((int) (Math.random() * 10000.0 + 1.0));
     }
 
     public static String GetNumberRandom(int patern) {
-        String var = String.valueOf((int)(Math.random() * (double)patern + 1.0));
+        String var = String.valueOf((int) (Math.random() * (double) patern + 1.0));
         (new logger()).OCategory.fatal(var);
         return var;
     }
 
-
     public static String getDay(Date Odate) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(Odate);
-        String[] DayName = new String[]{"DIMANCHE", "LUNDI", "MARDI", "MERCREDI", "JEUDI", "VENDREDI", "SAMEDI"};
+        String[] DayName = new String[] { "DIMANCHE", "LUNDI", "MARDI", "MERCREDI", "JEUDI", "VENDREDI", "SAMEDI" };
         String Day = DayName[cal.get(7) - 1];
         return Day;
     }
@@ -394,7 +392,8 @@ public class KeyUtilGen {
     public static String getMois(Date Odate) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(Odate);
-        String[] monthName = new String[]{"Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aout", "Aout", "Octobre", "Novembre", "Decembre"};
+        String[] monthName = new String[] { "Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aout",
+                "Aout", "Octobre", "Novembre", "Decembre" };
         String month = monthName[cal.get(2)];
         return month;
     }
@@ -420,7 +419,6 @@ public class KeyUtilGen {
         return (Integer.valueOf(Oval)).toString();
     }
 
-
     public static String getoDay(Date Odate) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(Odate);
@@ -442,8 +440,6 @@ public class KeyUtilGen {
         return (Integer.valueOf(Oval)).toString();
     }
 
-
-
     public static String getTime(Date ODate) {
         String result = "";
         String Str_O_Date = dateToString(ODate, formatterMysql);
@@ -456,15 +452,13 @@ public class KeyUtilGen {
         return result;
     }
 
-
-
-
     public static String GetNumberRandom(int debut, int fin) {
         int rand;
-        for(rand = Integer.parseInt(GetNumberRandom(fin)); rand < debut; rand = Integer.parseInt(GetNumberRandom(fin))) {
+        for (rand = Integer.parseInt(GetNumberRandom(fin)); rand < debut; rand = Integer
+                .parseInt(GetNumberRandom(fin))) {
         }
 
-        while(rand == debut) {
+        while (rand == debut) {
             rand = Integer.parseInt(GetNumberRandom(fin));
         }
 
@@ -489,7 +483,6 @@ public class KeyUtilGen {
         (new logger()).OCategory.info("lastDateOfPreviousMonth " + lastDateOfPreviousMonth);
         return lastDateOfPreviousMonth;
     }
-
 
     public Date getFirstDayofNextMonth() {
         Calendar cal = Calendar.getInstance();

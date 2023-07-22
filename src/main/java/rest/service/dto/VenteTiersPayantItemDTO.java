@@ -19,20 +19,19 @@ import lombok.ToString;
 @Getter
 @Setter
 public class VenteTiersPayantItemDTO {
-     private final String id;
-  
+    private final String id;
+
     private final Integer intPERCENT;
-    
+
     private final Integer intPRICE;
 
     private final Integer intPRICERESTE;
-   
-  
+
     private final String strSTATUTFACTURE;
-  
+
     private final String strREFBON;
-  
+
     private final TiersPayantDTO tiersPayant;
-  
+
     private final String lgPREENREGISTREMENTID;
 }

@@ -20,10 +20,9 @@ import java.util.Objects;
 public class ExtraitCompteClientDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static  final  String PATERN="MM/yyyy";
+    private static final String PATERN = "MM/yyyy";
 
     private String libelle, ref;
-
 
     private String user;
     private LocalDateTime createdAt;
@@ -36,6 +35,7 @@ public class ExtraitCompteClientDTO implements Serializable {
     public String getLibelle() {
         return libelle;
     }
+
     public String getRef() {
         return ref;
     }
@@ -43,6 +43,7 @@ public class ExtraitCompteClientDTO implements Serializable {
     public void setRef(String ref) {
         this.ref = ref;
     }
+
     public void setLibelle(String libelle) {
         this.libelle = libelle;
     }
@@ -112,7 +113,7 @@ public class ExtraitCompteClientDTO implements Serializable {
     }
 
     public ExtraitCompteClientDTO(VenteTiersPayantsDTO dto) {
-      
+
         this.libelle = "ACHAT A CREDIT";
         this.user = dto.getOperateur();
         this.createdAt = dto.getCreatedAt();
@@ -126,21 +127,21 @@ public class ExtraitCompteClientDTO implements Serializable {
     }
 
     public ExtraitCompteClientDTO(ReglementCarnetDTO dto) {
-        TypeReglementCarnet typeReglementCarnet=dto.getTypeReglementCarnet();
-         this.libelle = "VERSEMENT";
-        if(Objects.nonNull(typeReglementCarnet)){
+        TypeReglementCarnet typeReglementCarnet = dto.getTypeReglementCarnet();
+        this.libelle = "VERSEMENT";
+        if (Objects.nonNull(typeReglementCarnet)) {
             switch (typeReglementCarnet) {
-                case DEPENSE:
-                     this.libelle = "DEPENSE";
-                    break;
-                    case REGLEMENT:
-                      this.libelle = "VERSEMENT";
-                    break;
-                default:
-                    break;
+            case DEPENSE:
+                this.libelle = "DEPENSE";
+                break;
+            case REGLEMENT:
+                this.libelle = "VERSEMENT";
+                break;
+            default:
+                break;
             }
         }
-       
+
         this.user = dto.getUser();
         this.createdAt = dto.getCreated();
         this.dateOperation = dto.getCreatedAt();
@@ -153,7 +154,7 @@ public class ExtraitCompteClientDTO implements Serializable {
     }
 
     public ExtraitCompteClientDTO(RetourCarnetDTO dto) {
-        this.libelle ="RETOUR DE PRODUITS";
+        this.libelle = "RETOUR DE PRODUITS";
         this.user = dto.getUser();
         this.createdAt = dto.getCreatedAt();
         this.dateOperation = dto.getDateOperation();

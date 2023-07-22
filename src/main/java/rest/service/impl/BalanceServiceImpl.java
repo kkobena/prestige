@@ -102,14 +102,15 @@ public class BalanceServiceImpl implements BalanceService {
         List<BalanceDTO> balances = new ArrayList<>();
         List<BalanceVenteItemDTO> dataVentes;
         if (!balanceParams.isToPrint()) {
-            dataVentes = fetchPreenregistrements(balanceParams, "", "", "", "")
-                    .stream().map(this::buildFromTuple).collect(Collectors.toList());
+            dataVentes = fetchPreenregistrements(balanceParams, "", "", "", "").stream().map(this::buildFromTuple)
+                    .collect(Collectors.toList());
         } else {
-            dataVentes = fetchPreenregistrements(balanceParams, "", "", "m.`typeMvtCaisseId` AS typeMvtCaisse,", ",typeMvtCaisse")
-                    .stream().map(this::buildPdfDataFromTuple).collect(Collectors.toList());
+            dataVentes = fetchPreenregistrements(balanceParams, "", "", "m.`typeMvtCaisseId` AS typeMvtCaisse,",
+                    ",typeMvtCaisse").stream().map(this::buildPdfDataFromTuple).collect(Collectors.toList());
         }
 
-        Map<TypeTransaction, List<BalanceVenteItemDTO>> groupByTypeVente = dataVentes.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeTransaction));
+        Map<TypeTransaction, List<BalanceVenteItemDTO>> groupByTypeVente = dataVentes.stream()
+                .collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeTransaction));
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_COMPTANT)) {
             boolean checkUg = checkUg() && !balanceParams.isShowAllAmount();
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_COMPTANT);
@@ -153,11 +154,13 @@ public class BalanceServiceImpl implements BalanceService {
         bons.addAll(ventes);
 
         if (!balanceParams.isByMonth()) {
-            Map<LocalDate, List<TableauBaordPhDTO>> dailyData = bons.stream().collect(Collectors.groupingBy(TableauBaordPhDTO::getMvtDate));
+            Map<LocalDate, List<TableauBaordPhDTO>> dailyData = bons.stream()
+                    .collect(Collectors.groupingBy(TableauBaordPhDTO::getMvtDate));
             return buildTableauBoard(dailyData);
         } else {
 
-            Map<YearMonth, List<TableauBaordPhDTO>> monthyData = bons.stream().collect(Collectors.groupingBy(TableauBaordPhDTO::getYearMonth));
+            Map<YearMonth, List<TableauBaordPhDTO>> monthyData = bons.stream()
+                    .collect(Collectors.groupingBy(TableauBaordPhDTO::getYearMonth));
             return buildTableauBoard(monthyData);
         }
 
@@ -219,13 +222,15 @@ public class BalanceServiceImpl implements BalanceService {
         long montantTTCReel = 0;
         long montantNetReel = 0;
 
-        Map<String, List<BalanceVenteItemDTO>> mapByTypeReglemement = venteData.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeReglement));
+        Map<String, List<BalanceVenteItemDTO>> mapByTypeReglemement = venteData.stream()
+                .collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeReglement));
         for (Map.Entry<String, List<BalanceVenteItemDTO>> entry : mapByTypeReglemement.entrySet()) {
             String typeReglemement = entry.getKey();
             List<BalanceVenteItemDTO> values = entry.getValue();
             for (BalanceVenteItemDTO balanceVenteItem : values) {
                 long montantRegle1 = balanceVenteItem.getMontantRegle().longValue();
-                montantTTC += showAllAmount ? balanceVenteItem.getMontantTTCDetatilReal().longValue() : balanceVenteItem.getMontantTTCDetatil().longValue();
+                montantTTC += showAllAmount ? balanceVenteItem.getMontantTTCDetatilReal().longValue()
+                        : balanceVenteItem.getMontantTTCDetatil().longValue();
                 montantTTCReel += balanceVenteItem.getMontantTTCDetatil().longValue();
                 if (checkUg) {
                     montantTTC -= balanceVenteItem.getMontantUg().longValue();
@@ -240,31 +245,31 @@ public class BalanceServiceImpl implements BalanceService {
                 montantCredit += balanceVenteItem.getMontantCredit().longValue();
                 montantRegle += montantRegle1;
                 switch (typeReglemement) {
-                    case DateConverter.MODE_ESP:
-                        montantEsp +=montantRegle1;
-                        montantEsp -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
-                        break;
-                    case DateConverter.MODE_CHEQUE:
-                        montantCheque += balanceVenteItem.getMontantRegle().longValue();
-                        montantCheque -= balanceVenteItem.getFlagedAmount().longValue();
-                        break;
-                    case DateConverter.MODE_CB:
-                        montantCB += montantRegle1;
-                        montantCB -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
-                        break;
-                    case DateConverter.MODE_VIREMENT:
-                        montantVirement +=montantRegle1;
-                        montantVirement -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
-                        break;
-                    case DateConverter.MODE_MOOV:
-                    case DateConverter.TYPE_REGLEMENT_ORANGE:
-                    case DateConverter.MODE_MTN:
-                    case DateConverter.MODE_WAVE:
-                        montantMobilePayment += montantRegle1;
-                        montantMobilePayment -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
-                        break;
-                    default:
-                        break;
+                case DateConverter.MODE_ESP:
+                    montantEsp += montantRegle1;
+                    montantEsp -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
+                    break;
+                case DateConverter.MODE_CHEQUE:
+                    montantCheque += balanceVenteItem.getMontantRegle().longValue();
+                    montantCheque -= balanceVenteItem.getFlagedAmount().longValue();
+                    break;
+                case DateConverter.MODE_CB:
+                    montantCB += montantRegle1;
+                    montantCB -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
+                    break;
+                case DateConverter.MODE_VIREMENT:
+                    montantVirement += montantRegle1;
+                    montantVirement -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
+                    break;
+                case DateConverter.MODE_MOOV:
+                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                case DateConverter.MODE_MTN:
+                case DateConverter.MODE_WAVE:
+                    montantMobilePayment += montantRegle1;
+                    montantMobilePayment -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
+                    break;
+                default:
+                    break;
 
                 }
 
@@ -310,15 +315,16 @@ public class BalanceServiceImpl implements BalanceService {
         return sql;
     }
 
-    private List<Tuple> fetchPreenregistrements(BalanceParamsDTO balanceParams, String subQueryMvtDate, String subQueryGroupBy, String typeMvtCaisse, String typeMvtCaisseGroupBy) { //AND p.`int_PRICE`>?0
+    private List<Tuple> fetchPreenregistrements(BalanceParamsDTO balanceParams, String subQueryMvtDate,
+            String subQueryGroupBy, String typeMvtCaisse, String typeMvtCaisseGroupBy) { // AND p.`int_PRICE`>?0
 
-        String sql = String.format(BALANCE_SQL_QUERY, subQueryMvtDate, typeMvtCaisse, subQueryGroupBy, typeMvtCaisseGroupBy);
+        String sql = String.format(BALANCE_SQL_QUERY, subQueryMvtDate, typeMvtCaisse, subQueryGroupBy,
+                typeMvtCaisseGroupBy);
 
         sql = replacePlaceHolder(sql, balanceParams);
         LOG.log(Level.INFO, "sql--- balance vente {0}", sql);
         try {
-            Query query = em.createNativeQuery(sql, Tuple.class)
-                    .setParameter(1, DateConverter.DEPOT_EXTENSION)
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, DateConverter.DEPOT_EXTENSION)
                     .setParameter(2, balanceParams.getEmplacementId())
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
@@ -353,8 +359,7 @@ public class BalanceServiceImpl implements BalanceService {
                 sql = sql.replace("{byDay}", "").replace("{groupByDay}", "");
             }
             LOG.log(Level.INFO, "sql--- TVAS {0}", sql);
-            Query query = em.createNativeQuery(sql, Tuple.class)
-                    .setParameter(1, DateConverter.DEPOT_EXTENSION)
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, DateConverter.DEPOT_EXTENSION)
                     .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtEnd()))
                     .setParameter(4, balanceParams.getEmplacementId());
@@ -386,14 +391,13 @@ public class BalanceServiceImpl implements BalanceService {
         return o;
     }
 
-    private List<BalanceVenteItemDTO> fetchRemises(BalanceParamsDTO balanceParams, String subQueryMvtDate, String subQuery, String subQueryGroupBy, boolean remisePara) { //AND p.`int_PRICE`>?0
+    private List<BalanceVenteItemDTO> fetchRemises(BalanceParamsDTO balanceParams, String subQueryMvtDate,
+            String subQuery, String subQueryGroupBy, boolean remisePara) { // AND p.`int_PRICE`>?0
         String sql = String.format(REMISE_SQL_QUERY, subQueryMvtDate, subQuery, subQueryGroupBy);
         LOG.log(Level.INFO, "sql--- remiseSqlQuery  {0}", sql);
         try {
-            Query query = em.createNativeQuery(sql, Tuple.class)
-                    .setParameter(1, remisePara)
-                    .setParameter(2, balanceParams.getEmplacementId())
-                    .setParameter(3, DateConverter.DEPOT_EXTENSION)
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, remisePara)
+                    .setParameter(2, balanceParams.getEmplacementId()).setParameter(3, DateConverter.DEPOT_EXTENSION)
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(5, java.sql.Date.valueOf(balanceParams.getDtEnd()));
             List<Tuple> list = query.getResultList();
@@ -440,21 +444,19 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     private BalanceVenteItemDTO buildRemiseFromTuple(Tuple tuple) {
-        return BalanceVenteItemDTO.builder()
-                .typeVente(tuple.get("typeVente", String.class))
-                .montantRemise(tuple.get("montantRemise", BigDecimal.class))
-                .build();
+        return BalanceVenteItemDTO.builder().typeVente(tuple.get("typeVente", String.class))
+                .montantRemise(tuple.get("montantRemise", BigDecimal.class)).build();
     }
 
     private BalanceVenteItemDTO buildFromTuple(Tuple tuple) {
-        TypeTransaction typeVente = tuple.get("typeVente", Integer.class) == 0 ? TypeTransaction.VENTE_COMPTANT : TypeTransaction.VENTE_CREDIT;
+        TypeTransaction typeVente = tuple.get("typeVente", Integer.class) == 0 ? TypeTransaction.VENTE_COMPTANT
+                : TypeTransaction.VENTE_CREDIT;
         BigDecimal montantHorsCa0 = tuple.get("montantTTCDetatilToRemove", BigDecimal.class);
         BigDecimal montantPaye = tuple.get("montantPaye", BigDecimal.class);
         BigDecimal montantRegle = tuple.get("montantRegle", BigDecimal.class);
         long montantHorsCa = Objects.nonNull(montantHorsCa0) ? montantHorsCa0.longValue() : 0;
 
-        return BalanceVenteItemDTO.builder()
-                .typeTransaction(typeVente)
+        return BalanceVenteItemDTO.builder().typeTransaction(typeVente)
                 .typeReglement(tuple.get("typeReglement", String.class))
                 .montantAcc(tuple.get("montantAcc", BigDecimal.class))
                 .montantAchat(tuple.get("montantAchat", BigDecimal.class))
@@ -465,8 +467,10 @@ public class BalanceServiceImpl implements BalanceService {
                 .montantNet(tuple.get("montantNet", BigDecimal.class))
                 .montantCredit(tuple.get("montantCredit", BigDecimal.class))
                 .montantRemise(tuple.get("montantRemise", BigDecimal.class))
-                .montantRegle(Objects.nonNull(montantRegle) ? montantRegle.subtract(BigDecimal.valueOf(montantHorsCa)) : BigDecimal.ONE)
-                .montantPaye(Objects.nonNull(montantPaye) ? montantPaye.subtract(BigDecimal.valueOf(montantHorsCa)) : BigDecimal.ONE)
+                .montantRegle(Objects.nonNull(montantRegle) ? montantRegle.subtract(BigDecimal.valueOf(montantHorsCa))
+                        : BigDecimal.ONE)
+                .montantPaye(Objects.nonNull(montantPaye) ? montantPaye.subtract(BigDecimal.valueOf(montantHorsCa))
+                        : BigDecimal.ONE)
                 .montantDiffere(tuple.get("montantDiffere", BigDecimal.class))
                 .montantTTCDetatil(tuple.get("montantTTCDetatil", BigDecimal.class))
                 .totalVente(tuple.get("totalVente", BigDecimal.class).intValue())
@@ -474,8 +478,7 @@ public class BalanceServiceImpl implements BalanceService {
                 .montantTvaUg(tuple.get("montantTvaUg", BigDecimal.class))
                 .montantTTCDetatilToRemove(tuple.get("montantTTCDetatilToRemove", BigDecimal.class))
                 .flagedAmount(tuple.get("flagedAmount", BigDecimal.class))
-                .montantTTCDetatilReal(tuple.get("montantTTCDetatilReal", BigDecimal.class))
-                .build();
+                .montantTTCDetatilReal(tuple.get("montantTTCDetatilReal", BigDecimal.class)).build();
     }
 
     private BalanceVenteItemDTO buildPdfDataFromTuple(Tuple tuple) {
@@ -485,10 +488,8 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     private BalanceVenteItemDTO buildFromTupleOtherMvt(Tuple tuple) {
-        return BalanceVenteItemDTO.builder()
-                .typeMvtCaisse(tuple.get("typeMvtCaisse", String.class))
-                .montantTTC(tuple.get("montantTTC", BigDecimal.class))
-                .build();
+        return BalanceVenteItemDTO.builder().typeMvtCaisse(tuple.get("typeMvtCaisse", String.class))
+                .montantTTC(tuple.get("montantTTC", BigDecimal.class)).build();
     }
 
     private int computePercent(long amount, long totalAmount) {
@@ -519,7 +520,8 @@ public class BalanceServiceImpl implements BalanceService {
         return list;
     }
 
-    private GenericDTO buildBalance(List<BalanceDTO> balances, List<BalanceVenteItemDTO> othersTypeMvts, long montantAchat) {
+    private GenericDTO buildBalance(List<BalanceDTO> balances, List<BalanceVenteItemDTO> othersTypeMvts,
+            long montantAchat) {
         long montantTTC = 0;
         long montantNet = 0;
         long montantRemise = 0;
@@ -561,29 +563,31 @@ public class BalanceServiceImpl implements BalanceService {
         for (BalanceVenteItemDTO o : othersTypeMvts) {
             long amount = o.getMontantTTC().longValue();
             switch (o.getTypeMvtCaisse()) {
-                case DateConverter.MVT_FOND_CAISSE:
-                    fondCaisse += amount;
-                    break;
-                case DateConverter.MVT_SORTIE_CAISSE:
-                    montantSortie += amount;
-                    break;
-                case DateConverter.MVT_ENTREE_CAISSE:
-                    montantEntre += amount;
-                    break;
-                case DateConverter.MVT_REGLE_DIFF:
-                    montantRegDiff += amount;
-                    break;
-                case DateConverter.MVT_REGLE_TP:
-                    montantRegleTp += amount;
-                    break;
-                default:
-                    break;
+            case DateConverter.MVT_FOND_CAISSE:
+                fondCaisse += amount;
+                break;
+            case DateConverter.MVT_SORTIE_CAISSE:
+                montantSortie += amount;
+                break;
+            case DateConverter.MVT_ENTREE_CAISSE:
+                montantEntre += amount;
+                break;
+            case DateConverter.MVT_REGLE_DIFF:
+                montantRegDiff += amount;
+                break;
+            case DateConverter.MVT_REGLE_TP:
+                montantRegleTp += amount;
+                break;
+            default:
+                break;
             }
         }
         if (montantAchat > 0) {
 
-            ratioVA = BigDecimal.valueOf(Double.valueOf(montantTTC) / montantAchat).setScale(2, RoundingMode.HALF_UP).doubleValue();
-            rationAV = BigDecimal.valueOf(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP).doubleValue();
+            ratioVA = BigDecimal.valueOf(Double.valueOf(montantTTC) / montantAchat).setScale(2, RoundingMode.HALF_UP)
+                    .doubleValue();
+            rationAV = BigDecimal.valueOf(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP)
+                    .doubleValue();
         }
         if (nbreVente > 0) {
             panierMoyen = montantTTC / nbreVente;
@@ -697,7 +701,8 @@ public class BalanceServiceImpl implements BalanceService {
             }
             if (!amounts.isEmpty()) {
                 if (Objects.isNull(lastFoundDay) || (!data.getLocalOperation().isEqual(lastFoundDay))) {
-                    Optional<FlagedAmount> fl = amounts.stream().filter(e -> e.getMvtDate().isEqual(data.getLocalOperation())).findFirst();
+                    Optional<FlagedAmount> fl = amounts.stream()
+                            .filter(e -> e.getMvtDate().isEqual(data.getLocalOperation())).findFirst();
                     if (fl.isPresent()) {
                         FlagedAmount fa = fl.get();
                         lastFoundDay = fa.getMvtDate();
@@ -731,12 +736,12 @@ public class BalanceServiceImpl implements BalanceService {
 
         try {
             Query query = em.createNativeQuery(AMOUNT_TO_REMOVE, Tuple.class)
-                    .setParameter(4, balanceParams.getEmplacementId())
-                    .setParameter(3, DateConverter.DEPOT_EXTENSION)
+                    .setParameter(4, balanceParams.getEmplacementId()).setParameter(3, DateConverter.DEPOT_EXTENSION)
                     .setParameter(1, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtEnd()));
             Tuple tuple = (Tuple) query.getSingleResult();
-            return tuple.get("montant", BigDecimal.class).longValue() - tuple.get("montantAcc", BigDecimal.class).longValue();
+            return tuple.get("montant", BigDecimal.class).longValue()
+                    - tuple.get("montantAcc", BigDecimal.class).longValue();
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -760,7 +765,7 @@ public class BalanceServiceImpl implements BalanceService {
     @Override
     public boolean useLastUpdateStats() {
         return true;
-        //  return findParam(TVA_BALANCE_LAST_UPDATE);
+        // return findParam(TVA_BALANCE_LAST_UPDATE);
     }
 
     private boolean checkUg() {
@@ -776,9 +781,9 @@ public class BalanceServiceImpl implements BalanceService {
 
     private long avoirFournisseur(LocalDate dtStart, LocalDate dtEnd) {
         try {
-            Query q = em.createNativeQuery("SELECT COALESCE(SUM(o.dl_AMOUNT),0) FROM  t_retour_fournisseur o where DATE(o.dt_UPDATED)  BETWEEN ?1 AND ?2 AND o.str_REPONSE_FRS <>'' AND o.str_STATUT='enable'")
-                    .setParameter(1, java.sql.Date.valueOf(dtStart))
-                    .setParameter(2, java.sql.Date.valueOf(dtEnd));
+            Query q = em.createNativeQuery(
+                    "SELECT COALESCE(SUM(o.dl_AMOUNT),0) FROM  t_retour_fournisseur o where DATE(o.dt_UPDATED)  BETWEEN ?1 AND ?2 AND o.str_REPONSE_FRS <>'' AND o.str_STATUT='enable'")
+                    .setParameter(1, java.sql.Date.valueOf(dtStart)).setParameter(2, java.sql.Date.valueOf(dtEnd));
             return ((Number) q.getSingleResult()).longValue();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -791,8 +796,7 @@ public class BalanceServiceImpl implements BalanceService {
         String sqlQ = replacePlaceHolder(TABLEAU_BOARD_SQL, balanceParams);
         LOG.log(Level.INFO, "sql--- tableau vente {0}", sqlQ);
         try {
-            Query query = em.createNativeQuery(sqlQ, Tuple.class)
-                    .setParameter(1, DateConverter.DEPOT_EXTENSION)
+            Query query = em.createNativeQuery(sqlQ, Tuple.class).setParameter(1, DateConverter.DEPOT_EXTENSION)
                     .setParameter(2, balanceParams.getEmplacementId())
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
@@ -832,27 +836,27 @@ public class BalanceServiceImpl implements BalanceService {
                 o.setMontantAchat(montant);
                 switch (t.get("libelle", String.class)) {
 
-                    case DateConverter.LABOREXCI:
-                        o.setMontantAchatOne(montant);
+                case DateConverter.LABOREXCI:
+                    o.setMontantAchatOne(montant);
 
-                        break;
-                    case DateConverter.DPCI:
-                        o.setMontantAchatTwo(montant);
+                    break;
+                case DateConverter.DPCI:
+                    o.setMontantAchatTwo(montant);
 
-                        break;
-                    case DateConverter.COPHARMED:
-                        o.setMontantAchatThree(montant);
+                    break;
+                case DateConverter.COPHARMED:
+                    o.setMontantAchatThree(montant);
 
-                        break;
-                    case DateConverter.TEDIS:
-                        o.setMontantAchatFour(montant);
+                    break;
+                case DateConverter.TEDIS:
+                    o.setMontantAchatFour(montant);
 
-                        break;
-                    case DateConverter.AUTRES:
-                        o.setMontantAchatFive(montant);
-                        break;
-                    default:
-                        break;
+                    break;
+                case DateConverter.AUTRES:
+                    o.setMontantAchatFive(montant);
+                    break;
+                default:
+                    break;
                 }
                 list.add(o);
             }
@@ -881,16 +885,19 @@ public class BalanceServiceImpl implements BalanceService {
             Long montantNet2 = summary.getMontantNet();
             Long montantAchat2 = summary.getMontantAchat();
             if (montantAchat2.compareTo(0l) > 0) {
-                summary.setRatioVA(BigDecimal.valueOf(Double.valueOf(montantNet2) / montantAchat2).setScale(2, RoundingMode.FLOOR).doubleValue());
+                summary.setRatioVA(BigDecimal.valueOf(Double.valueOf(montantNet2) / montantAchat2)
+                        .setScale(2, RoundingMode.FLOOR).doubleValue());
             }
             if (montantNet2.compareTo(0l) > 0) {
-                summary.setRationAV(BigDecimal.valueOf(Double.valueOf(montantAchat2) / montantNet2).setScale(2, RoundingMode.FLOOR).doubleValue());
+                summary.setRationAV(BigDecimal.valueOf(Double.valueOf(montantAchat2) / montantNet2)
+                        .setScale(2, RoundingMode.FLOOR).doubleValue());
             }
         }
         return summary;
     }
 
-    private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buildTableauBoard(Map<? extends TemporalAccessor, List<TableauBaordPhDTO>> data) {
+    private Map<TableauBaordSummary, List<TableauBaordPhDTO>> buildTableauBoard(
+            Map<? extends TemporalAccessor, List<TableauBaordPhDTO>> data) {
         Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = new HashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMM");
         DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("MM/yyyy");
@@ -928,10 +935,12 @@ public class BalanceServiceImpl implements BalanceService {
             Integer montantNet2 = baordPh.getMontantNet();
             Integer montantAchat2 = baordPh.getMontantAchat() - avoir;
             if (montantAchat2.compareTo(0) > 0) {
-                baordPh.setRatioVA(BigDecimal.valueOf(Double.valueOf(montantNet2) / montantAchat2).setScale(2, RoundingMode.FLOOR).doubleValue());
+                baordPh.setRatioVA(BigDecimal.valueOf(Double.valueOf(montantNet2) / montantAchat2)
+                        .setScale(2, RoundingMode.FLOOR).doubleValue());
             }
             if (montantNet2.compareTo(0) > 0) {
-                baordPh.setRationAV(BigDecimal.valueOf(Double.valueOf(montantAchat2) / montantNet2).setScale(2, RoundingMode.FLOOR).doubleValue());
+                baordPh.setRationAV(BigDecimal.valueOf(Double.valueOf(montantAchat2) / montantNet2)
+                        .setScale(2, RoundingMode.FLOOR).doubleValue());
             }
             baordPh.setMontantAvoir(avoir);
             tableauBaords.add(baordPh);
@@ -1045,7 +1054,8 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     private Set<FlagedAmount> buildFlagedAmount(List<Tuple> ts) {
-        return ts.stream().map(t -> new FlagedAmount(LocalDate.parse(t.get("mvtDate", String.class)), t.get("montantAcc", BigDecimal.class).intValue())).collect(Collectors.toSet());
+        return ts.stream().map(t -> new FlagedAmount(LocalDate.parse(t.get("mvtDate", String.class)),
+                t.get("montantAcc", BigDecimal.class).intValue())).collect(Collectors.toSet());
     }
 
     @Override
@@ -1054,10 +1064,11 @@ public class BalanceServiceImpl implements BalanceService {
         List<BalanceDTO> balances = new ArrayList<>();
         List<BalanceVenteItemDTO> dataVentes;
 
-        dataVentes = fetchPreenregistrements(balanceParams, "", "", "m.`typeMvtCaisseId` AS typeMvtCaisse,", ",typeMvtCaisse")
-                .stream().map(this::buildPdfDataFromTuple).collect(Collectors.toList());
+        dataVentes = fetchPreenregistrements(balanceParams, "", "", "m.`typeMvtCaisseId` AS typeMvtCaisse,",
+                ",typeMvtCaisse").stream().map(this::buildPdfDataFromTuple).collect(Collectors.toList());
 
-        Map<TypeTransaction, List<BalanceVenteItemDTO>> groupByTypeVente = dataVentes.stream().collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeTransaction));
+        Map<TypeTransaction, List<BalanceVenteItemDTO>> groupByTypeVente = dataVentes.stream()
+                .collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeTransaction));
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_COMPTANT)) {
             boolean checkUg = checkUg() && !balanceParams.isShowAllAmount();
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_COMPTANT);

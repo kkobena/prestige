@@ -29,16 +29,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "t_groupe_factures")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TGroupeFactures.findAll", query = "SELECT t FROM TGroupeFactures t")
-    , @NamedQuery(name = "TGroupeFactures.findById", query = "SELECT t FROM TGroupeFactures t WHERE t.id = :id")
-    , @NamedQuery(name = "TGroupeFactures.findByIntAMOUNT", query = "SELECT t FROM TGroupeFactures t WHERE t.intAMOUNT = :intAMOUNT")
-    , @NamedQuery(name = "TGroupeFactures.findByDtDEBUTFACTURE", query = "SELECT t FROM TGroupeFactures t WHERE t.dtDEBUTFACTURE = :dtDEBUTFACTURE")
-    , @NamedQuery(name = "TGroupeFactures.findByDtFINFACTURE", query = "SELECT t FROM TGroupeFactures t WHERE t.dtFINFACTURE = :dtFINFACTURE")
-    , @NamedQuery(name = "TGroupeFactures.findByIntNBDOSSIER", query = "SELECT t FROM TGroupeFactures t WHERE t.intNBDOSSIER = :intNBDOSSIER")
-    , @NamedQuery(name = "TGroupeFactures.findByStrCODEFACTURE", query = "SELECT t FROM TGroupeFactures t WHERE t.strCODEFACTURE = :strCODEFACTURE")
-    , @NamedQuery(name = "TGroupeFactures.findByDtCREATED", query = "SELECT t FROM TGroupeFactures t WHERE t.dtCREATED = :dtCREATED")
-    , @NamedQuery(name = "TGroupeFactures.findByDtUPDATED", query = "SELECT t FROM TGroupeFactures t WHERE t.dtUPDATED = :dtUPDATED")})
+@NamedQueries({ @NamedQuery(name = "TGroupeFactures.findAll", query = "SELECT t FROM TGroupeFactures t"),
+        @NamedQuery(name = "TGroupeFactures.findById", query = "SELECT t FROM TGroupeFactures t WHERE t.id = :id"),
+        @NamedQuery(name = "TGroupeFactures.findByIntAMOUNT", query = "SELECT t FROM TGroupeFactures t WHERE t.intAMOUNT = :intAMOUNT"),
+        @NamedQuery(name = "TGroupeFactures.findByDtDEBUTFACTURE", query = "SELECT t FROM TGroupeFactures t WHERE t.dtDEBUTFACTURE = :dtDEBUTFACTURE"),
+        @NamedQuery(name = "TGroupeFactures.findByDtFINFACTURE", query = "SELECT t FROM TGroupeFactures t WHERE t.dtFINFACTURE = :dtFINFACTURE"),
+        @NamedQuery(name = "TGroupeFactures.findByIntNBDOSSIER", query = "SELECT t FROM TGroupeFactures t WHERE t.intNBDOSSIER = :intNBDOSSIER"),
+        @NamedQuery(name = "TGroupeFactures.findByStrCODEFACTURE", query = "SELECT t FROM TGroupeFactures t WHERE t.strCODEFACTURE = :strCODEFACTURE"),
+        @NamedQuery(name = "TGroupeFactures.findByDtCREATED", query = "SELECT t FROM TGroupeFactures t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TGroupeFactures.findByDtUPDATED", query = "SELECT t FROM TGroupeFactures t WHERE t.dtUPDATED = :dtUPDATED") })
 public class TGroupeFactures implements Serializable {
 
     @Column(name = "int_PAYE")
@@ -194,14 +193,14 @@ public class TGroupeFactures implements Serializable {
     public void setIntPAYE(Integer intPAYE) {
         this.intPAYE = intPAYE;
     }
-//      public int getVersion() {
-//        return version;
-//    }
-//
-//    public void setVersion(int version) {
-//        this.version = version;
-//    }
-//    
-//    
-//    @Version private int version;
+    // public int getVersion() {
+    // return version;
+    // }
+    //
+    // public void setVersion(int version) {
+    // this.version = version;
+    // }
+    //
+    //
+    // @Version private int version;
 }

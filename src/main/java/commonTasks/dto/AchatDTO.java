@@ -16,7 +16,7 @@ public class AchatDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private long montantTTC = 0;
     private long montantHT = 0;
-    private long montantTVA  = 0;
+    private long montantTVA = 0;
     private String libelleGroupeGrossiste;
 
     public long getMontantTTC() {
@@ -53,9 +53,8 @@ public class AchatDTO implements Serializable {
 
     @Override
     public String toString() {
-        return "AchatDTO{" + "montantTTC=" + montantTTC + ", montantHT=" + montantHT + ", montantTVA=" + montantTVA + ", libelleGroupeGrossiste=" + libelleGroupeGrossiste + '}';
+        return "AchatDTO{" + "montantTTC=" + montantTTC + ", montantHT=" + montantHT + ", montantTVA=" + montantTVA
+                + ", libelleGroupeGrossiste=" + libelleGroupeGrossiste + '}';
     }
-
-    
 
 }

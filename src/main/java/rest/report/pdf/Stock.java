@@ -54,31 +54,33 @@ public class Stock {
     @EJB
     private SalesStatsService salesStatsService;
 
-    public String valorisation(TUser tu, int mode, LocalDate dtSt, String lgGROSSISTEID, String lgFAMILLEARTICLEID, String lgZONEGEOID, String end, String begin, String emplacementId) throws IOException {
+    public String valorisation(TUser tu, int mode, LocalDate dtSt, String lgGROSSISTEID, String lgFAMILLEARTICLEID,
+            String lgZONEGEOID, String end, String begin, String emplacementId) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_valorisation_stock_produit2";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         String P_SUBTITLE;
         switch (mode) {
-            case 1:
-                P_SUBTITLE = "VALORISATION  PAR FAMILLE D'ARTICLE ";
-                break;
-            case 2:
-                P_SUBTITLE = "VALORISATION PAR EMPLACEMENT ";
-                break;
-            case 3:
-                P_SUBTITLE = "VALORISATION PAR GROSSISTE ";
-                break;
-            default:
-                P_SUBTITLE = "VALORISATION ";
-                scr_report_file = "rp_valorisation_stock_produit";
-                break;
+        case 1:
+            P_SUBTITLE = "VALORISATION  PAR FAMILLE D'ARTICLE ";
+            break;
+        case 2:
+            P_SUBTITLE = "VALORISATION PAR EMPLACEMENT ";
+            break;
+        case 3:
+            P_SUBTITLE = "VALORISATION PAR GROSSISTE ";
+            break;
+        default:
+            P_SUBTITLE = "VALORISATION ";
+            scr_report_file = "rp_valorisation_stock_produit";
+            break;
         }
 
         parameters.put("P_H_CLT_INFOS", P_SUBTITLE + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        ValorisationDTO o = produitService.getValeurStockPdf(mode, dtSt, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID, end, begin, emplacementId);
+        ValorisationDTO o = produitService.getValeurStockPdf(mode, dtSt, lgGROSSISTEID, lgFAMILLEARTICLEID, lgZONEGEOID,
+                end, begin, emplacementId);
 
         ValorisationDTO tva = o.getTvas();
         parameters.put("totalpa", o.getMontantFacture());
@@ -93,9 +95,11 @@ public class Stock {
             parameters.put("totalPmd", o.getMontantPmd());
             parameters.put("totalTarif", o.getMontantTarif());
 
-            reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "valorisation_" + report_generate_file, o.getDatas());
+            reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                    jdom.scr_report_pdf + "valorisation_" + report_generate_file, o.getDatas());
         } else {
-            reportUtil.buildReportEmptyDs(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "valorisation_" + report_generate_file);
+            reportUtil.buildReportEmptyDs(parameters, scr_report_file, jdom.scr_report_file,
+                    jdom.scr_report_pdf + "valorisation_" + report_generate_file);
         }
 
         return "/data/reports/pdf/valorisation_" + report_generate_file;
@@ -109,11 +113,13 @@ public class Stock {
         parameters.put("P_H_CLT_INFOS", "VENTES UNITES GRATUITES " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         List<VenteDetailsDTO> data = caisseService.venteUgDTO(dtSt, dtEnd, query);
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_vente_ugs" + report_generate_file, data);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "rp_vente_ugs" + report_generate_file, data);
         return "/data/reports/pdf/rp_vente_ugs" + report_generate_file;
     }
 
-    public String rupturePharmaMl(TUser tu, LocalDate dtSt, LocalDate dtEnd, String query, String grossisteId, String emplacementId) throws IOException {
+    public String rupturePharmaMl(TUser tu, LocalDate dtSt, LocalDate dtEnd, String query, String grossisteId,
+            String emplacementId) throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_ruptures_pharmaml";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
@@ -121,11 +127,13 @@ public class Stock {
         parameters.put("P_H_CLT_INFOS", "PRODUITS EN RUPTURES " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         List<RuptureDetailDTO> data = orderService.listeRuptures(dtSt, dtEnd, query, grossisteId, emplacementId);
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_ruptures_pharmaml_" + report_generate_file, data);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "rp_ruptures_pharmaml_" + report_generate_file, data);
         return "/data/reports/pdf/rp_ruptures_pharmaml_" + report_generate_file;
     }
 
-    public String ventesTiersPayants(TUser tu, String scr_report_file, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId, String typeTp) {
+    public String ventesTiersPayants(TUser tu, String scr_report_file, String query, String dtStart, String dtEnd,
+            String tiersPayantId, String groupeId, String typeTp) {
         TOfficine oTOfficine = commonService.findOfficine();
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + LocalDate.parse(dtStart).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -135,14 +143,18 @@ public class Stock {
         }
         parameters.put("P_H_CLT_INFOS", "Liste des Bordereaux " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<VenteTiersPayantsDTO> data = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp, 0, 0, true);
+        List<VenteTiersPayantsDTO> data = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId,
+                groupeId, typeTp, 0, 0, true);
         if ("rp_ventetpGroup".equals(scr_report_file)) {
-            data.sort(Comparator.comparing(VenteTiersPayantsDTO::getLibelleGroupe,
-                    Comparator.nullsLast(Comparator.naturalOrder())).thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
+            data.sort(Comparator
+                    .comparing(VenteTiersPayantsDTO::getLibelleGroupe, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
         } else {
-            data.sort(Comparator.comparing(VenteTiersPayantsDTO::getTypeTiersPayant).thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
+            data.sort(Comparator.comparing(VenteTiersPayantsDTO::getTypeTiersPayant)
+                    .thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
         }
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_ventetp" + report_generate_file, data);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "rp_ventetp" + report_generate_file, data);
         return "/data/reports/pdf/rp_ventetp" + report_generate_file;
     }
 
@@ -176,7 +188,8 @@ public class Stock {
             }
         }
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "articlesvendus" + report_generate_file, data);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "articlesvendus" + report_generate_file, data);
         return "/data/reports/pdf/articlesvendus" + report_generate_file;
     }
 

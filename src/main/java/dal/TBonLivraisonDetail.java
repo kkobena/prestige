@@ -29,27 +29,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "t_bon_livraison_detail")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TBonLivraisonDetail.findAll", query = "SELECT t FROM TBonLivraisonDetail t"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByLgBONLIVRAISONDETAIL", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONDETAIL = :lgBONLIVRAISONDETAIL"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntQTECMDE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTECMDE = :intQTECMDE"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntQTEUG", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTEUG = :intQTEUG"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntQTERECUE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTERECUE = :intQTERECUE"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntPRIXREFERENCE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intPRIXREFERENCE = :intPRIXREFERENCE"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByStrLIVRAISONADP", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.strLIVRAISONADP = :strLIVRAISONADP"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByStrMANQUEFORCES", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.strMANQUEFORCES = :strMANQUEFORCES"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByStrETATARTICLE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.strETATARTICLE = :strETATARTICLE"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntPRIXVENTE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intPRIXVENTE = :intPRIXVENTE"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntPAF", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intPAF = :intPAF"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntPAREEL", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intPAREEL = :intPAREEL"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByStrSTATUT", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.strSTATUT = :strSTATUT"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByDtCREATED", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.dtCREATED = :dtCREATED"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByDtUPDATED", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.dtUPDATED = :dtUPDATED"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntQTEMANQUANT", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTEMANQUANT = :intQTEMANQUANT"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntQTERETURN", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTERETURN = :intQTERETURN"),
-    @NamedQuery(name = "TBonLivraisonDetail.findByIntINITSTOCK", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intINITSTOCK = :intINITSTOCK")})
+@NamedQueries({ @NamedQuery(name = "TBonLivraisonDetail.findAll", query = "SELECT t FROM TBonLivraisonDetail t"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByLgBONLIVRAISONDETAIL", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONDETAIL = :lgBONLIVRAISONDETAIL"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntQTECMDE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTECMDE = :intQTECMDE"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntQTEUG", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTEUG = :intQTEUG"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntQTERECUE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTERECUE = :intQTERECUE"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntPRIXREFERENCE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intPRIXREFERENCE = :intPRIXREFERENCE"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByStrLIVRAISONADP", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.strLIVRAISONADP = :strLIVRAISONADP"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByStrMANQUEFORCES", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.strMANQUEFORCES = :strMANQUEFORCES"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByStrETATARTICLE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.strETATARTICLE = :strETATARTICLE"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntPRIXVENTE", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intPRIXVENTE = :intPRIXVENTE"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntPAF", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intPAF = :intPAF"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntPAREEL", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intPAREEL = :intPAREEL"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByStrSTATUT", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.strSTATUT = :strSTATUT"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByDtCREATED", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByDtUPDATED", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.dtUPDATED = :dtUPDATED"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntQTEMANQUANT", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTEMANQUANT = :intQTEMANQUANT"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntQTERETURN", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intQTERETURN = :intQTERETURN"),
+        @NamedQuery(name = "TBonLivraisonDetail.findByIntINITSTOCK", query = "SELECT t FROM TBonLivraisonDetail t WHERE t.intINITSTOCK = :intINITSTOCK") })
 
-public class TBonLivraisonDetail implements Serializable,Cloneable  {
+public class TBonLivraisonDetail implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -106,7 +105,7 @@ public class TBonLivraisonDetail implements Serializable,Cloneable  {
     @Column(name = "prixTarif")
     private Integer prixTarif = 0;
     @Column(name = "prixUni")
-    private Integer prixUni ;
+    private Integer prixUni;
 
     public TBonLivraisonDetail() {
     }
@@ -297,7 +296,9 @@ public class TBonLivraisonDetail implements Serializable,Cloneable  {
             return false;
         }
         TBonLivraisonDetail other = (TBonLivraisonDetail) object;
-        if ((this.lgBONLIVRAISONDETAIL == null && other.lgBONLIVRAISONDETAIL != null) || (this.lgBONLIVRAISONDETAIL != null && !this.lgBONLIVRAISONDETAIL.equals(other.lgBONLIVRAISONDETAIL))) {
+        if ((this.lgBONLIVRAISONDETAIL == null && other.lgBONLIVRAISONDETAIL != null)
+                || (this.lgBONLIVRAISONDETAIL != null
+                        && !this.lgBONLIVRAISONDETAIL.equals(other.lgBONLIVRAISONDETAIL))) {
             return false;
         }
         return true;
@@ -325,8 +326,8 @@ public class TBonLivraisonDetail implements Serializable,Cloneable  {
     }
 
     @Override
-    public Object clone()  {
-        try { 
+    public Object clone() {
+        try {
             return super.clone();
         } catch (CloneNotSupportedException ex) {
             Logger.getLogger(TBonLivraisonDetail.class.getName()).log(Level.SEVERE, null, ex);
@@ -334,6 +335,4 @@ public class TBonLivraisonDetail implements Serializable,Cloneable  {
         return null;
     }
 
-    
-    
 }
