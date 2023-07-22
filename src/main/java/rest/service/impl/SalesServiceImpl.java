@@ -855,7 +855,7 @@ public class SalesServiceImpl implements SalesService {
 
     private void copyRecette(TPreenregistrement newPreen, TRecettes old, TUser o) {
         TRecettes tr = old;
-        LOG.log(Level.INFO, "tr {0} ", new Object[] { tr });
+        LOG.log(Level.INFO, "tr {0} ", new Object[]{tr});
         tr.setLgUSERID(o);
         tr.setDtCREATED(newPreen.getDtUPDATED());
         tr.setDtUPDATED(newPreen.getDtUPDATED());
@@ -1653,37 +1653,37 @@ public class SalesServiceImpl implements SalesService {
     private TModeReglement findModeReglement(String idTypeRegl, EntityManager emg) {
         TModeReglement modeReglement;
         switch (idTypeRegl) {
-        case "1":
-        case "4":
-            modeReglement = findByIdMod("1", emg);
-            break;
-        case "2":
-            modeReglement = findByIdMod("2", emg);
-            break;
-        case "3":
-            modeReglement = findByIdMod("5", emg);
-            break;
-        case "6":
-            modeReglement = findByIdMod("7", emg);
-            break;
-        case "5":
-            modeReglement = findByIdMod("6", emg);
-            break;
-        case "7":
-            modeReglement = findByIdMod(DateConverter.MODE_ORANGE, emg);
-            break;
-        case "8":
-            modeReglement = findByIdMod("8", emg);
-            break;
-        case "9":
-            modeReglement = findByIdMod("9", emg);
-            break;
-        case "10":
-            modeReglement = findByIdMod("11", emg);
-            break;
-        default:
-            modeReglement = findByIdMod(idTypeRegl, emg);
-            break;
+            case "1":
+            case "4":
+                modeReglement = findByIdMod("1", emg);
+                break;
+            case "2":
+                modeReglement = findByIdMod("2", emg);
+                break;
+            case "3":
+                modeReglement = findByIdMod("5", emg);
+                break;
+            case "6":
+                modeReglement = findByIdMod("7", emg);
+                break;
+            case "5":
+                modeReglement = findByIdMod("6", emg);
+                break;
+            case "7":
+                modeReglement = findByIdMod(DateConverter.MODE_ORANGE, emg);
+                break;
+            case "8":
+                modeReglement = findByIdMod("8", emg);
+                break;
+            case "9":
+                modeReglement = findByIdMod("9", emg);
+                break;
+            case "10":
+                modeReglement = findByIdMod("11", emg);
+                break;
+            default:
+                modeReglement = findByIdMod(idTypeRegl, emg);
+                break;
 
         }
         return modeReglement;
@@ -2551,10 +2551,10 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public MontantAPaye calculVoNet(TPreenregistrement OTPreenregistrement, List<TiersPayantParams> tierspayants,
+    public MontantAPaye calculVoNet(TPreenregistrement op, List<TiersPayantParams> tierspayants,
             EntityManager emg) {
         try {
-            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, emg);
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(op, emg);
             int remiseCarnet = 0;
             int montantvente;
             int totalTp = 0;
@@ -2563,15 +2563,15 @@ public class SalesServiceImpl implements SalesService {
             int diffMontantTotalAndCmuAmount = 0;
             int cmuAmount = 0;
             boolean isCmu = tierspayants.stream().allMatch(TiersPayantParams::isCmu);
-
+            TTypeVente tTypeVente = op.getLgTYPEVENTEID();
             MontantAPaye montantAPaye;
             List<TiersPayantParams> resultat = new ArrayList<>();
-            if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
+            if (tTypeVente.getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
                 totalTaux = 100;
-                TRemise remise = OTPreenregistrement.getRemise();
-                remise = remise != null ? remise : OTPreenregistrement.getClient().getRemise();
+                TRemise remise = op.getRemise();
+                remise = remise != null ? remise : op.getClient().getRemise();
                 if (remise != null) {
-                    montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
+                    montantAPaye = getRemiseVno(op, remise, op.getIntPRICE());
                     montantvente = montantAPaye.getMontant();
                     remiseCarnet = montantAPaye.getRemise();
                 } else {
@@ -2581,7 +2581,7 @@ public class SalesServiceImpl implements SalesService {
                 }
 
                 TiersPayantParams tp = new TiersPayantParams();
-                Integer tpnet = montantvente - remiseCarnet;
+                int tpnet = montantvente - remiseCarnet;
                 totalTp += tpnet;
                 tp.setCompteTp(tierspayants.get(0).getCompteTp());
                 tp.setNumBon(tierspayants.get(0).getNumBon());
@@ -2590,28 +2590,25 @@ public class SalesServiceImpl implements SalesService {
                 tp.setTaux(100);
                 resultat.add(tp);
             } else {
-                TRemise remise = OTPreenregistrement.getRemise();
+                TRemise remise = op.getRemise();
 
                 if (remise != null) {
-                    montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
-
-                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
-                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
-                    montantVariable = montantvente;
+                    montantAPaye = getRemiseVno(op, remise, op.getIntPRICE());
                     remiseCarnet = montantAPaye.getRemise();
 
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
-                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
-                    montantVariable = montantvente;
+
                 }
+                cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
+                montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
+                montantVariable = montantvente;
                 diffMontantTotalAndCmuAmount = montantAPaye.getMontant() - cmuAmount;
                 for (TiersPayantParams tierspayant : tierspayants) {
                     TiersPayantParams tp = new TiersPayantParams();
-                    Integer taux = tierspayant.getTaux();
-                    Double montantTp = montantvente * (Double.valueOf(taux) / 100);
-                    Integer tpnet = (int) Math.ceil(montantTp);
+                    int taux = tierspayant.getTaux();
+                    double montantTp = montantvente * (Double.valueOf(taux) / 100);
+                    int tpnet = (int) Math.ceil(montantTp);
                     int thatTaux = 0;
                     if (montantVariable > tpnet) {
                         montantVariable -= tpnet;
@@ -2633,9 +2630,9 @@ public class SalesServiceImpl implements SalesService {
                 }
 
             }
-            Integer netCustomer = (montantvente - totalTp) - remiseCarnet
+            int netCustomer = (montantvente - totalTp) - remiseCarnet
                     + (diffMontantTotalAndCmuAmount != montantvente ? diffMontantTotalAndCmuAmount : 0);
-            if (totalTaux >= 100) {
+            if (totalTaux >= 100 || Parameter.VENTE_AVEC_CARNET.equals(tTypeVente.getLgTYPEVENTEID())) {
                 netCustomer = 0;
             }
             int finalSaleAmount = diffMontantTotalAndCmuAmount != montantvente
@@ -2651,8 +2648,8 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    private MontantAPaye getRemiseVno(TPreenregistrement OTPreenregistrement, TRemise OTRemise, Integer para) {
-        Integer int_TOTAL_REMISE, int_REMISE_PARA = 0, montantNet;
+    private MontantAPaye getRemiseVno(TPreenregistrement OTPreenregistrement, TRemise oTRemise, Integer para) {
+        int intTOTALREMISE;int  intREMISEPARA = 0;int montantNet;
         LongAdder totalRemise = new LongAdder();
         LongAdder totalRemisePara = new LongAdder();
         LongAdder totalAmount = new LongAdder();
@@ -2664,7 +2661,7 @@ public class SalesServiceImpl implements SalesService {
         lstTPreenregistrementDetail.forEach(x -> {
             totalAmount.add(x.getIntPRICE());
             if (Objects.nonNull(x.getCmuPrice())) {
-                montantCMU.add(x.getCmuPrice());
+                montantCMU.add(x.getCmuPrice()*x.getIntQUANTITY());
             }
             montantTva.add(x.getMontantTva());
             TFamille famille = x.getLgFAMILLEID();
@@ -2672,7 +2669,7 @@ public class SalesServiceImpl implements SalesService {
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
                 TGrilleRemise grilleRemise = grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(), famille,
-                        OTRemise.getLgREMISEID());
+                        oTRemise.getLgREMISEID());
                 if (grilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * grilleRemise.getDblTAUX()) / 100);
                     if (!x.getBoolACCOUNT()) {
@@ -2697,20 +2694,20 @@ public class SalesServiceImpl implements SalesService {
 
         });
         Integer montantTotal = totalAmount.intValue();
-        int_TOTAL_REMISE = totalRemise.intValue();
+        intTOTALREMISE = totalRemise.intValue();
         int tva = montantTva.intValue();
-        montantNet = montantTotal - int_TOTAL_REMISE;
+        montantNet = montantTotal - intTOTALREMISE;
         OTPreenregistrement.setIntPRICE(montantTotal);
         OTPreenregistrement.setIntACCOUNT(montantAccount.intValue());
-        OTPreenregistrement.setIntPRICEREMISE(int_TOTAL_REMISE);
-        OTPreenregistrement.setIntREMISEPARA(int_REMISE_PARA);
+        OTPreenregistrement.setIntPRICEREMISE(intTOTALREMISE);
+        OTPreenregistrement.setIntREMISEPARA(intREMISEPARA);
         OTPreenregistrement.setMontantTva(tva);
-        if (int_TOTAL_REMISE > 0 && OTRemise == null) {
-            OTPreenregistrement.setRemise(OTRemise);
+        if (intTOTALREMISE > 0 && oTRemise == null) {
+            OTPreenregistrement.setRemise(oTRemise);
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
-                DateConverter.arrondiModuloOfNumber(int_TOTAL_REMISE, 5), marge.intValue(), tva)
-                        .cmuAmount(montantAccount.intValue());
+                DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
+                .cmuAmount(montantAccount.intValue());
     }
 
     @Override
@@ -3291,11 +3288,11 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private List<TPreenregistrementCompteClientTiersPayent> getTPreenregistrementCompteClientTiersPayent(
-            String lg_PREENREGISTREMENT_ID) {
+            String idVente) {
         try {
             TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEm().createQuery(
                     "SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1 ORDER BY t.lgCOMPTECLIENTTIERSPAYANTID.intPRIORITY ASC ",
-                    TPreenregistrementCompteClientTiersPayent.class).setParameter(1, lg_PREENREGISTREMENT_ID);
+                    TPreenregistrementCompteClientTiersPayent.class).setParameter(1, idVente);
             return q.getResultList();
 
         } catch (Exception e) {
@@ -3335,22 +3332,22 @@ public class SalesServiceImpl implements SalesService {
     @Override
     public JSONObject mettreAjourDonneesClientVenteExistante(String venteId, SalesParams params) throws JSONException {
         try {
-            TPreenregistrement OTPreenregistrement = getEm().find(TPreenregistrement.class, venteId);
+            TPreenregistrement op = getEm().find(TPreenregistrement.class, venteId);
             findClientById(params.getClientId()).ifPresent(c -> {
-                OTPreenregistrement.setStrFIRSTNAMECUSTOMER(c.getStrFIRSTNAME());
-                OTPreenregistrement.setStrLASTNAMECUSTOMER(c.getStrLASTNAME());
-                OTPreenregistrement.setStrPHONECUSTOME(c.getStrADRESSE());
-                OTPreenregistrement.setClient(c);
+                op.setStrFIRSTNAMECUSTOMER(c.getStrFIRSTNAME());
+                op.setStrLASTNAMECUSTOMER(c.getStrLASTNAME());
+                op.setStrPHONECUSTOME(c.getStrADRESSE());
+                op.setClient(c);
             });
-            if (!OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
+            if (!op.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
                 findAyantDroit(params.getAyantDroitId(), getEm()).ifPresent(a -> {
-                    OTPreenregistrement.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
-                    OTPreenregistrement.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
-                    OTPreenregistrement.setAyantDroit(a);
+                    op.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
+                    op.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
+                    op.setAyantDroit(a);
                 });
             }
-            createPreenregistrementTierspayant(params.getTierspayants(), OTPreenregistrement, getEm());
-            getEm().merge(OTPreenregistrement);
+            createPreenregistrementTierspayant(params.getTierspayants(), op, getEm());
+            getEm().merge(op);
             return new JSONObject().put("success", true);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -3579,7 +3576,8 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrementCompteClientTiersPayent clientTiersPayent = getTPreenregistrementCompteClientTiersPayent(
                     venteId, olClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID(), getEm());
             /**
-             * s'il y a modification de tu tiers-payant on rentre dans premiere condition
+             * s'il y a modification de tu tiers-payant on rentre dans premiere
+             * condition
              */
             if (!params.getTypeVenteId().equals(params.getAyantDroitId())) {
 
@@ -3737,16 +3735,16 @@ public class SalesServiceImpl implements SalesService {
             if (oreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
                 TRemise remise = oreenregistrement.getRemise();
                 remise = remise != null ? remise : client.getRemise();
+                System.out.println("remise "+remise.getStrCODE());
                 if (remise != null) {
                     montantAPaye = getRemiseVno(oreenregistrement, remise, oreenregistrement.getIntPRICE());
-                    montantvente = montantAPaye.getMontant();
+                    System.err.println("montantAPaye =="+montantAPaye);
                     remiseCarnet = montantAPaye.getRemise();
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                    montantvente = montantAPaye.getMontant();
 
                 }
-
+                montantvente = montantAPaye.getMontant();
                 int tpnet = montantvente - remiseCarnet;
                 totalTp = tpnet;
                 JSONObject json = chechCustomerTiersPayantConsumption(tierspayants.get(0).getCompteTp(), tpnet);
@@ -3778,17 +3776,16 @@ public class SalesServiceImpl implements SalesService {
                     cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
                     // montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() :
                     // montantAPaye.getMontant();
-                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
-                    montantVariable = montantvente;
+
                     remiseCarnet = montantAPaye.getRemise();
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
                     // montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() :
                     // montantAPaye.getMontant();
-                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
-                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
-                    montantVariable = montantvente;
+
                 }
+                montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
+                montantVariable = montantvente;
                 diffMontantTotalAndCmuAmount = montantAPaye.getMontant() - cmuAmount;
                 for (TiersPayantParams tierspayant : tierspayants) {
                     TiersPayantParams tp = new TiersPayantParams();
@@ -3797,7 +3794,7 @@ public class SalesServiceImpl implements SalesService {
                     Integer tpnet = (int) Math.ceil(montantTp);
                     int taux2 = 0;
                     JSONObject json = chechCustomerTiersPayantConsumption(tierspayant.getCompteTp(), tpnet);
-                    System.err.println("chechCustomerTiersPayantConsumption =====>> " + json);
+                  
                     if (json.getBoolean("hasRestructuring")) {
                         msg += json.getString("msg") + " ";
                         hasRestructuring = json.getBoolean("hasRestructuring");
@@ -4452,7 +4449,7 @@ public class SalesServiceImpl implements SalesService {
         if (OTCompteClient != null && payant.getDblPLAFOND() != null && payant.getDblPLAFOND() != 0) {
             payant.setDblQUOTACONSOMENSUELLE(
                     (payant.getDblQUOTACONSOMENSUELLE() != null ? payant.getDblQUOTACONSOMENSUELLE() : 0)
-                            + newItem.getIntPRICE());
+                    + newItem.getIntPRICE());
             payant.setDtUPDATED(old.getDtUPDATED());
             getEm().merge(payant);
         }
@@ -4683,8 +4680,8 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(int_TOTAL_REMISE, 5), marge.intValue(), tva)
-                        .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
-                        .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
+                .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
+                .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
     }
 
     private MontantAPaye sumVenteSansRemise(List<TPreenregistrementDetail> list, TPreenregistrement p) {
@@ -4815,13 +4812,13 @@ public class SalesServiceImpl implements SalesService {
                         pt.setLgPREENREGISTREMENTID(newTp);
                         return pt;
                     }).map(pt -> {
-                        pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
-                        pt.setDtCREATED(newTp.getDtUPDATED());
-                        pt.setDtUPDATED(newTp.getDtUPDATED());
-                        return pt;
-                    }).forEachOrdered(pt -> {
-                        getEm().persist(pt);
-                    });
+                pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
+                pt.setDtCREATED(newTp.getDtUPDATED());
+                pt.setDtUPDATED(newTp.getDtUPDATED());
+                return pt;
+            }).forEachOrdered(pt -> {
+                getEm().persist(pt);
+            });
             JSONObject data = new JSONObject();
             data.put("lgPREENREGISTREMENTID", newTp.getLgPREENREGISTREMENTID());
             data.put("strREF", newTp.getStrREF());
@@ -4959,14 +4956,14 @@ public class SalesServiceImpl implements SalesService {
                 return detail;
             }).map(detail -> findHMvtProduitByPkey(detail.getLgPREENREGISTREMENTDETAILID()))
                     .filter(hMvtProduit -> (hMvtProduit != null)).map(hMvtProduit -> {
-                        hMvtProduit.setMvtDate(toDay);
-                        return hMvtProduit;
-                    }).map(hMvtProduit -> {
-                        hMvtProduit.setCreatedAt(venteDateNew);
-                        return hMvtProduit;
-                    }).forEachOrdered(hMvtProduit -> {
-                        getEm().merge(hMvtProduit);
-                    });
+                hMvtProduit.setMvtDate(toDay);
+                return hMvtProduit;
+            }).map(hMvtProduit -> {
+                hMvtProduit.setCreatedAt(venteDateNew);
+                return hMvtProduit;
+            }).forEachOrdered(hMvtProduit -> {
+                getEm().merge(hMvtProduit);
+            });
         }
 
     }
