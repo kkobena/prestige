@@ -58,7 +58,7 @@ public class StatistiqueProduitServiceImpl implements StatistiqueProduitService 
     @Override
     public JSONObject getIntervalAnnees() {
         int[] months = CommonUtils.getYears();
-     
+
         JSONArray datas = new JSONArray();
         for (int i = 0; i < months.length; i++) {
             int value = months[i];
@@ -71,26 +71,31 @@ public class StatistiqueProduitServiceImpl implements StatistiqueProduitService 
     }
 
     @Override
-    public List<StatistiqueProduitAnnuelleDTO> getVenteProduits(Integer year, String search, String userEmplacement, String rayonId, int start, int limit, boolean all) {
+    public List<StatistiqueProduitAnnuelleDTO> getVenteProduits(Integer year, String search, String userEmplacement,
+            String rayonId, int start, int limit, boolean all) {
         if (Objects.isNull(year)) {
             year = Year.now().getValue();
         }
-        return getVentes(year, search, userEmplacement, rayonId, start, limit, all).stream().map(this::build).collect(Collectors.toList());
+        return getVentes(year, search, userEmplacement, rayonId, start, limit, all).stream().map(this::build)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public JSONObject getVenteProduits(Integer year, String search, String userEmplacement, String rayonId, int start, int limit) {
+    public JSONObject getVenteProduits(Integer year, String search, String userEmplacement, String rayonId, int start,
+            int limit) {
         if (Objects.isNull(year)) {
             year = Year.now().getValue();
         }
         long count = getCountVentes(year, search, userEmplacement, rayonId);
-        return FunctionUtils.returnData(this.getVenteProduits(year, search, userEmplacement, rayonId, start, limit, false), count);
+        return FunctionUtils
+                .returnData(this.getVenteProduits(year, search, userEmplacement, rayonId, start, limit, false), count);
     }
 
     private String builQuery(String search, String rayonId, String sql) {
 
         if (StringUtils.isNotEmpty(search)) {
-            sql = sql.replace("{likeStatement}", " AND (f.`int_CIP` LIKE '" + search + "%' OR f.`str_NAME` LIKE '" + search + "%' )");
+            sql = sql.replace("{likeStatement}",
+                    " AND (f.`int_CIP` LIKE '" + search + "%' OR f.`str_NAME` LIKE '" + search + "%' )");
         } else {
             sql = sql.replace("{likeStatement}", "");
         }
@@ -103,13 +108,12 @@ public class StatistiqueProduitServiceImpl implements StatistiqueProduitService 
         return sql;
     }
 
-    List<Tuple> getVentes(int year, String search, String userEmplacement, String rayonId, int start, int limit, boolean all) {
+    List<Tuple> getVentes(int year, String search, String userEmplacement, String rayonId, int start, int limit,
+            boolean all) {
         try {
             Query query = em.createNativeQuery(builQuery(search, rayonId, YEAR_SQL_QUERY), Tuple.class)
-                    .setParameter(1, DateConverter.DEPOT_EXTENSION)
-                    .setParameter(2, userEmplacement)
-                    .setParameter(3, STATUT)
-                    .setParameter(4, year);
+                    .setParameter(1, DateConverter.DEPOT_EXTENSION).setParameter(2, userEmplacement)
+                    .setParameter(3, STATUT).setParameter(4, year);
             if (!all) {
                 query.setFirstResult(start);
                 query.setMaxResults(limit);
@@ -137,21 +141,15 @@ public class StatistiqueProduitServiceImpl implements StatistiqueProduitService 
     }
 
     private StatistiqueProduitAnnuelleDTO build(Tuple t) {
-        return StatistiqueProduitAnnuelleDTO.builder()
-                .id(t.get("id", String.class))
-                .codeCip(t.get("codeCip", String.class))
-                .libelle(t.get("libelle", String.class))
+        return StatistiqueProduitAnnuelleDTO.builder().id(t.get("id", String.class))
+                .codeCip(t.get("codeCip", String.class)).libelle(t.get("libelle", String.class))
                 .janvier(t.get("janvier", BigDecimal.class).intValue())
-                .fevrier(t.get("fevrier", BigDecimal.class).intValue())
-                .mars(t.get("mars", BigDecimal.class).intValue())
-                .avril(t.get("avril", BigDecimal.class).intValue())
-                .mai(t.get("mai", BigDecimal.class).intValue())
-                .juin(t.get("juin", BigDecimal.class).intValue())
-                .juillet(t.get("juillet", BigDecimal.class).intValue())
+                .fevrier(t.get("fevrier", BigDecimal.class).intValue()).mars(t.get("mars", BigDecimal.class).intValue())
+                .avril(t.get("avril", BigDecimal.class).intValue()).mai(t.get("mai", BigDecimal.class).intValue())
+                .juin(t.get("juin", BigDecimal.class).intValue()).juillet(t.get("juillet", BigDecimal.class).intValue())
                 .septembre(t.get("septembre", BigDecimal.class).intValue())
                 .octobre(t.get("octobre", BigDecimal.class).intValue())
                 .novembre(t.get("novembre", BigDecimal.class).intValue())
-                .decembre(t.get("decembre", BigDecimal.class).intValue())
-                .build();
+                .decembre(t.get("decembre", BigDecimal.class).intValue()).build();
     }
 }

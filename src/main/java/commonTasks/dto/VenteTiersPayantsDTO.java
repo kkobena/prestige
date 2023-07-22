@@ -34,7 +34,7 @@ public class VenteTiersPayantsDTO implements Serializable {
     private String libelleTiersPayant;
     private String codeTiersPayant;
     private int nbreDossier, taux;
-    private long montant,account;
+    private long montant, account;
     private long montantRemise;
     private String typeTiersPayant;
     private String typeTiersPayantId;
@@ -42,7 +42,8 @@ public class VenteTiersPayantsDTO implements Serializable {
     private String operateur;
     private LocalDateTime createdAt;
     private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-    private static String dateFormat_PATTERN="dd/MM/yyyy HH:mm:ss";
+    private static String dateFormat_PATTERN = "dd/MM/yyyy HH:mm:ss";
+
     public long getAccount() {
         return account;
     }
@@ -155,7 +156,8 @@ public class VenteTiersPayantsDTO implements Serializable {
         this.createdAt = createdAt;
     }
 
-    public VenteTiersPayantsDTO(TTiersPayant payant, List<TPreenregistrementCompteClientTiersPayent> clientTiersPayents) {
+    public VenteTiersPayantsDTO(TTiersPayant payant,
+            List<TPreenregistrementCompteClientTiersPayent> clientTiersPayents) {
 
         this.tiersPayantId = payant.getLgTIERSPAYANTID();
         this.codeTiersPayant = payant.getStrCODEORGANISME();
@@ -232,28 +234,35 @@ public class VenteTiersPayantsDTO implements Serializable {
         this.tiersPayantId = payant.getLgTIERSPAYANTID();
         this.codeTiersPayant = payant.getStrCODEORGANISME();
         this.libelleTiersPayant = payant.getStrFULLNAME();
-        this.createdAt=DateConverter.convertDateToLocalDateTime(pr.getDtUPDATED());
+        this.createdAt = DateConverter.convertDateToLocalDateTime(pr.getDtUPDATED());
     }
 
     @Override
     public String toString() {
-        return "VenteTiersPayantsDTO{" + "libelleGroupe=" + libelleGroupe + ", groupeId=" + groupeId + ", tiersPayantId=" + tiersPayantId + ", libelleTiersPayant=" + libelleTiersPayant + ", codeTiersPayant=" + codeTiersPayant + ", nbreDossier=" + nbreDossier + ", taux=" + taux + ", montant=" + montant + ", account=" + account + ", montantRemise=" + montantRemise + ", typeTiersPayant=" + typeTiersPayant + ", typeTiersPayantId=" + typeTiersPayantId + ", refVente=" + refVente + ", dateVente=" + dateVente + ", refBon=" + refBon + ", operateur=" + operateur + ", createdAt=" + createdAt + ", dateFormat=" + dateFormat + '}';
+        return "VenteTiersPayantsDTO{" + "libelleGroupe=" + libelleGroupe + ", groupeId=" + groupeId
+                + ", tiersPayantId=" + tiersPayantId + ", libelleTiersPayant=" + libelleTiersPayant
+                + ", codeTiersPayant=" + codeTiersPayant + ", nbreDossier=" + nbreDossier + ", taux=" + taux
+                + ", montant=" + montant + ", account=" + account + ", montantRemise=" + montantRemise
+                + ", typeTiersPayant=" + typeTiersPayant + ", typeTiersPayantId=" + typeTiersPayantId + ", refVente="
+                + refVente + ", dateVente=" + dateVente + ", refBon=" + refBon + ", operateur=" + operateur
+                + ", createdAt=" + createdAt + ", dateFormat=" + dateFormat + '}';
     }
 
     public VenteTiersPayantsDTO() {
     }
-   public VenteTiersPayantsDTO(VenteExclusDTO venteExclus) {
+
+    public VenteTiersPayantsDTO(VenteExclusDTO venteExclus) {
         this.montant = venteExclus.getMontantTiersPayant();
         this.operateur = venteExclus.getUserFullName();
-        this.dateVente =venteExclus.getModifiedAt().format(DateTimeFormatter.ofPattern(dateFormat_PATTERN));
-     
+        this.dateVente = venteExclus.getModifiedAt().format(DateTimeFormatter.ofPattern(dateFormat_PATTERN));
+
         this.refBon = venteExclus.getRefBon();
         this.refVente = venteExclus.getPreenregistrementRef();
-    
+
         this.tiersPayantId = venteExclus.getTiersPayantId();
-    
+
         this.libelleTiersPayant = venteExclus.getTiersPayantName();
-        this.createdAt=venteExclus.getModifiedAt();
-        
+        this.createdAt = venteExclus.getModifiedAt();
+
     }
 }

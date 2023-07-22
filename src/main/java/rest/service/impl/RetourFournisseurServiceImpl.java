@@ -53,18 +53,22 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
 
     @Override
     public List<RetourDetailsDTO> loadDetailRetourFournisseur(String retourId) {
-        TypedQuery<TRetourFournisseurDetail> q = getEntityManager().createQuery("SELECT o FROM TRetourFournisseurDetail o WHERE o.lgRETOURFRSID.lgRETOURFRSID=?1 ORDER BY o.dtCREATED DESC", TRetourFournisseurDetail.class);
+        TypedQuery<TRetourFournisseurDetail> q = getEntityManager().createQuery(
+                "SELECT o FROM TRetourFournisseurDetail o WHERE o.lgRETOURFRSID.lgRETOURFRSID=?1 ORDER BY o.dtCREATED DESC",
+                TRetourFournisseurDetail.class);
         q.setParameter(1, retourId);
         return q.getResultList().stream().map(RetourDetailsDTO::new).collect(Collectors.toList());
     }
 
     private TRetourFournisseur create(RetourFournisseurDTO params) {
-        TRetourFournisseurDetail item = newItem(params.getItems().get(0), params.getLgBONLIVRAISONID(), params.getUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        TRetourFournisseurDetail item = newItem(params.getItems().get(0), params.getLgBONLIVRAISONID(),
+                params.getUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         if (item == null) {
             return null;
         }
         TBonLivraison bonLivraison = getTBonLivraison(params.getLgBONLIVRAISONID());
-        TRetourFournisseur fournisseur = createRetourFournisseur(params.getUser(), params.getStrCOMMENTAIRE(), params.getStrREPONSEFRS(), bonLivraison);
+        TRetourFournisseur fournisseur = createRetourFournisseur(params.getUser(), params.getStrCOMMENTAIRE(),
+                params.getStrREPONSEFRS(), bonLivraison);
         getEntityManager().persist(fournisseur);
         item.setLgRETOURFRSID(fournisseur);
         getEntityManager().persist(item);
@@ -86,7 +90,8 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         TRetourFournisseur fournisseur = getEntityManager().find(TRetourFournisseur.class, params.getLgRETOURFRSID());
         TRetourFournisseurDetail item = getRetourFournisseurDetail(params.getLgRETOURFRSID(), params.getProduitId());
         if (item == null) {
-            item = newItem(params, fournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON(), fournisseur.getLgUSERID().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            item = newItem(params, fournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON(),
+                    fournisseur.getLgUSERID().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             if (item != null) {
                 item.setLgRETOURFRSID(fournisseur);
                 getEntityManager().persist(item);
@@ -117,7 +122,8 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
 
     @Override
     public RetourDetailsDTO updateItem(RetourDetailsDTO params) {
-        TRetourFournisseurDetail item = getEntityManager().find(TRetourFournisseurDetail.class, params.getLgRETOURFRSDETAIL());
+        TRetourFournisseurDetail item = getEntityManager().find(TRetourFournisseurDetail.class,
+                params.getLgRETOURFRSDETAIL());
         TBonLivraisonDetail bonLivraisonDetail = item.getBonLivraisonDetail();
         if (params.getIntNUMBERRETURN() > bonLivraisonDetail.getIntQTERECUE()) {
             return null;
@@ -136,20 +142,23 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
 
     @Override
     public void cloture(RetourFournisseurDTO params) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     private TBonLivraisonDetail getTBonLivraisonDetailLast(String lgBONLIVRAISONID, String lgFAMILLEID) {
-        TypedQuery<TBonLivraisonDetail> qry = getEntityManager().createQuery("SELECT t FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONID.strREFLIVRAISON = ?1  AND t.lgFAMILLEID.lgFAMILLEID = ?2", TBonLivraisonDetail.class).
-                setParameter(1, lgBONLIVRAISONID).setParameter(2, lgFAMILLEID);
+        TypedQuery<TBonLivraisonDetail> qry = getEntityManager().createQuery(
+                "SELECT t FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONID.strREFLIVRAISON = ?1  AND t.lgFAMILLEID.lgFAMILLEID = ?2",
+                TBonLivraisonDetail.class).setParameter(1, lgBONLIVRAISONID).setParameter(2, lgFAMILLEID);
         qry.setMaxResults(1);
         return qry.getSingleResult();
 
     }
 
     private TBonLivraison getTBonLivraison(String lgBONLIVRAISONID) {
-        TypedQuery<TBonLivraison> qry = getEntityManager().createQuery("SELECT t FROM TBonLivraison t WHERE t.strREFLIVRAISON = ?1", TBonLivraison.class).
-                setParameter(1, lgBONLIVRAISONID);
+        TypedQuery<TBonLivraison> qry = getEntityManager()
+                .createQuery("SELECT t FROM TBonLivraison t WHERE t.strREFLIVRAISON = ?1", TBonLivraison.class)
+                .setParameter(1, lgBONLIVRAISONID);
         return qry.getSingleResult();
     }
 
@@ -158,7 +167,9 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
     }
 
     private TFamilleStock getFamilleStock(String produitId, String emplacementId) {
-        TypedQuery<TFamilleStock> q = getEntityManager().createQuery("SELECT o FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2 AND o.strSTATUT='enable'", TFamilleStock.class);
+        TypedQuery<TFamilleStock> q = getEntityManager().createQuery(
+                "SELECT o FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2 AND o.strSTATUT='enable'",
+                TFamilleStock.class);
         q.setParameter(1, produitId).setParameter(2, emplacementId);
         q.setMaxResults(1);
         return q.getSingleResult();
@@ -181,7 +192,8 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         oTRetourFournisseurDetail.setDtUPDATED(oTRetourFournisseurDetail.getDtCREATED());
         oTRetourFournisseurDetail.setStrSTATUT(DateConverter.STATUT_PROCESS);
         oTRetourFournisseurDetail.setLgFAMILLEID(getFamille(item.getProduitId()));
-        oTRetourFournisseurDetail.setIntSTOCK(getFamilleStock(item.getProduitId(), emplacementId).getIntNUMBERAVAILABLE());
+        oTRetourFournisseurDetail
+                .setIntSTOCK(getFamilleStock(item.getProduitId(), emplacementId).getIntNUMBERAVAILABLE());
         oTRetourFournisseurDetail.setLgMOTIFRETOUR(getFromId(item.getLgMOTIFRETOUR()));
 
         return oTRetourFournisseurDetail;
@@ -196,8 +208,9 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
 
     private TRetourFournisseurDetail getRetourFournisseurDetail(String lgRetourId, String lgFAMILLEID) {
         try {
-            TypedQuery<TRetourFournisseurDetail> qry = getEntityManager().createQuery("SELECT t FROM TRetourFournisseurDetail t WHERE t.lgRETOURFRSID.lgRETOURFRSID = ?1  AND t.lgFAMILLEID.lgFAMILLEID = ?2", TRetourFournisseurDetail.class).
-                    setParameter(1, lgRetourId).setParameter(2, lgFAMILLEID);
+            TypedQuery<TRetourFournisseurDetail> qry = getEntityManager().createQuery(
+                    "SELECT t FROM TRetourFournisseurDetail t WHERE t.lgRETOURFRSID.lgRETOURFRSID = ?1  AND t.lgFAMILLEID.lgFAMILLEID = ?2",
+                    TRetourFournisseurDetail.class).setParameter(1, lgRetourId).setParameter(2, lgFAMILLEID);
             return qry.getSingleResult();
         } catch (Exception e) {
             return null;
@@ -206,10 +219,10 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
 
     @Override
     public List<ErpAvoir> erpAvoirsFournisseurs(String dtStart, String dtEnd) {
-        return getEntityManager().createQuery("SELECT new commonTasks.dto.ErpAvoir(o) FROM TRetourFournisseurDetail o WHERE o.strSTATUT='enable' AND FUNCTION('DATE',o.dtUPDATED) BETWEEN ?1 AND ?2", ErpAvoir.class)
-                .setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
-                .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
-                .getResultList();
+        return getEntityManager().createQuery(
+                "SELECT new commonTasks.dto.ErpAvoir(o) FROM TRetourFournisseurDetail o WHERE o.strSTATUT='enable' AND FUNCTION('DATE',o.dtUPDATED) BETWEEN ?1 AND ?2",
+                ErpAvoir.class).setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
+                .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE).getResultList();
     }
 
     @Override
@@ -219,20 +232,21 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         TRetourFournisseur retourFournisseur = createRetourFournisseur(user, "", null, bonLivraison);
         retourFournisseur.setStrSTATUT(DateConverter.STATUT_ENABLE);
         TMotifRetour motifRetour = getFromId(motifId);
-        ArrayList<TBonLivraisonDetail> bonLivraisonDetails = new ArrayList<>(bonLivraison.getTBonLivraisonDetailCollection());
+        ArrayList<TBonLivraisonDetail> bonLivraisonDetails = new ArrayList<>(
+                bonLivraison.getTBonLivraisonDetailCollection());
         cloneBl(bonLivraison, user, bonLivraisonDetails);
         retourFournisseur.setLgBONLIVRAISONID(bonLivraison);
-        mvtProduitService.validerFullBlRetourFournisseur(retourFournisseur,
-                motifRetour, bonLivraisonDetails);
-      
+        mvtProduitService.validerFullBlRetourFournisseur(retourFournisseur, motifRetour, bonLivraisonDetails);
+
         this.getEntityManager().merge(bonLivraison);
 
     }
 
-    private void cloneBl(TBonLivraison bonLivraison, TUser user, ArrayList<TBonLivraisonDetail> bonLivraisonDetails) throws CloneNotSupportedException {
+    private void cloneBl(TBonLivraison bonLivraison, TUser user, ArrayList<TBonLivraisonDetail> bonLivraisonDetails)
+            throws CloneNotSupportedException {
         bonLivraison.setDtUPDATED(new Date());
         bonLivraison.setSTATUS(DateConverter.STATUT_DELETE);
-          bonLivraison.setStrSTATUT(DateConverter.STATUT_DELETE);
+        bonLivraison.setStrSTATUT(DateConverter.STATUT_DELETE);
         TBonLivraison cloneBl = (TBonLivraison) bonLivraison.clone();
         cloneBl.setTBonLivraisonDetailCollection(new ArrayList<>());
         cloneBl.setTRetourFournisseurCollection(new ArrayList<>());
@@ -247,7 +261,9 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         this.getEntityManager().merge(bonLivraison);
 
     }
-    private final Function<TBonLivraisonDetail, TBonLivraisonDetail> cloneTBonLivraisonDetail = (bonLivraisonDetail) -> {
+
+    private final Function<TBonLivraisonDetail, TBonLivraisonDetail> cloneTBonLivraisonDetail = (
+            bonLivraisonDetail) -> {
         TBonLivraisonDetail copy = (TBonLivraisonDetail) bonLivraisonDetail.clone();
         copy.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
         copy.setDtCREATED(new Date());
@@ -266,7 +282,8 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         cloneBl.getTBonLivraisonDetailCollection().stream().forEach(this.getEntityManager()::persist);
     }
 
-    private TRetourFournisseur createRetourFournisseur(TUser tUser, String comment, String response, TBonLivraison bonLivraison) {
+    private TRetourFournisseur createRetourFournisseur(TUser tUser, String comment, String response,
+            TBonLivraison bonLivraison) {
         TRetourFournisseur retourFournisseur = new TRetourFournisseur(UUID.randomUUID().toString());
         retourFournisseur.setDtCREATED(new Date());
         retourFournisseur.setDtDATE(new Date());
@@ -288,5 +305,4 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
         return retourFournisseur;
     }
 
-  
 }

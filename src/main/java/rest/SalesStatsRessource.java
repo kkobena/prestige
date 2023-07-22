@@ -72,13 +72,10 @@ public class SalesStatsRessource {
 
     @GET
     @Path("preventes")
-    public Response getDetails(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "typeVenteId") String typeVenteId,
-            @QueryParam(value = "statut") String statut,
-            @QueryParam(value = "nature") String nature
-    ) throws JSONException {
+    public Response getDetails(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "typeVenteId") String typeVenteId,
+            @QueryParam(value = "statut") String statut, @QueryParam(value = "nature") String nature)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -105,14 +102,10 @@ public class SalesStatsRessource {
 
     @GET
     @Path("annulations")
-    public Response annulations(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "statut") String statut
-    ) throws JSONException {
+    public Response annulations(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "statut") String statut)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
@@ -169,10 +162,10 @@ public class SalesStatsRessource {
 
     @GET
     @Path("devis")
-    public Response allDevis(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "statut") String statut
-    ) throws JSONException {
+    public Response allDevis(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "statut") String statut)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -204,10 +197,9 @@ public class SalesStatsRessource {
 
     @GET
     @Path("preventes-depot")
-    public Response preventeDepotOnly(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
-            @QueryParam(value = "typeVenteId") String typeVenteId, @QueryParam(value = "statut") String statut
-    ) throws JSONException {
+    public Response preventeDepotOnly(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "typeVenteId") String typeVenteId,
+            @QueryParam(value = "statut") String statut) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
@@ -259,19 +251,12 @@ public class SalesStatsRessource {
     }
 
     @GET
-    public Response getAlls(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "hStart") String hStart,
-            @QueryParam(value = "hEnd") String hEnd,
-            @QueryParam(value = "sansBon") boolean sansBon,
-            @QueryParam(value = "onlyAvoir") boolean onlyAvoir,
-            @QueryParam(value = "typeVenteId") String typeVenteId,
-            @QueryParam(value = "nature") String nature
-    ) throws JSONException {
+    public Response getAlls(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "sansBon") boolean sansBon,
+            @QueryParam(value = "onlyAvoir") boolean onlyAvoir, @QueryParam(value = "typeVenteId") String typeVenteId,
+            @QueryParam(value = "nature") String nature) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
@@ -282,8 +267,10 @@ public class SalesStatsRessource {
         boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
         boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
         boolean canCancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
-        boolean modification = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.P_BT_MODIFICATION_DE_VENTE);
-        boolean modificationClientTp = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.P_BTN_UPDATE_VENTE_CLIENT_TP);
+        boolean modification = DateConverter.hasAuthorityByName(LstTPrivilege,
+                DateConverter.P_BT_MODIFICATION_DE_VENTE);
+        boolean modificationClientTp = DateConverter.hasAuthorityByName(LstTPrivilege,
+                DateConverter.P_BTN_UPDATE_VENTE_CLIENT_TP);
         SalesStatsParams body = new SalesStatsParams();
         body.setCanCancel(canCancel);
         body.setLimit(limit);
@@ -333,14 +320,11 @@ public class SalesStatsRessource {
 
     @GET
     @Path("avoirs")
-    public Response getAllsAvoir(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "hStart") String hStart,
-            @QueryParam(value = "hEnd") String hEnd,
-            @QueryParam(value = "typeVenteId") String typeVenteId,
-            @QueryParam(value = "nature") String nature
-    ) throws JSONException {
+    public Response getAllsAvoir(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "typeVenteId") String typeVenteId,
+            @QueryParam(value = "nature") String nature) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
@@ -387,7 +371,8 @@ public class SalesStatsRessource {
     @GET
     @Path("tvastat")
     @Deprecated
-    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "typeVente") String typeVente) throws JSONException {
+    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "typeVente") String typeVente) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -410,7 +395,8 @@ public class SalesStatsRessource {
 
     @PUT
     @Path("modifiertierspayant/{id}")
-    public Response modifiertpayantvente(@PathParam("id") String venteId, ClotureVenteParams params) throws JSONException {
+    public Response modifiertpayantvente(@PathParam("id") String venteId, ClotureVenteParams params)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
@@ -440,8 +426,7 @@ public class SalesStatsRessource {
     public Response findAllVenteOrdonnancier(@QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "medecinId") String medecinId
-    ) throws JSONException {
+            @QueryParam(value = "medecinId") String medecinId) throws JSONException {
 
         JSONObject jsono = salesService.findAllVenteOrdonnancier(medecinId, dtStart, dtEnd, query, start, limit);
         return Response.ok().entity(jsono.toString()).build();
@@ -449,23 +434,15 @@ public class SalesStatsRessource {
 
     @GET
     @Path("article-vendus")
-    public Response articlesVendus(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "hStart") String hStart,
-            @QueryParam(value = "hEnd") String hEnd,
-            @QueryParam(value = "user") String user,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "typeTransaction") String typeTransaction,
-            @QueryParam(value = "nbre") int nbre,
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "stock") Integer stock,
+    public Response articlesVendus(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "user") String user,
+            @QueryParam(value = "query") String query, @QueryParam(value = "typeTransaction") String typeTransaction,
+            @QueryParam(value = "nbre") int nbre, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "stock") Integer stock,
             @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
-            @QueryParam(value = "stockFiltre") String stockFiltre,
-            @QueryParam(value = "rayonId") String rayonId,
-            @QueryParam(value = "produitId") String produitId
-    ) throws JSONException {
+            @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "produitId") String produitId) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
@@ -511,23 +488,15 @@ public class SalesStatsRessource {
 
     @GET
     @Path("article-vendus-recap")
-    public Response articlesVendusRecap(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "hStart") String hStart,
-            @QueryParam(value = "hEnd") String hEnd,
-            @QueryParam(value = "user") String user,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "typeTransaction") String typeTransaction,
-            @QueryParam(value = "nbre") int nbre,
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "stock") Integer stock,
+    public Response articlesVendusRecap(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "user") String user,
+            @QueryParam(value = "query") String query, @QueryParam(value = "typeTransaction") String typeTransaction,
+            @QueryParam(value = "nbre") int nbre, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "stock") Integer stock,
             @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
-            @QueryParam(value = "stockFiltre") String stockFiltre,
-            @QueryParam(value = "rayonId") String rayonId,
-            @QueryParam(value = "qteVendu") Integer qteVendu
-    ) throws JSONException {
+            @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "qteVendu") Integer qteVendu) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
@@ -574,23 +543,14 @@ public class SalesStatsRessource {
 
     @GET
     @Path("suggerer")
-    public Response addVente(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "hStart") String hStart,
-            @QueryParam(value = "hEnd") String hEnd,
-            @QueryParam(value = "user") String user,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "typeTransaction") String typeTransaction,
-            @QueryParam(value = "nbre") int nbre,
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "stock") Integer stock,
-            @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
-            @QueryParam(value = "stockFiltre") String stockFiltre,
-            @QueryParam(value = "rayonId") String rayonId,
-            @QueryParam(value = "qteVendu") Integer qteVendu
-    ) {
+    public Response addVente(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "hStart") String hStart, @QueryParam(value = "hEnd") String hEnd,
+            @QueryParam(value = "user") String user, @QueryParam(value = "query") String query,
+            @QueryParam(value = "typeTransaction") String typeTransaction, @QueryParam(value = "nbre") int nbre,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "stock") Integer stock, @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
+            @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "qteVendu") Integer qteVendu) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -642,8 +602,8 @@ public class SalesStatsRessource {
                 List<TPreenregistrementDetail> detailses = salesService.venteDetailByVenteId(venteId);
                 Writer writer = new OutputStreamWriter(out, "UTF-8");
 
-                try (CSVPrinter printer = CSVFormat.EXCEL
-                        .withDelimiter(';').withHeader(ArticleHeader.class).print(writer)) {
+                try (CSVPrinter printer = CSVFormat.EXCEL.withDelimiter(';').withHeader(ArticleHeader.class)
+                        .print(writer)) {
 
                     detailses.forEach(f -> {
                         try {
@@ -659,11 +619,10 @@ public class SalesStatsRessource {
                 throw new WebApplicationException("File Not Found !!");
             }
         };
-        String filename = "devis_" + ref + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".csv";
-        return Response
-                .ok(output, MediaType.APPLICATION_OCTET_STREAM)
-                .header("content-disposition", "attachment; filename = " + filename)
-                .build();
+        String filename = "devis_" + ref + "_"
+                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".csv";
+        return Response.ok(output, MediaType.APPLICATION_OCTET_STREAM)
+                .header("content-disposition", "attachment; filename = " + filename).build();
 
     }
 

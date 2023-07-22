@@ -29,41 +29,39 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author MKABOU
  */
 @Entity
-@Table(name = "t_preenregistrement", indexes = {
-    @Index(name = "indexpreechecked", columnList = "checked"),})
+@Table(name = "t_preenregistrement", indexes = { @Index(name = "indexpreechecked", columnList = "checked"), })
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TPreenregistrement.findAll", query = "SELECT t FROM TPreenregistrement t"),
-    @NamedQuery(name = "TPreenregistrement.findByLgPREENREGISTREMENTID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgPREENREGISTREMENTID = :lgPREENREGISTREMENTID"),
-    @NamedQuery(name = "TPreenregistrement.findByStrREF", query = "SELECT t FROM TPreenregistrement t WHERE t.strREF = :strREF"),
-    @NamedQuery(name = "TPreenregistrement.findByStrREFTICKET", query = "SELECT t FROM TPreenregistrement t WHERE t.strREFTICKET = :strREFTICKET"),
-    @NamedQuery(name = "TPreenregistrement.findByIntPRICE", query = "SELECT t FROM TPreenregistrement t WHERE t.intPRICE = :intPRICE"),
-    @NamedQuery(name = "TPreenregistrement.findByIntPRICEREMISE", query = "SELECT t FROM TPreenregistrement t WHERE t.intPRICEREMISE = :intPRICEREMISE"),
-    @NamedQuery(name = "TPreenregistrement.findByIntCUSTPART", query = "SELECT t FROM TPreenregistrement t WHERE t.intCUSTPART = :intCUSTPART"),
-    @NamedQuery(name = "TPreenregistrement.findByStrSTATUT", query = "SELECT t FROM TPreenregistrement t WHERE t.strSTATUT = :strSTATUT"),
-    @NamedQuery(name = "TPreenregistrement.findByDtCREATED", query = "SELECT t FROM TPreenregistrement t WHERE t.dtCREATED = :dtCREATED"),
-    @NamedQuery(name = "TPreenregistrement.findByDtUPDATED", query = "SELECT t FROM TPreenregistrement t WHERE t.dtUPDATED = :dtUPDATED"),
-    @NamedQuery(name = "TPreenregistrement.findByStrMEDECIN", query = "SELECT t FROM TPreenregistrement t WHERE t.strMEDECIN = :strMEDECIN"),
-    @NamedQuery(name = "TPreenregistrement.findByStrREFBON", query = "SELECT t FROM TPreenregistrement t WHERE t.strREFBON = :strREFBON"),
-    @NamedQuery(name = "TPreenregistrement.findByStrORDONNANCE", query = "SELECT t FROM TPreenregistrement t WHERE t.strORDONNANCE = :strORDONNANCE"),
-    @NamedQuery(name = "TPreenregistrement.findByLgPARENTID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgPARENTID = :lgPARENTID"),
-    @NamedQuery(name = "TPreenregistrement.findByDtCREATEDORDONNANCE", query = "SELECT t FROM TPreenregistrement t WHERE t.dtCREATEDORDONNANCE = :dtCREATEDORDONNANCE"),
-    @NamedQuery(name = "TPreenregistrement.findByStrINFOSCLT", query = "SELECT t FROM TPreenregistrement t WHERE t.strINFOSCLT = :strINFOSCLT"),
-    @NamedQuery(name = "TPreenregistrement.findByStrSTATUTVENTE", query = "SELECT t FROM TPreenregistrement t WHERE t.strSTATUTVENTE = :strSTATUTVENTE"),
-    @NamedQuery(name = "TPreenregistrement.findByStrTYPEVENTE", query = "SELECT t FROM TPreenregistrement t WHERE t.strTYPEVENTE = :strTYPEVENTE"),
-    @NamedQuery(name = "TPreenregistrement.findByLgREGLEMENTID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgREGLEMENTID = :lgREGLEMENTID"),
-    @NamedQuery(name = "TPreenregistrement.findByLgREMISEID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgREMISEID = :lgREMISEID"),
-    @NamedQuery(name = "TPreenregistrement.findByIntSENDTOSUGGESTION", query = "SELECT t FROM TPreenregistrement t WHERE t.intSENDTOSUGGESTION = :intSENDTOSUGGESTION"),
-    @NamedQuery(name = "TPreenregistrement.findByBISCANCEL", query = "SELECT t FROM TPreenregistrement t WHERE t.bISCANCEL = :bISCANCEL"),
-    @NamedQuery(name = "TPreenregistrement.findByStrFIRSTNAMECUSTOMER", query = "SELECT t FROM TPreenregistrement t WHERE t.strFIRSTNAMECUSTOMER = :strFIRSTNAMECUSTOMER"),
-    @NamedQuery(name = "TPreenregistrement.findByStrLASTNAMECUSTOMER", query = "SELECT t FROM TPreenregistrement t WHERE t.strLASTNAMECUSTOMER = :strLASTNAMECUSTOMER"),
-    @NamedQuery(name = "TPreenregistrement.findByStrNUMEROSECURITESOCIAL", query = "SELECT t FROM TPreenregistrement t WHERE t.strNUMEROSECURITESOCIAL = :strNUMEROSECURITESOCIAL"),
-    @NamedQuery(name = "TPreenregistrement.findByStrPHONECUSTOME", query = "SELECT t FROM TPreenregistrement t WHERE t.strPHONECUSTOME = :strPHONECUSTOME"),
-    @NamedQuery(name = "TPreenregistrement.findByLgPREENGISTREMENTANNULEID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgPREENGISTREMENTANNULEID = :lgPREENGISTREMENTANNULEID"),
-    @NamedQuery(name = "TPreenregistrement.findByDtANNULER", query = "SELECT t FROM TPreenregistrement t WHERE t.dtANNULER = :dtANNULER"),
-    @NamedQuery(name = "TPreenregistrement.findByBISAVOIR", query = "SELECT t FROM TPreenregistrement t WHERE t.bISAVOIR = :bISAVOIR"),
-    @NamedQuery(name = "TPreenregistrement.findByBWITHOUTBON", query = "SELECT t FROM TPreenregistrement t WHERE t.bWITHOUTBON = :bWITHOUTBON"),
-    @NamedQuery(name = "TPreenregistrement.findByIntPRICEOTHER", query = "SELECT t FROM TPreenregistrement t WHERE t.intPRICEOTHER = :intPRICEOTHER")})
+@NamedQueries({ @NamedQuery(name = "TPreenregistrement.findAll", query = "SELECT t FROM TPreenregistrement t"),
+        @NamedQuery(name = "TPreenregistrement.findByLgPREENREGISTREMENTID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgPREENREGISTREMENTID = :lgPREENREGISTREMENTID"),
+        @NamedQuery(name = "TPreenregistrement.findByStrREF", query = "SELECT t FROM TPreenregistrement t WHERE t.strREF = :strREF"),
+        @NamedQuery(name = "TPreenregistrement.findByStrREFTICKET", query = "SELECT t FROM TPreenregistrement t WHERE t.strREFTICKET = :strREFTICKET"),
+        @NamedQuery(name = "TPreenregistrement.findByIntPRICE", query = "SELECT t FROM TPreenregistrement t WHERE t.intPRICE = :intPRICE"),
+        @NamedQuery(name = "TPreenregistrement.findByIntPRICEREMISE", query = "SELECT t FROM TPreenregistrement t WHERE t.intPRICEREMISE = :intPRICEREMISE"),
+        @NamedQuery(name = "TPreenregistrement.findByIntCUSTPART", query = "SELECT t FROM TPreenregistrement t WHERE t.intCUSTPART = :intCUSTPART"),
+        @NamedQuery(name = "TPreenregistrement.findByStrSTATUT", query = "SELECT t FROM TPreenregistrement t WHERE t.strSTATUT = :strSTATUT"),
+        @NamedQuery(name = "TPreenregistrement.findByDtCREATED", query = "SELECT t FROM TPreenregistrement t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TPreenregistrement.findByDtUPDATED", query = "SELECT t FROM TPreenregistrement t WHERE t.dtUPDATED = :dtUPDATED"),
+        @NamedQuery(name = "TPreenregistrement.findByStrMEDECIN", query = "SELECT t FROM TPreenregistrement t WHERE t.strMEDECIN = :strMEDECIN"),
+        @NamedQuery(name = "TPreenregistrement.findByStrREFBON", query = "SELECT t FROM TPreenregistrement t WHERE t.strREFBON = :strREFBON"),
+        @NamedQuery(name = "TPreenregistrement.findByStrORDONNANCE", query = "SELECT t FROM TPreenregistrement t WHERE t.strORDONNANCE = :strORDONNANCE"),
+        @NamedQuery(name = "TPreenregistrement.findByLgPARENTID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgPARENTID = :lgPARENTID"),
+        @NamedQuery(name = "TPreenregistrement.findByDtCREATEDORDONNANCE", query = "SELECT t FROM TPreenregistrement t WHERE t.dtCREATEDORDONNANCE = :dtCREATEDORDONNANCE"),
+        @NamedQuery(name = "TPreenregistrement.findByStrINFOSCLT", query = "SELECT t FROM TPreenregistrement t WHERE t.strINFOSCLT = :strINFOSCLT"),
+        @NamedQuery(name = "TPreenregistrement.findByStrSTATUTVENTE", query = "SELECT t FROM TPreenregistrement t WHERE t.strSTATUTVENTE = :strSTATUTVENTE"),
+        @NamedQuery(name = "TPreenregistrement.findByStrTYPEVENTE", query = "SELECT t FROM TPreenregistrement t WHERE t.strTYPEVENTE = :strTYPEVENTE"),
+        @NamedQuery(name = "TPreenregistrement.findByLgREGLEMENTID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgREGLEMENTID = :lgREGLEMENTID"),
+        @NamedQuery(name = "TPreenregistrement.findByLgREMISEID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgREMISEID = :lgREMISEID"),
+        @NamedQuery(name = "TPreenregistrement.findByIntSENDTOSUGGESTION", query = "SELECT t FROM TPreenregistrement t WHERE t.intSENDTOSUGGESTION = :intSENDTOSUGGESTION"),
+        @NamedQuery(name = "TPreenregistrement.findByBISCANCEL", query = "SELECT t FROM TPreenregistrement t WHERE t.bISCANCEL = :bISCANCEL"),
+        @NamedQuery(name = "TPreenregistrement.findByStrFIRSTNAMECUSTOMER", query = "SELECT t FROM TPreenregistrement t WHERE t.strFIRSTNAMECUSTOMER = :strFIRSTNAMECUSTOMER"),
+        @NamedQuery(name = "TPreenregistrement.findByStrLASTNAMECUSTOMER", query = "SELECT t FROM TPreenregistrement t WHERE t.strLASTNAMECUSTOMER = :strLASTNAMECUSTOMER"),
+        @NamedQuery(name = "TPreenregistrement.findByStrNUMEROSECURITESOCIAL", query = "SELECT t FROM TPreenregistrement t WHERE t.strNUMEROSECURITESOCIAL = :strNUMEROSECURITESOCIAL"),
+        @NamedQuery(name = "TPreenregistrement.findByStrPHONECUSTOME", query = "SELECT t FROM TPreenregistrement t WHERE t.strPHONECUSTOME = :strPHONECUSTOME"),
+        @NamedQuery(name = "TPreenregistrement.findByLgPREENGISTREMENTANNULEID", query = "SELECT t FROM TPreenregistrement t WHERE t.lgPREENGISTREMENTANNULEID = :lgPREENGISTREMENTANNULEID"),
+        @NamedQuery(name = "TPreenregistrement.findByDtANNULER", query = "SELECT t FROM TPreenregistrement t WHERE t.dtANNULER = :dtANNULER"),
+        @NamedQuery(name = "TPreenregistrement.findByBISAVOIR", query = "SELECT t FROM TPreenregistrement t WHERE t.bISAVOIR = :bISAVOIR"),
+        @NamedQuery(name = "TPreenregistrement.findByBWITHOUTBON", query = "SELECT t FROM TPreenregistrement t WHERE t.bWITHOUTBON = :bWITHOUTBON"),
+        @NamedQuery(name = "TPreenregistrement.findByIntPRICEOTHER", query = "SELECT t FROM TPreenregistrement t WHERE t.intPRICEOTHER = :intPRICEOTHER") })
 
 public class TPreenregistrement implements Serializable {
 
@@ -584,7 +582,8 @@ public class TPreenregistrement implements Serializable {
         return tPreenregistrementCompteClientCollection;
     }
 
-    public void setTPreenregistrementCompteClientCollection(Collection<TPreenregistrementCompteClient> tPreenregistrementCompteClientCollection) {
+    public void setTPreenregistrementCompteClientCollection(
+            Collection<TPreenregistrementCompteClient> tPreenregistrementCompteClientCollection) {
         this.tPreenregistrementCompteClientCollection = tPreenregistrementCompteClientCollection;
     }
 
@@ -593,7 +592,8 @@ public class TPreenregistrement implements Serializable {
         return tPreenregistrementCompteClientTiersPayentCollection;
     }
 
-    public void setTPreenregistrementCompteClientTiersPayentCollection(Collection<TPreenregistrementCompteClientTiersPayent> tPreenregistrementCompteClientTiersPayentCollection) {
+    public void setTPreenregistrementCompteClientTiersPayentCollection(
+            Collection<TPreenregistrementCompteClientTiersPayent> tPreenregistrementCompteClientTiersPayentCollection) {
         this.tPreenregistrementCompteClientTiersPayentCollection = tPreenregistrementCompteClientTiersPayentCollection;
     }
 
@@ -602,7 +602,8 @@ public class TPreenregistrement implements Serializable {
         return tPreenregistrementDetailCollection;
     }
 
-    public void setTPreenregistrementDetailCollection(Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection) {
+    public void setTPreenregistrementDetailCollection(
+            Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection) {
         this.tPreenregistrementDetailCollection = tPreenregistrementDetailCollection;
     }
 
@@ -620,7 +621,9 @@ public class TPreenregistrement implements Serializable {
             return false;
         }
         TPreenregistrement other = (TPreenregistrement) object;
-        if ((this.lgPREENREGISTREMENTID == null && other.lgPREENREGISTREMENTID != null) || (this.lgPREENREGISTREMENTID != null && !this.lgPREENREGISTREMENTID.equals(other.lgPREENREGISTREMENTID))) {
+        if ((this.lgPREENREGISTREMENTID == null && other.lgPREENREGISTREMENTID != null)
+                || (this.lgPREENREGISTREMENTID != null
+                        && !this.lgPREENREGISTREMENTID.equals(other.lgPREENREGISTREMENTID))) {
             return false;
         }
         return true;
@@ -628,7 +631,8 @@ public class TPreenregistrement implements Serializable {
 
     @Override
     public String toString() {
-        return "TPreenregistrement{" + "lgPREENREGISTREMENTID=" + lgPREENREGISTREMENTID + ", strREF=" + strREF + ", strREFTICKET=" + strREFTICKET + '}';
+        return "TPreenregistrement{" + "lgPREENREGISTREMENTID=" + lgPREENREGISTREMENTID + ", strREF=" + strREF
+                + ", strREFTICKET=" + strREFTICKET + '}';
     }
 
     public TReglement getLgREGLEMENTID() {

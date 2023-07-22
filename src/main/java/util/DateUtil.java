@@ -54,7 +54,8 @@ public final class DateUtil {
             return "";
         }
     }
-    public static String convertDate(Date date,SimpleDateFormat simpleDateFormat) {
+
+    public static String convertDate(Date date, SimpleDateFormat simpleDateFormat) {
 
         if (date != null) {
             return simpleDateFormat.format(date);
@@ -62,6 +63,7 @@ public final class DateUtil {
             return "";
         }
     }
+
     private DateUtil() {
     }
 

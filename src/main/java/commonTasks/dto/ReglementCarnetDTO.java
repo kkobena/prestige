@@ -214,7 +214,8 @@ public class ReglementCarnetDTO {
             this.motifLibelle = motifReglement.getLibelle();
             this.motifId = motifReglement.getId();
         }
-        this.typeReglementCarnet = Objects.nonNull(carnet.getTypeReglementCarnet()) ? carnet.getTypeReglementCarnet() : TypeReglementCarnet.REGLEMENT;
+        this.typeReglementCarnet = Objects.nonNull(carnet.getTypeReglementCarnet()) ? carnet.getTypeReglementCarnet()
+                : TypeReglementCarnet.REGLEMENT;
     }
 
     public String getIdDossier() {

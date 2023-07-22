@@ -10,6 +10,7 @@ import java.util.Optional;
 /**
  *
  * @author koben
+ *
  * @param <T>
  */
 public interface AbstractRepo<T> {
@@ -32,5 +33,4 @@ public interface AbstractRepo<T> {
 
     Optional<T> findById(Integer entityId);
 
-   
 }

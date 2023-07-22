@@ -129,7 +129,8 @@ public class GroupeTierspayantController implements Serializable {
     public GroupeTierspayantController(EntityManagerFactory emf) {
         this.emf = emf;
     }
-    private EntityManagerFactory emf ;
+
+    private EntityManagerFactory emf;
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();
@@ -146,17 +147,20 @@ public class GroupeTierspayantController implements Serializable {
             em.getTransaction().begin();
             List<TTiersPayant> attachedTTiersPayantList = new ArrayList<>();
             for (TTiersPayant TTiersPayantListTTiersPayantToAttach : TGroupeTierspayant.getTTiersPayantList()) {
-                TTiersPayantListTTiersPayantToAttach = em.getReference(TTiersPayantListTTiersPayantToAttach.getClass(), TTiersPayantListTTiersPayantToAttach.getLgTIERSPAYANTID());
+                TTiersPayantListTTiersPayantToAttach = em.getReference(TTiersPayantListTTiersPayantToAttach.getClass(),
+                        TTiersPayantListTTiersPayantToAttach.getLgTIERSPAYANTID());
                 attachedTTiersPayantList.add(TTiersPayantListTTiersPayantToAttach);
             }
             TGroupeTierspayant.setTTiersPayantList(attachedTTiersPayantList);
             em.persist(TGroupeTierspayant);
             for (TTiersPayant TTiersPayantListTTiersPayant : TGroupeTierspayant.getTTiersPayantList()) {
-                TGroupeTierspayant oldLgGROUPEIDOfTTiersPayantListTTiersPayant = TTiersPayantListTTiersPayant.getLgGROUPEID();
+                TGroupeTierspayant oldLgGROUPEIDOfTTiersPayantListTTiersPayant = TTiersPayantListTTiersPayant
+                        .getLgGROUPEID();
                 TTiersPayantListTTiersPayant.setLgGROUPEID(TGroupeTierspayant);
                 TTiersPayantListTTiersPayant = em.merge(TTiersPayantListTTiersPayant);
                 if (oldLgGROUPEIDOfTTiersPayantListTTiersPayant != null) {
-                    oldLgGROUPEIDOfTTiersPayantListTTiersPayant.getTTiersPayantList().remove(TTiersPayantListTTiersPayant);
+                    oldLgGROUPEIDOfTTiersPayantListTTiersPayant.getTTiersPayantList()
+                            .remove(TTiersPayantListTTiersPayant);
                     em.merge(oldLgGROUPEIDOfTTiersPayantListTTiersPayant);
                 }
             }
@@ -176,7 +180,8 @@ public class GroupeTierspayantController implements Serializable {
         return isOk;
     }
 
-    public boolean edit(int idGroupe, String str_LIBELLE, String str_ADRESSE, String str_TELEPHONE) throws NonexistentEntityException, Exception {
+    public boolean edit(int idGroupe, String str_LIBELLE, String str_ADRESSE, String str_TELEPHONE)
+            throws NonexistentEntityException, Exception {
         EntityManager em = null;
         boolean isOk = false;
         try {
@@ -211,7 +216,8 @@ public class GroupeTierspayantController implements Serializable {
                 TGroupeTierspayant = em.getReference(TGroupeTierspayant.class, id);
                 TGroupeTierspayant.getLgGROUPEID();
             } catch (EntityNotFoundException enfe) {
-                throw new NonexistentEntityException("The TGroupeTierspayant with id " + id + " no longer exists.", enfe);
+                throw new NonexistentEntityException("The TGroupeTierspayant with id " + id + " no longer exists.",
+                        enfe);
             }
             List<TTiersPayant> TTiersPayantList = TGroupeTierspayant.getTTiersPayantList();
             for (TTiersPayant TTiersPayantListTTiersPayant : TTiersPayantList) {
@@ -230,13 +236,12 @@ public class GroupeTierspayantController implements Serializable {
         return isOk;
     }
 
-
-
     public List<TGroupeTierspayant> findTGroupeTierspayantEntities(int maxResults, int firstResult, String search) {
         return findTGroupeTierspayantEntities(false, maxResults, firstResult, search);
     }
 
-    private List<TGroupeTierspayant> findTGroupeTierspayantEntities(boolean all, int maxResults, int firstResult, String search) {
+    private List<TGroupeTierspayant> findTGroupeTierspayantEntities(boolean all, int maxResults, int firstResult,
+            String search) {
         EntityManager em = getEntityManager();
         try {
             CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -299,7 +304,10 @@ public class GroupeTierspayantController implements Serializable {
 
             }
             em.getTransaction().commit();
-            json.put("status", cont).put("message", "<span style='color:blue;'>" + cont + "</span> Tierspayant(s) associé(s) à ce groupe <span style='font-weight:800;'><u>" + g.getStrLIBELLE() + "</u></span>");
+            json.put("status", cont).put("message",
+                    "<span style='color:blue;'>" + cont
+                            + "</span> Tierspayant(s) associé(s) à ce groupe <span style='font-weight:800;'><u>"
+                            + g.getStrLIBELLE() + "</u></span>");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -311,12 +319,13 @@ public class GroupeTierspayantController implements Serializable {
         return json;
     }
 
-    public List<TTiersPayant> findTGroupeTierspayantTierspayant(boolean all, int maxResults, int firstResult, int idGp, String search) {
+    public List<TTiersPayant> findTGroupeTierspayantTierspayant(boolean all, int maxResults, int firstResult, int idGp,
+            String search) {
         EntityManager em = null;
         try {
 
             em = getEntityManager();
-//            TGroupeTierspayant groupeTierspayant = findTGroupeTierspayant(idGp);
+            // TGroupeTierspayant groupeTierspayant = findTGroupeTierspayant(idGp);
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<TTiersPayant> cq = cb.createQuery(TTiersPayant.class);
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
@@ -327,7 +336,8 @@ public class GroupeTierspayantController implements Serializable {
                 criteria = cb.and(criteria, cb.equal(root.get("lgGROUPEID").get("lgGROUPEID"), idGp));
             }
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(root.get("strFULLNAME"), search + "%"), cb.like(root.get("strNAME"), search + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(root.get("strFULLNAME"), search + "%"),
+                        cb.like(root.get("strNAME"), search + "%")));
             }
             criteria = cb.and(criteria, cb.equal(root.get("strSTATUT"), "enable"));
             cq.where(criteria);
@@ -361,11 +371,13 @@ public class GroupeTierspayantController implements Serializable {
                 criteria = cb.and(criteria, cb.equal(root.get("lgGROUPEID").get("lgGROUPEID"), idGp));
             }
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(root.get("strFULLNAME"), search + "%"), cb.like(root.get("strNAME"), search + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(root.get("strFULLNAME"), search + "%"),
+                        cb.like(root.get("strNAME"), search + "%")));
             }
             criteria = cb.and(criteria, cb.equal(root.get("strSTATUT"), "enable"));
             cq.where(criteria);
-//            cq.where(cb.equal(root.get("lgGROUPEID"), groupeTierspayant), cb.like(root.get("strFULLNAME"), search + "%"), cb.equal(root.get("strSTATUT"), "enable"));
+            // cq.where(cb.equal(root.get("lgGROUPEID"), groupeTierspayant), cb.like(root.get("strFULLNAME"), search +
+            // "%"), cb.equal(root.get("strSTATUT"), "enable"));
             Query q = em.createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();
 
@@ -374,7 +386,8 @@ public class GroupeTierspayantController implements Serializable {
         }
     }
 
-    public List<TTiersPayant> findTGroupeTierspayantNOTINTierspayant(boolean all, int maxResults, int firstResult, int idGp, String search) {
+    public List<TTiersPayant> findTGroupeTierspayantNOTINTierspayant(boolean all, int maxResults, int firstResult,
+            int idGp, String search) {
         EntityManager em = null;
         try {
 
@@ -384,8 +397,10 @@ public class GroupeTierspayantController implements Serializable {
             CriteriaQuery<TTiersPayant> cq = cb.createQuery(TTiersPayant.class);
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
             cq.select(root);
-            cq.where(cb.and(cb.equal(root.get("strSTATUT"), "enable")), cb.or(cb.isNull(root.get("lgGROUPEID")), cb.notEqual(root.get("lgGROUPEID"), groupeTierspayant)), cb.or(cb.like(root.get("strFULLNAME"), search + "%"), cb.like(root.get("strNAME"), search + "%")));
-//         
+            cq.where(cb.and(cb.equal(root.get("strSTATUT"), "enable")),
+                    cb.or(cb.isNull(root.get("lgGROUPEID")), cb.notEqual(root.get("lgGROUPEID"), groupeTierspayant)),
+                    cb.or(cb.like(root.get("strFULLNAME"), search + "%"), cb.like(root.get("strNAME"), search + "%")));
+            //
             Query q = em.createQuery(cq);
 
             if (!all) {
@@ -403,7 +418,7 @@ public class GroupeTierspayantController implements Serializable {
     public int findTGroupeTierspayantNOTINTierspayantcount(int idGp, String search) {
         EntityManager em = null;
         try {
-//            CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
+            // CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
             em = getEntityManager();
             TGroupeTierspayant groupeTierspayant = findTGroupeTierspayant(idGp);
             CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -412,8 +427,10 @@ public class GroupeTierspayantController implements Serializable {
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
             cq.select(cb.count(root));
 
-            cq.where(cb.and(cb.equal(root.get("strSTATUT"), "enable")), cb.or(cb.isNull(root.get("lgGROUPEID")), cb.notEqual(root.get("lgGROUPEID"), groupeTierspayant)), cb.or(cb.like(root.get("strFULLNAME"), search + "%"), cb.like(root.get("strNAME"), search + "%")));
-//         
+            cq.where(cb.and(cb.equal(root.get("strSTATUT"), "enable")),
+                    cb.or(cb.isNull(root.get("lgGROUPEID")), cb.notEqual(root.get("lgGROUPEID"), groupeTierspayant)),
+                    cb.or(cb.like(root.get("strFULLNAME"), search + "%"), cb.like(root.get("strNAME"), search + "%")));
+            //
             Query q = em.createQuery(cq);
 
             return ((Long) q.getSingleResult()).intValue();
@@ -445,7 +462,10 @@ public class GroupeTierspayantController implements Serializable {
             }
             em.getTransaction().commit();
 
-            json.put("status", cont).put("message", "<span style='color:blue;'>" + cont + "</span> Tierspayant(s) sumprimés de ce groupe <span style='font-weight:800;'><u>" + g.getStrLIBELLE() + "</u></span>");
+            json.put("status", cont).put("message",
+                    "<span style='color:blue;'>" + cont
+                            + "</span> Tierspayant(s) sumprimés de ce groupe <span style='font-weight:800;'><u>"
+                            + g.getStrLIBELLE() + "</u></span>");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -456,7 +476,7 @@ public class GroupeTierspayantController implements Serializable {
         return json;
     }
 
-    //ajout en masse
+    // ajout en masse
     public JSONObject addSelection2Groupe(int lgGOUPE, String search_value) {
         JSONObject json = new JSONObject();
         EntityManager em = null;
@@ -477,7 +497,10 @@ public class GroupeTierspayantController implements Serializable {
 
             }
             em.getTransaction().commit();
-            json.put("status", cont).put("message", "<span style='color:blue;'>" + cont + "</span> Tierspayant(s) associé(s) à ce groupe <span style='font-weight:800;'><u>" + g.getStrLIBELLE() + "</u></span>");
+            json.put("status", cont).put("message",
+                    "<span style='color:blue;'>" + cont
+                            + "</span> Tierspayant(s) associé(s) à ce groupe <span style='font-weight:800;'><u>"
+                            + g.getStrLIBELLE() + "</u></span>");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -489,7 +512,7 @@ public class GroupeTierspayantController implements Serializable {
         return json;
     }
 
-//suppression en masse
+    // suppression en masse
     public JSONObject removeSelection2Groupe(int lgGOUPE, String search_value) {
         JSONObject json = new JSONObject();
         EntityManager em = null;
@@ -510,7 +533,10 @@ public class GroupeTierspayantController implements Serializable {
 
             }
             em.getTransaction().commit();
-            json.put("status", cont).put("message", "<span style='color:blue;'>" + cont + "</span> Tierspayant(s) supprimé de ce groupe <span style='font-weight:800;'><u>" + g.getStrLIBELLE() + "</u></span>");
+            json.put("status", cont).put("message",
+                    "<span style='color:blue;'>" + cont
+                            + "</span> Tierspayant(s) supprimé de ce groupe <span style='font-weight:800;'><u>"
+                            + g.getStrLIBELLE() + "</u></span>");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -521,19 +547,24 @@ public class GroupeTierspayantController implements Serializable {
 
         return json;
     }
-// les bons d'un groupe
+    // les bons d'un groupe
 
-    public List<TPreenregistrementCompteClientTiersPayent> getGroupeBons(boolean all, String dt_start, String dt_end, int firstResult, int maxResults, String lgTP_ID, Integer lgGRP, String refBon) {
+    public List<TPreenregistrementCompteClientTiersPayent> getGroupeBons(boolean all, String dt_start, String dt_end,
+            int firstResult, int maxResults, String lgTP_ID, Integer lgGRP, String refBon) {
         EntityManager em = null;
         try {
 
             em = getEntityManager();
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb.createQuery(TPreenregistrementCompteClientTiersPayent.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb
+                    .createQuery(TPreenregistrementCompteClientTiersPayent.class);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Join<TCompteClientTiersPayant, TTiersPayant> cmp = cmpt.join("lgTIERSPAYANTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             if (lgGRP != 0 && lgGRP > 0) {
@@ -545,7 +576,8 @@ public class GroupeTierspayantController implements Serializable {
             if (!"".equals(lgTP_ID)) {
 
                 ParameterExpression<String> p = cb.parameter(String.class, "lgTIERSPAYANTID");
-                criteria = cb.and(criteria, cb.equal(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
+                criteria = cb.and(criteria, cb.equal(
+                        root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
             }
 
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
@@ -557,7 +589,9 @@ public class GroupeTierspayantController implements Serializable {
 
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             Predicate pu2 = cb.greaterThan(root.get("intPRICE"), 0);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(
+                    cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             cq.orderBy(cb.desc(pr.get("intPRICE")));
             cq.where(criteria, cb.and(pu), cb.and(pu2), cb.and(btw));
 
@@ -569,7 +603,7 @@ public class GroupeTierspayantController implements Serializable {
             if (!"".equals(lgTP_ID)) {
                 q.setParameter("lgTIERSPAYANTID", lgTP_ID);
             }
-//           
+            //
 
             if (!all) {
                 q.setMaxResults(maxResults);
@@ -583,8 +617,8 @@ public class GroupeTierspayantController implements Serializable {
         }
     }
 
-
-    public List<TTiersPayant> findTierspayant(boolean all, String search_value, String lg_TYPE_TIERS_PAYANT_ID, int lgGRP, int firstResult, int maxResults) {
+    public List<TTiersPayant> findTierspayant(boolean all, String search_value, String lg_TYPE_TIERS_PAYANT_ID,
+            int lgGRP, int firstResult, int maxResults) {
         EntityManager em = null;
         try {
             em = getEntityManager();
@@ -621,7 +655,7 @@ public class GroupeTierspayantController implements Serializable {
             if (!"".equals(lg_TYPE_TIERS_PAYANT_ID)) {
                 q.setParameter("lgTYPETIERSPAYANTID", lg_TYPE_TIERS_PAYANT_ID);
             }
-//           q.setParameter("bISCANCEL", false);
+            // q.setParameter("bISCANCEL", false);
 
             if (!all) {
                 q.setMaxResults(maxResults);
@@ -676,7 +710,7 @@ public class GroupeTierspayantController implements Serializable {
             if (!"".equals(lg_TYPE_TIERS_PAYANT_ID)) {
                 q.setParameter("lgTYPETIERSPAYANTID", lg_TYPE_TIERS_PAYANT_ID);
             }
-//           q.setParameter("bISCANCEL", false);
+            // q.setParameter("bISCANCEL", false);
 
             return ((Long) q.getSingleResult()).intValue();
 
@@ -688,59 +722,67 @@ public class GroupeTierspayantController implements Serializable {
 
     }
 
-    public Map<String, LinkedHashSet<TFacture>> generateGroupeFacture(String dt_start, String dt_end, int lgGRP, JSONArray tplist, JSONArray listExclud, int mode, TUser OUser) {
+    public Map<String, LinkedHashSet<TFacture>> generateGroupeFacture(String dt_start, String dt_end, int lgGRP,
+            JSONArray tplist, JSONArray listExclud, int mode, TUser OUser) {
         Map<String, LinkedHashSet<TFacture>> grfact = new HashMap<>();
         final Map<String, LinkedHashSet<TFacture>> _grfact = new HashMap<>();
         List<TTiersPayant> grtp;
         switch (mode) {
-            case 0:
-                grtp = this.findTGroupeTierspayantTierspayant(true, -1, -1, lgGRP, "");
-                Map<TGroupeTierspayant, List<TTiersPayant>> mapList = grtp.stream().collect(Collectors.groupingBy(s -> s.getLgGROUPEID()));
-                EntityManager em = getEntityManager();
-                em.getTransaction().begin();
-                mapList.entrySet().forEach((t) -> {
-                    TGroupeTierspayant g = t.getKey();
-                    TParameters OParameters = em.find(TParameters.class, Parameter.KEY_CODE_FACTURE);
-                    String CODEFACTURE = OParameters.getStrVALUE();
+        case 0:
+            grtp = this.findTGroupeTierspayantTierspayant(true, -1, -1, lgGRP, "");
+            Map<TGroupeTierspayant, List<TTiersPayant>> mapList = grtp.stream()
+                    .collect(Collectors.groupingBy(s -> s.getLgGROUPEID()));
+            EntityManager em = getEntityManager();
+            em.getTransaction().begin();
+            mapList.entrySet().forEach((t) -> {
+                TGroupeTierspayant g = t.getKey();
+                TParameters OParameters = em.find(TParameters.class, Parameter.KEY_CODE_FACTURE);
+                String CODEFACTURE = OParameters.getStrVALUE();
 
-                    OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
-                    em.merge(OParameters);
-                    LinkedHashSet<TFacture> listfact = generateInvoices(t.getValue(), dt_start, dt_end, g, em, CODEFACTURE, OUser);
-                    _grfact.put(CODEFACTURE, listfact);
-                    String description = "Création de  factures groupées : du  " + dt_start + " au " + dt_end + " groupe tiers-payant: " + g.getStrLIBELLE() + " ";
-                    updateItem(OUser, "", description, TypeLog.GENERATION_DE_FACTURE, "t_facture", em);
-                });
-                em.getTransaction().commit();
-                break;
-            case 1:
-                grtp = this.findTGroupeTierspayantTierspayant(lgGRP, listExclud);
-                grfact = generateInvoices(grtp, dt_start, dt_end, lgGRP, OUser);
-                try {
-                    String description = "Création de  factures groupées : du  " + dt_start + " au " + dt_end + " groupe tiers-payant: " + this.getEntityManager().find(TGroupeTierspayant.class, lgGRP).getStrLIBELLE() + " ";
-                    updateItem(OUser, "", description, TypeLog.GENERATION_DE_FACTURE, "t_facture", this.getEntityManager());
-                } catch (Exception e) {
-                }
+                OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
+                em.merge(OParameters);
+                LinkedHashSet<TFacture> listfact = generateInvoices(t.getValue(), dt_start, dt_end, g, em, CODEFACTURE,
+                        OUser);
+                _grfact.put(CODEFACTURE, listfact);
+                String description = "Création de  factures groupées : du  " + dt_start + " au " + dt_end
+                        + " groupe tiers-payant: " + g.getStrLIBELLE() + " ";
+                updateItem(OUser, "", description, TypeLog.GENERATION_DE_FACTURE, "t_facture", em);
+            });
+            em.getTransaction().commit();
+            break;
+        case 1:
+            grtp = this.findTGroupeTierspayantTierspayant(lgGRP, listExclud);
+            grfact = generateInvoices(grtp, dt_start, dt_end, lgGRP, OUser);
+            try {
+                String description = "Création de  factures groupées : du  " + dt_start + " au " + dt_end
+                        + " groupe tiers-payant: "
+                        + this.getEntityManager().find(TGroupeTierspayant.class, lgGRP).getStrLIBELLE() + " ";
+                updateItem(OUser, "", description, TypeLog.GENERATION_DE_FACTURE, "t_facture", this.getEntityManager());
+            } catch (Exception e) {
+            }
 
-                break;
-            case 2:
-                grtp = this.findTierspayant(tplist);
-                grfact = generateInvoices(grtp, dt_start, dt_end, OUser);
-                try {
-                    String description = "Création de  factures groupées : du  " + dt_start + " au " + dt_end + " groupe tiers-payant: " + this.getEntityManager().find(TGroupeTierspayant.class, lgGRP).getStrLIBELLE() + " ";
-                    updateItem(OUser, "", description, TypeLog.GENERATION_DE_FACTURE, "t_facture", this.getEntityManager());
-                } catch (Exception e) {
-                }
-                break;
+            break;
+        case 2:
+            grtp = this.findTierspayant(tplist);
+            grfact = generateInvoices(grtp, dt_start, dt_end, OUser);
+            try {
+                String description = "Création de  factures groupées : du  " + dt_start + " au " + dt_end
+                        + " groupe tiers-payant: "
+                        + this.getEntityManager().find(TGroupeTierspayant.class, lgGRP).getStrLIBELLE() + " ";
+                updateItem(OUser, "", description, TypeLog.GENERATION_DE_FACTURE, "t_facture", this.getEntityManager());
+            } catch (Exception e) {
+            }
+            break;
         }
 
-//        this.do_event_log("", "Création de  factures groupées : du  " + dt_start + " au " + dt_end, OUser.getStrFIRSTNAME(), commonparameter.statut_enable, "t_facture", "t_facture", "Facturation", OUser.getLgUSERID());
+        // this.do_event_log("", "Création de factures groupées : du " + dt_start + " au " + dt_end,
+        // OUser.getStrFIRSTNAME(), commonparameter.statut_enable, "t_facture", "t_facture", "Facturation",
+        // OUser.getLgUSERID());
         return (mode == 0 ? _grfact : grfact);
     }
 
-    public void do_event_log(String ID_INSCRIPTION,
-            String str_DESCRIPTION, String str_CREATED_BY,
-            String str_STATUT, String str_TABLE_CONCERN,
-            String str_MODULE_CONCERN, String str_TYPE_LOG, String lg_USER_ID) {
+    public void do_event_log(String ID_INSCRIPTION, String str_DESCRIPTION, String str_CREATED_BY, String str_STATUT,
+            String str_TABLE_CONCERN, String str_MODULE_CONCERN, String str_TYPE_LOG, String lg_USER_ID) {
         EntityManager em = getEntityManager();
 
         try {
@@ -749,16 +791,11 @@ public class GroupeTierspayantController implements Serializable {
                 em.getTransaction().begin();
             }
 
-            em.createNativeQuery("INSERT INTO `t_event_log` (`lg_EVENT_LOG_ID`, `str_DESCRIPTION`, `str_CREATED_BY`, `str_STATUT`, `str_TABLE_CONCERN`,`str_MODULE_CONCERN`,`str_TYPE_LOG`,`lg_USER_ID`) VALUES(?,?,?,?,?,?,?,?)")
-                    .setParameter(1, key.gettimeid())
-                    .setParameter(2, str_DESCRIPTION)
-                    .setParameter(3, str_CREATED_BY)
-                    .setParameter(4, str_STATUT)
-                    .setParameter(5, str_TABLE_CONCERN)
-                    .setParameter(6, str_MODULE_CONCERN)
-                    .setParameter(7, str_TYPE_LOG)
-                    .setParameter(8, lg_USER_ID)
-                    .executeUpdate();
+            em.createNativeQuery(
+                    "INSERT INTO `t_event_log` (`lg_EVENT_LOG_ID`, `str_DESCRIPTION`, `str_CREATED_BY`, `str_STATUT`, `str_TABLE_CONCERN`,`str_MODULE_CONCERN`,`str_TYPE_LOG`,`lg_USER_ID`) VALUES(?,?,?,?,?,?,?,?)")
+                    .setParameter(1, key.gettimeid()).setParameter(2, str_DESCRIPTION).setParameter(3, str_CREATED_BY)
+                    .setParameter(4, str_STATUT).setParameter(5, str_TABLE_CONCERN).setParameter(6, str_MODULE_CONCERN)
+                    .setParameter(7, str_TYPE_LOG).setParameter(8, lg_USER_ID).executeUpdate();
             if (em.getTransaction().isActive()) {
                 em.getTransaction().commit();
             }
@@ -771,11 +808,12 @@ public class GroupeTierspayantController implements Serializable {
         }
     }
 
-
-    public TFacture createInvoices(List<TPreenregistrementCompteClientTiersPayent> list, Date dt_debut, Date dt_fin, TTiersPayant OTTiersPayant, EntityManager em, TUser u) {
+    public TFacture createInvoices(List<TPreenregistrementCompteClientTiersPayent> list, Date dt_debut, Date dt_fin,
+            TTiersPayant OTTiersPayant, EntityManager em, TUser u) {
 
         LongAdder totalRemise = new LongAdder();
-        final double TauxRemise = (OTTiersPayant.getDblPOURCENTAGEREMISE() != null ? (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100) : 1);
+        final double TauxRemise = (OTTiersPayant.getDblPOURCENTAGEREMISE() != null
+                ? (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100) : 1);
         LongAdder totalBrut = new LongAdder();
 
         double montantForfetaire = 0;
@@ -784,16 +822,22 @@ public class GroupeTierspayantController implements Serializable {
 
         TTypeFacture OTTypeFacture = em.find(TTypeFacture.class, commonparameter.KEY_TYPE_FACTURE_TIERSPAYANT);
         TTypeMvtCaisse OTTypeMvtCaisse = em.find(TTypeMvtCaisse.class, commonparameter.KEY_TYPE_FACTURE_TIERSPAYANT);
-        final TFacture OFacture = this.createInvoiceItem(dt_debut, dt_fin, 0d, null, OTTypeFacture, OTTypeMvtCaisse.getStrCODECOMPTABLE(), OTTiersPayant.getLgTIERSPAYANTID(), 0, 0, 0, em, OTTiersPayant, u);
+        final TFacture OFacture = this.createInvoiceItem(dt_debut, dt_fin, 0d, null, OTTypeFacture,
+                OTTypeMvtCaisse.getStrCODECOMPTABLE(), OTTiersPayant.getLgTIERSPAYANTID(), 0, 0, 0, em, OTTiersPayant,
+                u);
 
         if (OFacture != null) {
             list.forEach((pr) -> {
-//                    double montantremise = Math.round((Math.round(pr.getIntPRICE() * (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100))));
-                Integer montantremise = DateConverter.getRemise(TauxRemise, pr.getIntPERCENT(), findItems(pr.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID(), em));
+                // double montantremise = Math.round((Math.round(pr.getIntPRICE() *
+                // (OTTiersPayant.getDblPOURCENTAGEREMISE() / 100))));
+                Integer montantremise = DateConverter.getRemise(TauxRemise, pr.getIntPERCENT(),
+                        findItems(pr.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID(), em));
                 totalRemise.add(montantremise);
                 totalBrut.add(pr.getIntPRICE());
                 Integer montantNetDetails = pr.getIntPRICE() - montantremise;
-                if (this.invoiceDetail(OFacture, pr, montantNetDetails, pr.getLgPREENREGISTREMENTID().getStrREFBON(), pr.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID(), pr.getIntPRICE(), montantremise, em)) {
+                if (this.invoiceDetail(OFacture, pr, montantNetDetails, pr.getLgPREENREGISTREMENTID().getStrREFBON(),
+                        pr.getLgPREENREGISTREMENTID().getLgPREENREGISTREMENTID(), pr.getIntPRICE(), montantremise,
+                        em)) {
                     pr.setStrSTATUTFACTURE(commonparameter.CHARGED);
                     em.merge(pr);
 
@@ -814,15 +858,19 @@ public class GroupeTierspayantController implements Serializable {
         return OFacture;
 
     }
-private boolean getParametreFacturation(){
-    try {
-         TParameters o = getEntityManager().find(TParameters.class, Parameter.KEY_CODE_NUMERARTION_FACTURE);
-         return  Integer.valueOf(o.getStrVALUE()).compareTo(1)==0;
-    } catch (Exception e) {
-        return false;
+
+    private boolean getParametreFacturation() {
+        try {
+            TParameters o = getEntityManager().find(TParameters.class, Parameter.KEY_CODE_NUMERARTION_FACTURE);
+            return Integer.valueOf(o.getStrVALUE()).compareTo(1) == 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
-}
-    public TFacture createInvoiceItem(Date dt_debut, Date dt_fin, double d_montant, String str_pere, TTypeFacture OTTypeFacture, String str_CODE_COMPTABLE, String str_CUSTOMER, Integer NB_DOSSIER, long montantRemise, long montantFofetaire, EntityManager em, TTiersPayant tiersPayant, TUser u) {
+
+    public TFacture createInvoiceItem(Date dt_debut, Date dt_fin, double d_montant, String str_pere,
+            TTypeFacture OTTypeFacture, String str_CODE_COMPTABLE, String str_CUSTOMER, Integer NB_DOSSIER,
+            long montantRemise, long montantFofetaire, EntityManager em, TTiersPayant tiersPayant, TUser u) {
         try {
             TFacture OTFacture = new TFacture();
             if (OTTypeFacture == null) {
@@ -845,15 +893,16 @@ private boolean getParametreFacturation(){
             OTFacture.setDtFINFACTURE(dt_fin);
             OTFacture.setStrCUSTOMER(str_CUSTOMER);
             OTFacture.setDtDATEFACTURE(new Date());
-            //add nombre dossier
+            // add nombre dossier
             OTFacture.setDblMONTANTCMDE((d_montant - montantRemise));
-             boolean numerationFacture=getParametreFacturation();
-            if(numerationFacture){
-                 OTFacture.setStrCODEFACTURE(LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
-            }else{
-                OTFacture.setStrCODEFACTURE(CODEFACTURE); 
+            boolean numerationFacture = getParametreFacturation();
+            if (numerationFacture) {
+                OTFacture.setStrCODEFACTURE(
+                        LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE));
+            } else {
+                OTFacture.setStrCODEFACTURE(CODEFACTURE);
             }
-            
+
             OTFacture.setStrCODECOMPTABLE(str_CODE_COMPTABLE);
             OTFacture.setDblMONTANTRESTANT((d_montant - montantRemise));
             OTFacture.setDblMONTANTPAYE(0.0);
@@ -898,25 +947,27 @@ private boolean getParametreFacturation(){
             OTTiersPayant.setBCANBEUSE(true);
             em.merge(OTTiersPayant);
         }
-        List<TCompteClientTiersPayant> list = (List<TCompteClientTiersPayant>) OTTiersPayant.getTCompteClientTiersPayantCollection();
-        list.stream().filter((compteClientTiersPayant) -> (!compteClientTiersPayant.getBIsAbsolute())).map((compteClientTiersPayant) -> {
-            compteClientTiersPayant.setBCANBEUSE(true);
-            return compteClientTiersPayant;
-        }).map((compteClientTiersPayant) -> {
-            compteClientTiersPayant.setDbCONSOMMATIONMENSUELLE(0);
-            return compteClientTiersPayant;
-        }).forEachOrdered((compteClientTiersPayant) -> {
-            em.merge(compteClientTiersPayant);
-        });
+        List<TCompteClientTiersPayant> list = (List<TCompteClientTiersPayant>) OTTiersPayant
+                .getTCompteClientTiersPayantCollection();
+        list.stream().filter((compteClientTiersPayant) -> (!compteClientTiersPayant.getBIsAbsolute()))
+                .map((compteClientTiersPayant) -> {
+                    compteClientTiersPayant.setBCANBEUSE(true);
+                    return compteClientTiersPayant;
+                }).map((compteClientTiersPayant) -> {
+                    compteClientTiersPayant.setDbCONSOMMATIONMENSUELLE(0);
+                    return compteClientTiersPayant;
+                }).forEachOrdered((compteClientTiersPayant) -> {
+                    em.merge(compteClientTiersPayant);
+                });
     }
 
     private List<TPreenregistrementDetail> findItems(String OTPreenregistrement, EntityManager em) {
 
         try {
 
-            TypedQuery<TPreenregistrementDetail> q = em.
-                    createQuery("SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1", TPreenregistrementDetail.class).
-                    setParameter(1, OTPreenregistrement);
+            TypedQuery<TPreenregistrementDetail> q = em.createQuery(
+                    "SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1",
+                    TPreenregistrementDetail.class).setParameter(1, OTPreenregistrement);
 
             return q.getResultList();
         } catch (Exception ex) {
@@ -924,9 +975,11 @@ private boolean getParametreFacturation(){
         }
     }
 
-    public boolean invoiceDetail(TFacture OTFacture, TPreenregistrementCompteClientTiersPayent payent, int montant, String str_ref_description, String str_PKEY_PREENREGISTREMENT, int montantBrut, int montantRemise, EntityManager em) {
+    public boolean invoiceDetail(TFacture OTFacture, TPreenregistrementCompteClientTiersPayent payent, int montant,
+            String str_ref_description, String str_PKEY_PREENREGISTREMENT, int montantBrut, int montantRemise,
+            EntityManager em) {
         TFactureDetail OTFactureDetail = new TFactureDetail();
-        //EntityManager em = getEntityManager();
+        // EntityManager em = getEntityManager();
         try {
 
             if (OTFacture == null) {
@@ -934,8 +987,10 @@ private boolean getParametreFacturation(){
                 return false;
             }
             String str_CATEGORY = "";
-            if (payent.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID().getLgCATEGORYCLIENTID() != null) {
-                str_CATEGORY = payent.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID().getLgCATEGORYCLIENTID().getStrLIBELLE();
+            if (payent.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID()
+                    .getLgCATEGORYCLIENTID() != null) {
+                str_CATEGORY = payent.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTID().getLgCLIENTID()
+                        .getLgCATEGORYCLIENTID().getStrLIBELLE();
             }
             TPreenregistrement preenregistrement = payent.getLgPREENREGISTREMENTID();
             OTFactureDetail.setLgFACTUREDETAILID(new date().getComplexId());
@@ -973,7 +1028,7 @@ private boolean getParametreFacturation(){
 
     }
 
-    //groupe facture
+    // groupe facture
 
     public List<TTiersPayant> findTierspayant(JSONArray lstp) {
         EntityManager em = getEntityManager();
@@ -985,15 +1040,12 @@ private boolean getParametreFacturation(){
                 list.add(payant);
             }
 
-            //return q.getResultList();
+            // return q.getResultList();
         } catch (Exception e) {
 
         }
         return list;
     }
-
-
-
 
     private int getCase(TTiersPayant p) {
         int i = 0;
@@ -1007,7 +1059,8 @@ private boolean getParametreFacturation(){
         return i;
     }
 
-    private TGroupeFactures createGroupeFacture(TGroupeTierspayant g, TFacture op, String codeFacture, EntityManager em) {
+    private TGroupeFactures createGroupeFacture(TGroupeTierspayant g, TFacture op, String codeFacture,
+            EntityManager em) {
         TGroupeFactures factures = null;
         try {
 
@@ -1030,17 +1083,22 @@ private boolean getParametreFacturation(){
         return factures;
     }
 
-    public List<TPreenregistrementCompteClientTiersPayent> getGroupeBonsInterval(String dt_start, String dt_end, String lgTP_ID, Integer lgGRP, JSONArray listExclud) {
+    public List<TPreenregistrementCompteClientTiersPayent> getGroupeBonsInterval(String dt_start, String dt_end,
+            String lgTP_ID, Integer lgGRP, JSONArray listExclud) {
         EntityManager em = null;
         try {
 
             em = getEntityManager();
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb.createQuery(TPreenregistrementCompteClientTiersPayent.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb
+                    .createQuery(TPreenregistrementCompteClientTiersPayent.class);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Join<TCompteClientTiersPayant, TTiersPayant> cmp = cmpt.join("lgTIERSPAYANTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             if (lgGRP != 0 && lgGRP > 0) {
@@ -1052,7 +1110,8 @@ private boolean getParametreFacturation(){
             if (!"".equals(lgTP_ID)) {
 
                 ParameterExpression<String> p = cb.parameter(String.class, "lgTIERSPAYANTID");
-                criteria = cb.and(criteria, cb.equal(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
+                criteria = cb.and(criteria, cb.equal(
+                        root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
             }
 
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
@@ -1071,7 +1130,9 @@ private boolean getParametreFacturation(){
 
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             Predicate pu2 = cb.greaterThan(root.get("intPRICE"), 0);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(
+                    cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
 
             cq.where(criteria, cb.and(pu), cb.and(pu2), cb.and(btw));
 
@@ -1092,24 +1153,30 @@ private boolean getParametreFacturation(){
         }
     }
 
-    public List<TPreenregistrementCompteClientTiersPayent> getGroupeBonsInterval(String dt_start, String dt_end, String lgTP_ID, JSONArray listExclud) {
+    public List<TPreenregistrementCompteClientTiersPayent> getGroupeBonsInterval(String dt_start, String dt_end,
+            String lgTP_ID, JSONArray listExclud) {
         EntityManager em = null;
         try {
 
             em = getEntityManager();
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb.createQuery(TPreenregistrementCompteClientTiersPayent.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb
+                    .createQuery(TPreenregistrementCompteClientTiersPayent.class);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Join<TCompteClientTiersPayant, TTiersPayant> cmp = cmpt.join("lgTIERSPAYANTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
             if (!"".equals(lgTP_ID)) {
 
                 ParameterExpression<String> p = cb.parameter(String.class, "lgTIERSPAYANTID");
-                criteria = cb.and(criteria, cb.equal(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
+                criteria = cb.and(criteria, cb.equal(
+                        root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
             }
 
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
@@ -1128,7 +1195,9 @@ private boolean getParametreFacturation(){
 
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             Predicate pu2 = cb.greaterThan(root.get("intPRICE"), 0);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(
+                    cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
 
             cq.where(criteria, cb.and(pu), cb.and(pu2), cb.and(btw));
 
@@ -1146,14 +1215,14 @@ private boolean getParametreFacturation(){
         }
     }
 
-
-
-    public List<TPreenregistrementCompteClientTiersPayent> getSelectedTpBons(JSONArray lstp, String dt_start, String dt_end, String refBon) {
+    public List<TPreenregistrementCompteClientTiersPayent> getSelectedTpBons(JSONArray lstp, String dt_start,
+            String dt_end, String refBon) {
         List<TPreenregistrementCompteClientTiersPayent> list = new ArrayList<>();
         try {
             List<TTiersPayant> tp = findTierspayant(lstp);
             tp.forEach((tTiersPayant) -> {
-                list.addAll(this.getGroupeBons(true, dt_start, dt_end, -1, -1, tTiersPayant.getLgTIERSPAYANTID(), -1, refBon));
+                list.addAll(this.getGroupeBons(true, dt_start, dt_end, -1, -1, tTiersPayant.getLgTIERSPAYANTID(), -1,
+                        refBon));
             });
 
         } catch (Exception e) {
@@ -1173,7 +1242,8 @@ private boolean getParametreFacturation(){
 
                 try {
 
-                    TPreenregistrementCompteClientTiersPayent pr = em.find(TPreenregistrementCompteClientTiersPayent.class, selectedBons.getString(i));
+                    TPreenregistrementCompteClientTiersPayent pr = em
+                            .find(TPreenregistrementCompteClientTiersPayent.class, selectedBons.getString(i));
                     list.add(pr);
                 } catch (JSONException ex) {
 
@@ -1189,24 +1259,30 @@ private boolean getParametreFacturation(){
         }
     }
 
-    public List<TPreenregistrementCompteClientTiersPayent> findAllBons(boolean all, String dt_start, String dt_end, int firstResult, int maxResults, String lgTP_ID, String refBon) {
+    public List<TPreenregistrementCompteClientTiersPayent> findAllBons(boolean all, String dt_start, String dt_end,
+            int firstResult, int maxResults, String lgTP_ID, String refBon) {
         EntityManager em = null;
         try {
 
             em = getEntityManager();
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb.createQuery(TPreenregistrementCompteClientTiersPayent.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            CriteriaQuery<TPreenregistrementCompteClientTiersPayent> cq = cb
+                    .createQuery(TPreenregistrementCompteClientTiersPayent.class);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Join<TCompteClientTiersPayant, TTiersPayant> cmp = cmpt.join("lgTIERSPAYANTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
             if (!"".equals(lgTP_ID)) {
 
                 ParameterExpression<String> p = cb.parameter(String.class, "lgTIERSPAYANTID");
-                criteria = cb.and(criteria, cb.equal(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
+                criteria = cb.and(criteria, cb.equal(
+                        root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
             }
 
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
@@ -1218,7 +1294,9 @@ private boolean getParametreFacturation(){
 
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             Predicate pu2 = cb.greaterThan(root.get("intPRICE"), 0);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(
+                    cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
 
             cq.where(criteria, cb.and(pu), cb.and(pu2), cb.and(btw));
 
@@ -1227,7 +1305,7 @@ private boolean getParametreFacturation(){
             if (!"".equals(lgTP_ID)) {
                 q.setParameter("lgTIERSPAYANTID", lgTP_ID);
             }
-//           
+            //
 
             if (!all) {
                 q.setMaxResults(maxResults);
@@ -1246,19 +1324,23 @@ private boolean getParametreFacturation(){
         try {
 
             em = getEntityManager();
-//         
+            //
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Join<TCompteClientTiersPayant, TTiersPayant> cmp = cmpt.join("lgTIERSPAYANTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
             if (!"".equals(lgTP_ID)) {
 
                 ParameterExpression<String> p = cb.parameter(String.class, "lgTIERSPAYANTID");
-                criteria = cb.and(criteria, cb.equal(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
+                criteria = cb.and(criteria, cb.equal(
+                        root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), p));
             }
 
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
@@ -1270,7 +1352,9 @@ private boolean getParametreFacturation(){
 
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             Predicate pu2 = cb.greaterThan(root.get("intPRICE"), 0);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(
+                    cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
 
             cq.select(cb.count(root));
             cq.where(criteria, cb.and(pu), cb.and(pu2), cb.and(btw));
@@ -1289,7 +1373,7 @@ private boolean getParametreFacturation(){
         }
     }
 
-    //facture selection 
+    // facture selection
     public LinkedHashSet<TFacture> generateFacture(String dt_start, String dt_end, JSONArray selectedList, TUser u) {
         EntityManager em = getEntityManager();
         TParameters OParameters = em.find(TParameters.class, Parameter.KEY_CODE_FACTURE);
@@ -1298,54 +1382,56 @@ private boolean getParametreFacturation(){
         LinkedHashSet<TFacture> factures = new LinkedHashSet<>();
         List<TPreenregistrementCompteClientTiersPayent> oblist = this.getGroupeSelectedBons(selectedList);
 
-        Map<TTiersPayant, List<TPreenregistrementCompteClientTiersPayent>> mysList = oblist.stream().collect(Collectors.groupingBy(s -> s.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID()));
+        Map<TTiersPayant, List<TPreenregistrementCompteClientTiersPayent>> mysList = oblist.stream()
+                .collect(Collectors.groupingBy(s -> s.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID()));
         mysList.entrySet().forEach((t) -> {
             TTiersPayant p = t.getKey();
             List<TPreenregistrementCompteClientTiersPayent> finalTp = t.getValue();
             switch (getCase(p)) {
 
-                case 1:
+            case 1:
 
-                    long montantFact = finalTp.stream().mapToLong((_qty) -> {
-                        return _qty.getIntPRICE();
-                    }).sum();
+                long montantFact = finalTp.stream().mapToLong((_qty) -> {
+                    return _qty.getIntPRICE();
+                }).sum();
 
-                    if (p.getIntMONTANTFAC() < montantFact) {
-                        Integer virtualAmont = 0;
-                        int myCount = 0;
-                        for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
+                if (p.getIntMONTANTFAC() < montantFact) {
+                    Integer virtualAmont = 0;
+                    int myCount = 0;
+                    for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
 
-                            virtualAmont += op.getIntPRICE();
-                            myCount++;
+                        virtualAmont += op.getIntPRICE();
+                        myCount++;
 
-                            if (virtualAmont > p.getIntMONTANTFAC()) {
-                                finalTp = finalTp.subList(0, myCount - 1);
-                                break;
-                            }
-
+                        if (virtualAmont > p.getIntMONTANTFAC()) {
+                            finalTp = finalTp.subList(0, myCount - 1);
+                            break;
                         }
-                    }
-
-                    break;
-                case 2:
-
-                    int count = finalTp.size();
-                    int _count = p.getIntNBREBONS();
-                    if (count > _count) {
-
-                        finalTp = finalTp.subList(0, _count);
 
                     }
-                    break;
-                default:
+                }
 
-                    break;
+                break;
+            case 2:
+
+                int count = finalTp.size();
+                int _count = p.getIntNBREBONS();
+                if (count > _count) {
+
+                    finalTp = finalTp.subList(0, _count);
+
+                }
+                break;
+            default:
+
+                break;
 
             }
             try {
 
                 if (finalTp.size() > 0) {
-                    TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, u);
+                    TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                            date.formatterMysqlShort.parse(dt_end), p, em, u);
 
                     factures.add(of);
 
@@ -1362,7 +1448,8 @@ private boolean getParametreFacturation(){
 
     }
 
-    public JSONArray getGoupBons(boolean all, String dt_start, String dt_end, Integer idGroup, String search, int start, int limit) {
+    public JSONArray getGoupBons(boolean all, String dt_start, String dt_end, Integer idGroup, String search, int start,
+            int limit) {
         JSONArray list = new JSONArray();
         EntityManager em = null;
         try {
@@ -1371,9 +1458,12 @@ private boolean getParametreFacturation(){
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Join<TCompteClientTiersPayant, TTiersPayant> cmp = cmpt.join("lgTIERSPAYANTID", JoinType.INNER);
             Join<TTiersPayant, TGroupeTierspayant> tps = cmp.join("lgGROUPEID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
@@ -1386,14 +1476,20 @@ private boolean getParametreFacturation(){
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
             criteria = cb.and(criteria, cb.equal(root.get("strSTATUTFACTURE"), "unpaid"));
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.like(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("strFULLNAME"), search + "%"));
+                criteria = cb.and(criteria,
+                        cb.like(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("strFULLNAME"),
+                                search + "%"));
             }
 
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             Predicate pu2 = cb.greaterThan(root.get("intPRICE"), 0);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(
+                    cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
 
-            cq.multiselect(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"), root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("strFULLNAME"), cb.count(root), cb.sumAsLong(root.get("intPRICE")))
+            cq.multiselect(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"),
+                    root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("strFULLNAME"), cb.count(root),
+                    cb.sumAsLong(root.get("intPRICE")))
                     .groupBy(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"));
             cq.where(criteria, cb.and(pu), cb.and(pu2), cb.and(btw));
 
@@ -1410,7 +1506,8 @@ private boolean getParametreFacturation(){
             oblist.forEach((objects) -> {
                 try {
                     JSONObject json = new JSONObject();
-                    json.put("lgTIERSPAYANTID", objects[0]).put("str_LIB", objects[1]).put("NBBONS", objects[2]).put("AMOUNT", objects[3]);
+                    json.put("lgTIERSPAYANTID", objects[0]).put("str_LIB", objects[1]).put("NBBONS", objects[2])
+                            .put("AMOUNT", objects[3]);
                     list.put(json);
                 } catch (JSONException ex) {
 
@@ -1435,9 +1532,12 @@ private boolean getParametreFacturation(){
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> cmpt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Join<TCompteClientTiersPayant, TTiersPayant> cmp = cmpt.join("lgTIERSPAYANTID", JoinType.INNER);
             Join<TTiersPayant, TGroupeTierspayant> tps = cmp.join("lgGROUPEID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
@@ -1450,12 +1550,16 @@ private boolean getParametreFacturation(){
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
             criteria = cb.and(criteria, cb.equal(root.get("strSTATUTFACTURE"), "unpaid"));
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.like(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("strFULLNAME"), search + "%"));
+                criteria = cb.and(criteria,
+                        cb.like(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("strFULLNAME"),
+                                search + "%"));
             }
 
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             Predicate pu2 = cb.greaterThan(root.get("intPRICE"), 0);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(
+                    cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
 
             cq.select(cb.count(root))
                     .groupBy(root.get("lgCOMPTECLIENTTIERSPAYANTID").get("lgTIERSPAYANTID").get("lgTIERSPAYANTID"));
@@ -1478,7 +1582,7 @@ private boolean getParametreFacturation(){
     public List<TTiersPayant> findTGroupeTierspayantTierspayant(int idGp, JSONArray listExclud) {
         EntityManager em = null;
         try {
-//            CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
+            // CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
             em = getEntityManager();
             TGroupeTierspayant groupeTierspayant = findTGroupeTierspayant(idGp);
             CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -1514,56 +1618,59 @@ private boolean getParametreFacturation(){
         em.getTransaction().begin();
 
         LinkedHashSet<TFacture> factures = new LinkedHashSet<>();
-        List<TPreenregistrementCompteClientTiersPayent> oblist = this.findAllBons(true, dt_start, dt_end, -1, -1, lgTP, "");
+        List<TPreenregistrementCompteClientTiersPayent> oblist = this.findAllBons(true, dt_start, dt_end, -1, -1, lgTP,
+                "");
 
-        Map<TTiersPayant, List<TPreenregistrementCompteClientTiersPayent>> mysList = oblist.stream().collect(Collectors.groupingBy(s -> s.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID()));
+        Map<TTiersPayant, List<TPreenregistrementCompteClientTiersPayent>> mysList = oblist.stream()
+                .collect(Collectors.groupingBy(s -> s.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID()));
         mysList.entrySet().forEach((t) -> {
             TTiersPayant p = t.getKey();
             List<TPreenregistrementCompteClientTiersPayent> finalTp = t.getValue();
             switch (getCase(p)) {
 
-                case 1:
+            case 1:
 
-                    long montantFact = finalTp.stream().mapToLong((_qty) -> {
-                        return _qty.getIntPRICE();
-                    }).sum();
+                long montantFact = finalTp.stream().mapToLong((_qty) -> {
+                    return _qty.getIntPRICE();
+                }).sum();
 
-                    if (p.getIntMONTANTFAC() < montantFact) {
-                        Integer virtualAmont = 0;
-                        int myCount = 0;
-                        for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
+                if (p.getIntMONTANTFAC() < montantFact) {
+                    Integer virtualAmont = 0;
+                    int myCount = 0;
+                    for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
 
-                            virtualAmont += op.getIntPRICE();
-                            myCount++;
+                        virtualAmont += op.getIntPRICE();
+                        myCount++;
 
-                            if (virtualAmont > p.getIntMONTANTFAC()) {
-                                finalTp = finalTp.subList(0, myCount - 1);
-                                break;
-                            }
-
+                        if (virtualAmont > p.getIntMONTANTFAC()) {
+                            finalTp = finalTp.subList(0, myCount - 1);
+                            break;
                         }
-                    }
-
-                    break;
-                case 2:
-
-                    int count = finalTp.size();
-                    int _count = p.getIntNBREBONS();
-                    if (count > _count) {
-
-                        finalTp = finalTp.subList(0, _count);
 
                     }
-                    break;
-                default:
+                }
 
-                    break;
+                break;
+            case 2:
+
+                int count = finalTp.size();
+                int _count = p.getIntNBREBONS();
+                if (count > _count) {
+
+                    finalTp = finalTp.subList(0, _count);
+
+                }
+                break;
+            default:
+
+                break;
 
             }
             try {
 
                 if (finalTp.size() > 0) {
-                    TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, u);
+                    TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                            date.formatterMysqlShort.parse(dt_end), p, em, u);
 
                     factures.add(of);
 
@@ -1580,61 +1687,65 @@ private boolean getParametreFacturation(){
 
     }
 
-    public LinkedHashSet<TFacture> generateFactureWithExcludBons(String dt_start, String dt_end, JSONArray listExclut, String lgTP, TUser u) {
+    public LinkedHashSet<TFacture> generateFactureWithExcludBons(String dt_start, String dt_end, JSONArray listExclut,
+            String lgTP, TUser u) {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
 
         LinkedHashSet<TFacture> factures = new LinkedHashSet<>();
-        List<TPreenregistrementCompteClientTiersPayent> oblist = this.getGroupeBonsInterval(dt_start, dt_end, lgTP, listExclut);
+        List<TPreenregistrementCompteClientTiersPayent> oblist = this.getGroupeBonsInterval(dt_start, dt_end, lgTP,
+                listExclut);
 
-        Map<TTiersPayant, List<TPreenregistrementCompteClientTiersPayent>> mysList = oblist.stream().collect(Collectors.groupingBy(s -> s.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID()));
+        Map<TTiersPayant, List<TPreenregistrementCompteClientTiersPayent>> mysList = oblist.stream()
+                .collect(Collectors.groupingBy(s -> s.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID()));
         mysList.entrySet().forEach((t) -> {
             TTiersPayant p = t.getKey();
             List<TPreenregistrementCompteClientTiersPayent> finalTp = t.getValue();
             switch (getCase(p)) {
 
-                case 1:
+            case 1:
 
-                    long montantFact = finalTp.stream().mapToLong((_qty) -> {
-                        return _qty.getIntPRICE();
-                    }).sum();
+                long montantFact = finalTp.stream().mapToLong((_qty) -> {
+                    return _qty.getIntPRICE();
+                }).sum();
 
-                    if (p.getIntMONTANTFAC() < montantFact) {
-                        Integer virtualAmont = 0;
-                        int myCount = 0;
-                        for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
+                if (p.getIntMONTANTFAC() < montantFact) {
+                    Integer virtualAmont = 0;
+                    int myCount = 0;
+                    for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
 
-                            virtualAmont += op.getIntPRICE();
-                            myCount++;
+                        virtualAmont += op.getIntPRICE();
+                        myCount++;
 
-                            if (virtualAmont > p.getIntMONTANTFAC()) {
-                                finalTp = finalTp.subList(0, myCount - 1);
-                                break;
-                            }
-
+                        if (virtualAmont > p.getIntMONTANTFAC()) {
+                            finalTp = finalTp.subList(0, myCount - 1);
+                            break;
                         }
-                    }
-
-                    break;
-                case 2:
-
-                    int count = finalTp.size();
-                    int _count = p.getIntNBREBONS();
-                    if (count > _count) {
-
-                        finalTp = finalTp.subList(0, _count);
 
                     }
-                    break;
-                default:
+                }
 
-                    break;
+                break;
+            case 2:
+
+                int count = finalTp.size();
+                int _count = p.getIntNBREBONS();
+                if (count > _count) {
+
+                    finalTp = finalTp.subList(0, _count);
+
+                }
+                break;
+            default:
+
+                break;
 
             }
             try {
 
                 if (finalTp.size() > 0) {
-                    TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, u);
+                    TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                            date.formatterMysqlShort.parse(dt_end), p, em, u);
 
                     factures.add(of);
 
@@ -1651,22 +1762,23 @@ private boolean getParametreFacturation(){
 
     }
 
-    public Set<TFacture> generateFacture(String dt_start, String dt_end, JSONArray listExclud, JSONArray selectedBons, String lgTP, int mode, TUser u) {
+    public Set<TFacture> generateFacture(String dt_start, String dt_end, JSONArray listExclud, JSONArray selectedBons,
+            String lgTP, int mode, TUser u) {
         Set<TFacture> grfact = null;
 
         switch (mode) {
-            case 0:
-                grfact = this.generateFacture(dt_start, dt_end, lgTP, u);
+        case 0:
+            grfact = this.generateFacture(dt_start, dt_end, lgTP, u);
 
-                break;
-            case 1:
-                grfact = this.generateFactureWithExcludBons(dt_start, dt_end, listExclud, lgTP, u);
+            break;
+        case 1:
+            grfact = this.generateFactureWithExcludBons(dt_start, dt_end, listExclud, lgTP, u);
 
-                break;
-            case 2:
-                grfact = this.generateFacture(dt_start, dt_end, selectedBons, u);
+            break;
+        case 2:
+            grfact = this.generateFacture(dt_start, dt_end, selectedBons, u);
 
-                break;
+            break;
         }
 
         return grfact;
@@ -1683,7 +1795,8 @@ private boolean getParametreFacturation(){
             Root<TGroupeFactures> root = cq.from(TGroupeFactures.class);
             Join<TGroupeFactures, TGroupeFactures> pr = root.join("lgGROUPEID", JoinType.INNER);
             cq.select(cb.sum(root.get("intAMOUNT")));
-            cq.where(cb.and(cb.equal(root.get("strCODEFACTURE"), codeFact)), cb.and(cb.equal(root.get("lgGROUPEID").get("lgGROUPEID"), idGrp)));
+            cq.where(cb.and(cb.equal(root.get("strCODEFACTURE"), codeFact)),
+                    cb.and(cb.equal(root.get("lgGROUPEID").get("lgGROUPEID"), idGrp)));
 
             Query q = em.createQuery(cq);
 
@@ -1699,8 +1812,9 @@ private boolean getParametreFacturation(){
         TGroupeTierspayant groupeTierspayant = null;
         try {
             EntityManager em = getEntityManager();
-            groupeTierspayant = (TGroupeTierspayant) em.createQuery("SELECT o.lgGROUPEID FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ").setParameter(1, codeFacture)
-                    .setMaxResults(1).getSingleResult();
+            groupeTierspayant = (TGroupeTierspayant) em
+                    .createQuery("SELECT o.lgGROUPEID FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ")
+                    .setParameter(1, codeFacture).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1711,15 +1825,17 @@ private boolean getParametreFacturation(){
         TGroupeFactures groupeTierspayant = null;
         try {
             EntityManager em = getEntityManager();
-            groupeTierspayant = (TGroupeFactures) em.createQuery("SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ").setParameter(1, codeFacture)
-                    .setMaxResults(1).getSingleResult();
+            groupeTierspayant = (TGroupeFactures) em
+                    .createQuery("SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ")
+                    .setParameter(1, codeFacture).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return groupeTierspayant;
     }
 
-    public JSONArray getGroupeInvoice(boolean all, String dt_start, String dt_end, String search, Integer idGrp, String CODEGROUPE, boolean ACTION_REGLER_FACTURE, int start, int limit) {
+    public JSONArray getGroupeInvoice(boolean all, String dt_start, String dt_end, String search, Integer idGrp,
+            String CODEGROUPE, boolean ACTION_REGLER_FACTURE, int start, int limit) {
         JSONArray list = new JSONArray();
         EntityManager em = null;
         try {
@@ -1738,18 +1854,24 @@ private boolean getParametreFacturation(){
                 criteria = cb.and(criteria, cb.equal(root.get("lgGROUPEID").get("lgGROUPEID"), idGrp));
             }
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgGROUPEID").get("strLIBELLE"), search + "%"),
-                        cb.like(root.get("lgFACTURESID").get("strCODEFACTURE"), search + "%"), cb.like(root.get("strCODEFACTURE"), search + "%")));
+                criteria = cb.and(criteria,
+                        cb.or(cb.like(root.get("lgGROUPEID").get("strLIBELLE"), search + "%"),
+                                cb.like(root.get("lgFACTURESID").get("strCODEFACTURE"), search + "%"),
+                                cb.like(root.get("strCODEFACTURE"), search + "%")));
             }
-//           
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtCREATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            //
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtCREATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             if ("".equals(CODEGROUPE)) {
                 criteria = cb.and(criteria, btw);
             } else {
                 criteria = cb.and(criteria, cb.equal(root.get(TGroupeFactures_.strCODEFACTURE), CODEGROUPE));
             }
-            cq.multiselect(root.get("lgGROUPEID").get("lgGROUPEID"), root.get("lgGROUPEID").get("strLIBELLE"), cb.count(root), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTRESTANT")), root.get("strCODEFACTURE"), root.get("dtCREATED"), root.get("lgFACTURESID").get("strSTATUT"), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTCMDE")), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTPAYE")))
-                    .groupBy(root.get("strCODEFACTURE"));
+            cq.multiselect(root.get("lgGROUPEID").get("lgGROUPEID"), root.get("lgGROUPEID").get("strLIBELLE"),
+                    cb.count(root), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTRESTANT")),
+                    root.get("strCODEFACTURE"), root.get("dtCREATED"), root.get("lgFACTURESID").get("strSTATUT"),
+                    cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTCMDE")),
+                    cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTPAYE"))).groupBy(root.get("strCODEFACTURE"));
             cq.where(criteria);
 
             Query q = em.createQuery(cq);
@@ -1767,7 +1889,10 @@ private boolean getParametreFacturation(){
                     if (Long.valueOf(objects[3] + "") == 0) {
                         status = "paid";
                     }
-                    json.put("lg_GROUPE_ID", objects[0]).put("str_LIB", objects[1]).put("NBFACTURES", objects[2]).put("MONTANTRESTANT", objects[3]).put("CODEFACTURE", objects[4]).put("DATECREATION", date.formatterShort.format(objects[5])).put("STATUT", status).put("AMOUNT", objects[7]).put("AMOUNTPAYE", objects[8]);
+                    json.put("lg_GROUPE_ID", objects[0]).put("str_LIB", objects[1]).put("NBFACTURES", objects[2])
+                            .put("MONTANTRESTANT", objects[3]).put("CODEFACTURE", objects[4])
+                            .put("DATECREATION", date.formatterShort.format(objects[5])).put("STATUT", status)
+                            .put("AMOUNT", objects[7]).put("AMOUNTPAYE", objects[8]);
                     json.put("ACTION_REGLER_FACTURE", ACTION_REGLER_FACTURE);
                     list.put(json);
                 } catch (JSONException ex) {
@@ -1801,17 +1926,18 @@ private boolean getParametreFacturation(){
                 criteria = cb.and(criteria, cb.equal(root.get("lgGROUPEID").get("lgGROUPEID"), idGrp));
             }
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgGROUPEID").get("strLIBELLE"), search + "%"), cb.like(root.get("lgFACTURESID").get("strCODEFACTURE"), search + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgGROUPEID").get("strLIBELLE"), search + "%"),
+                        cb.like(root.get("lgFACTURESID").get("strCODEFACTURE"), search + "%")));
             }
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtCREATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtCREATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             if ("".equals(CODEGROUPE)) {
                 criteria = cb.and(criteria, btw);
             } else {
                 criteria = cb.and(criteria, cb.equal(root.get(TGroupeFactures_.strCODEFACTURE), CODEGROUPE));
             }
-            cq.multiselect(cb.count(root))
-                    .groupBy(root.get("strCODEFACTURE"));
+            cq.multiselect(cb.count(root)).groupBy(root.get("strCODEFACTURE"));
             cq.where(criteria);
 
             Query q = em.createQuery(cq);
@@ -1830,9 +1956,10 @@ private boolean getParametreFacturation(){
         List<TGroupeFactures> groupeTierspayant = new ArrayList<>();
         try {
             EntityManager em = getEntityManager();
-            groupeTierspayant = em.createQuery("SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 AND o.lgGROUPEID.lgGROUPEID=?2 ")
-                    .setParameter(1, codeFacture).setParameter(2, idGRP)
-                    .getResultList();
+            groupeTierspayant = em
+                    .createQuery(
+                            "SELECT o FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 AND o.lgGROUPEID.lgGROUPEID=?2 ")
+                    .setParameter(1, codeFacture).setParameter(2, idGRP).getResultList();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1849,7 +1976,7 @@ private boolean getParametreFacturation(){
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<TFacture> cq = cb.createQuery(TFacture.class);
             Root<TFacture> root = cq.from(TFacture.class);
-            Join< TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
+            Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
 
             Predicate criteria = cb.conjunction();
 
@@ -1873,7 +2000,8 @@ private boolean getParametreFacturation(){
 
     }
 
-    public List<TFacture> getGroupeInvoiceDetails(boolean all, String search, String lgTP, String codeFacture, int start, int limit) {
+    public List<TFacture> getGroupeInvoiceDetails(boolean all, String search, String lgTP, String codeFacture,
+            int start, int limit) {
 
         EntityManager em = null;
         try {
@@ -1883,10 +2011,10 @@ private boolean getParametreFacturation(){
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<TFacture> cq = cb.createQuery(TFacture.class);
             Root<TFacture> root = cq.from(TFacture.class);
-            Join< TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
+            Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             if (!"".equals(lgTP)) {
-//                 Join<TFacture, TTiersPayant> tp = root.join("str_CUSTOMER", JoinType.INNER);
+                // Join<TFacture, TTiersPayant> tp = root.join("str_CUSTOMER", JoinType.INNER);
 
                 criteria = cb.and(criteria, cb.equal(root.get("strCUSTOMER"), lgTP));
             }
@@ -1962,7 +2090,7 @@ private boolean getParametreFacturation(){
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<TFacture> cq = cb.createQuery(TFacture.class);
             Root<TFacture> root = cq.from(TFacture.class);
-            Join< TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
+            Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
 
             Predicate criteria = cb.conjunction();
             for (int i = 0; i < excludList.length(); i++) {
@@ -2000,7 +2128,7 @@ private boolean getParametreFacturation(){
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TFacture> root = cq.from(TFacture.class);
-            Join< TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
+            Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
 
             Predicate criteria = cb.conjunction();
 
@@ -2024,13 +2152,15 @@ private boolean getParametreFacturation(){
 
     }
 
-    public boolean updateGroupFactureAmount(String LGFACTURE, Integer amount) throws NonexistentEntityException, Exception {
+    public boolean updateGroupFactureAmount(String LGFACTURE, Integer amount)
+            throws NonexistentEntityException, Exception {
         EntityManager em = null;
         boolean isOk = false;
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            TGroupeFactures factures = (TGroupeFactures) em.createQuery("SELECT o FROM TGroupeFactures o WHERE o.lgFACTURESID.lgFACTUREID =?1 ")
+            TGroupeFactures factures = (TGroupeFactures) em
+                    .createQuery("SELECT o FROM TGroupeFactures o WHERE o.lgFACTURESID.lgFACTUREID =?1 ")
                     .setParameter(1, LGFACTURE).setMaxResults(1).getSingleResult();
             factures.setIntPAYE(amount);
             factures.setDtUPDATED(new Date());
@@ -2048,8 +2178,6 @@ private boolean getParametreFacturation(){
         }
         return isOk;
     }
-
-
 
     public JSONObject getReleveFacture(String dt_start, String dt_end, String search, String lgTP) {
         JSONObject json = new JSONObject();
@@ -2082,7 +2210,8 @@ private boolean getParametreFacturation(){
             oblist.forEach((objects) -> {
                 try {
 
-                    json.put("dblMONTANTRESTANT", objects[0]).put("dblMONTANTCMDE", objects[1]).put("dblMONTANTPAYE", objects[2]);
+                    json.put("dblMONTANTRESTANT", objects[0]).put("dblMONTANTCMDE", objects[1]).put("dblMONTANTPAYE",
+                            objects[2]);
 
                 } catch (JSONException ex) {
 
@@ -2097,7 +2226,8 @@ private boolean getParametreFacturation(){
         return json;
     }
 
-    public Map<String, LinkedHashSet<TFacture>> generateInvoices(List<TTiersPayant> payants, String dt_start, String dt_end, Integer lgGRP, TUser us) {
+    public Map<String, LinkedHashSet<TFacture>> generateInvoices(List<TTiersPayant> payants, String dt_start,
+            String dt_end, Integer lgGRP, TUser us) {
         EntityManager em = getEntityManager();
         TParameters OParameters = em.find(TParameters.class, Parameter.KEY_CODE_FACTURE);
         em.getTransaction().begin();
@@ -2111,136 +2241,149 @@ private boolean getParametreFacturation(){
         em.merge(OParameters);
         payants.forEach((p) -> {
 
-            List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1, -1, p.getLgTIERSPAYANTID(), lgGRP, "");
+            List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1, -1,
+                    p.getLgTIERSPAYANTID(), lgGRP, "");
 
             switch (getCase(p)) {
 
-                case 1:
+            case 1:
 
-                    long montantFact = finalTp.stream().mapToLong((_qty) -> {
-                        return _qty.getIntPRICE();
-                    }).sum();
+                long montantFact = finalTp.stream().mapToLong((_qty) -> {
+                    return _qty.getIntPRICE();
+                }).sum();
 
-                    if (p.getIntMONTANTFAC() < montantFact) {
-                        Integer virtualAmont = 0;
-                        int myCount = 0;
-                        int volatilecount = 0;
+                if (p.getIntMONTANTFAC() < montantFact) {
+                    Integer virtualAmont = 0;
+                    int myCount = 0;
+                    int volatilecount = 0;
 
-                        for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
+                    for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
 
-                            if (virtualAmont > p.getIntMONTANTFAC()) {
-                                try {
-                                    if (myCount < finalTp.size()) {
+                        if (virtualAmont > p.getIntMONTANTFAC()) {
+                            try {
+                                if (myCount < finalTp.size()) {
 
-                                        TFacture of = this.createInvoices(finalTp.subList(volatilecount, myCount - 1), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
-
-                                        factures.add(of);
-
-                                        createGroupeFacture(g, of, CODEFACTURE, em);
-
-                                    } else if (myCount == (finalTp.size() - 1)) {
-
-                                        TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
-
-                                        factures.add(of);
-                                        createGroupeFacture(g, of, CODEFACTURE, em);
-                                    }
-
-                                    volatilecount = (myCount - 1);
-                                    virtualAmont = (finalTp.get(volatilecount).getIntPRICE()) + (finalTp.get(myCount).getIntPRICE());
-
-                                } catch (ParseException ex) {
-
-                                }
-                            } else if ((virtualAmont <= p.getIntMONTANTFAC()) && (myCount == (finalTp.size() - 1))) {
-                                try {
-
-                                    TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
+                                    TFacture of = this.createInvoices(finalTp.subList(volatilecount, myCount - 1),
+                                            date.formatterMysqlShort.parse(dt_start),
+                                            date.formatterMysqlShort.parse(dt_end), p, em, us);
 
                                     factures.add(of);
 
                                     createGroupeFacture(g, of, CODEFACTURE, em);
-                                } catch (ParseException ex) {
 
+                                } else if (myCount == (finalTp.size() - 1)) {
+
+                                    TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()),
+                                            date.formatterMysqlShort.parse(dt_start),
+                                            date.formatterMysqlShort.parse(dt_end), p, em, us);
+
+                                    factures.add(of);
+                                    createGroupeFacture(g, of, CODEFACTURE, em);
                                 }
 
+                                volatilecount = (myCount - 1);
+                                virtualAmont = (finalTp.get(volatilecount).getIntPRICE())
+                                        + (finalTp.get(myCount).getIntPRICE());
+
+                            } catch (ParseException ex) {
+
                             }
-                            virtualAmont += op.getIntPRICE();
-                            myCount++;
+                        } else if ((virtualAmont <= p.getIntMONTANTFAC()) && (myCount == (finalTp.size() - 1))) {
+                            try {
+
+                                TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()),
+                                        date.formatterMysqlShort.parse(dt_start),
+                                        date.formatterMysqlShort.parse(dt_end), p, em, us);
+
+                                factures.add(of);
+
+                                createGroupeFacture(g, of, CODEFACTURE, em);
+                            } catch (ParseException ex) {
+
+                            }
 
                         }
-
-                    } else {
-                        try {
-                            TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
-
-                            factures.add(of);
-                            createGroupeFacture(g, of, CODEFACTURE, em);
-                        } catch (ParseException ex) {
-
-                        }
+                        virtualAmont += op.getIntPRICE();
+                        myCount++;
 
                     }
 
-                    break;
-                case 2:
-
-                    int count = p.getIntNBREBONS();
-                    int decrementCount = finalTp.size();
-                    int _count = p.getIntNBREBONS();
-                    int virtualCnt = 0;
-                    Date dtstart = null;
-                    Date dtend = null;
+                } else {
                     try {
-                        dtstart = date.formatterMysqlShort.parse(dt_start);
-                        dtend = date.formatterMysqlShort.parse(dt_end);
-                    } catch (Exception e) {
-                    }
-
-                    if (finalTp.size() > _count) {
-                        while (decrementCount > 0) {
-
-                            if (count < finalTp.size()) {
-                                TFacture of = this.createInvoices(finalTp.subList(virtualCnt, count), dtstart, dtend, p, em, us);
-
-                                factures.add(of);
-                                createGroupeFacture(g, of, CODEFACTURE, em);
-
-                            } else {
-                                TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p, em, us);
-
-                                factures.add(of);
-                                createGroupeFacture(g, of, CODEFACTURE, em);
-
-                            }
-                            virtualCnt += _count;
-                            count += _count;
-                            decrementCount -= (_count);
-                        }
-
-                    } else {
-
-                        TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p, em, us);
+                        TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                                date.formatterMysqlShort.parse(dt_end), p, em, us);
 
                         factures.add(of);
                         createGroupeFacture(g, of, CODEFACTURE, em);
+                    } catch (ParseException ex) {
 
                     }
-                    break;
-                default:
 
-                    if (finalTp.size() > 0) {
-                        try {
-                            TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
+                }
+
+                break;
+            case 2:
+
+                int count = p.getIntNBREBONS();
+                int decrementCount = finalTp.size();
+                int _count = p.getIntNBREBONS();
+                int virtualCnt = 0;
+                Date dtstart = null;
+                Date dtend = null;
+                try {
+                    dtstart = date.formatterMysqlShort.parse(dt_start);
+                    dtend = date.formatterMysqlShort.parse(dt_end);
+                } catch (Exception e) {
+                }
+
+                if (finalTp.size() > _count) {
+                    while (decrementCount > 0) {
+
+                        if (count < finalTp.size()) {
+                            TFacture of = this.createInvoices(finalTp.subList(virtualCnt, count), dtstart, dtend, p, em,
+                                    us);
 
                             factures.add(of);
                             createGroupeFacture(g, of, CODEFACTURE, em);
-                        } catch (Exception e) {
-                        }
 
+                        } else {
+                            TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart,
+                                    dtend, p, em, us);
+
+                            factures.add(of);
+                            createGroupeFacture(g, of, CODEFACTURE, em);
+
+                        }
+                        virtualCnt += _count;
+                        count += _count;
+                        decrementCount -= (_count);
                     }
 
-                    break;
+                } else {
+
+                    TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p,
+                            em, us);
+
+                    factures.add(of);
+                    createGroupeFacture(g, of, CODEFACTURE, em);
+
+                }
+                break;
+            default:
+
+                if (finalTp.size() > 0) {
+                    try {
+                        TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                                date.formatterMysqlShort.parse(dt_end), p, em, us);
+
+                        factures.add(of);
+                        createGroupeFacture(g, of, CODEFACTURE, em);
+                    } catch (Exception e) {
+                    }
+
+                }
+
+                break;
 
             }
 
@@ -2251,142 +2394,156 @@ private boolean getParametreFacturation(){
         return grfact;
     }
 
-    private LinkedHashSet<TFacture> generateInvoices(List<TTiersPayant> payants, String dt_start, String dt_end, TGroupeTierspayant g, EntityManager em, String CODEFACTURE, TUser u) {
+    private LinkedHashSet<TFacture> generateInvoices(List<TTiersPayant> payants, String dt_start, String dt_end,
+            TGroupeTierspayant g, EntityManager em, String CODEFACTURE, TUser u) {
 
         LinkedHashSet<TFacture> factures = new LinkedHashSet<>();
 
         payants.forEach((p) -> {
 
-            List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1, -1, p.getLgTIERSPAYANTID(), -1, "");
+            List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1, -1,
+                    p.getLgTIERSPAYANTID(), -1, "");
 
             switch (getCase(p)) {
 
-                case 1:
+            case 1:
 
-                    long montantFact = finalTp.stream().mapToLong((_qty) -> {
-                        return _qty.getIntPRICE();
-                    }).sum();
+                long montantFact = finalTp.stream().mapToLong((_qty) -> {
+                    return _qty.getIntPRICE();
+                }).sum();
 
-                    if (p.getIntMONTANTFAC() < montantFact) {
-                        Integer virtualAmont = 0;
-                        int myCount = 0;
-                        int volatilecount = 0;
+                if (p.getIntMONTANTFAC() < montantFact) {
+                    Integer virtualAmont = 0;
+                    int myCount = 0;
+                    int volatilecount = 0;
 
-                        for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
+                    for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
 
-                            if (virtualAmont > p.getIntMONTANTFAC()) {
-                                try {
-                                    if (myCount < finalTp.size()) {
+                        if (virtualAmont > p.getIntMONTANTFAC()) {
+                            try {
+                                if (myCount < finalTp.size()) {
 
-                                        TFacture of = this.createInvoices(finalTp.subList(volatilecount, myCount - 1), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, u);
-
-                                        factures.add(of);
-
-                                        createGroupeFacture(g, of, CODEFACTURE, em);
-
-                                    } else if (myCount == (finalTp.size() - 1)) {
-
-                                        TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, u);
-
-                                        factures.add(of);
-                                        createGroupeFacture(g, of, CODEFACTURE, em);
-                                    }
-
-                                    volatilecount = (myCount - 1);
-                                    virtualAmont = (finalTp.get(volatilecount).getIntPRICE()) + (finalTp.get(myCount).getIntPRICE());
-
-                                } catch (ParseException ex) {
-
-                                }
-                            } else if ((virtualAmont <= p.getIntMONTANTFAC()) && (myCount == (finalTp.size() - 1))) {
-                                try {
-
-                                    TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, u);
+                                    TFacture of = this.createInvoices(finalTp.subList(volatilecount, myCount - 1),
+                                            date.formatterMysqlShort.parse(dt_start),
+                                            date.formatterMysqlShort.parse(dt_end), p, em, u);
 
                                     factures.add(of);
 
                                     createGroupeFacture(g, of, CODEFACTURE, em);
-                                } catch (ParseException ex) {
 
+                                } else if (myCount == (finalTp.size() - 1)) {
+
+                                    TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()),
+                                            date.formatterMysqlShort.parse(dt_start),
+                                            date.formatterMysqlShort.parse(dt_end), p, em, u);
+
+                                    factures.add(of);
+                                    createGroupeFacture(g, of, CODEFACTURE, em);
                                 }
 
+                                volatilecount = (myCount - 1);
+                                virtualAmont = (finalTp.get(volatilecount).getIntPRICE())
+                                        + (finalTp.get(myCount).getIntPRICE());
+
+                            } catch (ParseException ex) {
+
                             }
-                            virtualAmont += op.getIntPRICE();
-                            myCount++;
-
-                        }
-
-                    } else {
-                        if (finalTp.size() > 0) {
+                        } else if ((virtualAmont <= p.getIntMONTANTFAC()) && (myCount == (finalTp.size() - 1))) {
                             try {
-                                TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, u);
+
+                                TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()),
+                                        date.formatterMysqlShort.parse(dt_start),
+                                        date.formatterMysqlShort.parse(dt_end), p, em, u);
 
                                 factures.add(of);
+
                                 createGroupeFacture(g, of, CODEFACTURE, em);
                             } catch (ParseException ex) {
 
                             }
+
                         }
+                        virtualAmont += op.getIntPRICE();
+                        myCount++;
 
                     }
 
-                    break;
-                case 2:
-
-                    int count = p.getIntNBREBONS();
-                    int decrementCount = finalTp.size();
-                    int _count = p.getIntNBREBONS();
-                    int virtualCnt = 0;
-                    Date dtstart = null;
-                    Date dtend = null;
-                    try {
-                        dtstart = date.formatterMysqlShort.parse(dt_start);
-                        dtend = date.formatterMysqlShort.parse(dt_end);
-                    } catch (Exception e) {
-                    }
-
-                    if (finalTp.size() > _count) {
-                        while (decrementCount > 0) {
-
-                            if (count < finalTp.size()) {
-                                TFacture of = this.createInvoices(finalTp.subList(virtualCnt, count), dtstart, dtend, p, em, u);
-
-                                factures.add(of);
-                                createGroupeFacture(g, of, CODEFACTURE, em);
-
-                            } else {
-                                TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p, em, u);
-
-                                factures.add(of);
-                                createGroupeFacture(g, of, CODEFACTURE, em);
-
-                            }
-                            virtualCnt += _count;
-                            count += _count;
-                            decrementCount -= (_count);
-                        }
-
-                    } else {
-
-                        TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p, em, u);
-
-                        factures.add(of);
-                        createGroupeFacture(g, of, CODEFACTURE, em);
-
-                    }
-                    break;
-                default:
+                } else {
                     if (finalTp.size() > 0) {
                         try {
-                            TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, u);
+                            TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                                    date.formatterMysqlShort.parse(dt_end), p, em, u);
 
                             factures.add(of);
                             createGroupeFacture(g, of, CODEFACTURE, em);
-                        } catch (Exception e) {
-                        }
+                        } catch (ParseException ex) {
 
+                        }
                     }
-                    break;
+
+                }
+
+                break;
+            case 2:
+
+                int count = p.getIntNBREBONS();
+                int decrementCount = finalTp.size();
+                int _count = p.getIntNBREBONS();
+                int virtualCnt = 0;
+                Date dtstart = null;
+                Date dtend = null;
+                try {
+                    dtstart = date.formatterMysqlShort.parse(dt_start);
+                    dtend = date.formatterMysqlShort.parse(dt_end);
+                } catch (Exception e) {
+                }
+
+                if (finalTp.size() > _count) {
+                    while (decrementCount > 0) {
+
+                        if (count < finalTp.size()) {
+                            TFacture of = this.createInvoices(finalTp.subList(virtualCnt, count), dtstart, dtend, p, em,
+                                    u);
+
+                            factures.add(of);
+                            createGroupeFacture(g, of, CODEFACTURE, em);
+
+                        } else {
+                            TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart,
+                                    dtend, p, em, u);
+
+                            factures.add(of);
+                            createGroupeFacture(g, of, CODEFACTURE, em);
+
+                        }
+                        virtualCnt += _count;
+                        count += _count;
+                        decrementCount -= (_count);
+                    }
+
+                } else {
+
+                    TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p,
+                            em, u);
+
+                    factures.add(of);
+                    createGroupeFacture(g, of, CODEFACTURE, em);
+
+                }
+                break;
+            default:
+                if (finalTp.size() > 0) {
+                    try {
+                        TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                                date.formatterMysqlShort.parse(dt_end), p, em, u);
+
+                        factures.add(of);
+                        createGroupeFacture(g, of, CODEFACTURE, em);
+                    } catch (Exception e) {
+                    }
+
+                }
+                break;
 
             }
 
@@ -2395,7 +2552,7 @@ private boolean getParametreFacturation(){
         return factures;
     }
 
-    public JSONArray statQty(boolean all, int year, String search, String empl,String rayonId, int start, int limit) {
+    public JSONArray statQty(boolean all, int year, String search, String empl, String rayonId, int start, int limit) {
         JSONArray array = new JSONArray();
         EntityManager em = this.getEntityManager();
         try {
@@ -2403,24 +2560,26 @@ private boolean getParametreFacturation(){
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-           
+
             Predicate criteria = cb.conjunction();
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"), cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"),
+                        cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
             }
-            if(StringUtils.isNotEmpty(rayonId)){
-               Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER); 
-               criteria=cb.and(criteria,cb.equal(prf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), rayonId));
+            if (StringUtils.isNotEmpty(rayonId)) {
+                Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
+                criteria = cb.and(criteria,
+                        cb.equal(prf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), rayonId));
             }
             criteria = cb.and(criteria, cb.equal(pr.get(TPreenregistrement_.bISCANCEL), false));
             criteria = cb.and(criteria, cb.notLike(pr.get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
             Predicate btw = cb.equal(cb.function("YEAR", Integer.class, root.get("dtCREATED")), year);
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
-            criteria = cb.and(criteria, cb.equal(pr.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+            criteria = cb.and(criteria,
+                    cb.equal(pr.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
             Predicate pu = cb.greaterThan(pr.get("intPRICE"), 0);
-            cq.multiselect(root.get("lgFAMILLEID").get("lgFAMILLEID"),
-                    root.get("lgFAMILLEID").get("strNAME"), root.get("lgFAMILLEID").get("intCIP"))
-                    .groupBy(root.get("lgFAMILLEID").get("lgFAMILLEID"))
+            cq.multiselect(root.get("lgFAMILLEID").get("lgFAMILLEID"), root.get("lgFAMILLEID").get("strNAME"),
+                    root.get("lgFAMILLEID").get("intCIP")).groupBy(root.get("lgFAMILLEID").get("lgFAMILLEID"))
                     .orderBy(cb.asc(root.get("lgFAMILLEID").get("strNAME")));
             cq.where(criteria, pu, btw);
             Query q = em.createQuery(cq);
@@ -2470,8 +2629,7 @@ private boolean getParametreFacturation(){
             String query = "SELECT YEAR(`t_preenregistrement`.`dt_UPDATED`),MONTHNAME(`t_preenregistrement`.`dt_UPDATED`), SUM(`t_preenregistrement_detail`.`int_QUANTITY`) FROM\n"
                     + "  `t_preenregistrement`\n"
                     + "  INNER JOIN `t_preenregistrement_detail` ON (`t_preenregistrement`.`lg_PREENREGISTREMENT_ID` = `t_preenregistrement_detail`.`lg_PREENREGISTREMENT_ID`)\n"
-                    + "WHERE\n"
-                    + "  `t_preenregistrement_detail`.`lg_FAMILLE_ID`=? AND\n"
+                    + "WHERE\n" + "  `t_preenregistrement_detail`.`lg_FAMILLE_ID`=? AND\n"
                     + "   `t_preenregistrement`.`b_IS_CANCEL`=0 AND  `t_preenregistrement`.`int_PRICE` >0\n"
                     + "   AND  `t_preenregistrement`.`lg_TYPE_VENTE_ID` <> '5' AND\n"
                     + "   `t_preenregistrement_detail`.`int_QUANTITY` >0 AND   `t_preenregistrement`.`str_STATUT`='is_Closed'\n"
@@ -2515,56 +2673,59 @@ private boolean getParametreFacturation(){
     public int getQty(int year, int month, String id, String empl) {
         int result = 0;
         EntityManager em = this.getEntityManager();
-   
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
-            Predicate criteria = cb.conjunction();
-            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
-            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
-            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
-            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
-            Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
-            cb.and(criteria, pu);
-            Predicate pu2 = cb.greaterThan(root.get(TPreenregistrementDetail_.intQUANTITY), 0);
-            criteria = cb.and(criteria, cb.equal(prf.get(TFamille_.lgFAMILLEID), id));
-            Predicate btw = cb.equal(cb.function("MONTH", Integer.class, root.get("dtCREATED")), month);
-            Predicate btw2 = cb.equal(cb.function("YEAR", Integer.class, root.get("dtCREATED")), year);
-            cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)));
-            cq.where(criteria, btw, pu2, btw2, pu);
-            Query q = em.createQuery(cq);
-            Long r = (Long) q.getSingleResult();
-            result = (r != null ? r.intValue() : 0);
 
-    
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+        Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
+        Predicate criteria = cb.conjunction();
+        criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
+        criteria = cb.and(criteria,
+                cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
+        criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
+        criteria = cb.and(criteria, cb.equal(
+                root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+        Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
+        cb.and(criteria, pu);
+        Predicate pu2 = cb.greaterThan(root.get(TPreenregistrementDetail_.intQUANTITY), 0);
+        criteria = cb.and(criteria, cb.equal(prf.get(TFamille_.lgFAMILLEID), id));
+        Predicate btw = cb.equal(cb.function("MONTH", Integer.class, root.get("dtCREATED")), month);
+        Predicate btw2 = cb.equal(cb.function("YEAR", Integer.class, root.get("dtCREATED")), year);
+        cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)));
+        cq.where(criteria, btw, pu2, btw2, pu);
+        Query q = em.createQuery(cq);
+        Long r = (Long) q.getSingleResult();
+        result = (r != null ? r.intValue() : 0);
 
         return result;
     }
 
-    public int statQty(int year, String search, String empl,String rayonId) {
-     
+    public int statQty(int year, String search, String empl, String rayonId) {
+
         EntityManager em = this.getEntityManager();
         try {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long[]> cq = cb.createQuery(Long[].class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-        
+
             Predicate criteria = cb.conjunction();
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"), cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"),
+                        cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
             }
-             if(StringUtils.isNotEmpty(rayonId)){
-               Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER); 
-               criteria=cb.and(criteria,cb.equal(prf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), rayonId));
+            if (StringUtils.isNotEmpty(rayonId)) {
+                Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
+                criteria = cb.and(criteria,
+                        cb.equal(prf.get(TFamille_.lgZONEGEOID).get(TZoneGeographique_.lgZONEGEOID), rayonId));
             }
             criteria = cb.and(criteria, cb.notLike(pr.get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
             criteria = cb.and(criteria, cb.equal(pr.get(TPreenregistrement_.bISCANCEL), false));
             Predicate btw = cb.equal(cb.function("YEAR", Integer.class, root.get("dtCREATED")), year);
             criteria = cb.and(criteria, btw);
             criteria = cb.and(criteria, cb.equal(pr.get("strSTATUT"), "is_Closed"));
-            criteria = cb.and(criteria, cb.equal(pr.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+            criteria = cb.and(criteria,
+                    cb.equal(pr.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
             Predicate pu = cb.greaterThan(pr.get("intPRICE"), 0);
             criteria = cb.and(criteria, pu);
             cq.multiselect(cb.count(root)).groupBy(root.get("lgFAMILLEID").get("lgFAMILLEID"));
@@ -2591,19 +2752,21 @@ private boolean getParametreFacturation(){
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TBonLivraisonDetail> root = cq.from(TBonLivraisonDetail.class);
 
-            Join< TBonLivraisonDetail, TBonLivraison> pr = root.join("lgBONLIVRAISONID", JoinType.INNER);
+            Join<TBonLivraisonDetail, TBonLivraison> pr = root.join("lgBONLIVRAISONID", JoinType.INNER);
             Join<TBonLivraisonDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"), cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"),
+                        cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
             }
 
-            Predicate btw = cb.equal(cb.function("YEAR", Integer.class, root.get("lgBONLIVRAISONID").get("dtUPDATED")), year);
+            Predicate btw = cb.equal(cb.function("YEAR", Integer.class, root.get("lgBONLIVRAISONID").get("dtUPDATED")),
+                    year);
             criteria = cb.and(criteria, cb.equal(root.get("lgBONLIVRAISONID").get("strSTATUT"), "is_Closed"));
 
-            cq.multiselect(root.get("lgFAMILLEID").get("lgFAMILLEID"), root.get("lgFAMILLEID").get("strNAME"), root.get("lgFAMILLEID").get("intCIP"))
-                    .groupBy(root.get("lgFAMILLEID").get("lgFAMILLEID"))
+            cq.multiselect(root.get("lgFAMILLEID").get("lgFAMILLEID"), root.get("lgFAMILLEID").get("strNAME"),
+                    root.get("lgFAMILLEID").get("intCIP")).groupBy(root.get("lgFAMILLEID").get("lgFAMILLEID"))
                     .orderBy(cb.asc(root.get("lgFAMILLEID").get("strNAME")));
             cq.where(criteria, btw);
 
@@ -2626,7 +2789,9 @@ private boolean getParametreFacturation(){
                     for (int i = 1; i <= today.getMonthValue(); i++) {
                         LocalDate date = LocalDate.of(today.getYear(), i, 1);
                         JSONObject data = getAchatsData(year, i, objects[0].toString());
-                        json.put(date.getMonth().name(), data.getInt("montant")).put(date.getMonth().name() + "QTY", data.get("intQTERECUE")).put(date.getMonth().name() + "UG", data.get("intQTEUG"));
+                        json.put(date.getMonth().name(), data.getInt("montant"))
+                                .put(date.getMonth().name() + "QTY", data.get("intQTERECUE"))
+                                .put(date.getMonth().name() + "UG", data.get("intQTEUG"));
 
                     }
 
@@ -2657,10 +2822,13 @@ private boolean getParametreFacturation(){
             Join<TBonLivraisonDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             criteria = cb.and(criteria, cb.equal(prf.get(TFamille_.lgFAMILLEID), id));
-            Predicate btw = cb.equal(cb.function("MONTH", Integer.class, root.get(TBonLivraisonDetail_.dtCREATED)), month);
-            Predicate btw2 = cb.equal(cb.function("YEAR", Integer.class, root.get(TBonLivraisonDetail_.dtCREATED)), year);
+            Predicate btw = cb.equal(cb.function("MONTH", Integer.class, root.get(TBonLivraisonDetail_.dtCREATED)),
+                    month);
+            Predicate btw2 = cb.equal(cb.function("YEAR", Integer.class, root.get(TBonLivraisonDetail_.dtCREATED)),
+                    year);
 
-            cq.multiselect(cb.sumAsLong(root.get(TBonLivraisonDetail_.intQTERECUE)), cb.sumAsLong(root.get(TBonLivraisonDetail_.intQTEUG)), root.get(TBonLivraisonDetail_.intPAF));
+            cq.multiselect(cb.sumAsLong(root.get(TBonLivraisonDetail_.intQTERECUE)),
+                    cb.sumAsLong(root.get(TBonLivraisonDetail_.intQTEUG)), root.get(TBonLivraisonDetail_.intPAF));
             cq.where(criteria, btw);
 
             Query q = em.createQuery(cq);
@@ -2668,8 +2836,10 @@ private boolean getParametreFacturation(){
             r.forEach((t) -> {
                 try {
 
-                    result.put("intQTERECUE", (t[0] != null ? Integer.valueOf(t[0] + "") : 0)).put("intQTEUG", (t[1] != null ? Integer.valueOf(t[1] + "") : 0))
-                            .put("montant", (t[0] != null ? Integer.valueOf(t[0] + "") : 0) * (t[2] != null ? Integer.valueOf(t[2] + "") : 0));
+                    result.put("intQTERECUE", (t[0] != null ? Integer.valueOf(t[0] + "") : 0))
+                            .put("intQTEUG", (t[1] != null ? Integer.valueOf(t[1] + "") : 0))
+                            .put("montant", (t[0] != null ? Integer.valueOf(t[0] + "") : 0)
+                                    * (t[2] != null ? Integer.valueOf(t[2] + "") : 0));
                 } catch (JSONException ex) {
 
                 }
@@ -2694,15 +2864,17 @@ private boolean getParametreFacturation(){
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TBonLivraisonDetail> root = cq.from(TBonLivraisonDetail.class);
 
-            Join< TBonLivraisonDetail, TBonLivraison> pr = root.join("lgBONLIVRAISONID", JoinType.INNER);
+            Join<TBonLivraisonDetail, TBonLivraison> pr = root.join("lgBONLIVRAISONID", JoinType.INNER);
             Join<TBonLivraisonDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"), cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(root.get("lgFAMILLEID").get("strNAME"), search + "%"),
+                        cb.like(root.get("lgFAMILLEID").get("intCIP"), search + "%")));
             }
 
-            Predicate btw = cb.equal(cb.function("YEAR", Integer.class, root.get(TBonLivraisonDetail_.dtCREATED)), year);
+            Predicate btw = cb.equal(cb.function("YEAR", Integer.class, root.get(TBonLivraisonDetail_.dtCREATED)),
+                    year);
             criteria = cb.and(criteria, cb.equal(root.get("lgBONLIVRAISONID").get("strSTATUT"), "is_Closed"));
 
             cq.multiselect(cb.count(root)).groupBy(root.get("lgFAMILLEID").get("lgFAMILLEID"));
@@ -2720,7 +2892,6 @@ private boolean getParametreFacturation(){
 
     }
 
-
     public JSONObject getMvt(String dt_start, String dt_end) {
         EntityManager em = this.getEntityManager();
         JSONObject jsono = new JSONObject();
@@ -2735,11 +2906,13 @@ private boolean getParametreFacturation(){
 
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtCREATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtCREATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.notLike(pr.get("lgTYPEMVTCAISSEID"), "9"));
             criteria = cb.and(criteria, cb.notLike(pr.get("lgTYPEMVTCAISSEID"), "8"));
 
-            cq.multiselect(cb.sumAsDouble(root.get("intAMOUNT")), pr.get("strNAME")).groupBy(pr.get("lgTYPEMVTCAISSEID"));
+            cq.multiselect(cb.sumAsDouble(root.get("intAMOUNT")), pr.get("strNAME"))
+                    .groupBy(pr.get("lgTYPEMVTCAISSEID"));
             cq.where(criteria, btw);
 
             Query q = em.createQuery(cq);
@@ -2782,11 +2955,13 @@ private boolean getParametreFacturation(){
 
             Predicate criteria = cb.conjunction();
             System.out.println(" dt " + dt_start + " " + dt_end);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(root.get(TBonLivraison_.strSTATUT), "is_Closed"));
 
-//            Predicate pu = cb.greaterThan(root.get("intAMOUNT"), 0);
-            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)), cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
+            // Predicate pu = cb.greaterThan(root.get("intAMOUNT"), 0);
+            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)),
+                    cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
             cq.where(btw, criteria);
 
             Query q = em.createQuery(cq);
@@ -2802,10 +2977,12 @@ private boolean getParametreFacturation(){
             }
 
             if (valueTTC > 0) {
-                ration = new BigDecimal(Double.valueOf(ttc) / Double.valueOf(valueTTC)).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();//Math.round(Double.valueOf(ttc)/Double.valueOf(valueTTC));
+                ration = new BigDecimal(Double.valueOf(ttc) / Double.valueOf(valueTTC))
+                        .setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();// Math.round(Double.valueOf(ttc)/Double.valueOf(valueTTC));
             }
             JSONObject data = new JSONObject();
-            data.put("th", Util.getFormattedLongValue(valueHT)).put("ttc", Util.getFormattedLongValue(valueTTC)).put("tva", Util.getFormattedLongValue(valueTVA));
+            data.put("th", Util.getFormattedLongValue(valueHT)).put("ttc", Util.getFormattedLongValue(valueTTC))
+                    .put("tva", Util.getFormattedLongValue(valueTVA));
             data.put("marge", Util.getFormattedLongValue(marge)).put("ratio", ration);
             jsono.put("achats", data);
         } catch (Exception e) {
@@ -2816,7 +2993,8 @@ private boolean getParametreFacturation(){
     }
 
     private List<TGrossiste> getGroupe(String name) {
-        return this.getEntityManager().createQuery("SELECT o FROM TGrossiste o WHERE o.strLIBELLE LIKE ?1 ").setParameter(1, name + "%").getResultList();
+        return this.getEntityManager().createQuery("SELECT o FROM TGrossiste o WHERE o.strLIBELLE LIKE ?1 ")
+                .setParameter(1, name + "%").getResultList();
     }
 
     public JSONObject getGrossisteAchats(String dt_start, String dt_end) {
@@ -2832,7 +3010,8 @@ private boolean getParametreFacturation(){
             Join<TBonLivraison, TOrder> or = root.join("lgORDERID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(root.get(TBonLivraison_.strSTATUT), "is_Closed"));
             List<TGrossiste> laborex = getGroupe("LABOREX");
 
@@ -2844,7 +3023,8 @@ private boolean getParametreFacturation(){
             orp = orlist.toArray(orp);
             criteria = cb.and(criteria, cb.or(orp));
 
-            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)), cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
+            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)),
+                    cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
             cq.where(btw, criteria);
 
             Query q = em.createQuery(cq);
@@ -2853,13 +3033,18 @@ private boolean getParametreFacturation(){
             list.forEach((objects) -> {
                 try {
                     JSONObject data = new JSONObject();
-                    data.put("th", Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0))).put("ttc", Util.getFormattedLongValue((objects[0] != null ? Long.valueOf(objects[0] + "") : 0))).put("tva", Util.getFormattedLongValue((objects[2] != null ? Long.valueOf(objects[2] + "") : 0)));
+                    data.put("th", Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0)))
+                            .put("ttc",
+                                    Util.getFormattedLongValue(
+                                            (objects[0] != null ? Long.valueOf(objects[0] + "") : 0)))
+                            .put("tva", Util
+                                    .getFormattedLongValue((objects[2] != null ? Long.valueOf(objects[2] + "") : 0)));
                     data.put("grossiste", "LABOREX");
                     array.put(data);
                 } catch (JSONException ex) {
 
                 }
-                // 
+                //
                 List<String> quatresGrd = Arrays.asList("COPHARMED", "TEDIS", "DPCI");
                 quatresGrd.forEach((string) -> {
                     try {
@@ -2879,7 +3064,6 @@ private boolean getParametreFacturation(){
             e.printStackTrace();
 
         }
-
 
         JSONObject out = new JSONObject();
         try {
@@ -2903,11 +3087,13 @@ private boolean getParametreFacturation(){
             Join<TBonLivraison, TOrder> or = root.join("lgORDERID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(root.get(TBonLivraison_.strSTATUT), "is_Closed"));
             criteria = cb.and(criteria, cb.like(or.get("lgGROSSISTEID").get("strLIBELLE"), desc + "%"));
 
-            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)), cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
+            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)),
+                    cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
             cq.where(btw, criteria);
 
             Query q = em.createQuery(cq);
@@ -2916,7 +3102,12 @@ private boolean getParametreFacturation(){
             list.forEach((objects) -> {
                 try {
                     JSONObject data = new JSONObject();
-                    data.put("th", Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0))).put("ttc", Util.getFormattedLongValue((objects[0] != null ? Long.valueOf(objects[0] + "") : 0))).put("tva", Util.getFormattedLongValue((objects[2] != null ? Long.valueOf(objects[2] + "") : 0)));
+                    data.put("th", Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0)))
+                            .put("ttc",
+                                    Util.getFormattedLongValue(
+                                            (objects[0] != null ? Long.valueOf(objects[0] + "") : 0)))
+                            .put("tva", Util
+                                    .getFormattedLongValue((objects[2] != null ? Long.valueOf(objects[2] + "") : 0)));
                     data.put("grossiste", desc);
                     jsono.put(desc, data);
                 } catch (JSONException ex) {
@@ -2944,7 +3135,8 @@ private boolean getParametreFacturation(){
             Join<TBonLivraison, TOrder> or = root.join("lgORDERID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(root.get(TBonLivraison_.strSTATUT), "is_Closed"));
             List<Predicate> orlist = new ArrayList<>();
             quatresGrd.forEach((desc) -> {
@@ -2954,7 +3146,8 @@ private boolean getParametreFacturation(){
             orp = orlist.toArray(orp);
             criteria = cb.and(criteria, cb.and(orp));
 
-            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)), cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
+            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)),
+                    cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
             cq.where(btw, criteria);
 
             Query q = em.createQuery(cq);
@@ -2963,7 +3156,12 @@ private boolean getParametreFacturation(){
             list.forEach((objects) -> {
                 try {
                     JSONObject data = new JSONObject();
-                    data.put("th", Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0))).put("ttc", Util.getFormattedLongValue((objects[0] != null ? Long.valueOf(objects[0] + "") : 0))).put("tva", Util.getFormattedLongValue((objects[2] != null ? Long.valueOf(objects[2] + "") : 0)));
+                    data.put("th", Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0)))
+                            .put("ttc",
+                                    Util.getFormattedLongValue(
+                                            (objects[0] != null ? Long.valueOf(objects[0] + "") : 0)))
+                            .put("tva", Util
+                                    .getFormattedLongValue((objects[2] != null ? Long.valueOf(objects[2] + "") : 0)));
                     data.put("grossiste", "AUTRES");
                     jsono.put("AUTRES", data);
                 } catch (JSONException ex) {
@@ -2979,7 +3177,8 @@ private boolean getParametreFacturation(){
         return jsono;
     }
 
-    public JSONArray creditsAccorde(boolean all, String dt_start, String dt_end, String search, String empl, int start, int limit) {
+    public JSONArray creditsAccorde(boolean all, String dt_start, String dt_end, String search, String empl, int start,
+            int limit) {
         EntityManager em = this.getEntityManager();
 
         JSONArray array = new JSONArray();
@@ -2988,25 +3187,38 @@ private boolean getParametreFacturation(){
             CriteriaBuilder cb = em.getCriteriaBuilder();
 
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> or = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> pt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> or = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> pt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, or.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, or.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.strSTATUT), "is_Closed"));
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(pt.get("lgTIERSPAYANTID").get("strNAME"), search + "%"), cb.like(pt.get("lgTIERSPAYANTID").get("lgTYPETIERSPAYANTID").get("strLIBELLETYPETIERSPAYANT"), search + "%")));
+                criteria = cb.and(criteria,
+                        cb.or(cb.like(pt.get("lgTIERSPAYANTID").get("strNAME"), search + "%"), cb.like(
+                                pt.get("lgTIERSPAYANTID").get("lgTYPETIERSPAYANTID").get("strLIBELLETYPETIERSPAYANT"),
+                                search + "%")));
             }
-            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+            criteria = cb.and(criteria, cb.equal(
+                    root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"),
+                    empl));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.bISCANCEL), false));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.strTYPEVENTE), "VO"));
             Predicate pu = cb.greaterThan(or.get(TPreenregistrement_.intPRICE), 0);
-            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
-//            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "4"));
+            criteria = cb.and(criteria,
+                    cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
+            // criteria = cb.and(criteria,
+            // cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "4"));
             Predicate pu2 = cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE), 0);
-            cq.multiselect(cb.sumAsLong(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)), cb.countDistinct(root),
-                    pt.get("lgTIERSPAYANTID").get("strNAME"), pt.get("lgTIERSPAYANTID").get("lgTYPETIERSPAYANTID").get("strLIBELLETYPETIERSPAYANT"), cb.countDistinct(pt.get("lgCOMPTECLIENTID").get("lgCLIENTID")))
+            cq.multiselect(cb.sumAsLong(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)),
+                    cb.countDistinct(root), pt.get("lgTIERSPAYANTID").get("strNAME"),
+                    pt.get("lgTIERSPAYANTID").get("lgTYPETIERSPAYANTID").get("strLIBELLETYPETIERSPAYANT"),
+                    cb.countDistinct(pt.get("lgCOMPTECLIENTID").get("lgCLIENTID")))
                     .groupBy(pt.get("lgTIERSPAYANTID").get("strNAME"));
             cq.where(btw, criteria, pu2, pu);
 
@@ -3020,10 +3232,13 @@ private boolean getParametreFacturation(){
             list.forEach((objects) -> {
                 try {
                     JSONObject data = new JSONObject();
-                    data.put("montant", Util.getFormattedLongValue((objects[0] != null ? Long.valueOf(objects[0] + "") : 0)));
-                    data.put("nb", Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0)));
+                    data.put("montant",
+                            Util.getFormattedLongValue((objects[0] != null ? Long.valueOf(objects[0] + "") : 0)));
+                    data.put("nb",
+                            Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0)));
                     data.put("name", objects[2]);
-                    data.put("nametype", objects[3]).put("nbclient", Util.getFormattedLongValue((objects[4] != null ? Long.valueOf(objects[4] + "") : 0)));
+                    data.put("nametype", objects[3]).put("nbclient",
+                            Util.getFormattedLongValue((objects[4] != null ? Long.valueOf(objects[4] + "") : 0)));
                     array.put(data);
                 } catch (JSONException ex) {
 
@@ -3046,25 +3261,35 @@ private boolean getParametreFacturation(){
             CriteriaBuilder cb = em.getCriteriaBuilder();
 
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> or = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> pt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> or = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> pt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, or.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, or.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.strSTATUT), "is_Closed"));
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(pt.get("lgTIERSPAYANTID").get("strNAME"), search + "%"), cb.like(pt.get("lgTIERSPAYANTID").get("lgTYPETIERSPAYANTID").get("strLIBELLETYPETIERSPAYANT"), search + "%")));
+                criteria = cb.and(criteria,
+                        cb.or(cb.like(pt.get("lgTIERSPAYANTID").get("strNAME"), search + "%"), cb.like(
+                                pt.get("lgTIERSPAYANTID").get("lgTYPETIERSPAYANTID").get("strLIBELLETYPETIERSPAYANT"),
+                                search + "%")));
             }
-            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+            criteria = cb.and(criteria, cb.equal(
+                    root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"),
+                    empl));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.bISCANCEL), false));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.strTYPEVENTE), "VO"));
             Predicate pu = cb.greaterThan(or.get(TPreenregistrement_.intPRICE), 0);
-            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
-            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "4"));
+            criteria = cb.and(criteria,
+                    cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
+            criteria = cb.and(criteria,
+                    cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "4"));
             Predicate pu2 = cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE), 0);
-            cq.multiselect(cb.countDistinct(root))
-                    .groupBy(pt.get("lgTIERSPAYANTID").get("strNAME"));
+            cq.multiselect(cb.countDistinct(root)).groupBy(pt.get("lgTIERSPAYANTID").get("strNAME"));
             cq.where(btw, criteria, pu2, pu);
 
             Query q = em.createQuery(cq);
@@ -3088,22 +3313,33 @@ private boolean getParametreFacturation(){
             CriteriaBuilder cb = em.getCriteriaBuilder();
 
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> or = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> pt = root.join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> or = root.join("lgPREENREGISTREMENTID",
+                    JoinType.INNER);
+            Join<TPreenregistrementCompteClientTiersPayent, TCompteClientTiersPayant> pt = root
+                    .join("lgCOMPTECLIENTTIERSPAYANTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, or.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, or.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.strSTATUT), "is_Closed"));
             if (!"".equals(search)) {
-                criteria = cb.and(criteria, cb.or(cb.like(pt.get("lgTIERSPAYANTID").get("strNAME"), search + "%"), cb.like(pt.get("lgTIERSPAYANTID").get("lgTYPETIERSPAYANTID").get("strLIBELLETYPETIERSPAYANT"), search + "%")));
+                criteria = cb.and(criteria,
+                        cb.or(cb.like(pt.get("lgTIERSPAYANTID").get("strNAME"), search + "%"), cb.like(
+                                pt.get("lgTIERSPAYANTID").get("lgTYPETIERSPAYANTID").get("strLIBELLETYPETIERSPAYANT"),
+                                search + "%")));
             }
-            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+            criteria = cb.and(criteria, cb.equal(
+                    root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"),
+                    empl));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.bISCANCEL), false));
             criteria = cb.and(criteria, cb.equal(or.get(TPreenregistrement_.strTYPEVENTE), "VO"));
             Predicate pu = cb.greaterThan(or.get(TPreenregistrement_.intPRICE), 0);
-            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
-            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "4"));
+            criteria = cb.and(criteria,
+                    cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
+            criteria = cb.and(criteria,
+                    cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "4"));
             Predicate pu2 = cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE), 0);
             cq.multiselect(cb.sumAsLong(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)), cb.count(root),
                     cb.countDistinct(pt.get("lgCOMPTECLIENTID").get("lgCLIENTID")));
@@ -3116,10 +3352,14 @@ private boolean getParametreFacturation(){
             list.forEach((objects) -> {
                 try {
                     JSONObject data = new JSONObject();
-                    data.put("montant", Util.getFormattedLongValue((objects[0] != null ? Long.valueOf(objects[0] + "") : 0)) + " CFA");
-                    data.put("nb", Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0)));
+                    data.put("montant",
+                            Util.getFormattedLongValue((objects[0] != null ? Long.valueOf(objects[0] + "") : 0))
+                                    + " CFA");
+                    data.put("nb",
+                            Util.getFormattedLongValue((objects[1] != null ? Long.valueOf(objects[1] + "") : 0)));
 
-                    data.put("nbclient", Util.getFormattedLongValue((objects[2] != null ? Long.valueOf(objects[2] + "") : 0)));
+                    data.put("nbclient",
+                            Util.getFormattedLongValue((objects[2] != null ? Long.valueOf(objects[2] + "") : 0)));
                     array.put(data);
                 } catch (JSONException ex) {
 
@@ -3149,7 +3389,8 @@ private boolean getParametreFacturation(){
 
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TDossierReglement_.dtCREATED)), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TDossierReglement_.dtCREATED)),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
 
             if (!"".equals(search)) {
 
@@ -3157,7 +3398,8 @@ private boolean getParametreFacturation(){
                 if (!laborex.isEmpty()) {
                     List<Predicate> orlist = new ArrayList<>();
                     laborex.forEach((tGrossiste) -> {
-                        orlist.add(cb.like(root.get(TDossierReglement_.strORGANISMEID), tGrossiste.getLgTIERSPAYANTID()));
+                        orlist.add(
+                                cb.like(root.get(TDossierReglement_.strORGANISMEID), tGrossiste.getLgTIERSPAYANTID()));
                     });
                     Predicate[] orp = new Predicate[orlist.size()];
                     orp = orlist.toArray(orp);
@@ -3168,7 +3410,9 @@ private boolean getParametreFacturation(){
 
             }
 
-            cq.multiselect(root.get(TDossierReglement_.dblAMOUNT), mapfac.get(TFacture_.dblMONTANTCMDE), mapfac.get(TFacture_.dblMONTANTRESTANT), mapfac.get(TFacture_.strCODEFACTURE), root.get(TDossierReglement_.strORGANISMEID))
+            cq.multiselect(root.get(TDossierReglement_.dblAMOUNT), mapfac.get(TFacture_.dblMONTANTCMDE),
+                    mapfac.get(TFacture_.dblMONTANTRESTANT), mapfac.get(TFacture_.strCODEFACTURE),
+                    root.get(TDossierReglement_.strORGANISMEID))
                     .orderBy(cb.desc(root.get(TDossierReglement_.dtCREATED)));
             cq.where(btw, criteria);
 
@@ -3182,8 +3426,10 @@ private boolean getParametreFacturation(){
             list.forEach((objects) -> {
                 try {
                     JSONObject data = new JSONObject();
-                    data.put("montant", Util.getFormattedDoubleValue((objects[0] != null ? Double.valueOf(objects[0] + "") : 0)));
-                    data.put("montantfact", Util.getFormattedDoubleValue((objects[1] != null ? Double.valueOf(objects[1] + "") : 0)));
+                    data.put("montant",
+                            Util.getFormattedDoubleValue((objects[0] != null ? Double.valueOf(objects[0] + "") : 0)));
+                    data.put("montantfact",
+                            Util.getFormattedDoubleValue((objects[1] != null ? Double.valueOf(objects[1] + "") : 0)));
                     data.put("rest", Util.getFormattedDoubleValue(Double.valueOf(objects[2] + "")));
                     data.put("code", objects[3]);
                     TTiersPayant tp = em.find(TTiersPayant.class, objects[4].toString());
@@ -3205,7 +3451,9 @@ private boolean getParametreFacturation(){
     }
 
     private List<TTiersPayant> getPayants(String name) {
-        return this.getEntityManager().createQuery("SELECT o FROM TTiersPayant o WHERE (o.strNAME LIKE ?1 OR o.lgTYPETIERSPAYANTID.strLIBELLETYPETIERSPAYANT LIKE ?1) ").setParameter(1, name + "%").getResultList();
+        return this.getEntityManager().createQuery(
+                "SELECT o FROM TTiersPayant o WHERE (o.strNAME LIKE ?1 OR o.lgTYPETIERSPAYANTID.strLIBELLETYPETIERSPAYANT LIKE ?1) ")
+                .setParameter(1, name + "%").getResultList();
     }
 
     public int recapReglement(String dt_start, String dt_end, String search) {
@@ -3221,7 +3469,8 @@ private boolean getParametreFacturation(){
 
             Predicate criteria = cb.conjunction();
 
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TDossierReglement_.dtCREATED)), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TDossierReglement_.dtCREATED)),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
 
             if (!"".equals(search)) {
 
@@ -3229,7 +3478,8 @@ private boolean getParametreFacturation(){
                 if (!laborex.isEmpty()) {
                     List<Predicate> orlist = new ArrayList<>();
                     laborex.forEach((tGrossiste) -> {
-                        orlist.add(cb.like(root.get(TDossierReglement_.strORGANISMEID), tGrossiste.getLgTIERSPAYANTID()));
+                        orlist.add(
+                                cb.like(root.get(TDossierReglement_.strORGANISMEID), tGrossiste.getLgTIERSPAYANTID()));
                     });
                     Predicate[] orp = new Predicate[orlist.size()];
                     orp = orlist.toArray(orp);
@@ -3255,8 +3505,9 @@ private boolean getParametreFacturation(){
         }
     }
 
-    //valorisation simple
-    public JSONObject getDataValorisation(int mode, String lg_GROSSISTE_ID, String lg_FAMILLEARTICLE_ID, String lg_ZONE_GEO_ID, String str_BEGIN, String str_END, String empl) {
+    // valorisation simple
+    public JSONObject getDataValorisation(int mode, String lg_GROSSISTE_ID, String lg_FAMILLEARTICLE_ID,
+            String lg_ZONE_GEO_ID, String str_BEGIN, String str_END, String empl) {
         EntityManager em = this.getEntityManager();
         JSONObject json = new JSONObject();
         try {
@@ -3269,70 +3520,71 @@ private boolean getParametreFacturation(){
             predicate = cb.and(predicate, cb.equal(fa.get(TFamille_.strSTATUT), "enable"));
 
             switch (mode) {
-                case 1:
-                    if (!"".equals(lg_FAMILLEARTICLE_ID)) {
-                        predicate = cb.and(predicate, cb.equal(far.get("lgFAMILLEARTICLEID"), lg_FAMILLEARTICLE_ID));
-                    }
-                    if (!"".equals(str_BEGIN) && !"".equals(str_END)) {
-                        Predicate ge = cb.greaterThanOrEqualTo(far.get(TFamillearticle_.strCODEFAMILLE), str_BEGIN);
-                        Predicate gl = cb.lessThanOrEqualTo(far.get(TFamillearticle_.strCODEFAMILLE), str_END);
-                        predicate = cb.and(predicate, cb.and(ge), cb.and(gl));
-                    }
-                    if (!"".equals(str_BEGIN) && "".equals(str_END)) {
-                        Predicate ge = cb.greaterThanOrEqualTo(far.get(TFamillearticle_.strCODEFAMILLE), str_BEGIN);
-                        predicate = cb.and(predicate, cb.and(ge));
-                    }
-                    if ("".equals(str_BEGIN) && !"".equals(str_END)) {
-                        Predicate gl = cb.lessThanOrEqualTo(far.get(TFamillearticle_.strCODEFAMILLE), str_END);
-                        predicate = cb.and(predicate, cb.and(gl));
-                    }
-                    break;
-                case 2:
-                    Join<TFamille, TZoneGeographique> fz = fa.join("lgZONEGEOID", JoinType.INNER);
-                    if (!"".equals(lg_ZONE_GEO_ID)) {
-                        predicate = cb.and(predicate, cb.equal(fz.get("lgZONEGEOID"), lg_ZONE_GEO_ID));
-                    }
-                    if (!"".equals(str_BEGIN) && !"".equals(str_END)) {
-                        Predicate ge = cb.greaterThanOrEqualTo(fz.get(TZoneGeographique_.strCODE), str_BEGIN);
-                        Predicate gl = cb.lessThanOrEqualTo(fz.get(TZoneGeographique_.strCODE), str_END);
-                        predicate = cb.and(predicate, cb.and(ge), cb.and(gl));
-                    }
-                    if (!"".equals(str_BEGIN) && "".equals(str_END)) {
-                        Predicate ge = cb.greaterThanOrEqualTo(fz.get(TZoneGeographique_.strCODE), str_BEGIN);
-                        predicate = cb.and(predicate, cb.and(ge));
-                    }
-                    if ("".equals(str_BEGIN) && !"".equals(str_END)) {
-                        Predicate gl = cb.lessThanOrEqualTo(fz.get(TZoneGeographique_.strCODE), str_END);
-                        predicate = cb.and(predicate, cb.and(gl));
-                    }
-                    break;
-                case 3:
-                    Join<TFamille, TGrossiste> fg = fa.join("lgGROSSISTEID", JoinType.INNER);
-                    if (!"".equals(lg_GROSSISTE_ID)) {
-                        predicate = cb.and(predicate, cb.equal(fg.get("lgGROSSISTEID"), lg_GROSSISTE_ID));
-                    }
-                    if (!"".equals(str_BEGIN) && !"".equals(str_END)) {
-                        Predicate ge = cb.greaterThanOrEqualTo(fg.get(TGrossiste_.strCODE), str_BEGIN);
-                        Predicate gl = cb.lessThanOrEqualTo(fg.get(TGrossiste_.strCODE), str_END);
-                        predicate = cb.and(predicate, cb.and(ge), cb.and(gl));
-                    }
-                    if (!"".equals(str_BEGIN) && "".equals(str_END)) {
-                        Predicate ge = cb.greaterThanOrEqualTo(fg.get(TGrossiste_.strCODE), str_BEGIN);
-                        predicate = cb.and(predicate, cb.and(ge));
-                    }
-                    if ("".equals(str_BEGIN) && !"".equals(str_END)) {
-                        Predicate gl = cb.lessThanOrEqualTo(fg.get(TGrossiste_.strCODE), str_END);
-                        predicate = cb.and(predicate, cb.and(gl));
-                    }
-                    break;
+            case 1:
+                if (!"".equals(lg_FAMILLEARTICLE_ID)) {
+                    predicate = cb.and(predicate, cb.equal(far.get("lgFAMILLEARTICLEID"), lg_FAMILLEARTICLE_ID));
+                }
+                if (!"".equals(str_BEGIN) && !"".equals(str_END)) {
+                    Predicate ge = cb.greaterThanOrEqualTo(far.get(TFamillearticle_.strCODEFAMILLE), str_BEGIN);
+                    Predicate gl = cb.lessThanOrEqualTo(far.get(TFamillearticle_.strCODEFAMILLE), str_END);
+                    predicate = cb.and(predicate, cb.and(ge), cb.and(gl));
+                }
+                if (!"".equals(str_BEGIN) && "".equals(str_END)) {
+                    Predicate ge = cb.greaterThanOrEqualTo(far.get(TFamillearticle_.strCODEFAMILLE), str_BEGIN);
+                    predicate = cb.and(predicate, cb.and(ge));
+                }
+                if ("".equals(str_BEGIN) && !"".equals(str_END)) {
+                    Predicate gl = cb.lessThanOrEqualTo(far.get(TFamillearticle_.strCODEFAMILLE), str_END);
+                    predicate = cb.and(predicate, cb.and(gl));
+                }
+                break;
+            case 2:
+                Join<TFamille, TZoneGeographique> fz = fa.join("lgZONEGEOID", JoinType.INNER);
+                if (!"".equals(lg_ZONE_GEO_ID)) {
+                    predicate = cb.and(predicate, cb.equal(fz.get("lgZONEGEOID"), lg_ZONE_GEO_ID));
+                }
+                if (!"".equals(str_BEGIN) && !"".equals(str_END)) {
+                    Predicate ge = cb.greaterThanOrEqualTo(fz.get(TZoneGeographique_.strCODE), str_BEGIN);
+                    Predicate gl = cb.lessThanOrEqualTo(fz.get(TZoneGeographique_.strCODE), str_END);
+                    predicate = cb.and(predicate, cb.and(ge), cb.and(gl));
+                }
+                if (!"".equals(str_BEGIN) && "".equals(str_END)) {
+                    Predicate ge = cb.greaterThanOrEqualTo(fz.get(TZoneGeographique_.strCODE), str_BEGIN);
+                    predicate = cb.and(predicate, cb.and(ge));
+                }
+                if ("".equals(str_BEGIN) && !"".equals(str_END)) {
+                    Predicate gl = cb.lessThanOrEqualTo(fz.get(TZoneGeographique_.strCODE), str_END);
+                    predicate = cb.and(predicate, cb.and(gl));
+                }
+                break;
+            case 3:
+                Join<TFamille, TGrossiste> fg = fa.join("lgGROSSISTEID", JoinType.INNER);
+                if (!"".equals(lg_GROSSISTE_ID)) {
+                    predicate = cb.and(predicate, cb.equal(fg.get("lgGROSSISTEID"), lg_GROSSISTE_ID));
+                }
+                if (!"".equals(str_BEGIN) && !"".equals(str_END)) {
+                    Predicate ge = cb.greaterThanOrEqualTo(fg.get(TGrossiste_.strCODE), str_BEGIN);
+                    Predicate gl = cb.lessThanOrEqualTo(fg.get(TGrossiste_.strCODE), str_END);
+                    predicate = cb.and(predicate, cb.and(ge), cb.and(gl));
+                }
+                if (!"".equals(str_BEGIN) && "".equals(str_END)) {
+                    Predicate ge = cb.greaterThanOrEqualTo(fg.get(TGrossiste_.strCODE), str_BEGIN);
+                    predicate = cb.and(predicate, cb.and(ge));
+                }
+                if ("".equals(str_BEGIN) && !"".equals(str_END)) {
+                    Predicate gl = cb.lessThanOrEqualTo(fg.get(TGrossiste_.strCODE), str_END);
+                    predicate = cb.and(predicate, cb.and(gl));
+                }
+                break;
 
-                default:
-                    break;
+            default:
+                break;
             }
 
             predicate = cb.and(predicate, cb.equal(root.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
 
-            cq.multiselect(cb.sumAsLong(cb.prod(root.get(TFamilleStock_.intNUMBERAVAILABLE), fa.get(TFamille_.intPAF))), cb.sumAsLong(cb.prod(root.get(TFamilleStock_.intNUMBERAVAILABLE), fa.get(TFamille_.intPRICE))));
+            cq.multiselect(cb.sumAsLong(cb.prod(root.get(TFamilleStock_.intNUMBERAVAILABLE), fa.get(TFamille_.intPAF))),
+                    cb.sumAsLong(cb.prod(root.get(TFamilleStock_.intNUMBERAVAILABLE), fa.get(TFamille_.intPRICE))));
 
             cq.where(predicate);
             Query q = em.createQuery(cq);
@@ -3340,7 +3592,8 @@ private boolean getParametreFacturation(){
             List<Object[]> list = q.getResultList();
             list.forEach((t) -> {
                 try {
-                    json.put("Achat", Util.getFormattedLongValue(t[0] != null ? Long.valueOf(t[0] + "") : 0)).put("Vente", Util.getFormattedLongValue(t[1] != null ? Long.valueOf(t[1] + "") : 0));
+                    json.put("Achat", Util.getFormattedLongValue(t[0] != null ? Long.valueOf(t[0] + "") : 0))
+                            .put("Vente", Util.getFormattedLongValue(t[1] != null ? Long.valueOf(t[1] + "") : 0));
                 } catch (JSONException ex) {
 
                 }
@@ -3352,15 +3605,14 @@ private boolean getParametreFacturation(){
         return json;
     }
 
-    public JSONObject get(int mode, String date, String lg_GROSSISTE_ID, String lg_FAMILLEARTICLE_ID, String lg_ZONE_GEO_ID, String str_BEGIN, String str_END, String empl) {
+    public JSONObject get(int mode, String date, String lg_GROSSISTE_ID, String lg_FAMILLEARTICLE_ID,
+            String lg_ZONE_GEO_ID, String str_BEGIN, String str_END, String empl) {
         LocalDate today = LocalDate.now();
         LocalDate param = LocalDate.parse(date);
-        return getDataValorisation(mode, lg_GROSSISTE_ID, lg_FAMILLEARTICLE_ID, lg_ZONE_GEO_ID, str_BEGIN, str_END, empl);
+        return getDataValorisation(mode, lg_GROSSISTE_ID, lg_FAMILLEARTICLE_ID, lg_ZONE_GEO_ID, str_BEGIN, str_END,
+                empl);
 
     }
-
-
-
 
     public JSONArray getFamille(boolean all, String criteria, String lgEmp, int start, int limit) {
         EntityManager em = this.getEntityManager();
@@ -3374,11 +3626,20 @@ private boolean getParametreFacturation(){
             Join<TFamille, TFamilleStock> fa = root.join("tFamilleStockCollection", JoinType.INNER);
             Predicate predicate = cb.conjunction();
             if (!"".equals(criteria)) {
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(st.get("strCODEARTICLE"), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"),
+                                cb.like(root.get(TFamille_.intCIP), criteria + "%"),
+                                cb.like(root.get(TFamille_.intEAN13), criteria + "%"),
+                                cb.like(st.get("strCODEARTICLE"), criteria + "%"),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate, cb.equal(fa.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmp));
-            cq.multiselect(root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.strDESCRIPTION), root.get(TFamille_.intCIP), root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBER), fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get("lgZONEGEOID").get("strLIBELLEE"), root.get(TFamille_.intPAF)).orderBy(cb.asc(root.get(TFamille_.strDESCRIPTION))).distinct(true);
+            cq.multiselect(root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.strDESCRIPTION),
+                    root.get(TFamille_.intCIP), root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBER),
+                    fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get("lgZONEGEOID").get("strLIBELLEE"),
+                    root.get(TFamille_.intPAF)).orderBy(cb.asc(root.get(TFamille_.strDESCRIPTION))).distinct(true);
             cq.where(predicate);
             Query q = em.createQuery(cq);
             if (!all) {
@@ -3391,7 +3652,8 @@ private boolean getParametreFacturation(){
                     JSONObject ob = new JSONObject();
                     ob.putOnce("lg_FAMILLE_ID", t[0] + "").putOnce("str_DESCRIPTION", t[1] + "")
                             .putOnce("CIP", t[2] + "").putOnce("int_PRICE", t[3] + "").putOnce("int_NUMBER", t[5] + "")
-                            .putOnce("int_NUMBER_AVAILABLE", t[5] + "").put("lg_ZONE_GEO_ID", t[6]).put("int_PAF", t[7] + "");
+                            .putOnce("int_NUMBER_AVAILABLE", t[5] + "").put("lg_ZONE_GEO_ID", t[6])
+                            .put("int_PAF", t[7] + "");
                     array.put(ob);
                 } catch (JSONException ex) {
 
@@ -3416,12 +3678,21 @@ private boolean getParametreFacturation(){
             Join<TFamille, TFamilleStock> fa = root.join("tFamilleStockCollection", JoinType.INNER);
             Predicate predicate = cb.conjunction();
             if (!"".equals(criteria)) {
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(st.get("strCODEARTICLE"), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"),
+                                cb.like(root.get(TFamille_.intCIP), criteria + "%"),
+                                cb.like(root.get(TFamille_.intEAN13), criteria + "%"),
+                                cb.like(st.get("strCODEARTICLE"), criteria + "%"),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.boolDECONDITIONNE), 0));
             predicate = cb.and(predicate, cb.equal(fa.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmp));
-            cq.multiselect(root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.strDESCRIPTION), root.get(TFamille_.intCIP), root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBER), fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get("lgZONEGEOID").get("strLIBELLEE"), root.get(TFamille_.intPAF)).orderBy(cb.asc(root.get(TFamille_.strDESCRIPTION))).distinct(true);
+            cq.multiselect(root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.strDESCRIPTION),
+                    root.get(TFamille_.intCIP), root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBER),
+                    fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get("lgZONEGEOID").get("strLIBELLEE"),
+                    root.get(TFamille_.intPAF)).orderBy(cb.asc(root.get(TFamille_.strDESCRIPTION))).distinct(true);
             cq.where(predicate);
             Query q = em.createQuery(cq);
             if (!all) {
@@ -3434,7 +3705,8 @@ private boolean getParametreFacturation(){
                     JSONObject ob = new JSONObject();
                     ob.putOnce("lg_FAMILLE_ID", t[0] + "").putOnce("str_DESCRIPTION", t[1] + "")
                             .putOnce("CIP", t[2] + "").putOnce("int_PRICE", t[3] + "").putOnce("int_NUMBER", t[5] + "")
-                            .putOnce("int_NUMBER_AVAILABLE", t[5] + "").put("lg_ZONE_GEO_ID", t[6]).put("int_PAF", t[7] + "");
+                            .putOnce("int_NUMBER_AVAILABLE", t[5] + "").put("lg_ZONE_GEO_ID", t[6])
+                            .put("int_PAF", t[7] + "");
                     array.put(ob);
                 } catch (JSONException ex) {
 
@@ -3458,7 +3730,13 @@ private boolean getParametreFacturation(){
             Join<TFamille, TFamilleStock> fa = root.join("tFamilleStockCollection", JoinType.INNER);
             Predicate predicate = cb.conjunction();
             if (!"".equals(criteria)) {
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(st.get("strCODEARTICLE"), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"),
+                                cb.like(root.get(TFamille_.intCIP), criteria + "%"),
+                                cb.like(root.get(TFamille_.intEAN13), criteria + "%"),
+                                cb.like(st.get("strCODEARTICLE"), criteria + "%"),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
 
             predicate = cb.and(predicate, cb.equal(fa.get(TFamilleStock_.strSTATUT), "enable"));
@@ -3489,10 +3767,16 @@ private boolean getParametreFacturation(){
             Root<TFamille> root = cq.from(TFamille.class);
             Join<TFamille, TFamilleGrossiste> st = root.join("tFamilleGrossisteCollection", JoinType.INNER);
             Join<TFamille, TFamilleStock> fa = root.join("tFamilleStockCollection", JoinType.INNER);
-//            Join<TFamilleGrossiste, TFamille> st = fa.join("lgFAMILLEID", JoinType.INNER);
+            // Join<TFamilleGrossiste, TFamille> st = fa.join("lgFAMILLEID", JoinType.INNER);
             Predicate predicate = cb.conjunction();
             if (!"".equals(criteria)) {
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(st.get("strCODEARTICLE"), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"),
+                                cb.like(root.get(TFamille_.intCIP), criteria + "%"),
+                                cb.like(root.get(TFamille_.intEAN13), criteria + "%"),
+                                cb.like(st.get("strCODEARTICLE"), criteria + "%"),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
 
             predicate = cb.and(predicate, cb.equal(fa.get(TFamilleStock_.strSTATUT), "enable"));
@@ -3547,10 +3831,13 @@ private boolean getParametreFacturation(){
             Root<TUser> urs = sub.from(TUser.class);
             Join<TUser, TEmplacement> um = urs.join("lgEMPLACEMENTID", JoinType.INNER);
             sub.select(urs.get(TUser_.lgUSERID)).where(cb.equal(um.get(TEmplacement_.lgEMPLACEMENTID), emp));
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TMvtCaisse_.dtCREATED)), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TMvtCaisse_.dtCREATED)),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             Predicate p = cb.conjunction();
-            p = cb.and(p, cb.notLike(tm.get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID), "8"), cb.notLike(tm.get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID), "9"));
-            cq.multiselect(cb.sum(root.get(TMvtCaisse_.intAMOUNT)), tm.get(TTypeMvtCaisse_.strNAME), tm.get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID))
+            p = cb.and(p, cb.notLike(tm.get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID), "8"),
+                    cb.notLike(tm.get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID), "9"));
+            cq.multiselect(cb.sum(root.get(TMvtCaisse_.intAMOUNT)), tm.get(TTypeMvtCaisse_.strNAME),
+                    tm.get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID))
                     .groupBy(tm.get(TTypeMvtCaisse_.strNAME), tm.get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID));
             cq.where(p, btw, cb.in(root.get(TMvtCaisse_.lgUSERID)).value(sub));
             Query q = em.createQuery(cq);
@@ -3560,11 +3847,12 @@ private boolean getParametreFacturation(){
                 try {
 
                     if (Util.MVTSORTIE.equals(t[1] + "")) {
-                        ob.put("MONTANT", Util.getFormattedIntegerValue(Double.valueOf(t[0] + "").intValue() * (1)) + " FCFA")
+                        ob.put("MONTANT",
+                                Util.getFormattedIntegerValue(Double.valueOf(t[0] + "").intValue() * (1)) + " FCFA")
                                 .put("TYPEMVT", t[1] + "").put("IDMVT", t[2] + "");
                     } else {
-                        ob.put("MONTANT", Double.valueOf(t[0] + "").intValue())
-                                .put("TYPEMVT", t[1] + "").put("IDMVT", t[2] + "");
+                        ob.put("MONTANT", Double.valueOf(t[0] + "").intValue()).put("TYPEMVT", t[1] + "").put("IDMVT",
+                                t[2] + "");
                     }
 
                     data.put(ob);
@@ -3578,8 +3866,7 @@ private boolean getParametreFacturation(){
         return data;
     }
 
-
-    //montant achat pour la balanve 
+    // montant achat pour la balanve
     public long getMontantAchats(String dt_start, String dt_end, String emp) {
         EntityManager em = this.getEntityManager();
         long achat = 0;
@@ -3590,7 +3877,8 @@ private boolean getParametreFacturation(){
             Join<TBonLivraison, TUser> us = root.join("lgUSERID", JoinType.INNER);
             Join<TBonLivraison, TOrder> or = root.join("lgORDERID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(root.get(TBonLivraison_.strSTATUT), "is_Closed"));
             criteria = cb.and(criteria, cb.equal(us.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), emp));
             criteria = cb.and(criteria);
@@ -3611,7 +3899,6 @@ private boolean getParametreFacturation(){
         return achat;
     }
 
-
     public long getMarge(String dt_start, String dt_end, String emp) {
         EntityManager em = this.getEntityManager();
         long marge = 0;
@@ -3624,20 +3911,27 @@ private boolean getParametreFacturation(){
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             Join<TPreenregistrementDetail, TPreenregistrement> pr = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(
+                    cb.function("DATE", Date.class, root.get("lgPREENREGISTREMENTID").get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
-            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
-            //criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "4"));
+            criteria = cb.and(criteria,
+                    cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
+            // criteria = cb.and(criteria,
+            // cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "4"));
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
-            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), emp));
+            criteria = cb.and(criteria, cb.equal(
+                    root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"),
+                    emp));
 
             cq.where(criteria, pu, btw);
 
             Query q = em.createQuery(cq);
             List<TPreenregistrementDetail> oblist = q.getResultList();
 
-            Map<TCodeTva, List<TPreenregistrementDetail>> mysList = oblist.stream().collect(Collectors.groupingBy(s -> s.getLgFAMILLEID().getLgCODETVAID()));
+            Map<TCodeTva, List<TPreenregistrementDetail>> mysList = oblist.stream()
+                    .collect(Collectors.groupingBy(s -> s.getLgFAMILLEID().getLgCODETVAID()));
 
             Double montHT2 = 0.0;
 
@@ -3662,9 +3956,9 @@ private boolean getParametreFacturation(){
         return marge;
     }
 
-
     // les produits périmés ou en voie de péremption
-    public JSONArray getObseleteProducts(boolean all, String criteria, String dt_obsolete, String perimes, String cmbobsolete, String lgEmp, int start, int limit) {
+    public JSONArray getObseleteProducts(boolean all, String criteria, String dt_obsolete, String perimes,
+            String cmbobsolete, String lgEmp, int start, int limit) {
         EntityManager em = this.getEntityManager();
         JSONArray array = new JSONArray();
         LocalDate today = LocalDate.now();
@@ -3679,7 +3973,12 @@ private boolean getParametreFacturation(){
             Predicate gth = cb.greaterThan(fa.get(TFamilleStock_.intNUMBERAVAILABLE), 0);
             predicate = cb.and(predicate, gth);
             if (!"".equals(criteria)) {
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"),
+                                cb.like(root.get(TFamille_.intCIP), criteria + "%"),
+                                cb.like(root.get(TFamille_.intEAN13), criteria + "%"),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
             int mode = 0;
             if (!"".equals(perimes)) {
@@ -3693,51 +3992,63 @@ private boolean getParametreFacturation(){
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate, cb.equal(fa.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmp));
             switch (mode) {
-                case -1:
-                    Predicate avant = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(dt_obsolete));
-                    predicate = cb.and(predicate, avant);
-                    break;
-                case 0:
-                    Predicate get = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.plusWeeks(2)));
-                    predicate = cb.and(predicate, get);
-                    break;
-                case 2:
-                    Predicate ge = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusMonths(1)));
-                    Predicate l = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today));
-                    predicate = cb.and(predicate, ge, l);
-                    break;
-                case 1:
-                    Predicate le = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusMonths(1)));
-                    predicate = cb.and(predicate, le);
-                    break;
-                case 3:
-                    Predicate le2weeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, le2weeks);
-                    break;
-                case 4:
-                    Predicate ge2weeks = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, ge2weeks);
-                    break;
+            case -1:
+                Predicate avant = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(dt_obsolete));
+                predicate = cb.and(predicate, avant);
+                break;
+            case 0:
+                Predicate get = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.plusWeeks(2)));
+                predicate = cb.and(predicate, get);
+                break;
+            case 2:
+                Predicate ge = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusMonths(1)));
+                Predicate l = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today));
+                predicate = cb.and(predicate, ge, l);
+                break;
+            case 1:
+                Predicate le = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusMonths(1)));
+                predicate = cb.and(predicate, le);
+                break;
+            case 3:
+                Predicate le2weeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, le2weeks);
+                break;
+            case 4:
+                Predicate ge2weeks = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, ge2weeks);
+                break;
 
-                case 5:
-                    Predicate leMonth = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.plusMonths(1)));
-                    predicate = cb.and(predicate, leMonth);
-                    break;
-                case 6:
-                    Predicate letwoweeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, letwoweeks);
-                    break;
-                case 7:
-                    Predicate letoneweek = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(1)));
-                    predicate = cb.and(predicate, letoneweek);
-                    break;
+            case 5:
+                Predicate leMonth = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.plusMonths(1)));
+                predicate = cb.and(predicate, leMonth);
+                break;
+            case 6:
+                Predicate letwoweeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, letwoweeks);
+                break;
+            case 7:
+                Predicate letoneweek = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(1)));
+                predicate = cb.and(predicate, letoneweek);
+                break;
 
             }
 
-            cq.multiselect(root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.strDESCRIPTION), root.get(TFamille_.intCIP), cb.sum(cb.prod(root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBERAVAILABLE))), cb.sum(cb.prod(root.get(TFamille_.intPAF), fa.get(TFamilleStock_.intNUMBERAVAILABLE))), fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get("lgZONEGEOID").get("strLIBELLEE"),
+            cq.multiselect(root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.strDESCRIPTION),
+                    root.get(TFamille_.intCIP),
+                    cb.sum(cb.prod(root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBERAVAILABLE))),
+                    cb.sum(cb.prod(root.get(TFamille_.intPAF), fa.get(TFamilleStock_.intNUMBERAVAILABLE))),
+                    fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get("lgZONEGEOID").get("strLIBELLEE"),
                     cb.function("DATE_FORMAT", String.class, root.get(TFamille_.dtPEREMPTION), cb.literal("%Y-%m-%d")))
-                    .groupBy(root.get(TFamille_.lgFAMILLEID))
-                    .orderBy(cb.desc(root.get(TFamille_.dtPEREMPTION)));
+                    .groupBy(root.get(TFamille_.lgFAMILLEID)).orderBy(cb.desc(root.get(TFamille_.dtPEREMPTION)));
 
             cq.where(predicate);
             Query q = em.createQuery(cq);
@@ -3754,9 +4065,11 @@ private boolean getParametreFacturation(){
                 try {
 
                     JSONObject ob = new JSONObject();
-                    ob.put("intPRICE", tataux.getInt("intPRICE")).put("PAF", tataux.getInt("intPAF")).put("intNUMBERAVAILABLE", tataux.getInt("intNUMBERAVAILABLE"));
+                    ob.put("intPRICE", tataux.getInt("intPRICE")).put("PAF", tataux.getInt("intPAF"))
+                            .put("intNUMBERAVAILABLE", tataux.getInt("intNUMBERAVAILABLE"));
                     ob.putOnce("lg_FAMILLE_ID", t[0] + "").putOnce("str_DESCRIPTION", t[1] + "")
-                            .putOnce("int_CIP", t[2] + "").putOnce("int_PRICE", Integer.valueOf(t[3] + "")).putOnce("intPAF", Integer.valueOf(t[4] + ""))
+                            .putOnce("int_CIP", t[2] + "").putOnce("int_PRICE", Integer.valueOf(t[3] + ""))
+                            .putOnce("intPAF", Integer.valueOf(t[4] + ""))
                             .putOnce("int_NUMBER_AVAILABLE", Integer.valueOf(t[5] + "")).put("lg_EMPLACEMENT_ID", t[6]);
                     String date_perem = t[7] + "";
 
@@ -3791,7 +4104,8 @@ private boolean getParametreFacturation(){
         return array;
     }
 
-    public int getObseleteProductsCount(String criteria, String dt_obsolete, String perimes, String cmbobsolete, String lgEmp) {
+    public int getObseleteProductsCount(String criteria, String dt_obsolete, String perimes, String cmbobsolete,
+            String lgEmp) {
         EntityManager em = this.getEntityManager();
         JSONArray array = new JSONArray();
         LocalDate today = LocalDate.now();
@@ -3807,7 +4121,12 @@ private boolean getParametreFacturation(){
             Predicate gth = cb.greaterThan(fa.get(TFamilleStock_.intNUMBERAVAILABLE), 0);
             predicate = cb.and(predicate, gth);
             if (!"".equals(criteria)) {
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"),
+                                cb.like(root.get(TFamille_.intCIP), criteria + "%"),
+                                cb.like(root.get(TFamille_.intEAN13), criteria + "%"),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
             int mode = 0;
             if (!"".equals(perimes)) {
@@ -3821,44 +4140,53 @@ private boolean getParametreFacturation(){
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate, cb.equal(fa.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmp));
             switch (mode) {
-                case -1:
-                    Predicate avant = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(dt_obsolete));
-                    predicate = cb.and(predicate, avant);
-                    break;
-                case 0:
-                    Predicate get = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.plusWeeks(2)));
-                    predicate = cb.and(predicate, get);
-                    break;
-                case 2:
-                    Predicate ge = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusMonths(1)));
-                    Predicate l = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today));
-                    predicate = cb.and(predicate, ge, l);
-                    break;
-                case 1:
-                    Predicate le = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusMonths(1)));
-                    predicate = cb.and(predicate, le);
-                    break;
-                case 3:
-                    Predicate le2weeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, le2weeks);
-                    break;
-                case 4:
-                    Predicate ge2weeks = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, ge2weeks);
-                    break;
+            case -1:
+                Predicate avant = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(dt_obsolete));
+                predicate = cb.and(predicate, avant);
+                break;
+            case 0:
+                Predicate get = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.plusWeeks(2)));
+                predicate = cb.and(predicate, get);
+                break;
+            case 2:
+                Predicate ge = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusMonths(1)));
+                Predicate l = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today));
+                predicate = cb.and(predicate, ge, l);
+                break;
+            case 1:
+                Predicate le = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusMonths(1)));
+                predicate = cb.and(predicate, le);
+                break;
+            case 3:
+                Predicate le2weeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, le2weeks);
+                break;
+            case 4:
+                Predicate ge2weeks = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, ge2weeks);
+                break;
 
-                case 5:
-                    Predicate leMonth = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.plusMonths(1)));
-                    predicate = cb.and(predicate, leMonth);
-                    break;
-                case 6:
-                    Predicate letwoweeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, letwoweeks);
-                    break;
-                case 7:
-                    Predicate letoneweek = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(1)));
-                    predicate = cb.and(predicate, letoneweek);
-                    break;
+            case 5:
+                Predicate leMonth = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.plusMonths(1)));
+                predicate = cb.and(predicate, leMonth);
+                break;
+            case 6:
+                Predicate letwoweeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, letwoweeks);
+                break;
+            case 7:
+                Predicate letoneweek = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(1)));
+                predicate = cb.and(predicate, letoneweek);
+                break;
 
             }
 
@@ -3877,8 +4205,8 @@ private boolean getParametreFacturation(){
 
     }
 
-
-    public JSONObject getObseleteProductsTotaux(String criteria, String dt_obsolete, String perimes, String cmbobsolete, String lgEmp) {
+    public JSONObject getObseleteProductsTotaux(String criteria, String dt_obsolete, String perimes, String cmbobsolete,
+            String lgEmp) {
         EntityManager em = this.getEntityManager();
         JSONObject ob = new JSONObject();
 
@@ -3894,7 +4222,12 @@ private boolean getParametreFacturation(){
             Predicate gth = cb.greaterThan(fa.get(TFamilleStock_.intNUMBERAVAILABLE), 0);
             predicate = cb.and(predicate, gth);
             if (!"".equals(criteria)) {
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"), cb.like(root.get(TFamille_.intCIP), criteria + "%"), cb.like(root.get(TFamille_.intEAN13), criteria + "%"), cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"), cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(root.get(TFamille_.strNAME), criteria + "%"),
+                                cb.like(root.get(TFamille_.intCIP), criteria + "%"),
+                                cb.like(root.get(TFamille_.intEAN13), criteria + "%"),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), criteria + "%"),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), criteria + "%")));
             }
             int mode = 0;
             if (!"".equals(perimes)) {
@@ -3908,48 +4241,60 @@ private boolean getParametreFacturation(){
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate, cb.equal(fa.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmp));
             switch (mode) {
-                case -1:
-                    Predicate avant = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(dt_obsolete));
-                    predicate = cb.and(predicate, avant);
-                    break;
-                case 0:
-                    Predicate get = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.plusWeeks(2)));
-                    predicate = cb.and(predicate, get);
-                    break;
-                case 2:
-                    Predicate ge = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusMonths(1)));
-                    Predicate l = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today));
-                    predicate = cb.and(predicate, ge, l);
-                    break;
-                case 1:
-                    Predicate le = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusMonths(1)));
-                    predicate = cb.and(predicate, le);
-                    break;
-                case 3:
-                    Predicate le2weeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, le2weeks);
-                    break;
-                case 4:
-                    Predicate ge2weeks = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, ge2weeks);
-                    break;
+            case -1:
+                Predicate avant = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(dt_obsolete));
+                predicate = cb.and(predicate, avant);
+                break;
+            case 0:
+                Predicate get = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.plusWeeks(2)));
+                predicate = cb.and(predicate, get);
+                break;
+            case 2:
+                Predicate ge = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusMonths(1)));
+                Predicate l = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today));
+                predicate = cb.and(predicate, ge, l);
+                break;
+            case 1:
+                Predicate le = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusMonths(1)));
+                predicate = cb.and(predicate, le);
+                break;
+            case 3:
+                Predicate le2weeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, le2weeks);
+                break;
+            case 4:
+                Predicate ge2weeks = cb.greaterThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, ge2weeks);
+                break;
 
-                case 5:
-                    Predicate leMonth = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.plusMonths(1)));
-                    predicate = cb.and(predicate, leMonth);
-                    break;
-                case 6:
-                    Predicate letwoweeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(2)));
-                    predicate = cb.and(predicate, letwoweeks);
-                    break;
-                case 7:
-                    Predicate letoneweek = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION), java.sql.Date.valueOf(today.minusWeeks(1)));
-                    predicate = cb.and(predicate, letoneweek);
-                    break;
+            case 5:
+                Predicate leMonth = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.plusMonths(1)));
+                predicate = cb.and(predicate, leMonth);
+                break;
+            case 6:
+                Predicate letwoweeks = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(2)));
+                predicate = cb.and(predicate, letwoweeks);
+                break;
+            case 7:
+                Predicate letoneweek = cb.lessThanOrEqualTo(root.get(TFamille_.dtPEREMPTION),
+                        java.sql.Date.valueOf(today.minusWeeks(1)));
+                predicate = cb.and(predicate, letoneweek);
+                break;
 
             }
 
-            cq.multiselect(cb.sum(cb.prod(root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBERAVAILABLE))), cb.sum(cb.prod(root.get(TFamille_.intPAF), fa.get(TFamilleStock_.intNUMBERAVAILABLE))), cb.sum(fa.get(TFamilleStock_.intNUMBERAVAILABLE)), root.get("lgZONEGEOID").get("strLIBELLEE"), cb.function("DATE_FORMAT", String.class, root.get(TFamille_.dtPEREMPTION), cb.literal("%Y-%m-%d")));
+            cq.multiselect(cb.sum(cb.prod(root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBERAVAILABLE))),
+                    cb.sum(cb.prod(root.get(TFamille_.intPAF), fa.get(TFamilleStock_.intNUMBERAVAILABLE))),
+                    cb.sum(fa.get(TFamilleStock_.intNUMBERAVAILABLE)), root.get("lgZONEGEOID").get("strLIBELLEE"),
+                    cb.function("DATE_FORMAT", String.class, root.get(TFamille_.dtPEREMPTION), cb.literal("%Y-%m-%d")));
 
             cq.where(predicate);
             Query q = em.createQuery(cq);
@@ -3972,10 +4317,6 @@ private boolean getParametreFacturation(){
         }
         return ob;
     }
-
-
-
-
 
     public JSONArray findAllCompanies(boolean all, int maxResults, int firstResult, String str_LIBELLE) {
 
@@ -4027,8 +4368,7 @@ private boolean getParametreFacturation(){
 
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TCompany> root = cq.from(TCompany.class);
-            cq.select(cb.count(root))
-                    .where(cb.like(root.get(TCompany_.strRAISONSOCIALE), str_LIBELLE + "%"));
+            cq.select(cb.count(root)).where(cb.like(root.get(TCompany_.strRAISONSOCIALE), str_LIBELLE + "%"));
 
             Query q = em.createQuery(cq);
 
@@ -4067,7 +4407,8 @@ private boolean getParametreFacturation(){
         return isOk;
     }
 
-    public boolean updateCompany(String lg_COMPANY_ID, String str_RAISONSOCIALE, String str_ADRESS, String str_PHONE, String str_CEL) {
+    public boolean updateCompany(String lg_COMPANY_ID, String str_RAISONSOCIALE, String str_ADRESS, String str_PHONE,
+            String str_CEL) {
         boolean isOk = true;
         EntityManager em = this.getEntityManager();
 
@@ -4114,7 +4455,8 @@ private boolean getParametreFacturation(){
     public List<TPreenregistrementCompteClientTiersPayent> getDetails(String id) {
         try {
             EntityManager em = getEntityManager();
-            return em.createQuery("SELECT p FROM TPreenregistrementCompteClientTiersPayent p, TFactureDetail o WHERE p.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=o.strREF AND o.lgFACTUREID.lgFACTUREID=?1 ORDER BY p.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strFIRSTNAME,p.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strLASTNAME ASC  ,p.lgCOMPTECLIENTTIERSPAYANTID.intPRIORITY DESC   ")
+            return em.createQuery(
+                    "SELECT p FROM TPreenregistrementCompteClientTiersPayent p, TFactureDetail o WHERE p.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=o.strREF AND o.lgFACTUREID.lgFACTUREID=?1 ORDER BY p.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strFIRSTNAME,p.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.strLASTNAME ASC  ,p.lgCOMPTECLIENTTIERSPAYANTID.intPRIORITY DESC   ")
                     .setParameter(1, id).getResultList();
         } catch (Exception e) {
             return Collections.emptyList();
@@ -4191,8 +4533,7 @@ private boolean getParametreFacturation(){
                 criteria = cb.and(criteria, cb.notLike(root.get(TTypeVente_.lgTYPEVENTEID), exclude));
             }
             cq.multiselect(root.get(TTypeVente_.lgTYPEVENTEID), root.get(TTypeVente_.strNAME),
-                    root.get(TTypeVente_.strDESCRIPTION))
-                    .orderBy(cb.asc(root.get(TTypeVente_.lgTYPEVENTEID)));
+                    root.get(TTypeVente_.strDESCRIPTION)).orderBy(cb.asc(root.get(TTypeVente_.lgTYPEVENTEID)));
 
             cq.where(criteria);
 
@@ -4205,8 +4546,7 @@ private boolean getParametreFacturation(){
                 JSONObject json = new JSONObject();
 
                 try {
-                    json.put("lg_TYPE_VENTE_ID", t[0]).put("str_DESCRIPTION", t[2] + "")
-                            .put("str_NAME", t[1]);
+                    json.put("lg_TYPE_VENTE_ID", t[0]).put("str_DESCRIPTION", t[2] + "").put("str_NAME", t[1]);
                     data.put(json);
 
                 } catch (JSONException ex) {
@@ -4220,8 +4560,6 @@ private boolean getParametreFacturation(){
         return data;
     }
 
-
-
     public long achats(String dt_start, String dt_end) {
         EntityManager em = this.getEntityManager();
         try {
@@ -4229,7 +4567,8 @@ private boolean getParametreFacturation(){
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TBonLivraison> root = cq.from(TBonLivraison.class);
             Predicate criteria = cb.conjunction();
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(root.get(TBonLivraison_.strSTATUT), "is_Closed"));
             cq.select(cb.count(root));
             cq.where(btw, criteria);
@@ -4253,10 +4592,12 @@ private boolean getParametreFacturation(){
 
             Predicate criteria = cb.conjunction();
             System.out.println(" dt " + dt_start + " " + dt_end);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtUPDATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, cb.equal(root.get(TBonLivraison_.strSTATUT), "is_Closed"));
 
-            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)), cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
+            cq.multiselect(cb.sumAsLong(root.get(TBonLivraison_.intHTTC)),
+                    cb.sumAsLong(root.get(TBonLivraison_.intMHT)), cb.sumAsLong(root.get(TBonLivraison_.intTVA)));
             cq.where(btw, criteria);
 
             Query q = em.createQuery(cq);
@@ -4296,10 +4637,14 @@ private boolean getParametreFacturation(){
             if (idGrp > 0) {
                 criteria = cb.and(criteria, cb.equal(root.get("lgGROUPEID").get("lgGROUPEID"), idGrp));
             }
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtCREATED")), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get("dtCREATED")),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             criteria = cb.and(criteria, btw);
-            cq.multiselect(root.get("lgGROUPEID").get("lgGROUPEID"), root.get("lgGROUPEID").get("strLIBELLE"), cb.count(root), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTRESTANT")), root.get("strCODEFACTURE"), root.get("dtCREATED"), root.get("lgFACTURESID").get("strSTATUT"), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTCMDE")), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTPAYE")))
-                    .groupBy(root.get("strCODEFACTURE"));
+            cq.multiselect(root.get("lgGROUPEID").get("lgGROUPEID"), root.get("lgGROUPEID").get("strLIBELLE"),
+                    cb.count(root), cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTRESTANT")),
+                    root.get("strCODEFACTURE"), root.get("dtCREATED"), root.get("lgFACTURESID").get("strSTATUT"),
+                    cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTCMDE")),
+                    cb.sumAsLong(root.get("lgFACTURESID").get("dblMONTANTPAYE"))).groupBy(root.get("strCODEFACTURE"));
             cq.where(criteria);
             Query q = em.createQuery(cq);
             List<Object[]> oblist = q.getResultList();
@@ -4310,7 +4655,10 @@ private boolean getParametreFacturation(){
                     if (Long.valueOf(objects[3] + "") == 0) {
                         status = "paid";
                     }
-                    json.put("lg_GROUPE_ID", objects[0]).put("str_LIB", objects[1]).put("NBFACTURES", objects[2]).put("MONTANTRESTANT", objects[3]).put("CODEFACTURE", objects[4]).put("DATECREATION", date.formatterMysqlShort.format(objects[5])).put("STATUT", status).put("AMOUNT", objects[7]).put("AMOUNTPAYE", objects[8]);
+                    json.put("lg_GROUPE_ID", objects[0]).put("str_LIB", objects[1]).put("NBFACTURES", objects[2])
+                            .put("MONTANTRESTANT", objects[3]).put("CODEFACTURE", objects[4])
+                            .put("DATECREATION", date.formatterMysqlShort.format(objects[5])).put("STATUT", status)
+                            .put("AMOUNT", objects[7]).put("AMOUNTPAYE", objects[8]);
                     list.put(json);
                 } catch (JSONException ex) {
 
@@ -4367,7 +4715,8 @@ private boolean getParametreFacturation(){
         return _json;
     }
 
-    public JSONArray getListePerimes(String search_value, String str_TYPE_TRANSACTION, String str_TRI, int start, int limit, boolean all) {
+    public JSONArray getListePerimes(String search_value, String str_TYPE_TRANSACTION, String str_TRI, int start,
+            int limit, boolean all) {
         JSONArray array = new JSONArray();
         EntityManager em = this.getEntityManager();
         try {
@@ -4385,45 +4734,51 @@ private boolean getParametreFacturation(){
             Join<TFamille, TFamilleStock> st = pr.join("tFamilleStockCollection", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             if (!"".equals(search_value)) {
-                criteria = cb.and(criteria, cb.or(cb.like(pr.get(TFamille_.intCIP), search_value + "%"), cb.like(pr.get(TFamille_.strNAME), search_value + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(pr.get(TFamille_.intCIP), search_value + "%"),
+                        cb.like(pr.get(TFamille_.strNAME), search_value + "%")));
             }
             Predicate gt = cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), 0);
             criteria = cb.and(criteria, gt);
             criteria = cb.and(criteria, cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), "1"));
 
             switch (str_TYPE_TRANSACTION) {
-                case Parameter.KEY_PARAM_PERIME:
-//                    Predicate eq = cb.lessThanOrEqualTo(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(now));
-                    criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime));
+            case Parameter.KEY_PARAM_PERIME:
+                // Predicate eq = cb.lessThanOrEqualTo(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(now));
+                criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime));
 
-                    break;
-                case Parameter.KEY_PERIMER_ENCOURS:
-//                    Predicate l = cb.lessThan(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(peremption));
-                    Predicate ge = cb.greaterThan(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(now));
-                    criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION));
-                    criteria = cb.and(criteria, ge);
-                    break;
-                default:
-//                    Predicate le = cb.lessThanOrEqualTo(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(peremption));
-                    criteria = cb.and(criteria, cb.or(cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION), cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime)));
+                break;
+            case Parameter.KEY_PERIMER_ENCOURS:
+                // Predicate l = cb.lessThan(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(peremption));
+                Predicate ge = cb.greaterThan(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(now));
+                criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION));
+                criteria = cb.and(criteria, ge);
+                break;
+            default:
+                // Predicate le = cb.lessThanOrEqualTo(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(peremption));
+                criteria = cb.and(criteria,
+                        cb.or(cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION),
+                                cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime)));
 
-                    break;
+                break;
             }
             criteria = cb.and(criteria, cb.equal(pr.get(TFamille_.strSTATUT), commonparameter.statut_enable));
 
             switch (str_TRI) {
-                case "str_CODE_EMPLACEMENT":
-                    cq.select(root).orderBy(cb.asc(pr.get("lgZONEGEOID").get("strCODE")), cb.asc(pr.get(TFamille_.strNAME)));
-                    break;
-                case "str_CODE_FAMILLE":
-                    cq.select(root).orderBy(cb.asc(pr.get("lgFAMILLEARTICLEID").get("strCODEFAMILLE")), cb.asc(pr.get(TFamille_.strNAME)));
-                    break;
-                case "str_CODE_GROSSISTE":
-                    cq.select(root).orderBy(cb.asc(pr.get("lgGROSSISTEID").get("strCODE")), cb.asc(pr.get(TFamille_.strNAME)));
-                    break;
-                default:
-                    cq.select(root).orderBy(cb.asc(pr.get(TFamille_.strNAME)));
-                    break;
+            case "str_CODE_EMPLACEMENT":
+                cq.select(root).orderBy(cb.asc(pr.get("lgZONEGEOID").get("strCODE")),
+                        cb.asc(pr.get(TFamille_.strNAME)));
+                break;
+            case "str_CODE_FAMILLE":
+                cq.select(root).orderBy(cb.asc(pr.get("lgFAMILLEARTICLEID").get("strCODEFAMILLE")),
+                        cb.asc(pr.get(TFamille_.strNAME)));
+                break;
+            case "str_CODE_GROSSISTE":
+                cq.select(root).orderBy(cb.asc(pr.get("lgGROSSISTEID").get("strCODE")),
+                        cb.asc(pr.get(TFamille_.strNAME)));
+                break;
+            default:
+                cq.select(root).orderBy(cb.asc(pr.get(TFamille_.strNAME)));
+                break;
             }
             cq.where(criteria);
 
@@ -4438,15 +4793,20 @@ private boolean getParametreFacturation(){
 
                 JSONObject json = new JSONObject();
                 json.put("lg_LOT_ID", tLot.getLgLOTID());
-                json.put("lg_FAMILLE_ID", tLot.getLgUSERID().getStrFIRSTNAME().substring(0, 1) + " " + tLot.getLgUSERID().getStrLASTNAME());
+                json.put("lg_FAMILLE_ID", tLot.getLgUSERID().getStrFIRSTNAME().substring(0, 1) + " "
+                        + tLot.getLgUSERID().getStrLASTNAME());
                 json.put("str_NAME", tLot.getLgFAMILLEID().getStrNAME());
                 json.put("lg_GROSSISTE_ID", tLot.getLgFAMILLEID().getLgGROSSISTEID().getStrLIBELLE());
                 json.put("int_CIP", tLot.getLgFAMILLEID().getIntCIP());
-//                json.put("int_NUMBER", tLot.getIntNUMBER() - tLot.getIntQTYVENDUE());
+                // json.put("int_NUMBER", tLot.getIntNUMBER() - tLot.getIntQTYVENDUE());
                 json.put("int_NUMBER", tLot.getIntNUMBER());
                 json.put("int_NUM_LOT", tLot.getIntNUMLOT());
                 json.put("dt_PEREMPTION", DATEFORMAT.format(tLot.getDtPEREMPTION()));
-                if (LocalDate.parse(DATEFORMATYYYY.format(tLot.getDtPEREMPTION()), DateTimeFormatter.ofPattern("yyyy-MM-dd")).isBefore(now) || LocalDate.parse(DATEFORMATYYYY.format(tLot.getDtPEREMPTION()), DateTimeFormatter.ofPattern("yyyy-MM-dd")).isEqual(now)) {
+                if (LocalDate
+                        .parse(DATEFORMATYYYY.format(tLot.getDtPEREMPTION()), DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        .isBefore(now)
+                        || LocalDate.parse(DATEFORMATYYYY.format(tLot.getDtPEREMPTION()),
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd")).isEqual(now)) {
                     json.put("str_STATUT", "Périmé");
                     json.put("etat", "1");
                 } else {
@@ -4479,25 +4839,28 @@ private boolean getParametreFacturation(){
             Join<TFamille, TFamilleStock> st = pr.join("tFamilleStockCollection", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             if (!"".equals(search_value)) {
-                criteria = cb.and(criteria, cb.or(cb.like(pr.get(TFamille_.intCIP), search_value + "%"), cb.like(pr.get(TFamille_.strNAME), search_value + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(pr.get(TFamille_.intCIP), search_value + "%"),
+                        cb.like(pr.get(TFamille_.strNAME), search_value + "%")));
             }
             Predicate gt = cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), 0);
             criteria = cb.and(criteria, gt);
             criteria = cb.and(criteria, cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), "1"));
             switch (str_TYPE_TRANSACTION) {
-                case Parameter.KEY_PARAM_PERIME:
-                    criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime));
+            case Parameter.KEY_PARAM_PERIME:
+                criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime));
 
-                    break;
-                case Parameter.KEY_PERIMER_ENCOURS:
-                    Predicate ge = cb.greaterThan(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(now));
-                    criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION));
-                    criteria = cb.and(criteria, ge);
-                    break;
-                default:
-                    criteria = cb.and(criteria, cb.or(cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION), cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime)));
+                break;
+            case Parameter.KEY_PERIMER_ENCOURS:
+                Predicate ge = cb.greaterThan(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(now));
+                criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION));
+                criteria = cb.and(criteria, ge);
+                break;
+            default:
+                criteria = cb.and(criteria,
+                        cb.or(cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION),
+                                cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime)));
 
-                    break;
+                break;
             }
             criteria = cb.and(criteria, cb.equal(pr.get(TFamille_.strSTATUT), commonparameter.statut_enable));
             cq.select(cb.count(root));
@@ -4532,58 +4895,67 @@ private boolean getParametreFacturation(){
             Join<TFamille, TFamilleStock> st = pr.join("tFamilleStockCollection", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             if (!"".equals(search_value)) {
-                criteria = cb.and(criteria, cb.or(cb.like(pr.get(TFamille_.intCIP), search_value + "%"), cb.like(pr.get(TFamille_.strNAME), search_value + "%")));
+                criteria = cb.and(criteria, cb.or(cb.like(pr.get(TFamille_.intCIP), search_value + "%"),
+                        cb.like(pr.get(TFamille_.strNAME), search_value + "%")));
             }
             Predicate gt = cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), 0);
             criteria = cb.and(criteria, gt);
             criteria = cb.and(criteria, cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), "1"));
             criteria = cb.and(criteria, cb.equal(pr.get(TFamille_.strSTATUT), commonparameter.statut_enable));
             switch (str_TYPE_TRANSACTION) {
-                case Parameter.KEY_PARAM_PERIME:
+            case Parameter.KEY_PARAM_PERIME:
 
-                    criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime));
+                criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime));
 
-                    break;
-                case Parameter.KEY_PERIMER_ENCOURS:
+                break;
+            case Parameter.KEY_PERIMER_ENCOURS:
 
-                    Predicate ge = cb.greaterThan(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(now));
-                    criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION));
-                    criteria = cb.and(criteria, ge);
-                    break;
-                default:
-                    criteria = cb.and(criteria, cb.or(cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION), cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime)));
-                    break;
+                Predicate ge = cb.greaterThan(root.get(TLot_.dtPEREMPTION), java.sql.Date.valueOf(now));
+                criteria = cb.and(criteria, cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION));
+                criteria = cb.and(criteria, ge);
+                break;
+            default:
+                criteria = cb.and(criteria,
+                        cb.or(cb.equal(root.get(TLot_.strSTATUT), Parameter.STATUT_ENCOURS_PEREMPTION),
+                                cb.equal(root.get(TLot_.strSTATUT), commonparameter.statut_perime)));
+                break;
             }
 
             switch (str_TRI) {
-                case "str_CODE_EMPLACEMENT":
-                    cq.select(root).orderBy(cb.asc(pr.get("lgZONEGEOID").get("strCODE")), cb.asc(pr.get(TFamille_.strNAME)));
-                    break;
-                case "str_CODE_FAMILLE":
-                    cq.select(root).orderBy(cb.asc(pr.get("lgFAMILLEARTICLEID").get("strCODEFAMILLE")), cb.asc(pr.get(TFamille_.strNAME)));
-                    break;
-                case "str_CODE_GROSSISTE":
-                    cq.select(root).orderBy(cb.asc(pr.get("lgGROSSISTEID").get("strCODE")), cb.asc(pr.get(TFamille_.strNAME)));
-                    break;
-                default:
-                    cq.select(root).orderBy(cb.asc(pr.get(TFamille_.strNAME)));
-                    break;
+            case "str_CODE_EMPLACEMENT":
+                cq.select(root).orderBy(cb.asc(pr.get("lgZONEGEOID").get("strCODE")),
+                        cb.asc(pr.get(TFamille_.strNAME)));
+                break;
+            case "str_CODE_FAMILLE":
+                cq.select(root).orderBy(cb.asc(pr.get("lgFAMILLEARTICLEID").get("strCODEFAMILLE")),
+                        cb.asc(pr.get(TFamille_.strNAME)));
+                break;
+            case "str_CODE_GROSSISTE":
+                cq.select(root).orderBy(cb.asc(pr.get("lgGROSSISTEID").get("strCODE")),
+                        cb.asc(pr.get(TFamille_.strNAME)));
+                break;
+            default:
+                cq.select(root).orderBy(cb.asc(pr.get(TFamille_.strNAME)));
+                break;
             }
-            cq.where(criteria/*, pu2, pu*/);
+            cq.where(criteria/* , pu2, pu */);
             Query q = em.createQuery(cq);
 
             List<TLot> list = q.getResultList();
             list.stream().map(tLot -> {
                 JSONObject json = new JSONObject();
                 json.put("lg_LOT_ID", tLot.getLgLOTID());
-                json.put("lg_FAMILLE_ID", tLot.getLgUSERID().getStrFIRSTNAME().substring(0, 1) + " " + tLot.getLgUSERID().getStrLASTNAME());
+                json.put("lg_FAMILLE_ID", tLot.getLgUSERID().getStrFIRSTNAME().substring(0, 1) + " "
+                        + tLot.getLgUSERID().getStrLASTNAME());
                 json.put("str_NAME", tLot.getLgFAMILLEID().getStrNAME());
                 json.put("lg_GROSSISTE_ID", tLot.getLgFAMILLEID().getLgGROSSISTEID().getStrLIBELLE());
                 json.put("int_CIP", tLot.getLgFAMILLEID().getIntCIP());
                 json.put("int_NUMBER", tLot.getIntNUMBER());
                 json.put("int_NUM_LOT", tLot.getIntNUMLOT());
                 json.put("dt_PEREMPTION", DATEFORMAT.format(tLot.getDtPEREMPTION()));
-                if (LocalDate.parse(DATEFORMATYYYY.format(tLot.getDtPEREMPTION()), DateTimeFormatter.ofPattern("yyyy-MM-dd")).isBefore(now)) {
+                if (LocalDate
+                        .parse(DATEFORMATYYYY.format(tLot.getDtPEREMPTION()), DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        .isBefore(now)) {
                     json.put("str_STATUT", "Périmé");
 
                 } else {
@@ -4601,147 +4973,165 @@ private boolean getParametreFacturation(){
         return _json;
     }
 
-    public Map<String, LinkedHashSet<TFacture>> generateInvoices(List<TTiersPayant> payants, String dt_start, String dt_end, TUser us) {
+    public Map<String, LinkedHashSet<TFacture>> generateInvoices(List<TTiersPayant> payants, String dt_start,
+            String dt_end, TUser us) {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
         Map<String, LinkedHashSet<TFacture>> grfact = new HashMap<>();
         LinkedHashSet<TFacture> factures = new LinkedHashSet<>();
-        Map<TGroupeTierspayant, List<TTiersPayant>> lgGRPgroupe = payants.stream().collect(Collectors.groupingBy(s -> s.getLgGROUPEID()));
+        Map<TGroupeTierspayant, List<TTiersPayant>> lgGRPgroupe = payants.stream()
+                .collect(Collectors.groupingBy(s -> s.getLgGROUPEID()));
         lgGRPgroupe.forEach((g, u) -> {
             if (!em.getTransaction().isActive()) {
                 em.getTransaction().begin();
             }
             TParameters OParameters = em.find(TParameters.class, Parameter.KEY_CODE_FACTURE);
             String CODEFACTURE = OParameters.getStrVALUE();
-              OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
-             boolean numerationFacture=getParametreFacturation();
-            final String codeFacture=numerationFacture?LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE):CODEFACTURE;
+            OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
+            boolean numerationFacture = getParametreFacturation();
+            final String codeFacture = numerationFacture
+                    ? LocalDate.now().format(DateTimeFormatter.ofPattern("yy")).concat("_").concat(CODEFACTURE)
+                    : CODEFACTURE;
             em.merge(OParameters);
             u.forEach((p) -> {
-                List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1, -1, p.getLgTIERSPAYANTID(), g.getLgGROUPEID(), "");
+                List<TPreenregistrementCompteClientTiersPayent> finalTp = this.getGroupeBons(true, dt_start, dt_end, -1,
+                        -1, p.getLgTIERSPAYANTID(), g.getLgGROUPEID(), "");
                 switch (getCase(p)) {
-                    case 1:
-                        long montantFact = finalTp.stream().mapToLong((_qty) -> {
-                            return _qty.getIntPRICE();
-                        }).sum();
+                case 1:
+                    long montantFact = finalTp.stream().mapToLong((_qty) -> {
+                        return _qty.getIntPRICE();
+                    }).sum();
 
-                        if (p.getIntMONTANTFAC() < montantFact) {
-                            Integer virtualAmont = 0;
-                            int myCount = 0;
-                            int volatilecount = 0;
+                    if (p.getIntMONTANTFAC() < montantFact) {
+                        Integer virtualAmont = 0;
+                        int myCount = 0;
+                        int volatilecount = 0;
 
-                            for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
+                        for (TPreenregistrementCompteClientTiersPayent op : finalTp) {
 
-                                if (virtualAmont > p.getIntMONTANTFAC()) {
-                                    try {
-                                        if (myCount < finalTp.size()) {
+                            if (virtualAmont > p.getIntMONTANTFAC()) {
+                                try {
+                                    if (myCount < finalTp.size()) {
 
-                                            TFacture of = this.createInvoices(finalTp.subList(volatilecount, myCount - 1), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
-
-                                            factures.add(of);
-
-                                            createGroupeFacture(g, of, codeFacture, em);
-
-                                        } else if (myCount == (finalTp.size() - 1)) {
-
-                                            TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
-
-                                            factures.add(of);
-                                            createGroupeFacture(g, of, codeFacture, em);
-                                        }
-
-                                        volatilecount = (myCount - 1);
-                                        virtualAmont = (finalTp.get(volatilecount).getIntPRICE()) + (finalTp.get(myCount).getIntPRICE());
-
-                                    } catch (ParseException ex) {
-
-                                    }
-                                } else if ((virtualAmont <= p.getIntMONTANTFAC()) && (myCount == (finalTp.size() - 1))) {
-                                    try {
-
-                                        TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()), date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
+                                        TFacture of = this.createInvoices(finalTp.subList(volatilecount, myCount - 1),
+                                                date.formatterMysqlShort.parse(dt_start),
+                                                date.formatterMysqlShort.parse(dt_end), p, em, us);
 
                                         factures.add(of);
 
                                         createGroupeFacture(g, of, codeFacture, em);
-                                    } catch (ParseException ex) {
 
+                                    } else if (myCount == (finalTp.size() - 1)) {
+
+                                        TFacture of = this.createInvoices(
+                                                finalTp.subList(volatilecount, finalTp.size()),
+                                                date.formatterMysqlShort.parse(dt_start),
+                                                date.formatterMysqlShort.parse(dt_end), p, em, us);
+
+                                        factures.add(of);
+                                        createGroupeFacture(g, of, codeFacture, em);
                                     }
 
+                                    volatilecount = (myCount - 1);
+                                    virtualAmont = (finalTp.get(volatilecount).getIntPRICE())
+                                            + (finalTp.get(myCount).getIntPRICE());
+
+                                } catch (ParseException ex) {
+
                                 }
-                                virtualAmont += op.getIntPRICE();
-                                myCount++;
+                            } else if ((virtualAmont <= p.getIntMONTANTFAC()) && (myCount == (finalTp.size() - 1))) {
+                                try {
+
+                                    TFacture of = this.createInvoices(finalTp.subList(volatilecount, finalTp.size()),
+                                            date.formatterMysqlShort.parse(dt_start),
+                                            date.formatterMysqlShort.parse(dt_end), p, em, us);
+
+                                    factures.add(of);
+
+                                    createGroupeFacture(g, of, codeFacture, em);
+                                } catch (ParseException ex) {
+
+                                }
 
                             }
+                            virtualAmont += op.getIntPRICE();
+                            myCount++;
 
-                        } else {
-                            try {
-                                TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
+                        }
+
+                    } else {
+                        try {
+                            TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                                    date.formatterMysqlShort.parse(dt_end), p, em, us);
+                            factures.add(of);
+                            createGroupeFacture(g, of, codeFacture, em);
+                        } catch (ParseException ex) {
+
+                        }
+
+                    }
+
+                    break;
+                case 2:
+
+                    int count = p.getIntNBREBONS();
+                    int decrementCount = finalTp.size();
+                    int _count = p.getIntNBREBONS();
+                    int virtualCnt = 0;
+                    Date dtstart = null;
+                    Date dtend = null;
+                    try {
+                        dtstart = date.formatterMysqlShort.parse(dt_start);
+                        dtend = date.formatterMysqlShort.parse(dt_end);
+                    } catch (Exception e) {
+                    }
+
+                    if (finalTp.size() > _count) {
+                        while (decrementCount > 0) {
+
+                            if (count < finalTp.size()) {
+                                TFacture of = this.createInvoices(finalTp.subList(virtualCnt, count), dtstart, dtend, p,
+                                        em, us);
+
                                 factures.add(of);
                                 createGroupeFacture(g, of, codeFacture, em);
-                            } catch (ParseException ex) {
+
+                            } else {
+                                TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart,
+                                        dtend, p, em, us);
+
+                                factures.add(of);
+                                createGroupeFacture(g, of, codeFacture, em);
 
                             }
-
+                            virtualCnt += _count;
+                            count += _count;
+                            decrementCount -= (_count);
                         }
 
-                        break;
-                    case 2:
+                    } else {
 
-                        int count = p.getIntNBREBONS();
-                        int decrementCount = finalTp.size();
-                        int _count = p.getIntNBREBONS();
-                        int virtualCnt = 0;
-                        Date dtstart = null;
-                        Date dtend = null;
+                        TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend,
+                                p, em, us);
+
+                        factures.add(of);
+                        createGroupeFacture(g, of, codeFacture, em);
+
+                    }
+                    break;
+                default:
+
+                    if (finalTp.size() > 0) {
                         try {
-                            dtstart = date.formatterMysqlShort.parse(dt_start);
-                            dtend = date.formatterMysqlShort.parse(dt_end);
-                        } catch (Exception e) {
-                        }
-
-                        if (finalTp.size() > _count) {
-                            while (decrementCount > 0) {
-
-                                if (count < finalTp.size()) {
-                                    TFacture of = this.createInvoices(finalTp.subList(virtualCnt, count), dtstart, dtend, p, em, us);
-
-                                    factures.add(of);
-                                    createGroupeFacture(g, of, codeFacture, em);
-
-                                } else {
-                                    TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p, em, us);
-
-                                    factures.add(of);
-                                    createGroupeFacture(g, of, codeFacture, em);
-
-                                }
-                                virtualCnt += _count;
-                                count += _count;
-                                decrementCount -= (_count);
-                            }
-
-                        } else {
-
-                            TFacture of = this.createInvoices(finalTp.subList(virtualCnt, finalTp.size()), dtstart, dtend, p, em, us);
+                            TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
+                                    date.formatterMysqlShort.parse(dt_end), p, em, us);
 
                             factures.add(of);
                             createGroupeFacture(g, of, codeFacture, em);
-
+                        } catch (Exception e) {
                         }
-                        break;
-                    default:
-
-                        if (finalTp.size() > 0) {
-                            try {
-                                TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start), date.formatterMysqlShort.parse(dt_end), p, em, us);
-
-                                factures.add(of);
-                                createGroupeFacture(g, of, codeFacture, em);
-                            } catch (Exception e) {
-                            }
-                        }
-                        break;
+                    }
+                    break;
                 }
             });
             grfact.put(codeFacture, factures);
@@ -4758,9 +5148,10 @@ private boolean getParametreFacturation(){
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<TFacture> cq = cb.createQuery(TFacture.class);
             Root<TFacture> root = cq.from(TFacture.class);
-            Join< TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
+            Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
             cq.orderBy(cb.asc(pr.get("strCODEFACTURE")));
-            cq.where(cb.and(cb.notEqual(root.get(TFacture_.strSTATUT), commonparameter.statut_paid), cb.equal(pr.get("strCODEFACTURE"), codeFacture)));
+            cq.where(cb.and(cb.notEqual(root.get(TFacture_.strSTATUT), commonparameter.statut_paid),
+                    cb.equal(pr.get("strCODEFACTURE"), codeFacture)));
             Query q = em.createQuery(cq);
             return q.getResultList();
 

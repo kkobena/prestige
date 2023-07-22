@@ -26,6 +26,7 @@ import rest.service.SalesStatsService;
 import rest.service.impl.CommonCorrection;
 import toolkits.parameters.commonparameter;
 import util.Constant;
+
 /**
  *
  * @author koben
@@ -46,7 +47,8 @@ public class TestController {
 
     @GET
     @Path("tva")
-    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "typeVente") String typeVente) throws JSONException {
+    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "typeVente") String typeVente) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         Params params = new Params();

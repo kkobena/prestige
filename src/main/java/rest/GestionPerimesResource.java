@@ -48,7 +48,8 @@ public class GestionPerimesResource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject json = gestionPerimesService.addPerime(params.getRef(), params.getValue(), params.getRefTwo(), params.getRefParent(), tu);
+        JSONObject json = gestionPerimesService.addPerime(params.getRef(), params.getValue(), params.getRefTwo(),
+                params.getRefParent(), tu);
         return Response.ok(json.toString()).build();
     }
 
@@ -87,8 +88,7 @@ public class GestionPerimesResource {
 
     @GET
     @Path("saisie-encours")
-    public Response getPerimesSaisiEnCours(
-            @QueryParam(value = "start") int start,
+    public Response getPerimesSaisiEnCours(@QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
         JSONObject json = gestionPerimesService.getPerimesSaisiEnCours(start, limit);
         return Response.ok().entity(json.toString()).build();

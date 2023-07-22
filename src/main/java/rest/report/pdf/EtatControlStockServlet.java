@@ -53,14 +53,12 @@ public class EtatControlStockServlet extends HttpServlet {
         processRequest(request, response);
     }
 
-  
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-  
     @Override
     public String getServletInfo() {
         return "Short description";
@@ -86,7 +84,8 @@ public class EtatControlStockServlet extends HttpServlet {
         String reportName = "rp_etat_control_achats";
 
         parameters.put("P_H_CLT_INFOS", "LISTE DES ETATS DE CONTRÔLE D'ACHATS\n DU  " + periode);
-        List<EtatControlBon> datas = this.etatControlBonService.list(true, search, dtStart, dtEnd, grossisteId, 0, 0, true);
+        List<EtatControlBon> datas = this.etatControlBonService.list(true, search, dtStart, dtEnd, grossisteId, 0, 0,
+                true);
 
         return reportUtil.buildReport(parameters, reportName, datas);
 
@@ -100,7 +99,8 @@ public class EtatControlStockServlet extends HttpServlet {
         String dtEnd = request.getParameter("dtEnd");
         String grossisteId = request.getParameter("grossisteId");
 
-        Integer groupeId = StringUtils.isNotEmpty(request.getParameter("groupeId")) ? Integer.valueOf(request.getParameter("groupeId")) : null;
+        Integer groupeId = StringUtils.isNotEmpty(request.getParameter("groupeId"))
+                ? Integer.valueOf(request.getParameter("groupeId")) : null;
 
         String groupBy = request.getParameter("groupBy");
         TOfficine oTOfficine = commonService.findOfficine();
@@ -114,7 +114,8 @@ public class EtatControlStockServlet extends HttpServlet {
         String reportName = "rp_etat_control_achats_annuel";
 
         parameters.put("P_H_CLT_INFOS", "LISTE DES ETATS DE CONTRÔLE D'ACHATS ANNUEL \n DU  " + periode);
-        EtatControlAnnuelWrapperDTO annuelSummary = this.etatControlBonService.listBonAnnuel(groupBy, dtStart, dtEnd, grossisteId, groupeId);
+        EtatControlAnnuelWrapperDTO annuelSummary = this.etatControlBonService.listBonAnnuel(groupBy, dtStart, dtEnd,
+                grossisteId, groupeId);
         List<EtatControlAnnuelDTO> annuels = annuelSummary.getEtatControlAnnuels();
         EtatControlAnnuelWrapperDTO.EtatControlAnnuelSummary summary = annuelSummary.getSummary();
 

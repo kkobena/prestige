@@ -43,11 +43,11 @@ public class GammeProduitRessource {
     private GammeProduitRepo gammeProduitRepo;
 
     @GET
-    public Response findAllGammeProduit(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
+    public Response findAllGammeProduit(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) {
         List<GammeProduit> data = produitQueryRepo.findAllGammeProduit(query, start, limit, false);
-        return Response.ok().entity(ResultFactory.getSuccessResult(data, produitQueryRepo.countGammeProduit(query))).build();
+        return Response.ok().entity(ResultFactory.getSuccessResult(data, produitQueryRepo.countGammeProduit(query)))
+                .build();
     }
 
     @POST

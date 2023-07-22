@@ -68,8 +68,8 @@ public class SuggestionRessource {
                 List<TSuggestionOrderDetails> detailses = suggestionService.findFamillesBySuggestion(suggestionId);
                 Writer writer = new OutputStreamWriter(out, "UTF-8");
 
-                try (CSVPrinter printer = CSVFormat.EXCEL
-                        .withDelimiter(';').withHeader(ArticleHeader.class).print(writer)) {
+                try (CSVPrinter printer = CSVFormat.EXCEL.withDelimiter(';').withHeader(ArticleHeader.class)
+                        .print(writer)) {
 
                     detailses.forEach(f -> {
                         try {
@@ -86,10 +86,8 @@ public class SuggestionRessource {
             }
         };
         String filename = "suggestion_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("H_mm_ss")) + ".csv";
-        return Response
-                .ok(output, MediaType.APPLICATION_OCTET_STREAM)
-                .header("content-disposition", "attachment; filename = " + filename)
-                .build();
+        return Response.ok(output, MediaType.APPLICATION_OCTET_STREAM)
+                .header("content-disposition", "attachment; filename = " + filename).build();
 
     }
 
@@ -207,9 +205,8 @@ public class SuggestionRessource {
 
     @GET
     @Path("list")
-    public Response findAll(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
+    public Response findAll(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) {
 
         return Response.ok().entity(this.suggestionService.fetch(query, start, limit).toString()).build();
     }

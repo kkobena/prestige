@@ -59,13 +59,19 @@ public class AccountResource {
             hs.setAttribute(Constant.AIRTIME_USER, tu);
             TRoleUser OTRoleUser = userService.getTRoleUser(tu.getLgUSERID());
             if (OTRoleUser != null && OTRoleUser.getLgROLEID() != null) {
-                xtypeuser = (OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_PHARMACIEN) || OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN) || OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_ADMIN) ? "dashboard" : "mainmenumanager");
+                xtypeuser = (OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_PHARMACIEN)
+                        || OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)
+                        || OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_ADMIN)
+                                ? "dashboard" : "mainmenumanager");
             }
             json.put("xtypeuser", xtypeuser);
 
             json.put("str_PIC", "../general/resources/images/photo_personne/" + tu.getStrPIC());
             json.put("lg_EMPLACEMENT_ID", tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            json.put("OFFICINE", tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS) ? userService.getOfficine().getStrNOMABREGE() : tu.getLgEMPLACEMENTID().getStrDESCRIPTION());
+            json.put("OFFICINE",
+                    tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)
+                            ? userService.getOfficine().getStrNOMABREGE()
+                            : tu.getLgEMPLACEMENTID().getStrDESCRIPTION());
             List<TPrivilege> LstTPrivilege = userService.getAllPrivilege(tu);
             hs.setAttribute(commonparameter.USER_LIST_PRIVILEGE, LstTPrivilege);
             boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_UPDATE_PRICE_EDIT);
@@ -94,14 +100,13 @@ public class AccountResource {
         HttpSession hs = request.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         JSONObject json = new JSONObject();
-        return Response.ok().entity(json.put("accountInfo", new JSONObject(this.userService.getAccount(tu))).toString()).build();
+        return Response.ok().entity(json.put("accountInfo", new JSONObject(this.userService.getAccount(tu))).toString())
+                .build();
     }
 
     @POST
     @Path("account")
-    public Response updateAccount(
-            AccountInfoDTO accountInfo
-    ) {
+    public Response updateAccount(AccountInfoDTO accountInfo) {
         HttpSession hs = request.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {

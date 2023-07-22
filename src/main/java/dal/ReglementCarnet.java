@@ -30,7 +30,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = "reglement_carnet", indexes = {
-    @Index(name = "reglement_carnet_type_tiers_payant", columnList = "type_tiers_payant")
+        @Index(name = "reglement_carnet_type_tiers_payant", columnList = "type_tiers_payant")
 
 })
 public class ReglementCarnet implements Serializable {
@@ -63,7 +63,7 @@ public class ReglementCarnet implements Serializable {
     @ManyToOne
     private TTiersPayant tiersPayant;
     @Column(name = "createdAt", nullable = false)
-    private LocalDateTime createdAt ;
+    private LocalDateTime createdAt;
     @NotNull
     @Column(name = "reference", nullable = false)
     private Integer reference = 0;
@@ -214,7 +214,9 @@ public class ReglementCarnet implements Serializable {
 
     @Override
     public String toString() {
-        return "ReglementCarnet{" + "id=" + id + ", description=" + description + ", montantPaye=" + montantPaye + ", montantPayer=" + montantPayer + ", montantRestant=" + montantRestant + ", createdAt=" + createdAt + '}';
+        return "ReglementCarnet{" + "id=" + id + ", description=" + description + ", montantPaye=" + montantPaye
+                + ", montantPayer=" + montantPayer + ", montantRestant=" + montantRestant + ", createdAt=" + createdAt
+                + '}';
     }
 
     public Integer getReference() {

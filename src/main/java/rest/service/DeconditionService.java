@@ -18,5 +18,5 @@ import org.json.JSONObject;
 
 public interface DeconditionService {
 
-    public JSONObject deconditionnementVente(SalesParams params)throws JSONException;
+    public JSONObject deconditionnementVente(SalesParams params) throws JSONException;
 }

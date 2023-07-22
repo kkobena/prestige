@@ -95,7 +95,8 @@ public class Rupture implements Serializable {
 
     @Override
     public String toString() {
-        return "Rupture{" + "id=" + id + ", dtCreated=" + dtCreated + ", statut=" + statut + ", dtUpdated=" + dtUpdated + ", grossiste=" + grossiste + '}';
+        return "Rupture{" + "id=" + id + ", dtCreated=" + dtCreated + ", statut=" + statut + ", dtUpdated=" + dtUpdated
+                + ", grossiste=" + grossiste + '}';
     }
 
     @Override

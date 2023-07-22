@@ -13,7 +13,7 @@ import javax.persistence.Tuple;
  */
 public class ProduitVenduDTO {
 
-    private String cip, name,id;
+    private String cip, name, id;
     private int prix, prixAchat;
 
     public String getCip() {

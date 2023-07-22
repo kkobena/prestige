@@ -69,7 +69,7 @@ public class TvaServiceImpl implements TvaService {
                 .forEach((k, v) -> {
                     TvaDTO o = new TvaDTO();
                     long montantTTC = v.stream().mapToLong(TvaDTO::getMontantTtc).reduce(0, Long::sum);
-                   
+
                     Double valeurTva = 1 + (Double.valueOf(k) / 100);
                     long htAmont = (long) Math.ceil(montantTTC / valeurTva);
                     long montantTva = montantTTC - htAmont;
@@ -85,15 +85,16 @@ public class TvaServiceImpl implements TvaService {
 
     private List<TvaDTO> tvaVoData(LocalDate dtStart, LocalDate dtEnd, boolean to_be_exclude, String emplacementId) {
         try {
-            List<Tuple> list = getEntityManager().createNativeQuery("SELECT SUM(d.int_PRICE) AS montantTTC,d.valeurTva  FROM  t_preenregistrement_detail d,t_preenregistrement p,t_client c,t_compte_client cp,t_tiers_payant tp,t_compte_client_tiers_payant ccp WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID "
-                    + " AND p.lg_CLIENT_ID=c.lg_CLIENT_ID AND p.str_TYPE_VENTE='VO' AND p.b_IS_CANCEL=0 AND p.int_PRICE >0 AND p.lg_TYPE_VENTE_ID <>'5' AND p.str_STATUT='is_Closed' AND c.lg_CLIENT_ID=cp.lg_CLIENT_ID AND "
-                    + " cp.lg_COMPTE_CLIENT_ID=ccp.lg_COMPTE_CLIENT_ID AND tp.lg_TIERS_PAYANT_ID=ccp.lg_TIERS_PAYANT_ID AND tp.to_be_exclude=?1 AND DATE(p.dt_UPDATED) BETWEEN ?2 AND ?3 GROUP BY d.valeurTva ", Tuple.class)
-                    .setParameter(1, to_be_exclude)
+            List<Tuple> list = getEntityManager().createNativeQuery(
+                    "SELECT SUM(d.int_PRICE) AS montantTTC,d.valeurTva  FROM  t_preenregistrement_detail d,t_preenregistrement p,t_client c,t_compte_client cp,t_tiers_payant tp,t_compte_client_tiers_payant ccp WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID "
+                            + " AND p.lg_CLIENT_ID=c.lg_CLIENT_ID AND p.str_TYPE_VENTE='VO' AND p.b_IS_CANCEL=0 AND p.int_PRICE >0 AND p.lg_TYPE_VENTE_ID <>'5' AND p.str_STATUT='is_Closed' AND c.lg_CLIENT_ID=cp.lg_CLIENT_ID AND "
+                            + " cp.lg_COMPTE_CLIENT_ID=ccp.lg_COMPTE_CLIENT_ID AND tp.lg_TIERS_PAYANT_ID=ccp.lg_TIERS_PAYANT_ID AND tp.to_be_exclude=?1 AND DATE(p.dt_UPDATED) BETWEEN ?2 AND ?3 GROUP BY d.valeurTva ",
+                    Tuple.class).setParameter(1, to_be_exclude)
                     .setParameter(2, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
-                    .setParameter(3, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
-                    .getResultList();
+                    .setParameter(3, java.sql.Date.valueOf(dtEnd), TemporalType.DATE).getResultList();
 
-            return list.stream().map(t -> new TvaDTO(t.get(1, Integer.class), t.get(0, BigDecimal.class))).collect(Collectors.toList());
+            return list.stream().map(t -> new TvaDTO(t.get(1, Integer.class), t.get(0, BigDecimal.class)))
+                    .collect(Collectors.toList());
 
         } catch (Exception e) {
             e.printStackTrace(System.err);
@@ -104,14 +105,15 @@ public class TvaServiceImpl implements TvaService {
 
     private List<TvaDTO> tvaVnoData(LocalDate dtStart, LocalDate dtEnd, String emplacementId) {
         try {
-            List<Tuple> list = getEntityManager().createNativeQuery("SELECT SUM(d.int_PRICE) AS montantTTC,d.valeurTva  FROM  t_preenregistrement_detail d,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID "
-                    + "  AND p.str_TYPE_VENTE='VNO' AND p.b_IS_CANCEL=0 AND p.int_PRICE >0 AND p.lg_TYPE_VENTE_ID <>'5' AND p.str_STATUT='is_Closed' "
-                    + "  AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2 GROUP BY d.valeurTva ", Tuple.class)
-                    .setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
-                    .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
-                    .getResultList();
+            List<Tuple> list = getEntityManager().createNativeQuery(
+                    "SELECT SUM(d.int_PRICE) AS montantTTC,d.valeurTva  FROM  t_preenregistrement_detail d,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID "
+                            + "  AND p.str_TYPE_VENTE='VNO' AND p.b_IS_CANCEL=0 AND p.int_PRICE >0 AND p.lg_TYPE_VENTE_ID <>'5' AND p.str_STATUT='is_Closed' "
+                            + "  AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2 GROUP BY d.valeurTva ",
+                    Tuple.class).setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
+                    .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE).getResultList();
 
-            return list.stream().map(t -> new TvaDTO(t.get(1, Integer.class), t.get(0, BigDecimal.class))).collect(Collectors.toList());
+            return list.stream().map(t -> new TvaDTO(t.get(1, Integer.class), t.get(0, BigDecimal.class)))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             return Collections.emptyList();
         }

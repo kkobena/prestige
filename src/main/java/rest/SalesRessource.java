@@ -133,7 +133,7 @@ public class SalesRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUserId(tu);
-       params.setStatut(params.isPrevente()?DateConverter.STATUT_PENDING: DateConverter.STATUT_PROCESS);
+        params.setStatut(params.isPrevente() ? DateConverter.STATUT_PENDING : DateConverter.STATUT_PROCESS);
         JSONObject json = salesService.createPreVente(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -147,7 +147,7 @@ public class SalesRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUserId(tu);
-      params.setStatut(params.isPrevente()?DateConverter.STATUT_PENDING: DateConverter.STATUT_PROCESS);
+        params.setStatut(params.isPrevente() ? DateConverter.STATUT_PENDING : DateConverter.STATUT_PROCESS);
         JSONObject json = salesService.createPreVenteVo(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -317,8 +317,8 @@ public class SalesRessource {
 
     @GET
     @Path("search")
-    public Response searchProduct(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) throws JSONException {
+    public Response searchProduct(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -336,10 +336,9 @@ public class SalesRessource {
 
     @GET
     @Path("deatails")
-    public Response getDetails(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
-            @QueryParam(value = "venteId") String venteId, @QueryParam(value = "statut") String statut
-    ) throws JSONException {
+    public Response getDetails(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "venteId") String venteId,
+            @QueryParam(value = "statut") String statut) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -558,7 +557,8 @@ public class SalesRessource {
 
     @PUT
     @Path("client/{id}")
-    public Response updateCurrentVenteClientData(@PathParam("id") String venteId, SalesParams params) throws JSONException {
+    public Response updateCurrentVenteClientData(@PathParam("id") String venteId, SalesParams params)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -582,7 +582,8 @@ public class SalesRessource {
 
     @PUT
     @Path("tp/{id}")
-    public Response modifiertierspayantprincipal(@PathParam("id") String id, ClotureVenteParams params) throws JSONException {
+    public Response modifiertierspayantprincipal(@PathParam("id") String id, ClotureVenteParams params)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -709,7 +710,7 @@ public class SalesRessource {
         JSONObject jsono = smsService.findAccessToken();
         return Response.ok().entity(jsono.toString()).build();
     }
-   
+
     @PUT
     @Path("terminerprevente/{id}")
     public Response terminerprevente(@PathParam("id") String id) throws JSONException {
@@ -721,8 +722,8 @@ public class SalesRessource {
         }
         return Response.ok().entity(salesService.closePreventeVente(tu, id).toString()).build();
     }
-    
-     @PUT
+
+    @PUT
     @Path("clone-devis/{id}")
     public Response clonerDevis(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
@@ -733,11 +734,12 @@ public class SalesRessource {
         }
         return Response.ok().entity(salesService.clonerDevis(tu, id).toString()).build();
     }
-     @GET
+
+    @GET
     @Path("test")
     public Response test() throws JSONException {
-      salesService.upadteVente();
+        salesService.upadteVente();
         return Response.ok().build();
     }
-    
+
 }

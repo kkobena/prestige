@@ -28,7 +28,7 @@ import org.json.JSONObject;
  * @author Kobena
  */
 @Local
-//@Remote
+// @Remote
 public interface SalesStatsService {
 
     JSONObject getListeTPreenregistrement(SalesStatsParams params) throws JSONException;
@@ -81,7 +81,8 @@ public interface SalesStatsService {
 
     List<VenteDTO> findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd);
 
-    JSONObject findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd, String query, int start, int limit) throws JSONException;
+    JSONObject findAllVenteOrdonnancier(String medecinId, String dtStart, String dtEnd, String query, int start,
+            int limit) throws JSONException;
 
     List<TvaDTO> tvaRapport(Params params);
 

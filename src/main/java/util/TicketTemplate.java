@@ -39,10 +39,12 @@ public class TicketTemplate {
         sb.append("px;} body {font-size:");
         sb.append(pm.fontSize);
         sb.append("px;} table {border-collapse: collapse;width:");
-        sb.append(pm.itemBodyWidth); 
+        sb.append(pm.itemBodyWidth);
         sb.append("mm;margin: 3px 0 3px 0;}");
-        sb.append(".tableItems thead tr th {border-bottom: 1px solid #D4D4D4;} .tableItems thead tr th:nth-child(3), .tableItems thead tr th:last-child{text-align: right;}");
-        sb.append(" .tableItems tfoot tr th {border-top: 1px solid #D4D4D4;border-bottom: 1px solid #D4D4D4;} table tbody tr td:first-child {text-align: left;}");
+        sb.append(
+                ".tableItems thead tr th {border-bottom: 1px solid #D4D4D4;} .tableItems thead tr th:nth-child(3), .tableItems thead tr th:last-child{text-align: right;}");
+        sb.append(
+                " .tableItems tfoot tr th {border-top: 1px solid #D4D4D4;border-bottom: 1px solid #D4D4D4;} table tbody tr td:first-child {text-align: left;}");
         sb.append(
                 "table tbody tr td:last-child {text-align: right;} .tableItems tbody tr td:nth-child(3),.tableItems tbody tr td:last-child {text-align: right;margin-left: 5px;}");
         sb.append(
@@ -54,7 +56,8 @@ public class TicketTemplate {
         return sb;
     }
 
-    public static StringBuilder buildInfosOficine(TOfficine officine, String ticketNum, boolean isDepot, TEmplacement te, String numBon, TClient c) {
+    public static StringBuilder buildInfosOficine(TOfficine officine, String ticketNum, boolean isDepot,
+            TEmplacement te, String numBon, TClient c) {
         StringBuilder sb = new StringBuilder();
         sb.append("<h1>");
         sb.append(officine.getStrNOMCOMPLET());
@@ -107,7 +110,8 @@ public class TicketTemplate {
         return sb;
     }
 
-    public static StringBuilder buildInfoCaisse(TUser caisse, TUser vendeur, boolean isCanceled, TUser canceledBy, boolean isDepot, TEmplacement e) {
+    public static StringBuilder buildInfoCaisse(TUser caisse, TUser vendeur, boolean isCanceled, TUser canceledBy,
+            boolean isDepot, TEmplacement e) {
         StringBuilder sb = new StringBuilder();
         sb.append("<p>");
         sb.append("Caissier: ");
@@ -141,7 +145,8 @@ public class TicketTemplate {
         return sb;
     }
 
-    public static StringBuilder buildInfoClientVo(TAyantDroit ayantDroit, TClient c, int montantClient, List<TPreenregistrementCompteClientTiersPayent> lstT) {
+    public static StringBuilder buildInfoClientVo(TAyantDroit ayantDroit, TClient c, int montantClient,
+            List<TPreenregistrementCompteClientTiersPayent> lstT) {
         StringBuilder sb = new StringBuilder();
         sb.append("<p>");
         sb.append("Matricule assuré: ");
@@ -183,9 +188,11 @@ public class TicketTemplate {
         return sb;
     }
 
-    public static StringBuilder buildItemsContent(TPreenregistrement p, List<TPreenregistrementDetail> items, int count) {
+    public static StringBuilder buildItemsContent(TPreenregistrement p, List<TPreenregistrementDetail> items,
+            int count) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<table class='tableItems'><thead><tr><th>Qté</th><th>Désignation</th><th>P.u</th><th>Prix</th></tr></thead><tbody>");
+        sb.append(
+                "<table class='tableItems'><thead><tr><th>Qté</th><th>Désignation</th><th>P.u</th><th>Prix</th></tr></thead><tbody>");
 
         for (TPreenregistrementDetail item : items) {
             sb.append("<tr>");
@@ -232,7 +239,9 @@ public class TicketTemplate {
         return sb;
     }
 
-    public static StringBuilder buildContentReglement(boolean isVo, TPreenregistrement p, MvtTransaction m, int avoir, int acompte, int montantRestant, int totalRecap, int montantNet, int montantRemise, int montantVerse, int monnaie) {
+    public static StringBuilder buildContentReglement(boolean isVo, TPreenregistrement p, MvtTransaction m, int avoir,
+            int acompte, int montantRestant, int totalRecap, int montantNet, int montantRemise, int montantVerse,
+            int monnaie) {
         StringBuilder sb = new StringBuilder();
         sb.append("<table class='infosreglment'><tbody>");
         if (avoir > 0) {
@@ -334,8 +343,8 @@ public class TicketTemplate {
         StringBuilder sb = new StringBuilder();
         sb.append("<table><tbody><tr>  ");
         sb.append("<td><img src=\"");
-        sb.append(srcImg);  
-        sb.append("\" alt='barcode' width='100px' height='100px'   /></td> "); 
+        sb.append(srcImg);
+        sb.append("\" alt='barcode' width='100px' height='100px'   /></td> ");
         sb.append("<td>");
         sb.append(DateConverter.formatDateToEEEE_dd_MM_yyyy_HH_mm(p.getDtUPDATED()));
         sb.append("</td></tr></tbody></table></html>");
@@ -345,7 +354,8 @@ public class TicketTemplate {
 
     public static StringBuilder buildItemsContentPortion(TPreenregistrement p, List<TPreenregistrementDetail> items) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<table class='tableItems'><thead><tr><th>Qté</th><th>Désignation</th><th>P.U</th><th>Prix</th></tr></thead><tbody>");
+        sb.append(
+                "<table class='tableItems'><thead><tr><th>Qté</th><th>Désignation</th><th>P.U</th><th>Prix</th></tr></thead><tbody>");
 
         for (TPreenregistrementDetail item : items) {
             sb.append("<tr>");

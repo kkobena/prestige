@@ -173,7 +173,8 @@ public class SalesParams implements Serializable {
     public SalesParams() {
     }
 
-    public SalesParams(String typeVenteId, String natureVenteId, String remiseId, String userVendeurId, String stockId, String produitId, int qte, int qteServie, int qteUg) {
+    public SalesParams(String typeVenteId, String natureVenteId, String remiseId, String userVendeurId, String stockId,
+            String produitId, int qte, int qteServie, int qteUg) {
         this.typeVenteId = typeVenteId;
         this.natureVenteId = natureVenteId;
         this.remiseId = remiseId;
@@ -263,7 +264,10 @@ public class SalesParams implements Serializable {
 
     @Override
     public String toString() {
-        return "SalesParams{" + "typeVenteId=" + typeVenteId + ", natureVenteId=" + natureVenteId + ", remiseId=" + remiseId + ", userVendeurId=" + userVendeurId + ", stockId=" + stockId + ", produitId=" + produitId + ", qte=" + qte + ", qteServie=" + qteServie + ", qteUg=" + qteUg + ", tierspayants=" + tierspayants + '}';
+        return "SalesParams{" + "typeVenteId=" + typeVenteId + ", natureVenteId=" + natureVenteId + ", remiseId="
+                + remiseId + ", userVendeurId=" + userVendeurId + ", stockId=" + stockId + ", produitId=" + produitId
+                + ", qte=" + qte + ", qteServie=" + qteServie + ", qteUg=" + qteUg + ", tierspayants=" + tierspayants
+                + '}';
     }
 
     public String getMedecinId() {

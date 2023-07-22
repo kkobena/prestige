@@ -52,7 +52,8 @@ public class FacturationServiceImpl implements FacturationService {
     @Override
     public List<ModelFactureDTO> getAll() {
         try {
-            TypedQuery<TModelFacture> tq = getEntityManager().createQuery("SELECT o FROM TModelFacture o ", TModelFacture.class);
+            TypedQuery<TModelFacture> tq = getEntityManager().createQuery("SELECT o FROM TModelFacture o ",
+                    TModelFacture.class);
             return tq.getResultList().stream().map(ModelFactureDTO::new).collect(Collectors.toList());
         } catch (Exception e) {
             return Collections.emptyList();
@@ -88,11 +89,12 @@ public class FacturationServiceImpl implements FacturationService {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<ComboDTO> cq = cb.createQuery(ComboDTO.class);
             Root<TGroupeTierspayant> root = cq.from(TGroupeTierspayant.class);
-            cq.select(cb.construct(ComboDTO.class, root.get(TGroupeTierspayant_.lgGROUPEID), root.get(TGroupeTierspayant_.strLIBELLE)));
+            cq.select(cb.construct(ComboDTO.class, root.get(TGroupeTierspayant_.lgGROUPEID),
+                    root.get(TGroupeTierspayant_.strLIBELLE)));
             if (query != null && !"".equals(query)) {
                 cq.where(cb.like(root.get("strLIBELLE"), query + "%"));
             }
-//           
+            //
             Query q = getEntityManager().createQuery(cq);
             List<ComboDTO> l = q.getResultList();
 
@@ -104,7 +106,8 @@ public class FacturationServiceImpl implements FacturationService {
     }
 
     @Override
-    public JSONObject provisoires(Mode mode, String groupTp, String typetp, String tpid, String codegroup, String dtStart, String dtEnd, String query, int start, int limit) throws JSONException {
+    public JSONObject provisoires(Mode mode, String groupTp, String typetp, String tpid, String codegroup,
+            String dtStart, String dtEnd, String query, int start, int limit) throws JSONException {
         if (Mode.BONS == mode) {
             return provisoiresBon(tpid, dtStart, dtEnd, query, start, limit);
         }
@@ -112,15 +115,22 @@ public class FacturationServiceImpl implements FacturationService {
 
     }
 
-    private long provisoiresCount(Mode mode, String groupTp, String typetp, String tpid, String codegroup, String dtStart, String dtEnd) throws JSONException {
+    private long provisoiresCount(Mode mode, String groupTp, String typetp, String tpid, String codegroup,
+            String dtStart, String dtEnd) throws JSONException {
         try {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root.join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.count(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID))).groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID));
-            List<Predicate> predicates = provisoirespartp(cb, root, st, mode, groupTp, typetp, tpid, codegroup, dtStart, dtEnd);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root
+                    .join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(cb.count(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                    .get(TCompteClientTiersPayant_.lgTIERSPAYANTID)))
+                    .groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID));
+            List<Predicate> predicates = provisoirespartp(cb, root, st, mode, groupTp, typetp, tpid, codegroup, dtStart,
+                    dtEnd);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList().size();
@@ -136,8 +146,10 @@ public class FacturationServiceImpl implements FacturationService {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root.join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root
+                    .join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
             cq.select(cb.count(root));
             List<Predicate> predicates = provisoiresBonPredicate(cb, root, st, tpid, dtStart, dtEnd, query);
 
@@ -150,7 +162,8 @@ public class FacturationServiceImpl implements FacturationService {
         }
     }
 
-    private JSONObject provisoiresBon(String tpid, String dtStart, String dtEnd, String query, int start, int limit) throws JSONException {
+    private JSONObject provisoiresBon(String tpid, String dtStart, String dtEnd, String query, int start, int limit)
+            throws JSONException {
 
         try {
             long count = provisoiresBonCount(tpid, query, dtStart, dtEnd);
@@ -160,13 +173,15 @@ public class FacturationServiceImpl implements FacturationService {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<ItemFactGenererDTO> cq = cb.createQuery(ItemFactGenererDTO.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root.join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root
+                    .join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
             cq.select(cb.construct(ItemFactGenererDTO.class,
                     root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID),
                     root.get(TPreenregistrementCompteClientTiersPayent_.strREFBON),
-                    root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)
-            )).orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.dtUPDATED)));
+                    root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)))
+                    .orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.dtUPDATED)));
             List<Predicate> predicates = provisoiresBonPredicate(cb, root, st, tpid, dtStart, dtEnd, query);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
@@ -181,28 +196,35 @@ public class FacturationServiceImpl implements FacturationService {
 
     }
 
-    private List<Predicate> provisoiresBonPredicate(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st, String tpid, String dtStart, String dtEnd, String query) {
+    private List<Predicate> provisoiresBonPredicate(CriteriaBuilder cb,
+            Root<TPreenregistrementCompteClientTiersPayent> root,
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st, String tpid, String dtStart,
+            String dtEnd, String query) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL)));
         predicates.add(cb.greaterThan(st.get(TPreenregistrement_.intPRICE), 0));
-        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(dtStart),
-                java.sql.Date.valueOf(dtEnd));
+        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)),
+                java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
         predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUTFACTURE), DateConverter.STATUT_FACTURE_UNPAID));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT),
+                DateConverter.STATUT_IS_CLOSED));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUTFACTURE),
+                DateConverter.STATUT_FACTURE_UNPAID));
         if (tpid != null && !"".equals(tpid)) {
-            predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                    get(TTiersPayant_.lgTIERSPAYANTID), tpid));
+            predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                    .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID), tpid));
         }
         if (query != null && !"".equals(query)) {
             predicates.add(cb.or(cb.like(root.get(TPreenregistrementCompteClientTiersPayent_.strREFBON), query + "%"),
-                    cb.like(st.get(TPreenregistrement_.client).get(TClient_.strFIRSTNAME), query + "%"), cb.like(st.get(TPreenregistrement_.client).get(TClient_.strLASTNAME), query + "%")));
+                    cb.like(st.get(TPreenregistrement_.client).get(TClient_.strFIRSTNAME), query + "%"),
+                    cb.like(st.get(TPreenregistrement_.client).get(TClient_.strLASTNAME), query + "%")));
         }
         return predicates;
     }
 
-    private JSONObject provisoirespartp(Mode mode, String groupTp, String typetp, String tpid, String codegroup, String dtStart, String dtEnd, int start, int limit) throws JSONException {
+    private JSONObject provisoirespartp(Mode mode, String groupTp, String typetp, String tpid, String codegroup,
+            String dtStart, String dtEnd, int start, int limit) throws JSONException {
         try {
             long count = provisoiresCount(mode, groupTp, typetp, tpid, codegroup, dtStart, dtEnd);
             if (count == 0) {
@@ -211,15 +233,22 @@ public class FacturationServiceImpl implements FacturationService {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<ItemFactGenererDTO> cq = cb.createQuery(ItemFactGenererDTO.class);
-            Root<TPreenregistrementCompteClientTiersPayent> root = cq.from(TPreenregistrementCompteClientTiersPayent.class);
-            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root.join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
+            Root<TPreenregistrementCompteClientTiersPayent> root = cq
+                    .from(TPreenregistrementCompteClientTiersPayent.class);
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st = root
+                    .join(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID, JoinType.INNER);
             cq.select(cb.construct(ItemFactGenererDTO.class,
-                    root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID),
-                    root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME),
-                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)),
-                    cb.count(root)
-            )).groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID)).orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)));
-            List<Predicate> predicates = provisoirespartp(cb, root, st, mode, groupTp, typetp, tpid, codegroup, dtStart, dtEnd);
+                    root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID),
+                    root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME),
+                    cb.sum(root.get(TPreenregistrementCompteClientTiersPayent_.intPRICE)), cb.count(root)))
+                    .groupBy(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID))
+                    .orderBy(cb.asc(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                            .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strFULLNAME)));
+            List<Predicate> predicates = provisoirespartp(cb, root, st, mode, groupTp, typetp, tpid, codegroup, dtStart,
+                    dtEnd);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             q.setFirstResult(start);
@@ -232,56 +261,68 @@ public class FacturationServiceImpl implements FacturationService {
         }
     }
 
-    private List<Predicate> provisoirespartp(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root, Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st, Mode mode, String groupTp, String typetp, String tpid, String codegroup, String dtStart, String dtEnd) {
+    private List<Predicate> provisoirespartp(CriteriaBuilder cb, Root<TPreenregistrementCompteClientTiersPayent> root,
+            Join<TPreenregistrementCompteClientTiersPayent, TPreenregistrement> st, Mode mode, String groupTp,
+            String typetp, String tpid, String codegroup, String dtStart, String dtEnd) {
         List<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL)));
         predicates.add(cb.greaterThan(st.get(TPreenregistrement_.intPRICE), 0));
-        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(dtStart),
-                java.sql.Date.valueOf(dtEnd));
+        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)),
+                java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
         predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUTFACTURE), DateConverter.STATUT_FACTURE_UNPAID));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT),
+                DateConverter.STATUT_IS_CLOSED));
+        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUTFACTURE),
+                DateConverter.STATUT_FACTURE_UNPAID));
 
         switch (mode) {
-            case TYPETP:
-                if (typetp != null && !"".equals(typetp)) {
-                    predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                            get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typetp));
-                }
-                break;
-            case TP:
-                if (tpid != null && !"".equals(tpid)) {
-                    predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                            get(TTiersPayant_.lgTIERSPAYANTID), tpid));
-                }
-                break;
-            case GROUP:
-                if (groupTp != null && !"".equals(groupTp)) {
-                    predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                            get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupTp)));
-                }
-                break;
-            case CODE_GROUP:
-                if (codegroup != null && !"".equals(codegroup)) {
-                    predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID).get(TCompteClientTiersPayant_.lgTIERSPAYANTID).
-                            get(TTiersPayant_.strCODEREGROUPEMENT), codegroup));
-                }
-                break;
-            default:
-                break;
+        case TYPETP:
+            if (typetp != null && !"".equals(typetp)) {
+                predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                        .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTYPETIERSPAYANTID)
+                        .get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typetp));
+            }
+            break;
+        case TP:
+            if (tpid != null && !"".equals(tpid)) {
+                predicates.add(cb.equal(
+                        root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                                .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgTIERSPAYANTID),
+                        tpid));
+            }
+            break;
+        case GROUP:
+            if (groupTp != null && !"".equals(groupTp)) {
+                predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                        .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.lgGROUPEID)
+                        .get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupTp)));
+            }
+            break;
+        case CODE_GROUP:
+            if (codegroup != null && !"".equals(codegroup)) {
+                predicates.add(cb.equal(
+                        root.get(TPreenregistrementCompteClientTiersPayent_.lgCOMPTECLIENTTIERSPAYANTID)
+                                .get(TCompteClientTiersPayant_.lgTIERSPAYANTID).get(TTiersPayant_.strCODEREGROUPEMENT),
+                        codegroup));
+            }
+            break;
+        default:
+            break;
         }
         return predicates;
     }
 
     @Override
-    public JSONObject provisoires10(String groupTp, String typetp, String tpid, String codegroup, boolean isTemplate, int start, int limit) throws JSONException {
+    public JSONObject provisoires10(String groupTp, String typetp, String tpid, String codegroup, boolean isTemplate,
+            int start, int limit) throws JSONException {
         long count = provisoires10(groupTp, typetp, tpid, codegroup, isTemplate);
         if (count == 0) {
             return new JSONObject().put("total", 0).put("data", new JSONArray());
         }
-        return new JSONObject().put("total", count).put("data", new JSONArray(provisoires10(groupTp, typetp, tpid, codegroup, isTemplate, false, start, limit)));
+        return new JSONObject().put("total", count).put("data",
+                new JSONArray(provisoires10(groupTp, typetp, tpid, codegroup, isTemplate, false, start, limit)));
     }
 
     private long provisoires10(String groupTp, String typetp, String tpid, String codegroup, boolean isTemplate) {
@@ -292,7 +333,8 @@ public class FacturationServiceImpl implements FacturationService {
             Root<TFacture> root = cq.from(TFacture.class);
             Join<TFacture, TTiersPayant> st = root.join(TFacture_.tiersPayant, JoinType.INNER);
             cq.select(cb.count(root));
-            List<Predicate> predicates = provisoires10Predicates(cb, root, st, groupTp, typetp, tpid, codegroup, isTemplate);
+            List<Predicate> predicates = provisoires10Predicates(cb, root, st, groupTp, typetp, tpid, codegroup,
+                    isTemplate);
 
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
@@ -304,7 +346,8 @@ public class FacturationServiceImpl implements FacturationService {
     }
 
     @Override
-    public List<FactureDTO> provisoires10(String groupTp, String typetp, String tpid, String codegroup, boolean isTemplate, boolean all, int start, int limit) {
+    public List<FactureDTO> provisoires10(String groupTp, String typetp, String tpid, String codegroup,
+            boolean isTemplate, boolean all, int start, int limit) {
         try {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -312,7 +355,8 @@ public class FacturationServiceImpl implements FacturationService {
             Root<TFacture> root = cq.from(TFacture.class);
             Join<TFacture, TTiersPayant> st = root.join(TFacture_.tiersPayant, JoinType.INNER);
             cq.select(root).orderBy(cb.desc(root.get(TFacture_.dtCREATED)), cb.desc(st.get(TTiersPayant_.strFULLNAME)));
-            List<Predicate> predicates = provisoires10Predicates(cb, root, st, groupTp, typetp, tpid, codegroup, isTemplate);
+            List<Predicate> predicates = provisoires10Predicates(cb, root, st, groupTp, typetp, tpid, codegroup,
+                    isTemplate);
 
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<TFacture> q = getEntityManager().createQuery(cq);
@@ -327,7 +371,9 @@ public class FacturationServiceImpl implements FacturationService {
         }
     }
 
-    private List<Predicate> provisoires10Predicates(CriteriaBuilder cb, Root<TFacture> root, Join<TFacture, TTiersPayant> st, String groupTp, String typetp, String tpid, String codegroup, boolean isTemplate) {
+    private List<Predicate> provisoires10Predicates(CriteriaBuilder cb, Root<TFacture> root,
+            Join<TFacture, TTiersPayant> st, String groupTp, String typetp, String tpid, String codegroup,
+            boolean isTemplate) {
         List<Predicate> predicates = new ArrayList<>();
         if (isTemplate) {
             predicates.add(cb.isTrue(root.get(TFacture_.template)));
@@ -336,17 +382,17 @@ public class FacturationServiceImpl implements FacturationService {
         }
 
         if (typetp != null && !"".equals(typetp)) {
-            predicates.add(cb.equal(st.get(TTiersPayant_.lgTYPETIERSPAYANTID)
-                    .get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typetp));
+            predicates.add(cb.equal(
+                    st.get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), typetp));
         }
 
         if (tpid != null && !"".equals(tpid)) {
-            predicates.add(cb.equal(root.get(TFacture_.tiersPayant).
-                    get(TTiersPayant_.lgTIERSPAYANTID), tpid));
+            predicates.add(cb.equal(root.get(TFacture_.tiersPayant).get(TTiersPayant_.lgTIERSPAYANTID), tpid));
         }
 
         if (groupTp != null && !"".equals(groupTp)) {
-            predicates.add(cb.equal(st.get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID), Integer.valueOf(groupTp)));
+            predicates.add(cb.equal(st.get(TTiersPayant_.lgGROUPEID).get(TGroupeTierspayant_.lgGROUPEID),
+                    Integer.valueOf(groupTp)));
         }
 
         if (codegroup != null && !"".equals(codegroup)) {
@@ -394,7 +440,8 @@ public class FacturationServiceImpl implements FacturationService {
     @Override
     public List<FactureDetailDTO> findFacturesDetailsByFactureId(String id) {
         try {
-            TypedQuery<TFactureDetail> q = getEntityManager().createNamedQuery("TFactureDetail.findByFactureId", TFactureDetail.class);
+            TypedQuery<TFactureDetail> q = getEntityManager().createNamedQuery("TFactureDetail.findByFactureId",
+                    TFactureDetail.class);
             q.setParameter("lgFACTUREID", id);
             return q.getResultList().stream().map(FactureDetailDTO::new).collect(Collectors.toList());
         } catch (Exception e) {
@@ -406,7 +453,8 @@ public class FacturationServiceImpl implements FacturationService {
     @Override
     public List<VenteDetailsDTO> findArticleByFactureDetailsId(String id) {
         try {
-            TypedQuery<TPreenregistrementDetail> q = getEntityManager().createNamedQuery("TPreenregistrementDetail.findByVenteId", TPreenregistrementDetail.class);
+            TypedQuery<TPreenregistrementDetail> q = getEntityManager()
+                    .createNamedQuery("TPreenregistrementDetail.findByVenteId", TPreenregistrementDetail.class);
             q.setParameter("lgPREENREGISTREMENTID", id);
             return q.getResultList().stream().map(VenteDetailsDTO::new).collect(Collectors.toList());
         } catch (Exception e) {
@@ -421,11 +469,13 @@ public class FacturationServiceImpl implements FacturationService {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TPreenregistrementDetail> cq = cb.createQuery(TPreenregistrementDetail.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> st = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            Join<TPreenregistrementDetail, TPreenregistrement> st = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
             cq.select(root);
             Subquery<String> sub = cq.subquery(String.class);
             Root<TFactureDetail> pr = sub.from(TFactureDetail.class);
-            sub.select(pr.get(TFactureDetail_.pKey)).where(cb.equal(pr.get(TFactureDetail_.lgFACTUREID).get(TFacture_.lgFACTUREID), id));
+            sub.select(pr.get(TFactureDetail_.pKey))
+                    .where(cb.equal(pr.get(TFactureDetail_.lgFACTUREID).get(TFacture_.lgFACTUREID), id));
             cq.where(cb.in(st.get(TPreenregistrement_.lgPREENREGISTREMENTID)).value(sub));
             TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(cq);
             return q.getResultList().stream().map(VenteDetailsDTO::new).collect(Collectors.toList());

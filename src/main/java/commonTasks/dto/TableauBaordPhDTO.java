@@ -21,7 +21,7 @@ import util.DateConverter;
 public class TableauBaordPhDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-   
+
     private boolean vente;
     private String dateOperation;
     private Integer montantTTC = 0;
@@ -100,7 +100,7 @@ public class TableauBaordPhDTO implements Serializable {
     }
 
     public void setMvtDate(LocalDate mvtDate) {
-       
+
         this.mvtDate = mvtDate;
     }
 
@@ -268,7 +268,8 @@ public class TableauBaordPhDTO implements Serializable {
 
     }
 
-    public TableauBaordPhDTO(long montantTTC, long montantRemise, Date dateOp, long nbreVente, long customPart, String typeVente) {
+    public TableauBaordPhDTO(long montantTTC, long montantRemise, Date dateOp, long nbreVente, long customPart,
+            String typeVente) {
         this.montantRemise = (int) montantRemise;
         this.montantTTC = (int) montantTTC;
         this.nbreVente = (int) nbreVente;
@@ -291,7 +292,8 @@ public class TableauBaordPhDTO implements Serializable {
         this.vente = true;
     }
 
-    public TableauBaordPhDTO(Date dateOp, long montantTTC, long montantRemise, long montantEsp, long montantCredit, long montantDiff) {
+    public TableauBaordPhDTO(Date dateOp, long montantTTC, long montantRemise, long montantEsp, long montantCredit,
+            long montantDiff) {
         this.montantRemise -= (int) montantRemise;
         this.montantTTC -= (int) montantTTC;
         this.montantCredit -= (int) (montantCredit + montantDiff);

@@ -16,11 +16,11 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"userId"})
+@EqualsAndHashCode(of = { "userId" })
 public class TicketZDTO {
 
     private long totalEsp;
-   
+
     private long totalCredit;
     private long totalCheque;
     private long totalVirement;
@@ -29,7 +29,7 @@ public class TicketZDTO {
     private String user;
     private String userId;
     private long totalEntreeEsp;
-   
+
     private long totalEntreeCredit;
     private long totalEntreeCheque;
     private long totalEntreeVirement;
@@ -43,7 +43,7 @@ public class TicketZDTO {
     private long totalReglementCB;
 
     private long totalSortieEsp;
-  
+
     private long totalSortieCredit;
     private long totalSortieCheque;
     private long totalSortieVirement;

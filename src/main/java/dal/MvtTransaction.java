@@ -29,17 +29,13 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Kobena
  */
 @Entity
-@Table(name = "MvtTransaction",
-        indexes = {
-            @Index(name = "indexMvtTranstionmvdate", columnList = "mvtdate"),
-            @Index(name = "indexMvtTranstype", columnList = "typeTransaction"),
-            @Index(name = "indexMvtpkey", columnList = "pkey"),
-            @Index(name = "indexMvtchecked", columnList = "checked"),
-            @Index(name = "indexMvtcategorie", columnList = "categorie"),
-            @Index(name = "indexMvtRef", columnList = "reference")
+@Table(name = "MvtTransaction", indexes = { @Index(name = "indexMvtTranstionmvdate", columnList = "mvtdate"),
+        @Index(name = "indexMvtTranstype", columnList = "typeTransaction"),
+        @Index(name = "indexMvtpkey", columnList = "pkey"), @Index(name = "indexMvtchecked", columnList = "checked"),
+        @Index(name = "indexMvtcategorie", columnList = "categorie"),
+        @Index(name = "indexMvtRef", columnList = "reference")
 
-        }
-)
+})
 @XmlRootElement
 public class MvtTransaction implements Serializable {
 
@@ -58,7 +54,7 @@ public class MvtTransaction implements Serializable {
     @Column(name = "montantRemise")
     private Integer montantRemise = 0;
     @Column(name = "montantPaye")
-    private Integer montantPaye = 0;//arrondi de la caisse
+    private Integer montantPaye = 0;// arrondi de la caisse
     @Column(name = "avoidAmount")
     private Integer avoidAmount = 0;
     @Column(name = "montantAcc")
@@ -380,7 +376,15 @@ public class MvtTransaction implements Serializable {
 
     @Override
     public String toString() {
-        return "MvtTransaction{" + "uuid=" + uuid + ", montant=" + montant + ", montantRestant=" + montantRestant + ", montantRegle=" + montantRegle + ", montantCredit=" + montantCredit + ", montantVerse=" + montantVerse + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", montantPaye=" + montantPaye + ", avoidAmount=" + avoidAmount + ", checked=" + checked + ", mvtDate=" + mvtDate + ", createdAt=" + createdAt + ", user=" + user + ", magasin=" + magasin + ", reglement=" + reglement + ", grossiste=" + grossiste + ", tTypeMvtCaisse=" + tTypeMvtCaisse + ", typeTransaction=" + typeTransaction + ", categoryTransaction=" + categoryTransaction + ", pkey=" + pkey + ", reference=" + reference + ", caisse=" + caisse + ", montantTva=" + montantTva + ", marge=" + marge + ", organisme=" + organisme + '}';
+        return "MvtTransaction{" + "uuid=" + uuid + ", montant=" + montant + ", montantRestant=" + montantRestant
+                + ", montantRegle=" + montantRegle + ", montantCredit=" + montantCredit + ", montantVerse="
+                + montantVerse + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", montantPaye="
+                + montantPaye + ", avoidAmount=" + avoidAmount + ", checked=" + checked + ", mvtDate=" + mvtDate
+                + ", createdAt=" + createdAt + ", user=" + user + ", magasin=" + magasin + ", reglement=" + reglement
+                + ", grossiste=" + grossiste + ", tTypeMvtCaisse=" + tTypeMvtCaisse + ", typeTransaction="
+                + typeTransaction + ", categoryTransaction=" + categoryTransaction + ", pkey=" + pkey + ", reference="
+                + reference + ", caisse=" + caisse + ", montantTva=" + montantTva + ", marge=" + marge + ", organisme="
+                + organisme + '}';
     }
 
     public Integer getMargeug() {

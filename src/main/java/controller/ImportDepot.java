@@ -41,12 +41,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
 
-@WebServlet(name = "ImportDepot", urlPatterns = {"/ImportDepot"})
-@MultipartConfig(
-        fileSizeThreshold = 5242880,
-        maxFileSize = 20971520L,
-        maxRequestSize = 41943040L
-)
+@WebServlet(name = "ImportDepot", urlPatterns = { "/ImportDepot" })
+@MultipartConfig(fileSizeThreshold = 5242880, maxFileSize = 20971520L, maxRequestSize = 41943040L)
 public class ImportDepot extends HttpServlet {
 
     private final static Logger LOGGER = Logger.getLogger(ImportDepot.class.getName());
@@ -68,20 +64,22 @@ public class ImportDepot extends HttpServlet {
         JsonObjectBuilder json = factory.createObjectBuilder();
         try (PrintWriter out = response.getWriter()) {
             switch (extension) {
-                case "csv":
-//                    _json = bulkUpdate(part, OdataManager.getEm());
-                    json.add("statut", 0);
-//                    json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/" + _json.getInt("ligne") + "</span> produits mis à jour");
-                    json.add("success", "Veuillez choisir un fichir excel");
-                    break;
+            case "csv":
+                // _json = bulkUpdate(part, OdataManager.getEm());
+                json.add("statut", 0);
+                // json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/" +
+                // _json.getInt("ligne") + "</span> produits mis à jour");
+                json.add("success", "Veuillez choisir un fichir excel");
+                break;
 
-                default:
-                    _json = bulkUpdateWithExcel(part, OdataManager.getEm());
-                    json.add("statut", 1);
+            default:
+                _json = bulkUpdateWithExcel(part, OdataManager.getEm());
+                json.add("statut", 1);
 
-                    json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/" + _json.getInt("ligne") + "</span> produits mis à jour");
+                json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/"
+                        + _json.getInt("ligne") + "</span> produits mis à jour");
 
-                    break;
+                break;
             }
             out.println(json.build());
         } catch (Exception ex) {
@@ -89,14 +87,20 @@ public class ImportDepot extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the
+    // code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @param request
+     *            servlet request
+     * @param response
+     *            servlet response
+     *
+     * @throws ServletException
+     *             if a servlet-specific error occurs
+     * @throws IOException
+     *             if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -107,10 +111,15 @@ public class ImportDepot extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @param request
+     *            servlet request
+     * @param response
+     *            servlet response
+     *
+     * @throws ServletException
+     *             if a servlet-specific error occurs
+     * @throws IOException
+     *             if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -128,7 +137,6 @@ public class ImportDepot extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-   
     private JSONObject bulkUpdateWithExcel(Part part, EntityManager em) throws Exception {
         int count = 0;
         int i = 0;
@@ -156,14 +164,21 @@ public class ImportDepot extends HttpServlet {
 
                 TFamille famille;
                 if (id != null) {
-                    famille = findFamille((id.getCellType() == 1) ? id.getStringCellValue() : String.valueOf(Double.valueOf(id.getNumericCellValue()).intValue()));
+                    famille = findFamille((id.getCellType() == 1) ? id.getStringCellValue()
+                            : String.valueOf(Double.valueOf(id.getNumericCellValue()).intValue()));
                 } else {
-                    famille = findFamilleByCip((cip.getCellType() == 1) ? cip.getStringCellValue() : String.valueOf(Double.valueOf(cip.getNumericCellValue()).intValue()), em);
+                    famille = findFamilleByCip((cip.getCellType() == 1) ? cip.getStringCellValue()
+                            : String.valueOf(Double.valueOf(cip.getNumericCellValue()).intValue()), em);
                 }
                 try {
                     if (famille != null) {
-                        em.persist(createFamilleStock((qty.getCellType() == 1) ? Integer.valueOf(qty.getStringCellValue()) : Double.valueOf(cip.getNumericCellValue()).intValue(), famille, emplacement));
-                        em.persist(createTypeStock((qty.getCellType() == 1) ? Integer.valueOf(qty.getStringCellValue()) : Double.valueOf(cip.getNumericCellValue()).intValue(), famille, emplacement));
+                        em.persist(
+                                createFamilleStock(
+                                        (qty.getCellType() == 1) ? Integer.valueOf(qty.getStringCellValue())
+                                                : Double.valueOf(cip.getNumericCellValue()).intValue(),
+                                        famille, emplacement));
+                        em.persist(createTypeStock((qty.getCellType() == 1) ? Integer.valueOf(qty.getStringCellValue())
+                                : Double.valueOf(cip.getNumericCellValue()).intValue(), famille, emplacement));
                         i++;
                     }
                 } catch (Exception e) {

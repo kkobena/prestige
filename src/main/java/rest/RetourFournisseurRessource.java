@@ -43,9 +43,7 @@ public class RetourFournisseurRessource {
 
     @GET
     @Path("retours-items")
-    public Response loadDetailsRetouFournisseurs(
-            @QueryParam(value = "retourId") String retourId
-    ) {
+    public Response loadDetailsRetouFournisseurs(@QueryParam(value = "retourId") String retourId) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -57,28 +55,26 @@ public class RetourFournisseurRessource {
 
     @POST
     @Path("new")
-    public Response create(
-            RetourFournisseurDTO params
-    ) {
+    public Response create(RetourFournisseurDTO params) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUser(tu);
-        
+
         RetourFournisseurDTO data = retourFournisseurService.createRetour(params);
         if (data != null) {
             return Response.ok().entity(ResultFactory.getSuccessResult(data, 1)).build();
         }
-        return Response.ok().entity(ResultFactory.getFailResult("L'opération a échoué . Veuillez vérifier la quantité à retourner")).build();
+        return Response.ok()
+                .entity(ResultFactory.getFailResult("L'opération a échoué . Veuillez vérifier la quantité à retourner"))
+                .build();
     }
 
     @POST
     @Path("add-item")
-    public Response addItem(
-            RetourDetailsDTO params
-    ) {
+    public Response addItem(RetourDetailsDTO params) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -89,14 +85,14 @@ public class RetourFournisseurRessource {
         if (data != null) {
             return Response.ok().entity(ResultFactory.getSuccessResult(data, 1)).build();
         }
-        return Response.ok().entity(ResultFactory.getFailResult("L'opération a échoué . Veuillez vérifier la quantité à retourner")).build();
+        return Response.ok()
+                .entity(ResultFactory.getFailResult("L'opération a échoué . Veuillez vérifier la quantité à retourner"))
+                .build();
     }
 
     @POST
     @Path("update-item")
-    public Response updateItem(
-            RetourDetailsDTO params
-    ) {
+    public Response updateItem(RetourDetailsDTO params) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -107,14 +103,14 @@ public class RetourFournisseurRessource {
         if (data != null) {
             return Response.ok().entity(ResultFactory.getSuccessResult(data, 1)).build();
         }
-        return Response.ok().entity(ResultFactory.getFailResult("L'opération a échoué . Veuillez vérifier la quantité à retourner")).build();
+        return Response.ok()
+                .entity(ResultFactory.getFailResult("L'opération a échoué . Veuillez vérifier la quantité à retourner"))
+                .build();
     }
 
     @DELETE
     @Path("remove-item/{id}")
-    public Response removeItem(
-          @PathParam("id") String id
-    ) {
+    public Response removeItem(@PathParam("id") String id) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -125,20 +121,19 @@ public class RetourFournisseurRessource {
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
 
     }
-    
-     @PUT
+
+    @PUT
     @Path("full-bl/{id}")
-    public Response returnFullBonLivraison( @PathParam("id") String id,
-            RetourDetailsDTO params
-    ) throws CloneNotSupportedException {
+    public Response returnFullBonLivraison(@PathParam("id") String id, RetourDetailsDTO params)
+            throws CloneNotSupportedException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        retourFournisseurService.returnFullBonLivraison(id,params.getLgMOTIFRETOUR(),tu);
-       
+        retourFournisseurService.returnFullBonLivraison(id, params.getLgMOTIFRETOUR(), tu);
+
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
 }

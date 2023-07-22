@@ -30,21 +30,20 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "t_warehouse")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TWarehouse.findAll", query = "SELECT t FROM TWarehouse t"),
-    @NamedQuery(name = "TWarehouse.findByLgWAREHOUSEID", query = "SELECT t FROM TWarehouse t WHERE t.lgWAREHOUSEID = :lgWAREHOUSEID"),
-    @NamedQuery(name = "TWarehouse.findByIntNUMLOT", query = "SELECT t FROM TWarehouse t WHERE t.intNUMLOT = :intNUMLOT"),
-    @NamedQuery(name = "TWarehouse.findByIntNUMBER", query = "SELECT t FROM TWarehouse t WHERE t.intNUMBER = :intNUMBER"),
-    @NamedQuery(name = "TWarehouse.findByDtCREATED", query = "SELECT t FROM TWarehouse t WHERE t.dtCREATED = :dtCREATED"),
-    @NamedQuery(name = "TWarehouse.findByDtUPDATED", query = "SELECT t FROM TWarehouse t WHERE t.dtUPDATED = :dtUPDATED"),
-    @NamedQuery(name = "TWarehouse.findByStrREFLIVRAISON", query = "SELECT t FROM TWarehouse t WHERE t.strREFLIVRAISON = :strREFLIVRAISON"),
-    @NamedQuery(name = "TWarehouse.findByDtSORTIEUSINE", query = "SELECT t FROM TWarehouse t WHERE t.dtSORTIEUSINE = :dtSORTIEUSINE"),
-    @NamedQuery(name = "TWarehouse.findByDtPEREMPTION", query = "SELECT t FROM TWarehouse t WHERE t.dtPEREMPTION = :dtPEREMPTION"),
-    @NamedQuery(name = "TWarehouse.findByIntNUMBERGRATUIT", query = "SELECT t FROM TWarehouse t WHERE t.intNUMBERGRATUIT = :intNUMBERGRATUIT"),
-    @NamedQuery(name = "TWarehouse.findByStrSTATUT", query = "SELECT t FROM TWarehouse t WHERE t.strSTATUT = :strSTATUT"),
-    @NamedQuery(name = "TWarehouse.findByStrREFORDER", query = "SELECT t FROM TWarehouse t WHERE t.strREFORDER = :strREFORDER"),
-    @NamedQuery(name = "TWarehouse.findByStrCODEETIQUETTE", query = "SELECT t FROM TWarehouse t WHERE t.strCODEETIQUETTE = :strCODEETIQUETTE"),
-    @NamedQuery(name = "TWarehouse.findByIntNUMBERDELETE", query = "SELECT t FROM TWarehouse t WHERE t.intNUMBERDELETE = :intNUMBERDELETE")})
+@NamedQueries({ @NamedQuery(name = "TWarehouse.findAll", query = "SELECT t FROM TWarehouse t"),
+        @NamedQuery(name = "TWarehouse.findByLgWAREHOUSEID", query = "SELECT t FROM TWarehouse t WHERE t.lgWAREHOUSEID = :lgWAREHOUSEID"),
+        @NamedQuery(name = "TWarehouse.findByIntNUMLOT", query = "SELECT t FROM TWarehouse t WHERE t.intNUMLOT = :intNUMLOT"),
+        @NamedQuery(name = "TWarehouse.findByIntNUMBER", query = "SELECT t FROM TWarehouse t WHERE t.intNUMBER = :intNUMBER"),
+        @NamedQuery(name = "TWarehouse.findByDtCREATED", query = "SELECT t FROM TWarehouse t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TWarehouse.findByDtUPDATED", query = "SELECT t FROM TWarehouse t WHERE t.dtUPDATED = :dtUPDATED"),
+        @NamedQuery(name = "TWarehouse.findByStrREFLIVRAISON", query = "SELECT t FROM TWarehouse t WHERE t.strREFLIVRAISON = :strREFLIVRAISON"),
+        @NamedQuery(name = "TWarehouse.findByDtSORTIEUSINE", query = "SELECT t FROM TWarehouse t WHERE t.dtSORTIEUSINE = :dtSORTIEUSINE"),
+        @NamedQuery(name = "TWarehouse.findByDtPEREMPTION", query = "SELECT t FROM TWarehouse t WHERE t.dtPEREMPTION = :dtPEREMPTION"),
+        @NamedQuery(name = "TWarehouse.findByIntNUMBERGRATUIT", query = "SELECT t FROM TWarehouse t WHERE t.intNUMBERGRATUIT = :intNUMBERGRATUIT"),
+        @NamedQuery(name = "TWarehouse.findByStrSTATUT", query = "SELECT t FROM TWarehouse t WHERE t.strSTATUT = :strSTATUT"),
+        @NamedQuery(name = "TWarehouse.findByStrREFORDER", query = "SELECT t FROM TWarehouse t WHERE t.strREFORDER = :strREFORDER"),
+        @NamedQuery(name = "TWarehouse.findByStrCODEETIQUETTE", query = "SELECT t FROM TWarehouse t WHERE t.strCODEETIQUETTE = :strCODEETIQUETTE"),
+        @NamedQuery(name = "TWarehouse.findByIntNUMBERDELETE", query = "SELECT t FROM TWarehouse t WHERE t.intNUMBERDELETE = :intNUMBERDELETE") })
 public class TWarehouse implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -281,7 +280,8 @@ public class TWarehouse implements Serializable {
             return false;
         }
         TWarehouse other = (TWarehouse) object;
-        if ((this.lgWAREHOUSEID == null && other.lgWAREHOUSEID != null) || (this.lgWAREHOUSEID != null && !this.lgWAREHOUSEID.equals(other.lgWAREHOUSEID))) {
+        if ((this.lgWAREHOUSEID == null && other.lgWAREHOUSEID != null)
+                || (this.lgWAREHOUSEID != null && !this.lgWAREHOUSEID.equals(other.lgWAREHOUSEID))) {
             return false;
         }
         return true;

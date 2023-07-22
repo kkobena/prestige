@@ -15,8 +15,9 @@ import org.json.JSONObject;
  * @author DICI
  */
 @Local
-//@Remote
+// @Remote
 public interface MagasinService {
     JSONObject findAllDepots(String query) throws JSONException;
-    JSONObject findAllDepots(String query,String type) throws JSONException;
+
+    JSONObject findAllDepots(String query, String type) throws JSONException;
 }

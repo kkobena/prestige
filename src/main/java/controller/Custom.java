@@ -21,7 +21,7 @@ import rest.service.impl.FlagService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 
-@WebServlet(name = "Custom", urlPatterns = {"/custom"})
+@WebServlet(name = "Custom", urlPatterns = { "/custom" })
 public class Custom extends HttpServlet {
 
     @EJB
@@ -37,7 +37,7 @@ public class Custom extends HttpServlet {
         HttpSession session = request.getSession();
         OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
         String dt_start = LocalDate.now().toString(), dt_end = dt_start;
-        Integer virtualAmount ;
+        Integer virtualAmount;
         if (request.getParameter("dt_start") != null && !"".equalsIgnoreCase(request.getParameter("dt_start"))) {
             dt_start = request.getParameter("dt_start");
         }
@@ -45,13 +45,15 @@ public class Custom extends HttpServlet {
             dt_end = request.getParameter("dt_end");
         }
         JSONObject json = new JSONObject();
-        try ( PrintWriter out = response.getWriter()) {
+        try (PrintWriter out = response.getWriter()) {
             if (!caisseService.key_Params()) {
                 out.println(json);
                 return;
             }
             if (request.getParameter("action").equals("getca")) {
-                Integer ca = caisseService.montantCa(LocalDate.parse(dt_start), LocalDate.parse(dt_end), true, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP);
+                Integer ca = caisseService.montantCa(LocalDate.parse(dt_start), LocalDate.parse(dt_end), true,
+                        OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT,
+                        DateConverter.MODE_ESP);
                 if (ca != null) {
                     json.put("CA", ca);
                     json.put("success", true);
@@ -67,7 +69,8 @@ public class Custom extends HttpServlet {
                         out.println(json);
 
                     } else {
-                        json = flagService.saveFlag(dt_start, dt_end, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), virtualAmount);
+                        json = flagService.saveFlag(dt_start, dt_end, OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID(),
+                                virtualAmount);
                     }
                 }
 

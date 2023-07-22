@@ -16,10 +16,10 @@ import javax.persistence.TypedQuery;
  */
 @Stateless
 public class MotifReglementRepo extends AbstractRepoImpl<MotifReglement> {
-    
+
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    
+
     @Override
     protected EntityManager getEntityManager() {
         return em;
@@ -28,32 +28,33 @@ public class MotifReglementRepo extends AbstractRepoImpl<MotifReglement> {
     public MotifReglementRepo() {
         super(MotifReglement.class);
     }
-    
+
     public void saveOrUpdate(MotifReglement motifReglement) {
         try {
             if (Objects.isNull(motifReglement.getId()) || motifReglement.getId() == 0) {
                 MotifReglement entity = new MotifReglement();
                 entity.setLibelle(motifReglement.getLibelle());
                 this.save(entity);
-                
+
             }
             this.findById(motifReglement.getId()).ifPresent(x -> {
-                
+
                 this.update(motifReglement);
             });
-            
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             throw e;
         }
-        
+
     }
-    
+
     public List<MotifReglement> fetch() {
         try {
-            TypedQuery<MotifReglement> q = getEntityManager().createNamedQuery("MotifReglement.findAll", MotifReglement.class);
+            TypedQuery<MotifReglement> q = getEntityManager().createNamedQuery("MotifReglement.findAll",
+                    MotifReglement.class);
             return q.getResultList();
-            
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();

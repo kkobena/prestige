@@ -137,13 +137,9 @@ public class CommandeRessource {
 
     @GET
     @Path("commande-en-cours-items")
-    public Response reglements(
-            @DefaultValue("ALL") @QueryParam(value = "filtre") CommandeFiltre filtre,
-            @QueryParam(value = "orderId") String orderId,
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "limit") int limit
-    ) throws JSONException {
+    public Response reglements(@DefaultValue("ALL") @QueryParam(value = "filtre") CommandeFiltre filtre,
+            @QueryParam(value = "orderId") String orderId, @QueryParam(value = "start") int start,
+            @QueryParam(value = "query") String query, @QueryParam(value = "limit") int limit) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -176,12 +172,12 @@ public class CommandeRessource {
 
     @GET
     @Path("list")
-    public Response findAll(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
+    public Response findAll(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) {
 
-        return Response.ok().entity(this.orderService.fetch(query, Set.of(Constant.STATUT_IS_PROGRESS,
-                Constant.STATUT_PHARMA), start, limit).toString()).build();
+        return Response.ok().entity(this.orderService
+                .fetch(query, Set.of(Constant.STATUT_IS_PROGRESS, Constant.STATUT_PHARMA), start, limit).toString())
+                .build();
     }
 
     @DELETE
@@ -221,24 +217,24 @@ public class CommandeRessource {
 
     @GET
     @Path("list/passees")
-    public Response findCommandePassees(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
-        return Response.ok().entity(this.orderService.fetch(query, Set.of(Constant.STATUT_PASSED), start, limit).toString()).build();
+    public Response findCommandePassees(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) {
+        return Response.ok()
+                .entity(this.orderService.fetch(query, Set.of(Constant.STATUT_PASSED), start, limit).toString())
+                .build();
     }
 
     @GET
     @Path("export-csv")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response exportToCsv(@QueryParam("id") String commandId) {
-           Map<String, List<CommandeCsvDTO>> map = orderService.commandeEncoursCsv(commandId);
+        Map<String, List<CommandeCsvDTO>> map = orderService.commandeEncoursCsv(commandId);
         StreamingOutput output = (OutputStream out) -> {
             try {
-             
+
                 Writer writer = new OutputStreamWriter(out, "UTF-8");
 
-                try (CSVPrinter printer = CSVFormat.EXCEL
-                        .withDelimiter(';').print(writer)) {
+                try (CSVPrinter printer = CSVFormat.EXCEL.withDelimiter(';').print(writer)) {
 
                     map.forEach((k, v) -> {
                         v.forEach(o -> {
@@ -256,14 +252,12 @@ public class CommandeRessource {
                 throw new WebApplicationException("File Not Found !!");
             }
         };
-       
-        String filename = "commande_" + map.keySet().stream().findFirst().get() + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("H_mm_ss")) + ".csv";
-        return Response
-                .ok(output, MediaType.APPLICATION_OCTET_STREAM)
-                .header("content-disposition", "attachment; filename = " + filename)
-                .build();
+
+        String filename = "commande_" + map.keySet().stream().findFirst().get() + "_"
+                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("H_mm_ss")) + ".csv";
+        return Response.ok(output, MediaType.APPLICATION_OCTET_STREAM)
+                .header("content-disposition", "attachment; filename = " + filename).build();
 
     }
 
-  
 }

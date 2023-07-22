@@ -25,7 +25,7 @@ public class GammeProduitRepo extends AbstractRepoImpl<GammeProduit> {
     private EntityManager em;
 
     public GammeProduitRepo() {
-     super(GammeProduit.class);
+        super(GammeProduit.class);
     }
 
     @Override
@@ -33,7 +33,6 @@ public class GammeProduitRepo extends AbstractRepoImpl<GammeProduit> {
         return em;
     }
 
-  
     public GammeProduit saveOrUpdate(GammeProduit gammeProduit) {
         try {
             if (StringUtils.isEmpty(gammeProduit.getId())) {

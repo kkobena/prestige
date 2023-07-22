@@ -23,9 +23,9 @@ import javax.persistence.Table;
  * @author koben
  */
 @Entity
-@Table(name="notification_client")
+@Table(name = "notification_client")
 @NamedQueries({
-    @NamedQuery(name = "NotificationClient.findByNotificationId", query = "SELECT o FROM NotificationClient o WHERE o.notification.id=:notificationId")
+        @NamedQuery(name = "NotificationClient.findByNotificationId", query = "SELECT o FROM NotificationClient o WHERE o.notification.id=:notificationId")
 
 })
 public class NotificationClient implements Serializable {

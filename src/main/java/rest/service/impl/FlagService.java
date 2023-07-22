@@ -80,7 +80,8 @@ public class FlagService {
         Flag flag = new Flag();
         flag.setInterval(joiner.toString());
         flag.setMontant(finalPrice);
-        flag.setId(dtSt.format(DateTimeFormatter.ofPattern("yyyyMMdd")).concat(dtEnd.format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
+        flag.setId(dtSt.format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                .concat(dtEnd.format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
         flag.setDateStart(Integer.valueOf(dtSt.format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
         flag.setDateEnd(Integer.valueOf(dtEnd.format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
         return Pair.of(false, flag);
@@ -103,13 +104,18 @@ public class FlagService {
             Predicate predicate = cb.conjunction();
             predicate = cb.and(predicate, cb.equal(pu.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmp));
             predicate = cb.and(predicate, cb.equal(root.get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));
-            predicate = cb.and(predicate, cb.notLike(root.get("lgTYPEVENTEID").get("lgTYPEVENTEID"), Parameter.VENTE_DEPOT_EXTENSION));
-            predicate = cb.and(predicate, cb.equal(root.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-            predicate = cb.and(predicate, cb.equal(root.get(TPreenregistrement_.strTYPEVENTE), DateConverter.VENTE_COMPTANT));
+            predicate = cb.and(predicate,
+                    cb.notLike(root.get("lgTYPEVENTEID").get("lgTYPEVENTEID"), Parameter.VENTE_DEPOT_EXTENSION));
+            predicate = cb.and(predicate,
+                    cb.equal(root.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
+            predicate = cb.and(predicate,
+                    cb.equal(root.get(TPreenregistrement_.strTYPEVENTE), DateConverter.VENTE_COMPTANT));
             predicate = cb.and(predicate, cb.equal(root.get(TPreenregistrement_.intPRICEREMISE), 0));
-            predicate = cb.and(predicate, cb.equal(pr.get("lgMODEREGLEMENTID").get("lgMODEREGLEMENTID"), DateConverter.MODE_ESP));
+            predicate = cb.and(predicate,
+                    cb.equal(pr.get("lgMODEREGLEMENTID").get("lgMODEREGLEMENTID"), DateConverter.MODE_ESP));
             Predicate ge = cb.greaterThan(root.get(TPreenregistrement_.intPRICE), 0);
-            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrement_.dtUPDATED)),
+                    java.sql.Date.valueOf(dt_start), java.sql.Date.valueOf(dt_end));
             cq.select(root).orderBy(cb.desc(root.get(TPreenregistrement_.intPRICE)));
             cq.where(predicate, btw, ge);
             Query q = em.createQuery(cq);
@@ -146,13 +152,13 @@ public class FlagService {
                 for (TPreenregistrement tPreenregistrement : list) {
                     Integer finalPrice;
                     Integer Net = tPreenregistrement.getIntPRICE();
-                    Integer newPrice ;
+                    Integer newPrice;
                     int netPercent = (virtualAmount * 100) / Net;
                     if (netPercent >= 100) {
                         newPrice = (Net * 35) / 100;
                     } else if (netPercent > 6) {
                         newPrice = (Net * 30) / 100;
-                    }else{
+                    } else {
                         continue;
                     }
                     if (virtualAmount > newPrice) {
@@ -179,9 +185,9 @@ public class FlagService {
                 start += max;
                 json.put("success", 1);
                 json.put("nb", i + " ventes  impactées ");
-                 if (virtualAmount == 0) {
-                        break;
-                    }
+                if (virtualAmount == 0) {
+                    break;
+                }
             } catch (Exception e) {
                 e.printStackTrace(System.err);
                 json.put("success", 0);
@@ -196,7 +202,8 @@ public class FlagService {
 
     public MvtTransaction findByVenteId(String venteId) {
         try {
-            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM  MvtTransaction o WHERE o.pkey=?1", MvtTransaction.class);
+            TypedQuery<MvtTransaction> q = getEntityManager()
+                    .createQuery("SELECT o FROM  MvtTransaction o WHERE o.pkey=?1", MvtTransaction.class);
             q.setMaxResults(1);
             q.setParameter(1, venteId);
             return q.getSingleResult();
@@ -208,7 +215,8 @@ public class FlagService {
 
     private List<MvtTransaction> findByFlagId(String id) {
         try {
-            TypedQuery<MvtTransaction> q = getEntityManager().createQuery("SELECT o FROM  MvtTransaction o WHERE o.flag.id= ?1", MvtTransaction.class);
+            TypedQuery<MvtTransaction> q = getEntityManager()
+                    .createQuery("SELECT o FROM  MvtTransaction o WHERE o.flag.id= ?1", MvtTransaction.class);
             q.setParameter(1, id);
             return q.getResultList();
         } catch (Exception e) {

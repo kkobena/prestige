@@ -2,23 +2,19 @@ package rest.service.dto;
 
 import org.json.JSONPropertyName;
 
-
 public class AccountInfoDTO {
 
     private String lgUSERID;
 
     private Integer strIDS;
 
-
     private String strLOGIN;
-
 
     private String strTYPE;
 
     private String strPASSWORD;
 
     private String strCODE;
-
 
     private String strCREATEDBY;
 
@@ -28,13 +24,11 @@ public class AccountInfoDTO {
 
     private String strLASTNAME;
 
-
     private String strLASTCONNECTIONDATE;
 
     private String lgSKINID;
 
     private String strSTATUT;
-
 
     private String dtLASTACTIVITY;
 
@@ -57,7 +51,6 @@ public class AccountInfoDTO {
     private String role;
     private String xtypeload;
 
-    
     @JSONPropertyName("lg_ROLE_ID")
     public String getRole() {
         return role;
@@ -67,6 +60,7 @@ public class AccountInfoDTO {
         this.role = role;
         return this;
     }
+
     @JSONPropertyName("xtypeload")
     public String getXtypeload() {
         return xtypeload;
@@ -136,7 +130,6 @@ public class AccountInfoDTO {
         this.strCODE = strCODE;
         return this;
     }
-
 
     @JSONPropertyName("str_CREATED_BY")
     public String getStrCREATEDBY() {
@@ -310,8 +303,9 @@ public class AccountInfoDTO {
 
     @Override
     public String toString() {
-        return "AccountInfoDTO{" + "lgUSERID=" + lgUSERID + ", strLOGIN=" + strLOGIN + ", strFIRSTNAME=" + strFIRSTNAME + ", strLASTNAME=" + strLASTNAME + ", strLASTCONNECTIONDATE=" + strLASTCONNECTIONDATE + ", lgSKINID=" + lgSKINID + ", strSTATUT=" + strSTATUT + ", bCHANGEPASSWORD=" + bCHANGEPASSWORD + '}';
+        return "AccountInfoDTO{" + "lgUSERID=" + lgUSERID + ", strLOGIN=" + strLOGIN + ", strFIRSTNAME=" + strFIRSTNAME
+                + ", strLASTNAME=" + strLASTNAME + ", strLASTCONNECTIONDATE=" + strLASTCONNECTIONDATE + ", lgSKINID="
+                + lgSKINID + ", strSTATUT=" + strSTATUT + ", bCHANGEPASSWORD=" + bCHANGEPASSWORD + '}';
     }
-    
-    
+
 }

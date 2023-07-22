@@ -59,23 +59,18 @@ public class RuptureRessource {
     OrderService orderService;
 
     @GET
-    public Response listeRuptures(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "grossisteId") String grossisteId
-    ) throws JSONException {
-        JSONObject json = orderService.listeRuptures(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, grossisteId, start, limit);
+    public Response listeRuptures(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "query") String query, @QueryParam(value = "grossisteId") String grossisteId)
+            throws JSONException {
+        JSONObject json = orderService.listeRuptures(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query,
+                grossisteId, start, limit);
         return Response.ok().entity(json.toString()).build();
     }
 
     @DELETE
     @Path("{id}")
-    public Response removeRupture(
-            @PathParam("id") String id
-    ) throws JSONException {
+    public Response removeRupture(@PathParam("id") String id) throws JSONException {
         JSONObject json = orderService.removeRupture(id);
         return Response.ok().entity(json.toString()).build();
     }
@@ -89,14 +84,15 @@ public class RuptureRessource {
                 List<RuptureDetail> detailses = orderService.ruptureDetaisDtoByRupture(orderId);
                 Writer writer = new OutputStreamWriter(out, "UTF-8");
 
-                try (CSVPrinter printer = CSVFormat.EXCEL
-                        .withDelimiter(';').withHeader(ArticleHeader.class).print(writer)) {
+                try (CSVPrinter printer = CSVFormat.EXCEL.withDelimiter(';').withHeader(ArticleHeader.class)
+                        .print(writer)) {
 
                     detailses.forEach(f -> {
                         try {
                             TFamille famille = f.getProduit();
-                            TFamilleGrossiste tfg = orderService.findOrCreateFamilleGrossisteByFamilleAndGrossiste(famille, orderService.findGrossiste(organismeId));
-                            if (!StringUtils.isEmpty(famille.getIntEAN13()) && famille.getIntEAN13().length()==13) {
+                            TFamilleGrossiste tfg = orderService.findOrCreateFamilleGrossisteByFamilleAndGrossiste(
+                                    famille, orderService.findGrossiste(organismeId));
+                            if (!StringUtils.isEmpty(famille.getIntEAN13()) && famille.getIntEAN13().length() == 13) {
                                 printer.printRecord(famille.getIntEAN13(), f.getQty());
                             } else {
                                 printer.printRecord(tfg.getStrCODEARTICLE(), f.getQty());
@@ -112,11 +108,10 @@ public class RuptureRessource {
                 throw new WebApplicationException("File Not Found !!");
             }
         };
-        String filename = "rupture_liste_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("H_mm_ss")) + ".csv";
-        return Response
-                .ok(output, MediaType.APPLICATION_OCTET_STREAM)
-                .header("content-disposition", "attachment; filename = " + filename)
-                .build();
+        String filename = "rupture_liste_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("H_mm_ss"))
+                + ".csv";
+        return Response.ok(output, MediaType.APPLICATION_OCTET_STREAM)
+                .header("content-disposition", "attachment; filename = " + filename).build();
 
     }
 

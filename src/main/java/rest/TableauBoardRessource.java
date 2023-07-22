@@ -13,8 +13,6 @@ import rest.service.dto.BalanceParamsDTO;
 
 import util.Constant;
 
-
-
 /**
  *
  * @author koben
@@ -31,46 +29,33 @@ public class TableauBoardRessource {
 
     @GET
     @Path("/carnet")
-    public Response getTableauCarnet(
-            @QueryParam(value = "dtStart") String dtStart,
+    public Response getTableauCarnet(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd,
-            @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly
-    ) {
+            @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject    json = this.balanceService.tableauBoardDatas(BalanceParamsDTO.builder()
-                    .dtStart(dtStart)
-                    .dtEnd(dtEnd)
-                    .byMonth(monthly)
-                        .showAllAmount(true)
-                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                    .build());
+        JSONObject json = this.balanceService
+                .tableauBoardDatas(BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd).byMonth(monthly)
+                        .showAllAmount(true).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
 
         return Response.ok().entity(json.toString()).build();
     }
 
     @GET
     @Path("/tableau")
-    public Response getTableau(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly
-    ) {
+    public Response getTableau(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject    json = this.balanceService.tableauBoardDatas(BalanceParamsDTO.builder()
-                .dtStart(dtStart)
-                .dtEnd(dtEnd)
-                .byMonth(monthly)
-                .showAllAmount(false)
-                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                .build());
+        JSONObject json = this.balanceService
+                .tableauBoardDatas(BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd).byMonth(monthly)
+                        .showAllAmount(false).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
 
         return Response.ok().entity(json.toString()).build();
     }

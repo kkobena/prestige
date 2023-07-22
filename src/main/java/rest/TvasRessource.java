@@ -13,6 +13,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import rest.service.TvaService;
+
 /**
  *
  * @author koben
@@ -21,15 +22,16 @@ import rest.service.TvaService;
 @Produces("application/json")
 @Consumes("application/json")
 public class TvasRessource {
-   
+
     @EJB
     private TvaService tvaService;
 
     @GET
     @Path("list")
-    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "typeVente") String typeVente) throws JSONException {
-   
+    public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "typeVente") String typeVente) throws JSONException {
+
         List<TvaDTO> json = tvaService.tva(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), false, null);
         return Response.ok().entity(json).build();
-    } 
+    }
 }

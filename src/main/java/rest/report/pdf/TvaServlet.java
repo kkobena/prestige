@@ -31,9 +31,9 @@ import toolkits.utils.jdom;
  *
  * @author koben
  */
-@WebServlet(name = "TvaServlet", urlPatterns = {"/TvaServlet"})
+@WebServlet(name = "TvaServlet", urlPatterns = { "/TvaServlet" })
 public class TvaServlet extends HttpServlet {
-    
+
     @EJB
     private CaisseService caisseService;
     @EJB
@@ -42,12 +42,11 @@ public class TvaServlet extends HttpServlet {
     private TvaDataService tvaDataService;
     @EJB
     private BalanceService balanceService;
-    
+
     private enum TvaAction {
-        TVA, TVA_JOUR,
-        TVA_WITH_CRITERIA, TVA_JOUR_WITH_CRITERIA
+        TVA, TVA_JOUR, TVA_WITH_CRITERIA, TVA_JOUR_WITH_CRITERIA
     }
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/pdf");
@@ -69,44 +68,41 @@ public class TvaServlet extends HttpServlet {
         if (StringUtils.isNotEmpty(dtEnd)) {
             params.setDtEnd(dtEnd);
         }
-         if (StringUtils.isNotEmpty(dtStart)) {
-              params.setDtStart(dtStart);
+        if (StringUtils.isNotEmpty(dtStart)) {
+            params.setDtStart(dtStart);
         }
-       
+
         params.setCheckug(checkug);
         if (this.balanceService.useLastUpdateStats()) {
-            file = tvaPdf(BalanceParamsDTO.builder()
-                    .dtEnd(params.getDtEnd())
-                    .dtStart(params.getDtStart())
+            file = tvaPdf(BalanceParamsDTO.builder().dtEnd(params.getDtEnd()).dtStart(params.getDtStart())
                     .emplacementId(OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
                     .vnoOnly(StringUtils.isNotBlank(ref) && !"TOUT".equalsIgnoreCase(ref))
-                    .byDay("TVA_JOUR".equals(action))
-                    .build(), OTUser);
+                    .byDay("TVA_JOUR".equals(action)).build(), OTUser);
         } else {
             switch (TvaAction.valueOf(action)) {
-                case TVA:
-                    file = tvaPdf(params);
-                    break;
-                case TVA_WITH_CRITERIA:
-                    file = tvaPdfWithCriteria(params);
-                    break;
-                case TVA_JOUR:
-                    file = tvaPdfGroupByJour(params);
-                    break;
-                default:
-                    break;
-            }            
+            case TVA:
+                file = tvaPdf(params);
+                break;
+            case TVA_WITH_CRITERIA:
+                file = tvaPdfWithCriteria(params);
+                break;
+            case TVA_JOUR:
+                file = tvaPdfGroupByJour(params);
+                break;
+            default:
+                break;
+            }
         }
-        
+
         response.sendRedirect(request.getContextPath() + file);
     }
-    
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
-    
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -114,7 +110,7 @@ public class TvaServlet extends HttpServlet {
     }
 
     public String tvaPdfWithCriteria(Params parasm) throws IOException {
-        
+
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(parasm.getDtStart());
@@ -122,31 +118,33 @@ public class TvaServlet extends HttpServlet {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        
+
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            
+
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".pdf";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+                + ".pdf";
         List<TvaDTO> datas;
-        
+
         if (!tvaDataService.isExcludTiersPayantActive()) {
             datas = tvaDataService.statistiqueTvaWithSomeCriteria(parasm);
         } else {
             datas = tvaDataService.statistiqueTvaWithSomeTiersPayantToExclude(parasm);
         }
         datas.sort(Comparator.comparing(TvaDTO::getTaux));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "tvastat_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "tvastat_" + report_generate_file, datas);
         return "/data/reports/pdf/tvastat_" + report_generate_file;
     }
-    
+
     public String tvaPdf(Params parasm) throws IOException {
-        
+
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(parasm.getDtStart());
@@ -154,32 +152,32 @@ public class TvaServlet extends HttpServlet {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        
+
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            
+
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
-        
+
         List<TvaDTO> datas;
         if (StringUtils.isNotBlank(parasm.getRef()) && !parasm.getRef().equalsIgnoreCase("TOUT")) {
-            
+
             datas = tvaDataService.tvaVnoDatas(parasm);
         } else {
             datas = tvaDataService.statistiqueTva(parasm);
         }
-        
+
         datas.sort(Comparator.comparing(TvaDTO::getTaux));
         return reportUtil.buildReport(parameters, scr_report_file, datas);
-        
+
     }
-    
+
     public String tvaPdfGroupByJour(Params parasm) throws IOException {
-   
+
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(parasm.getDtStart());
@@ -187,50 +185,52 @@ public class TvaServlet extends HttpServlet {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        
+
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastatjour";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            
+
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss")) + ".pdf";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss"))
+                + ".pdf";
         List<TvaDTO> datas;
         if (StringUtils.isNotBlank(parasm.getRef()) && !parasm.getRef().equalsIgnoreCase("TOUT")) {
             datas = tvaDataService.statistiqueTvaVnoGroupByDayTva(parasm);
         } else {
             datas = tvaDataService.statistiqueGroupByDayTva(parasm);
         }
-        
+
         datas.sort(Comparator.comparing(TvaDTO::getTaux));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "tvastat_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "tvastat_" + report_generate_file, datas);
         return "/data/reports/pdf/tvastat_" + report_generate_file;
     }
-    
+
     public String tvaPdf(BalanceParamsDTO balanceParams, TUser tu) throws IOException {
-        
-        LocalDate dtSt =LocalDate.parse(balanceParams.getDtStart()) ;
-        LocalDate dtEn =LocalDate.parse(balanceParams.getDtEnd()) ;
-        
+
+        LocalDate dtSt = LocalDate.parse(balanceParams.getDtStart());
+        LocalDate dtEn = LocalDate.parse(balanceParams.getDtEnd());
+
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
-        if(balanceParams.isByDay()){
-            scr_report_file="rp_tvastatjour";
+        if (balanceParams.isByDay()) {
+            scr_report_file = "rp_tvastatjour";
         }
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            
+
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
-        
+
         List<TvaDTO> datas = this.balanceService.statistiqueTva(balanceParams);
-        
+
         return reportUtil.buildReport(parameters, scr_report_file, datas);
-        
+
     }
 }

@@ -88,14 +88,17 @@ public class LogServiceImpl implements LogService {
         eventLog.setStrTYPELOG(ref);
         em.persist(eventLog);
     }
+
     Comparator<LogDTO> comparatorOrder = Comparator.comparing(LogDTO::getOrder);
     Comparator<LogDTO> comparatorDate = Comparator.comparing(LogDTO::getOperationDate);
 
     @Override
     public JSONObject filtres(String query) throws JSONException {
-        List<LogDTO> l = Stream.of(TypeLog.values()).map(x -> new LogDTO(x.ordinal(), x.getValue())).collect(Collectors.toList());
+        List<LogDTO> l = Stream.of(TypeLog.values()).map(x -> new LogDTO(x.ordinal(), x.getValue()))
+                .collect(Collectors.toList());
         if (query != null && !"".equals(query)) {
-            List<LogDTO> _new = l.stream().filter(x -> x.getStrDESCRIPTION().startsWith(query)).sorted(comparatorOrder.reversed()).collect(Collectors.toList());
+            List<LogDTO> _new = l.stream().filter(x -> x.getStrDESCRIPTION().startsWith(query))
+                    .sorted(comparatorOrder.reversed()).collect(Collectors.toList());
             _new.add(new LogDTO(-1, "TOUS"));
 
             return new JSONObject().put("total", _new.size()).put("data", new JSONArray(_new));
@@ -122,15 +125,15 @@ public class LogServiceImpl implements LogService {
         }
     }
 
-    private List<Predicate> logs(CriteriaBuilder cb, Root<TEventLog> root, String search, LocalDate dtStart, LocalDate dtEnd, String userId, int criteria) {
+    private List<Predicate> logs(CriteriaBuilder cb, Root<TEventLog> root, String search, LocalDate dtStart,
+            LocalDate dtEnd, String userId, int criteria) {
         List<Predicate> predicates = new ArrayList<>();
-        Predicate btw = cb.between(
-                cb.function("DATE", Date.class, root.get(TEventLog_.dtCREATED)),
-                java.sql.Date.valueOf(dtStart),
-                java.sql.Date.valueOf(dtEnd));
+        Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TEventLog_.dtCREATED)),
+                java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
         if (StringUtils.isNotEmpty(search)) {
-            predicates.add(cb.or(cb.like(root.get(TEventLog_.strDESCRIPTION), search + "%"), cb.like(root.get(TEventLog_.strTYPELOG), search + "%")));
+            predicates.add(cb.or(cb.like(root.get(TEventLog_.strDESCRIPTION), search + "%"),
+                    cb.like(root.get(TEventLog_.strTYPELOG), search + "%")));
         }
         if (StringUtils.isNotEmpty(userId)) {
             predicates.add(cb.equal(root.get(TEventLog_.lgUSERID).get(TUser_.lgUSERID), userId));
@@ -142,7 +145,8 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public List<LogDTO> logs(String search, LocalDate dtStart, LocalDate dtEnd, int start, int limit, boolean all, String userId, int criteria) {
+    public List<LogDTO> logs(String search, LocalDate dtStart, LocalDate dtEnd, int start, int limit, boolean all,
+            String userId, int criteria) {
         try {
 
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
@@ -156,7 +160,8 @@ public class LogServiceImpl implements LogService {
                 q.setFirstResult(start);
                 q.setMaxResults(limit);
             }
-            return q.getResultList().stream().map(LogDTO::new).sorted(comparatorDate.reversed()).collect(Collectors.toList());
+            return q.getResultList().stream().map(LogDTO::new).sorted(comparatorDate.reversed())
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
@@ -164,7 +169,8 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public JSONObject logs(String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit, String userId, int criteria) throws JSONException {
+    public JSONObject logs(String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit, String userId,
+            int criteria) throws JSONException {
         long count = logs(query, dtStart, dtEnd, userId, criteria);
         if (count == 0) {
             return new JSONObject().put("total", count).put("data", new JSONArray());
@@ -190,7 +196,8 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T, String remoteHost, String remoteAddr) {
+    public void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T, String remoteHost,
+            String remoteAddr) {
         try {
             TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
             eventLog.setLgUSERID(user);

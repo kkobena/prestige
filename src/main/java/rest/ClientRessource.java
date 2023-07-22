@@ -48,16 +48,14 @@ public class ClientRessource {
 
     @GET
     @Path("lambda")
-    public Response getUsers(
-            @QueryParam(value = "query") String query) {
+    public Response getUsers(@QueryParam(value = "query") String query) {
         List<ClientLambdaDTO> data = clientService.findClientLambda(query);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
     @GET
     @Path("delayed")
-    public Response clientDifferes(
-            @QueryParam(value = "query") String query) {
+    public Response clientDifferes(@QueryParam(value = "query") String query) {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -70,8 +68,7 @@ public class ClientRessource {
 
     @GET
     @Path("differes")
-    public Response differes(
-            @QueryParam(value = "query") String query) {
+    public Response differes(@QueryParam(value = "query") String query) {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -109,19 +106,17 @@ public class ClientRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-   
-
     @GET
-    public Response findClients(
-            @QueryParam(value = "query") String query, @QueryParam(value = "typeClientId") String typeClientId) {
+    public Response findClients(@QueryParam(value = "query") String query,
+            @QueryParam(value = "typeClientId") String typeClientId) {
         List<ClientDTO> data = clientService.findClientAssurance(query, typeClientId);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
     @GET
     @Path("bytype/{type}")
-    public Response findAllClients(
-            @QueryParam(value = "query") String query, @PathParam("type") String id, String typeClientId) {
+    public Response findAllClients(@QueryParam(value = "query") String query, @PathParam("type") String id,
+            String typeClientId) {
         List<ClientDTO> data = clientService.findClientAssurance(query, typeClientId);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
@@ -136,32 +131,28 @@ public class ClientRessource {
 
     @GET
     @Path("tiers-payants/carnet")
-    public Response findAllTiersPayantsCarnet(
-            @QueryParam(value = "query") String query) {
+    public Response findAllTiersPayantsCarnet(@QueryParam(value = "query") String query) {
         List<TiersPayantDTO> data = clientService.findTiersPayants(query, "2");
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
     @GET
     @Path("tiers-payants/assurance")
-    public Response findAllTiersPayantsassurance(
-            @QueryParam(value = "query") String query) {
+    public Response findAllTiersPayantsassurance(@QueryParam(value = "query") String query) {
         List<TiersPayantDTO> data = clientService.findTiersPayants(query, "1");
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
     @GET
     @Path("tiers-payants-associes-include")
-    public Response findAllTiersPayantsByClientId(
-            @QueryParam(value = "clientId") String clientId) {
+    public Response findAllTiersPayantsByClientId(@QueryParam(value = "clientId") String clientId) {
         List<TiersPayantParams> data = clientService.findTiersPayantByClientId(clientId);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
     @GET
     @Path("tiers-payants-associes")
-    public Response findTiersPayantByClientIdExcludeRo(
-            @QueryParam(value = "clientId") String clientId) {
+    public Response findTiersPayantByClientIdExcludeRo(@QueryParam(value = "clientId") String clientId) {
         List<TiersPayantParams> data = clientService.findTiersPayantByClientIdExcludeRo(clientId);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
@@ -188,15 +179,15 @@ public class ClientRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-//        JSONObject json = clientService.updateClientAssurance(client);
+        // JSONObject json = clientService.updateClientAssurance(client);
         JSONObject json = clientService.updateOrCreateClientAssurance(client);
         return Response.ok().entity(json.toString()).build();
     }
 
     @GET
     @Path("ayant-droits")
-    public Response ayantDroits(
-            @QueryParam(value = "query") String query, @QueryParam(value = "clientId") String clientId) {
+    public Response ayantDroits(@QueryParam(value = "query") String query,
+            @QueryParam(value = "clientId") String clientId) {
         List<AyantDroitDTO> data = clientService.findAyantDroitByClientId(clientId, query);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
@@ -211,7 +202,8 @@ public class ClientRessource {
 
     @GET
     @Path("client-assurance/{id}/{venteId}")
-    public Response findClientById(@PathParam("id") String id, @PathParam("venteId") String venteId) throws JSONException {
+    public Response findClientById(@PathParam("id") String id, @PathParam("venteId") String venteId)
+            throws JSONException {
         JSONObject json = clientService.findClientAssuranceById(id, venteId);
         return Response.ok().entity(json.toString()).build();
     }
@@ -226,15 +218,16 @@ public class ClientRessource {
 
     @GET
     @Path("tierspayantsbytype/{type}")
-    public Response findByType(@PathParam("type") String type,
-            @QueryParam(value = "query") String query) {
+    public Response findByType(@PathParam("type") String type, @QueryParam(value = "query") String query) {
         List<TiersPayantDTO> data = clientService.findTiersPayants(query, type);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
 
     @POST
     @Path("add-tierspayant/{clientId}/{typetierspayantId}/{taux}")
-    public Response addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, @PathParam("clientId") String clientId, @PathParam("typetierspayantId") String typeTiersPayantId, @PathParam("taux") int taux) throws JSONException {
+    public Response addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, @PathParam("clientId") String clientId,
+            @PathParam("typetierspayantId") String typeTiersPayantId, @PathParam("taux") int taux)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -246,7 +239,8 @@ public class ClientRessource {
 
     @POST
     @Path("update-infos-client/{clientId}")
-    public Response updateClientInfos(ClientDTO clientDTO, @PathParam("clientId") String clientId) throws JSONException {
+    public Response updateClientInfos(ClientDTO clientDTO, @PathParam("clientId") String clientId)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -258,7 +252,8 @@ public class ClientRessource {
 
     @POST
     @Path("update-infos-ayantdroit/{ayantDroitId}")
-    public Response updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO, @PathParam("ayantDroitId") String ayantDroitId) throws JSONException {
+    public Response updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO, @PathParam("ayantDroitId") String ayantDroitId)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -271,16 +266,12 @@ public class ClientRessource {
 
     @GET
     @Path("ventes-tierspayant")
-    public Response ventesTiersPayants(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "tiersPayantId") String tiersPayantId,
-            @QueryParam(value = "groupeId") String groupeId,
-            @QueryParam(value = "typeTp") String typeTp,
-            @QueryParam(value = "query") String query) {
-        JSONObject json = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId,typeTp, start, limit);
+    public Response ventesTiersPayants(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "groupeId") String groupeId,
+            @QueryParam(value = "typeTp") String typeTp, @QueryParam(value = "query") String query) {
+        JSONObject json = clientService.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp,
+                start, limit);
         return Response.ok().entity(json.toString()).build();
     }
 }
