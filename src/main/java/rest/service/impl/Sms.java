@@ -56,11 +56,11 @@ public class Sms implements Runnable {
             outboundSMSMessageRequest.put("outboundSMSTextMessage", outboundSMSTextMessage);
             jSONObject.put("outboundSMSMessageRequest", outboundSMSMessageRequest);
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
-             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
+            Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            System.out.println("response ---  "+response.getStatus());
-              System.out.println("jSONObject ---  "+jSONObject); 
-               System.out.println("response ---  "+response.readEntity(String.class));
+            System.out.println("response ---  " + response.getStatus());
+            System.out.println("jSONObject ---  " + jSONObject);
+            System.out.println("response ---  " + response.readEntity(String.class));
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }

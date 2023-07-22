@@ -54,11 +54,14 @@ public interface OrderService {
 
     JSONObject removeRupture(String id);
 
-    List<RuptureDTO> listeRuptures(LocalDate dtStart, LocalDate dtEnd, String query, String grossisteId, int start, int limit, boolean all);
+    List<RuptureDTO> listeRuptures(LocalDate dtStart, LocalDate dtEnd, String query, String grossisteId, int start,
+            int limit, boolean all);
 
-    JSONObject listeRuptures(LocalDate dtStart, LocalDate dtEnd, String query, String grossisteId, int start, int limit) throws JSONException;
+    JSONObject listeRuptures(LocalDate dtStart, LocalDate dtEnd, String query, String grossisteId, int start, int limit)
+            throws JSONException;
 
-    List<RuptureDetailDTO> listeRuptures(LocalDate dtStart, LocalDate dtEnd, String query, String grossisteId, String emplacementId);
+    List<RuptureDetailDTO> listeRuptures(LocalDate dtStart, LocalDate dtEnd, String query, String grossisteId,
+            String emplacementId);
 
     int findProduitStock(String idProduit, String emplacementId);
 
@@ -86,7 +89,8 @@ public interface OrderService {
 
     JSONObject updateScheduled(String idProduit, boolean scheduled) throws JSONException;
 
-    List<CommandeEncourDetailDTO> fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit, boolean all);
+    List<CommandeEncourDetailDTO> fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start,
+            int limit, boolean all);
 
     JSONObject fetchOrderItems(CommandeFiltre filtre, String orderId, String query, int start, int limit);
 
@@ -100,5 +104,5 @@ public interface OrderService {
 
     JSONObject addItem(OrderDetailDTO orderDetail, TUser user);
 
-    Map<String,List<CommandeCsvDTO>> commandeEncoursCsv(String idCommande);
+    Map<String, List<CommandeCsvDTO>> commandeEncoursCsv(String idCommande);
 }

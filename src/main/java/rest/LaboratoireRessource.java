@@ -43,11 +43,11 @@ public class LaboratoireRessource {
     private LaboratoireRepo repo;
 
     @GET
-    public Response findAllGammeProduit(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
+    public Response findAllGammeProduit(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) {
         List<Laboratoire> data = produitQueryRepo.findAllLaboratoire(query, start, limit, false);
-        return Response.ok().entity(ResultFactory.getSuccessResult(data, produitQueryRepo.countLaboratoire(query))).build();
+        return Response.ok().entity(ResultFactory.getSuccessResult(data, produitQueryRepo.countLaboratoire(query)))
+                .build();
     }
 
     @POST

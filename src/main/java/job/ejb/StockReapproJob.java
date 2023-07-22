@@ -26,9 +26,9 @@ public class StockReapproJob {
 
     @PostConstruct
     public void init() {
-     
+
         scheduledExecutorService.scheduleAtFixedRate(this::execute, 0, 1, TimeUnit.DAYS);
-        
+
     }
 
     private void execute() {

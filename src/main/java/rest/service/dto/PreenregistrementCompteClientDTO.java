@@ -19,14 +19,12 @@ import lombok.ToString;
 @Setter
 public class PreenregistrementCompteClientDTO {
     private final String id;
-   
 
     private final String dtUPDATED;
 
     private final Integer intPRICE;
 
     private final Integer intPRICERESTE;
-  
- 
+
     private final String lgPREENREGISTREMENTID;
 }

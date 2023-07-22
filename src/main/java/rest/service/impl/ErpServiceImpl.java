@@ -71,7 +71,8 @@ public class ErpServiceImpl implements ErpService {
     @Override
     public StockDailyValueDTO valorisation(String day) {
         try {
-            StockDailyValue sdv = getEntityManager().find(StockDailyValue.class, Integer.valueOf(LocalDate.parse(day).format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
+            StockDailyValue sdv = getEntityManager().find(StockDailyValue.class,
+                    Integer.valueOf(LocalDate.parse(day).format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
             return new StockDailyValueDTO(sdv);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "valorisation =====>>", e);
@@ -82,9 +83,9 @@ public class ErpServiceImpl implements ErpService {
     @Override
     public List<ErpCaComptant> caComptant(String dtStart, String dtEnd) {
         try {
-            List<Tuple> list = getEntityManager().createNativeQuery("SELECT SUM(m.montantRegle) AS MONTANTREGLE,SUM(m.montantPaye) AS MONTANTPAYE, SUM(m.montantRemise) AS montantRemise, SUM(m.montantTva) as montantTva,m.mvtdate,m.typeReglementId FROM mvttransaction m where m.checked=1 AND (m.typeTransaction=0 OR m.typeTransaction=1) AND m.lg_EMPLACEMENT_ID='1' AND DATE(m.mvtdate) BETWEEN ?1 AND ?2 GROUP BY m.mvtdate,m.typeReglementId", Tuple.class)
-                    .setParameter(1, LocalDate.parse(dtStart))
-                    .setParameter(2, LocalDate.parse(dtEnd))
+            List<Tuple> list = getEntityManager().createNativeQuery(
+                    "SELECT SUM(m.montantRegle) AS MONTANTREGLE,SUM(m.montantPaye) AS MONTANTPAYE, SUM(m.montantRemise) AS montantRemise, SUM(m.montantTva) as montantTva,m.mvtdate,m.typeReglementId FROM mvttransaction m where m.checked=1 AND (m.typeTransaction=0 OR m.typeTransaction=1) AND m.lg_EMPLACEMENT_ID='1' AND DATE(m.mvtdate) BETWEEN ?1 AND ?2 GROUP BY m.mvtdate,m.typeReglementId",
+                    Tuple.class).setParameter(1, LocalDate.parse(dtStart)).setParameter(2, LocalDate.parse(dtEnd))
                     .getResultList();
             List<ErpCaComptant> caComptants = new ArrayList<>();
             list.stream().map(t -> {
@@ -105,7 +106,8 @@ public class ErpServiceImpl implements ErpService {
                 caComptants.add(caComptant);
             });
             List<ErpCaComptant> caComptants2 = new ArrayList<>();
-            Map<String, List<ErpCaComptant>> map = caComptants.stream().collect(Collectors.groupingBy(ErpCaComptant::getMvtDate));
+            Map<String, List<ErpCaComptant>> map = caComptants.stream()
+                    .collect(Collectors.groupingBy(ErpCaComptant::getMvtDate));
             map.forEach((k, v) -> {
                 ErpCaComptant caComptant = new ErpCaComptant();
                 caComptant.setMvtDate(k);
@@ -113,25 +115,25 @@ public class ErpServiceImpl implements ErpService {
                     caComptant.setRemiseSurCA(caComptant.getRemiseSurCA() + e.getRemiseSurCA());
                     caComptant.setTotTVA(caComptant.getTotTVA() + e.getTotTVA());
                     switch (e.getMode()) {
-                        case DateConverter.MODE_ESP:
-                            caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CHEQUE:
-                            caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CB:
-                            caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_VIREMENT:
-                            caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_MOOV:
-                        case DateConverter.TYPE_REGLEMENT_ORANGE:
-                        case DateConverter.MODE_MTN:
-                            caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
-                            break;
-                        default:
-                            break;
+                    case DateConverter.MODE_ESP:
+                        caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CHEQUE:
+                        caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CB:
+                        caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_VIREMENT:
+                        caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_MOOV:
+                    case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    case DateConverter.MODE_MTN:
+                        caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
+                        break;
+                    default:
+                        break;
                     }
                 });
 
@@ -146,7 +148,9 @@ public class ErpServiceImpl implements ErpService {
 
     private List<TPreenregistrementCompteClientTiersPayent> nonFactures(String dtStart, String dtEnd) {
         try {
-            TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEntityManager().createQuery("SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgPREENREGISTREMENTID.strSTATUT='is_Closed' AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE >0 AND FUNCTION('DATE',o.lgPREENREGISTREMENTID.dtCREATED) BETWEEN ?1 AND ?2 AND o.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID NOT IN (SELECT s.strREF FROM TFactureDetail s  )", TPreenregistrementCompteClientTiersPayent.class);
+            TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEntityManager().createQuery(
+                    "SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgPREENREGISTREMENTID.strSTATUT='is_Closed' AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE >0 AND FUNCTION('DATE',o.lgPREENREGISTREMENTID.dtCREATED) BETWEEN ?1 AND ?2 AND o.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID NOT IN (SELECT s.strREF FROM TFactureDetail s  )",
+                    TPreenregistrementCompteClientTiersPayent.class);
             q.setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE);
             q.setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE);
             return q.getResultList();
@@ -158,10 +162,10 @@ public class ErpServiceImpl implements ErpService {
 
     private List<Tuple> factures(String dtStart, String dtEnd) {
         try {
-            return getEntityManager().createQuery("SELECT o,f.lgFACTUREID FROM TPreenregistrementCompteClientTiersPayent o,TFactureDetail f WHERE o.lgPREENREGISTREMENTID.strSTATUT='is_Closed' AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE >0 AND FUNCTION('DATE',o.lgPREENREGISTREMENTID.dtCREATED) BETWEEN ?1 AND ?2 AND o.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID =f.strREF", Tuple.class)
-                    .setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
-                    .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
-                    .getResultList();
+            return getEntityManager().createQuery(
+                    "SELECT o,f.lgFACTUREID FROM TPreenregistrementCompteClientTiersPayent o,TFactureDetail f WHERE o.lgPREENREGISTREMENTID.strSTATUT='is_Closed' AND o.lgPREENREGISTREMENTID.bISCANCEL=FALSE AND o.lgPREENREGISTREMENTID.intPRICE >0 AND FUNCTION('DATE',o.lgPREENREGISTREMENTID.dtCREATED) BETWEEN ?1 AND ?2 AND o.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID =f.strREF",
+                    Tuple.class).setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
+                    .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE).getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "factures =====>>", e);
             return Collections.emptyList();
@@ -196,10 +200,10 @@ public class ErpServiceImpl implements ErpService {
 
     private List<Tuple> reglements(String dtStart, String dtEnd) {
         try {
-            return getEntityManager().createQuery("SELECT o,f,p FROM TDossierReglement o,TReglement f,TTiersPayant p WHERE  FUNCTION('DATE',o.dtCREATED) BETWEEN ?1 AND ?2 AND o.lgDOSSIERREGLEMENTID =f.strREFRESSOURCE AND o.strORGANISMEID=p.lgTIERSPAYANTID", Tuple.class)
-                    .setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
-                    .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
-                    .getResultList();
+            return getEntityManager().createQuery(
+                    "SELECT o,f,p FROM TDossierReglement o,TReglement f,TTiersPayant p WHERE  FUNCTION('DATE',o.dtCREATED) BETWEEN ?1 AND ?2 AND o.lgDOSSIERREGLEMENTID =f.strREFRESSOURCE AND o.strORGANISMEID=p.lgTIERSPAYANTID",
+                    Tuple.class).setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
+                    .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE).getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "reglements =====>>", e);
             return Collections.emptyList();
@@ -219,10 +223,10 @@ public class ErpServiceImpl implements ErpService {
 
     private List<Tuple> facturePeriode(String dtStart, String dtEnd) {
         try {
-            return getEntityManager().createQuery("SELECT f,p FROM TFacture f,TTiersPayant p WHERE  FUNCTION('DATE',f.dtCREATED) BETWEEN ?1 AND ?2 AND f.strCUSTOMER =p.lgTIERSPAYANTID ", Tuple.class)
-                    .setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
-                    .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
-                    .getResultList();
+            return getEntityManager().createQuery(
+                    "SELECT f,p FROM TFacture f,TTiersPayant p WHERE  FUNCTION('DATE',f.dtCREATED) BETWEEN ?1 AND ?2 AND f.strCUSTOMER =p.lgTIERSPAYANTID ",
+                    Tuple.class).setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
+                    .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE).getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "facturePeriode =====>>", e);
             return Collections.emptyList();
@@ -231,242 +235,265 @@ public class ErpServiceImpl implements ErpService {
 
     @Override
     public List<ErpFournisseur> fournisseurs() {
-        return getEntityManager().createQuery("SELECT new commonTasks.dto.ErpFournisseur(o) FROM TGrossiste o", ErpFournisseur.class).getResultList();
-    }
-
-    @Override
-    public List<ErpAchatFournisseurDTO> achatsFournisseurs(String dtStart, String dtEnd) {
-        return getEntityManager().createQuery("SELECT new commonTasks.dto.ErpAchatFournisseurDTO(o) FROM TBonLivraison  o WHERE o.strSTATUT='is_Closed' AND FUNCTION('DATE',o.dtCREATED) BETWEEN ?1 AND ?2", ErpAchatFournisseurDTO.class)
-                .setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
-                .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE)
+        return getEntityManager()
+                .createQuery("SELECT new commonTasks.dto.ErpFournisseur(o) FROM TGrossiste o", ErpFournisseur.class)
                 .getResultList();
     }
 
     @Override
+    public List<ErpAchatFournisseurDTO> achatsFournisseurs(String dtStart, String dtEnd) {
+        return getEntityManager().createQuery(
+                "SELECT new commonTasks.dto.ErpAchatFournisseurDTO(o) FROM TBonLivraison  o WHERE o.strSTATUT='is_Closed' AND FUNCTION('DATE',o.dtCREATED) BETWEEN ?1 AND ?2",
+                ErpAchatFournisseurDTO.class).setParameter(1, java.sql.Date.valueOf(dtStart), TemporalType.DATE)
+                .setParameter(2, java.sql.Date.valueOf(dtEnd), TemporalType.DATE).getResultList();
+    }
+
+    @Override
     public List<ErpTiersPayant> allTiersPayants() {
-        return getEntityManager().createQuery("SELECT new commonTasks.dto.ErpTiersPayant(o) FROM TTiersPayant o", ErpTiersPayant.class).getResultList();
+        return getEntityManager()
+                .createQuery("SELECT new commonTasks.dto.ErpTiersPayant(o) FROM TTiersPayant o", ErpTiersPayant.class)
+                .getResultList();
     }
 
     @Override
     public List<GroupeTiersPayantDTO> allGroupeTiersPayants() {
-       
-        return getEntityManager().createQuery("SELECT new commonTasks.ws.GroupeTiersPayantDTO(o) FROM TGroupeTierspayant o", GroupeTiersPayantDTO.class).getResultList();
+
+        return getEntityManager()
+                .createQuery("SELECT new commonTasks.ws.GroupeTiersPayantDTO(o) FROM TGroupeTierspayant o",
+                        GroupeTiersPayantDTO.class)
+                .getResultList();
     }
 
     @Override
     public List<TiersPayantDto> allWsTiersPayants() {
-      return  buildTiersPayant();
+        return buildTiersPayant();
     }
 
     @Override
     public List<CustomerDTO> allWsClients() {
         return buildClients();
     }
-    
-    private List<TTiersPayant> findAllTTiersPayants(){
-          return getEntityManager().createQuery("SELECT o FROM TTiersPayant o WHERE o.strSTATUT='enable'", TTiersPayant.class).getResultList();
-    }
-    
-    private List<TAyantDroit> ayantDroitsByClientId(String idClient){
-        return getEntityManager().createQuery("SELECT o FROM TAyantDroit o WHERE o.lgCLIENTID.lgCLIENTID=?1 ", TAyantDroit.class)
-                .setParameter(1, idClient)
+
+    private List<TTiersPayant> findAllTTiersPayants() {
+        return getEntityManager()
+                .createQuery("SELECT o FROM TTiersPayant o WHERE o.strSTATUT='enable'", TTiersPayant.class)
                 .getResultList();
     }
-     private long clientsCount(){
+
+    private List<TAyantDroit> ayantDroitsByClientId(String idClient) {
+        return getEntityManager()
+                .createQuery("SELECT o FROM TAyantDroit o WHERE o.lgCLIENTID.lgCLIENTID=?1 ", TAyantDroit.class)
+                .setParameter(1, idClient).getResultList();
+    }
+
+    private long clientsCount() {
         return getEntityManager().createQuery("SELECT COUNT(o)  FROM TClient o WHERE o.strSTATUT='enable'", Long.class)
-         
+
                 .getSingleResult();
     }
-       private List<TClient> clients(int start,int limit){
-        return getEntityManager().createQuery("SELECT o  FROM TClient o WHERE o.strSTATUT='enable'  ORDER BY o.strCODEINTERNE ASC", TClient.class)
-           .setFirstResult(start).setMaxResults(limit)
-                .getResultList();
+
+    private List<TClient> clients(int start, int limit) {
+        return getEntityManager()
+                .createQuery("SELECT o  FROM TClient o WHERE o.strSTATUT='enable'  ORDER BY o.strCODEINTERNE ASC",
+                        TClient.class)
+                .setFirstResult(start).setMaxResults(limit).getResultList();
     }
-         private List<TCompteClientTiersPayant> compteClientTiersPayantByTiersPayant(String clientId){
-        return getEntityManager().createQuery("SELECT o FROM TCompteClientTiersPayant o WHERE  o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 ", TCompteClientTiersPayant.class)
-            
-                   .setParameter(1, clientId)
-                .getResultList();
+
+    private List<TCompteClientTiersPayant> compteClientTiersPayantByTiersPayant(String clientId) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT o FROM TCompteClientTiersPayant o WHERE  o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 ",
+                        TCompteClientTiersPayant.class)
+
+                .setParameter(1, clientId).getResultList();
     }
-       
-       private List<CustomerDTO> buildAyantDroits(String idClient,String numAssure){
-            List<CustomerDTO> customers=new ArrayList<>();
-    List<TAyantDroit> ayantDroits=      ayantDroitsByClientId( idClient);
-           for (TAyantDroit ayantDroit : ayantDroits) {
-               if(idClient.equals(ayantDroit.getLgAYANTSDROITSID()) || StringUtils.isEmpty(numAssure) || numAssure.equals(ayantDroit.getStrNUMEROSECURITESOCIAL()) || !ayantDroit.getStrSTATUT().equalsIgnoreCase("enable")){
-                   continue;
-               }
-               CustomerDTO o=new CustomerDTO();
-               o.setUniqueId(ayantDroit.getLgAYANTSDROITSID());
-               o.setCode(ayantDroit.getStrCODEINTERNE());
-               o.setDatNaiss(fromDate(ayantDroit.getDtNAISSANCE()));
-               o.setFirstName(ayantDroit.getStrFIRSTNAME());
-               o.setLastName(ayantDroit.getStrLASTNAME());
-               o.setNumAyantDroit(ayantDroit.getStrNUMEROSECURITESOCIAL());
-               o.setSexe(ayantDroit.getStrSEXE());
-                o.setType("ASSURE");
-               customers.add(o);
-              
-           }
-              return customers;
-                      
-                   
-       }
-        private List<CustomerDTO> buildClients(){
-             List<CustomerDTO> customers=new ArrayList<>();
-             LocalDateTime startAt=LocalDateTime.now();
-              System.out.println("startAt at "+ startAt.toString());
-//             long count=clientsCount();
-            long count=5000;
-             if(count==0) return Collections.emptyList();
-            
-             int start=0;int limit=100;
-            while (start<count) {                
-               List<TClient> clients= clients(start,limit );
-              for (TClient client : clients) {
-                 CustomerDTO o=new CustomerDTO();
-                   o.setUniqueId(client.getLgCLIENTID());
-               o.setCode(client.getStrCODEINTERNE());
-               o.setDatNaiss(fromDate(client.getDtNAISSANCE()));
-               o.setFirstName(client.getStrFIRSTNAME());
-               o.setLastName(client.getStrLASTNAME());
-               o.setNumAyantDroit(client.getStrNUMEROSECURITESOCIAL());
-               o.setSexe(client.getStrSEXE());
-               o.setEmail(client.getEmail());
-               if(checkPhoneNumber(client.getStrADRESSE())){
-                  o.setPhone(client.getStrADRESSE());  
-               }
-                TTypeClient tTypeClient=client.getLgTYPECLIENTID();
-                  if( tTypeClient!=null &&(tTypeClient.getLgTYPECLIENTID().equals("1")||tTypeClient.getLgTYPECLIENTID().equals("2") )){
-                      o.setTiersPayants(buildClientTiersPayants(o.getUniqueId() ));
-              o.setAyantDroits(buildAyantDroits(o.getUniqueId(), o.getNumAyantDroit()));
-                  } 
-              
-              
-                  if(tTypeClient!=null){
-                      if(tTypeClient.getLgTYPECLIENTID().equals("1")||tTypeClient.getLgTYPECLIENTID().equals("2") ){
-                           o.setType("ASSURE");
-                      }else{
-                          o.setType("STANDARD");  
-                      }
-                  }else{
-                    if(!o.getTiersPayants().isEmpty()) {
+
+    private List<CustomerDTO> buildAyantDroits(String idClient, String numAssure) {
+        List<CustomerDTO> customers = new ArrayList<>();
+        List<TAyantDroit> ayantDroits = ayantDroitsByClientId(idClient);
+        for (TAyantDroit ayantDroit : ayantDroits) {
+            if (idClient.equals(ayantDroit.getLgAYANTSDROITSID()) || StringUtils.isEmpty(numAssure)
+                    || numAssure.equals(ayantDroit.getStrNUMEROSECURITESOCIAL())
+                    || !ayantDroit.getStrSTATUT().equalsIgnoreCase("enable")) {
+                continue;
+            }
+            CustomerDTO o = new CustomerDTO();
+            o.setUniqueId(ayantDroit.getLgAYANTSDROITSID());
+            o.setCode(ayantDroit.getStrCODEINTERNE());
+            o.setDatNaiss(fromDate(ayantDroit.getDtNAISSANCE()));
+            o.setFirstName(ayantDroit.getStrFIRSTNAME());
+            o.setLastName(ayantDroit.getStrLASTNAME());
+            o.setNumAyantDroit(ayantDroit.getStrNUMEROSECURITESOCIAL());
+            o.setSexe(ayantDroit.getStrSEXE());
+            o.setType("ASSURE");
+            customers.add(o);
+
+        }
+        return customers;
+
+    }
+
+    private List<CustomerDTO> buildClients() {
+        List<CustomerDTO> customers = new ArrayList<>();
+        LocalDateTime startAt = LocalDateTime.now();
+        System.out.println("startAt at " + startAt.toString());
+        // long count=clientsCount();
+        long count = 5000;
+        if (count == 0)
+            return Collections.emptyList();
+
+        int start = 0;
+        int limit = 100;
+        while (start < count) {
+            List<TClient> clients = clients(start, limit);
+            for (TClient client : clients) {
+                CustomerDTO o = new CustomerDTO();
+                o.setUniqueId(client.getLgCLIENTID());
+                o.setCode(client.getStrCODEINTERNE());
+                o.setDatNaiss(fromDate(client.getDtNAISSANCE()));
+                o.setFirstName(client.getStrFIRSTNAME());
+                o.setLastName(client.getStrLASTNAME());
+                o.setNumAyantDroit(client.getStrNUMEROSECURITESOCIAL());
+                o.setSexe(client.getStrSEXE());
+                o.setEmail(client.getEmail());
+                if (checkPhoneNumber(client.getStrADRESSE())) {
+                    o.setPhone(client.getStrADRESSE());
+                }
+                TTypeClient tTypeClient = client.getLgTYPECLIENTID();
+                if (tTypeClient != null && (tTypeClient.getLgTYPECLIENTID().equals("1")
+                        || tTypeClient.getLgTYPECLIENTID().equals("2"))) {
+                    o.setTiersPayants(buildClientTiersPayants(o.getUniqueId()));
+                    o.setAyantDroits(buildAyantDroits(o.getUniqueId(), o.getNumAyantDroit()));
+                }
+
+                if (tTypeClient != null) {
+                    if (tTypeClient.getLgTYPECLIENTID().equals("1") || tTypeClient.getLgTYPECLIENTID().equals("2")) {
                         o.setType("ASSURE");
-                    } else{
-                         o.setType("STANDARD");
+                    } else {
+                        o.setType("STANDARD");
                     }
-                  }
-               customers.add(o);
-            }  
-              start+=limit;
+                } else {
+                    if (!o.getTiersPayants().isEmpty()) {
+                        o.setType("ASSURE");
+                    } else {
+                        o.setType("STANDARD");
+                    }
+                }
+                customers.add(o);
             }
-              LocalDateTime endAt=LocalDateTime.now();
-              System.out.println("end at "+ endAt);
-            System.out.println("tempas passe ===>"+ChronoUnit.MINUTES.between(startAt, endAt));  
-              return customers;
+            start += limit;
         }
-     private   List<ClientTiersPayantDTO> buildClientTiersPayants(String clientId){
-             List<ClientTiersPayantDTO> l=new ArrayList<>();
-           List<TCompteClientTiersPayant> clientTiersPayants= compteClientTiersPayantByTiersPayant( clientId);
-            for (TCompteClientTiersPayant clientTiersPayant : clientTiersPayants) {
-                TTiersPayant payant=clientTiersPayant.getLgTIERSPAYANTID();
-                ClientTiersPayantDTO o=new ClientTiersPayantDTO();
-                o.setNum(clientTiersPayant.getStrNUMEROSECURITESOCIAL());
-                o.setTiersPayantName(payant.getStrNAME());
-                int priorite=clientTiersPayant.getIntPRIORITY();
-                if(priorite<0){
-                     priorite=(-1)*clientTiersPayant.getIntPRIORITY();
-                }else if(priorite>0 && priorite<5){
-                    priorite--;
-                }
-                else if(priorite>4){
-                   priorite=3; 
-                }
-                o.setPriorite(priorite);
-                o.setTaux(clientTiersPayant.getIntPOURCENTAGE());
-                if(clientTiersPayant.getDbPLAFONDENCOURS()!=null && clientTiersPayant.getDbPLAFONDENCOURS()>0){
-                  o.setPlafondConso(clientTiersPayant.getDbPLAFONDENCOURS().longValue());  
-                }
-                if(clientTiersPayant.getDblQUOTACONSOVENTE()!=null && clientTiersPayant.getDblQUOTACONSOVENTE()>0){
-                     o.setPlafondJournalier(clientTiersPayant.getDblQUOTACONSOVENTE().longValue()); 
-                }
-              o.setPlafondAbsolu(clientTiersPayant.getBIsAbsolute());
-                l.add(o);
+        LocalDateTime endAt = LocalDateTime.now();
+        System.out.println("end at " + endAt);
+        System.out.println("tempas passe ===>" + ChronoUnit.MINUTES.between(startAt, endAt));
+        return customers;
+    }
+
+    private List<ClientTiersPayantDTO> buildClientTiersPayants(String clientId) {
+        List<ClientTiersPayantDTO> l = new ArrayList<>();
+        List<TCompteClientTiersPayant> clientTiersPayants = compteClientTiersPayantByTiersPayant(clientId);
+        for (TCompteClientTiersPayant clientTiersPayant : clientTiersPayants) {
+            TTiersPayant payant = clientTiersPayant.getLgTIERSPAYANTID();
+            ClientTiersPayantDTO o = new ClientTiersPayantDTO();
+            o.setNum(clientTiersPayant.getStrNUMEROSECURITESOCIAL());
+            o.setTiersPayantName(payant.getStrNAME());
+            int priorite = clientTiersPayant.getIntPRIORITY();
+            if (priorite < 0) {
+                priorite = (-1) * clientTiersPayant.getIntPRIORITY();
+            } else if (priorite > 0 && priorite < 5) {
+                priorite--;
+            } else if (priorite > 4) {
+                priorite = 3;
             }
-            return l;
+            o.setPriorite(priorite);
+            o.setTaux(clientTiersPayant.getIntPOURCENTAGE());
+            if (clientTiersPayant.getDbPLAFONDENCOURS() != null && clientTiersPayant.getDbPLAFONDENCOURS() > 0) {
+                o.setPlafondConso(clientTiersPayant.getDbPLAFONDENCOURS().longValue());
+            }
+            if (clientTiersPayant.getDblQUOTACONSOVENTE() != null && clientTiersPayant.getDblQUOTACONSOVENTE() > 0) {
+                o.setPlafondJournalier(clientTiersPayant.getDblQUOTACONSOVENTE().longValue());
+            }
+            o.setPlafondAbsolu(clientTiersPayant.getBIsAbsolute());
+            l.add(o);
         }
-        
-        private boolean checkPhoneNumber(String phone){
-            if(StringUtils.isEmpty(phone)) return false;
-            if(phone.length()<8) return  false;
-           return NumberUtils.isCreatable(phone);
-        }
-       private LocalDate fromDate( Date date){
-           if(date==null) return null;
-           return DateConverter.convertDateToLocalDate(date) ;
-       }
-       private List<TiersPayantDto> buildTiersPayant(){
-           List<TiersPayantDto>list=new ArrayList<>();
-           List<TTiersPayant> l= findAllTTiersPayants();
-           for (TTiersPayant p : l) {
-               TTypeTiersPayant payant=p.getLgTYPETIERSPAYANTID();
-              TiersPayantDto o=new TiersPayantDto();
-               o.setName(p.getStrNAME());
-                o.setFullName(p.getStrFULLNAME());
-            
-               if(p.getIsDepot()!=null && p.getIsDepot()){
-                   o.setCategorie("DEPOT"); 
-               }else{
-                   if(payant.getLgTYPETIERSPAYANTID().equals("1") ){
+        return l;
+    }
+
+    private boolean checkPhoneNumber(String phone) {
+        if (StringUtils.isEmpty(phone))
+            return false;
+        if (phone.length() < 8)
+            return false;
+        return NumberUtils.isCreatable(phone);
+    }
+
+    private LocalDate fromDate(Date date) {
+        if (date == null)
+            return null;
+        return DateConverter.convertDateToLocalDate(date);
+    }
+
+    private List<TiersPayantDto> buildTiersPayant() {
+        List<TiersPayantDto> list = new ArrayList<>();
+        List<TTiersPayant> l = findAllTTiersPayants();
+        for (TTiersPayant p : l) {
+            TTypeTiersPayant payant = p.getLgTYPETIERSPAYANTID();
+            TiersPayantDto o = new TiersPayantDto();
+            o.setName(p.getStrNAME());
+            o.setFullName(p.getStrFULLNAME());
+
+            if (p.getIsDepot() != null && p.getIsDepot()) {
+                o.setCategorie("DEPOT");
+            } else {
+                if (payant.getLgTYPETIERSPAYANTID().equals("1")) {
                     o.setCategorie("ASSURANCE");
-               }else{
-                     o.setCategorie("CARNET");
-               } 
-               }
-              if(StringUtils.isNoneEmpty(p.getStrCODEORGANISME())){
-                 o.setCodeOrganisme(p.getStrCODEORGANISME()); 
-              }
-               if(StringUtils.isNoneEmpty(p.getStrCODEREGROUPEMENT())){
-               o.setCodeRegroupement(p.getStrCODEREGROUPEMENT());
-              }
-              if(StringUtils.isNoneEmpty(p.getStrMAIL())){
-              o.setEmail(p.getStrMAIL());
-              }
-               if(StringUtils.isNoneEmpty(p.getStrADRESSE())){
-               o.setAdresse(p.getStrADRESSE());
-              }
-             
-              if(checkPhoneNumber(p.getStrMOBILE())){
-                   o.setTelephone(p.getStrMOBILE()); 
-              }
-             if(checkPhoneNumber(p.getStrTELEPHONE())){
-                   o.setTelephoneFixe(p.getStrTELEPHONE()); 
-              }
-             o.setNbreBordereaux(p.getIntNBREEXEMPLAIREBORD());
-             if(p.getDblREMISEFORFETAIRE()!=null && p.getDblREMISEFORFETAIRE()>0){
-               o.setRemiseForfaitaire(p.getDblREMISEFORFETAIRE().longValue());  
-             }
-             if(p.getIntNBREBONS()!=null && p.getIntNBREBONS() >0){
-                   o.setNbreBons( p.getIntNBREBONS());
-             }
-             if(p.getIntMONTANTFAC()!=null && p.getIntMONTANTFAC()>0){
-                 o.setMontantMaxParFcture(p.getIntMONTANTFAC().longValue());
-             }
-             if(p.getBIsAbsolute()!=null){
-                o.setPlafondAbsolu(p.getBIsAbsolute());  
-             }
-             if(p.getDblPLAFONDCREDIT()!=null && p.getDblPLAFONDCREDIT()>0){
-                   o.setPlafondConso(p.getDblPLAFONDCREDIT().longValue());
-             }
-               TGroupeTierspayant groupeTierspayant=p.getLgGROUPEID();
-               if(groupeTierspayant!=null){
-                   o.setGroupeTiersPayantName(groupeTierspayant.getStrLIBELLE());
-               }
-                
-               
-               list.add(o);
-           }
-           return list;
-       }
-       
+                } else {
+                    o.setCategorie("CARNET");
+                }
+            }
+            if (StringUtils.isNoneEmpty(p.getStrCODEORGANISME())) {
+                o.setCodeOrganisme(p.getStrCODEORGANISME());
+            }
+            if (StringUtils.isNoneEmpty(p.getStrCODEREGROUPEMENT())) {
+                o.setCodeRegroupement(p.getStrCODEREGROUPEMENT());
+            }
+            if (StringUtils.isNoneEmpty(p.getStrMAIL())) {
+                o.setEmail(p.getStrMAIL());
+            }
+            if (StringUtils.isNoneEmpty(p.getStrADRESSE())) {
+                o.setAdresse(p.getStrADRESSE());
+            }
+
+            if (checkPhoneNumber(p.getStrMOBILE())) {
+                o.setTelephone(p.getStrMOBILE());
+            }
+            if (checkPhoneNumber(p.getStrTELEPHONE())) {
+                o.setTelephoneFixe(p.getStrTELEPHONE());
+            }
+            o.setNbreBordereaux(p.getIntNBREEXEMPLAIREBORD());
+            if (p.getDblREMISEFORFETAIRE() != null && p.getDblREMISEFORFETAIRE() > 0) {
+                o.setRemiseForfaitaire(p.getDblREMISEFORFETAIRE().longValue());
+            }
+            if (p.getIntNBREBONS() != null && p.getIntNBREBONS() > 0) {
+                o.setNbreBons(p.getIntNBREBONS());
+            }
+            if (p.getIntMONTANTFAC() != null && p.getIntMONTANTFAC() > 0) {
+                o.setMontantMaxParFcture(p.getIntMONTANTFAC().longValue());
+            }
+            if (p.getBIsAbsolute() != null) {
+                o.setPlafondAbsolu(p.getBIsAbsolute());
+            }
+            if (p.getDblPLAFONDCREDIT() != null && p.getDblPLAFONDCREDIT() > 0) {
+                o.setPlafondConso(p.getDblPLAFONDCREDIT().longValue());
+            }
+            TGroupeTierspayant groupeTierspayant = p.getLgGROUPEID();
+            if (groupeTierspayant != null) {
+                o.setGroupeTiersPayantName(groupeTierspayant.getStrLIBELLE());
+            }
+
+            list.add(o);
+        }
+        return list;
+    }
+
 }

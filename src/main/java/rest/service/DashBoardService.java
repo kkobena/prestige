@@ -22,18 +22,23 @@ import org.json.JSONObject;
 @Local
 public interface DashBoardService {
 
-    JSONObject donneesRecapActiviteView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query) throws JSONException;
+    JSONObject donneesRecapActiviteView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu,
+            String query) throws JSONException;
 
-    List<Params> donneesReglementsTp(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query, int start, int limit, boolean all);
+    List<Params> donneesReglementsTp(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query,
+            int start, int limit, boolean all);
 
-    List<RecapActiviteCreditDTO> donneesCreditAccordes(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query, int start, int limit, boolean all);
+    List<RecapActiviteCreditDTO> donneesCreditAccordes(LocalDate dtStart, LocalDate dtEnd, String emplacementId,
+            TUser tu, String query, int start, int limit, boolean all);
 
-    JSONObject donneesReglementsTpView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query, int start, int limit, boolean all) throws JSONException;
+    JSONObject donneesReglementsTpView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query,
+            int start, int limit, boolean all) throws JSONException;
 
-    JSONObject donneesCreditAccordesView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query, int start, int limit, boolean all) throws JSONException;
+    JSONObject donneesCreditAccordesView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu,
+            String query, int start, int limit, boolean all) throws JSONException;
 
     RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu);
 
-    RecapActiviteCreditDTO donneesRecapTotataux(LocalDate dtStart, LocalDate dtEnd,  TUser tu, String query);
+    RecapActiviteCreditDTO donneesRecapTotataux(LocalDate dtStart, LocalDate dtEnd, TUser tu, String query);
 
 }

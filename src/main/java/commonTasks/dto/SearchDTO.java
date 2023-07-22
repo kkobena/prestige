@@ -41,6 +41,7 @@ public class SearchDTO implements Serializable {
     public void setDtUPDATED(Date dtUPDATED) {
         this.dtUPDATED = dtUPDATED;
     }
+
     private Short boolDECONDITIONNE;
 
     public String getLgFAMILLEID() {
@@ -161,7 +162,9 @@ public class SearchDTO implements Serializable {
         return Objects.equals(this.lgFAMILLEID, other.lgFAMILLEID);
     }
 
-    public SearchDTO(String lgFAMILLEID, String intCIP, String strNAME, String strLIBELLEE, Integer intPRICE, Integer intNUMBERAVAILABLE, Integer intPAF, Integer intNUMBER, Short boolDECONDITIONNE, String lgFAMILLEPARENTID) {
+    public SearchDTO(String lgFAMILLEID, String intCIP, String strNAME, String strLIBELLEE, Integer intPRICE,
+            Integer intNUMBERAVAILABLE, Integer intPAF, Integer intNUMBER, Short boolDECONDITIONNE,
+            String lgFAMILLEPARENTID) {
         this.lgFAMILLEID = lgFAMILLEID;
         this.strDESCRIPTION = strNAME;
         this.intCIP = intCIP;
@@ -175,7 +178,8 @@ public class SearchDTO implements Serializable {
         this.lgFAMILLEPARENTID = lgFAMILLEPARENTID;
     }
 
-    public SearchDTO(String lgFAMILLEID, String intCIP, String strNAME, String strLIBELLEE, Integer intPRICE, Integer intNUMBERAVAILABLE, Integer intPAF, Integer intNUMBER, Integer intNUMBERDETAIL) {
+    public SearchDTO(String lgFAMILLEID, String intCIP, String strNAME, String strLIBELLEE, Integer intPRICE,
+            Integer intNUMBERAVAILABLE, Integer intPAF, Integer intNUMBER, Integer intNUMBERDETAIL) {
         this.lgFAMILLEID = lgFAMILLEID;
         this.strDESCRIPTION = strNAME;
         this.intCIP = intCIP;
@@ -192,7 +196,8 @@ public class SearchDTO implements Serializable {
     public SearchDTO() {
     }
 
-    public SearchDTO(String lgFAMILLEID, String intCIP, String strNAME, Integer intPRICE, Integer intNUMBERAVAILABLE, Integer intPAF, Integer intNUMBER, Date dtUPDATED) {
+    public SearchDTO(String lgFAMILLEID, String intCIP, String strNAME, Integer intPRICE, Integer intNUMBERAVAILABLE,
+            Integer intPAF, Integer intNUMBER, Date dtUPDATED) {
         this.lgFAMILLEID = lgFAMILLEID;
         this.strDESCRIPTION = strNAME;
         this.intCIP = intCIP;

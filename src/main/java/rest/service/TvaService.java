@@ -21,6 +21,6 @@ public interface TvaService {
     JSONObject tvaData(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
 
     List<TvaDTO> tva(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId);
-    
+
     boolean isExcludTiersPayantActive();
 }

@@ -29,27 +29,23 @@ public class EtatControlBonResource {
 
     @GET
     @Path("list")
-    public Response list(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "search") String search,
-            @QueryParam(value = "grossisteId") String grossisteId,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd) {
-        boolean returnFullBLLAuthority = Utils.hasAuthorityByName(Utils.getconnectedUserPrivileges(servletRequest), Parameter.ACTION_RETURN_FULL_BL);
+    public Response list(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "search") String search, @QueryParam(value = "grossisteId") String grossisteId,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
+        boolean returnFullBLLAuthority = Utils.hasAuthorityByName(Utils.getconnectedUserPrivileges(servletRequest),
+                Parameter.ACTION_RETURN_FULL_BL);
 
-        JSONObject json = etatControlBonService.list(returnFullBLLAuthority, search, dtStart, dtEnd, grossisteId, start, limit);
+        JSONObject json = etatControlBonService.list(returnFullBLLAuthority, search, dtStart, dtEnd, grossisteId, start,
+                limit);
         return Response.ok().entity(json.toString()).build();
 
     }
 
     @GET
     @Path("list-annuelle")
-    public Response listAnnuelle(
-            @QueryParam(value = "groupeId") Integer groupeId,
-            @QueryParam(value = "groupBy") String groupBy,
-            @QueryParam(value = "grossisteId") String grossisteId,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd) {
+    public Response listAnnuelle(@QueryParam(value = "groupeId") Integer groupeId,
+            @QueryParam(value = "groupBy") String groupBy, @QueryParam(value = "grossisteId") String grossisteId,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
 
         JSONObject json = etatControlBonService.listBonAnnuelView(groupBy, dtStart, dtEnd, grossisteId, groupeId);
         return Response.ok().entity(json.toString()).build();

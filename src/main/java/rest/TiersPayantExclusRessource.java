@@ -39,11 +39,10 @@ public class TiersPayantExclusRessource {
     private HttpServletRequest servletRequest;
     @EJB
     private TiersPayantExclusService tiersPayantExclusService;
-  
+
     @GET
     @Path("list")
-      public Response fetchAll(
-            @QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
+    public Response fetchAll(@QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
         JSONObject json = tiersPayantExclusService.allTiersPayant(start, limit, query);
         return Response.ok().entity(json.toString()).build();
@@ -66,8 +65,7 @@ public class TiersPayantExclusRessource {
 
     @GET
     @Path("list-exclus")
-    public Response fetchExclud(
-            @QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
+    public Response fetchExclud(@QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
         JSONObject json = tiersPayantExclusService.all(start, limit, query);
         return Response.ok().entity(json.toString()).build();
@@ -76,10 +74,9 @@ public class TiersPayantExclusRessource {
 
     @GET
     @Path("ventes")
-    public Response fetchVenteByTiersPayant(
-            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit) {
+    public Response fetchVenteByTiersPayant(@QueryParam(value = "tiersPayantId") String tiersPayantId,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
         JSONObject json = tiersPayantExclusService.fetchVenteByTiersPayant(tiersPayantId, dtStart, dtEnd, start, limit);
         return Response.ok().entity(json.toString()).build();
 
@@ -87,11 +84,10 @@ public class TiersPayantExclusRessource {
 
     @GET
     @Path("reglements")
-    public Response reglementsCarnet(
-            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit) {
-        JSONObject json = tiersPayantExclusService.reglementsCarnet(tiersPayantId,null, dtStart, dtEnd, start, limit);
+    public Response reglementsCarnet(@QueryParam(value = "tiersPayantId") String tiersPayantId,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
+        JSONObject json = tiersPayantExclusService.reglementsCarnet(tiersPayantId, null, dtStart, dtEnd, start, limit);
         return Response.ok().entity(json.toString()).build();
 
     }

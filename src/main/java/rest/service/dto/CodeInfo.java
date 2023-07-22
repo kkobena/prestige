@@ -18,6 +18,6 @@ import lombok.ToString;
 @Getter
 @Setter
 public class CodeInfo {
-    private final  String code;
+    private final String code;
     private final String libelle;
 }

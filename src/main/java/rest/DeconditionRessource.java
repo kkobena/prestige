@@ -34,6 +34,7 @@ public class DeconditionRessource {
     private HttpServletRequest servletRequest;
     @EJB
     DeconditionService deconditionService;
+
     @POST
     @Path("vente")
     public Response add(SalesParams params) throws JSONException {

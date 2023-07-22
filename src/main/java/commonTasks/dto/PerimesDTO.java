@@ -14,12 +14,12 @@ import java.io.Serializable;
 public class PerimesDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-   
-    private String  id;
+
+    private String id;
     private String lot;
-    private String produitId,datePeremption,dateEntree,produitCip,produitLibelle;
+    private String produitId, datePeremption, dateEntree, produitCip, produitLibelle;
     private int quantity;
-    private Integer stockInitial,stockFinal;
+    private Integer stockInitial, stockFinal;
 
     public Integer getStockInitial() {
         return stockInitial;
@@ -101,7 +101,4 @@ public class PerimesDTO implements Serializable {
         this.quantity = quantity;
     }
 
-  
-
-  
 }

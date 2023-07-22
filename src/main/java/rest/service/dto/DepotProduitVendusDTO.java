@@ -18,7 +18,7 @@ public class DepotProduitVendusDTO {
     private int prixUni, prixAchat;
     private long quantite;
     private long montantVente;
-     private long montantAchat;
+    private long montantAchat;
     private String tiersPayantName;
     private String tiersPayantId;
 

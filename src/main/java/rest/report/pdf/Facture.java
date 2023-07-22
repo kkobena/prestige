@@ -87,11 +87,12 @@ public class Facture {
         List<VenteDetailsDTO> datas = salesStatsService.venteDetailsByVenteId(venteId);
         datas.sort(comparator);
         List<TvaDTO> tvas = new ArrayList<>();
-        Map<Integer, List<VenteDetailsDTO>> maps = datas.stream().collect(Collectors.groupingBy(VenteDetailsDTO::getValeurTva));
+        Map<Integer, List<VenteDetailsDTO>> maps = datas.stream()
+                .collect(Collectors.groupingBy(VenteDetailsDTO::getValeurTva));
         for (Map.Entry<Integer, List<VenteDetailsDTO>> entry : maps.entrySet()) {
             Integer key = entry.getKey();
             long montantHt = 0, montantTva = 0, montantTtc = 0;
-//            new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{factures})
+            // new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{factures})
             List<VenteDetailsDTO> val = entry.getValue();
             for (VenteDetailsDTO venteDetailsDTO : val) {
                 montantHt += venteDetailsDTO.getMontantHt();
@@ -103,8 +104,11 @@ public class Facture {
         tvas.sort(Comparator.comparing(TvaDTO::getTaux, Comparator.naturalOrder()));
         Integer total_devis = op.getIntPRICE() - op.getIntPRICEREMISE();
         TClient client = op.getClient();
-        String P_CLIENT = (client.getStrNUMEROSECURITESOCIAL() != null && !"".equals(client.getStrNUMEROSECURITESOCIAL()) ? client.getStrNUMEROSECURITESOCIAL() + " | " : "") + client.getStrFIRSTNAME() + " " + client.getStrLASTNAME();
-        String P_AMOUNT_DEVIS = "Le Montant TTC pour cette Proforma est de  " + DateConverter.amountFormat(total_devis, '.') + " F CFA";
+        String P_CLIENT = (client.getStrNUMEROSECURITESOCIAL() != null
+                && !"".equals(client.getStrNUMEROSECURITESOCIAL()) ? client.getStrNUMEROSECURITESOCIAL() + " | " : "")
+                + client.getStrFIRSTNAME() + " " + client.getStrLASTNAME();
+        String P_AMOUNT_DEVIS = "Le Montant TTC pour cette Proforma est de  "
+                + DateConverter.amountFormat(total_devis, '.') + " F CFA";
         parameters.put("P_BARE_CODE", DateConverter.buildLineBarecode(op.getStrREFTICKET()));
         parameters.put("P_REFERENCE", op.getLgPREENREGISTREMENTID());
         parameters.put("P_H_CLT_INFOS", "Proforma N° " + op.getStrREF());
@@ -112,11 +116,13 @@ public class Facture {
         parameters.put("totalBrut", op.getIntPRICE());
         parameters.put("totalNet", op.getIntPRICE() - op.getIntPRICEREMISE());
         parameters.put("str_REF", op.getStrREF());
-        parameters.put("P_TOTAL_DEVIS", DateConverter.convertionChiffeLettres(total_devis) + " -- (" + DateConverter.amountFormat(total_devis) + ")");
+        parameters.put("P_TOTAL_DEVIS", DateConverter.convertionChiffeLettres(total_devis) + " -- ("
+                + DateConverter.amountFormat(total_devis) + ")");
         parameters.put("P_AMOUNT_DEVIS", P_AMOUNT_DEVIS.toUpperCase());
         parameters.put("P_REMISE", op.getIntPRICEREMISE());
         parameters.put("P_CLIENT", P_CLIENT);
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "proforma_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "proforma_" + report_generate_file, datas);
         return "/data/reports/pdf/proforma_" + report_generate_file;
     }
 
@@ -134,7 +140,8 @@ public class Facture {
         }
         parameters.put("P_H_CLT_INFOS", "LISTE DES DIFFERES CLIENTS  " + P_PERIODE);
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "differeslist_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "differeslist_" + report_generate_file, datas);
         return "/data/reports/pdf/differeslist_" + report_generate_file;
     }
 
@@ -144,7 +151,8 @@ public class Facture {
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getOperateur());
         LocalDate dtEn = LocalDate.parse(params.getDtEnd()), dtSt = LocalDate.parse(params.getDtStart());
-        List<DelayedDTO> datas = reglementService.reglementsDifferesDto(dtSt, dtEn, checked, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), params.getRef());
+        List<DelayedDTO> datas = reglementService.reglementsDifferesDto(dtSt, dtEn, checked,
+                params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), params.getRef());
 
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
@@ -153,11 +161,13 @@ public class Facture {
         }
         parameters.put("P_H_CLT_INFOS", "REGLEMENT DES DIFFERES CLIENTS  " + P_PERIODE);
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "regledifferes_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "regledifferes_" + report_generate_file, datas);
         return "/data/reports/pdf/regledifferes_" + report_generate_file;
     }
 
-    public String logs(String search, LocalDate dtSt, LocalDate dtEn, String userId, int criteria, TUser u) throws IOException {
+    public String logs(String search, LocalDate dtSt, LocalDate dtEn, String userId, int criteria, TUser u)
+            throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_logfile";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
@@ -170,12 +180,13 @@ public class Facture {
         }
         parameters.put("P_H_CLT_INFOS", "FICHIER JOURNAL DU   " + P_PERIODE);
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "logfile_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "logfile_" + report_generate_file, datas);
         return "/data/reports/pdf/logfile_" + report_generate_file;
     }
 
-    public String annulations(String query,
-            LocalDate dtSt, LocalDate dtEn, TUser u, List<TPrivilege> LstTPrivilege) throws IOException {
+    public String annulations(String query, LocalDate dtSt, LocalDate dtEn, TUser u, List<TPrivilege> LstTPrivilege)
+            throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_vente_annulees";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
@@ -201,12 +212,12 @@ public class Facture {
         parameters.put("montantEspece", montantEspeceAnnualation);
         parameters.put("P_H_CLT_INFOS", "LISTE DES VENTES ANNULEES DU   " + P_PERIODE);
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "vente_annulees_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "vente_annulees_" + report_generate_file, datas);
         return "/data/reports/pdf/vente_annulees_" + report_generate_file;
     }
 
-    public String facturesprovisoires0(String modeId, TUser u, HttpSession session
-    ) throws IOException {
+    public String facturesprovisoires0(String modeId, TUser u, HttpSession session) throws IOException {
         DateFormat DF = new SimpleDateFormat("dd_MM_YYYY_HH_mm_ss");
         LongAdder longAdder = new LongAdder();
         TOfficine oTOfficine = commonService.findOfficine();
@@ -220,24 +231,33 @@ public class Facture {
         for (CodeFactureDTO codeFactureDTO : code) {
             TFacture OFacture = facturationService.findFactureById(codeFactureDTO.getFactureId());
             TTiersPayant OTiersPayant = OFacture.getTiersPayant();
-            String P_PERIODE = "PERIODE DU " + df.format(OFacture.getDtDEBUTFACTURE()) + " AU " + df.format(OFacture.getDtFINFACTURE());
+            String P_PERIODE = "PERIODE DU " + df.format(OFacture.getDtDEBUTFACTURE()) + " AU "
+                    + df.format(OFacture.getDtFINFACTURE());
             parameters.put("P_H_CLT_INFOS", P_PERIODE);
             parameters.put("P_LG_FACTURE_ID", OFacture.getLgFACTUREID());
             parameters.put("P_LG_TIERS_PAYANT_ID", OTiersPayant.getLgTIERSPAYANTID());
-            parameters.put("P_CODE_FACTURE", "FACTURE N° " + OFacture.getStrCODEFACTURE() + " (" + OTiersPayant.getStrNAME() + ")");
+            parameters.put("P_CODE_FACTURE",
+                    "FACTURE N° " + OFacture.getStrCODEFACTURE() + " (" + OTiersPayant.getStrNAME() + ")");
             parameters.put("P_TIERS_PAYANT_NAME", OTiersPayant.getStrFULLNAME());
             parameters.put("P_CODE_COMPTABLE", "CODE COMPTABLE : " + OFacture.getStrCODECOMPTABLE());
-            parameters.put("P_CODE_POSTALE", (OTiersPayant.getStrADRESSE() != null && !"".equals(OTiersPayant.getStrADRESSE())) ? OTiersPayant.getStrADRESSE() : "");
-            parameters.put("P_COMPTE_CONTRIBUABLE", (OTiersPayant.getStrCOMPTECONTRIBUABLE() != null && !"".equals(OTiersPayant.getStrCOMPTECONTRIBUABLE())) ? OTiersPayant.getStrCOMPTECONTRIBUABLE() : "");
-            parameters.put("P_CODE_OFFICINE", (OTiersPayant.getStrCODEOFFICINE() != null && !"".equals(OTiersPayant.getStrCODEOFFICINE())) ? OTiersPayant.getStrCODEOFFICINE() : "");
-            parameters.put("P_REGISTRE_COMMERCE", (OTiersPayant.getStrREGISTRECOMMERCE() != null && !"".equals(OTiersPayant.getStrREGISTRECOMMERCE())) ? OTiersPayant.getStrREGISTRECOMMERCE() : "");
-            int P_TOTAL_AMOUNT = OFacture.getMontantVente(),
-                    P_ADHER_AMOUNT = OFacture.getDblMONTANTCMDE().intValue(),
+            parameters.put("P_CODE_POSTALE",
+                    (OTiersPayant.getStrADRESSE() != null && !"".equals(OTiersPayant.getStrADRESSE()))
+                            ? OTiersPayant.getStrADRESSE() : "");
+            parameters.put("P_COMPTE_CONTRIBUABLE",
+                    (OTiersPayant.getStrCOMPTECONTRIBUABLE() != null
+                            && !"".equals(OTiersPayant.getStrCOMPTECONTRIBUABLE()))
+                                    ? OTiersPayant.getStrCOMPTECONTRIBUABLE() : "");
+            parameters.put("P_CODE_OFFICINE",
+                    (OTiersPayant.getStrCODEOFFICINE() != null && !"".equals(OTiersPayant.getStrCODEOFFICINE()))
+                            ? OTiersPayant.getStrCODEOFFICINE() : "");
+            parameters.put("P_REGISTRE_COMMERCE",
+                    (OTiersPayant.getStrREGISTRECOMMERCE() != null && !"".equals(OTiersPayant.getStrREGISTRECOMMERCE()))
+                            ? OTiersPayant.getStrREGISTRECOMMERCE() : "");
+            int P_TOTAL_AMOUNT = OFacture.getMontantVente(), P_ADHER_AMOUNT = OFacture.getDblMONTANTCMDE().intValue(),
                     P_ATT_AMOUNT = OFacture.getDblMONTANTCMDE().intValue(),
                     P_REMISE_AMOUNT = OFacture.getDblMONTANTREMISE().intValue(),
                     P_REMISEFORFAITAIRE = OFacture.getDblMONTANTFOFETAIRE().intValue(),
-                    P_MONTANTBRUTTP = OFacture.getMontantVente(),
-                    P_REMISE_VENTE = OFacture.getMontantRemiseVente(),
+                    P_MONTANTBRUTTP = OFacture.getMontantVente(), P_REMISE_VENTE = OFacture.getMontantRemiseVente(),
                     P_TVA_VENTE = OFacture.getMontantTvaVente();
 
             parameters.put("P_REMISEFORFAITAIRE", DateConverter.amountFormat(P_REMISEFORFAITAIRE, ' '));
@@ -250,9 +270,11 @@ public class Facture {
             parameters.put("P_TOTALNET_AMOUNT", DateConverter.amountFormat(P_ATT_AMOUNT, ' '));
             parameters.put("P_TVA_VENTE", P_TVA_VENTE);
             parameters.put("P_REMISE_VENTE", P_REMISE_VENTE);
-            parameters.put("P_TOTAL_GENERAL", "TOTAL GENERAL " + OTiersPayant.getStrNAME() + " ( NOMBRE DE BONS=" + OFacture.getIntNBDOSSIER() + " )");
+            parameters.put("P_TOTAL_GENERAL", "TOTAL GENERAL " + OTiersPayant.getStrNAME() + " ( NOMBRE DE BONS="
+                    + OFacture.getIntNBDOSSIER() + " )");
 
-            parameters.put("P_TOTAL_IN_LETTERS", DateConverter.getNumberTowords(P_ATT_AMOUNT).toUpperCase() + " (" + DateConverter.amountFormat(P_ATT_AMOUNT) + " FCFA)");
+            parameters.put("P_TOTAL_IN_LETTERS", DateConverter.getNumberTowords(P_ATT_AMOUNT).toUpperCase() + " ("
+                    + DateConverter.amountFormat(P_ATT_AMOUNT) + " FCFA)");
             if (OTiersPayant.getDblPOURCENTAGEREMISE() > 0) {
                 scr_report_file = modelFacture.getNomFichierRemiseTierspayant();
             }
@@ -262,14 +284,14 @@ public class Facture {
             String finalpath = jdom.scr_report_pdf + "lab_facture_" + report_generate_file;
             List<?> datas = new ArrayList<>();
             switch (modelFacture.getTypeAffichage()) {
-                case DETAIL_ARTICLE:
-                    datas = facturationService.findArticleByFacturId(OFacture.getLgFACTUREID());
-                    break;
-                case LIGNE_VENTE:
-                    datas = facturationService.findFacturesDetailsByFactureId(OFacture.getLgFACTUREID());
-                    break;
-                default:
-                    break;
+            case DETAIL_ARTICLE:
+                datas = facturationService.findArticleByFacturId(OFacture.getLgFACTUREID());
+                break;
+            case LIGNE_VENTE:
+                datas = facturationService.findFacturesDetailsByFactureId(OFacture.getLgFACTUREID());
+                break;
+            default:
+                break;
             }
             reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, finalpath, datas);
             inputPdfList.add(new FileInputStream(finalpath));
@@ -293,7 +315,8 @@ public class Facture {
         Comparator<VenteDetailsDTO> comparator = Comparator.comparing(VenteDetailsDTO::getStrNAME);
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_proforma_facture";
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".pdf";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss"))
+                + ".pdf";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
 
         VenteDTO venteDTO = salesStatsService.findVenteDTOById(venteId);
@@ -310,27 +333,33 @@ public class Facture {
         parameters.put("intPRICE", venteDTO.getIntPRICE());
         parameters.put("montantTva", venteDTO.getMontantTva());
         parameters.put("intPRICEREMISE", venteDTO.getIntPRICEREMISE());
-        parameters.put("P_TOTAL_IN_LETTERS", DateConverter.convertionChiffeLettres(total_devis).toUpperCase() + " -- (" + DateConverter.amountFormat(total_devis) + ")");
+        parameters.put("P_TOTAL_IN_LETTERS", DateConverter.convertionChiffeLettres(total_devis).toUpperCase() + " -- ("
+                + DateConverter.amountFormat(total_devis) + ")");
         parameters.put("strREF", venteDTO.getStrREF());
         switch (fileForma) {
-            case WORD:
-                report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".docx";
-                reportUtil.buildReportDocx(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
-                break;
-            case EXCEL:
-                report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss")) + ".xlsx";
-                reportUtil.buildReportExcel(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
-                break;
-            default:
-                reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
-                break;
+        case WORD:
+            report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss"))
+                    + ".docx";
+            reportUtil.buildReportDocx(parameters, scr_report_file, jdom.scr_report_file,
+                    jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
+            break;
+        case EXCEL:
+            report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss"))
+                    + ".xlsx";
+            reportUtil.buildReportExcel(parameters, scr_report_file, jdom.scr_report_file,
+                    jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
+            break;
+        default:
+            reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                    jdom.scr_report_pdf + "proforma_facture_" + report_generate_file, datas);
+            break;
         }
 
         return "/data/reports/pdf/proforma_facture_" + report_generate_file;
     }
 
-    public String annulationsPlus(String query,
-            LocalDate dtSt, LocalDate dtEn, TUser u, List<TPrivilege> LstTPrivilege) throws IOException {
+    public String annulationsPlus(String query, LocalDate dtSt, LocalDate dtEn, TUser u, List<TPrivilege> LstTPrivilege)
+            throws IOException {
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_produits_annules";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
@@ -353,31 +382,36 @@ public class Facture {
 
         }
         parameters.put("P_H_CLT_INFOS", "LISTE DES ARTICLES ANNULES DU   " + P_PERIODE);
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_produits_annules_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "rp_produits_annules_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_produits_annules_" + report_generate_file;
     }
- public String listeReglement(Params params) throws IOException {
-     if(StringUtils.isEmpty(params.getDtStart())){
-         params.setDtStart(LocalDate.now().toString());
-     }
-      if(StringUtils.isEmpty(params.getDtEnd())){
-         params.setDtEnd(LocalDate.now().toString());
-     }
+
+    public String listeReglement(Params params) throws IOException {
+        if (StringUtils.isEmpty(params.getDtStart())) {
+            params.setDtStart(LocalDate.now().toString());
+        }
+        if (StringUtils.isEmpty(params.getDtEnd())) {
+            params.setDtEnd(LocalDate.now().toString());
+        }
         TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_reglement_facture_group";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getOperateur());
-        List<DossierReglementDTO> datas = reglementService.listeReglementFactures(params.getDtStart(),params.getDtEnd(),params.getRef());
+        List<DossierReglementDTO> datas = reglementService.listeReglementFactures(params.getDtStart(),
+                params.getDtEnd(), params.getRef());
         LocalDate dtEn = LocalDate.parse(params.getDtEnd()), dtSt = LocalDate.parse(params.getDtStart());
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
         }
-          datas.sort(Comparator.comparing(DossierReglementDTO::getTiersPayantName).thenComparing(DossierReglementDTO::getDateReglement,Comparator.reverseOrder()));
+        datas.sort(Comparator.comparing(DossierReglementDTO::getTiersPayantName)
+                .thenComparing(DossierReglementDTO::getDateReglement, Comparator.reverseOrder()));
         parameters.put("P_H_CLT_INFOS", "LISTE DES REGLEMENTS FACTURES  " + P_PERIODE);
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_reglement_facture_group_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "rp_reglement_facture_group_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_reglement_facture_group_" + report_generate_file;
     }
 

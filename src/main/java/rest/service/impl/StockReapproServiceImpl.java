@@ -72,7 +72,7 @@ public class StockReapproServiceImpl implements StockReapproService {
             LocalDate lastMonth = DateUtil.getLastMonthFromNow();
             LocalDate threeMonthAgo = DateUtil.getNthLastMonthFromNow(3);
             Date now = new Date();
-            LOG.log(Level.INFO, "REAPPRO COMPUTE BEGIN AT ======>>>  {0} ", new Object[]{LocalDateTime.now()});
+            LOG.log(Level.INFO, "REAPPRO COMPUTE BEGIN AT ======>>>  {0} ", new Object[] { LocalDateTime.now() });
             userTransaction.begin();
             List<Produit> boiteCh = new ArrayList<>();
             Map<String, Integer> deconditiones = new HashMap<>();
@@ -83,7 +83,7 @@ public class StockReapproServiceImpl implements StockReapproService {
                 short hasChild = t.get("hasChild", Byte.class).shortValue();
                 short isChild = t.get("isChild", Byte.class).shortValue();
                 Integer itemQuantity = t.get("itemQuantity", Integer.class);
-               
+
                 if (StringUtils.isEmpty(parentId) && (hasChild == 0)) {
                     Reappro reappro = compute(consommation, dayStock, delayReappro);
                     updateTFamille(id, reappro, now);
@@ -91,13 +91,13 @@ public class StockReapproServiceImpl implements StockReapproService {
                     if (hasChild == 1 && StringUtils.isEmpty(parentId)) {
                         boiteCh.add(new Produit(id, consommation, itemQuantity));
                     } else if (isChild == 1) {
-                        //deconditiones
+                        // deconditiones
                         deconditiones.put(parentId, consommation);
                     }
                 }
 
             });
-          
+
             computeBoiteCh(boiteCh, deconditiones, dayStock, delayReappro, now);
             computeInvendus(lastMonth, threeMonthAgo, deconditiones, dayStock, delayReappro, now);
             TParameters p = getParameters("KEY_DAY_SEUIL_REAPPRO");
@@ -106,14 +106,16 @@ public class StockReapproServiceImpl implements StockReapproService {
             this.em.merge(p);
             userTransaction.commit();
 
-        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
+        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException
+                | NotSupportedException | RollbackException | SystemException e) {
             LOG.log(Level.SEVERE, null, e);
         }
-        LOG.log(Level.INFO, "REAPPRO COMPUTE END AT ======>>>  {0} ", new Object[]{LocalDateTime.now()});
+        LOG.log(Level.INFO, "REAPPRO COMPUTE END AT ======>>>  {0} ", new Object[] { LocalDateTime.now() });
 
     }
 
-    private void computeBoiteCh(List<Produit> boiteCh, Map<String, Integer> deconditiones, final int dayStock, final int delayReappro, Date now) {
+    private void computeBoiteCh(List<Produit> boiteCh, Map<String, Integer> deconditiones, final int dayStock,
+            final int delayReappro, Date now) {
         boiteCh.forEach((produit) -> {
             int conso = produit.getConsommation();
             int itemQty = produit.getItemQuantity();
@@ -131,8 +133,8 @@ public class StockReapproServiceImpl implements StockReapproService {
         return (int) Math.ceil(conso / Double.valueOf(quantity));
     }
 
-    private void computeInvendus(LocalDate lastMonth,
-            LocalDate threeMonthAgo, Map<String, Integer> deconditiones, final int dayStock, final int delayReappro, Date now) {
+    private void computeInvendus(LocalDate lastMonth, LocalDate threeMonthAgo, Map<String, Integer> deconditiones,
+            final int dayStock, final int delayReappro, Date now) {
 
         produitsInvendus(threeMonthAgo, lastMonth).forEach((tuple) -> {
             String produitId = tuple.get("id", String.class);
@@ -179,8 +181,7 @@ public class StockReapproServiceImpl implements StockReapproService {
     private void updateTFamille(String produitId, Reappro reappro, Date now) {
 
         CriteriaBuilder cb = this.em.getCriteriaBuilder();
-        CriteriaUpdate<TFamille> update = cb.
-                createCriteriaUpdate(TFamille.class);
+        CriteriaUpdate<TFamille> update = cb.createCriteriaUpdate(TFamille.class);
         Root<TFamille> root = update.from(TFamille.class);
         update.set(TFamille_.INT_SE_UI_LM_IN, reappro.getSeuilMin());
         update.set(TFamille_.INT_SE_UI_LM_AX, reappro.getSeuilMax());
@@ -194,8 +195,7 @@ public class StockReapproServiceImpl implements StockReapproService {
     private void updateTFamilleInvendus(String produitId, Date now) {
 
         CriteriaBuilder cb = this.em.getCriteriaBuilder();
-        CriteriaUpdate<TFamille> update = cb.
-                createCriteriaUpdate(TFamille.class);
+        CriteriaUpdate<TFamille> update = cb.createCriteriaUpdate(TFamille.class);
         Root<TFamille> root = update.from(TFamille.class);
         update.set(TFamille_.INT_SE_UI_LM_IN, 0);
         update.set(TFamille_.INT_SE_UI_LM_AX, 0);
@@ -217,7 +217,7 @@ public class StockReapproServiceImpl implements StockReapproService {
 
     private boolean checkExecutePossible() {
 
-        TParameters p = getParameters("KEY_DAY_SEUIL_REAPPRO");//derniere date de mise a jour stock reappro
+        TParameters p = getParameters("KEY_DAY_SEUIL_REAPPRO");// derniere date de mise a jour stock reappro
         if (p == null) {
             return false;
         }

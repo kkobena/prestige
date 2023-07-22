@@ -19,7 +19,7 @@ import javax.ejb.Local;
 @Local
 public interface RetourFournisseurService {
 
-    List<RetourDetailsDTO> loadDetailRetourFournisseur(String retourId) ;
+    List<RetourDetailsDTO> loadDetailRetourFournisseur(String retourId);
 
     RetourFournisseurDTO createRetour(RetourFournisseurDTO params);
 
@@ -30,8 +30,8 @@ public interface RetourFournisseurService {
     void removeItem(String params);
 
     void cloture(RetourFournisseurDTO params);
-    
-      List<ErpAvoir> erpAvoirsFournisseurs(String dtStart, String dtEnd) ;
-      
-      void returnFullBonLivraison(String bonId, String motifId,TUser user) throws CloneNotSupportedException;
+
+    List<ErpAvoir> erpAvoirsFournisseurs(String dtStart, String dtEnd);
+
+    void returnFullBonLivraison(String bonId, String motifId, TUser user) throws CloneNotSupportedException;
 }

@@ -35,7 +35,5 @@ public class GroupeTiersPayantDTO {
     public String getTelephone() {
         return telephone;
     }
-    
-    
 
 }

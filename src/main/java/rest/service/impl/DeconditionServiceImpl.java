@@ -43,14 +43,15 @@ public class DeconditionServiceImpl implements DeconditionService {
     @EJB
     private SuggestionService suggestionService;
 
-
     public EntityManager getEntityManager() {
         return em;
     }
 
     private Optional<TMouvement> findByDay(TFamille OTFamille, String lgEmpl) {
         try {
-            TypedQuery<TMouvement> query = getEntityManager().createQuery("SELECT o FROM TMouvement o  WHERE o.dtDAY =?1 AND o.lgFAMILLEID.lgFAMILLEID =?2 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?3 AND o.strACTION =?4", TMouvement.class);
+            TypedQuery<TMouvement> query = getEntityManager().createQuery(
+                    "SELECT o FROM TMouvement o  WHERE o.dtDAY =?1 AND o.lgFAMILLEID.lgFAMILLEID =?2 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?3 AND o.strACTION =?4",
+                    TMouvement.class);
             query.setParameter(1, new Date(), TemporalType.DATE);
             query.setParameter(2, OTFamille.getLgFAMILLEID());
             query.setParameter(3, lgEmpl);
@@ -65,9 +66,10 @@ public class DeconditionServiceImpl implements DeconditionService {
 
     private TFamilleStock getTProductItemStock(String lg_FAMILLE_ID, String lg_EMPLACEMENT_ID) {
 
-        TFamilleStock OTProductItemStock = (TFamilleStock) getEntityManager().
-                createQuery("SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable'").
-                setParameter(1, lg_FAMILLE_ID).setParameter(2, lg_EMPLACEMENT_ID).setFirstResult(0).setMaxResults(1).getSingleResult();
+        TFamilleStock OTProductItemStock = (TFamilleStock) getEntityManager().createQuery(
+                "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable'")
+                .setParameter(1, lg_FAMILLE_ID).setParameter(2, lg_EMPLACEMENT_ID).setFirstResult(0).setMaxResults(1)
+                .getSingleResult();
         getEntityManager().refresh(OTProductItemStock);
 
         return OTProductItemStock;
@@ -82,7 +84,8 @@ public class DeconditionServiceImpl implements DeconditionService {
 
     }
 
-    public void createTMouvement(TFamille OTFamille, TEmplacement OTEmplacement, String str_TYPE_ACTION, String str_ACTION, Integer int_NUMBER, TUser user) throws Exception {
+    public void createTMouvement(TFamille OTFamille, TEmplacement OTEmplacement, String str_TYPE_ACTION,
+            String str_ACTION, Integer int_NUMBER, TUser user) throws Exception {
 
         TMouvement OTMouvement = new TMouvement();
         OTMouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
@@ -104,7 +107,9 @@ public class DeconditionServiceImpl implements DeconditionService {
 
     private Optional<TMouvementSnapshot> findMouvementSnapshotByDay(TFamille OTFamille, String lgEmpl) {
         try {
-            TypedQuery<TMouvementSnapshot> query = getEntityManager().createQuery("SELECT o FROM TMouvementSnapshot o  WHERE o.dtDAY =?1 AND o.lgFAMILLEID.lgFAMILLEID =?2 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?3 AND o.strSTATUT='enable' ", TMouvementSnapshot.class);
+            TypedQuery<TMouvementSnapshot> query = getEntityManager().createQuery(
+                    "SELECT o FROM TMouvementSnapshot o  WHERE o.dtDAY =?1 AND o.lgFAMILLEID.lgFAMILLEID =?2 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?3 AND o.strSTATUT='enable' ",
+                    TMouvementSnapshot.class);
             query.setParameter(1, new Date(), TemporalType.DATE);
             query.setParameter(2, OTFamille.getLgFAMILLEID());
             query.setParameter(3, lgEmpl);
@@ -133,8 +138,10 @@ public class DeconditionServiceImpl implements DeconditionService {
             TFamille OTFamilleChild = getEntityManager().find(TFamille.class, params.getProduitId());
             TFamille OTFamilleParent = getEntityManager().find(TFamille.class, OTFamilleChild.getLgFAMILLEPARENTID());
             Integer qtyDetail = OTFamilleParent.getIntNUMBERDETAIL();
-            TFamilleStock OTFamilleStockParent = getTProductItemStock(OTFamilleParent.getLgFAMILLEID(), te.getLgEMPLACEMENTID());
-            TFamilleStock OTFamilleStockChild = getTProductItemStock(OTFamilleChild.getLgFAMILLEID(), te.getLgEMPLACEMENTID());
+            TFamilleStock OTFamilleStockParent = getTProductItemStock(OTFamilleParent.getLgFAMILLEID(),
+                    te.getLgEMPLACEMENTID());
+            TFamilleStock OTFamilleStockChild = getTProductItemStock(OTFamilleChild.getLgFAMILLEID(),
+                    te.getLgEMPLACEMENTID());
             Integer stockInitDetail = OTFamilleStockChild.getIntNUMBERAVAILABLE();
             Integer stockInit = OTFamilleStockParent.getIntNUMBERAVAILABLE();
             Integer _stockInitDetail = stockInit * qtyDetail;
@@ -148,10 +155,12 @@ public class DeconditionServiceImpl implements DeconditionService {
                 numberToDecondition++;
                 x += qtyDetail;
             }
-            OTFamilleStockParent.setIntNUMBERAVAILABLE(OTFamilleStockParent.getIntNUMBERAVAILABLE() - numberToDecondition);
+            OTFamilleStockParent
+                    .setIntNUMBERAVAILABLE(OTFamilleStockParent.getIntNUMBERAVAILABLE() - numberToDecondition);
             OTFamilleStockParent.setIntNUMBER(OTFamilleStockParent.getIntNUMBERAVAILABLE());
             OTFamilleStockParent.setDtUPDATED(new Date());
-            OTFamilleStockChild.setIntNUMBERAVAILABLE(OTFamilleStockChild.getIntNUMBERAVAILABLE() + (numberToDecondition * qtyDetail));
+            OTFamilleStockChild.setIntNUMBERAVAILABLE(
+                    OTFamilleStockChild.getIntNUMBERAVAILABLE() + (numberToDecondition * qtyDetail));
             OTFamilleStockChild.setIntNUMBER(OTFamilleStockChild.getIntNUMBERAVAILABLE());
             OTFamilleStockChild.setDtUPDATED(new Date());
             getEntityManager().merge(OTFamilleStockParent);
@@ -162,29 +171,34 @@ public class DeconditionServiceImpl implements DeconditionService {
             if (opChild.isPresent()) {
                 updateTMouvement(opChild.get(), (numberToDecondition * qtyDetail));
             } else {
-                createTMouvement(OTFamilleChild, te, commonparameter.ADD, commonparameter.str_ACTION_DECONDITIONNEMENT, (numberToDecondition * qtyDetail), params.getUserId());
+                createTMouvement(OTFamilleChild, te, commonparameter.ADD, commonparameter.str_ACTION_DECONDITIONNEMENT,
+                        (numberToDecondition * qtyDetail), params.getUserId());
             }
             Optional<TMouvement> opParent = findByDay(OTFamilleParent, te.getLgEMPLACEMENTID());
             if (opParent.isPresent()) {
                 updateTMouvement(opParent.get(), numberToDecondition);
             } else {
-                createTMouvement(OTFamilleParent, te, commonparameter.REMOVE, commonparameter.str_ACTION_DECONDITIONNEMENT, numberToDecondition, params.getUserId());
+                createTMouvement(OTFamilleParent, te, commonparameter.REMOVE,
+                        commonparameter.str_ACTION_DECONDITIONNEMENT, numberToDecondition, params.getUserId());
             }
             Optional<TMouvementSnapshot> mvtChild = findMouvementSnapshotByDay(OTFamilleChild, te.getLgEMPLACEMENTID());
             if (mvtChild.isPresent()) {
                 updateSnapshotMouvementArticle(mvtChild.get(), (numberToDecondition * qtyDetail));
             } else {
-                createSnapshotMouvementArticle(OTFamilleChild, OTFamilleStockChild.getIntNUMBERAVAILABLE(), stockInitDetail, te);
+                createSnapshotMouvementArticle(OTFamilleChild, OTFamilleStockChild.getIntNUMBERAVAILABLE(),
+                        stockInitDetail, te);
             }
-            Optional<TMouvementSnapshot> mvtparent = findMouvementSnapshotByDay(OTFamilleParent, te.getLgEMPLACEMENTID());
+            Optional<TMouvementSnapshot> mvtparent = findMouvementSnapshotByDay(OTFamilleParent,
+                    te.getLgEMPLACEMENTID());
             if (mvtparent.isPresent()) {
                 updateSnapshotMouvementArticle(mvtparent.get(), numberToDecondition);
             } else {
-                createSnapshotMouvementArticle(OTFamilleParent, OTFamilleStockParent.getIntNUMBERAVAILABLE(), stockInit, te);
+                createSnapshotMouvementArticle(OTFamilleParent, OTFamilleStockParent.getIntNUMBERAVAILABLE(), stockInit,
+                        te);
             }
             json.put("success", true);
             json.put("msg", "opération effectuée avec success");
-             suggestionService.makeSuggestionAuto(OTFamilleStockParent, OTFamilleParent);
+            suggestionService.makeSuggestionAuto(OTFamilleStockParent, OTFamilleParent);
             return json;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -194,7 +208,8 @@ public class DeconditionServiceImpl implements DeconditionService {
         }
     }
 
-    public void createSnapshotMouvementArticle(TFamille OTFamille, int int_NUMBER, int int_STOCK_DEBUT, TEmplacement OTEmplacement) {
+    public void createSnapshotMouvementArticle(TFamille OTFamille, int int_NUMBER, int int_STOCK_DEBUT,
+            TEmplacement OTEmplacement) {
 
         TMouvementSnapshot OTMouvementSnapshot = new TMouvementSnapshot();
         OTMouvementSnapshot.setLgMOUVEMENTSNAPSHOTID(UUID.randomUUID().toString());

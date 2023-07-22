@@ -25,13 +25,12 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "motif_reglement")
 @NamedQueries({
-    @NamedQuery(name = "MotifReglement.findAll", query = "SELECT o FROM MotifReglement o ORDER BY o.libelle")}
-        )
+        @NamedQuery(name = "MotifReglement.findAll", query = "SELECT o FROM MotifReglement o ORDER BY o.libelle") })
 public class MotifReglement implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
-     @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false)
     private Integer id;
     @NotNull
@@ -80,7 +79,5 @@ public class MotifReglement implements Serializable {
     public String toString() {
         return "MotifReglement{" + "id=" + id + ", libelle=" + libelle + '}';
     }
-    
-    
-    
+
 }

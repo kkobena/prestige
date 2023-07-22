@@ -30,7 +30,8 @@ public class RetourDetailsDTO implements Serializable {
     private Date dateOperation;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
-    private String lgRETOURFRSDETAIL, strNAME, intCIP, strLIBELLE, motif, dtCREATED, HEURE, produitId, lgMOTIFRETOUR, lgRETOURFRSID;
+    private String lgRETOURFRSDETAIL, strNAME, intCIP, strLIBELLE, motif, dtCREATED, HEURE, produitId, lgMOTIFRETOUR,
+            lgRETOURFRSID;
     private Integer intNUMBERRETURN = 0, intNUMBERANSWER = 0, qtyMvt = 0, prixPaf = 0, intSTOCK, ecart;
     private String strCOMMENTAIRE, strREFRETOURFRS;
     private String referenceBl;
@@ -261,7 +262,8 @@ public class RetourDetailsDTO implements Serializable {
         this.operateur = tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
         this.dateOperation = DateConverter.convertLocalDateTimeToDate(d.getCreatedAt());
         this.dtCREATED = d.getMvtDate().format(DateTimeFormatter.ofPattern("dd/MM/yyy"));
-        this.HEURE = d.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm"));;
+        this.HEURE = d.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm"));
+        ;
         this.intNUMBERRETURN = d.getQteDebut();
         this.intNUMBERANSWER = d.getQteFinale();
         this.qtyMvt = d.getQteMvt();

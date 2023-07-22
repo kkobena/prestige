@@ -12,7 +12,8 @@ public class RecapActiviteCreditDTO {
     private final long nbreClient;
     private final long nbreBons;
 
-    public RecapActiviteCreditDTO(String libelleTiersPayant, String libelleTypeTiersPayant, long montant, long nbreClient, long nbreBons) {
+    public RecapActiviteCreditDTO(String libelleTiersPayant, String libelleTypeTiersPayant, long montant,
+            long nbreClient, long nbreBons) {
         this.libelleTiersPayant = libelleTiersPayant;
         this.libelleTypeTiersPayant = libelleTypeTiersPayant;
         this.montant = montant;

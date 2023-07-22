@@ -9,7 +9,7 @@ public class RecapActiviteReglementDTO {
     private final long montant;
     private final String libelle;
 
-    public RecapActiviteReglementDTO( String libelle,long montant) {
+    public RecapActiviteReglementDTO(String libelle, long montant) {
         this.montant = montant;
         this.libelle = libelle;
     }
@@ -21,5 +21,5 @@ public class RecapActiviteReglementDTO {
     public String getLibelle() {
         return libelle;
     }
-    
+
 }

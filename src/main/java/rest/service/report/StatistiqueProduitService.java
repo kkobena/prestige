@@ -14,7 +14,9 @@ public interface StatistiqueProduitService {
 
     JSONObject getIntervalAnnees();
 
-    List<StatistiqueProduitAnnuelleDTO> getVenteProduits(Integer year, String search, String userEmplacement, String rayonId, int start, int limit, boolean all);
+    List<StatistiqueProduitAnnuelleDTO> getVenteProduits(Integer year, String search, String userEmplacement,
+            String rayonId, int start, int limit, boolean all);
 
-    JSONObject getVenteProduits(Integer year, String search, String userEmplacement, String rayonId, int start, int limit);
+    JSONObject getVenteProduits(Integer year, String search, String userEmplacement, String rayonId, int start,
+            int limit);
 }

@@ -19,8 +19,8 @@ import org.json.JSONObject;
 /**
  * @author Kobena
  */
-//@Local
-//@Remote
+// @Local
+// @Remote
 public interface SalesService {
 
     void cloneTransaction(MvtTransaction old, TPreenregistrement p);
@@ -107,7 +107,7 @@ public interface SalesService {
 
     JSONObject modificationVentetierpayantprincipal(String venteId, ClotureVenteParams params) throws JSONException;
 
-    JSONObject shownetpayVoWithEncour(SalesParams params) ;
+    JSONObject shownetpayVoWithEncour(SalesParams params);
 
     JSONObject updateMedecin(String idVente, MedecinDTO medecinDTO) throws JSONException;
 
@@ -119,7 +119,7 @@ public interface SalesService {
 
     JSONObject findVenteForUpdationg(String venteId) throws JSONException;
 
-    void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp) ;
+    void annulerVenteAnterieur(TUser ooTUser, TPreenregistrement tp);
 
     JSONObject closePreventeVente(TUser ooTUser, String id);
 

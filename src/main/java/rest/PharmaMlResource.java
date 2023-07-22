@@ -39,7 +39,6 @@ public class PharmaMlResource {
     private HttpServletRequest servletRequest;
     @EJB
     PharmaMlService pharmaMlService;
-   
 
     @PUT
     @Path("{id}")
@@ -74,25 +73,25 @@ public class PharmaMlResource {
 
     @PUT
     @Path("rupture/{id}/{grossiste}")
-    public Response renvoiPharmaCommande(@PathParam("id") String ruptureId,@PathParam("grossiste") String grossiste) throws JSONException {
+    public Response renvoiPharmaCommande(@PathParam("id") String ruptureId, @PathParam("grossiste") String grossiste)
+            throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject json = pharmaMlService.renvoiPharmaCommande(ruptureId,  grossiste,LocalDate.now().plusDays(1), 0, null, null);
+        JSONObject json = pharmaMlService.renvoiPharmaCommande(ruptureId, grossiste, LocalDate.now().plusDays(1), 0,
+                null, null);
         return Response.ok().entity(json.toString()).build();
     }
 
-     @GET
+    @GET
     @Path("rupture/responseorder")
     public Response reponseRupture(@QueryParam("ruptureId") String orderId) throws JSONException {
-         HttpSession hs = servletRequest.getSession();
+        HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         JSONObject json = pharmaMlService.reponseRupture(orderId, tu);
         return Response.ok().entity(json.toString()).build();
     }
-    
-   
 
 }

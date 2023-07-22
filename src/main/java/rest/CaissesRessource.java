@@ -42,16 +42,14 @@ public class CaissesRessource {
     private CaisseService caisseService;
     @EJB
     private SalesStatsService salesStatsService;
- 
+
     @EJB
     private BalanceService balanceService;
 
     @GET
     @Path("balancesalecash")
-    public Response balanceCaisse(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response balanceCaisse(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -65,20 +63,19 @@ public class CaissesRessource {
         }
         JSONObject json;
         if (!this.balanceService.useLastUpdateStats()) {
-            json = caisseService.balanceVenteCaisseVersion2(dtSt, dtEn, true, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), true);
+            json = caisseService.balanceVenteCaisseVersion2(dtSt, dtEn, true,
+                    tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), true);
         } else {
-            json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
-                    .dtStart(dtStart)
-                    .dtEnd(dtEnd)
-                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                    .build());
+            json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd)
+                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         }
 
         return Response.ok().entity(json.toString()).build();
     }
 
     @Deprecated
-    public Response tvastatDeprecated(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+    public Response tvastatDeprecated(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -94,10 +91,8 @@ public class CaissesRessource {
 
     @GET
     @Path("balanceparas")
-    public Response balancepara(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response balancepara(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -113,5 +108,4 @@ public class CaissesRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-   
 }

@@ -37,9 +37,10 @@ public class BatchUpdateRessource {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter")).build();
+            return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter"))
+                    .build();
         }
-        mes.submit( stockReapproService::computeReappro);
+        mes.submit(stockReapproService::computeReappro);
         return Response.ok().entity(ResultFactory.getFailResult("Traitement en cours")).build();
     }
 

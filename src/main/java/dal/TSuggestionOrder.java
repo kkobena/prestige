@@ -32,14 +32,13 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "t_suggestion_order")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TSuggestionOrder.findAll", query = "SELECT t FROM TSuggestionOrder t"),
-    @NamedQuery(name = "TSuggestionOrder.findByLgSUGGESTIONORDERID", query = "SELECT t FROM TSuggestionOrder t WHERE t.lgSUGGESTIONORDERID = :lgSUGGESTIONORDERID"),
-    @NamedQuery(name = "TSuggestionOrder.findByStrREF", query = "SELECT t FROM TSuggestionOrder t WHERE t.strREF = :strREF"),
-    @NamedQuery(name = "TSuggestionOrder.findByIntNUMBER", query = "SELECT t FROM TSuggestionOrder t WHERE t.intNUMBER = :intNUMBER"),
-    @NamedQuery(name = "TSuggestionOrder.findByDtCREATED", query = "SELECT t FROM TSuggestionOrder t WHERE t.dtCREATED = :dtCREATED"),
-    @NamedQuery(name = "TSuggestionOrder.findByDtUPDATED", query = "SELECT t FROM TSuggestionOrder t WHERE t.dtUPDATED = :dtUPDATED"),
-    @NamedQuery(name = "TSuggestionOrder.findByStrSTATUT", query = "SELECT t FROM TSuggestionOrder t WHERE t.strSTATUT = :strSTATUT")})
+@NamedQueries({ @NamedQuery(name = "TSuggestionOrder.findAll", query = "SELECT t FROM TSuggestionOrder t"),
+        @NamedQuery(name = "TSuggestionOrder.findByLgSUGGESTIONORDERID", query = "SELECT t FROM TSuggestionOrder t WHERE t.lgSUGGESTIONORDERID = :lgSUGGESTIONORDERID"),
+        @NamedQuery(name = "TSuggestionOrder.findByStrREF", query = "SELECT t FROM TSuggestionOrder t WHERE t.strREF = :strREF"),
+        @NamedQuery(name = "TSuggestionOrder.findByIntNUMBER", query = "SELECT t FROM TSuggestionOrder t WHERE t.intNUMBER = :intNUMBER"),
+        @NamedQuery(name = "TSuggestionOrder.findByDtCREATED", query = "SELECT t FROM TSuggestionOrder t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TSuggestionOrder.findByDtUPDATED", query = "SELECT t FROM TSuggestionOrder t WHERE t.dtUPDATED = :dtUPDATED"),
+        @NamedQuery(name = "TSuggestionOrder.findByStrSTATUT", query = "SELECT t FROM TSuggestionOrder t WHERE t.strSTATUT = :strSTATUT") })
 public class TSuggestionOrder implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -124,7 +123,8 @@ public class TSuggestionOrder implements Serializable {
         return tSuggestionOrderDetailsCollection;
     }
 
-    public void setTSuggestionOrderDetailsCollection(Collection<TSuggestionOrderDetails> tSuggestionOrderDetailsCollection) {
+    public void setTSuggestionOrderDetailsCollection(
+            Collection<TSuggestionOrderDetails> tSuggestionOrderDetailsCollection) {
         this.tSuggestionOrderDetailsCollection = tSuggestionOrderDetailsCollection;
     }
 
@@ -150,7 +150,8 @@ public class TSuggestionOrder implements Serializable {
             return false;
         }
         TSuggestionOrder other = (TSuggestionOrder) object;
-        if ((this.lgSUGGESTIONORDERID == null && other.lgSUGGESTIONORDERID != null) || (this.lgSUGGESTIONORDERID != null && !this.lgSUGGESTIONORDERID.equals(other.lgSUGGESTIONORDERID))) {
+        if ((this.lgSUGGESTIONORDERID == null && other.lgSUGGESTIONORDERID != null)
+                || (this.lgSUGGESTIONORDERID != null && !this.lgSUGGESTIONORDERID.equals(other.lgSUGGESTIONORDERID))) {
             return false;
         }
         return true;
@@ -160,5 +161,5 @@ public class TSuggestionOrder implements Serializable {
     public String toString() {
         return "dal.TSuggestionOrder[ lgSUGGESTIONORDERID=" + lgSUGGESTIONORDERID + " ]";
     }
-    
+
 }

@@ -41,9 +41,11 @@ public interface MvtProduitService {
 
     public void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg);
 
-    public void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg, TEmplacement depot) throws Exception;
+    public void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg,
+            TEmplacement depot) throws Exception;
 
-    void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement, EntityManager emg) throws Exception;
+    void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement, EntityManager emg)
+            throws Exception;
 
     JSONObject creerAjustement(Params params) throws JSONException;
 
@@ -71,13 +73,8 @@ public interface MvtProduitService {
 
     int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em);
 
-    JSONObject loadetourFournisseur(
-            String dtStart,
-            String dtEnd,
-            int start,
-            int limit,
-            String fourId,
-            String query, boolean cunRemove, String filtre) throws JSONException;
+    JSONObject loadetourFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query,
+            boolean cunRemove, String filtre) throws JSONException;
 
     JSONObject validerRetourDepot(String retourId, TUser user) throws JSONException;
 
@@ -85,21 +82,14 @@ public interface MvtProduitService {
 
     List<AjustementDetailDTO> getAllAjustementDetailDTOs(SalesStatsParams params);
 
-    List<RetourFournisseurDTO> loadretoursFournisseur(
-            String dtStart,
-            String dtEnd,
-            int start,
-            int limit,
-            String fourId,
+    List<RetourFournisseurDTO> loadretoursFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId,
             String query, boolean cunRemove, String filtre);
 
-    List<RetourDetailsDTO> loadretoursFournisseur(
-            String dtStart,
-            String dtEnd,
-            String fourId,
-            String query, String filtre);
+    List<RetourDetailsDTO> loadretoursFournisseur(String dtStart, String dtEnd, String fourId, String query,
+            String filtre);
 
     void validerFullBlRetourFournisseur(TRetourFournisseur fournisseur);
 
-    void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur, TMotifRetour motifRetour, List<TBonLivraisonDetail> bonLivraisonDetails);
+    void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur, TMotifRetour motifRetour,
+            List<TBonLivraisonDetail> bonLivraisonDetails);
 }

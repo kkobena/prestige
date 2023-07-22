@@ -9,7 +9,5 @@ package rest.service.dto;
  * @author koben
  */
 public enum CommandeFiltre {
-    PRIX_VENTE_DIFF,
-    PRIX_VENTE_PLUS_30,
-    ALL
+    PRIX_VENTE_DIFF, PRIX_VENTE_PLUS_30, ALL
 }

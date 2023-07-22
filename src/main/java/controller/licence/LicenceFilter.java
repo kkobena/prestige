@@ -31,7 +31,7 @@ import org.json.JSONObject;
  *
  * @author koben
  */
-@WebFilter(filterName = "LicenceFilter", urlPatterns = {"/*"})
+@WebFilter(filterName = "LicenceFilter", urlPatterns = { "/*" })
 public class LicenceFilter implements Filter {
 
     private static final boolean debug = true;
@@ -44,11 +44,8 @@ public class LicenceFilter implements Filter {
     public LicenceFilter() {
     }
 
- 
- 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response,
-            FilterChain chain)
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest httpReq = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -67,7 +64,8 @@ public class LicenceFilter implements Filter {
     /**
      * Set the filter configuration object for this filter.
      *
-     * @param filterConfig The filter configuration object
+     * @param filterConfig
+     *            The filter configuration object
      */
     public void setFilterConfig(FilterConfig filterConfig) {
         this.filterConfig = filterConfig;
@@ -107,8 +105,6 @@ public class LicenceFilter implements Filter {
         return (sb.toString());
     }
 
-  
-
     public static String getStackTrace(Throwable t) {
         String stackTrace = null;
         try {
@@ -131,11 +127,10 @@ public class LicenceFilter implements Filter {
         return DigestUtils.sha1Hex(dataToEncode);
     }
 
-
     private void sendProcessingError(ServletResponse response) {
         try {
             response.setContentType("application/json;charset=UTF-8");
-            try ( PrintStream ps = new PrintStream(response.getOutputStream());  PrintWriter pw = new PrintWriter(ps)) {
+            try (PrintStream ps = new PrintStream(response.getOutputStream()); PrintWriter pw = new PrintWriter(ps)) {
                 JSONObject json = new JSONObject();
                 json.put("success", false).put("msg", "Votre licence n'est pas valide");
                 pw.print(json.toString());
@@ -158,20 +153,21 @@ public class LicenceFilter implements Filter {
         return em.find(TOfficine.class, "1");
     }
 
-    private void proceedWithAuth2(HttpServletRequest httpReq, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        if (httpReq.getRequestURI().contains("/laborex/custom")|| httpReq.getRequestURI().contains("v1/flag")) {
+    private void proceedWithAuth2(HttpServletRequest httpReq, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+        if (httpReq.getRequestURI().contains("/laborex/custom") || httpReq.getRequestURI().contains("v1/flag")) {
             Optional<Licence> lc = getOne(encode(KEY.concat(getOfficine().getStrNOMCOMPLET())));
-         
-            if(lc.isEmpty()){
-                   sendProcessingError(response);
-            }else{
-                if (lc.get().getDateEnd().isBefore(LocalDate.now())) {
+
+            if (lc.isEmpty()) {
                 sendProcessingError(response);
             } else {
-                chain.doFilter(httpReq, response);
-            } 
+                if (lc.get().getDateEnd().isBefore(LocalDate.now())) {
+                    sendProcessingError(response);
+                } else {
+                    chain.doFilter(httpReq, response);
+                }
             }
-           
+
         } else {
             chain.doFilter(httpReq, response);
         }

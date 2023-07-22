@@ -13,11 +13,14 @@ import rest.service.dto.EtatControlBon;
 @Local
 public interface EtatControlBonService {
 
-    List<EtatControlBon> list(boolean fullAuth, String search, String dtStart, String dtEnd, String grossisteId, int start, int limit, boolean all);
+    List<EtatControlBon> list(boolean fullAuth, String search, String dtStart, String dtEnd, String grossisteId,
+            int start, int limit, boolean all);
 
-    JSONObject list(boolean fullAuth, String search, String dtStart, String dtEnd, String grossisteId, int start, int limit);
+    JSONObject list(boolean fullAuth, String search, String dtStart, String dtEnd, String grossisteId, int start,
+            int limit);
 
-    EtatControlAnnuelWrapperDTO listBonAnnuel(String groupBy, String dtStart, String dtEnd, String grossisteId, Integer groupeId);
+    EtatControlAnnuelWrapperDTO listBonAnnuel(String groupBy, String dtStart, String dtEnd, String grossisteId,
+            Integer groupeId);
 
     JSONObject listBonAnnuelView(String groupBy, String dtStart, String dtEnd, String grossisteId, Integer groupeId);
 

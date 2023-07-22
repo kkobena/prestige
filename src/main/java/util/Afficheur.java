@@ -28,15 +28,15 @@ public class Afficheur {
 
     private static final Logger LOG = Logger.getLogger(Afficheur.class.getName());
 
-    private BufferedReader bufRead; //flux de lecture du port
-    private OutputStream outStream; //flux d'écriture du port
-    private CommPortIdentifier portId; //identifiant du port
-    private SerialPort sPort; //le port série
+    private BufferedReader bufRead; // flux de lecture du port
+    private OutputStream outStream; // flux d'écriture du port
+    private CommPortIdentifier portId; // identifiant du port
+    private SerialPort sPort; // le port série
     private static Afficheur INSTANCE = null;
     private Boolean isOpen;
     private CommPort cp;
 
-    public  static Afficheur getInstance() {
+    public static Afficheur getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new Afficheur();
         }
@@ -47,43 +47,42 @@ public class Afficheur {
         try {
             Win32Driver w32Driver = new Win32Driver();
             w32Driver.initialize();
-//            sPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+            // sPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
         } catch (Exception e) {
-            
+
         }
         try {
             portId = CommPortIdentifier.getPortIdentifier(jdom.com_port_displayer);
         } catch (NoSuchPortException e) {
-            LOG.log(Level.INFO, "--------------->>>> NoSuchPortException {0} --->>> error msg {1} ", new Object[]{jdom.com_port_displayer,e.getLocalizedMessage()});
+            LOG.log(Level.INFO, "--------------->>>> NoSuchPortException {0} --->>> error msg {1} ",
+                    new Object[] { jdom.com_port_displayer, e.getLocalizedMessage() });
         }
         try {
             sPort = (SerialPort) portId.open(jdom.APP_NAME, 3000);
         } catch (PortInUseException e) {
-              
+
         }
 
         try {
             outStream = sPort.getOutputStream();
-            bufRead
-                    = new BufferedReader(
-                            new InputStreamReader(sPort.getInputStream()));
+            bufRead = new BufferedReader(new InputStreamReader(sPort.getInputStream()));
         } catch (IOException e) {
-           
+
         }
         try {
             sPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
         } catch (UnsupportedCommOperationException e) {
-              
+
         }
 
     }
 
     public void communique(char envoie) {
         try {
-            //affiche un caractere a l'ecran
-            outStream.write( envoie);
+            // affiche un caractere a l'ecran
+            outStream.write(envoie);
         } catch (IOException e) {
-          
+
         }
     }
 
@@ -92,11 +91,11 @@ public class Afficheur {
      */
     public void close() {
         try {
-//            bufRead.close();
+            // bufRead.close();
             outStream.close();
             sPort.close();
         } catch (IOException e) {
-           
+
         }
 
     }
@@ -109,27 +108,20 @@ public class Afficheur {
             isOpen = true;
         } catch (PortInUseException e) {
             isOpen = false;
-         
+
         }
-        //règle les paramètres de la connexion
+        // règle les paramètres de la connexion
         try {
-            sPort.setSerialPortParams(
-                    9600,
-                    SerialPort.DATABITS_8,
-                    SerialPort.STOPBITS_1,
-                    SerialPort.PARITY_NONE);
+            sPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
         } catch (UnsupportedCommOperationException e) {
 
-         
         }
-        //récupération du flux de lecture et écriture du port
+        // récupération du flux de lecture et écriture du port
         try {
             outStream = sPort.getOutputStream();
-            bufRead
-                    = new BufferedReader(
-                            new InputStreamReader(sPort.getInputStream()));
+            bufRead = new BufferedReader(new InputStreamReader(sPort.getInputStream()));
         } catch (IOException e) {
-       
+
         }
 
     }
@@ -152,7 +144,7 @@ public class Afficheur {
                 communique(tab1.charAt(0));
             }
         } catch (Exception e) {
-           
+
         }
     }
 
@@ -169,7 +161,7 @@ public class Afficheur {
                 communique(tab1.charAt(0));
             }
         } catch (Exception e) {
-          
+
         }
     }
 }

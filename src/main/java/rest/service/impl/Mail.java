@@ -65,14 +65,14 @@ public class Mail implements Runnable {
         MimeMessage msg = new MimeMessage(session);
 
         try {
-            String email=getReceiverAddres();
-            if(StringUtils.isEmpty(email)){
-                email=sp.mailOfficine;
+            String email = getReceiverAddres();
+            if (StringUtils.isEmpty(email)) {
+                email = sp.mailOfficine;
             }
             Address sender = new InternetAddress(sp.email);
             Address recipient = new InternetAddress(email);
             msg.setText(getMessage());
-           
+
             msg.setFrom(sender);
             msg.setRecipient(Message.RecipientType.TO, recipient);
             msg.setSubject(getSubject());

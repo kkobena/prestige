@@ -35,11 +35,12 @@ public class Utils {
         java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(authorityName);
         return privileges.stream().anyMatch(p);
     }
-    
-      public static TUser getConnectedUser(HttpServletRequest request) {
+
+    public static TUser getConnectedUser(HttpServletRequest request) {
         HttpSession hs = request.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if( Objects.nonNull(tu)) return tu;
+        if (Objects.nonNull(tu))
+            return tu;
         return null;
     }
 }

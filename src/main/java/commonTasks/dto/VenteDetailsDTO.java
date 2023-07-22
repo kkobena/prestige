@@ -31,9 +31,10 @@ import util.DateConverter;
 public class VenteDetailsDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private String lgPREENREGISTREMENTDETAILID = "", lgPREENREGISTREMENTID = "",
-            strREF, lgFAMILLEID, strNAME, intCIP, intEAN13, strSTATUT, dtCREATED, HEURE, ticketName, ticketNum;
-    private Integer intPRICEUNITAIR = 0, intQUANTITY = 0, intQUANTITYSERVED = 0, intPRICE = 0, intPRICEREMISE = 0,stockInitial,stockFinal;
+    private String lgPREENREGISTREMENTDETAILID = "", lgPREENREGISTREMENTID = "", strREF, lgFAMILLEID, strNAME, intCIP,
+            intEAN13, strSTATUT, dtCREATED, HEURE, ticketName, ticketNum;
+    private Integer intPRICEUNITAIR = 0, intQUANTITY = 0, intQUANTITYSERVED = 0, intPRICE = 0, intPRICEREMISE = 0,
+            stockInitial, stockFinal;
     private String operateur, strRefBon, dateHeure, caissier, caissierId;
     private Date dateOperation;
     private String typeVente, numOrder, medecinId, commentaire, nom;
@@ -367,7 +368,8 @@ public class VenteDetailsDTO implements Serializable {
         this.strSTATUT = f.getStrSTATUT();
         this.intPRICEUNITAIR = d.getIntPRICEUNITAIR();
         this.intQUANTITY = d.getIntQUANTITY();
-        this.intQUANTITYSERVED = (p.getStrSTATUT().equals(commonparameter.statut_is_Closed) ? d.getIntQUANTITYSERVED() + d.getIntAVOIR() : d.getIntQUANTITYSERVED());
+        this.intQUANTITYSERVED = (p.getStrSTATUT().equals(commonparameter.statut_is_Closed)
+                ? d.getIntQUANTITYSERVED() + d.getIntAVOIR() : d.getIntQUANTITYSERVED());
         this.intPRICE = d.getIntPRICE();
         this.intAVOIR = d.getIntAVOIR();
         this.bISAVOIR = d.getBISAVOIR();
@@ -403,7 +405,8 @@ public class VenteDetailsDTO implements Serializable {
         this.strSTATUT = f.getStrSTATUT();
         this.intPRICEUNITAIR = d.getIntPRICEUNITAIR();
         this.intQUANTITY = d.getIntQUANTITY();
-        this.intQUANTITYSERVED = (p.getStrSTATUT().equals(commonparameter.statut_is_Closed) ? d.getIntQUANTITYSERVED() + d.getIntAVOIR() : d.getIntQUANTITYSERVED());
+        this.intQUANTITYSERVED = (p.getStrSTATUT().equals(commonparameter.statut_is_Closed)
+                ? d.getIntQUANTITYSERVED() + d.getIntAVOIR() : d.getIntQUANTITYSERVED());
         this.intPRICE = d.getIntPRICE();
         this.intAVOIR = d.getIntAVOIR();
         this.bISAVOIR = d.getBISAVOIR();
@@ -534,7 +537,6 @@ public class VenteDetailsDTO implements Serializable {
         return bISAVOIR;
     }
 
-
     public void setbISAVOIR(boolean bISAVOIR) {
         this.bISAVOIR = bISAVOIR;
     }
@@ -561,7 +563,8 @@ public class VenteDetailsDTO implements Serializable {
         return Objects.equals(this.lgPREENREGISTREMENTDETAILID, other.lgPREENREGISTREMENTDETAILID);
     }
 
-    public VenteDetailsDTO(String cip, String libelle, long valeurCa, long valeurQty, String produit, String grossiste, String familleArticle) {
+    public VenteDetailsDTO(String cip, String libelle, long valeurCa, long valeurQty, String produit, String grossiste,
+            String familleArticle) {
         this.intCIP = cip;
         this.strNAME = libelle;
         this.intPRICE = (int) valeurCa;
@@ -579,7 +582,9 @@ public class VenteDetailsDTO implements Serializable {
 
     }
 
-    public VenteDetailsDTO(String cip, String libelle, String rayon, String grossiste, String familleArticle, Date _datePeremption, Integer valeurPrixAchat, Integer valeurPrixVente, Integer qty, String groupById, String groupBy, int seuil) {
+    public VenteDetailsDTO(String cip, String libelle, String rayon, String grossiste, String familleArticle,
+            Date _datePeremption, Integer valeurPrixAchat, Integer valeurPrixVente, Integer qty, String groupById,
+            String groupBy, int seuil) {
         LocalDate dateTime = DateConverter.convertDateToLocalDate(_datePeremption);
         String date_perem = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         this.intCIP = cip;
@@ -674,11 +679,9 @@ public class VenteDetailsDTO implements Serializable {
         this.prixAchat = prixAchat;
     }
 
-    public VenteDetailsDTO(String lgFAMILLEID,
-            String strNAME, String intCIP,
-            Date dateHeure, TUser operateur,
-            TUser caissier, int seuil, int stock, int qty,
-            int avoir, String refVente, String typeVente, String rayonId, String libelleRayon, int price, String tickeNum) {
+    public VenteDetailsDTO(String lgFAMILLEID, String strNAME, String intCIP, Date dateHeure, TUser operateur,
+            TUser caissier, int seuil, int stock, int qty, int avoir, String refVente, String typeVente, String rayonId,
+            String libelleRayon, int price, String tickeNum) {
         this.lgFAMILLEID = lgFAMILLEID;
         this.strNAME = strNAME;
         this.intCIP = intCIP;
@@ -701,11 +704,8 @@ public class VenteDetailsDTO implements Serializable {
 
     }
 
-    public VenteDetailsDTO(String lgFAMILLEID,
-            String strNAME, String intCIP,
-            TUser operateur,
-            TUser caissier, int stock, long qty,
-            long avoir, String rayonId, String libelleRayon, long price) {
+    public VenteDetailsDTO(String lgFAMILLEID, String strNAME, String intCIP, TUser operateur, TUser caissier,
+            int stock, long qty, long avoir, String rayonId, String libelleRayon, long price) {
         this.lgFAMILLEID = lgFAMILLEID;
         this.strNAME = strNAME;
         this.intCIP = intCIP;
@@ -719,6 +719,7 @@ public class VenteDetailsDTO implements Serializable {
         this.intPRICE = (int) price;
         this.intAVOIR = (int) avoir;
     }
+
     private String lgFAMILLEPARENTID;
 
     public String getLgFAMILLEPARENTID() {
@@ -729,13 +730,14 @@ public class VenteDetailsDTO implements Serializable {
         this.lgFAMILLEPARENTID = lgFAMILLEPARENTID;
     }
 
-    public VenteDetailsDTO(String produit, long quantiteVendue, String grossiste, Short bool_DECONDITIONNE, String lgFAMILLEPARENTID) {
+    public VenteDetailsDTO(String produit, long quantiteVendue, String grossiste, Short bool_DECONDITIONNE,
+            String lgFAMILLEPARENTID) {
         this.intQUANTITY = (int) quantiteVendue;
         this.lgFAMILLEID = produit;
         this.typeVente = grossiste;
         this.deconditionne = bool_DECONDITIONNE == 1;
         this.lgFAMILLEPARENTID = lgFAMILLEPARENTID;
-        this.lgPREENREGISTREMENTDETAILID=produit;
+        this.lgPREENREGISTREMENTDETAILID = produit;
 
     }
 
@@ -745,8 +747,8 @@ public class VenteDetailsDTO implements Serializable {
         this.lgFAMILLEID = famille.getLgFAMILLEID();
         this.strNAME = famille.getStrNAME();
         this.intCIP = famille.getIntCIP();
-        this.stockFinal=warehouse.getStockFinal();
-        this.stockInitial=warehouse.getStockInitial();
+        this.stockFinal = warehouse.getStockFinal();
+        this.stockInitial = warehouse.getStockInitial();
         this.operateur = warehouse.getLgUSERID().getStrFIRSTNAME() + " " + warehouse.getLgUSERID().getStrLASTNAME();
         try {
             this.dtCREATED = dateFormat.format(warehouse.getDtPEREMPTION());
@@ -785,6 +787,5 @@ public class VenteDetailsDTO implements Serializable {
         }
         this.prixAchat = famille.getIntPAF();
     }
-    
-    
+
 }

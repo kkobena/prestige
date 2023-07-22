@@ -31,7 +31,7 @@ public class RecapActiviteDTO implements Serializable {
     private long montantTotalHT = 0;
     private long montantTotalTVA = 0;
     private long montantRegle = 0;
-    private long montantMobilePayment ;
+    private long montantMobilePayment;
     private double ratio;
     private List<RecapActiviteReglementDTO> reglements = new ArrayList<>();
     private List<RecapActiviteReglementDTO> mvtsCaisse = new ArrayList<>();

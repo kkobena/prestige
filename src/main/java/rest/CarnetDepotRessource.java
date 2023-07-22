@@ -47,8 +47,7 @@ public class CarnetDepotRessource {
 
     @GET
     @Path("list")
-    public Response fetchAll(
-            @QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
+    public Response fetchAll(@QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
         JSONObject json = carnetAsDepotService.all(start, limit, query, null);
         return Response.ok().entity(json.toString()).build();
@@ -78,8 +77,7 @@ public class CarnetDepotRessource {
 
     @GET
     @Path("list-exclus")
-    public Response fetchExclud(
-            @QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
+    public Response fetchExclud(@QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
         JSONObject json = carnetAsDepotService.all(start, limit, query, true);
         return Response.ok().entity(json.toString()).build();
@@ -88,10 +86,9 @@ public class CarnetDepotRessource {
 
     @GET
     @Path("ventes")
-    public Response fetchVenteByTiersPayant(
-            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit) {
+    public Response fetchVenteByTiersPayant(@QueryParam(value = "tiersPayantId") String tiersPayantId,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
         JSONObject json = carnetAsDepotService.fetchVenteByTiersPayant(tiersPayantId, dtStart, dtEnd, start, limit);
         return Response.ok().entity(json.toString()).build();
 
@@ -99,11 +96,12 @@ public class CarnetDepotRessource {
 
     @GET
     @Path("reglements")
-    public Response reglementsCarnet(
-            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,  @QueryParam(value = "typeReglementCarnet") TypeReglementCarnet typeReglementCarnet) {
-        JSONObject json = carnetAsDepotService.reglementsCarnet(tiersPayantId,typeReglementCarnet, dtStart, dtEnd, start, limit);
+    public Response reglementsCarnet(@QueryParam(value = "tiersPayantId") String tiersPayantId,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "typeReglementCarnet") TypeReglementCarnet typeReglementCarnet) {
+        JSONObject json = carnetAsDepotService.reglementsCarnet(tiersPayantId, typeReglementCarnet, dtStart, dtEnd,
+                start, limit);
         return Response.ok().entity(json.toString()).build();
 
     }
@@ -113,18 +111,16 @@ public class CarnetDepotRessource {
     public Response regler(@PathParam("tiersPayantId") String id, ReglementCarnetDTO o) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        JSONObject json = reglementService.faireReglementCarnetDepot(o.setTiersPayantId(id)
-                .typeReglementCarnet(TypeReglementCarnet.REGLEMENT)
-                , tu);
+        JSONObject json = reglementService.faireReglementCarnetDepot(
+                o.setTiersPayantId(id).typeReglementCarnet(TypeReglementCarnet.REGLEMENT), tu);
         return Response.ok().entity(json.toString()).build();
     }
 
     @GET
     @Path("produits")
-    public Response produits(
-            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart
-    ) {
+    public Response produits(@QueryParam(value = "tiersPayantId") String tiersPayantId,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "dtStart") String dtStart) {
         JSONObject json = carnetAsDepotService.listArticleByTiersPayant(query, tiersPayantId, dtStart, dtEnd);
         return Response.ok().entity(json.toString()).build();
 
@@ -132,23 +128,22 @@ public class CarnetDepotRessource {
 
     @GET
     @Path("produits-one/{produitId}/{tiersPayantId}")
-    public Response produitsById(
-            @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "produitId") String produitId,
-            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart
-    ) {
-        JSONObject json = carnetAsDepotService.articleByTiersPayantByProduitId(produitId, tiersPayantId, dtStart, dtEnd);
+    public Response produitsById(@QueryParam(value = "tiersPayantId") String tiersPayantId,
+            @QueryParam(value = "produitId") String produitId, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "dtStart") String dtStart) {
+        JSONObject json = carnetAsDepotService.articleByTiersPayantByProduitId(produitId, tiersPayantId, dtStart,
+                dtEnd);
         return Response.ok().entity(json.toString()).build();
 
     }
 
     @GET
     @Path("produits-carnet-as-depot")
-    public Response produitVenduParDepot(
-            @QueryParam(value = "tiersPayantId") String tiersPayantId, 
-            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit
-    ) {
-        JSONObject json = carnetAsDepotService.produitVenduParDepot(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null, start, limit);
+    public Response produitVenduParDepot(@QueryParam(value = "tiersPayantId") String tiersPayantId,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
+        JSONObject json = carnetAsDepotService.produitVenduParDepot(tiersPayantId, LocalDate.parse(dtStart),
+                LocalDate.parse(dtEnd), null, start, limit);
         return Response.ok().entity(json.toString()).build();
 
     }
@@ -161,16 +156,14 @@ public class CarnetDepotRessource {
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
 
     }
-    
-    
-     @PUT
+
+    @PUT
     @Path("regler/depense/{tiersPayantId}")
     public Response reglerDepense(@PathParam("tiersPayantId") String id, ReglementCarnetDTO o) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        JSONObject json = reglementService.faireReglementCarnetDepot(o.setTiersPayantId(id)
-                .typeReglementCarnet(TypeReglementCarnet.DEPENSE)
-                , tu);
+        JSONObject json = reglementService
+                .faireReglementCarnetDepot(o.setTiersPayantId(id).typeReglementCarnet(TypeReglementCarnet.DEPENSE), tu);
         return Response.ok().entity(json.toString()).build();
     }
 }

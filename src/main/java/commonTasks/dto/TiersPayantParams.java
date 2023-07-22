@@ -174,7 +174,7 @@ public class TiersPayantParams implements Serializable {
             this.lgTIERSPAYANTID = payant.getLgTIERSPAYANTID();
             this.numSecurity = cp.getStrNUMEROSECURITESOCIAL();
             this.order = cp.getIntPRIORITY();
-              this.cmu=payant.getCmus();
+            this.cmu = payant.getCmus();
 
         } catch (Exception e) {
         }
@@ -234,7 +234,7 @@ public class TiersPayantParams implements Serializable {
             this.dblQUOTACONSOMENSUELLE = cp.getDblPLAFOND().intValue();
             this.activeTiersPayant = payant.getBCANBEUSE();
             this.dblPLAFOND = cp.getDblPLAFOND().intValue();
-            this.cmu=payant.getCmus();
+            this.cmu = payant.getCmus();
 
         } catch (Exception e) {
         }

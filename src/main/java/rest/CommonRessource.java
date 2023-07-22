@@ -149,8 +149,8 @@ public class CommonRessource {
 
     @GET
     @Path("users")
-    public Response getUsers(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) {
+    public Response getUsers(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -246,11 +246,10 @@ public class CommonRessource {
 
     @GET
     @Path("logs")
-    public Response logs(@QueryParam(value = "query") String query, @QueryParam(value = "userId") String userId, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
+    public Response logs(@QueryParam(value = "query") String query, @QueryParam(value = "userId") String userId,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "criteria") int criteria
-    ) throws JSONException {
+            @QueryParam(value = "criteria") int criteria) throws JSONException {
         LocalDate dtSt = LocalDate.now(), dtEd = dtSt;
         if (dtStart != null && !"".equals(dtStart)) {
             dtSt = LocalDate.parse(dtStart);
@@ -337,7 +336,8 @@ public class CommonRessource {
     public Response autorisationAfficherStock() {
         HttpSession hs = servletRequest.getSession();
         List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean afficherStockVente = DateConverter.hasAuthorityByName(lstTPrivilege, DateConverter.P_AFFICHER_STOCK_A_LA_VENTE);
+        boolean afficherStockVente = DateConverter.hasAuthorityByName(lstTPrivilege,
+                DateConverter.P_AFFICHER_STOCK_A_LA_VENTE);
         return Response.ok().entity(ResultFactory.getSuccessResult(afficherStockVente, 1)).build();
     }
 

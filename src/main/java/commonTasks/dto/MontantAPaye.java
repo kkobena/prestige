@@ -92,8 +92,8 @@ public class MontantAPaye implements Serializable {
         this.message = message;
     }
 
-    public MontantAPaye(Integer montantNet, Integer montant, Integer montantTp,
-            Integer remise, Integer marge, Integer montantTva) {
+    public MontantAPaye(Integer montantNet, Integer montant, Integer montantTp, Integer remise, Integer marge,
+            Integer montantTva) {
         this.montant = montant;
         this.montantNet = montantNet;
         this.montantTp = montantTp;
@@ -140,10 +140,13 @@ public class MontantAPaye implements Serializable {
 
     @Override
     public String toString() {
-        return "MontantAPaye{" + "remise=" + remise + ", marge=" + marge + ", montantTva=" + montantTva + ", montantNet=" + montantNet + ", montant=" + montant + ", montantTp=" + montantTp + ", montantAccount=" + montantAccount + ", montantNetUg=" + montantNetUg + ", montantTtcUg=" + montantTtcUg + ", margeUg=" + margeUg + ", tierspayants=" + tierspayants + ", restructuring=" + restructuring + ", message=" + message + ", montantTvaUg=" + montantTvaUg + ", cmuAmount=" + cmuAmount + '}';
+        return "MontantAPaye{" + "remise=" + remise + ", marge=" + marge + ", montantTva=" + montantTva
+                + ", montantNet=" + montantNet + ", montant=" + montant + ", montantTp=" + montantTp
+                + ", montantAccount=" + montantAccount + ", montantNetUg=" + montantNetUg + ", montantTtcUg="
+                + montantTtcUg + ", margeUg=" + margeUg + ", tierspayants=" + tierspayants + ", restructuring="
+                + restructuring + ", message=" + message + ", montantTvaUg=" + montantTvaUg + ", cmuAmount=" + cmuAmount
+                + '}';
     }
-
-   
 
     public int getMontantNetUg() {
         return montantNetUg;

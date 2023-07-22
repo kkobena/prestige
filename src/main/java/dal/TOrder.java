@@ -30,15 +30,14 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "t_order")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TOrder.findAll", query = "SELECT t FROM TOrder t"),
-    @NamedQuery(name = "TOrder.findByLgORDERID", query = "SELECT t FROM TOrder t WHERE t.lgORDERID = :lgORDERID"),
-    @NamedQuery(name = "TOrder.findByStrREFORDER", query = "SELECT t FROM TOrder t WHERE t.strREFORDER = :strREFORDER"),
-    @NamedQuery(name = "TOrder.findByIntLINE", query = "SELECT t FROM TOrder t WHERE t.intLINE = :intLINE"),
-    @NamedQuery(name = "TOrder.findByStrSTATUT", query = "SELECT t FROM TOrder t WHERE t.strSTATUT = :strSTATUT"),
-    @NamedQuery(name = "TOrder.findByDtCREATED", query = "SELECT t FROM TOrder t WHERE t.dtCREATED = :dtCREATED"),
-    @NamedQuery(name = "TOrder.findByDtUPDATED", query = "SELECT t FROM TOrder t WHERE t.dtUPDATED = :dtUPDATED"),
-    @NamedQuery(name = "TOrder.findByIntPRICE", query = "SELECT t FROM TOrder t WHERE t.intPRICE = :intPRICE")})
+@NamedQueries({ @NamedQuery(name = "TOrder.findAll", query = "SELECT t FROM TOrder t"),
+        @NamedQuery(name = "TOrder.findByLgORDERID", query = "SELECT t FROM TOrder t WHERE t.lgORDERID = :lgORDERID"),
+        @NamedQuery(name = "TOrder.findByStrREFORDER", query = "SELECT t FROM TOrder t WHERE t.strREFORDER = :strREFORDER"),
+        @NamedQuery(name = "TOrder.findByIntLINE", query = "SELECT t FROM TOrder t WHERE t.intLINE = :intLINE"),
+        @NamedQuery(name = "TOrder.findByStrSTATUT", query = "SELECT t FROM TOrder t WHERE t.strSTATUT = :strSTATUT"),
+        @NamedQuery(name = "TOrder.findByDtCREATED", query = "SELECT t FROM TOrder t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TOrder.findByDtUPDATED", query = "SELECT t FROM TOrder t WHERE t.dtUPDATED = :dtUPDATED"),
+        @NamedQuery(name = "TOrder.findByIntPRICE", query = "SELECT t FROM TOrder t WHERE t.intPRICE = :intPRICE") })
 public class TOrder implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -59,7 +58,7 @@ public class TOrder implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtUPDATED;
     @Column(name = "int_PRICE")
-    private Integer intPRICE=0;
+    private Integer intPRICE = 0;
     @OneToMany(mappedBy = "lgORDERID")
     private Collection<TBonLivraison> tBonLivraisonCollection;
     @JoinColumn(name = "lg_USER_ID", referencedColumnName = "lg_USER_ID")
@@ -192,7 +191,8 @@ public class TOrder implements Serializable {
             return false;
         }
         TOrder other = (TOrder) object;
-        if ((this.lgORDERID == null && other.lgORDERID != null) || (this.lgORDERID != null && !this.lgORDERID.equals(other.lgORDERID))) {
+        if ((this.lgORDERID == null && other.lgORDERID != null)
+                || (this.lgORDERID != null && !this.lgORDERID.equals(other.lgORDERID))) {
             return false;
         }
         return true;

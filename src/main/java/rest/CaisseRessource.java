@@ -59,23 +59,17 @@ public class CaisseRessource {
     private BalanceService balanceService;
 
     public TUser getUser() {
-        return  Utils.getConnectedUser(servletRequest);
+        return Utils.getConnectedUser(servletRequest);
     }
 
     @GET
     @Path("listecaisse")
-    public Response geListeCaisse(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "page") int p,
-            @QueryParam(value = "user") String lg_USER_ID,
+    public Response geListeCaisse(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "page") int p, @QueryParam(value = "user") String lg_USER_ID,
             @QueryParam(value = "reglement") String lg_TYPE_REGLEMENT_ID,
-            @QueryParam(value = "startDate") String dt_Date_Debut,
-            @QueryParam(value = "endDate") String dt_Date_Fin,
-            @QueryParam(value = "startH") String h_debut,
-            @QueryParam(value = "endH") String h_fin,
-            @QueryParam(value = "findClient") boolean findClient
-    ) {
+            @QueryParam(value = "startDate") String dt_Date_Debut, @QueryParam(value = "endDate") String dt_Date_Fin,
+            @QueryParam(value = "startH") String h_debut, @QueryParam(value = "endH") String h_fin,
+            @QueryParam(value = "findClient") boolean findClient) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -112,21 +106,16 @@ public class CaisseRessource {
 
     @GET
     @Path("balancesalecash")
-    public Response balanceCaisse(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response balanceCaisse(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        JSONObject    json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
-                    .dtStart(dtStart)
-                    .dtEnd(dtEnd)
-                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                    .build());
+        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart)
+                .dtEnd(dtEnd).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -158,13 +147,9 @@ public class CaisseRessource {
 
     @GET
     @Path("resumecaisse")
-    public Response resumecaisse(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "userId") String userId,
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit
-    ) {
+    public Response resumecaisse(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "userId") String userId,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -185,11 +170,9 @@ public class CaisseRessource {
 
     @GET
     @Path("tableauboard")
-    public Response tableauBoard(
-            @QueryParam(value = "dtStart") String dtStart,
+    public Response tableauBoard(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd,
-            @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly
-    ) {
+            @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -210,12 +193,8 @@ public class CaisseRessource {
                 json = caisseService.tableauBoardDatas(dtSt, dtEn, true, tu, 0, 0, true);
             }
         } else {
-            json = this.balanceService.tableauBoardDatas(BalanceParamsDTO.builder()
-                    .dtStart(dtStart)
-                    .dtEnd(dtEnd)
-                    .byMonth(monthly)
-                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                    .build());
+            json = this.balanceService.tableauBoardDatas(BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd)
+                    .byMonth(monthly).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         }
 
         return Response.ok().entity(json.toString()).build();
@@ -261,10 +240,8 @@ public class CaisseRessource {
 
     @GET
     @Path("rapport-gestion")
-    public Response rapportGestion(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) throws JSONException {
+    public Response rapportGestion(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -280,9 +257,7 @@ public class CaisseRessource {
 
     @POST
     @Path("tickez")
-    public Response ticketZ(
-            Params params
-    ) throws JSONException {
+    public Response ticketZ(Params params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -295,10 +270,8 @@ public class CaisseRessource {
 
     @GET
     @Path("tableauboard-old")
-    public Response tableauBoardOld(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response tableauBoardOld(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -316,13 +289,9 @@ public class CaisseRessource {
 
     @GET
     @Path("mvtcaisses")
-    public Response mvtcaisses(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "user") String lg_USER_ID,
-            @QueryParam(value = "dtStart") String dt_Date_Debut,
-            @QueryParam(value = "dtEnd") String dt_Date_Fin
-    ) {
+    public Response mvtcaisses(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "user") String lg_USER_ID, @QueryParam(value = "dtStart") String dt_Date_Debut,
+            @QueryParam(value = "dtEnd") String dt_Date_Fin) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -350,10 +319,7 @@ public class CaisseRessource {
 
     @GET
     @Path("ca/ug")
-    public Response ugs(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response ugs(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -371,10 +337,8 @@ public class CaisseRessource {
 
     @GET
     @Path("tableauboard-groupbymonth")
-    public Response tableauBoardGroupByMonth(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response tableauBoardGroupByMonth(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -393,43 +357,31 @@ public class CaisseRessource {
 
     @GET
     @Path("balancesalecash/carnet")
-    public Response balanceCaisseCarnet(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
+    public Response balanceCaisseCarnet(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        JSONObject    json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
-                .dtStart(dtStart)
-                .dtEnd(dtEnd)
-                        .showAllAmount(true)
-                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                .build());
+        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart)
+                .dtEnd(dtEnd).showAllAmount(true).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         return Response.ok().entity(json.toString()).build();
     }
 
     @GET
     @Path("balancesalecash/carnet-depot")
-    public Response balanceCaisseCarnetDepot(
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd
-    ) {
-     
-        TUser tu =  getUser();
+    public Response balanceCaisseCarnetDepot(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
+
+        TUser tu = getUser();
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder()
-                .dtStart(dtStart)
-                .dtEnd(dtEnd)
-                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID())
-                .showAllAmount(true)
-                .build());
+        JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart)
+                .dtEnd(dtEnd).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).showAllAmount(true).build());
 
         return Response.ok().entity(json.toString()).build();
     }

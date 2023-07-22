@@ -46,21 +46,19 @@ public class RetourCarnetRessource {
 
     @GET
     @Path("list")
-    public Response fetchAll(
-            @QueryParam(value = "query") String query,
+    public Response fetchAll(@QueryParam(value = "query") String query,
             @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit) throws JSONException{
-        JSONObject json = retourCarnetService.listRetourByTierspayantIdAndPeriode(tiersPayantId, query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), start, limit);
+            @QueryParam(value = "limit") int limit) throws JSONException {
+        JSONObject json = retourCarnetService.listRetourByTierspayantIdAndPeriode(tiersPayantId, query,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd), start, limit);
         return Response.ok().entity(json.toString()).build();
     }
 
     @GET
     @Path("items")
-    public Response fetchItem(
-            @QueryParam(value = "retourCarnetId") Integer retourCarnetId,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "start") int start,
+    public Response fetchItem(@QueryParam(value = "retourCarnetId") Integer retourCarnetId,
+            @QueryParam(value = "query") String query, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit) {
         JSONObject json = retourCarnetService.findByRetourCarnetId(retourCarnetId, query, start, limit);
         return Response.ok().entity(json.toString()).build();
@@ -78,7 +76,7 @@ public class RetourCarnetRessource {
     @PUT
     @Path("item/{id}")
     public Response modifierProduitRetour(@PathParam("id") Integer id, Params params) throws Exception {
-        Integer idRetour= retourCarnetService.updateDetailRetour(params.getValue(), id);
+        Integer idRetour = retourCarnetService.updateDetailRetour(params.getValue(), id);
         JSONObject json = new JSONObject().put("success", true).put("data", new JSONObject().put("id", idRetour));
         return Response.ok().entity(json.toString()).build();
     }
@@ -87,7 +85,8 @@ public class RetourCarnetRessource {
     @Path("add/item")
     public Response ajusterProduit(Params params) throws Exception {
 
-      Integer id=  retourCarnetService.addDetailRetour(params.getValue(), params.getRefTwo(), params.getValueFour(), Integer.valueOf(params.getRefParent()));
+        Integer id = retourCarnetService.addDetailRetour(params.getValue(), params.getRefTwo(), params.getValueFour(),
+                Integer.valueOf(params.getRefParent()));
         JSONObject json = new JSONObject().put("success", true).put("data", new JSONObject().put("id", id));
         return Response.ok().entity(json.toString()).build();
     }
@@ -104,15 +103,17 @@ public class RetourCarnetRessource {
         retourCarnetDTO.setOperateur(tu);
         retourCarnetDTO.setLibelle(params.getDescription());
         retourCarnetDTO.setTierspayantId(params.getRef());
-        RetourCarnet retourCarnet = retourCarnetService.createRetourCarnet(retourCarnetDTO, params.getValue(), params.getValueFour(), params.getRefTwo());
-        JSONObject json = new JSONObject().put("success", true).put("data", new JSONObject().put("id", retourCarnet.getId()));
+        RetourCarnet retourCarnet = retourCarnetService.createRetourCarnet(retourCarnetDTO, params.getValue(),
+                params.getValueFour(), params.getRefTwo());
+        JSONObject json = new JSONObject().put("success", true).put("data",
+                new JSONObject().put("id", retourCarnet.getId()));
         return Response.ok().entity(json.toString()).build();
     }
 
     @PUT
     @Path("{id}")
     public Response clore(@PathParam("id") Integer id, Params params) throws JSONException {
-       retourCarnetService.updateRetourCarnet(id, params.getDescription());
+        retourCarnetService.updateRetourCarnet(id, params.getDescription());
         JSONObject json = new JSONObject().put("success", true);
         return Response.ok().entity(json.toString()).build();
     }

@@ -34,12 +34,15 @@ public class NotificationImpl implements NotificationService {
 
     @Override
     public JSONObject findAll(int criteria, int canal, Statut statut, LocalDate dtStart, LocalDate dtEnd) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override
-    public List<NotificationDTO> findAllDto(int criteria, int canal, Statut statut, LocalDate dtStart, LocalDate dtEnd) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public List<NotificationDTO> findAllDto(int criteria, int canal, Statut statut, LocalDate dtStart,
+            LocalDate dtEnd) {
+        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
+                                                                       // Tools | Templates.
     }
 
     @Override

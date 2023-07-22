@@ -227,15 +227,17 @@ public class BalanceDTO implements Serializable {
 
     @Override
     public String toString() {
-        return "BalanceDTO{" + "balanceId=" + balanceId + ", typeVente=" + typeVente + ", montantTTC=" + montantTTC + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", pourcentage=" + pourcentage + ", panierMoyen=" + panierMoyen + ", montantEsp=" + montantEsp + ", montantCheque=" + montantCheque + ", montantCB=" + montantCB + ", montantTp=" + montantTp + ", montantDiff=" + montantDiff + '}';
+        return "BalanceDTO{" + "balanceId=" + balanceId + ", typeVente=" + typeVente + ", montantTTC=" + montantTTC
+                + ", montantNet=" + montantNet + ", montantRemise=" + montantRemise + ", pourcentage=" + pourcentage
+                + ", panierMoyen=" + panierMoyen + ", montantEsp=" + montantEsp + ", montantCheque=" + montantCheque
+                + ", montantCB=" + montantCB + ", montantTp=" + montantTp + ", montantDiff=" + montantDiff + '}';
     }
 
     /*
-    constructor vente
+     * constructor vente
      */
-    public BalanceDTO(long montantTTC, long montantNet,
-            long montantRemise, long montantTva, long marge, long montantDiff,
-            long montantTp, long nbreVente, long montantEsp, int typeTransaction, String reglement) {
+    public BalanceDTO(long montantTTC, long montantNet, long montantRemise, long montantTva, long marge,
+            long montantDiff, long montantTp, long nbreVente, long montantEsp, int typeTransaction, String reglement) {
         this.montantTTC = montantTTC;
         this.montantRemise = montantRemise;
         this.montantNet = montantNet;
@@ -246,14 +248,14 @@ public class BalanceDTO implements Serializable {
         this.montantDiff = montantDiff;
         this.montantEsp = montantEsp;
         switch (typeTransaction) {
-            case 0:
-                this.typeTransaction = TypeTransaction.VENTE_COMPTANT;
-                break;
-            case 1:
-                this.typeTransaction = TypeTransaction.VENTE_CREDIT;
-                break;
-            default:
-                break;
+        case 0:
+            this.typeTransaction = TypeTransaction.VENTE_COMPTANT;
+            break;
+        case 1:
+            this.typeTransaction = TypeTransaction.VENTE_CREDIT;
+            break;
+        default:
+            break;
         }
         this.reglement = reglement;
 
