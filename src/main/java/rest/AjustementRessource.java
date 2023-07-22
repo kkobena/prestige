@@ -126,8 +126,6 @@ public class AjustementRessource {
         }
         List<TPrivilege> attribute = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
         boolean canCancel = DateConverter.hasAuthorityByName(attribute, DateConverter.ACTIONDELETEAJUSTEMENT);
-        // boolean asAuthority = DateConverter.hasAuthorityByName(attribute, commonparameter.str_SHOW_VENTE);
-
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);

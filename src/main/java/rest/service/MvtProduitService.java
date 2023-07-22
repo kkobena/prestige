@@ -33,19 +33,12 @@ import org.json.JSONObject;
 @Local
 public interface MvtProduitService {
 
-    void updatefamillenbvente(TFamille famille, int qty, boolean updatable, EntityManager emg);
-
     void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list);
 
-    void updateVenteStock(String idVente);
-
-    public void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg);
-
-    public void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg,
+    void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg,
             TEmplacement depot) throws Exception;
 
-    void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement, EntityManager emg)
-            throws Exception;
+    void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement) throws Exception;
 
     JSONObject creerAjustement(Params params) throws JSONException;
 
@@ -55,8 +48,6 @@ public interface MvtProduitService {
 
     JSONObject cloreAjustement(Params params) throws JSONException;
 
-    JSONObject findOneAjustement(String idAjustement) throws JSONException;
-
     JSONObject removeAjustementDetail(String id) throws JSONException;
 
     JSONObject annulerAjustement(String id) throws JSONException;
@@ -64,8 +55,6 @@ public interface MvtProduitService {
     JSONObject ajsutements(SalesStatsParams params) throws JSONException;
 
     JSONObject ajsutementsDetails(SalesStatsParams params, String idAjustement) throws JSONException;
-
-    JSONObject deconditionner(Params params) throws JSONException;
 
     JSONObject validerRetourFournisseur(Params params) throws JSONException;
 
