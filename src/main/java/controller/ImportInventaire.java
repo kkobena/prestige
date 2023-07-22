@@ -36,42 +36,41 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.json.JSONObject;
 
-@WebServlet(name = "ImportInventaire", urlPatterns = {"/ImportInventaire"})
-@MultipartConfig(
-        fileSizeThreshold = 5242880,
-        maxFileSize = 20971520L,
-        maxRequestSize = 41943040L
-)
+@WebServlet(name = "ImportInventaire", urlPatterns = { "/ImportInventaire" })
+@MultipartConfig(fileSizeThreshold = 5242880, maxFileSize = 20971520L, maxRequestSize = 41943040L)
 public class ImportInventaire extends HttpServlet {
-  private JsonBuilderFactory factory;
+    private JsonBuilderFactory factory;
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       response.setContentType("application/json;charset=UTF-8");
-          dataManager OdataManager = new dataManager();
+        response.setContentType("application/json;charset=UTF-8");
+        dataManager OdataManager = new dataManager();
         OdataManager.initEntityManager();
-       
+
         String lg_INVENTAIRE_ID = request.getParameter("lg_INVENTAIRE_ID");
-          Part part = request.getPart("fichier");
+        Part part = request.getPart("fichier");
         String fileName = part.getSubmittedFileName();
         String extension = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
-        JSONObject  _json;
-          factory = Json.createBuilderFactory(null);
-           JsonObjectBuilder json = factory.createObjectBuilder();
-         try (PrintWriter out = response.getWriter()) {
+        JSONObject _json;
+        factory = Json.createBuilderFactory(null);
+        JsonObjectBuilder json = factory.createObjectBuilder();
+        try (PrintWriter out = response.getWriter()) {
             switch (extension) {
-                case "csv":
-                    _json = bulkUpdate(part, lg_INVENTAIRE_ID, OdataManager.getEm());
-                    json.add("statut", 1);
-                    json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/" + _json.getInt("ligne") + "</span> produits mis à jour");
-                    break;
-               
-                    default:
-                        _json = bulkUpdateWithExcel(part, lg_INVENTAIRE_ID, OdataManager.getEm());
-                    json.add("statut", 1);
+            case "csv":
+                _json = bulkUpdate(part, lg_INVENTAIRE_ID, OdataManager.getEm());
+                json.add("statut", 1);
+                json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/"
+                        + _json.getInt("ligne") + "</span> produits mis à jour");
+                break;
 
-                    json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/" + _json.getInt("ligne") + "</span> produits mis à jour");
+            default:
+                _json = bulkUpdateWithExcel(part, lg_INVENTAIRE_ID, OdataManager.getEm());
+                json.add("statut", 1);
 
-                        break;
+                json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/"
+                        + _json.getInt("ligne") + "</span> produits mis à jour");
+
+                break;
             }
             out.println(json.build());
         } catch (Exception ex) {
@@ -79,14 +78,20 @@ public class ImportInventaire extends HttpServlet {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the
+    // code.">
     /**
      * Handles the HTTP <code>GET</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @param request
+     *            servlet request
+     * @param response
+     *            servlet response
+     *
+     * @throws ServletException
+     *             if a servlet-specific error occurs
+     * @throws IOException
+     *             if an I/O error occurs
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -97,10 +102,15 @@ public class ImportInventaire extends HttpServlet {
     /**
      * Handles the HTTP <code>POST</code> method.
      *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @param request
+     *            servlet request
+     * @param response
+     *            servlet response
+     *
+     * @throws ServletException
+     *             if a servlet-specific error occurs
+     * @throws IOException
+     *             if an I/O error occurs
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -125,13 +135,17 @@ public class ImportInventaire extends HttpServlet {
 
         em.getTransaction().begin();
 
-        // CSVParser  parser = new CSVParser(new InputStreamReader(part.getInputStream()), CSVFormat.DEFAULT.withDelimiter(';'));
+        // CSVParser parser = new CSVParser(new InputStreamReader(part.getInputStream()),
+        // CSVFormat.DEFAULT.withDelimiter(';'));
         CSVParser parser = new CSVParser(new InputStreamReader(part.getInputStream()), CSVFormat.DEFAULT);
 
         for (CSVRecord cSVRecord : parser) {
             if (count > 0) {
-                TInventaireFamille inventaireFamille = findByArticleAndInventaire(cSVRecord.get(1), lg_INVENTAIRE_ID, em);
-                // i += createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(2), Integer.valueOf(cSVRecord.get(5)), Double.valueOf(cSVRecord.get(6)).intValue(), Double.valueOf(cSVRecord.get(7)).intValue());
+                TInventaireFamille inventaireFamille = findByArticleAndInventaire(cSVRecord.get(1), lg_INVENTAIRE_ID,
+                        em);
+                // i += createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(2),
+                // Integer.valueOf(cSVRecord.get(5)), Double.valueOf(cSVRecord.get(6)).intValue(),
+                // Double.valueOf(cSVRecord.get(7)).intValue());
                 inventaireFamille.setIntNUMBER(Integer.valueOf(cSVRecord.get(4)));
                 inventaireFamille.setDtUPDATED(new Date());
                 em.merge(inventaireFamille);
@@ -147,7 +161,7 @@ public class ImportInventaire extends HttpServlet {
         if (em.getTransaction().isActive()) {
             em.getTransaction().commit();
             em.clear();
-            
+
         }
         json.put("count", i);
         json.put("ligne", count - 1);
@@ -155,8 +169,11 @@ public class ImportInventaire extends HttpServlet {
         return json;
     }
 
-    private TInventaireFamille findByArticleAndInventaire(String idArticle, String idInventaire, EntityManager em) throws Exception {
-        TypedQuery<TInventaireFamille> query = em.createQuery(" SELECT o FROM  TInventaireFamille o WHERE o.lgINVENTAIREID.lgINVENTAIREID =?1 AND o.lgFAMILLEID.lgFAMILLEID =?2  ", TInventaireFamille.class);
+    private TInventaireFamille findByArticleAndInventaire(String idArticle, String idInventaire, EntityManager em)
+            throws Exception {
+        TypedQuery<TInventaireFamille> query = em.createQuery(
+                " SELECT o FROM  TInventaireFamille o WHERE o.lgINVENTAIREID.lgINVENTAIREID =?1 AND o.lgFAMILLEID.lgFAMILLEID =?2  ",
+                TInventaireFamille.class);
         query.setFirstResult(0).setMaxResults(1).setParameter(1, idInventaire).setParameter(2, idArticle);
         return query.getSingleResult();
     }
@@ -180,7 +197,8 @@ public class ImportInventaire extends HttpServlet {
                     Row nextrow = (Row) rows.next();
                     Cell id = nextrow.getCell(1);
                     Cell qty = nextrow.getCell(4);
-                    TInventaireFamille inventaireFamille = findByArticleAndInventaire(id.getStringCellValue(), lg_INVENTAIRE_ID, em);
+                    TInventaireFamille inventaireFamille = findByArticleAndInventaire(id.getStringCellValue(),
+                            lg_INVENTAIRE_ID, em);
                     inventaireFamille.setIntNUMBER(Double.valueOf(qty.getNumericCellValue()).intValue());
                     inventaireFamille.setDtUPDATED(new Date());
                     em.merge(inventaireFamille);
@@ -196,13 +214,12 @@ public class ImportInventaire extends HttpServlet {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().commit();
                 em.clear();
-                
+
             }
             json.put("count", i);
             json.put("ligne", count - 1);
         }
 
-       
         json.put("count", i);
         json.put("ligne", count - 1);
 

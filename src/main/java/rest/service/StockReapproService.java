@@ -9,7 +9,8 @@ import javax.ejb.Local;
  */
 @Local
 public interface StockReapproService {
-     void execute();
-     void computeReappro();
-    
+    void execute();
+
+    void computeReappro();
+
 }

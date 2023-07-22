@@ -52,7 +52,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
     private RetourCarnetService retourCarnetService;
 
     private enum Action {
-        VENTE, REGLEMENTS, RETOUR, PRODUITS, RETOUR_CARNET_DEPOT,REGLEMENTS_CARNET_DEPOT
+        VENTE, REGLEMENTS, RETOUR, PRODUITS, RETOUR_CARNET_DEPOT, REGLEMENTS_CARNET_DEPOT
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -65,51 +65,51 @@ public class TiersPayantExcludServlet extends HttpServlet {
         String dtEnd = request.getParameter("dtEnd");
         String tiersPayantId = request.getParameter("tiersPayantId");
         String query = request.getParameter("query");
-            String typeReglementCarnet = request.getParameter("typeReglementCarnet");
-            TypeReglementCarnet typeReglementCarnetEnum=null;
-            if(StringUtils.isNotEmpty(typeReglementCarnet)){
-                typeReglementCarnetEnum=TypeReglementCarnet.valueOf(typeReglementCarnet);
-            }
+        String typeReglementCarnet = request.getParameter("typeReglementCarnet");
+        TypeReglementCarnet typeReglementCarnetEnum = null;
+        if (StringUtils.isNotEmpty(typeReglementCarnet)) {
+            typeReglementCarnetEnum = TypeReglementCarnet.valueOf(typeReglementCarnet);
+        }
         String file = "";
         long period = ChronoUnit.MONTHS.between(LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
         switch (Action.valueOf(action)) {
-            case REGLEMENTS: {
-                if (period == 0) {
-                    file = reglements(tiersPayantId,typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
-                } else {
-                    file = extraitCompteMonthly(tiersPayantId,typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
-                }
+        case REGLEMENTS: {
+            if (period == 0) {
+                file = reglements(tiersPayantId, typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
+            } else {
+                file = extraitCompteMonthly(tiersPayantId, typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
             }
+        }
 
             break;
-            case VENTE:
-                if (period == 0) {
-                    file = fetchVente(tiersPayantId, dtStart, dtEnd, OTUser);
-                } else {
-                    file = extraitCompteMonthly(tiersPayantId,null, dtStart, dtEnd, OTUser);
-                }
-                break;
-
-            case RETOUR:
-                if (period == 0) {
-                    file = retourCarnet(tiersPayantId, query, dtStart, dtEnd, OTUser);
-                } else {
-                    file = retourCarnetMonthly(tiersPayantId, query, dtStart, dtEnd, OTUser);
-                }
-                break;
-            case PRODUITS:
-                file = produitVenduDepot(tiersPayantId, dtStart, dtEnd, OTUser, null);
-                break;
-            case RETOUR_CARNET_DEPOT:
-                file = retourCarnetDepot(tiersPayantId, query, dtStart, dtEnd, OTUser);
-                break;
-            case REGLEMENTS_CARNET_DEPOT: {
-                if (period == 0) {
-                    file = reglementCarnetDepot(tiersPayantId,typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
-                } else {
-                    file = extraitCarnetDepotCompteMonthly(tiersPayantId,typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
-                }
+        case VENTE:
+            if (period == 0) {
+                file = fetchVente(tiersPayantId, dtStart, dtEnd, OTUser);
+            } else {
+                file = extraitCompteMonthly(tiersPayantId, null, dtStart, dtEnd, OTUser);
             }
+            break;
+
+        case RETOUR:
+            if (period == 0) {
+                file = retourCarnet(tiersPayantId, query, dtStart, dtEnd, OTUser);
+            } else {
+                file = retourCarnetMonthly(tiersPayantId, query, dtStart, dtEnd, OTUser);
+            }
+            break;
+        case PRODUITS:
+            file = produitVenduDepot(tiersPayantId, dtStart, dtEnd, OTUser, null);
+            break;
+        case RETOUR_CARNET_DEPOT:
+            file = retourCarnetDepot(tiersPayantId, query, dtStart, dtEnd, OTUser);
+            break;
+        case REGLEMENTS_CARNET_DEPOT: {
+            if (period == 0) {
+                file = reglementCarnetDepot(tiersPayantId, typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
+            } else {
+                file = extraitCarnetDepotCompteMonthly(tiersPayantId, typeReglementCarnetEnum, dtStart, dtEnd, OTUser);
+            }
+        }
             break;
         }
         response.sendRedirect(request.getContextPath() + file);
@@ -156,14 +156,18 @@ public class TiersPayantExcludServlet extends HttpServlet {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
-        List<ExtraitCompteClientDTO> datas = tiersPayantExclusService.extraitcompte(tiersPayantId,null, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
+        List<ExtraitCompteClientDTO> datas = tiersPayantExclusService.extraitcompte(tiersPayantId, null,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_vente_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "extrait_compte_vente_" + report_generate_file, datas);
         return "/data/reports/pdf/extrait_compte_vente_" + report_generate_file;
     }
 
-    public String reglements(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, TUser tu) throws IOException {
+    public String reglements(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart,
+            String dtEnd, TUser tu) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -187,14 +191,18 @@ public class TiersPayantExcludServlet extends HttpServlet {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
-        List<ExtraitCompteClientDTO> datas = tiersPayantExclusService.extraitcompte(tiersPayantId,typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
+        List<ExtraitCompteClientDTO> datas = tiersPayantExclusService.extraitcompte(tiersPayantId, typeReglementCarnet,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
         return "/data/reports/pdf/extrait_compte_" + report_generate_file;
     }
 
-    public String retourCarnet(String tiersPayantId, String query, String dtStart, String dtEnd, TUser tu) throws IOException {
+    public String retourCarnet(String tiersPayantId, String query, String dtStart, String dtEnd, TUser tu)
+            throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -218,14 +226,18 @@ public class TiersPayantExcludServlet extends HttpServlet {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
-        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompteAvecRetour(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
+        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompteAvecRetour(tiersPayantId,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query);
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
         return "/data/reports/pdf/extrait_compte_" + report_generate_file;
     }
 
-    public String retourCarnetMonthly(String tiersPayantId, String query, String dtStart, String dtEnd, TUser tu) throws IOException {
+    public String retourCarnetMonthly(String tiersPayantId, String query, String dtStart, String dtEnd, TUser tu)
+            throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -249,14 +261,18 @@ public class TiersPayantExcludServlet extends HttpServlet {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
-        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompteAvecRetour(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
+        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompteAvecRetour(tiersPayantId,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query);
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
         return "/data/reports/pdf/extrait_compte_" + report_generate_file;
     }
 
-    public String extraitCompteMonthly(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, TUser tu) throws IOException {
+    public String extraitCompteMonthly(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart,
+            String dtEnd, TUser tu) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -280,15 +296,19 @@ public class TiersPayantExcludServlet extends HttpServlet {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
 
-        List<ExtraitCompteClientDTO> datas = tiersPayantExclusService.extraitcompte(tiersPayantId,typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        List<ExtraitCompteClientDTO> datas = tiersPayantExclusService.extraitcompte(tiersPayantId, typeReglementCarnet,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_vente_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "extrait_compte_vente_" + report_generate_file, datas);
         return "/data/reports/pdf/extrait_compte_vente_" + report_generate_file;
     }
 
-    public String produitVenduDepot(String tiersPayantId, String dtStart, String dtEnd, TUser tu, String query) throws IOException {
+    public String produitVenduDepot(String tiersPayantId, String dtStart, String dtEnd, TUser tu, String query)
+            throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -312,14 +332,18 @@ public class TiersPayantExcludServlet extends HttpServlet {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
-        List<DepotProduitVendusDTO> datas = carnetAsDepotService.produitVenduParDepot(tiersPayantId, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, 0, 0, true);
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
+        List<DepotProduitVendusDTO> datas = carnetAsDepotService.produitVenduParDepot(tiersPayantId,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, 0, 0, true);
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_produits_vendus_au_depot_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "rp_produits_vendus_au_depot_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_produits_vendus_au_depot_" + report_generate_file;
     }
 
-    public String retourCarnetDepot(String tiersPayantId, String query, String dtStart, String dtEnd, TUser tu) throws IOException {
+    public String retourCarnetDepot(String tiersPayantId, String query, String dtStart, String dtEnd, TUser tu)
+            throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -337,16 +361,20 @@ public class TiersPayantExcludServlet extends HttpServlet {
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
-          parameters.put("rp_retour_au_depot_subreport", jdom.scr_report_file);
+        parameters.put("rp_retour_au_depot_subreport", jdom.scr_report_file);
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
-        List<RetourCarnetDTO> datas = retourCarnetService.fetchRetourByTierspayantIdAndPeriode(tiersPayantId, query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
+        List<RetourCarnetDTO> datas = retourCarnetService.fetchRetourByTierspayantIdAndPeriode(tiersPayantId, query,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
 
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "rp_retour_au_depot_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "rp_retour_au_depot_" + report_generate_file, datas);
         return "/data/reports/pdf/rp_retour_au_depot_" + report_generate_file;
     }
-    
-      public String reglementCarnetDepot(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, TUser tu) throws IOException {
+
+    public String reglementCarnetDepot(String tiersPayantId, TypeReglementCarnet typeReglementCarnet, String dtStart,
+            String dtEnd, TUser tu) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -370,14 +398,18 @@ public class TiersPayantExcludServlet extends HttpServlet {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
-        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompte(tiersPayantId,typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
+        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompte(tiersPayantId, typeReglementCarnet,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "extrait_compte_" + report_generate_file, datas);
         return "/data/reports/pdf/extrait_compte_" + report_generate_file;
     }
 
-  public String extraitCarnetDepotCompteMonthly(String tiersPayantId,TypeReglementCarnet typeReglementCarnet, String dtStart, String dtEnd, TUser tu) throws IOException {
+    public String extraitCarnetDepotCompteMonthly(String tiersPayantId, TypeReglementCarnet typeReglementCarnet,
+            String dtStart, String dtEnd, TUser tu) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
@@ -401,11 +433,14 @@ public class TiersPayantExcludServlet extends HttpServlet {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
         parameters.put("P_H_CLT_INFOS", P_H_CLT_INFOS + tiersPayant + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss")) + ".pdf";
+        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy_dd_MM_HH_mm_ss"))
+                + ".pdf";
 
-        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompte(tiersPayantId,typeReglementCarnet, LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
+        List<ExtraitCompteClientDTO> datas = carnetAsDepotService.extraitcompte(tiersPayantId, typeReglementCarnet,
+                LocalDate.parse(dtStart), LocalDate.parse(dtEnd));
         datas.sort(Comparator.comparing(ExtraitCompteClientDTO::getTierspayantName));
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file, jdom.scr_report_pdf + "extrait_compte_vente_" + report_generate_file, datas);
+        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
+                jdom.scr_report_pdf + "extrait_compte_vente_" + report_generate_file, datas);
         return "/data/reports/pdf/extrait_compte_vente_" + report_generate_file;
     }
 

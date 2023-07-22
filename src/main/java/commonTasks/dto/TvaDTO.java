@@ -110,7 +110,8 @@ public class TvaDTO implements Serializable {
 
     @Override
     public String toString() {
-        return "TvaDTO{" + "taux=" + taux + ", montantHt=" + montantHt + ", montantTva=" + montantTva + ", montantTtc=" + montantTtc + '}';
+        return "TvaDTO{" + "taux=" + taux + ", montantHt=" + montantHt + ", montantTva=" + montantTva + ", montantTtc="
+                + montantTtc + '}';
     }
 
     public TvaDTO() {

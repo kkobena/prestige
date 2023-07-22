@@ -14,12 +14,9 @@ import java.io.Serializable;
 public class TableauBaordSummary implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    long montantTTC = 0, montantNet = 0, montantRemise = 0,
-            montantEsp = 0,
-            montantCredit = 0,
-            nbreVente = 0, montantAchatOne = 0, montantAchatTwo = 0,
-            montantAchatThree = 0, montantAchatFour = 0, montantAchatFive = 0,
-            montantAchat = 0, montantAchatNet = 0,montantAvoir=0;
+    long montantTTC = 0, montantNet = 0, montantRemise = 0, montantEsp = 0, montantCredit = 0, nbreVente = 0,
+            montantAchatOne = 0, montantAchatTwo = 0, montantAchatThree = 0, montantAchatFour = 0, montantAchatFive = 0,
+            montantAchat = 0, montantAchatNet = 0, montantAvoir = 0;
     double ratioVA = 0.0, rationAV = 0.0;
 
     public long getMontantTTC() {
@@ -149,5 +146,5 @@ public class TableauBaordSummary implements Serializable {
     public void setRationAV(double rationAV) {
         this.rationAV = rationAV;
     }
-    
+
 }

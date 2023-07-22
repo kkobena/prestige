@@ -48,7 +48,7 @@ public class SumCaisseDTO implements Serializable {
         this.modeReglement = modeReglement;
     }
 
-    public SumCaisseDTO( String modeReglement,Long amount) {
+    public SumCaisseDTO(String modeReglement, Long amount) {
         this.amount = amount;
         this.modeReglement = modeReglement;
     }

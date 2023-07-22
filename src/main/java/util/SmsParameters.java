@@ -23,19 +23,21 @@ import org.apache.commons.lang3.StringUtils;
 public final class SmsParameters {
 
     private static SmsParameters instance;
-    public String applicationId = "MT7XwvGX6qGAPdfQ", clientId = "fJaOlJgwU2ggcRWmIlbU9s7jY8tbsRy8", clientSecret = "UgTURjiCK1rZtsnA", header = "Basic ZkphT2xKZ3dVMmdnY1JXbUlsYlU5czdqWTh0YnNSeTg6VWdUVVJqaUNLMXJadHNuQQ==";
+    public String applicationId = "MT7XwvGX6qGAPdfQ", clientId = "fJaOlJgwU2ggcRWmIlbU9s7jY8tbsRy8",
+            clientSecret = "UgTURjiCK1rZtsnA",
+            header = "Basic ZkphT2xKZ3dVMmdnY1JXbUlsYlU5czdqWTh0YnNSeTg6VWdUVVJqaUNLMXJadHNuQQ==";
     public String email = "dici.servtech@gmail.com", password = "dici@2020",
             pathsmsapitokenendpoint = "https://api.orange.com/oauth/v2/token",
             pathsmsapisendmessageurl = "https://api.orange.com/smsmessaging/v1/outbound/tel%3A%2B225000000/requests",
             senderAddress = "tel:+225000000";
     public String accesstoken = "kqJ1LJkaFgeBCzsy2NCeiKPF95Mb", expiresin = "7776000";
-    public String mobile = "",
-            smtpHost = "smtp.gmail.com",
-            protocol = "smtps";
+    public String mobile = "", smtpHost = "smtp.gmail.com", protocol = "smtps";
     public String mailOfficine = "";
 
-    public String pathWindow = System.getProperty("user.home") + File.separator + "Documents" + File.separator + "dicisms.properties";
-    public String pathUnix = System.getProperty("user.home") + File.separator + "Home" + File.separator + "dicisms.properties";
+    public String pathWindow = System.getProperty("user.home") + File.separator + "Documents" + File.separator
+            + "dicisms.properties";
+    public String pathUnix = System.getProperty("user.home") + File.separator + "Home" + File.separator
+            + "dicisms.properties";
     String Os = System.getProperty("os.name");
     Pattern pattern = Pattern.compile("Windows");
 

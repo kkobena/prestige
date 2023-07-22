@@ -172,7 +172,8 @@ public class ResumeCaisseDTO implements Serializable {
             this.intSOLDESOIR = caisse.getIntSOLDESOIR();
             this.strSTATUT = "En cours d'utilisation ";
         } else {
-            this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN()) - montantAnnule);
+            this.ecart = montantBilletage
+                    - (Math.abs(caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN()) - montantAnnule);
             this.intSOLDESOIR = caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN();
             if (caisse.getStrSTATUT().equals(DateConverter.STATUT_PROCESS)) {
                 this.strSTATUT = "Fermée ";
@@ -183,7 +184,8 @@ public class ResumeCaisseDTO implements Serializable {
     }
 
     // constructeur pour les officines qui prennent en compte le fond de caisse dans la recette
-     public ResumeCaisseDTO(TResumeCaisse caisse, Integer montantBilletage, Integer montantAnnule, boolean cancel,boolean prendreEnCompteFondCaisse) {
+    public ResumeCaisseDTO(TResumeCaisse caisse, Integer montantBilletage, Integer montantAnnule, boolean cancel,
+            boolean prendreEnCompteFondCaisse) {
 
         this.ldCAISSEID = caisse.getLdCAISSEID();
         this.dtCREATED = dateFormat.format(caisse.getDtCREATED());

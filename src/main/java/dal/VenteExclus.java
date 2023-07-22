@@ -30,32 +30,32 @@ import javax.validation.constraints.NotNull;
  */
 @Entity
 @Table(name = "vente_exclu", indexes = {
-    @Index(name = "VenteExclus_mvt_transaction_key", columnList = "mvt_transaction_key"),
-    @Index(name = "VenteExclus_type_tiers_payant", columnList = "type_tiers_payant")
+        @Index(name = "VenteExclus_mvt_transaction_key", columnList = "mvt_transaction_key"),
+        @Index(name = "VenteExclus_type_tiers_payant", columnList = "type_tiers_payant")
 
 })
-public class VenteExclus implements Serializable{
+public class VenteExclus implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     @Id
     @Basic(optional = false)
     @NotBlank
     protected String id = UUID.randomUUID().toString();
     @NotNull
     @Column(name = "created_at", nullable = false)
- 
+
     private LocalDateTime createdAt;
     @NotNull
     @Column(name = "modified_at", nullable = false)
-   
+
     private LocalDateTime modifiedAt;
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
- 
-    private Statut status=Statut.IS_CLOSE;
-    
+
+    private Statut status = Statut.IS_CLOSE;
+
     @NotNull
     @Column(name = "montantVente", nullable = false)
     private Integer montantVente = 0;
@@ -223,7 +223,9 @@ public class VenteExclus implements Serializable{
 
     @Override
     public String toString() {
-        return "VenteExclus{" + "montantVente=" + montantVente + ", montantRegle=" + montantRegle + ", montantTiersPayant=" + montantTiersPayant + ", montantPaye=" + montantPaye + ", preenregistrement=" + preenregistrement + '}';
+        return "VenteExclus{" + "montantVente=" + montantVente + ", montantRegle=" + montantRegle
+                + ", montantTiersPayant=" + montantTiersPayant + ", montantPaye=" + montantPaye + ", preenregistrement="
+                + preenregistrement + '}';
     }
 
     public TypeTiersPayant getTypeTiersPayant() {
@@ -235,9 +237,8 @@ public class VenteExclus implements Serializable{
     }
 
     public VenteExclus() {
-       
+
         this.status = Statut.IS_CLOSE;
-      
 
     }
 

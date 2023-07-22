@@ -32,31 +32,22 @@ import util.DateUtil;
  *
  * @author koben
  */
-public final class VenteDTOBuilder extends CommonBuilder{
+public final class VenteDTOBuilder extends CommonBuilder {
 
- 
     public static VenteDTO buildVenteDTO(TPreenregistrement p, MvtTransaction mt) {
-        return VenteDTO.builder()
-                .user(VenteDTOBuilder.user(p.getLgUSERID()))
+        return VenteDTO.builder().user(VenteDTOBuilder.user(p.getLgUSERID()))
                 .vendeur(VenteDTOBuilder.user(p.getLgUSERVENDEURID()))
-                .caissier(VenteDTOBuilder.user(p.getLgUSERCAISSIERID()))
-                .cmuAmount(p.getCmuAmount())
+                .caissier(VenteDTOBuilder.user(p.getLgUSERCAISSIERID())).cmuAmount(p.getCmuAmount())
                 .client(VenteDTOBuilder.client(p.getClient()))
-                .typeVente(VenteDTOBuilder.typeVente(p.getLgTYPEVENTEID()))
-                .strREFTICKET(p.getStrREFTICKET())
-                .strREF(p.getStrREF())
-                .strREFBON(p.getStrREFBON())
-                .intCUSTPART(p.getIntCUSTPART())
-                .intPRICE(p.getIntPRICE())
-                .intPRICEREMISE(p.getIntPRICEREMISE())
+                .typeVente(VenteDTOBuilder.typeVente(p.getLgTYPEVENTEID())).strREFTICKET(p.getStrREFTICKET())
+                .strREF(p.getStrREF()).strREFBON(p.getStrREFBON()).intCUSTPART(p.getIntCUSTPART())
+                .intPRICE(p.getIntPRICE()).intPRICEREMISE(p.getIntPRICEREMISE())
                 .dtUPDATED(DateUtil.convertDateToDD_MM_YYYY_HH_mm(p.getDtUPDATED()))
                 .items(VenteDTOBuilder.items(p.getTPreenregistrementDetailCollection()))
                 .assurances(VenteDTOBuilder.assurances(p.getTPreenregistrementCompteClientTiersPayentCollection()))
                 .differes(VenteDTOBuilder.differes(p.getTPreenregistrementCompteClientCollection()))
                 .reglement(VenteDTOBuilder.buildReglementDTO(mt))
-                .ayantDroit(VenteDTOBuilder.ayantDroit(p.getAyantDroit()))
-                .strTYPEVENTE(p.getStrTYPEVENTE())
-                .build();
+                .ayantDroit(VenteDTOBuilder.ayantDroit(p.getAyantDroit())).strTYPEVENTE(p.getStrTYPEVENTE()).build();
     }
 
     public static List<PreenregistrementCompteClientDTO> differes(Collection<TPreenregistrementCompteClient> pts) {
@@ -81,74 +72,49 @@ public final class VenteDTOBuilder extends CommonBuilder{
     }
 
     public static VenteItemDTO buildVenteItemDTO(TPreenregistrementDetail detail) {
-        return VenteItemDTO.builder().
-                cmuPrice(detail.getCmuPrice())
-                .id(detail.getLgPREENREGISTREMENTDETAILID())
-                .intAVOIRSERVED(detail.getIntAVOIRSERVED())
-                .intPRICE(detail.getIntPRICE())
-                .intPRICEUNITAIR(detail.getIntPRICEUNITAIR())
-                .intQUANTITY(detail.getIntQUANTITY())
+        return VenteItemDTO.builder().cmuPrice(detail.getCmuPrice()).id(detail.getLgPREENREGISTREMENTDETAILID())
+                .intAVOIRSERVED(detail.getIntAVOIRSERVED()).intPRICE(detail.getIntPRICE())
+                .intPRICEUNITAIR(detail.getIntPRICEUNITAIR()).intQUANTITY(detail.getIntQUANTITY())
                 .intQUANTITYSERVED(detail.getIntQUANTITYSERVED())
-                .produit(VenteDTOBuilder.produit(detail.getLgFAMILLEID()))
-                .build();
+                .produit(VenteDTOBuilder.produit(detail.getLgFAMILLEID())).build();
     }
 
     public static VenteTiersPayantItemDTO buildVenteTiersPayantDTO(TPreenregistrementCompteClientTiersPayent payent) {
-        return VenteTiersPayantItemDTO.builder()
-                .id(payent.getLgPREENREGISTREMENTCOMPTECLIENTPAYENTID())
-                .intPRICE(payent.getIntPRICE())
-                .intPERCENT(payent.getIntPERCENT())
-                .intPRICERESTE(payent.getIntPRICERESTE())
-                .strREFBON(payent.getStrREFBON())
+        return VenteTiersPayantItemDTO.builder().id(payent.getLgPREENREGISTREMENTCOMPTECLIENTPAYENTID())
+                .intPRICE(payent.getIntPRICE()).intPERCENT(payent.getIntPERCENT())
+                .intPRICERESTE(payent.getIntPRICERESTE()).strREFBON(payent.getStrREFBON())
                 .strSTATUTFACTURE(payent.getStrSTATUTFACTURE())
-                .tiersPayant(tiersPayant(payent.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID()))
-                .build();
+                .tiersPayant(tiersPayant(payent.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID())).build();
     }
 
     public static PreenregistrementCompteClientDTO buildCompteClientDTO(TPreenregistrementCompteClient client) {
         return PreenregistrementCompteClientDTO.builder()
                 .dtUPDATED(DateUtil.convertDateToDD_MM_YYYY_HH_mm(client.getDtCREATED()))
-                .id(client.getLgPREENREGISTREMENTCOMPTECLIENTID())
-                .intPRICE(client.getIntPRICE())
-                .intPRICERESTE(client.getIntPRICERESTE())
-                .build();
+                .id(client.getLgPREENREGISTREMENTCOMPTECLIENTID()).intPRICE(client.getIntPRICE())
+                .intPRICERESTE(client.getIntPRICERESTE()).build();
     }
 
     public static TransactionDTO buildReglementDTO(MvtTransaction mvtTransaction) {
         if (Objects.nonNull(mvtTransaction)) {
-            return TransactionDTO.builder()
-                    .checked(mvtTransaction.getChecked())
-                    .cmuAmount(mvtTransaction.getCmuAmount())
-                    .flaged(mvtTransaction.getFlaged())
-                    .marge(mvtTransaction.getMarge())
-                    .margeug(mvtTransaction.getMargeug())
-                    .montant(mvtTransaction.getMontant())
-                    .montantCredit(mvtTransaction.getMontantCredit())
-                    .montantNet(mvtTransaction.getMontantNet())
-                    .montantPaye(mvtTransaction.getMontantPaye())
-                    .montantRegle(mvtTransaction.getMontantRegle())
-                    .montantRemise(mvtTransaction.getMontantRemise())
-                    .montantRestant(mvtTransaction.getMontantRestant())
-                    .montantTva(mvtTransaction.getMontantTva())
-                    .montantTvaUg(mvtTransaction.getMontantTvaUg())
-                    .montantVerse(mvtTransaction.getMontantVerse())
-                    .reglement(reglement(mvtTransaction.getReglement()))
-                    .build();
+            return TransactionDTO.builder().checked(mvtTransaction.getChecked())
+                    .cmuAmount(mvtTransaction.getCmuAmount()).flaged(mvtTransaction.getFlaged())
+                    .marge(mvtTransaction.getMarge()).margeug(mvtTransaction.getMargeug())
+                    .montant(mvtTransaction.getMontant()).montantCredit(mvtTransaction.getMontantCredit())
+                    .montantNet(mvtTransaction.getMontantNet()).montantPaye(mvtTransaction.getMontantPaye())
+                    .montantRegle(mvtTransaction.getMontantRegle()).montantRemise(mvtTransaction.getMontantRemise())
+                    .montantRestant(mvtTransaction.getMontantRestant()).montantTva(mvtTransaction.getMontantTva())
+                    .montantTvaUg(mvtTransaction.getMontantTvaUg()).montantVerse(mvtTransaction.getMontantVerse())
+                    .reglement(reglement(mvtTransaction.getReglement())).build();
         }
         return null;
     }
 
     public static CodeInfo reglement(TTypeReglement reglement) {
         if (Objects.nonNull(reglement)) {
-            return CodeInfo.builder()
-                    .code(reglement.getLgTYPEREGLEMENTID())
-                    .libelle(reglement.getStrNAME())
-                    .build();
+            return CodeInfo.builder().code(reglement.getLgTYPEREGLEMENTID()).libelle(reglement.getStrNAME()).build();
         }
         return null;
     }
-
-  
 
     private static TiersPayantDTO tiersPayant(TTiersPayant payant) {
         TiersPayantDTO o = new TiersPayantDTO();
@@ -156,8 +122,6 @@ public final class VenteDTOBuilder extends CommonBuilder{
         o.setStrNAME(payant.getStrNAME());
         return o;
     }
-
-
 
     private static ClientDTO client(TClient client) {
         if (Objects.nonNull(client)) {
@@ -169,10 +133,7 @@ public final class VenteDTOBuilder extends CommonBuilder{
 
     public static CodeInfo typeVente(TTypeVente typeVente) {
         if (Objects.nonNull(typeVente)) {
-            return CodeInfo.builder()
-                    .code(typeVente.getLgTYPEVENTEID())
-                    .libelle(typeVente.getStrDESCRIPTION())
-                    .build();
+            return CodeInfo.builder().code(typeVente.getLgTYPEVENTEID()).libelle(typeVente.getStrDESCRIPTION()).build();
         }
         return null;
     }

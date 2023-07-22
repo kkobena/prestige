@@ -217,11 +217,11 @@ public class VenteExclusDTO {
         TUser user = preenregistrement.getLgUSERID();
         this.userFullName = String.format("%s %s", user.getStrFIRSTNAME(), user.getStrLASTNAME());
         this.userId = user.getLgUSERID();
-        this.montantTiersPayant=venteExclus.getMontantTiersPayant();
-        this.montantClient=venteExclus.getMontantClient();
-        this.montantPaye=venteExclus.getMontantPaye();
-        this.montantVente=venteExclus.getMontantVente();
-        
+        this.montantTiersPayant = venteExclus.getMontantTiersPayant();
+        this.montantClient = venteExclus.getMontantClient();
+        this.montantPaye = venteExclus.getMontantPaye();
+        this.montantVente = venteExclus.getMontantVente();
+
     }
 
 }

@@ -16,6 +16,5 @@ public class ArticleVenduDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
-   
-    
+
 }

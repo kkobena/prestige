@@ -40,7 +40,7 @@ public class SalesStatsParams implements Serializable {
     private Integer qteVendu, stock;
     private boolean discountStat;
     private String tiersPayantId;
-       private String nature;
+    private String nature;
 
     public String getNature() {
         return nature;
@@ -49,7 +49,6 @@ public class SalesStatsParams implements Serializable {
     public void setNature(String nature) {
         this.nature = nature;
     }
-    
 
     public boolean isDiscountStat() {
         return discountStat;
@@ -157,7 +156,8 @@ public class SalesStatsParams implements Serializable {
         this.tiersPayantId = tiersPayantId;
     }
 
-    public SalesStatsParams(boolean showAll, String typeVenteId, TUser userId, String query, String statut, LocalDate dtStart, LocalDate dtEnd, int start, int limit) {
+    public SalesStatsParams(boolean showAll, String typeVenteId, TUser userId, String query, String statut,
+            LocalDate dtStart, LocalDate dtEnd, int start, int limit) {
         this.typeVenteId = typeVenteId;
         this.userId = userId;
         this.query = query;

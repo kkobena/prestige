@@ -23,7 +23,7 @@ public class CaisseParamsDTO implements Serializable {
     private String utilisateurId;
     private int start, limit, page = 0;
     private String emplacementId;
-    private boolean  findClient=false;
+    private boolean findClient = false;
 
     public LocalDate getStartDate() {
         return startDate;
@@ -115,7 +115,9 @@ public class CaisseParamsDTO implements Serializable {
 
     @Override
     public String toString() {
-        return "CaisseParamsDTO{" + "startDate=" + startDate + ", end=" + end + ", startHour=" + startHour + ", startEnd=" + startEnd + ", typeReglementId=" + typeReglementId + ", utilisateurId=" + utilisateurId + ", start=" + start + ", limit=" + limit + ", page=" + page + ", emplacementId=" + emplacementId + '}';
+        return "CaisseParamsDTO{" + "startDate=" + startDate + ", end=" + end + ", startHour=" + startHour
+                + ", startEnd=" + startEnd + ", typeReglementId=" + typeReglementId + ", utilisateurId=" + utilisateurId
+                + ", start=" + start + ", limit=" + limit + ", page=" + page + ", emplacementId=" + emplacementId + '}';
     }
 
 }

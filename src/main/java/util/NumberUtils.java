@@ -9,10 +9,9 @@ import java.text.DecimalFormatSymbols;
  * @author koben
  */
 public final class NumberUtils {
-     public static String formatLongToString(long number) {
+    public static String formatLongToString(long number) {
         String result = "0";
         try {
-          
 
             DecimalFormatSymbols amountSymbols = new DecimalFormatSymbols();
 

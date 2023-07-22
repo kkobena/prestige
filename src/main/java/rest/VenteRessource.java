@@ -29,6 +29,7 @@ import rest.service.SalesService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 import util.Constant;
+
 /**
  *
  * @author Kobena
@@ -68,7 +69,7 @@ public class VenteRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUserId(tu);
-        params.setStatut(params.isPrevente()?DateConverter.STATUT_PENDING: DateConverter.STATUT_PROCESS);
+        params.setStatut(params.isPrevente() ? DateConverter.STATUT_PENDING : DateConverter.STATUT_PROCESS);
         JSONObject json = salesService.createPreVente(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -82,7 +83,7 @@ public class VenteRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUserId(tu);
-      params.setStatut(params.isPrevente()?DateConverter.STATUT_PENDING: DateConverter.STATUT_PROCESS);
+        params.setStatut(params.isPrevente() ? DateConverter.STATUT_PENDING : DateConverter.STATUT_PROCESS);
         JSONObject json = salesService.createPreVenteVo(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -214,8 +215,8 @@ public class VenteRessource {
 
     @GET
     @Path("search")
-    public Response searchProduct(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query) throws JSONException {
+    public Response searchProduct(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -233,10 +234,9 @@ public class VenteRessource {
 
     @GET
     @Path("deatails")
-    public Response getDetails(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
-            @QueryParam(value = "venteId") String venteId, @QueryParam(value = "statut") String statut
-    ) throws JSONException {
+    public Response getDetails(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "venteId") String venteId,
+            @QueryParam(value = "statut") String statut) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -294,8 +294,6 @@ public class VenteRessource {
         JSONObject json = salesService.updateTPreenregistrementDetail(params);
         return Response.ok().entity(json.toString()).build();
     }
-
-  
 
     @GET
     @Path("quantite-vente/{id}")

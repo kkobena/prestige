@@ -28,9 +28,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "t_preenregistrement_detail")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "TPreenregistrementDetail.findAvoir", query = "SELECT t FROM TPreenregistrementDetail t WHERE t.bISAVOIR=TRUE AND t.strSTATUT='is_Closed' AND t.intQUANTITY <> t.intQUANTITYSERVED AND t.intQUANTITY >0"),
-    @NamedQuery(name = "TPreenregistrementDetail.findAll", query = "SELECT t FROM TPreenregistrementDetail t"),
-    @NamedQuery(name = "TPreenregistrementDetail.findByVenteId", query = "SELECT t FROM TPreenregistrementDetail t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID  = :lgPREENREGISTREMENTID"),})
+        @NamedQuery(name = "TPreenregistrementDetail.findAvoir", query = "SELECT t FROM TPreenregistrementDetail t WHERE t.bISAVOIR=TRUE AND t.strSTATUT='is_Closed' AND t.intQUANTITY <> t.intQUANTITYSERVED AND t.intQUANTITY >0"),
+        @NamedQuery(name = "TPreenregistrementDetail.findAll", query = "SELECT t FROM TPreenregistrementDetail t"),
+        @NamedQuery(name = "TPreenregistrementDetail.findByVenteId", query = "SELECT t FROM TPreenregistrementDetail t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID  = :lgPREENREGISTREMENTID"), })
 public class TPreenregistrementDetail implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -94,7 +94,7 @@ public class TPreenregistrementDetail implements Serializable {
     @Column(name = "montanttvaug")
     private Integer montantTvaUg = 0;
     @Column(name = "cmu_price")
-    private Integer cmuPrice=0;
+    private Integer cmuPrice = 0;
 
     public Integer getCmuPrice() {
         return cmuPrice;
@@ -104,8 +104,6 @@ public class TPreenregistrementDetail implements Serializable {
         this.cmuPrice = cmuPrice;
     }
 
-    
-    
     public TPreenregistrementDetail() {
     }
 
@@ -308,7 +306,9 @@ public class TPreenregistrementDetail implements Serializable {
             return false;
         }
         TPreenregistrementDetail other = (TPreenregistrementDetail) object;
-        if ((this.lgPREENREGISTREMENTDETAILID == null && other.lgPREENREGISTREMENTDETAILID != null) || (this.lgPREENREGISTREMENTDETAILID != null && !this.lgPREENREGISTREMENTDETAILID.equals(other.lgPREENREGISTREMENTDETAILID))) {
+        if ((this.lgPREENREGISTREMENTDETAILID == null && other.lgPREENREGISTREMENTDETAILID != null)
+                || (this.lgPREENREGISTREMENTDETAILID != null
+                        && !this.lgPREENREGISTREMENTDETAILID.equals(other.lgPREENREGISTREMENTDETAILID))) {
             return false;
         }
         return true;
@@ -369,7 +369,7 @@ public class TPreenregistrementDetail implements Serializable {
         this.valeurTva = p.getValeurTva();
         this.prixAchat = p.getPrixAchat();
         this.montantTvaUg = p.getMontantTvaUg();
-        this.cmuPrice=p.cmuPrice;
+        this.cmuPrice = p.cmuPrice;
     }
 
 }

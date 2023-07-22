@@ -25,12 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Kobena
  */
 @Entity
-@Table(name = "HMvtProduit",
-        indexes = {
-            @Index(name = "HMvtProduit7", columnList = "mvtdate"),
-            @Index(name = "HMvtPkey", columnList = "pkey")
-        }
-)
+@Table(name = "HMvtProduit", indexes = { @Index(name = "HMvtProduit7", columnList = "mvtdate"),
+        @Index(name = "HMvtPkey", columnList = "pkey") })
 @XmlRootElement
 public class HMvtProduit implements Serializable {
 
@@ -74,29 +70,26 @@ public class HMvtProduit implements Serializable {
     private Boolean checked = true;
     @Column(name = "ug", nullable = false)
     private Integer ug = 0;
-     @Column(name = "cmu_price")
+    @Column(name = "cmu_price")
     private Integer cmuPrice;
     @ManyToOne
     @JoinColumn(name = "lg_PREENREGISTREMENT_DETAIL_ID", referencedColumnName = "lg_PREENREGISTREMENT_DETAIL_ID")
     private TPreenregistrementDetail preenregistrementDetail;
 
-
     public Integer getCmuPrice() {
         return cmuPrice;
     }
 
-    /* @Formula("qteMvt*prixUn")
-    private double montantTtc;
-    @Formula("(qteMvt*prixUn)/(1+(valeurTva/100))")
-    private double montantHt;*/
-    /*@Transient
-    public double getMontantHt() {
-    return montantHt;
-    }
-    @Transient
-    public double getMontantTtc() {
-    return montantTtc;
-    }*/
+    /*
+     * @Formula("qteMvt*prixUn") private double montantTtc;
+     *
+     * @Formula("(qteMvt*prixUn)/(1+(valeurTva/100))") private double montantHt;
+     */
+    /*
+     * @Transient public double getMontantHt() { return montantHt; }
+     *
+     * @Transient public double getMontantTtc() { return montantTtc; }
+     */
     public void setCmuPrice(Integer cmuPrice) {
         this.cmuPrice = cmuPrice;
     }
@@ -108,8 +101,7 @@ public class HMvtProduit implements Serializable {
     public void setPreenregistrementDetail(TPreenregistrementDetail preenregistrementDetail) {
         this.preenregistrementDetail = preenregistrementDetail;
     }
-    
-    
+
     public Integer getValeurTva() {
         return valeurTva;
     }

@@ -14,6 +14,7 @@ import javax.persistence.EntityManager;
 /**
  *
  * @author koben
+ *
  * @param <T>
  */
 public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
@@ -21,12 +22,13 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
     protected static final Logger LOG = Logger.getLogger(AbstractRepoImpl.class.getName());
 
     protected abstract EntityManager getEntityManager();
+
     private final Class<T> entityClass;
 
     public AbstractRepoImpl(Class<T> entityClass) {
         this.entityClass = entityClass;
     }
-   
+
     @Override
     public void save(T entity) {
         getEntityManager().persist(entity);
@@ -86,14 +88,14 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
             }
             return Optional.empty();
         } catch (Exception e) {
-             LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.SEVERE, null, e);
             return Optional.empty();
         }
     }
 
     @Override
     public int deleteById(Integer entityId) {
-     T obj = getEntityManager().find(entityClass, entityId);
+        T obj = getEntityManager().find(entityClass, entityId);
         if (obj != null) {
             getEntityManager().remove(getEntityManager().merge(obj));
             return 1;
@@ -103,7 +105,7 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
 
     @Override
     public Optional<T> findById(Integer entityId) {
-         try {
+        try {
             T obj = getEntityManager().find(entityClass, entityId);
             if (obj != null) {
                 return Optional.of(obj);
@@ -114,15 +116,13 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
             return Optional.empty();
         }
     }
-    
-    
-//  @Override
-//public Optional<T> find(Class<T> clazz, ID id) {
-//if (id == null) {
-//throw new IllegalArgumentException("ID cannot be null");
-//}
-//return Optional.ofNullable(entityManager.find(clazz, id));
-//}
 
-  
+    // @Override
+    // public Optional<T> find(Class<T> clazz, ID id) {
+    // if (id == null) {
+    // throw new IllegalArgumentException("ID cannot be null");
+    // }
+    // return Optional.ofNullable(entityManager.find(clazz, id));
+    // }
+
 }

@@ -43,8 +43,7 @@ public class GroupefournisseurRessource {
     private GroupefournisseurRepo groupefournisseurRepo;
 
     @GET
-    public Response findAll(
-            @QueryParam(value = "query") String query) {
+    public Response findAll(@QueryParam(value = "query") String query) {
         List<Groupefournisseur> data = produitQueryRepo.findAllGroupeFournisseurs(query);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }

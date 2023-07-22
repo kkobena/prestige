@@ -15,11 +15,6 @@ import org.json.JSONObject;
 @Local
 public interface SmsService {
 
-   
-
     JSONObject findAccessToken();
 
-   
-
- 
 }

@@ -22,11 +22,9 @@ import org.json.JSONPropertyName;
  * @author koben
  */
 @Entity
-@Table(name = "sms_token", indexes = {
-    @Index(name = "sms_token_index", columnList = "access_token")
+@Table(name = "sms_token", indexes = { @Index(name = "sms_token_index", columnList = "access_token")
 
-}, uniqueConstraints = {
-    @UniqueConstraint(name = "sms_token_un", columnNames = {"access_token"})})
+}, uniqueConstraints = { @UniqueConstraint(name = "sms_token_un", columnNames = { "access_token" }) })
 
 public class SmsToken implements Serializable {
 
@@ -46,7 +44,7 @@ public class SmsToken implements Serializable {
     private String header;
     @NotNull
     @Column(name = "create_date", nullable = false)
-    private LocalDateTime createDate=LocalDateTime.now();
+    private LocalDateTime createDate = LocalDateTime.now();
 
     public void setId(String id) {
         this.id = id;

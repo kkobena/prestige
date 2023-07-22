@@ -40,7 +40,7 @@ import toolkits.utils.date;
  *
  * @author KKOFFI
  */
-@WebServlet(name = "FactureDataExport", urlPatterns = {"/FactureDataExport"})
+@WebServlet(name = "FactureDataExport", urlPatterns = { "/FactureDataExport" })
 public class FactureDataExport extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -55,9 +55,11 @@ public class FactureDataExport extends HttpServlet {
             throws ServletException, IOException, ParseException, JSONException {
 
         OdataManager.initEntityManager();
-        String search_value = "", action = request.getParameter("action"), dt_debut = date.formatterMysqlShort.format(new Date()), dt_fin = date.formatterMysql.format(new Date()), lg_FACTURE_ID = "%%", lg_TYPE_FACTURE_ID = "%%", lg_customer_id = "%%";
+        String search_value = "", action = request.getParameter("action"),
+                dt_debut = date.formatterMysqlShort.format(new Date()), dt_fin = date.formatterMysql.format(new Date()),
+                lg_FACTURE_ID = "%%", lg_TYPE_FACTURE_ID = "%%", lg_customer_id = "%%";
         JSONObject dataToExport;
-        management = new factureManagement(OdataManager, null);//30032016
+        management = new factureManagement(OdataManager, null);// 30032016
         statisticSales = new StatisticSales(OdataManager);
         statisticsFamilleArticle = new StatisticsFamilleArticle(OdataManager);
         if (request.getParameter("dt_fin") != null && !"".equals(request.getParameter("dt_fin"))) {
@@ -73,7 +75,8 @@ public class FactureDataExport extends HttpServlet {
         if (request.getParameter("lg_FACTURE_ID") != null && !"".equals(request.getParameter("lg_FACTURE_ID"))) {
             lg_FACTURE_ID = request.getParameter("lg_FACTURE_ID");
         }
-        if (request.getParameter("lg_TYPE_FACTURE_ID") != null && !"".equals(request.getParameter("lg_TYPE_FACTURE_ID"))) {
+        if (request.getParameter("lg_TYPE_FACTURE_ID") != null
+                && !"".equals(request.getParameter("lg_TYPE_FACTURE_ID"))) {
             lg_TYPE_FACTURE_ID = request.getParameter("lg_TYPE_FACTURE_ID");
         }
         if (request.getParameter("lg_customer_id") != null && !"".equals(request.getParameter("lg_customer_id"))) {
@@ -90,7 +93,8 @@ public class FactureDataExport extends HttpServlet {
                 dt_debut = request.getParameter("dt_debut");
             }
 
-            dataToExport = management.getInvoiceExportToExcelData(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID, java.sql.Date.valueOf(dt_debut), end, lg_customer_id);
+            dataToExport = management.getInvoiceExportToExcelData(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID,
+                    java.sql.Date.valueOf(dt_debut), end, lg_customer_id);
 
             extportFactureData2(dataToExport, response, "Facture releve client");
         }
@@ -114,7 +118,8 @@ public class FactureDataExport extends HttpServlet {
                 if (!"".equals(dt_fin)) {
                     end = date.formatterMysql.parse(dt_fin);
                 }
-                dataToExport = statisticsFamilleArticle.achatFournisseur(search_value, java.sql.Date.valueOf(dt_debut), end);
+                dataToExport = statisticsFamilleArticle.achatFournisseur(search_value, java.sql.Date.valueOf(dt_debut),
+                        end);
                 extportSimpleData(dataToExport, response, "La liste des fournisseurs avec les produits achetés");
             } catch (JSONException ex) {
                 Logger.getLogger(FactureDataExport.class.getName()).log(Level.SEVERE, null, ex);
@@ -161,10 +166,10 @@ public class FactureDataExport extends HttpServlet {
         try {
             out = response.getOutputStream();
             response.setContentType("application/vnd.ms-excel");
-//             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            // response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
             response.setHeader("Content-disposition", "inline; filename=" + filename);
-            //  XSSFWorkbook wb = new XSSFWorkbook();
+            // XSSFWorkbook wb = new XSSFWorkbook();
             Workbook wb = new HSSFWorkbook();
             // XSSFSheet sheet = wb.createSheet(title);
             Sheet sheet = wb.createSheet(title);
@@ -207,7 +212,7 @@ public class FactureDataExport extends HttpServlet {
             JSONArray childheader = data.getJSONArray("childheader");
             for (int i = 0; i < childheader.length(); i++) {
                 Cell cell = titlechildrow.createCell((short) i);
-                //  cell.setCellStyle(cellStyle);
+                // cell.setCellStyle(cellStyle);
                 cell.setCellValue(childheader.getString(i));
             }
 
@@ -244,7 +249,6 @@ public class FactureDataExport extends HttpServlet {
                 cell = parentDataRow.createCell((short) 7);
                 cell.setCellStyle(cellStyle);
                 cell.setCellValue(o.getString("DATE"));
-                
 
                 JSONArray facturedetails = o.getJSONArray("facturedetails");
 
@@ -288,10 +292,10 @@ public class FactureDataExport extends HttpServlet {
         try {
             out = response.getOutputStream();
             response.setContentType("application/vnd.ms-excel");
-//             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            // response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
             response.setHeader("Content-disposition", "inline; filename=" + filename);
-            //  XSSFWorkbook wb = new XSSFWorkbook();
+            // XSSFWorkbook wb = new XSSFWorkbook();
             Workbook wb = new HSSFWorkbook();
             // XSSFSheet sheet = wb.createSheet(title);
             Sheet sheet = wb.createSheet(title);
@@ -371,11 +375,10 @@ public class FactureDataExport extends HttpServlet {
             out = response.getOutputStream();
             response.setContentType("application/vnd.ms-excel");
 
-
             response.setHeader("Content-disposition", "inline; filename=" + filename);
-           
+
             Workbook wb = new HSSFWorkbook();
-            
+
             Sheet sheet = wb.createSheet(title);
             sheet.setColumnWidth(0, 7000);
             sheet.setColumnWidth(1, 7000);
@@ -388,8 +391,7 @@ public class FactureDataExport extends HttpServlet {
             sheet.setColumnWidth(8, 7000);
             sheet.setColumnWidth(9, 7000);
             sheet.setColumnWidth(10, 7000);
-          
-           
+
             Font parentHeaderfont = wb.createFont();
             parentHeaderfont.setBoldweight((short) 700);
             parentHeaderfont.setFontHeightInPoints((short) 16);
@@ -413,7 +415,7 @@ public class FactureDataExport extends HttpServlet {
             JSONArray childheader = data.getJSONArray("childheader");
             for (int i = 0; i < childheader.length(); i++) {
                 Cell cell = titlechildrow.createCell((short) i);
-              
+
                 cell.setCellValue(childheader.getString(i));
             }
 
@@ -425,7 +427,7 @@ public class FactureDataExport extends HttpServlet {
                 Row parentDataRow = sheet.createRow((short) count);
 
                 JSONObject o = (JSONObject) parentData.getJSONObject(i);
-          
+
                 JSONArray headerdatavalue = o.getJSONArray("headerdatavalue");
 
                 for (int q = 0; q < headerdatavalue.length(); q++) {

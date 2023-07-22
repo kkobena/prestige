@@ -57,12 +57,14 @@ public class Suggestion extends HttpServlet {
         TFamilleStock OTProductItemStock = null;
 
         try {
-            OTProductItemStock = em.
-                    createQuery("SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable'", TFamilleStock.class).
-                    setParameter(1, lg_FAMILLE_ID).setParameter(2, lg_EMPLACEMENT_ID).setFirstResult(0).setMaxResults(1).getSingleResult();
-          //  em.refresh(OTProductItemStock);
+            OTProductItemStock = em.createQuery(
+                    "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable'",
+                    TFamilleStock.class).setParameter(1, lg_FAMILLE_ID).setParameter(2, lg_EMPLACEMENT_ID)
+                    .setFirstResult(0).setMaxResults(1).getSingleResult();
+            // em.refresh(OTProductItemStock);
         } catch (Exception e) {
-            LOGGER.log(Level.INFO, "findFamilleGrossiste id produit {0} lg_EMPLACEMENT_ID {1}", new Object[]{lg_FAMILLE_ID, lg_EMPLACEMENT_ID});
+            LOGGER.log(Level.INFO, "findFamilleGrossiste id produit {0} lg_EMPLACEMENT_ID {1}",
+                    new Object[] { lg_FAMILLE_ID, lg_EMPLACEMENT_ID });
             LOGGER.log(Level.SEVERE, null, e);
         }
         return OTProductItemStock;
@@ -72,15 +74,16 @@ public class Suggestion extends HttpServlet {
         TFamilleGrossiste familleGrossiste = null;
 
         try {
-            Query qry = em.createQuery("SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2  AND t.strSTATUT = ?3 ").
-                    setParameter(1, lg_FAMILLE_ID)
-                    .setParameter(2, lg_GROSSISTE_ID)
+            Query qry = em.createQuery(
+                    "SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2  AND t.strSTATUT = ?3 ")
+                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, lg_GROSSISTE_ID)
                     .setParameter(3, commonparameter.statut_enable);
             qry.setMaxResults(1);
             familleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
 
         } catch (Exception e) {
-            LOGGER.log(Level.INFO, "findFamilleGrossiste id produit {0} grossiste {1}", new Object[]{lg_FAMILLE_ID, lg_GROSSISTE_ID});
+            LOGGER.log(Level.INFO, "findFamilleGrossiste id produit {0} grossiste {1}",
+                    new Object[] { lg_FAMILLE_ID, lg_GROSSISTE_ID });
             LOGGER.log(Level.SEVERE, null, e);
         }
 
@@ -92,21 +95,20 @@ public class Suggestion extends HttpServlet {
         int status = 0;
         try {
 
-            long count = (long) em.createQuery("SELECT COUNT(o)  FROM TSuggestionOrderDetails o WHERE  o.lgFAMILLEID.lgFAMILLEID =?1 ").setParameter(1, lgFamilleID)
-                    .setMaxResults(1)
-                    .getSingleResult();
+            long count = (long) em
+                    .createQuery(
+                            "SELECT COUNT(o)  FROM TSuggestionOrderDetails o WHERE  o.lgFAMILLEID.lgFAMILLEID =?1 ")
+                    .setParameter(1, lgFamilleID).setMaxResults(1).getSingleResult();
 
             if (count > 1) {
 
                 status = 1;
 
             }
-            count = (long) em.createQuery("SELECT COUNT(p) FROM TOrder r,TOrderDetail p WHERE p.lgORDERID.lgORDERID=r.lgORDERID AND (p.lgFAMILLEID.intORERSTATUS =?2 OR p.lgFAMILLEID.intORERSTATUS =?3 OR p.lgFAMILLEID.intORERSTATUS =?4 ) AND  p.lgFAMILLEID.lgFAMILLEID =?1  ORDER BY p.lgFAMILLEID.intORERSTATUS DESC").setParameter(1, lgFamilleID)
-                    .setParameter(2, (short) 2)
-                    .setParameter(3, (short) 3)
-                    .setParameter(4, (short) 4)
-                    .setMaxResults(1)
-                    .getSingleResult();
+            count = (long) em.createQuery(
+                    "SELECT COUNT(p) FROM TOrder r,TOrderDetail p WHERE p.lgORDERID.lgORDERID=r.lgORDERID AND (p.lgFAMILLEID.intORERSTATUS =?2 OR p.lgFAMILLEID.intORERSTATUS =?3 OR p.lgFAMILLEID.intORERSTATUS =?4 ) AND  p.lgFAMILLEID.lgFAMILLEID =?1  ORDER BY p.lgFAMILLEID.intORERSTATUS DESC")
+                    .setParameter(1, lgFamilleID).setParameter(2, (short) 2).setParameter(3, (short) 3)
+                    .setParameter(4, (short) 4).setMaxResults(1).getSingleResult();
 
             if (count > 0) {
                 status = 2;
@@ -136,7 +138,8 @@ public class Suggestion extends HttpServlet {
         }
         int start = Integer.parseInt(request.getParameter("start"));
         int limit = Integer.parseInt(request.getParameter("limit"));
-        List<TSuggestionOrderDetails> detailses = listeSuggestionOrderDetails(search_value, lg_SUGGESTION_ORDER_ID, start, limit);
+        List<TSuggestionOrderDetails> detailses = listeSuggestionOrderDetails(search_value, lg_SUGGESTION_ORDER_ID,
+                start, limit);
         int count = listeSuggestionOrderDetails(search_value, lg_SUGGESTION_ORDER_ID);
         JSONObject data = new JSONObject();
 
@@ -153,18 +156,22 @@ public class Suggestion extends HttpServlet {
             data.put("total", count);
             for (TSuggestionOrderDetails order : detailses) {
                 JSONObject json = new JSONObject();
-                TFamilleStock OTFamillestock = getTProductItemStock(order.getLgFAMILLEID().getLgFAMILLEID(), OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+                TFamilleStock OTFamillestock = getTProductItemStock(order.getLgFAMILLEID().getLgFAMILLEID(),
+                        OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
                 if (OTFamillestock == null) {
                     continue;
                 }
-                TFamilleGrossiste OTFamilleGrossiste = findFamilleGrossiste(order.getLgFAMILLEID().getLgFAMILLEID(), order.getLgSUGGESTIONORDERID().getLgGROSSISTEID().getLgGROSSISTEID());
+                TFamilleGrossiste OTFamilleGrossiste = findFamilleGrossiste(order.getLgFAMILLEID().getLgFAMILLEID(),
+                        order.getLgSUGGESTIONORDERID().getLgGROSSISTEID().getLgGROSSISTEID());
                 json.put("lg_SUGGESTION_ORDER_DETAILS_ID", order.getLgSUGGESTIONORDERDETAILSID());
                 json.put("lg_FAMILLE_ID", order.getLgFAMILLEID().getLgFAMILLEID());
                 json.put("bool_DECONDITIONNE_EXIST", order.getLgFAMILLEID().getBoolDECONDITIONNEEXIST());
                 json.put("lg_GROSSISTE_ID", order.getLgGROSSISTEID().getLgGROSSISTEID());
-                json.put("str_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE() : order.getLgFAMILLEID().getIntCIP()));
+                json.put("str_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE()
+                        : order.getLgFAMILLEID().getIntCIP()));
                 json.put("str_FAMILLE_NAME", order.getLgFAMILLEID().getStrDESCRIPTION());
-                json.put("int_DATE_BUTOIR_ARTICLE", (order.getLgFAMILLEID().getLgCODEGESTIONID() != null ? order.getLgFAMILLEID().getLgCODEGESTIONID().getIntDATEBUTOIRARTICLE() : 0));
+                json.put("int_DATE_BUTOIR_ARTICLE", (order.getLgFAMILLEID().getLgCODEGESTIONID() != null
+                        ? order.getLgFAMILLEID().getLgCODEGESTIONID().getIntDATEBUTOIRARTICLE() : 0));
                 json.put("int_STOCK", OTFamillestock.getIntNUMBERAVAILABLE());
 
                 json.put("int_NUMBER", order.getIntNUMBER());
@@ -198,10 +205,14 @@ public class Suggestion extends HttpServlet {
                 json.put("int_ACHAT", int_ACHAT);
                 json.put("int_VENTE", int_VENTE);
 
-                json.put("int_VALUE0", quantity(order.getLgFAMILLEID().getLgFAMILLEID(), moisUn.getMonthValue(), moisUn.getYear(), empl));
-                json.put("int_VALUE1", quantity(order.getLgFAMILLEID().getLgFAMILLEID(), nMoinsUn.getMonthValue(), nMoinsUn.getYear(), empl));
-                json.put("int_VALUE2", quantity(order.getLgFAMILLEID().getLgFAMILLEID(), nMoinsDeux.getMonthValue(), nMoinsDeux.getYear(), empl));
-                json.put("int_VALUE3", quantity(order.getLgFAMILLEID().getLgFAMILLEID(), nMoinsTrois.getMonthValue(), nMoinsTrois.getYear(), empl));
+                json.put("int_VALUE0", quantity(order.getLgFAMILLEID().getLgFAMILLEID(), moisUn.getMonthValue(),
+                        moisUn.getYear(), empl));
+                json.put("int_VALUE1", quantity(order.getLgFAMILLEID().getLgFAMILLEID(), nMoinsUn.getMonthValue(),
+                        nMoinsUn.getYear(), empl));
+                json.put("int_VALUE2", quantity(order.getLgFAMILLEID().getLgFAMILLEID(), nMoinsDeux.getMonthValue(),
+                        nMoinsDeux.getYear(), empl));
+                json.put("int_VALUE3", quantity(order.getLgFAMILLEID().getLgFAMILLEID(), nMoinsTrois.getMonthValue(),
+                        nMoinsTrois.getYear(), empl));
                 arrayObj.put(json);
 
             }
@@ -229,7 +240,8 @@ public class Suggestion extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private List<TSuggestionOrderDetails> listeSuggestionOrderDetails(String search_value, String lg_SUGGESTION_ORDER_ID, int start, int limit) {
+    private List<TSuggestionOrderDetails> listeSuggestionOrderDetails(String search_value,
+            String lg_SUGGESTION_ORDER_ID, int start, int limit) {
 
         List<TSuggestionOrderDetails> detailses = new ArrayList<>();
         try {
@@ -242,11 +254,17 @@ public class Suggestion extends HttpServlet {
             cq.select(root).orderBy(cb.asc(f.get(TFamille_.strNAME)));
             Predicate predicate = cb.conjunction();
 
-//            predicate = cb.and(predicate, cb.or(cb.like(join.get(TSuggestionOrder_.strSTATUT), commonparameter.statut_is_Process), cb.like(join.get(TSuggestionOrder_.strSTATUT), commonparameter.statut_is_Auto)));
-            predicate = cb.and(predicate, cb.equal(join.get(TSuggestionOrder_.lgSUGGESTIONORDERID), lg_SUGGESTION_ORDER_ID));
+            // predicate = cb.and(predicate, cb.or(cb.like(join.get(TSuggestionOrder_.strSTATUT),
+            // commonparameter.statut_is_Process), cb.like(join.get(TSuggestionOrder_.strSTATUT),
+            // commonparameter.statut_is_Auto)));
+            predicate = cb.and(predicate,
+                    cb.equal(join.get(TSuggestionOrder_.lgSUGGESTIONORDERID), lg_SUGGESTION_ORDER_ID));
             if (!"".equals(search_value)) {
 
-                predicate = cb.and(predicate, cb.or(cb.like(f.get(TFamille_.intCIP), search_value + "%"), cb.like(f.get(TFamille_.strNAME), search_value + "%"), cb.like(f.get(TFamille_.intEAN13), search_value + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(f.get(TFamille_.intCIP), search_value + "%"),
+                                cb.like(f.get(TFamille_.strNAME), search_value + "%"),
+                                cb.like(f.get(TFamille_.intEAN13), search_value + "%")));
 
             }
             cq.where(predicate);
@@ -275,10 +293,14 @@ public class Suggestion extends HttpServlet {
             cq.select(cb.count(root));
             Predicate predicate = cb.conjunction();
 
-            predicate = cb.and(predicate, cb.equal(join.get(TSuggestionOrder_.lgSUGGESTIONORDERID), lg_SUGGESTION_ORDER_ID));
+            predicate = cb.and(predicate,
+                    cb.equal(join.get(TSuggestionOrder_.lgSUGGESTIONORDERID), lg_SUGGESTION_ORDER_ID));
             if (!"".equals(search_value)) {
 
-                predicate = cb.and(predicate, cb.or(cb.like(f.get(TFamille_.intCIP), search_value + "%"), cb.like(f.get(TFamille_.strNAME), search_value + "%"), cb.like(f.get(TFamille_.intEAN13), search_value + "%")));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(f.get(TFamille_.intCIP), search_value + "%"),
+                                cb.like(f.get(TFamille_.strNAME), search_value + "%"),
+                                cb.like(f.get(TFamille_.intEAN13), search_value + "%")));
 
             }
             cq.where(predicate);
@@ -301,9 +323,12 @@ public class Suggestion extends HttpServlet {
             Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
-            criteria = cb.and(criteria, cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
+            criteria = cb.and(criteria,
+                    cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
             criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
-            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), empl));
+            criteria = cb.and(criteria, cb.equal(
+                    root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"),
+                    empl));
             Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
             cb.and(criteria, pu);
             Predicate pu2 = cb.greaterThan(root.get(TPreenregistrementDetail_.intQUANTITY), 0);

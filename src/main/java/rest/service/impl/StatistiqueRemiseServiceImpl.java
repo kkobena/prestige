@@ -20,21 +20,20 @@ import rest.service.StatistiqueRemiseService;
 @Stateless
 public class StatistiqueRemiseServiceImpl implements StatistiqueRemiseService {
 
-    private @EJB
-    SalesStatsService salesStatsService;
+    private @EJB SalesStatsService salesStatsService;
 
     @Override
     public JSONObject suiviRemise(SalesStatsParams params) throws JSONException {
         long count = salesStatsService.countListeVentes(params);
         if (count == 0) {
-            return new JSONObject().put("total", count).put("data", new JSONArray())
-                    .put("metaData",new JSONObject(new SummaryDTO()) );
+            return new JSONObject().put("total", count).put("data", new JSONArray()).put("metaData",
+                    new JSONObject(new SummaryDTO()));
         }
 
         List<VenteDTO> datas = salesStatsService.listVentes(params);
         SummaryDTO summary = salesStatsService.summarySales(params);
-        return new JSONObject().put("total", count).put("data", new JSONArray(datas))
-                .put("metaData", new JSONObject(summary));
+        return new JSONObject().put("total", count).put("data", new JSONArray(datas)).put("metaData",
+                new JSONObject(summary));
     }
 
     @Override

@@ -28,17 +28,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "t_resume_caisse")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TResumeCaisse.findAll", query = "SELECT t FROM TResumeCaisse t"),
-    @NamedQuery(name = "TResumeCaisse.findByLdCAISSEID", query = "SELECT t FROM TResumeCaisse t WHERE t.ldCAISSEID = :ldCAISSEID"),
-    @NamedQuery(name = "TResumeCaisse.findByIntSOLDEMATIN", query = "SELECT t FROM TResumeCaisse t WHERE t.intSOLDEMATIN = :intSOLDEMATIN"),
-    @NamedQuery(name = "TResumeCaisse.findByIntSOLDESOIR", query = "SELECT t FROM TResumeCaisse t WHERE t.intSOLDESOIR = :intSOLDESOIR"),
-    @NamedQuery(name = "TResumeCaisse.findByDtDAY", query = "SELECT t FROM TResumeCaisse t WHERE t.dtDAY = :dtDAY"),
-    @NamedQuery(name = "TResumeCaisse.findByDtCREATED", query = "SELECT t FROM TResumeCaisse t WHERE t.dtCREATED = :dtCREATED"),
-    @NamedQuery(name = "TResumeCaisse.findByLgCREATEDBY", query = "SELECT t FROM TResumeCaisse t WHERE t.lgCREATEDBY = :lgCREATEDBY"),
-    @NamedQuery(name = "TResumeCaisse.findByDtUPDATED", query = "SELECT t FROM TResumeCaisse t WHERE t.dtUPDATED = :dtUPDATED"),
-    @NamedQuery(name = "TResumeCaisse.findByLgUPDATEDBY", query = "SELECT t FROM TResumeCaisse t WHERE t.lgUPDATEDBY = :lgUPDATEDBY"),
-    @NamedQuery(name = "TResumeCaisse.findByStrSTATUT", query = "SELECT t FROM TResumeCaisse t WHERE t.strSTATUT = :strSTATUT")})
+@NamedQueries({ @NamedQuery(name = "TResumeCaisse.findAll", query = "SELECT t FROM TResumeCaisse t"),
+        @NamedQuery(name = "TResumeCaisse.findByLdCAISSEID", query = "SELECT t FROM TResumeCaisse t WHERE t.ldCAISSEID = :ldCAISSEID"),
+        @NamedQuery(name = "TResumeCaisse.findByIntSOLDEMATIN", query = "SELECT t FROM TResumeCaisse t WHERE t.intSOLDEMATIN = :intSOLDEMATIN"),
+        @NamedQuery(name = "TResumeCaisse.findByIntSOLDESOIR", query = "SELECT t FROM TResumeCaisse t WHERE t.intSOLDESOIR = :intSOLDESOIR"),
+        @NamedQuery(name = "TResumeCaisse.findByDtDAY", query = "SELECT t FROM TResumeCaisse t WHERE t.dtDAY = :dtDAY"),
+        @NamedQuery(name = "TResumeCaisse.findByDtCREATED", query = "SELECT t FROM TResumeCaisse t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TResumeCaisse.findByLgCREATEDBY", query = "SELECT t FROM TResumeCaisse t WHERE t.lgCREATEDBY = :lgCREATEDBY"),
+        @NamedQuery(name = "TResumeCaisse.findByDtUPDATED", query = "SELECT t FROM TResumeCaisse t WHERE t.dtUPDATED = :dtUPDATED"),
+        @NamedQuery(name = "TResumeCaisse.findByLgUPDATEDBY", query = "SELECT t FROM TResumeCaisse t WHERE t.lgUPDATEDBY = :lgUPDATEDBY"),
+        @NamedQuery(name = "TResumeCaisse.findByStrSTATUT", query = "SELECT t FROM TResumeCaisse t WHERE t.strSTATUT = :strSTATUT") })
 public class TResumeCaisse implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -180,7 +179,8 @@ public class TResumeCaisse implements Serializable {
             return false;
         }
         TResumeCaisse other = (TResumeCaisse) object;
-        if ((this.ldCAISSEID == null && other.ldCAISSEID != null) || (this.ldCAISSEID != null && !this.ldCAISSEID.equals(other.ldCAISSEID))) {
+        if ((this.ldCAISSEID == null && other.ldCAISSEID != null)
+                || (this.ldCAISSEID != null && !this.ldCAISSEID.equals(other.ldCAISSEID))) {
             return false;
         }
         return true;
@@ -190,5 +190,5 @@ public class TResumeCaisse implements Serializable {
     public String toString() {
         return "dal.TResumeCaisse[ ldCAISSEID=" + ldCAISSEID + " ]";
     }
-    
+
 }

@@ -45,9 +45,9 @@ public class CommandeEncourDetailDTO {
 
     private final String lgFAMILLEID;
 
-    private final Integer prixUnitaire ;
+    private final Integer prixUnitaire;
 
-    private final Integer prixAchat ;
+    private final Integer prixAchat;
 
     private final Short intORERSTATUS;
 
@@ -60,7 +60,7 @@ public class CommandeEncourDetailDTO {
     private final Integer produitPrixReference;
     private final boolean prixDiff;
     private final int qteLivree;
-    private final Integer seuil;//    
+    private final Integer seuil;//
     private int qteReasor;
     private int stock;
     private String codeArticle;
@@ -217,8 +217,8 @@ public class CommandeEncourDetailDTO {
     }
 
     public CommandeEncourDetailDTO(TOrderDetail detail) {
-        this.prixUnitaire=detail.getPrixUnitaire();
-        this.prixAchat=detail.getPrixAchat();
+        this.prixUnitaire = detail.getPrixUnitaire();
+        this.prixAchat = detail.getPrixAchat();
         this.lgORDERDETAILID = detail.getLgORDERDETAILID();
         this.intNUMBER = detail.getIntNUMBER();
         this.intPRICE = detail.getIntPRICE();
@@ -229,7 +229,8 @@ public class CommandeEncourDetailDTO {
         this.boolBL = detail.getBoolBL();
         this.strSTATUT = detail.getStrSTATUT();
         this.dtCREATED = DateCommonUtils.formatDate(detail.getDtCREATED());
-        this.dtUPDATED = Objects.isNull(detail.getDtUPDATED()) ? this.dtCREATED : DateCommonUtils.formatDate(detail.getDtUPDATED());
+        this.dtUPDATED = Objects.isNull(detail.getDtUPDATED()) ? this.dtCREATED
+                : DateCommonUtils.formatDate(detail.getDtUPDATED());
 
         TOrder order = detail.getLgORDERID();
         TGrossiste grossiste = order.getLgGROSSISTEID();
@@ -238,14 +239,15 @@ public class CommandeEncourDetailDTO {
 
         Collection<TFamilleGrossiste> tFamilleGrossisteCollection = famille.getTFamilleGrossisteCollection();
         if (CollectionUtils.isNotEmpty(tFamilleGrossisteCollection)) {
-            famille.getTFamilleGrossisteCollection().stream().filter((t)
-                    -> t.getLgGROSSISTEID().equals(grossiste) && "enable".equals(t.getStrSTATUT())).findFirst().ifPresentOrElse((t) -> {
-                this.produitCip = t.getStrCODEARTICLE();
-                this.codeArticle = t.getStrCODEARTICLE();
-            }, () -> {
-                this.produitCip = famille.getIntCIP();
-                this.codeArticle = "";
-            });
+            famille.getTFamilleGrossisteCollection().stream()
+                    .filter((t) -> t.getLgGROSSISTEID().equals(grossiste) && "enable".equals(t.getStrSTATUT()))
+                    .findFirst().ifPresentOrElse((t) -> {
+                        this.produitCip = t.getStrCODEARTICLE();
+                        this.codeArticle = t.getStrCODEARTICLE();
+                    }, () -> {
+                        this.produitCip = famille.getIntCIP();
+                        this.codeArticle = "";
+                    });
         } else {
             this.produitCip = famille.getIntCIP();
             this.codeArticle = "";

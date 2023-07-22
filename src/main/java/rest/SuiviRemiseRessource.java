@@ -24,6 +24,7 @@ import rest.service.StatistiqueRemiseService;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 import util.Constant;
+
 /**
  *
  * @author koben
@@ -32,25 +33,20 @@ import util.Constant;
 @Produces("application/json")
 @Consumes("application/json")
 public class SuiviRemiseRessource {
-    
+
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
     private StatistiqueRemiseService statistiqueRemiseService;
-    
+
     @GET
     @Path("ventes")
-    public Response getAlls(
-            @QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd,
-            @QueryParam(value = "typeVenteId") String typeVenteId,
-            @QueryParam(value = "tiersPayantId") String tiersPayantId
-    ) throws JSONException {
+    public Response getAlls(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "typeVenteId") String typeVenteId,
+            @QueryParam(value = "tiersPayantId") String tiersPayantId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        
+
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
@@ -70,9 +66,9 @@ public class SuiviRemiseRessource {
         body.setUserId(tu);
         body.setTiersPayantId(tiersPayantId);
         body.setDiscountStat(true);
-              body.sethStart(LocalTime.of(0, 0, 0));
-           body.sethEnd(LocalTime.of(23, 59));
-       
+        body.sethStart(LocalTime.of(0, 0, 0));
+        body.sethEnd(LocalTime.of(23, 59));
+
         try {
             body.setDtEnd(LocalDate.parse(dtEnd));
             body.setDtStart(LocalDate.parse(dtStart));

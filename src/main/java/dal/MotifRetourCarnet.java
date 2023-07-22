@@ -25,17 +25,16 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "motif_retour_carnet")
 @NamedQueries({
-    @NamedQuery(name = "MotifRetourCarnet.findAll", query = "SELECT o FROM MotifRetourCarnet o ORDER BY o.libelle")}
-        )
+        @NamedQuery(name = "MotifRetourCarnet.findAll", query = "SELECT o FROM MotifRetourCarnet o ORDER BY o.libelle") })
 public class MotifRetourCarnet implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
-      @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Basic(optional = false)
     @Column(name = "id", nullable = false, length = 11)
     private Integer id;
     @NotNull
-    @Column(name = "libelle", nullable = false,unique = true)
+    @Column(name = "libelle", nullable = false, unique = true)
     private String libelle;
 
     public Integer getId() {
@@ -80,7 +79,5 @@ public class MotifRetourCarnet implements Serializable {
     public String toString() {
         return "MotifRetourCarnet{" + "id=" + id + ", libelle=" + libelle + '}';
     }
-    
-    
-    
+
 }

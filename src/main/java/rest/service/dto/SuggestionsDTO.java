@@ -1,7 +1,6 @@
 
 package rest.service.dto;
 
-
 import dal.TGrossiste;
 import dal.TSuggestionOrder;
 import org.json.JSONPropertyName;
@@ -44,10 +43,12 @@ public class SuggestionsDTO {
         this.montantAchat = montantAchat;
         return this;
     }
+
     @JSONPropertyName("int_TOTAL_VENTE")
     public int getMontantVente() {
         return montantVente;
     }
+
     @JSONPropertyName("int_DATE_BUTOIR_ARTICLE")
 
     public Integer getDateButoir() {
@@ -63,6 +64,7 @@ public class SuggestionsDTO {
         this.montantVente = montantVente;
         return this;
     }
+
     @JSONPropertyName("lg_SUGGESTION_ORDER_ID")
     public String getLgSUGGESTIONORDERID() {
         return lgSUGGESTIONORDERID;
@@ -72,6 +74,7 @@ public class SuggestionsDTO {
         this.lgSUGGESTIONORDERID = lgSUGGESTIONORDERID;
         return this;
     }
+
     @JSONPropertyName("str_REF")
     public String getStrREF() {
         return strREF;
@@ -81,6 +84,7 @@ public class SuggestionsDTO {
         this.strREF = strREF;
         return this;
     }
+
     @JSONPropertyName("lg_GROSSISTE_ID")
     public String getGrossisteId() {
         return grossisteId;
@@ -90,6 +94,7 @@ public class SuggestionsDTO {
         this.grossisteId = grossisteId;
         return this;
     }
+
     @JSONPropertyName("str_STATUT")
     public String getStrSTATUT() {
         return strSTATUT;
@@ -99,6 +104,7 @@ public class SuggestionsDTO {
         this.strSTATUT = strSTATUT;
         return this;
     }
+
     @JSONPropertyName("dt_UPDATED")
     public String getDtUPDATED() {
         return dtUPDATED;
@@ -108,6 +114,7 @@ public class SuggestionsDTO {
         this.dtUPDATED = dtUPDATED;
         return this;
     }
+
     @JSONPropertyName("dt_CREATED")
     public String getDtCREATED() {
         return dtCREATED;
@@ -122,6 +129,7 @@ public class SuggestionsDTO {
     public String getDetails() {
         return details;
     }
+
     @JSONPropertyName("int_NOMBRE_ARTICLES")
     public int getNbreLigne() {
         return nbreLigne;
@@ -131,6 +139,7 @@ public class SuggestionsDTO {
         this.nbreLigne = nbreLigne;
         return this;
     }
+
     @JSONPropertyName("int_NUMBER")
     public int getTotalQty() {
         return totalQty;
@@ -146,8 +155,9 @@ public class SuggestionsDTO {
         return this;
     }
 
-    public SuggestionsDTO(TSuggestionOrder suggestionOrder,String items,int montantAchat,int montantVente,int nbreLigne,int totalQty) {
-        TGrossiste grossiste=suggestionOrder.getLgGROSSISTEID();
+    public SuggestionsDTO(TSuggestionOrder suggestionOrder, String items, int montantAchat, int montantVente,
+            int nbreLigne, int totalQty) {
+        TGrossiste grossiste = suggestionOrder.getLgGROSSISTEID();
         this.montantAchat = montantAchat;
         this.montantVente = montantVente;
         this.nbreLigne = nbreLigne;
@@ -161,7 +171,8 @@ public class SuggestionsDTO {
         this.lgGROSSISTEID = grossiste.getLgGROSSISTEID();
         this.strSTATUT = suggestionOrder.getStrSTATUT();
         this.dtCREATED = DateCommonUtils.formatDate(suggestionOrder.getDtCREATED());
-        this.dtUPDATED =  DateCommonUtils.formatToHour(suggestionOrder.getDtCREATED());;
+        this.dtUPDATED = DateCommonUtils.formatToHour(suggestionOrder.getDtCREATED());
+        ;
 
     }
 }

@@ -34,7 +34,8 @@ public interface CommandeService {
 
     JSONObject createProduct(Params params) throws JSONException;
 
-    default int calculPrixMoyenPondereReception(int ancienStock, int ancienPrixAchat, int nouveauStock, int nouveauPrixAchat) {
+    default int calculPrixMoyenPondereReception(int ancienStock, int ancienPrixAchat, int nouveauStock,
+            int nouveauPrixAchat) {
         return ((ancienStock * ancienPrixAchat) + (nouveauStock * nouveauPrixAchat)) / (ancienStock + nouveauStock);
     }
 
@@ -49,8 +50,5 @@ public interface CommandeService {
     void addRuptureHistory(TOrderDetail item, TGrossiste grossiste);
 
     JSONObject verificationCommande(Part part, String orderId, TUser OTUser);
-
-    
-    
 
 }

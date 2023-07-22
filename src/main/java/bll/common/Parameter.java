@@ -10,7 +10,7 @@ package bll.common;
  */
 public final class Parameter {
 
-    //Decoupe-CI-District
+    // Decoupe-CI-District
     public static final String KEY_TYPE_RECETTE_VENTE_BOISSON = "1";
     public static final String KEY_TYPE_DEPENSE_PRET_BOISSON = "1";
     public static final String KEY_TYPE_DEPENSE_ANNULATION = "1";
@@ -155,7 +155,7 @@ public final class Parameter {
     public static final String KEY_CODE_FACTURE = "KEY_CODE_FACTURE";
     public static final String TYPE_CODIFICATION = "CIP39";
     public static final String CODE_LIVRAISON = "OUI";
-    public static  final String TYPE_NUMCOMPTE_MVTCAISSE_VO = "70710000000";
+    public static final String TYPE_NUMCOMPTE_MVTCAISSE_VO = "70710000000";
     public static final String TYPE_NUMCOMPTE_MVTCAISSE_VNO = "70720000000";
 
     public static final String MOBILE_PAY_FLOOZ_LOGIN = "vital2016";
@@ -174,7 +174,7 @@ public final class Parameter {
     public static final String STATUT_ENCOURS_PEREMPTION = "en peremption";
     public static final String STATUT_ENTREE_STOCK = "ENTREE_STOCK";
     public static final String KEY_CODE_NUMERARTION_FACTURE = "KEY_CODE_NUMERARTION_FACTURE";
-     public static final String ACTION_RETURN_FULL_BL = "ACTION_RETURN_FULL_BL";
+    public static final String ACTION_RETURN_FULL_BL = "ACTION_RETURN_FULL_BL";
 
     private Parameter() {
     }

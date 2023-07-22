@@ -32,13 +32,13 @@ import toolkits.utils.jdom;
  */
 public class barecodeManager {
 
-    private static int uom = 0;        //  0 - Pixel, 1 - CM, 2 - Inch
+    private static int uom = 0; // 0 - Pixel, 1 - CM, 2 - Inch
     private static int resolution = 72;
     private static float leftMargin = 10.000f;
     private static float rightMargin = 10.000f;
     private static float topMargin = 10.000f;
     private static float bottomMargin = 10.000f;
-    private static int rotate = 0;     //  0 - 0, 1 - 90, 2 - 180, 3 - 270
+    private static int rotate = 0; // 0 - 0, 1 - 90, 2 - 180, 3 - 270
 
     private static float barWidth = 1.000f;
     private static float barHeight = 80.000f;
@@ -62,7 +62,8 @@ public class barecodeManager {
             file = outputFile.getAbsolutePath();
 
             try (OutputStream out = new FileOutputStream(outputFile)) {
-                BitmapCanvasProvider canvas = new BitmapCanvasProvider(out, "image/jpeg", dpi, BufferedImage.TYPE_BYTE_BINARY, false, 0);
+                BitmapCanvasProvider canvas = new BitmapCanvasProvider(out, "image/jpeg", dpi,
+                        BufferedImage.TYPE_BYTE_BINARY, false, 0);
                 bean.generateBarcode(canvas, DATA);
                 canvas.finish();
             }
@@ -94,7 +95,7 @@ public class barecodeManager {
 
         } catch (Exception e) {
 
-//            new logger().OCategory.error(e.getMessage());
+            // new logger().OCategory.error(e.getMessage());
         }
 
         return file;
@@ -107,22 +108,22 @@ public class barecodeManager {
 
     }
 
-    //fin dernier code de 
+    // fin dernier code de
     public static String buildbarcodeOther(String data, String str_file_name) {
         FileOutputStream out = null;
         try {
-            //    BufferedImage imgtext = new BufferedImage(100, 70, BufferedImage.TYPE_BYTE_BINARY);
-//        Graphics2D g2d = imgtext.createGraphics();
+            // BufferedImage imgtext = new BufferedImage(100, 70, BufferedImage.TYPE_BYTE_BINARY);
+            // Graphics2D g2d = imgtext.createGraphics();
             File f = new File(str_file_name);
             out = new FileOutputStream(f);
             AbstractBarcodeBean barcode = new Code128Bean();
-            //     barcode.setBarHeight(50.0);
+            // barcode.setBarHeight(50.0);
             barcode.setFontName("Calibri (Corps)");
             barcode.setFontSize(15.0);
             barcode.setMsgPosition(HumanReadablePlacement.HRP_NONE);
             barcode.setModuleWidth(0.8);
-            BitmapCanvasProvider canvas
-                    = new BitmapCanvasProvider(out, "image/x-png", 160, BufferedImage.TYPE_BYTE_BINARY, false, 0);
+            BitmapCanvasProvider canvas = new BitmapCanvasProvider(out, "image/x-png", 160,
+                    BufferedImage.TYPE_BYTE_BINARY, false, 0);
             barcode.generateBarcode(canvas, data);
             try {
                 canvas.finish();

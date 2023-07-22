@@ -69,7 +69,8 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
     }
 
     @Override
-    public RetourCarnet createRetourCarnet(RetourCarnetDTO retourCarnetDTO, int qty, Integer motifId, String produitId) throws Exception {
+    public RetourCarnet createRetourCarnet(RetourCarnetDTO retourCarnetDTO, int qty, Integer motifId, String produitId)
+            throws Exception {
         RetourCarnet retourCarnet = new RetourCarnet();
         retourCarnet.setCreatedAt(LocalDateTime.now());
         retourCarnet.setLibelle(retourCarnetDTO.getLibelle());
@@ -87,31 +88,33 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
         retourCarnet.setStatus("completed");
         retourCarnet.setLibelle(libelle);
         LongAdder montantRetour = new LongAdder();
-        listItemByRetourCarnet(retourCarnet.getId())
-                .forEach(e -> {
-                    montantRetour.add(e.getQtyRetour() * e.getPrixUni());
-                    updateStock(e.getQtyRetour(), e.getStockInit(), e.getProduit().getLgFAMILLEID(), e.getId().toString(), retourCarnet.getUser());
-                });
-        tiersPayantExclusService.updateTiersPayantAccount(retourCarnet.getTierspayant(), montantRetour.intValue() * (-1));
+        listItemByRetourCarnet(retourCarnet.getId()).forEach(e -> {
+            montantRetour.add(e.getQtyRetour() * e.getPrixUni());
+            updateStock(e.getQtyRetour(), e.getStockInit(), e.getProduit().getLgFAMILLEID(), e.getId().toString(),
+                    retourCarnet.getUser());
+        });
+        tiersPayantExclusService.updateTiersPayantAccount(retourCarnet.getTierspayant(),
+                montantRetour.intValue() * (-1));
         getEntityManager().merge(retourCarnet);
     }
 
     private void updateStock(int qtyMvt, int qtyDebut, String produitId, String pkey, TUser user) {
-        getOptionalFamilleStock(produitId)
-                .ifPresent(e -> {
-                    e.setIntNUMBERAVAILABLE(e.getIntNUMBERAVAILABLE() + qtyMvt);
-                    e.setIntNUMBER(e.getIntNUMBERAVAILABLE());
-                    e.setDtUPDATED(new Date());
-                    getEntityManager().merge(e);
-                    mouvementProduitService.saveMvtProduit(pkey, DateConverter.TMVTP_RETOUR_DEPOT, e.getLgFAMILLEID(), user, getEmplacement("1"), qtyMvt, qtyDebut, e.getIntNUMBERAVAILABLE(), getEntityManager(), 0);
-                });
+        getOptionalFamilleStock(produitId).ifPresent(e -> {
+            e.setIntNUMBERAVAILABLE(e.getIntNUMBERAVAILABLE() + qtyMvt);
+            e.setIntNUMBER(e.getIntNUMBERAVAILABLE());
+            e.setDtUPDATED(new Date());
+            getEntityManager().merge(e);
+            mouvementProduitService.saveMvtProduit(pkey, DateConverter.TMVTP_RETOUR_DEPOT, e.getLgFAMILLEID(), user,
+                    getEmplacement("1"), qtyMvt, qtyDebut, e.getIntNUMBERAVAILABLE(), getEntityManager(), 0);
+        });
     }
 
     private TEmplacement getEmplacement(String id) {
         return getEntityManager().find(TEmplacement.class, id);
     }
 
-    private void addDetailRetour(int qty, String produitId, Integer motifId, RetourCarnet retourCarnet) throws Exception {
+    private void addDetailRetour(int qty, String produitId, Integer motifId, RetourCarnet retourCarnet)
+            throws Exception {
         RetourCarnetDetail retourCarnetDetail = new RetourCarnetDetail();
         retourCarnetDetail.setCreatedAt(LocalDateTime.now());
         retourCarnetDetail.setQtyRetour(qty);
@@ -166,7 +169,9 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
 
     private Optional<RetourCarnetDetail> getOneItemByProduitId(String produitId, Integer idRetour) {
         try {
-            TypedQuery<RetourCarnetDetail> q = getEntityManager().createQuery("SELECT o FROM RetourCarnetDetail o WHERE o.produit.lgFAMILLEID=?1 AND o.retourCarnet.id=?2", RetourCarnetDetail.class);
+            TypedQuery<RetourCarnetDetail> q = getEntityManager().createQuery(
+                    "SELECT o FROM RetourCarnetDetail o WHERE o.produit.lgFAMILLEID=?1 AND o.retourCarnet.id=?2",
+                    RetourCarnetDetail.class);
             q.setParameter(1, produitId);
             q.setParameter(2, idRetour);
             return Optional.ofNullable(q.getSingleResult());
@@ -177,7 +182,9 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
 
     private TFamilleStock getFamilleStock(String produitId) {
         try {
-            TypedQuery<TFamilleStock> q = getEntityManager().createQuery("SELECT o FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID  =?2", TFamilleStock.class);
+            TypedQuery<TFamilleStock> q = getEntityManager().createQuery(
+                    "SELECT o FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID  =?2",
+                    TFamilleStock.class);
             q.setParameter(1, produitId);
             q.setParameter(2, "1");
             q.setMaxResults(1);
@@ -193,7 +200,8 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
 
     private List<RetourCarnetDetail> listItemByRetourCarnet(Integer idRetour) {
         try {
-            TypedQuery<RetourCarnetDetail> q = getEntityManager().createQuery("SELECT o FROM RetourCarnetDetail o WHERE  o.retourCarnet.id=?1", RetourCarnetDetail.class);
+            TypedQuery<RetourCarnetDetail> q = getEntityManager().createQuery(
+                    "SELECT o FROM RetourCarnetDetail o WHERE  o.retourCarnet.id=?1", RetourCarnetDetail.class);
             q.setParameter(1, idRetour);
             return q.getResultList();
         } catch (Exception e) {
@@ -203,7 +211,9 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
 
     private Optional<TFamilleStock> getOptionalFamilleStock(String produitId) {
         try {
-            TypedQuery<TFamilleStock> q = getEntityManager().createQuery("SELECT o FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID  =?2", TFamilleStock.class);
+            TypedQuery<TFamilleStock> q = getEntityManager().createQuery(
+                    "SELECT o FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID  =?2",
+                    TFamilleStock.class);
             q.setParameter(1, produitId);
             q.setParameter(2, "1");
             q.setMaxResults(1);
@@ -213,18 +223,23 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
         }
     }
 
-    private List<Predicate> listRetourByTierspayantIdAndPeriodePredicates(CriteriaBuilder cb, Root<RetourCarnetDetail> root, String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd) {
+    private List<Predicate> listRetourByTierspayantIdAndPeriodePredicates(CriteriaBuilder cb,
+            Root<RetourCarnetDetail> root, String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd) {
         List<Predicate> predicates = new ArrayList<>();
         if (!StringUtils.isEmpty(idTierspayant)) {
-            predicates.add(cb.equal(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.tierspayant).get(TTiersPayant_.lgTIERSPAYANTID), idTierspayant));
+            predicates.add(cb.equal(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.tierspayant)
+                    .get(TTiersPayant_.lgTIERSPAYANTID), idTierspayant));
         }
         predicates.add(cb.equal(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.status), "completed"));
-        predicates.add(cb.between(cb.function("DATE", Date.class, root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)),
-                java.sql.Date.valueOf(dtStart),
-                java.sql.Date.valueOf(dtEnd)));
+        predicates.add(cb.between(
+                cb.function("DATE", Date.class,
+                        root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)),
+                java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)));
 
         if (StringUtils.isNotEmpty(query)) {
-            predicates.add(cb.or(cb.like(root.get(RetourCarnetDetail_.produit).get(TFamille_.intCIP), query + "%"), cb.like(root.get(RetourCarnetDetail_.produit).get(TFamille_.strNAME), query + "%"), cb.like(root.get(RetourCarnetDetail_.produit).get(TFamille_.intEAN13), query + "%")));
+            predicates.add(cb.or(cb.like(root.get(RetourCarnetDetail_.produit).get(TFamille_.intCIP), query + "%"),
+                    cb.like(root.get(RetourCarnetDetail_.produit).get(TFamille_.strNAME), query + "%"),
+                    cb.like(root.get(RetourCarnetDetail_.produit).get(TFamille_.intEAN13), query + "%")));
         }
         return predicates;
     }
@@ -233,11 +248,14 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
     public List<RetourCarnetDetailDTO> findByRetourCarnetId(Integer retourCarnetId, String query) {
 
         if (StringUtils.isEmpty(query)) {
-            TypedQuery<RetourCarnetDetail> q = getEntityManager().createQuery("SELECT o FROM RetourCarnetDetail o WHERE o.retourCarnet.id =?1  ", RetourCarnetDetail.class);
+            TypedQuery<RetourCarnetDetail> q = getEntityManager().createQuery(
+                    "SELECT o FROM RetourCarnetDetail o WHERE o.retourCarnet.id =?1  ", RetourCarnetDetail.class);
             q.setParameter(1, retourCarnetId);
             return q.getResultList().stream().map(RetourCarnetDetailDTO::new).collect(Collectors.toList());
         } else {
-            TypedQuery<RetourCarnetDetail> q = getEntityManager().createQuery("SELECT o FROM RetourCarnetDetail o WHERE o.retourCarnet.id =?1 AND (o.produit.intCIP LIKE ?2 OR o.produit.strNAME LIKE ?2 )   ", RetourCarnetDetail.class);
+            TypedQuery<RetourCarnetDetail> q = getEntityManager().createQuery(
+                    "SELECT o FROM RetourCarnetDetail o WHERE o.retourCarnet.id =?1 AND (o.produit.intCIP LIKE ?2 OR o.produit.strNAME LIKE ?2 )   ",
+                    RetourCarnetDetail.class);
             q.setParameter(1, retourCarnetId);
             q.setParameter(2, query + "%");
             return q.getResultList().stream().map(RetourCarnetDetailDTO::new).collect(Collectors.toList());
@@ -246,28 +264,34 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
     }
 
     @Override
-    public List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit, boolean all) {
+    public List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query,
+            LocalDate dtStart, LocalDate dtEnd, int start, int limit, boolean all) {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<RetourCarnet> cq = cb.createQuery(RetourCarnet.class);
         Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
-        cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true).orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
-        List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
+        cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true)
+                .orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
+        List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query,
+                dtStart, dtEnd);
         cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
         if (!all) {
             q.setFirstResult(start);
             q.setMaxResults(limit);
         }
-        return q.getResultList().stream().map(e -> new RetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null))).collect(Collectors.toList());
+        return q.getResultList().stream().map(e -> new RetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null)))
+                .collect(Collectors.toList());
     }
 
-    private long countRetourByTierspayantIdAndPeriode(String idTierspayant, LocalDate dtStart, LocalDate dtEnd, String query) {
+    private long countRetourByTierspayantIdAndPeriode(String idTierspayant, LocalDate dtStart, LocalDate dtEnd,
+            String query) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
             cq.select(cb.count(root.get(RetourCarnetDetail_.retourCarnet))).distinct(true);
-            List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
+            List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query,
+                    dtStart, dtEnd);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
@@ -278,15 +302,16 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
     }
 
     @Override
-    public RetourCarnetDetailDTO retourCarnetSummary(String idTierspayant, LocalDate dtStart, LocalDate dtEnd, String query) {
+    public RetourCarnetDetailDTO retourCarnetSummary(String idTierspayant, LocalDate dtStart, LocalDate dtEnd,
+            String query) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<RetourCarnetDetailDTO> cq = cb.createQuery(RetourCarnetDetailDTO.class);
             Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
             cq.select(cb.construct(RetourCarnetDetailDTO.class, cb.sum(root.get(RetourCarnetDetail_.qtyRetour)),
-                    cb.sum(cb.prod(root.get(RetourCarnetDetail_.qtyRetour), root.get(RetourCarnetDetail_.prixUni)))
-            ));
-            List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
+                    cb.sum(cb.prod(root.get(RetourCarnetDetail_.qtyRetour), root.get(RetourCarnetDetail_.prixUni)))));
+            List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query,
+                    dtStart, dtEnd);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             TypedQuery<RetourCarnetDetailDTO> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
@@ -297,9 +322,11 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
     }
 
     @Override
-    public JSONObject listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd, int start, int limit) throws JSONException {
+    public JSONObject listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart,
+            LocalDate dtEnd, int start, int limit) throws JSONException {
         RetourCarnetDetailDTO metaData = retourCarnetSummary(idTierspayant, dtStart, dtEnd, query);
-        List<RetourCarnetDTO> data = listRetourByTierspayantIdAndPeriode(idTierspayant, query, dtStart, dtEnd, start, limit, false);
+        List<RetourCarnetDTO> data = listRetourByTierspayantIdAndPeriode(idTierspayant, query, dtStart, dtEnd, start,
+                limit, false);
         JSONObject json = new JSONObject();
         json.put("metaData", new JSONObject(metaData));
         json.put("total", countRetourByTierspayantIdAndPeriode(idTierspayant, dtStart, dtEnd, query));
@@ -317,31 +344,41 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
     }
 
     @Override
-    public List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd) {
+    public List<RetourCarnetDTO> listRetourByTierspayantIdAndPeriode(String idTierspayant, String query,
+            LocalDate dtStart, LocalDate dtEnd) {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<RetourCarnet> cq = cb.createQuery(RetourCarnet.class);
         Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
-        cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true).orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
-        List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
+        cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true)
+                .orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
+        List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query,
+                dtStart, dtEnd);
         cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
-        return q.getResultList().stream().map(e -> new RetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null)
-                .stream().mapToLong(RetourCarnetDetailDTO::getAmount).reduce(0, Long::sum)
-        )).collect(Collectors.toList());
+        return q.getResultList().stream()
+                .map(e -> new RetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null).stream()
+                        .mapToLong(RetourCarnetDetailDTO::getAmount).reduce(0, Long::sum)))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<RetourCarnetDTO> fetchRetourByTierspayantIdAndPeriode(String idTierspayant, String query, LocalDate dtStart, LocalDate dtEnd) {
+    public List<RetourCarnetDTO> fetchRetourByTierspayantIdAndPeriode(String idTierspayant, String query,
+            LocalDate dtStart, LocalDate dtEnd) {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<RetourCarnet> cq = cb.createQuery(RetourCarnet.class);
         Root<RetourCarnetDetail> root = cq.from(RetourCarnetDetail.class);
-        cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true).orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
-        List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query, dtStart, dtEnd);
+        cq.select(root.get(RetourCarnetDetail_.retourCarnet)).distinct(true)
+                .orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
+        List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query,
+                dtStart, dtEnd);
         cq.where(cb.and(predicates.toArray(new Predicate[0])));
         TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
 
-        return q.getResultList().stream().sorted(comparatorTiersPayant.thenComparing(comparatorDate)).map(e -> RetourCarnetDTO.buildRetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null))).collect(Collectors.toList());
+        return q.getResultList().stream().sorted(comparatorTiersPayant.thenComparing(comparatorDate))
+                .map(e -> RetourCarnetDTO.buildRetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null)))
+                .collect(Collectors.toList());
     }
+
     private final Comparator<RetourCarnet> comparatorTiersPayant = (RetourCarnet e1, RetourCarnet e2) -> {
         return e1.getTierspayant().getStrNAME().compareTo(e2.getTierspayant().getStrNAME());
     };

@@ -29,43 +29,41 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author MKABOU
  */
 @Entity
-@Table(name = "t_grossiste", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"lg_GROSSISTE_ID"})})
+@Table(name = "t_grossiste", uniqueConstraints = { @UniqueConstraint(columnNames = { "lg_GROSSISTE_ID" }) })
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TGrossiste.findAll", query = "SELECT t FROM TGrossiste t"),
-    @NamedQuery(name = "TGrossiste.findByLgGROSSISTEID", query = "SELECT t FROM TGrossiste t WHERE t.lgGROSSISTEID = :lgGROSSISTEID"),
-    @NamedQuery(name = "TGrossiste.findByStrLIBELLE", query = "SELECT t FROM TGrossiste t WHERE t.strLIBELLE = :strLIBELLE"),
-    @NamedQuery(name = "TGrossiste.findByStrCODE", query = "SELECT t FROM TGrossiste t WHERE t.strCODE = :strCODE"),
-    @NamedQuery(name = "TGrossiste.findByStrDESCRIPTION", query = "SELECT t FROM TGrossiste t WHERE t.strDESCRIPTION = :strDESCRIPTION"),
-    @NamedQuery(name = "TGrossiste.findByStrADRESSERUE1", query = "SELECT t FROM TGrossiste t WHERE t.strADRESSERUE1 = :strADRESSERUE1"),
-    @NamedQuery(name = "TGrossiste.findByStrADRESSERUE2", query = "SELECT t FROM TGrossiste t WHERE t.strADRESSERUE2 = :strADRESSERUE2"),
-    @NamedQuery(name = "TGrossiste.findByStrCODEPOSTAL", query = "SELECT t FROM TGrossiste t WHERE t.strCODEPOSTAL = :strCODEPOSTAL"),
-    @NamedQuery(name = "TGrossiste.findByStrBUREAUDISTRIBUTEUR", query = "SELECT t FROM TGrossiste t WHERE t.strBUREAUDISTRIBUTEUR = :strBUREAUDISTRIBUTEUR"),
-    @NamedQuery(name = "TGrossiste.findByStrMOBILE", query = "SELECT t FROM TGrossiste t WHERE t.strMOBILE = :strMOBILE"),
-    @NamedQuery(name = "TGrossiste.findByStrTELEPHONE", query = "SELECT t FROM TGrossiste t WHERE t.strTELEPHONE = :strTELEPHONE"),
-    @NamedQuery(name = "TGrossiste.findByIntDELAIREGLEMENTAUTORISE", query = "SELECT t FROM TGrossiste t WHERE t.intDELAIREGLEMENTAUTORISE = :intDELAIREGLEMENTAUTORISE"),
-    @NamedQuery(name = "TGrossiste.findByIntDELAIREAPPROVISIONNEMENT", query = "SELECT t FROM TGrossiste t WHERE t.intDELAIREAPPROVISIONNEMENT = :intDELAIREAPPROVISIONNEMENT"),
-    @NamedQuery(name = "TGrossiste.findByIntCOEFSECURITY", query = "SELECT t FROM TGrossiste t WHERE t.intCOEFSECURITY = :intCOEFSECURITY"),
-    @NamedQuery(name = "TGrossiste.findByIntDATEBUTOIRARTICLE", query = "SELECT t FROM TGrossiste t WHERE t.intDATEBUTOIRARTICLE = :intDATEBUTOIRARTICLE"),
-    @NamedQuery(name = "TGrossiste.findByDblCHIFFREDAFFAIRE", query = "SELECT t FROM TGrossiste t WHERE t.dblCHIFFREDAFFAIRE = :dblCHIFFREDAFFAIRE"),
-    @NamedQuery(name = "TGrossiste.findByStrURLEXTRANET", query = "SELECT t FROM TGrossiste t WHERE t.strURLEXTRANET = :strURLEXTRANET"),
-    @NamedQuery(name = "TGrossiste.findByStrURLPHARMAML", query = "SELECT t FROM TGrossiste t WHERE t.strURLPHARMAML = :strURLPHARMAML"),
-    @NamedQuery(name = "TGrossiste.findByStrIPGROSSISTE", query = "SELECT t FROM TGrossiste t WHERE t.strIPGROSSISTE = :strIPGROSSISTE"),
-    @NamedQuery(name = "TGrossiste.findByStrSTATUT", query = "SELECT t FROM TGrossiste t WHERE t.strSTATUT = :strSTATUT"),
-    @NamedQuery(name = "TGrossiste.findByDtCREATED", query = "SELECT t FROM TGrossiste t WHERE t.dtCREATED = :dtCREATED"),
-    @NamedQuery(name = "TGrossiste.findByDtUPDATED", query = "SELECT t FROM TGrossiste t WHERE t.dtUPDATED = :dtUPDATED"),
-    @NamedQuery(name = "TGrossiste.findByBoolUSEPHARMA", query = "SELECT t FROM TGrossiste t WHERE t.boolUSEPHARMA = :boolUSEPHARMA"),
-    @NamedQuery(name = "TGrossiste.findByStrCODERECEPTEURPHARMA", query = "SELECT t FROM TGrossiste t WHERE t.strCODERECEPTEURPHARMA = :strCODERECEPTEURPHARMA"),
-    @NamedQuery(name = "TGrossiste.findByStrIDRECEPTEURPHARMA", query = "SELECT t FROM TGrossiste t WHERE t.strIDRECEPTEURPHARMA = :strIDRECEPTEURPHARMA"),
-    @NamedQuery(name = "TGrossiste.findByStrEMETTEURID", query = "SELECT t FROM TGrossiste t WHERE t.strEMETTEURID = :strEMETTEURID"),
-    @NamedQuery(name = "TGrossiste.findByStrCLERECEPTEUR", query = "SELECT t FROM TGrossiste t WHERE t.strCLERECEPTEUR = :strCLERECEPTEUR"),
-    @NamedQuery(name = "TGrossiste.findByStrURLRECEPTEUR", query = "SELECT t FROM TGrossiste t WHERE t.strURLRECEPTEUR = :strURLRECEPTEUR"),
-    @NamedQuery(name = "TGrossiste.findByStrOFFICINEID", query = "SELECT t FROM TGrossiste t WHERE t.strOFFICINEID = :strOFFICINEID")})
+@NamedQueries({ @NamedQuery(name = "TGrossiste.findAll", query = "SELECT t FROM TGrossiste t"),
+        @NamedQuery(name = "TGrossiste.findByLgGROSSISTEID", query = "SELECT t FROM TGrossiste t WHERE t.lgGROSSISTEID = :lgGROSSISTEID"),
+        @NamedQuery(name = "TGrossiste.findByStrLIBELLE", query = "SELECT t FROM TGrossiste t WHERE t.strLIBELLE = :strLIBELLE"),
+        @NamedQuery(name = "TGrossiste.findByStrCODE", query = "SELECT t FROM TGrossiste t WHERE t.strCODE = :strCODE"),
+        @NamedQuery(name = "TGrossiste.findByStrDESCRIPTION", query = "SELECT t FROM TGrossiste t WHERE t.strDESCRIPTION = :strDESCRIPTION"),
+        @NamedQuery(name = "TGrossiste.findByStrADRESSERUE1", query = "SELECT t FROM TGrossiste t WHERE t.strADRESSERUE1 = :strADRESSERUE1"),
+        @NamedQuery(name = "TGrossiste.findByStrADRESSERUE2", query = "SELECT t FROM TGrossiste t WHERE t.strADRESSERUE2 = :strADRESSERUE2"),
+        @NamedQuery(name = "TGrossiste.findByStrCODEPOSTAL", query = "SELECT t FROM TGrossiste t WHERE t.strCODEPOSTAL = :strCODEPOSTAL"),
+        @NamedQuery(name = "TGrossiste.findByStrBUREAUDISTRIBUTEUR", query = "SELECT t FROM TGrossiste t WHERE t.strBUREAUDISTRIBUTEUR = :strBUREAUDISTRIBUTEUR"),
+        @NamedQuery(name = "TGrossiste.findByStrMOBILE", query = "SELECT t FROM TGrossiste t WHERE t.strMOBILE = :strMOBILE"),
+        @NamedQuery(name = "TGrossiste.findByStrTELEPHONE", query = "SELECT t FROM TGrossiste t WHERE t.strTELEPHONE = :strTELEPHONE"),
+        @NamedQuery(name = "TGrossiste.findByIntDELAIREGLEMENTAUTORISE", query = "SELECT t FROM TGrossiste t WHERE t.intDELAIREGLEMENTAUTORISE = :intDELAIREGLEMENTAUTORISE"),
+        @NamedQuery(name = "TGrossiste.findByIntDELAIREAPPROVISIONNEMENT", query = "SELECT t FROM TGrossiste t WHERE t.intDELAIREAPPROVISIONNEMENT = :intDELAIREAPPROVISIONNEMENT"),
+        @NamedQuery(name = "TGrossiste.findByIntCOEFSECURITY", query = "SELECT t FROM TGrossiste t WHERE t.intCOEFSECURITY = :intCOEFSECURITY"),
+        @NamedQuery(name = "TGrossiste.findByIntDATEBUTOIRARTICLE", query = "SELECT t FROM TGrossiste t WHERE t.intDATEBUTOIRARTICLE = :intDATEBUTOIRARTICLE"),
+        @NamedQuery(name = "TGrossiste.findByDblCHIFFREDAFFAIRE", query = "SELECT t FROM TGrossiste t WHERE t.dblCHIFFREDAFFAIRE = :dblCHIFFREDAFFAIRE"),
+        @NamedQuery(name = "TGrossiste.findByStrURLEXTRANET", query = "SELECT t FROM TGrossiste t WHERE t.strURLEXTRANET = :strURLEXTRANET"),
+        @NamedQuery(name = "TGrossiste.findByStrURLPHARMAML", query = "SELECT t FROM TGrossiste t WHERE t.strURLPHARMAML = :strURLPHARMAML"),
+        @NamedQuery(name = "TGrossiste.findByStrIPGROSSISTE", query = "SELECT t FROM TGrossiste t WHERE t.strIPGROSSISTE = :strIPGROSSISTE"),
+        @NamedQuery(name = "TGrossiste.findByStrSTATUT", query = "SELECT t FROM TGrossiste t WHERE t.strSTATUT = :strSTATUT"),
+        @NamedQuery(name = "TGrossiste.findByDtCREATED", query = "SELECT t FROM TGrossiste t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TGrossiste.findByDtUPDATED", query = "SELECT t FROM TGrossiste t WHERE t.dtUPDATED = :dtUPDATED"),
+        @NamedQuery(name = "TGrossiste.findByBoolUSEPHARMA", query = "SELECT t FROM TGrossiste t WHERE t.boolUSEPHARMA = :boolUSEPHARMA"),
+        @NamedQuery(name = "TGrossiste.findByStrCODERECEPTEURPHARMA", query = "SELECT t FROM TGrossiste t WHERE t.strCODERECEPTEURPHARMA = :strCODERECEPTEURPHARMA"),
+        @NamedQuery(name = "TGrossiste.findByStrIDRECEPTEURPHARMA", query = "SELECT t FROM TGrossiste t WHERE t.strIDRECEPTEURPHARMA = :strIDRECEPTEURPHARMA"),
+        @NamedQuery(name = "TGrossiste.findByStrEMETTEURID", query = "SELECT t FROM TGrossiste t WHERE t.strEMETTEURID = :strEMETTEURID"),
+        @NamedQuery(name = "TGrossiste.findByStrCLERECEPTEUR", query = "SELECT t FROM TGrossiste t WHERE t.strCLERECEPTEUR = :strCLERECEPTEUR"),
+        @NamedQuery(name = "TGrossiste.findByStrURLRECEPTEUR", query = "SELECT t FROM TGrossiste t WHERE t.strURLRECEPTEUR = :strURLRECEPTEUR"),
+        @NamedQuery(name = "TGrossiste.findByStrOFFICINEID", query = "SELECT t FROM TGrossiste t WHERE t.strOFFICINEID = :strOFFICINEID") })
 public class TGrossiste implements Serializable {
 
-    //@OneToMany( mappedBy = "lgGROSSISTEID")
-    //private Collection<TQuinzaine> tQuinzaineCollection;
+    // @OneToMany( mappedBy = "lgGROSSISTEID")
+    // private Collection<TQuinzaine> tQuinzaineCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -97,7 +95,8 @@ public class TGrossiste implements Serializable {
     private Integer intCOEFSECURITY;
     @Column(name = "int_DATE_BUTOIR_ARTICLE")
     private Integer intDATEBUTOIRARTICLE;
-    // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
+    // @Max(value=?) @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce
+    // field validation
     @Column(name = "dbl_CHIFFRE_DAFFAIRE", precision = 15, scale = 2)
     private Double dblCHIFFREDAFFAIRE;
     @Column(name = "str_URL_EXTRANET", length = 100)
@@ -181,7 +180,9 @@ public class TGrossiste implements Serializable {
         this.lgGROSSISTEID = lgGROSSISTEID;
     }
 
-    public TGrossiste(String lgGROSSISTEID, boolean boolUSEPHARMA, String strCODERECEPTEURPHARMA, String strIDRECEPTEURPHARMA, String strEMETTEURID, String strCLERECEPTEUR, String strURLRECEPTEUR, String strOFFICINEID) {
+    public TGrossiste(String lgGROSSISTEID, boolean boolUSEPHARMA, String strCODERECEPTEURPHARMA,
+            String strIDRECEPTEURPHARMA, String strEMETTEURID, String strCLERECEPTEUR, String strURLRECEPTEUR,
+            String strOFFICINEID) {
         this.lgGROSSISTEID = lgGROSSISTEID;
         this.boolUSEPHARMA = boolUSEPHARMA;
         this.strCODERECEPTEURPHARMA = strCODERECEPTEURPHARMA;
@@ -457,7 +458,8 @@ public class TGrossiste implements Serializable {
         return tSuggestionOrderDetailsCollection;
     }
 
-    public void setTSuggestionOrderDetailsCollection(Collection<TSuggestionOrderDetails> tSuggestionOrderDetailsCollection) {
+    public void setTSuggestionOrderDetailsCollection(
+            Collection<TSuggestionOrderDetails> tSuggestionOrderDetailsCollection) {
         this.tSuggestionOrderDetailsCollection = tSuggestionOrderDetailsCollection;
     }
 
@@ -536,7 +538,8 @@ public class TGrossiste implements Serializable {
             return false;
         }
         TGrossiste other = (TGrossiste) object;
-        if ((this.lgGROSSISTEID == null && other.lgGROSSISTEID != null) || (this.lgGROSSISTEID != null && !this.lgGROSSISTEID.equals(other.lgGROSSISTEID))) {
+        if ((this.lgGROSSISTEID == null && other.lgGROSSISTEID != null)
+                || (this.lgGROSSISTEID != null && !this.lgGROSSISTEID.equals(other.lgGROSSISTEID))) {
             return false;
         }
         return true;
@@ -547,15 +550,15 @@ public class TGrossiste implements Serializable {
         return "dal.TGrossiste[ lgGROSSISTEID=" + lgGROSSISTEID + " ]";
     }
 
-//    @XmlTransient
-//    public Collection<TQuinzaine> getTQuinzaineCollection() {
-//        return tQuinzaineCollection;
-//    }
-//
-//    public void setTQuinzaineCollection(Collection<TQuinzaine> tQuinzaineCollection) {
-//        this.tQuinzaineCollection = tQuinzaineCollection;
-//    }
-//    
+    // @XmlTransient
+    // public Collection<TQuinzaine> getTQuinzaineCollection() {
+    // return tQuinzaineCollection;
+    // }
+    //
+    // public void setTQuinzaineCollection(Collection<TQuinzaine> tQuinzaineCollection) {
+    // this.tQuinzaineCollection = tQuinzaineCollection;
+    // }
+    //
     public void setBoolUSEPHARMA(Boolean boolUSEPHARMA) {
         this.boolUSEPHARMA = boolUSEPHARMA;
     }

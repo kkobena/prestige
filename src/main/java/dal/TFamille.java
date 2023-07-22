@@ -33,14 +33,13 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "t_famille")
 
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TFamille.findAll", query = "SELECT t FROM TFamille t"),
-    @NamedQuery(name = "TFamille.findByLgFAMILLEID", query = "SELECT t FROM TFamille t WHERE t.lgFAMILLEID = :lgFAMILLEID"),
-    @NamedQuery(name = "TFamille.findByLgFAMILLEPARENTID", query = "SELECT t FROM TFamille t WHERE t.lgFAMILLEPARENTID = :lgFAMILLEPARENTID"),
-    @NamedQuery(name = "TFamille.findByStrNAME", query = "SELECT t FROM TFamille t WHERE t.strNAME = :strNAME"),
-    @NamedQuery(name = "TFamille.findByStrDESCRIPTION", query = "SELECT t FROM TFamille t WHERE t.strDESCRIPTION = :strDESCRIPTION"),
-    @NamedQuery(name = "TFamille.findByIntCIP", query = "SELECT t FROM TFamille t WHERE t.intCIP = :intCIP"),
-    @NamedQuery(name = "TFamille.findByStrSTATUT", query = "SELECT t FROM TFamille t WHERE t.strSTATUT = :strSTATUT")
+@NamedQueries({ @NamedQuery(name = "TFamille.findAll", query = "SELECT t FROM TFamille t"),
+        @NamedQuery(name = "TFamille.findByLgFAMILLEID", query = "SELECT t FROM TFamille t WHERE t.lgFAMILLEID = :lgFAMILLEID"),
+        @NamedQuery(name = "TFamille.findByLgFAMILLEPARENTID", query = "SELECT t FROM TFamille t WHERE t.lgFAMILLEPARENTID = :lgFAMILLEPARENTID"),
+        @NamedQuery(name = "TFamille.findByStrNAME", query = "SELECT t FROM TFamille t WHERE t.strNAME = :strNAME"),
+        @NamedQuery(name = "TFamille.findByStrDESCRIPTION", query = "SELECT t FROM TFamille t WHERE t.strDESCRIPTION = :strDESCRIPTION"),
+        @NamedQuery(name = "TFamille.findByIntCIP", query = "SELECT t FROM TFamille t WHERE t.intCIP = :intCIP"),
+        @NamedQuery(name = "TFamille.findByStrSTATUT", query = "SELECT t FROM TFamille t WHERE t.strSTATUT = :strSTATUT")
 
 })
 
@@ -107,7 +106,8 @@ public class TFamille implements Serializable {
     private Integer intSEUILMAX;
     @Column(name = "int_DAY_HISTORY")
     private Integer intDAYHISTORY;
-    // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
+    // @Max(value=?) @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce
+    // field validation
     @Column(name = "dbl_LAST_PRIX_ACHAT", precision = 15, scale = 2)
     private Double dblLASTPRIXACHAT;
     @Column(name = "dbl_MARGE", precision = 15, scale = 3)
@@ -923,7 +923,8 @@ public class TFamille implements Serializable {
         return tSnapShopDalySortieFamilleCollection;
     }
 
-    public void setTSnapShopDalySortieFamilleCollection(Collection<TSnapShopDalySortieFamille> tSnapShopDalySortieFamilleCollection) {
+    public void setTSnapShopDalySortieFamilleCollection(
+            Collection<TSnapShopDalySortieFamille> tSnapShopDalySortieFamilleCollection) {
         this.tSnapShopDalySortieFamilleCollection = tSnapShopDalySortieFamilleCollection;
     }
 
@@ -986,7 +987,8 @@ public class TFamille implements Serializable {
         return tFamilleStockretrocessionCollection;
     }
 
-    public void setTFamilleStockretrocessionCollection(Collection<TFamilleStockretrocession> tFamilleStockretrocessionCollection) {
+    public void setTFamilleStockretrocessionCollection(
+            Collection<TFamilleStockretrocession> tFamilleStockretrocessionCollection) {
         this.tFamilleStockretrocessionCollection = tFamilleStockretrocessionCollection;
     }
 
@@ -995,7 +997,8 @@ public class TFamille implements Serializable {
         return tSuggestionOrderDetailsCollection;
     }
 
-    public void setTSuggestionOrderDetailsCollection(Collection<TSuggestionOrderDetails> tSuggestionOrderDetailsCollection) {
+    public void setTSuggestionOrderDetailsCollection(
+            Collection<TSuggestionOrderDetails> tSuggestionOrderDetailsCollection) {
         this.tSuggestionOrderDetailsCollection = tSuggestionOrderDetailsCollection;
     }
 
@@ -1013,7 +1016,8 @@ public class TFamille implements Serializable {
         return tRetourFournisseurDetailCollection;
     }
 
-    public void setTRetourFournisseurDetailCollection(Collection<TRetourFournisseurDetail> tRetourFournisseurDetailCollection) {
+    public void setTRetourFournisseurDetailCollection(
+            Collection<TRetourFournisseurDetail> tRetourFournisseurDetailCollection) {
         this.tRetourFournisseurDetailCollection = tRetourFournisseurDetailCollection;
     }
 
@@ -1200,7 +1204,8 @@ public class TFamille implements Serializable {
         return tPreenregistrementDetailCollection;
     }
 
-    public void setTPreenregistrementDetailCollection(Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection) {
+    public void setTPreenregistrementDetailCollection(
+            Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection) {
         this.tPreenregistrementDetailCollection = tPreenregistrementDetailCollection;
     }
 
@@ -1236,7 +1241,8 @@ public class TFamille implements Serializable {
             return false;
         }
         TFamille other = (TFamille) object;
-        return !((this.lgFAMILLEID == null && other.lgFAMILLEID != null) || (this.lgFAMILLEID != null && !this.lgFAMILLEID.equals(other.lgFAMILLEID)));
+        return !((this.lgFAMILLEID == null && other.lgFAMILLEID != null)
+                || (this.lgFAMILLEID != null && !this.lgFAMILLEID.equals(other.lgFAMILLEID)));
     }
 
     @Override

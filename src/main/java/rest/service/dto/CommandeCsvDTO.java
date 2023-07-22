@@ -13,8 +13,6 @@ public class CommandeCsvDTO {
         return code;
     }
 
- 
-
     public int getQte() {
         return qte;
     }
@@ -24,6 +22,4 @@ public class CommandeCsvDTO {
         this.qte = qte;
     }
 
-    
-    
 }

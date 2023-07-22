@@ -31,20 +31,19 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "t_bon_livraison")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "TBonLivraison.findAll", query = "SELECT t FROM TBonLivraison t"),
-    @NamedQuery(name = "TBonLivraison.findByLgBONLIVRAISONID", query = "SELECT t FROM TBonLivraison t WHERE t.lgBONLIVRAISONID = :lgBONLIVRAISONID"),
-    @NamedQuery(name = "TBonLivraison.findByStrREFLIVRAISON", query = "SELECT t FROM TBonLivraison t WHERE t.strREFLIVRAISON = :strREFLIVRAISON"),
-    @NamedQuery(name = "TBonLivraison.findByDtDATELIVRAISON", query = "SELECT t FROM TBonLivraison t WHERE t.dtDATELIVRAISON = :dtDATELIVRAISON"),
-    @NamedQuery(name = "TBonLivraison.findByIntMHT", query = "SELECT t FROM TBonLivraison t WHERE t.intMHT = :intMHT"),
-    @NamedQuery(name = "TBonLivraison.findByIntTVA", query = "SELECT t FROM TBonLivraison t WHERE t.intTVA = :intTVA"),
-    @NamedQuery(name = "TBonLivraison.findByIntHTTC", query = "SELECT t FROM TBonLivraison t WHERE t.intHTTC = :intHTTC"),
-    @NamedQuery(name = "TBonLivraison.findByStrSTATUT", query = "SELECT t FROM TBonLivraison t WHERE t.strSTATUT = :strSTATUT"),
-    @NamedQuery(name = "TBonLivraison.findByDtCREATED", query = "SELECT t FROM TBonLivraison t WHERE t.dtCREATED = :dtCREATED"),
-    @NamedQuery(name = "TBonLivraison.findByDtUPDATED", query = "SELECT t FROM TBonLivraison t WHERE t.dtUPDATED = :dtUPDATED"),
-    @NamedQuery(name = "TBonLivraison.findByStrSTATUTFACTURE", query = "SELECT t FROM TBonLivraison t WHERE t.strSTATUTFACTURE = :strSTATUTFACTURE"),
-    @NamedQuery(name = "TBonLivraison.findByBlSELECTED", query = "SELECT t FROM TBonLivraison t WHERE t.blSELECTED = :blSELECTED")})
-public class TBonLivraison implements Serializable,Cloneable {
+@NamedQueries({ @NamedQuery(name = "TBonLivraison.findAll", query = "SELECT t FROM TBonLivraison t"),
+        @NamedQuery(name = "TBonLivraison.findByLgBONLIVRAISONID", query = "SELECT t FROM TBonLivraison t WHERE t.lgBONLIVRAISONID = :lgBONLIVRAISONID"),
+        @NamedQuery(name = "TBonLivraison.findByStrREFLIVRAISON", query = "SELECT t FROM TBonLivraison t WHERE t.strREFLIVRAISON = :strREFLIVRAISON"),
+        @NamedQuery(name = "TBonLivraison.findByDtDATELIVRAISON", query = "SELECT t FROM TBonLivraison t WHERE t.dtDATELIVRAISON = :dtDATELIVRAISON"),
+        @NamedQuery(name = "TBonLivraison.findByIntMHT", query = "SELECT t FROM TBonLivraison t WHERE t.intMHT = :intMHT"),
+        @NamedQuery(name = "TBonLivraison.findByIntTVA", query = "SELECT t FROM TBonLivraison t WHERE t.intTVA = :intTVA"),
+        @NamedQuery(name = "TBonLivraison.findByIntHTTC", query = "SELECT t FROM TBonLivraison t WHERE t.intHTTC = :intHTTC"),
+        @NamedQuery(name = "TBonLivraison.findByStrSTATUT", query = "SELECT t FROM TBonLivraison t WHERE t.strSTATUT = :strSTATUT"),
+        @NamedQuery(name = "TBonLivraison.findByDtCREATED", query = "SELECT t FROM TBonLivraison t WHERE t.dtCREATED = :dtCREATED"),
+        @NamedQuery(name = "TBonLivraison.findByDtUPDATED", query = "SELECT t FROM TBonLivraison t WHERE t.dtUPDATED = :dtUPDATED"),
+        @NamedQuery(name = "TBonLivraison.findByStrSTATUTFACTURE", query = "SELECT t FROM TBonLivraison t WHERE t.strSTATUTFACTURE = :strSTATUTFACTURE"),
+        @NamedQuery(name = "TBonLivraison.findByBlSELECTED", query = "SELECT t FROM TBonLivraison t WHERE t.blSELECTED = :blSELECTED") })
+public class TBonLivraison implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -83,7 +82,7 @@ public class TBonLivraison implements Serializable,Cloneable {
     private Collection<TRetourFournisseur> tRetourFournisseurCollection;
     @OneToMany(mappedBy = "lgBONLIVRAISONID")
     private Collection<TBonLivraisonDetail> tBonLivraisonDetailCollection;
-    
+
     @Column(name = "dt_REGLEMENT_DATE")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtREGLEMENTDATE;
@@ -91,7 +90,7 @@ public class TBonLivraison implements Serializable,Cloneable {
     private String strSTATUS;
     @Column(name = "int_MONTANT_REGLE")
     private Integer intMONTANTREGLE;
-     @Column(name = "int_MONTANT_RESTANT")
+    @Column(name = "int_MONTANT_RESTANT")
     private Integer intMONTANTRESTANT;
 
     public TBonLivraison() {
@@ -100,44 +99,39 @@ public class TBonLivraison implements Serializable,Cloneable {
     public TBonLivraison(String lgBONLIVRAISONID) {
         this.lgBONLIVRAISONID = lgBONLIVRAISONID;
     }
-    
-    public Integer getIntMONTANTREGLE(){
+
+    public Integer getIntMONTANTREGLE() {
         return this.intMONTANTREGLE;
     }
-    
-    public void setIntMONTANTREGLE(Integer montant){
-       this.intMONTANTREGLE  = montant;
+
+    public void setIntMONTANTREGLE(Integer montant) {
+        this.intMONTANTREGLE = montant;
     }
-    
-    public Integer getIntMONTANTRESTANT(){
+
+    public Integer getIntMONTANTRESTANT() {
         return this.intMONTANTRESTANT;
     }
-    
-    public void setIntMONTANTRESTANT(Integer montant){
-       this.intMONTANTRESTANT  = montant;
+
+    public void setIntMONTANTRESTANT(Integer montant) {
+        this.intMONTANTRESTANT = montant;
     }
-    
-    
-    public Date getDtREGLEMENTDATE(){
+
+    public Date getDtREGLEMENTDATE() {
         return this.dtREGLEMENTDATE;
     }
-    
-    public void setDtREGLEMENTDATE(Date date){
+
+    public void setDtREGLEMENTDATE(Date date) {
         this.dtREGLEMENTDATE = date;
     }
-    
-    
 
-    public String getSTATUS(){
+    public String getSTATUS() {
         return this.strSTATUS;
     }
-    
-    public void setSTATUS(String status){
+
+    public void setSTATUS(String status) {
         this.strSTATUS = status;
     }
-    
-    
-    
+
     public String getLgBONLIVRAISONID() {
         return lgBONLIVRAISONID;
     }
@@ -274,7 +268,8 @@ public class TBonLivraison implements Serializable,Cloneable {
             return false;
         }
         TBonLivraison other = (TBonLivraison) object;
-        if ((this.lgBONLIVRAISONID == null && other.lgBONLIVRAISONID != null) || (this.lgBONLIVRAISONID != null && !this.lgBONLIVRAISONID.equals(other.lgBONLIVRAISONID))) {
+        if ((this.lgBONLIVRAISONID == null && other.lgBONLIVRAISONID != null)
+                || (this.lgBONLIVRAISONID != null && !this.lgBONLIVRAISONID.equals(other.lgBONLIVRAISONID))) {
             return false;
         }
         return true;
@@ -287,7 +282,7 @@ public class TBonLivraison implements Serializable,Cloneable {
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        return super.clone(); 
+        return super.clone();
     }
-    
+
 }

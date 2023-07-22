@@ -4,7 +4,7 @@
  * Created on 24 ao�t 2008, 05:10
  *
  * To change this template, choose Tools | Template Manager
- * and open the template in the editor. 
+ * and open the template in the editor.
  */
 package dal;
 
@@ -75,7 +75,7 @@ public class jconnexion {
     private void set_Connection(Connection StringConnexion) {
         this.StringConnexion = StringConnexion;
     }
-    //accesseur des propriete privee
+    // accesseur des propriete privee
 
     public void set_port(int myport) {
         port = myport;
@@ -161,7 +161,7 @@ public class jconnexion {
             this.StringConnexion.commit();
 
             for (int k = 0; k < VMyRequest.size(); k++) {
-                //   stmt.addBatch(VMyRequest.get(k));
+                // stmt.addBatch(VMyRequest.get(k));
 
                 new logger().OCategory.info(VMyRequest.get(k));
             }
@@ -181,17 +181,15 @@ public class jconnexion {
     // pilote JDBC Mysql
 
     public String get_mysql_driver_JDBC() {
-        UrlConnexion = "jdbc:mysql://" + Host + "/"
-                + Database + "?user=" + User
-                + "&password=" + Password;
+        UrlConnexion = "jdbc:mysql://" + Host + "/" + Database + "?user=" + User + "&password=" + Password;
         return "com.mysql.jdbc.Driver";
 
     }
     // pilote JDBC SQL SERVER 2005
 
     public String get_sqlserver_2005_driver_JDBC() {
-        UrlConnexion = "jdbc:sqlserver://" + Host + ";databaseName="
-                + Database + ";user=" + User + ";password=" + Password;
+        UrlConnexion = "jdbc:sqlserver://" + Host + ";databaseName=" + Database + ";user=" + User + ";password="
+                + Password;
         return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 
     }
@@ -201,18 +199,18 @@ public class jconnexion {
         UrlConnexion = "jdbc:oracle:thin:@" + Host + ":" + port + ":" + DatabaseSID;
         return "oracle.jdbc.driver.OracleDriver";
     }
-    //pilote ODBC_JDBC
+    // pilote ODBC_JDBC
 
     public String get_driver_ODBC_JDBC() {
         UrlConnexion = "jdbc:odbc:" + Database;
         return "sun.jdbc.odbc.JdbcOdbcDriver";
     }
-    //pilote odbc postgrelsql
+    // pilote odbc postgrelsql
 
     public String get_driver_ODBC_JDBC_Postgrel() {
         return "postgrelsql.Driver";
     }
-    //chargement du pilotes
+    // chargement du pilotes
 
     public void LoadDriver() {
         try {
@@ -251,7 +249,7 @@ public class jconnexion {
 
         }
     }
-//fermeture de la connexion
+    // fermeture de la connexion
 
     public void CloseConnexion() {
         try {
@@ -270,9 +268,10 @@ public class jconnexion {
             System.out.println(message);
         }
     }
-    public Connection getConnection(){
+
+    public Connection getConnection() {
         try {
-            StringConnexion=   DriverManager.getConnection(UrlConnexion);
+            StringConnexion = DriverManager.getConnection(UrlConnexion);
         } catch (SQLException ex) {
             Logger.getLogger(jconnexion.class.getName()).log(Level.SEVERE, null, ex);
         }

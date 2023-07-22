@@ -44,8 +44,8 @@ public class AjustRessource {
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
-   private MouvementProduitService mvtProduitService;
-    
+    private MouvementProduitService mvtProduitService;
+
     @POST
     @Path("creeation")
     public Response createAjustement(Params params) throws JSONException {
@@ -64,7 +64,7 @@ public class AjustRessource {
     @Path("{id}")
     public Response cloreAjustement(@PathParam("id") String id, Params params) throws JSONException {
         params.setRefParent(id);
-        
+
         JSONObject json = mvtProduitService.cloreAjustement(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -97,14 +97,12 @@ public class AjustRessource {
         JSONObject json = mvtProduitService.annulerAjustement(id);
         return Response.ok().entity(json.toString()).build();
     }
-//
+    //
 
     @GET
     @Path("items")
-    public Response ajsutementsDetails(
-            @QueryParam(value = "query") String query,
-            @QueryParam(value = "ajustementId") String ajustementId
-    ) throws JSONException {
+    public Response ajsutementsDetails(@QueryParam(value = "query") String query,
+            @QueryParam(value = "ajustementId") String ajustementId) throws JSONException {
 
         SalesStatsParams body = new SalesStatsParams();
 
@@ -115,10 +113,9 @@ public class AjustRessource {
     }
 
     @GET
-    public Response allAjustement(@QueryParam(value = "start") int start,
-            @QueryParam(value = "limit") int limit, @QueryParam(value = "query") String query,
-            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd
-    ) throws JSONException {
+    public Response allAjustement(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);

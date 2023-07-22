@@ -246,7 +246,8 @@ public class Params implements Serializable {
 
     @Override
     public String toString() {
-        return "Params{" + "ref=" + ref + ", description=" + description + ", refParent=" + refParent + ", refTwo=" + refTwo + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", checkug=" + checkug + '}';
+        return "Params{" + "ref=" + ref + ", description=" + description + ", refParent=" + refParent + ", refTwo="
+                + refTwo + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", checkug=" + checkug + '}';
     }
 
 }

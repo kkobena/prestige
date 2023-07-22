@@ -23,8 +23,7 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "motif_ajustement")
 @NamedQueries({
-    @NamedQuery(name = "MotifAjustement.findAll", query = "SELECT o FROM MotifAjustement o ORDER BY o.libelle")}
-        )
+        @NamedQuery(name = "MotifAjustement.findAll", query = "SELECT o FROM MotifAjustement o ORDER BY o.libelle") })
 public class MotifAjustement implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -82,7 +81,5 @@ public class MotifAjustement implements Serializable {
         sb.append('}');
         return sb.toString();
     }
-    
-    
-    
+
 }
