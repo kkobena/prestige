@@ -65,7 +65,8 @@ public class Reapprovisionnement {
     private UserTransaction userTransaction;
 
     public List<TFamille> loadArticle(int start, int limit) {
-        TypedQuery<TFamille> q = em.createQuery("SELECT o FROM TFamille o WHERE o.strSTATUT='enable' AND o.boolDECONDITIONNE=?1 ", TFamille.class);
+        TypedQuery<TFamille> q = em.createQuery(
+                "SELECT o FROM TFamille o WHERE o.strSTATUT='enable' AND o.boolDECONDITIONNE=?1 ", TFamille.class);
         q.setParameter(1, (short) 0);
         q.setFirstResult(start);
         q.setMaxResults(limit);
@@ -80,7 +81,8 @@ public class Reapprovisionnement {
 
     public List<TFamille> loadArticleDeconditionne(String parentId) {
         try {
-            TypedQuery<TFamille> q = em.createQuery("SELECT o FROM TFamille o WHERE o.strSTATUT='enable' AND o.lgFAMILLEPARENTID=?1 ", TFamille.class);
+            TypedQuery<TFamille> q = em.createQuery(
+                    "SELECT o FROM TFamille o WHERE o.strSTATUT='enable' AND o.lgFAMILLEPARENTID=?1 ", TFamille.class);
             q.setParameter(1, parentId);
             return q.getResultList();
         } catch (Exception e) {
@@ -100,7 +102,7 @@ public class Reapprovisionnement {
 
             int qte = adder.intValue();
             if (qte > 0) {
-                return (int) Math.ceil(qte /qteDetail);
+                return (int) Math.ceil(qte / qteDetail);
             }
             return 0;
 
@@ -110,7 +112,8 @@ public class Reapprovisionnement {
     }
 
     public long loadArticleCount() {
-        Query q = em.createQuery("SELECT COUNT(o) FROM TFamille o WHERE o.strSTATUT='enable' AND o.boolDECONDITIONNE=?1 ");
+        Query q = em
+                .createQuery("SELECT COUNT(o) FROM TFamille o WHERE o.strSTATUT='enable' AND o.boolDECONDITIONNE=?1 ");
         q.setParameter(1, (short) 0);
         return (long) q.getSingleResult();
     }
@@ -131,7 +134,9 @@ public class Reapprovisionnement {
         for (int i = 1; i <= nombre; i++) {
             try {
                 LocalDate no = now.minusMonths(i);
-                TypedQuery<TCalendrier> tq = em.createQuery("SELECT o FROM TCalendrier o WHERE   FUNCTION('MONTH', o.dtDay) =?1 AND  FUNCTION('YEAR', o.dtDay)=?2 AND o.intNUMBERJOUR >=20 ", TCalendrier.class);
+                TypedQuery<TCalendrier> tq = em.createQuery(
+                        "SELECT o FROM TCalendrier o WHERE   FUNCTION('MONTH', o.dtDay) =?1 AND  FUNCTION('YEAR', o.dtDay)=?2 AND o.intNUMBERJOUR >=20 ",
+                        TCalendrier.class);
                 tq.setParameter(1, no.getMonthValue());
                 tq.setParameter(2, no.getYear());
                 tq.setMaxResults(1);
@@ -154,23 +159,28 @@ public class Reapprovisionnement {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> st = root.join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
-            cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY))).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
+            Join<TPreenregistrementDetail, TPreenregistrement> st = root
+                    .join(TPreenregistrementDetail_.lgPREENREGISTREMENTID, JoinType.INNER);
+            cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)))
+                    .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
             predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID), tf));
-            Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)), java.sql.Date.valueOf(dtSart),
-                    java.sql.Date.valueOf(dtEnd));
+            Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)),
+                    java.sql.Date.valueOf(dtSart), java.sql.Date.valueOf(dtEnd));
             predicates.add(btw);
             predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
             predicates.add(cb.isFalse(st.get(TPreenregistrement_.bISCANCEL)));
             predicates.add(cb.greaterThan(st.get(TPreenregistrement_.intPRICE), 0));
-            predicates.add(cb.notEqual(st.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID), DateConverter.DEPOT_EXTENSION));
-            predicates.add(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"), DateConverter.OFFICINE));
+            predicates.add(cb.notEqual(st.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
+                    DateConverter.DEPOT_EXTENSION));
+            predicates.add(
+                    cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"),
+                            DateConverter.OFFICINE));
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = em.createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();
 
         } catch (Exception e) {
-          
+
             return 0;
         }
     }
@@ -191,7 +201,7 @@ public class Reapprovisionnement {
             Q3 = Integer.parseInt(q3.getStrVALUE().trim());
         }
         List<LocalDate> nombreMois = nombreMoisPleinsConsommation(Q3).stream().sorted().collect(Collectors.toList());
-    
+
         if (!nombreMois.isEmpty()) {
             JSONObject json;
             for (int i = start; i <= total; i += limit) {
@@ -200,14 +210,22 @@ public class Reapprovisionnement {
                 try {
                     userTransaction.begin();
                     for (TFamille tf : list) {
-                      
-                        int conso = consommationProduits(nombreMois.get(0), LocalDate.of(nombreMois.get(nombreMois.size() - 1).getYear(), nombreMois.get(nombreMois.size() - 1).getMonth(), nombreMois.get(nombreMois.size() - 1).lengthOfMonth()), tf);
+
+                        int conso = consommationProduits(nombreMois.get(0),
+                                LocalDate.of(nombreMois.get(nombreMois.size() - 1).getYear(),
+                                        nombreMois.get(nombreMois.size() - 1).getMonth(),
+                                        nombreMois.get(nombreMois.size() - 1).lengthOfMonth()),
+                                tf);
                         int seuiCalule = 0;
                         int qteCalule = 0;
 
                         if (conso > 0) {
                             if (tf.getBoolDECONDITIONNEEXIST() == 1) {
-                                int consonDetail = deconditionneConsommation(nombreMois.get(0), LocalDate.of(nombreMois.get(nombreMois.size() - 1).getYear(), nombreMois.get(nombreMois.size() - 1).getMonth(), nombreMois.get(nombreMois.size() - 1).lengthOfMonth()), tf.getLgFAMILLEID(), Double.valueOf(tf.getIntNUMBERDETAIL()));
+                                int consonDetail = deconditionneConsommation(nombreMois.get(0),
+                                        LocalDate.of(nombreMois.get(nombreMois.size() - 1).getYear(),
+                                                nombreMois.get(nombreMois.size() - 1).getMonth(),
+                                                nombreMois.get(nombreMois.size() - 1).lengthOfMonth()),
+                                        tf.getLgFAMILLEID(), Double.valueOf(tf.getIntNUMBERDETAIL()));
                                 if (consonDetail > 0) {
                                     conso += consonDetail;
                                 }
@@ -216,7 +234,7 @@ public class Reapprovisionnement {
                             seuiCalule = json.getInt("seuilReappro");
                             qteCalule = json.getInt("qteReappro");
                         }
-                      
+
                         tf.setIntSEUILMIN(seuiCalule);
                         tf.setIntSTOCKREAPROVISONEMENT(seuiCalule);
                         tf.setIntQTEREAPPROVISIONNEMENT(qteCalule);
@@ -224,7 +242,8 @@ public class Reapprovisionnement {
                     }
                     userTransaction.commit();
 
-                } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+                } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException
+                        | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
                     try {
                         if (userTransaction.getStatus() == Status.STATUS_ACTIVE
                                 || userTransaction.getStatus() == Status.STATUS_MARKED_ROLLBACK) {
@@ -253,7 +272,8 @@ public class Reapprovisionnement {
 
     public void exec() {
         try {
-            TParameters p = em.find(TParameters.class, "KEY_DAY_SEUIL_REAPPRO");//derniere date de mise a jour stock reappro
+            TParameters p = em.find(TParameters.class, "KEY_DAY_SEUIL_REAPPRO");// derniere date de mise a jour stock
+                                                                                // reappro
             LocalDate date = LocalDate.parse(p.getStrVALUE());
             if (date.getMonthValue() != LocalDate.now().getMonthValue()) {
                 calculStockReappro();
@@ -263,14 +283,15 @@ public class Reapprovisionnement {
                 em.merge(p);
                 userTransaction.commit();
             }
-        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
+        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException
+                | NotSupportedException | RollbackException | SystemException e) {
             LOG.log(Level.SEVERE, null, e);
         }
     }
 
     public JSONObject calculSeuiQteReappro(int Q1, int Q2, double Q3, int Q3_parametre) {
         /*
-      valeur calculee de la consommation du produit sur une semaine
+         * valeur calculee de la consommation du produit sur une semaine
          */
         double divente = (Double.valueOf(Q3_parametre) * 4);
         double Q4 = 0.5;
@@ -284,7 +305,8 @@ public class Reapprovisionnement {
 
     public void execute() {
         try {
-            TParameters p = em.find(TParameters.class, "KEY_DAY_SEUIL_REAPPRO");//derniere date de mise a jour stock reappro
+            TParameters p = em.find(TParameters.class, "KEY_DAY_SEUIL_REAPPRO");// derniere date de mise a jour stock
+                                                                                // reappro
             calculStockReappro();
             userTransaction.begin();
             p.setStrVALUE(LocalDate.now().toString());
@@ -292,7 +314,8 @@ public class Reapprovisionnement {
             em.merge(p);
             userTransaction.commit();
 
-        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
+        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException
+                | NotSupportedException | RollbackException | SystemException e) {
             LOG.log(Level.SEVERE, null, e);
         }
     }

@@ -105,7 +105,8 @@ public class DailyStockTask implements Runnable {
     private List<TStockSnapshot> list(int e) {
 
         try {
-            TypedQuery<TStockSnapshot> q = getEntityManager().createNamedQuery("TStockSnapshot.findAll", TStockSnapshot.class);
+            TypedQuery<TStockSnapshot> q = getEntityManager().createNamedQuery("TStockSnapshot.findAll",
+                    TStockSnapshot.class);
             q.setMaxResults(e);
             return q.getResultList();
         } catch (Exception ex) {
