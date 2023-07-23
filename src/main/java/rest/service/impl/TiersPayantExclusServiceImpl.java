@@ -113,7 +113,7 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
             Root<VenteExclus> root = cq.from(VenteExclus.class);
             cq.select(cb.countDistinct(root.get(VenteExclus_.tiersPayant)));
             List<Predicate> predicates = perimePredicatCountAll(cb, root, query);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {

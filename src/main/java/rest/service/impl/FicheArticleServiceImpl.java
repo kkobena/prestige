@@ -451,7 +451,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             Join<TFamilleStock, TFamille> stock = root.join(TFamilleStock_.lgFAMILLEID, JoinType.INNER);
             cq.select(cb.count(root));
             List<Predicate> predicates = produitAccounts(cb, root, stock, query, rayon, filtre, u);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return q.getSingleResult() != null ? (Long) q.getSingleResult() : 0;
 

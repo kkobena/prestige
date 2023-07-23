@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.DashBoardService;
+import rest.service.dto.BalanceParamsDTO;
 import toolkits.parameters.commonparameter;
 import util.Constant;
 
@@ -48,8 +49,10 @@ public class DashBoardRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = dashBoardService.donneesCreditAccordesView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
-                tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, query, start, limit, false);
+
+        JSONObject jsono = dashBoardService.donneesCreditAccordesView(BalanceParamsDTO.builder().dtStart(dtStart)
+                .all(false).start(start).query(query).limi(limit).dtEnd(dtEnd).showAllAmount(true)
+                .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         return Response.ok().entity(jsono.toString()).build();
     }
 
@@ -63,8 +66,9 @@ public class DashBoardRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject jsono = new JSONObject(
-                dashBoardService.donneesRecapTotataux(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), tu, query));
+        JSONObject jsono = new JSONObject(dashBoardService
+                .donneesRecapTotataux(BalanceParamsDTO.builder().dtStart(dtStart).query(query).dtEnd(dtEnd)
+                        .showAllAmount(true).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build()));
         return Response.ok().entity(jsono.toString()).build();
     }
 

@@ -34,4 +34,8 @@ public class BalanceParamsDTO {
     private boolean byDay;
     private boolean byMonth;
     private boolean showAllAmount;
+    private String query;
+    private int start;
+    private int limi;
+    private boolean all;
 }

@@ -769,8 +769,9 @@ public class Balance {
                 tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu);
         List<Params> factures = dashBoardService.donneesReglementsTp(dtSt, dtEn,
                 tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, parasm.getDescription(), 0, 0, true);
-        List<RecapActiviteCreditDTO> credits = dashBoardService.donneesCreditAccordes(dtSt, dtEn,
-                tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, parasm.getDescription(), 0, 0, true);
+        List<RecapActiviteCreditDTO> credits = dashBoardService.donneesCreditAccordes(BalanceParamsDTO.builder()
+                .dtStart(parasm.getDtStart()).dtEnd(parasm.getDtEnd()).query(parasm.getDescription()).all(true)
+                .showAllAmount(true).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         List<Params> ratios = Arrays.asList(
                 new Params("Total comptant",
                         NumberUtils.formatLongToString(o.getMontantEsp()) + "(" + o.getPourcentageEsp() + "%)"),
@@ -789,7 +790,9 @@ public class Balance {
                 new RecapActiviteReglementDTO("Total comptant", o.getMontantEsp()),
                 new RecapActiviteReglementDTO("Total crédit", o.getMontantCredit())));
         achats.addAll(o.getAchats());
-        RecapActiviteCreditDTO summary = dashBoardService.donneesRecapTotataux(dtSt, dtEn, tu, parasm.getDescription());
+        RecapActiviteCreditDTO summary = dashBoardService.donneesRecapTotataux(BalanceParamsDTO.builder()
+                .dtStart(parasm.getDtStart()).dtEnd(parasm.getDtEnd()).query(parasm.getDescription())
+                .showAllAmount(true).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
         parameters.put("factures", factures);
         parameters.put("credits", credits);
         parameters.put("mvtsCaisse", o.getMvtsCaisse());
