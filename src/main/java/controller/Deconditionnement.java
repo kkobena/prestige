@@ -360,10 +360,10 @@ public class Deconditionnement extends HttpServlet {
             TDeconditionnement p = createDecondtionne(OTFamilleParent, int_NUMBER, em, user);
             TDeconditionnement child = createDecondtionne(OTFamilleChild, (int_NUMBER * qtyDetail), em, user);
             mouvementProduitService.saveMvtProduit(p.getLgDECONDITIONNEMENTID(), DateConverter.DECONDTIONNEMENT_NEGATIF,
-                    OTFamilleParent, user, OTEmplacement, int_NUMBER, stockInit, stockInit - int_NUMBER, em, 0);
+                    OTFamilleParent, user, OTEmplacement, int_NUMBER, stockInit, stockInit - int_NUMBER,  0);
             mouvementProduitService.saveMvtProduit(child.getLgDECONDITIONNEMENTID(),
                     DateConverter.DECONDTIONNEMENT_POSITIF, OTFamilleChild, user, OTEmplacement, int_NUMBER,
-                    stockInitDetail, stockInitDetail + (int_NUMBER * qtyDetail), em, 0);
+                    stockInitDetail, stockInitDetail + (int_NUMBER * qtyDetail),  0);
             String desc = "Déconditionnement du produit " + OTFamilleParent.getIntCIP() + " "
                     + OTFamilleParent.getStrNAME() + " nombre de boîtes = " + int_NUMBER + " nombre de détails ="
                     + (int_NUMBER * qtyDetail) + " opérateur " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
