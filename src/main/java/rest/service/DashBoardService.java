@@ -14,6 +14,7 @@ import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.BalanceParamsDTO;
 
 /**
  *
@@ -28,17 +29,15 @@ public interface DashBoardService {
     List<Params> donneesReglementsTp(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query,
             int start, int limit, boolean all);
 
-    List<RecapActiviteCreditDTO> donneesCreditAccordes(LocalDate dtStart, LocalDate dtEnd, String emplacementId,
-            TUser tu, String query, int start, int limit, boolean all);
+    List<RecapActiviteCreditDTO> donneesCreditAccordes(BalanceParamsDTO balanceParams);
 
     JSONObject donneesReglementsTpView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query,
             int start, int limit, boolean all) throws JSONException;
 
-    JSONObject donneesCreditAccordesView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu,
-            String query, int start, int limit, boolean all) throws JSONException;
+    JSONObject donneesCreditAccordesView(BalanceParamsDTO balanceParams);
 
     RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu);
 
-    RecapActiviteCreditDTO donneesRecapTotataux(LocalDate dtStart, LocalDate dtEnd, TUser tu, String query);
+    RecapActiviteCreditDTO donneesRecapTotataux(BalanceParamsDTO balanceParams);
 
 }
