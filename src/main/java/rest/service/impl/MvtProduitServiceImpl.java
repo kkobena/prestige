@@ -11,36 +11,12 @@ import commonTasks.dto.Params;
 import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.RetourFournisseurDTO;
 import commonTasks.dto.SalesStatsParams;
-import dal.Notification;
-import dal.TAjustement;
-import dal.TAjustementDetail;
-import dal.TAjustementDetail_;
-import dal.TAjustement_;
-import dal.TDeconditionnement;
-import dal.TEmplacement;
-import dal.TFamille;
-import dal.TFamilleStock;
-import dal.TFamille_;
-import dal.TGrossiste_;
-import dal.TMouvementprice;
-import dal.TPreenregistrement;
-import dal.TPreenregistrementDetail;
-import dal.TRetourFournisseur;
-import dal.TRetourFournisseurDetail;
-import dal.TRetourFournisseurDetail_;
-import dal.TRetourFournisseur_;
-import dal.TRetourdepot;
-import dal.TRetourdepotdetail;
-import dal.TUser;
-import dal.TUser_;
-import dal.MotifAjustement;
-import dal.MotifAjustement_;
-import dal.TBonLivraisonDetail;
-import dal.TMotifRetour;
-import dal.Typemvtproduit;
+import dal.*;
 import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -81,6 +57,7 @@ import rest.service.MvtProduitService;
 import rest.service.NotificationService;
 import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -110,18 +87,17 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     }
 
-    @Override
-    public void updatefamillenbvente(TFamille famille, int qty, boolean updatable, EntityManager emg) {
+    private void updatefamillenbvente(TFamille famille, int qty, boolean updatable) {
         if (updatable) {
             famille.setDtLASTMOUVEMENT(new Date());
             famille.setIntQTERESERVEE(famille.getIntNBRESORTIE() + qty);
-            emg.merge(famille);
+            this.getEmg().merge(famille);
         }
 
     }
 
     public void saveMouvementPrice(TUser user, TFamille OTFamille, Integer old, Integer newPu, int taux, String action,
-            String ref, EntityManager emg) {
+            String ref) {
         TMouvementprice mouvementprice = new TMouvementprice(UUID.randomUUID().toString());
         mouvementprice.setDtCREATED(new Date());
         mouvementprice.setDtDAY(new Date());
@@ -134,16 +110,16 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         mouvementprice.setStrREF(ref);
         mouvementprice.setLgFAMILLEID(OTFamille);
         mouvementprice.setStrSTATUT(commonparameter.statut_enable);
-        emg.persist(mouvementprice);
+        this.getEmg().persist(mouvementprice);
     }
 
-    private TEmplacement emplacementFromId(String lgEMPLACEMENTID, EntityManager emg) {
-        return emg.find(TEmplacement.class, lgEMPLACEMENTID);
+    private TEmplacement emplacementFromId(String lgEMPLACEMENTID) {
+        return getEmg().find(TEmplacement.class, lgEMPLACEMENTID);
     }
 
-    public List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp, EntityManager emg) {
+    public List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp) {
         try {
-            return emg.createQuery(
+            return getEmg().createQuery(
                     "SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1")
                     .setParameter(1, tp.getLgPREENREGISTREMENTID()).getResultList();
 
@@ -153,10 +129,10 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     }
 
-    private TFamilleStock findStock(String OTFamille, TEmplacement emplacement, EntityManager emg) {
+    private TFamilleStock findStock(String OTFamille, TEmplacement emplacement) {
 
         try {
-            TypedQuery<TFamilleStock> query = emg.createQuery(
+            TypedQuery<TFamilleStock> query = this.getEmg().createQuery(
                     "SELECT t FROM TFamilleStock t WHERE  t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable' ORDER BY t.dtCREATED DESC",
                     TFamilleStock.class);
             query.setParameter(1, OTFamille);
@@ -172,14 +148,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public void updateStockDepot(TUser user, TPreenregistrement tp, TEmplacement OTEmplacement, EntityManager emg)
-            throws Exception {
-        List<TPreenregistrementDetail> list = getTPreenregistrementDetail(tp, emg);
+    public void updateStockDepot(TUser user, TPreenregistrement tp, TEmplacement OTEmplacement) throws Exception {
+        List<TPreenregistrementDetail> list = getTPreenregistrementDetail(tp);
         user = (user == null) ? tp.getLgUSERID() : user;
         final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.ENTREE_EN_STOCK);
         for (TPreenregistrementDetail d : list) {
             TFamille tFamille = d.getLgFAMILLEID();
-            updateStockDepot(typemvtproduit, user, tFamille, d.getIntQUANTITY(), OTEmplacement, emg);
+            updateStockDepot(typemvtproduit, user, tFamille, d.getIntQUANTITY(), OTEmplacement);
         }
     }
 
@@ -208,7 +183,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             TFamille tFamille = it.getLgFAMILLEID();
             if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
                 saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0,
-                        commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
+                        commonparameter.str_ACTION_VENTE, tp.getStrREF());
                 String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de "
                         + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
                         + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
@@ -216,7 +191,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 notificationService.save(new Notification().canal(Canal.EMAIL)
                         .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
             }
-            TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
+            TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
             int initStock = familleStock.getIntNUMBERAVAILABLE();
             if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
                 TFamille oTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
@@ -227,50 +202,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
             }
 
-            updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
+            updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot);
             mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
                     emplacement, it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg,
                     it.getValeurTva(), tp.getChecked(), it.getIntUG());
 
             emg.merge(it);
-            updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITY(), depot, emg);
-            suggestionService.makeSuggestionAuto(familleStock, tFamille);
-        });
-
-    }
-
-    @Override
-    public void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg) {
-        TUser tu = tp.getLgUSERID();
-        final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
-        final String emplacementId = emplacement.getLgEMPLACEMENTID();
-        final boolean isDepot = !("1".equals(emplacementId));
-        list.stream().forEach(it -> {
-            it.setStrSTATUT(commonparameter.statut_is_Closed);
-            TFamille tFamille = it.getLgFAMILLEID();
-            if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
-                saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0,
-                        commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
-                String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de "
-                        + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
-                        + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
-                logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tFamille,
-                        emg);
-                notificationService.save(new Notification().canal(Canal.EMAIL)
-                        .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
-            }
-            TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
-            if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-
-                TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
-                TFamilleStock stockParent = findStockByProduitId(OTFamilleParent.getLgFAMILLEID(),
-                        emplacement.getLgEMPLACEMENTID());
-                deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock,
-                        it.getIntQUANTITY(), emg);
-            }
-
-            updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
-            emg.merge(it);
+            updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITY(), depot);
             suggestionService.makeSuggestionAuto(familleStock, tFamille);
         });
 
@@ -324,7 +262,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 TFamille tFamille = it.getLgFAMILLEID();
                 if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
                     saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0,
-                            commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
+                            commonparameter.str_ACTION_VENTE, tp.getStrREF());
                     String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de "
                             + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
                             + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
@@ -334,7 +272,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                             .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc)
                             .addUser(tu));
                 }
-                TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
+                TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
                 Integer initStock = familleStock.getIntNUMBERAVAILABLE();
 
                 if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
@@ -344,7 +282,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     deconditionner(tu, stockParent, familleStock, it.getIntQUANTITY());
 
                 }
-                updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
+                updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot);
                 mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
                         emplacement, it.getIntQUANTITY(), initStock,
                         familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY(), emg, it.getValeurTva(), true,
@@ -360,56 +298,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         }
     }
 
-    @Override
-    public void updateVenteStock(String idVente) {
-        EntityManager emg = this.getEmg();
-        try {
-            TPreenregistrement tp = emg.find(TPreenregistrement.class, idVente);
-            List<TPreenregistrementDetail> list = getTPreenregistrementDetail(tp, emg);
-            TUser tu = tp.getLgUSERID();
-            final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
-            final String emplacementId = emplacement.getLgEMPLACEMENTID();
-            final boolean isDepot = !("1".equals(emplacementId));
-            final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.VENTE);
-            list.stream().forEach(it -> {
-                TFamille tFamille = it.getLgFAMILLEID();
-                if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
-                    saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0,
-                            commonparameter.str_ACTION_VENTE, tp.getStrREF(), emg);
-                    String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de "
-                            + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
-                            + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
-                    logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT,
-                            tFamille, emg);
-                    notificationService.save(new Notification().canal(Canal.EMAIL)
-                            .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc)
-                            .addUser(tu));
-                }
-                TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement, emg);
-                Integer initStock = familleStock.getIntNUMBERAVAILABLE();
-                updateQtyUg(familleStock, tp, it);
-                if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-
-                    TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
-                    TFamilleStock stockParent = findStockByProduitId(otFamilleParent.getLgFAMILLEID(),
-                            emplacement.getLgEMPLACEMENTID());
-                    deconditionner(tu, emplacement, tFamille, otFamilleParent, stockParent, familleStock,
-                            it.getIntQUANTITY(), emg);
-
-                }
-                updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot, emg);
-                mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
-                        emplacement, it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg,
-                        it.getValeurTva(), true, it.getIntUG());
-                emg.merge(it);
-            });
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-        }
-    }
-
     private void updateStockDepot(Typemvtproduit typemvtproduit, TUser ooTUser, TFamille OTFamille, Integer qty,
-            TEmplacement OTEmplacement, EntityManager emg) {
+            TEmplacement OTEmplacement) {
         Integer initStock = 0;
         TFamilleStock familleStock;
         boolean isDetail = (OTFamille.getLgFAMILLEPARENTID() != null && !"".equals(OTFamille.getLgFAMILLEPARENTID()));
@@ -421,12 +311,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() + qty);
             familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
             familleStock.setDtUPDATED(new Date());
-            emg.merge(familleStock);
+            getEmg().merge(familleStock);
 
         } else {
 
             if (isDetail) {
-                familleStock = findByParent(OTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID(), emg);
+                familleStock = findByParent(OTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID());
                 if (familleStock == null) {
                     familleStock = createStock(OTFamille, qty, OTEmplacement);
                 } else {
@@ -434,12 +324,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() + qty);
                     familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
                     familleStock.setDtUPDATED(new Date());
-                    emg.merge(familleStock);
+                    getEmg().merge(familleStock);
                 }
                 TFamilleStock familleStock2 = findStockByProduitId(OTFamille.getLgFAMILLEPARENTID(),
                         OTEmplacement.getLgEMPLACEMENTID());
                 if (familleStock2 == null) {
-                    TFamille p = findProduitById(OTFamille.getLgFAMILLEPARENTID(), emg);
+                    TFamille p = findProduitById(OTFamille.getLgFAMILLEPARENTID(), getEmg());
                     if (p != null) {
                         createStock(p, 0, OTEmplacement);
                     }
@@ -452,14 +342,14 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
         }
         mouvementProduitService.saveMvtProduit2(OTFamille.getIntPRICE(), familleStock.getLgFAMILLESTOCKID(),
-                typemvtproduit, OTFamille, ooTUser, OTEmplacement, qty, initStock, initStock - qty, emg, 0, false, 0);
+                typemvtproduit, OTFamille, ooTUser, OTEmplacement, qty, initStock, initStock - qty, 0, false, 0);
 
     }
 
-    public TFamilleStock findByParent(String parentId, String emplecementId, EntityManager emg) {
+    private TFamilleStock findByParent(String parentId, String emplecementId) {
         TFamilleStock familleStock = null;
         try {
-            TypedQuery<TFamilleStock> query = emg.createQuery(
+            TypedQuery<TFamilleStock> query = this.getEmg().createQuery(
                     "SELECT t FROM TFamilleStock t WHERE  t.lgFAMILLEID.lgFAMILLEPARENTID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable' ORDER BY t.dtCREATED DESC",
                     TFamilleStock.class);
             query.setParameter(1, parentId);
@@ -554,11 +444,11 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             mouvementProduitService.saveMvtProduit(child.getLgDECONDITIONNEMENTID(),
                     DateConverter.DECONDTIONNEMENT_POSITIF, tFamilleChild, tu, ofamilleStockParent.getLgEMPLACEMENTID(),
                     (numberToDecondition * qtyDetail), stockInitDetail,
-                    stockInitDetail + (numberToDecondition * qtyDetail) - qteVendue, emg, 0);
+                    stockInitDetail + (numberToDecondition * qtyDetail) - qteVendue, 0);
             mouvementProduitService.saveMvtProduit(parent.getLgDECONDITIONNEMENTID(),
                     DateConverter.DECONDTIONNEMENT_NEGATIF, tFamilleParent, tu,
                     ofamilleStockParent.getLgEMPLACEMENTID(), numberToDecondition, stockInit,
-                    stockInit - numberToDecondition, emg, 0);
+                    stockInit - numberToDecondition, 0);
             String desc = "Déconditionnement du produit [ " + tFamilleParent.getIntCIP() + " ] de "
                     + tFamilleParent.getIntPRICE() + " stock initial " + stockInit + " quantité déconditionnée "
                     + numberToDecondition + " stock finale " + (stockInit - numberToDecondition)
@@ -604,7 +494,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             ajustement.setDtUPDATED(ajustement.getDtCREATED());
             ajustement.setStrSTATUT(commonparameter.statut_is_Process);
             emg.persist(ajustement);
-            ajusterProduitAjustement(params, ajustement, emg);
+            ajusterProduitAjustement(params, ajustement);
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             json.put("data", new JSONObject().put("lgAJUSTEMENTID", ajustement.getLgAJUSTEMENTID()));
         } catch (Exception e) {
@@ -620,7 +510,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         JSONObject json = new JSONObject();
         try {
             TAjustement ajustement = emg.find(TAjustement.class, params.getRefParent());
-            ajusterProduitAjustement(params, ajustement, emg);
+            ajusterProduitAjustement(params, ajustement);
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             json.put("data", new JSONObject().put("lgAJUSTEMENTID", ajustement.getLgAJUSTEMENTID()));
         } catch (Exception e) {
@@ -631,7 +521,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         return json;
     }
 
-    private void ajusterProduitAjustement(Params params, TAjustement ajustement, EntityManager emg) {
+    private void ajusterProduitAjustement(Params params, TAjustement ajustement) {
         TAjustementDetail ajustementDetail = updateAjustementDetail(params);
         if (ajustementDetail == null) {
             TEmplacement emplacement = ajustement.getLgUSERID().getLgEMPLACEMENTID();
@@ -643,13 +533,22 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             ajustementDetail.setLgFAMILLEID(familleStock.getLgFAMILLEID());
             ajustementDetail.setIntNUMBER(params.getValue());
             ajustementDetail.setIntNUMBERCURRENTSTOCK(currentStock);
-            ajustementDetail.setIntNUMBERAFTERSTOCK(params.getValue() + currentStock);
+            ajustementDetail.setIntNUMBERAFTERSTOCK(ajustementDetail.getIntNUMBER() + currentStock);
             ajustementDetail.setDtCREATED(new Date());
             ajustementDetail.setDtUPDATED(ajustementDetail.getDtCREATED());
             ajustementDetail.setTypeAjustement(getOneTypeAjustement(params.getValueFour()));
-            ajustementDetail.setStrSTATUT(commonparameter.statut_is_Process);
-            emg.persist(ajustementDetail);
+            ajustementDetail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+            this.getEmg().persist(ajustementDetail);
         }
+    }
+
+    private void updateFinalyseItem(TAjustementDetail ajustementDetail, TFamilleStock familleStock, Date dateUpdated) {
+        int currentStock = familleStock.getIntNUMBERAVAILABLE();
+        ajustementDetail.setIntNUMBERCURRENTSTOCK(currentStock);
+        ajustementDetail.setIntNUMBERAFTERSTOCK(ajustementDetail.getIntNUMBER() + currentStock);
+        ajustementDetail.setDtUPDATED(dateUpdated);
+        ajustementDetail.setStrSTATUT(Constant.STATUT_ENABLE);
+
     }
 
     @Override
@@ -707,38 +606,37 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 json.put("success", false).put("msg", "L'opération a échoué");
                 return json;
             }
+            ajustement.setDtUPDATED(new Date());
             TUser tUser = ajustement.getLgUSERID();
             TEmplacement emplacement = tUser.getLgEMPLACEMENTID();
-            List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(ajustement.getLgAJUSTEMENTID(),
-                    emg);
+            List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(ajustement.getLgAJUSTEMENTID());
             ajustementDetails.forEach(it -> {
                 TFamille famille = it.getLgFAMILLEID();
                 TFamilleStock familleStock = findStockByProduitId(famille.getLgFAMILLEID(),
                         emplacement.getLgEMPLACEMENTID());
                 Integer initStock = familleStock.getIntNUMBERAVAILABLE();
+                updateFinalyseItem(it, familleStock, ajustement.getDtUPDATED());
                 familleStock.setIntNUMBERAVAILABLE(it.getIntNUMBERAFTERSTOCK());
                 familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
-                familleStock.setDtUPDATED(new Date());
+                familleStock.setDtUPDATED(ajustement.getDtUPDATED());
                 emg.merge(familleStock);
                 int compare = initStock.compareTo(it.getIntNUMBERAFTERSTOCK());
 
                 String action2 = (compare < 0) ? DateConverter.AJUSTEMENT_POSITIF : DateConverter.AJUSTEMENT_NEGATIF;
 
                 mouvementProduitService.saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), action2, famille, tUser,
-                        emplacement, it.getIntNUMBER(), initStock, initStock + it.getIntNUMBER(), emg, 0);
+                        emplacement, it.getIntNUMBER(), initStock, familleStock.getIntNUMBERAVAILABLE(), 0);
                 suggestionService.makeSuggestionAuto(familleStock, famille);
                 String desc = "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME()
                         + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER()
-                        + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
+                        + " ] :Quantité finale [ " + familleStock.getIntNUMBERAVAILABLE() + " ]";
                 logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
-                it.setStrSTATUT(commonparameter.statut_enable);
-                it.setDtUPDATED(new Date());
+
                 emg.merge(it);
 
             });
             ajustement.setStrCOMMENTAIRE(params.getDescription());
-            ajustement.setDtUPDATED(new Date());
-            ajustement.setStrSTATUT(commonparameter.statut_enable);
+            ajustement.setStrSTATUT(Constant.STATUT_ENABLE);
             emg.merge(ajustement);
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             return json;
@@ -750,8 +648,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         }
     }
 
-    private List<TAjustementDetail> findAjustementDetailsByParenId(String idParent, EntityManager em) {
-        return em.createQuery("SELECT o FROM TAjustementDetail o WHERE o.lgAJUSTEMENTID.lgAJUSTEMENTID=?1 ",
+    private List<TAjustementDetail> findAjustementDetailsByParenId(String idParent) {
+        return this.getEmg().createQuery("SELECT o FROM TAjustementDetail o WHERE o.lgAJUSTEMENTID.lgAJUSTEMENTID=?1 ",
                 TAjustementDetail.class).setParameter(1, idParent).getResultList();
     }
 
@@ -769,44 +667,17 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         }
     }
 
-    @Override
-    public JSONObject findOneAjustement(String idAjustement) throws JSONException {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    public long countAjustement(SalesStatsParams params, EntityManager emg) {
+    public long countAjustement(SalesStatsParams params) {
         try {
-            List<Predicate> predicates = new ArrayList<>();
-            CriteriaBuilder cb = emg.getCriteriaBuilder();
+
+            CriteriaBuilder cb = this.getEmg().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TAjustementDetail> root = cq.from(TAjustementDetail.class);
             Join<TAjustementDetail, TAjustement> st = root.join("lgAJUSTEMENTID", JoinType.INNER);
             cq.select(cb.countDistinct(root.get(TAjustementDetail_.lgAJUSTEMENTID)));
-            Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TAjustement_.dtUPDATED)),
-                    java.sql.Date.valueOf(params.getDtStart()), java.sql.Date.valueOf(params.getDtEnd()));
-            predicates.add(btw);
-            predicates.add(cb.equal(st.get(TAjustement_.strSTATUT), commonparameter.statut_enable));
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
-                Predicate predicate = cb.or(
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP),
-                                params.getQuery() + "%"),
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME),
-                                params.getQuery() + "%"),
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13),
-                                params.getQuery() + "%"));
-                predicates.add(predicate);
-            }
-            if (!params.isShowAll()) {
-                predicates.add(
-                        cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID()));
-            }
-            if (StringUtils.isNotEmpty(params.getTypeFiltre())) {
-                predicates.add(cb.equal(root.get(TAjustementDetail_.typeAjustement).get(MotifAjustement_.id),
-                        Integer.valueOf(params.getTypeFiltre())));
-            }
+            List<Predicate> predicates = listAllAjustementPredicates(cb, root, st, params);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
-            Query q = emg.createQuery(cq);
+            Query q = this.getEmg().createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -816,32 +687,14 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     @Override
     public List<AjustementDTO> getAllAjustements(SalesStatsParams params) {
-        List<Predicate> predicates = new ArrayList<>();
+
         CriteriaBuilder cb = getEmg().getCriteriaBuilder();
         CriteriaQuery<TAjustement> cq = cb.createQuery(TAjustement.class);
         Root<TAjustementDetail> root = cq.from(TAjustementDetail.class);
         Join<TAjustementDetail, TAjustement> st = root.join("lgAJUSTEMENTID", JoinType.INNER);
         cq.select(root.get(TAjustementDetail_.lgAJUSTEMENTID)).distinct(true)
                 .orderBy(cb.asc(st.get(TAjustement_.dtUPDATED)));
-        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TAjustement_.dtUPDATED)),
-                java.sql.Date.valueOf(params.getDtStart()), java.sql.Date.valueOf(params.getDtEnd()));
-        predicates.add(btw);
-        predicates.add(cb.equal(st.get(TAjustement_.strSTATUT), commonparameter.statut_enable));
-        if (StringUtils.isNotEmpty(params.getTypeFiltre())) {
-            predicates.add(cb.equal(root.get(TAjustementDetail_.typeAjustement).get(MotifAjustement_.id),
-                    Integer.valueOf(params.getTypeFiltre())));
-        }
-        if (params.getQuery() != null && !"".equals(params.getQuery())) {
-            Predicate predicate = cb.or(
-                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"),
-                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"),
-                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%"));
-            predicates.add(predicate);
-        }
-        if (!params.isShowAll()) {
-            predicates.add(cb.and(
-                    cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
-        }
+        List<Predicate> predicates = listAllAjustementPredicates(cb, root, st, params);
         cq.where(predicates.toArray(new Predicate[0]));
         Query q = getEmg().createQuery(cq);
         if (!params.isAll()) {
@@ -849,8 +702,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             q.setMaxResults(params.getLimit());
         }
         List<TAjustement> list = q.getResultList();
-        return list.stream().map(v -> new AjustementDTO(v,
-                findAjustementDetailsByParenId(v.getLgAJUSTEMENTID(), getEmg()), params.isCanCancel()))
+        return list.stream().map(
+                v -> new AjustementDTO(v, findAjustementDetailsByParenId(v.getLgAJUSTEMENTID()), params.isCanCancel()))
                 .collect(Collectors.toList());
 
     }
@@ -860,7 +713,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEmg();
         try {
-            long count = countAjustement(params, emg);
+            long count = countAjustement(params);
             if (count == 0) {
                 json.put("total", count);
                 json.put("data", new JSONArray());
@@ -899,23 +752,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     public long ajsutementsDetailsCount(SalesStatsParams params, String idAjustement) {
         EntityManager emg = this.getEmg();
         try {
-            List<Predicate> predicates = new ArrayList<>();
+
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaQuery<Number> cq = cb.createQuery(Number.class);
             Root<TAjustementDetail> root = cq.from(TAjustementDetail.class);
             Join<TAjustementDetail, TAjustement> st = root.join("lgAJUSTEMENTID", JoinType.INNER);
             cq.select(cb.count(root));
-            predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgAJUSTEMENTID), idAjustement)));
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
-                Predicate predicate = cb.and(cb.or(
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP),
-                                params.getQuery() + "%"),
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME),
-                                params.getQuery() + "%"),
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13),
-                                params.getQuery() + "%")));
-                predicates.add(predicate);
-            }
+            List<Predicate> predicates = listPredicates(cb, root, st, params, idAjustement);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             return ((Number) q.getSingleResult()).longValue();
@@ -938,23 +781,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 json.put("data", new JSONArray());
                 return json;
             }
-            List<Predicate> predicates = new ArrayList<>();
+
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaQuery<TAjustementDetail> cq = cb.createQuery(TAjustementDetail.class);
             Root<TAjustementDetail> root = cq.from(TAjustementDetail.class);
             Join<TAjustementDetail, TAjustement> st = root.join("lgAJUSTEMENTID", JoinType.INNER);
             cq.select(root).orderBy(cb.asc(root.get(TAjustementDetail_.dtUPDATED)));
-            predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgAJUSTEMENTID), idAjustement)));
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
-                Predicate predicate = cb.and(cb.or(
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP),
-                                params.getQuery() + "%"),
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME),
-                                params.getQuery() + "%"),
-                        cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13),
-                                params.getQuery() + "%")));
-                predicates.add(predicate);
-            }
+            List<Predicate> predicates = listPredicates(cb, root, st, params, idAjustement);
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = emg.createQuery(cq);
             if (!params.isAll()) {
@@ -974,13 +807,57 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         return json;
     }
 
+    private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TAjustementDetail> root,
+            Join<TAjustementDetail, TAjustement> st, SalesStatsParams params, String idAjustement) {
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.and(cb.equal(st.get(TAjustement_.lgAJUSTEMENTID), idAjustement)));
+        if (params.getQuery() != null && !"".equals(params.getQuery())) {
+            Predicate predicate = cb.and(cb.or(
+                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"),
+                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"),
+                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13),
+                            params.getQuery() + "%")));
+            predicates.add(predicate);
+        }
+
+        return predicates;
+    }
+
+    private List<Predicate> listAllAjustementPredicates(CriteriaBuilder cb, Root<TAjustementDetail> root,
+            Join<TAjustementDetail, TAjustement> st, SalesStatsParams params) {
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.between(cb.function("DATE", Date.class, st.get(TAjustement_.dtUPDATED)),
+                java.sql.Date.valueOf(params.getDtStart()), java.sql.Date.valueOf(params.getDtEnd())));
+        predicates.add(cb.equal(st.get(TAjustement_.strSTATUT), Constant.STATUT_ENABLE));
+        if (StringUtils.isNotEmpty(params.getTypeFiltre())) {
+            predicates.add(cb.equal(root.get(TAjustementDetail_.typeAjustement).get(MotifAjustement_.id),
+                    Integer.valueOf(params.getTypeFiltre())));
+        }
+        if (StringUtils.isNotEmpty(params.getQuery())) {
+            Predicate predicate = cb.or(
+                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intCIP), params.getQuery() + "%"),
+                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.strNAME), params.getQuery() + "%"),
+                    cb.like(root.get(TAjustementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), params.getQuery() + "%"));
+            predicates.add(predicate);
+        }
+        if (!params.isShowAll()) {
+            predicates.add(cb.and(
+                    cb.equal(st.get(TAjustement_.lgUSERID).get(TUser_.lgUSERID), params.getUserId().getLgUSERID())));
+        }
+        if (StringUtils.isNotEmpty(params.getTypeFiltre())) {
+            predicates.add(cb.equal(root.get(TAjustementDetail_.typeAjustement).get(MotifAjustement_.id),
+                    Integer.valueOf(params.getTypeFiltre())));
+        }
+        return predicates;
+    }
+
     @Override
     public JSONObject annulerAjustement(String id) throws JSONException {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEmg();
         try {
             TAjustement ajustement = emg.find(TAjustement.class, id);
-            List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(id, emg);
+            List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(id);
             ajustementDetails.forEach(c -> {
                 emg.remove(c);
             });
@@ -1021,7 +898,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 emg.merge(d);
                 mouvementProduitService.saveMvtProduit(0, d.getIntPAF(), d.getLgRETOURFRSDETAIL(),
                         DateConverter.RETOUR_FOURNISSEUR, tf, params.getOperateur(), empl, d.getIntNUMBERRETURN(),
-                        sockInit, finalQty, emg, 0);
+                        sockInit, finalQty, 0);
 
                 suggestionService.makeSuggestionAuto(stock, tf);
                 String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME()
@@ -1068,14 +945,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public JSONObject deconditionner(Params params) throws JSONException {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
-    }
-
-    @Override
     public TFamilleStock updateStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em) {
-        TFamilleStock stock = findStock(tf.getLgFAMILLEID(), emplacementId, em);
+        TFamilleStock stock = findStock(tf.getLgFAMILLEID(), emplacementId);
         stock.setIntNUMBERAVAILABLE(stock.getIntNUMBERAVAILABLE() + qty);
         stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
         stock.setIntUG((stock.getIntUG() != null ? (stock.getIntUG() + ug) : ug));
@@ -1086,7 +957,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     @Override
     public int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em) {
-        TFamilleStock stock = findStock(tf.getLgFAMILLEID(), emplacementId, em);
+        TFamilleStock stock = findStock(tf.getLgFAMILLEID(), emplacementId);
         int stockInit = stock.getIntNUMBERAVAILABLE();
         stock.setIntNUMBERAVAILABLE(stock.getIntNUMBERAVAILABLE() + qty);
         stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
@@ -1284,13 +1155,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         Collection<TRetourdepotdetail> collection = new ArrayList<>(data.size());
         for (TRetourdepotdetail ODRetourdepot : data) {
             TFamille f = ODRetourdepot.getLgFAMILLEID();
-            TFamilleStock of = this.findStock(f.getLgFAMILLEID(), officine.getLgEMPLACEMENTID(), this.getEmg());
+            TFamilleStock of = this.findStock(f.getLgFAMILLEID(), officine.getLgEMPLACEMENTID());
             int ofStockInit = of.getIntNUMBERAVAILABLE();
             int ofFinale = ofStockInit + ODRetourdepot.getIntNUMBERRETURN();
             of.setIntNUMBERAVAILABLE(ofFinale);
             of.setIntNUMBER(ofFinale);
             this.getEmg().merge(of);
-            TFamilleStock depot = this.findStock(f.getLgFAMILLEID(), retourdepot.getLgEMPLACEMENTID(), this.getEmg());
+            TFamilleStock depot = this.findStock(f.getLgFAMILLEID(), retourdepot.getLgEMPLACEMENTID());
             int deStockInit = depot.getIntNUMBERAVAILABLE();
             int deFinale = deStockInit - ODRetourdepot.getIntNUMBERRETURN();
             depot.setIntNUMBERAVAILABLE(deFinale);
@@ -1310,11 +1181,11 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             collection.add(retourdepotdetail);
             mouvementProduitService.saveMvtProduit(0, f.getIntPAF(), retourdepotdetail.getLgRETOURDEPOTDETAILID(),
                     DateConverter.TMVTP_RETOUR_DEPOT, f, user, officine.getLgEMPLACEMENTID(),
-                    ODRetourdepot.getIntNUMBERRETURN(), ofStockInit, ofFinale, this.getEmg(), 0);
+                    ODRetourdepot.getIntNUMBERRETURN(), ofStockInit, ofFinale, 0);
 
             mouvementProduitService.saveMvtProduit(0, f.getIntPAF(), ODRetourdepot.getLgRETOURDEPOTDETAILID(),
                     DateConverter.RETOUR_FOURNISSEUR, f, user, retourdepot.getLgEMPLACEMENTID(),
-                    ODRetourdepot.getIntNUMBERRETURN(), deStockInit, deFinale, this.getEmg(), 0);
+                    ODRetourdepot.getIntNUMBERRETURN(), deStockInit, deFinale, 0);
 
         }
         retourdepot.setDblAMOUNT(total);
@@ -1384,8 +1255,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             emg.merge(stock);
             emg.persist(d);
             mouvementProduitService.saveMvtProduit(0, d.getIntPAF(), d.getLgRETOURFRSDETAIL(),
-                    DateConverter.RETOUR_FOURNISSEUR, tf, user, empl, d.getIntNUMBERRETURN(), sockInit, finalQty, emg,
-                    0);
+                    DateConverter.RETOUR_FOURNISSEUR, tf, user, empl, d.getIntNUMBERRETURN(), sockInit, finalQty, 0);
 
             suggestionService.makeSuggestionAuto(stock, tf);
             String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  "
@@ -1430,7 +1300,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             // emg.persist(retourFournisseurDetail);
             mouvementProduitService.saveMvtProduit(0, retourFournisseurDetail.getIntPAF(),
                     retourFournisseurDetail.getLgRETOURFRSDETAIL(), DateConverter.RETOUR_FOURNISSEUR, tf, user, empl,
-                    retourFournisseurDetail.getIntNUMBERRETURN(), sockInit, finalQty, emg, 0);
+                    retourFournisseurDetail.getIntNUMBERRETURN(), sockInit, finalQty, 0);
 
             suggestionService.makeSuggestionAuto(stock, tf);
             String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  "
@@ -1500,11 +1370,11 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             mouvementProduitService.saveMvtProduit(child.getLgDECONDITIONNEMENTID(),
                     DateConverter.DECONDTIONNEMENT_POSITIF, tFamilleChild, tu, ofamilleStockParent.getLgEMPLACEMENTID(),
                     (numberToDecondition * qtyDetail), stockInitDetail,
-                    stockInitDetail + (numberToDecondition * qtyDetail), this.getEmg(), 0);
+                    stockInitDetail + (numberToDecondition * qtyDetail), 0);
             mouvementProduitService.saveMvtProduit(parent.getLgDECONDITIONNEMENTID(),
                     DateConverter.DECONDTIONNEMENT_NEGATIF, tFamilleParent, tu,
                     ofamilleStockParent.getLgEMPLACEMENTID(), numberToDecondition, stockInit,
-                    stockInit - numberToDecondition, this.getEmg(), 0);
+                    stockInit - numberToDecondition, 0);
             String desc = "Déconditionnement du produit [ " + tFamilleParent.getIntCIP() + " ] de "
                     + tFamilleParent.getIntPRICE() + " stock initial " + stockInit + " quantité déconditionnée "
                     + numberToDecondition + " stock finale " + (stockInit - numberToDecondition)
