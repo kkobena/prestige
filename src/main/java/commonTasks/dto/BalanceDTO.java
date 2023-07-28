@@ -20,25 +20,65 @@ public class BalanceDTO implements Serializable {
     private String balanceId = UUID.randomUUID().toString();
     private String typeVente;
     private String reglement;
-    private long montantTTC = 0;
-    private long montantNet = 0;
-    private long montantRemise = 0;
-    private long pourcentage = 0;
-    private long panierMoyen = 0;
-    private long montantEsp = 0;
-    private long montantCheque = 0;
-    private long marge = 0;
-    private long montantTva = 0;
-    private long montantCB = 0;
-    private long montantTp = 0;
-    private long montantDiff = 0;
-    private long nbreVente = 0;
-    private long montantMobilePayment = 0;
+    private long montantTTC;
+    private long montantNet;
+    private long montantRemise;
+    private long pourcentage;
+    private long panierMoyen;
+    private long montantEsp;
+    private long montantCheque;
+    private long marge;
+    private long montantTva;
+    private long montantCB;
+    private long montantTp;
+    private long montantDiff;
+    private long nbreVente;
+    private long montantMobilePayment;
     private TypeTransaction typeTransaction;
-    private long montantVirement = 0;
+    private long montantVirement;
     private long montantAchat;
-    private long montantPaye = 0;
-    private long montantRegle = 0;
+    private long montantPaye;
+    private long montantRegle;
+    private long montantOrange;
+    private long montantMoov;
+    private long montantMtn;
+    private long montantWave;
+
+    public long getMontantOrange() {
+        return montantOrange;
+    }
+
+    public BalanceDTO setMontantOrange(long montantOrange) {
+        this.montantOrange = montantOrange;
+        return this;
+    }
+
+    public long getMontantMoov() {
+        return montantMoov;
+    }
+
+    public BalanceDTO setMontantMoov(long montantMoov) {
+        this.montantMoov = montantMoov;
+        return this;
+    }
+
+    public long getMontantMtn() {
+        return montantMtn;
+    }
+
+    public BalanceDTO setMontantMtn(long montantMtn) {
+        this.montantMtn = montantMtn;
+        return this;
+    }
+
+    public long getMontantWave() {
+        return montantWave;
+    }
+
+    public BalanceDTO setMontantWave(long montantWave) {
+        this.montantWave = montantWave;
+        return this;
+    }
 
     public String getBalanceId() {
         return balanceId;
