@@ -40,15 +40,15 @@ public interface MouvementProduitService {
             Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked, int ug);
 
     void saveMvtProduit2(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID,
-            TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg,
-            Integer valeurTva, boolean checked, int ug);
+            TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, Integer valeurTva,
+            boolean checked, int ug);
 
     void saveMvtProduit(String pkey, String typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement,
-            Integer qteMvt, Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva);
+            Integer qteMvt, Integer qteDebut, Integer qteFinale, Integer valeurTva);
 
     void saveMvtProduit(Integer prixUn, Integer prixAchat, String pkey, String typemvtproduit, TFamille famille,
             TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale,
-            EntityManager emg, Integer valeurTva);
+            Integer valeurTva);
 
     JSONObject creerAjustement(Params params) throws JSONException;
 
@@ -56,11 +56,9 @@ public interface MouvementProduitService {
 
     JSONObject modifierProduitAjustement(Params params) throws JSONException;
 
-    TFamilleStock findStock(String OTFamille, TEmplacement emplacement, EntityManager emg);
+    TFamilleStock findStock(String OTFamille, TEmplacement emplacement);
 
     JSONObject cloreAjustement(Params params) throws JSONException;
-
-    JSONObject findOneAjustement(String idAjustement) throws JSONException;
 
     JSONObject removeAjustementDetail(String id) throws JSONException;
 
@@ -70,11 +68,7 @@ public interface MouvementProduitService {
 
     JSONObject ajsutementsDetails(SalesStatsParams params, String idAjustement) throws JSONException;
 
-    void updatefamillenbvente(TFamille famille, Integer qty, boolean updatable, EntityManager emg);
-
-    void updateVenteStock(String idVente);
-
-    void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg);
+    void updatefamillenbvente(TFamille famille, Integer qty, boolean updatable);
 
     void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg,
             TEmplacement depot) throws Exception;
@@ -82,7 +76,7 @@ public interface MouvementProduitService {
     void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement, EntityManager emg)
             throws Exception;
 
-    Typemvtproduit getTypemvtproduitByID(String id, EntityManager emg);
+    Typemvtproduit getTypemvtproduitByID(String id);
 
     void updateVenteStock(TUser user, List<TPreenregistrementDetail> list) throws Exception;
 
