@@ -2237,7 +2237,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     componentsToHidePresales: function () {
-        var me = this, typeRegle = me.getVnotypeReglement(), encaissement = me.getEncaissement();
+        const me = this, typeRegle = me.getVnotypeReglement(), encaissement = me.getEncaissement();
         typeRegle.hide();
         encaissement.hide();
 
