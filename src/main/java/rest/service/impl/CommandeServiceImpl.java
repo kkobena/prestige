@@ -388,7 +388,7 @@ public class CommandeServiceImpl implements CommandeService {
         }
 
         mouvementProduitService.saveMvtProduit(prixU, prixA, key, DateConverter.ENTREE_EN_STOCK, OTFamille, u,
-                u.getLgEMPLACEMENTID(), qty, initStock, finalQty, em, 0);
+                u.getLgEMPLACEMENTID(), qty, initStock, finalQty,  0);
 
     }
 
