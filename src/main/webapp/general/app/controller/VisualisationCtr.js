@@ -69,25 +69,7 @@ Ext.define('testextjs.controller.VisualisationCtr', {
 //                doMetachange: this.doMetachange,
                 viewready: this.doInitStore
             }
-//            'visualisercaissemanager visualisationGrid #caisseStore': {
-//                metachange: this.doMetachange
-//                
-//            }
 
-
-            /*,
-             'visualisercaissemanager userform #saveBtn': {
-             click: this.doSaveUser
-             },
-             'visualisercaissemanager userform #deleteBtn': {
-             click: this.doDeleteUser
-             },
-             'visualisercaissemanager userform': {
-             afterrender: this.doAddUser
-             },
-             'userlist header tool[type="refresh"]': {
-             click: this.doRefreshUserList
-             }*/
         });
     },
 
