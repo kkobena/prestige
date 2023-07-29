@@ -286,12 +286,6 @@ public class ErpServiceImpl implements ErpService {
                 .setParameter(1, idClient).getResultList();
     }
 
-    private long clientsCount() {
-        return getEntityManager().createQuery("SELECT COUNT(o)  FROM TClient o WHERE o.strSTATUT='enable'", Long.class)
-
-                .getSingleResult();
-    }
-
     private List<TClient> clients(int start, int limit) {
         return getEntityManager()
                 .createQuery("SELECT o  FROM TClient o WHERE o.strSTATUT='enable'  ORDER BY o.strCODEINTERNE ASC",

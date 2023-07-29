@@ -375,7 +375,7 @@ public class GestionPerimesServiceImpl implements GestionPerimesService {
                     + commonparameter.statut_pending + "'";
 
             Object object = this.getEntityManager().createNativeQuery(qry).getSingleResult();
-            count = Long.valueOf(object + "");
+            count = Long.parseLong(object + "");
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "fetchPerimesSaisiEnCoursCount {0}", e);

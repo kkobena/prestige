@@ -8,7 +8,7 @@ import commonTasks.dto.TableauBaordSummary;
 import commonTasks.dto.TvaDTO;
 import dal.TParameters;
 import dal.enumeration.TypeTransaction;
-import static dal.enumeration.TypeTransaction.VENTE_COMPTANT;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -32,6 +32,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
@@ -40,11 +41,11 @@ import org.json.JSONObject;
 import rest.service.BalanceService;
 import rest.service.dto.BalanceParamsDTO;
 import rest.service.dto.BalanceVenteItemDTO;
+import util.Constant;
 import util.DateConverter;
 import util.FunctionUtils;
 
 /**
- *
  * @author koben
  */
 @Stateless
@@ -62,6 +63,17 @@ public class BalanceServiceImpl implements BalanceService {
             + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove "
             + " FROM t_preenregistrement_detail d  GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN "
             + " ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement} GROUP BY typeVente,typeReglement %s %s";
+    private static final String RAPPORT_SQL_QUERY = "SELECT m.`typeMvtCaisseId` AS typeMvtCaisse, m.`typeTransaction`  AS typeVente, m.`typeReglementId` AS typeReglement ,SUM(m.montant) AS montantTTC,"
+            + "SUM(m.`montantNet`) AS montantNet,SUM(m.`montantCredit`) AS montantCredit,SUM(m.`montantRemise`) AS montantRemise, SUM(CASE WHEN m.flag_id IS NOT NULL THEN m.`montantAcc` ELSE 0 END) AS flagedAmount,"
+            + " SUM(m.`montantRegle`) AS montantRegle, SUM(m.`montantPaye`) AS montantPaye,SUM(m.`montantRestant`) AS montantDiffere,SUM(sqlQ.montantTTCDetatil) AS montantTTCDetatil,SUM(sqlQ.montantTTCDetatilReal) AS montantTTCDetatilReal,SUM(sqlQ.montantAChat) AS montantAChat, "
+            + " SUM(sqlQ.montantUg) AS montantUg,SUM(sqlQ.montantTTCDetatilToRemove) AS montantTTCDetatilToRemove,SUM(sqlQ.montantTva) AS montantTva,SUM(sqlQ.montantAchatUg) AS montantAchatUg,SUM(sqlQ.montantRemiseDetail) AS montantRemiseDetail, SUM(sqlQ.montantTvaUg) AS montantTvaUg,"
+            + " SUM(CASE WHEN p.`int_PRICE` <0 OR p.`b_IS_CANCEL`=1 THEN 0 ELSE 1 END) AS totalVente,SUM(m.`avoidAmount`) AS avoidAmount,SUM(m.`montantAcc`) AS montantAcc "
+            + " FROM  mvttransaction m,t_preenregistrement p,(SELECT d.`lg_PREENREGISTREMENT_ID` AS idVente,"
+            + " SUM(d.`int_PRICE`) AS montantTTCDetatilReal,SUM(d.`int_QUANTITY`*d.`prixAchat`) AS montantAChat,SUM(d.`int_UG`*d.`int_PRICE_UNITAIR`) AS montantUg,SUM(d.`montantTva`) AS montantTva "
+            + ",SUM(d.`int_UG`*d.`prixAchat`) AS montantAchatUg,SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail,SUM(d.montanttvaug) AS montantTvaUg , SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,"
+            + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove "
+            + " FROM t_preenregistrement_detail d  GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN "
+            + " ?3 AND ?4 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement} GROUP BY typeVente,typeReglement ,typeMvtCaisse";
 
     private static final String REMISE_SQL_QUERY = "SELECT %s p.`lg_TYPE_VENTE_ID` AS typeVente,SUM(d.`int_PRICE_REMISE`) AS montantRemise FROM  t_preenregistrement_detail d,t_preenregistrement p,t_user u,t_famille f WHERE   d.`lg_PREENREGISTREMENT_ID`=p.`lg_PREENREGISTREMENT_ID`  AND d.`lg_FAMILLE_ID`=f.`lg_FAMILLE_ID` AND f.`bool_ACCOUNT`=?1 "
             + "  AND p.`lg_USER_ID`=u.`lg_USER_ID` AND u.`lg_EMPLACEMENT_ID`=?2  AND p.`str_STATUT`='is_Closed' AND %s  AND p.`lg_TYPE_VENTE_ID` <> ?3 AND DATE(p.`dt_UPDATED`) BETWEEN ?4 AND ?5 AND d.`int_PRICE_REMISE` <>0 GROUP BY typeVente %s";
@@ -221,7 +233,10 @@ public class BalanceServiceImpl implements BalanceService {
         long montantRegle = 0;
         long montantTTCReel = 0;
         long montantNetReel = 0;
-
+        long montantOrange = 0;
+        long montantMoov = 0;
+        long montantMtn = 0;
+        long montantWave = 0;
         Map<String, List<BalanceVenteItemDTO>> mapByTypeReglemement = venteData.stream()
                 .collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeReglement));
         for (Map.Entry<String, List<BalanceVenteItemDTO>> entry : mapByTypeReglemement.entrySet()) {
@@ -262,11 +277,20 @@ public class BalanceServiceImpl implements BalanceService {
                     montantVirement -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
                     break;
                 case DateConverter.MODE_MOOV:
+                    montantMoov += montantRegle1;
+                    montantMoov -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
+                    break;
                 case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    montantOrange += montantRegle1;
+                    montantOrange -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
+                    break;
                 case DateConverter.MODE_MTN:
+                    montantMtn += montantRegle1;
+                    montantMtn -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
+                    break;
                 case DateConverter.MODE_WAVE:
-                    montantMobilePayment += montantRegle1;
-                    montantMobilePayment -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
+                    montantWave += montantRegle1;
+                    montantWave -= getFlagedAmount(showAllAmount, balanceVenteItem.getFlagedAmount());
                     break;
                 default:
                     break;
@@ -301,6 +325,10 @@ public class BalanceServiceImpl implements BalanceService {
         balance.setMontantTva(montantTva);
         balance.setMontantTp(montantCredit);
         balance.setMontantRegle(montantRegle);
+        balance.setMontantMoov(montantMoov);
+        balance.setMontantWave(montantWave);
+        balance.setMontantOrange(montantOrange);
+        balance.setMontantMtn(montantMtn);
         return balance;
     }
 
@@ -316,7 +344,7 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     private List<Tuple> fetchPreenregistrements(BalanceParamsDTO balanceParams, String subQueryMvtDate,
-            String subQueryGroupBy, String typeMvtCaisse, String typeMvtCaisseGroupBy) { // AND p.`int_PRICE`>?0
+            String subQueryGroupBy, String typeMvtCaisse, String typeMvtCaisseGroupBy) {
 
         String sql = String.format(BALANCE_SQL_QUERY, subQueryMvtDate, typeMvtCaisse, subQueryGroupBy,
                 typeMvtCaisseGroupBy);
@@ -325,6 +353,23 @@ public class BalanceServiceImpl implements BalanceService {
         LOG.log(Level.INFO, "sql--- balance vente {0}", sql);
         try {
             Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, DateConverter.DEPOT_EXTENSION)
+                    .setParameter(2, balanceParams.getEmplacementId())
+                    .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
+                    .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
+            return query.getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new ArrayList<>();
+        }
+    }
+
+    private List<Tuple> fetchRecapPreenregistrements(BalanceParamsDTO balanceParams) {
+
+        String sql = replacePlaceHolder(RAPPORT_SQL_QUERY, balanceParams);
+        LOG.log(Level.INFO, "sql--- RAPPORT_SQL_QUERY vente {0}", sql);
+        try {
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
                     .setParameter(2, balanceParams.getEmplacementId())
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
@@ -389,24 +434,6 @@ public class BalanceServiceImpl implements BalanceService {
         o.setLocalOperation(mvDate);
         o.setDateOperation(mvDate.format(DateTimeFormatter.ofPattern(TVA_DATE_PATERN)));
         return o;
-    }
-
-    private List<BalanceVenteItemDTO> fetchRemises(BalanceParamsDTO balanceParams, String subQueryMvtDate,
-            String subQuery, String subQueryGroupBy, boolean remisePara) { // AND p.`int_PRICE`>?0
-        String sql = String.format(REMISE_SQL_QUERY, subQueryMvtDate, subQuery, subQueryGroupBy);
-        LOG.log(Level.INFO, "sql--- remiseSqlQuery  {0}", sql);
-        try {
-            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, remisePara)
-                    .setParameter(2, balanceParams.getEmplacementId()).setParameter(3, DateConverter.DEPOT_EXTENSION)
-                    .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtStart()))
-                    .setParameter(5, java.sql.Date.valueOf(balanceParams.getDtEnd()));
-            List<Tuple> list = query.getResultList();
-            return list.stream().map(this::buildRemiseFromTuple).collect(Collectors.toList());
-
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return new ArrayList<>();
-        }
     }
 
     private List<BalanceVenteItemDTO> othersTypeMvts(BalanceParamsDTO balanceParams) {
@@ -1064,8 +1091,8 @@ public class BalanceServiceImpl implements BalanceService {
         List<BalanceDTO> balances = new ArrayList<>();
         List<BalanceVenteItemDTO> dataVentes;
 
-        dataVentes = fetchPreenregistrements(balanceParams, "", "", "m.`typeMvtCaisseId` AS typeMvtCaisse,",
-                ",typeMvtCaisse").stream().map(this::buildPdfDataFromTuple).collect(Collectors.toList());
+        dataVentes = fetchRecapPreenregistrements(balanceParams).stream().map(this::buildPdfDataFromTuple)
+                .collect(Collectors.toList());
 
         Map<TypeTransaction, List<BalanceVenteItemDTO>> groupByTypeVente = dataVentes.stream()
                 .collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeTransaction));

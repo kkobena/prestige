@@ -44,16 +44,6 @@ public class dataManager {
      * }
      */
     public void initEntityManager() {
-        // Map<String,Object> parameters = new HashMap<>();
-        // parameters.put("javax.persistence.jdbc.user", jdom.ars_database_user_name);
-        // parameters.put("javax.persistence.jdbc.password", jdom.ars_database_user_password);
-        // parameters.put("javax.persistence.jdbc.url", "jdbc:mysql://" + jdom.ars_database_host + ":" +
-        // jdom.ars_database_port + "/" + jdom.ars_database_name);
-        //// parameters.put("javax.persistence.jdbc.url", "jdbc:mysql://" + jdom.ars_database_host + ":" +
-        // jdom.ars_database_port + "/" +
-        // jdom.ars_database_name+"?zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=UTC");
-        // parameters.put("javax.persistence.jdbc.driver", "com.mysql.jdbc.Driver");
-        //
 
         setEmf(Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME));
         setEm(getEmf().createEntityManager());
