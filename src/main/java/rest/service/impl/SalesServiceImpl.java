@@ -2551,10 +2551,9 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public MontantAPaye calculVoNet(TPreenregistrement OTPreenregistrement, List<TiersPayantParams> tierspayants,
-            EntityManager emg) {
+    public MontantAPaye calculVoNet(TPreenregistrement op, List<TiersPayantParams> tierspayants, EntityManager emg) {
         try {
-            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement, emg);
+            List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(op, emg);
             int remiseCarnet = 0;
             int montantvente;
             int totalTp = 0;
@@ -2563,15 +2562,15 @@ public class SalesServiceImpl implements SalesService {
             int diffMontantTotalAndCmuAmount = 0;
             int cmuAmount = 0;
             boolean isCmu = tierspayants.stream().allMatch(TiersPayantParams::isCmu);
-
+            TTypeVente tTypeVente = op.getLgTYPEVENTEID();
             MontantAPaye montantAPaye;
             List<TiersPayantParams> resultat = new ArrayList<>();
-            if (OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
+            if (tTypeVente.getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
                 totalTaux = 100;
-                TRemise remise = OTPreenregistrement.getRemise();
-                remise = remise != null ? remise : OTPreenregistrement.getClient().getRemise();
+                TRemise remise = op.getRemise();
+                remise = remise != null ? remise : op.getClient().getRemise();
                 if (remise != null) {
-                    montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
+                    montantAPaye = getRemiseVno(op, remise, op.getIntPRICE());
                     montantvente = montantAPaye.getMontant();
                     remiseCarnet = montantAPaye.getRemise();
                 } else {
@@ -2581,7 +2580,7 @@ public class SalesServiceImpl implements SalesService {
                 }
 
                 TiersPayantParams tp = new TiersPayantParams();
-                Integer tpnet = montantvente - remiseCarnet;
+                int tpnet = montantvente - remiseCarnet;
                 totalTp += tpnet;
                 tp.setCompteTp(tierspayants.get(0).getCompteTp());
                 tp.setNumBon(tierspayants.get(0).getNumBon());
@@ -2590,28 +2589,25 @@ public class SalesServiceImpl implements SalesService {
                 tp.setTaux(100);
                 resultat.add(tp);
             } else {
-                TRemise remise = OTPreenregistrement.getRemise();
+                TRemise remise = op.getRemise();
 
                 if (remise != null) {
-                    montantAPaye = getRemiseVno(OTPreenregistrement, remise, OTPreenregistrement.getIntPRICE());
-
-                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
-                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
-                    montantVariable = montantvente;
+                    montantAPaye = getRemiseVno(op, remise, op.getIntPRICE());
                     remiseCarnet = montantAPaye.getRemise();
 
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
-                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
-                    montantVariable = montantvente;
+
                 }
+                cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
+                montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
+                montantVariable = montantvente;
                 diffMontantTotalAndCmuAmount = montantAPaye.getMontant() - cmuAmount;
                 for (TiersPayantParams tierspayant : tierspayants) {
                     TiersPayantParams tp = new TiersPayantParams();
-                    Integer taux = tierspayant.getTaux();
-                    Double montantTp = montantvente * (Double.valueOf(taux) / 100);
-                    Integer tpnet = (int) Math.ceil(montantTp);
+                    int taux = tierspayant.getTaux();
+                    double montantTp = montantvente * (Double.valueOf(taux) / 100);
+                    int tpnet = (int) Math.ceil(montantTp);
                     int thatTaux = 0;
                     if (montantVariable > tpnet) {
                         montantVariable -= tpnet;
@@ -2633,9 +2629,9 @@ public class SalesServiceImpl implements SalesService {
                 }
 
             }
-            Integer netCustomer = (montantvente - totalTp) - remiseCarnet
+            int netCustomer = (montantvente - totalTp) - remiseCarnet
                     + (diffMontantTotalAndCmuAmount != montantvente ? diffMontantTotalAndCmuAmount : 0);
-            if (totalTaux >= 100) {
+            if (totalTaux >= 100 || Parameter.VENTE_AVEC_CARNET.equals(tTypeVente.getLgTYPEVENTEID())) {
                 netCustomer = 0;
             }
             int finalSaleAmount = diffMontantTotalAndCmuAmount != montantvente
@@ -2651,8 +2647,10 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    private MontantAPaye getRemiseVno(TPreenregistrement OTPreenregistrement, TRemise OTRemise, Integer para) {
-        Integer int_TOTAL_REMISE, int_REMISE_PARA = 0, montantNet;
+    private MontantAPaye getRemiseVno(TPreenregistrement OTPreenregistrement, TRemise oTRemise, Integer para) {
+        int intTOTALREMISE;
+        int intREMISEPARA = 0;
+        int montantNet;
         LongAdder totalRemise = new LongAdder();
         LongAdder totalRemisePara = new LongAdder();
         LongAdder totalAmount = new LongAdder();
@@ -2664,7 +2662,7 @@ public class SalesServiceImpl implements SalesService {
         lstTPreenregistrementDetail.forEach(x -> {
             totalAmount.add(x.getIntPRICE());
             if (Objects.nonNull(x.getCmuPrice())) {
-                montantCMU.add(x.getCmuPrice());
+                montantCMU.add(x.getCmuPrice() * x.getIntQUANTITY());
             }
             montantTva.add(x.getMontantTva());
             TFamille famille = x.getLgFAMILLEID();
@@ -2672,7 +2670,7 @@ public class SalesServiceImpl implements SalesService {
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
                 TGrilleRemise grilleRemise = grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(), famille,
-                        OTRemise.getLgREMISEID());
+                        oTRemise.getLgREMISEID());
                 if (grilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * grilleRemise.getDblTAUX()) / 100);
                     if (!x.getBoolACCOUNT()) {
@@ -2697,19 +2695,19 @@ public class SalesServiceImpl implements SalesService {
 
         });
         Integer montantTotal = totalAmount.intValue();
-        int_TOTAL_REMISE = totalRemise.intValue();
+        intTOTALREMISE = totalRemise.intValue();
         int tva = montantTva.intValue();
-        montantNet = montantTotal - int_TOTAL_REMISE;
+        montantNet = montantTotal - intTOTALREMISE;
         OTPreenregistrement.setIntPRICE(montantTotal);
         OTPreenregistrement.setIntACCOUNT(montantAccount.intValue());
-        OTPreenregistrement.setIntPRICEREMISE(int_TOTAL_REMISE);
-        OTPreenregistrement.setIntREMISEPARA(int_REMISE_PARA);
+        OTPreenregistrement.setIntPRICEREMISE(intTOTALREMISE);
+        OTPreenregistrement.setIntREMISEPARA(intREMISEPARA);
         OTPreenregistrement.setMontantTva(tva);
-        if (int_TOTAL_REMISE > 0 && OTRemise == null) {
-            OTPreenregistrement.setRemise(OTRemise);
+        if (intTOTALREMISE > 0 && oTRemise == null) {
+            OTPreenregistrement.setRemise(oTRemise);
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
-                DateConverter.arrondiModuloOfNumber(int_TOTAL_REMISE, 5), marge.intValue(), tva)
+                DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
                         .cmuAmount(montantAccount.intValue());
     }
 
@@ -3291,11 +3289,11 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private List<TPreenregistrementCompteClientTiersPayent> getTPreenregistrementCompteClientTiersPayent(
-            String lg_PREENREGISTREMENT_ID) {
+            String idVente) {
         try {
             TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEm().createQuery(
                     "SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1 ORDER BY t.lgCOMPTECLIENTTIERSPAYANTID.intPRIORITY ASC ",
-                    TPreenregistrementCompteClientTiersPayent.class).setParameter(1, lg_PREENREGISTREMENT_ID);
+                    TPreenregistrementCompteClientTiersPayent.class).setParameter(1, idVente);
             return q.getResultList();
 
         } catch (Exception e) {
@@ -3335,22 +3333,22 @@ public class SalesServiceImpl implements SalesService {
     @Override
     public JSONObject mettreAjourDonneesClientVenteExistante(String venteId, SalesParams params) throws JSONException {
         try {
-            TPreenregistrement OTPreenregistrement = getEm().find(TPreenregistrement.class, venteId);
+            TPreenregistrement op = getEm().find(TPreenregistrement.class, venteId);
             findClientById(params.getClientId()).ifPresent(c -> {
-                OTPreenregistrement.setStrFIRSTNAMECUSTOMER(c.getStrFIRSTNAME());
-                OTPreenregistrement.setStrLASTNAMECUSTOMER(c.getStrLASTNAME());
-                OTPreenregistrement.setStrPHONECUSTOME(c.getStrADRESSE());
-                OTPreenregistrement.setClient(c);
+                op.setStrFIRSTNAMECUSTOMER(c.getStrFIRSTNAME());
+                op.setStrLASTNAMECUSTOMER(c.getStrLASTNAME());
+                op.setStrPHONECUSTOME(c.getStrADRESSE());
+                op.setClient(c);
             });
-            if (!OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
+            if (!op.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
                 findAyantDroit(params.getAyantDroitId(), getEm()).ifPresent(a -> {
-                    OTPreenregistrement.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
-                    OTPreenregistrement.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
-                    OTPreenregistrement.setAyantDroit(a);
+                    op.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
+                    op.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
+                    op.setAyantDroit(a);
                 });
             }
-            createPreenregistrementTierspayant(params.getTierspayants(), OTPreenregistrement, getEm());
-            getEm().merge(OTPreenregistrement);
+            createPreenregistrementTierspayant(params.getTierspayants(), op, getEm());
+            getEm().merge(op);
             return new JSONObject().put("success", true);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -3503,7 +3501,7 @@ public class SalesServiceImpl implements SalesService {
         List<TPreenregistrementCompteClientTiersPayent> clientTiersPayents = findClientTiersPayents(
                 oldPreenregistrement, getEm());
         clientTiersPayents.forEach((a) -> {
-            TCompteClientTiersPayant OTCompteClientTiersPayant = a.getLgCOMPTECLIENTTIERSPAYANTID();
+            TCompteClientTiersPayant oTCompteClientTiersPayant = a.getLgCOMPTECLIENTTIERSPAYANTID();
             TPreenregistrementCompteClientTiersPayent newCmp = new TPreenregistrementCompteClientTiersPayent();
             newCmp.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
             newCmp.setLgPREENREGISTREMENTID(preenregistrement);
@@ -3512,7 +3510,7 @@ public class SalesServiceImpl implements SalesService {
             newCmp.setStrSTATUT(DateConverter.STATUT_PROCESS);
             newCmp.setDtCREATED(a.getDtCREATED());
             newCmp.setDtUPDATED(a.getDtUPDATED());
-            newCmp.setLgCOMPTECLIENTTIERSPAYANTID(OTCompteClientTiersPayant);
+            newCmp.setLgCOMPTECLIENTTIERSPAYANTID(oTCompteClientTiersPayant);
             newCmp.setStrREFBON(a.getStrREFBON());
             newCmp.setDblQUOTACONSOVENTE(a.getDblQUOTACONSOVENTE());
             newCmp.setIntPERCENT(a.getIntPERCENT());
@@ -3520,21 +3518,21 @@ public class SalesServiceImpl implements SalesService {
             newCmp.setStrSTATUTFACTURE(a.getStrSTATUTFACTURE());
             newCmp.setStrLASTTRANSACTION(a.getStrLASTTRANSACTION());
             getEm().persist(newCmp);
-            TCompteClient OTCompteClient = OTCompteClientTiersPayant.getLgCOMPTECLIENTID();
-            if (OTCompteClient != null && OTCompteClientTiersPayant.getDblPLAFOND() != null
-                    && OTCompteClientTiersPayant.getDblPLAFOND() != 0) {
-                OTCompteClientTiersPayant
-                        .setDblQUOTACONSOMENSUELLE((OTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() != null
-                                ? OTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() : 0) + newCmp.getIntPRICE());
-                OTCompteClientTiersPayant.setDtUPDATED(new Date());
-                getEm().merge(OTCompteClientTiersPayant);
+            TCompteClient oTCompteClient = oTCompteClientTiersPayant.getLgCOMPTECLIENTID();
+            if (oTCompteClient != null && oTCompteClientTiersPayant.getDblPLAFOND() != null
+                    && oTCompteClientTiersPayant.getDblPLAFOND() != 0) {
+                oTCompteClientTiersPayant
+                        .setDblQUOTACONSOMENSUELLE((oTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() != null
+                                ? oTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() : 0) + newCmp.getIntPRICE());
+                oTCompteClientTiersPayant.setDtUPDATED(new Date());
+                getEm().merge(oTCompteClientTiersPayant);
             }
-            if (OTCompteClient != null && OTCompteClient.getDblPLAFOND() != null
-                    && OTCompteClient.getDblPLAFOND() != 0) {
-                OTCompteClient.setDblQUOTACONSOMENSUELLE((OTCompteClient.getDblQUOTACONSOMENSUELLE() != null
-                        ? OTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newCmp.getIntPRICE());
-                OTCompteClient.setDtUPDATED(new Date());
-                getEm().merge(OTCompteClient);
+            if (oTCompteClient != null && oTCompteClient.getDblPLAFOND() != null
+                    && oTCompteClient.getDblPLAFOND() != 0) {
+                oTCompteClient.setDblQUOTACONSOMENSUELLE((oTCompteClient.getDblQUOTACONSOMENSUELLE() != null
+                        ? oTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newCmp.getIntPRICE());
+                oTCompteClient.setDtUPDATED(new Date());
+                getEm().merge(oTCompteClient);
             }
         });
 
@@ -3631,28 +3629,23 @@ public class SalesServiceImpl implements SalesService {
         TCompteClientTiersPayant tc = this.getEm().find(TCompteClientTiersPayant.class, compteTp);
         TTiersPayant tiersPayant2 = tc.getLgTIERSPAYANTID();
         String tierspayantName = tiersPayant2.getStrFULLNAME();
-        Integer plafondClient = (tc.getDblPLAFOND() == null || tc.getDblPLAFOND() <= 0 ? null
-                : tc.getDblPLAFOND().intValue());
-        Integer encoursClient = (tc.getDbPLAFONDENCOURS() == null || tc.getDbPLAFONDENCOURS() <= 0 ? Integer.MAX_VALUE
+        int plafondClient = (tc.getDblPLAFOND() == null || tc.getDblPLAFOND() <= 0 ? 0 : tc.getDblPLAFOND().intValue());
+        int encoursClient = (tc.getDbPLAFONDENCOURS() == null || tc.getDbPLAFONDENCOURS() <= 0 ? 0
                 : tc.getDbPLAFONDENCOURS());
-        Integer plafondTierPayant = (tiersPayant2.getDblPLAFONDCREDIT() == null
-                || tiersPayant2.getDblPLAFONDCREDIT() <= 0 ? null : tiersPayant2.getDblPLAFONDCREDIT().intValue());
-        Integer consoMensuelleClient = (tc.getDbCONSOMMATIONMENSUELLE() == null || tc.getDbCONSOMMATIONMENSUELLE() < 0
-                ? 0 : tc.getDbCONSOMMATIONMENSUELLE());
-        Integer consoMensuelleTierPayant = (tiersPayant2.getDbCONSOMMATIONMENSUELLE() == null
+        int plafondTierPayant = (tiersPayant2.getDblPLAFONDCREDIT() == null || tiersPayant2.getDblPLAFONDCREDIT() <= 0
+                ? 0 : tiersPayant2.getDblPLAFONDCREDIT().intValue());
+        int consoMensuelleClient = (tc.getDbCONSOMMATIONMENSUELLE() == null || tc.getDbCONSOMMATIONMENSUELLE() < 0 ? 0
+                : tc.getDbCONSOMMATIONMENSUELLE());
+        int consoMensuelleTierPayant = (tiersPayant2.getDbCONSOMMATIONMENSUELLE() == null
                 || tiersPayant2.getDbCONSOMMATIONMENSUELLE() < 0 ? 0 : tiersPayant2.getDbCONSOMMATIONMENSUELLE());
         JSONObject json = chechTiersPayantConsumption(plafondTierPayant, consoMensuelleTierPayant, montantToBePaid,
                 tierspayantName);
-        System.err.println("chechTiersPayantConsumption 11 ::: " + json);
-        System.err.println("plafond " + plafondClient);
-        System.err.println("encoursClient " + encoursClient);
-        System.err.println("plafondTierPayant " + plafondTierPayant);
         String msg = json.getString("msg");
         boolean hasRestructuring = json.getBoolean("hasRestructuring");
         montantToBePaid = json.getInt("montantToBePaid");
         json = chechCustomerConsumption(plafondClient, encoursClient, consoMensuelleClient, montantToBePaid,
                 tierspayantName);
-        System.err.println("chechTiersPayantConsumption 77777  ::: " + json);
+
         montantToBePaid = json.getInt("montantToBePaid");
         if (json.getBoolean("hasRestructuring")) {
             msg = json.getString("msg");
@@ -3662,46 +3655,49 @@ public class SalesServiceImpl implements SalesService {
                 montantToBePaid);
     }
 
-    private JSONObject chechCustomerConsumption(Integer plafondClient, Integer encoursClient,
-            Integer consoMensuelleClient, Integer montantToBePaid, String tierspayantName) {
+    private JSONObject chechCustomerConsumption(int plafondClient, int encoursClient, int consoMensuelleClient,
+            int montantToBePaid, String tierspayantName) {
         boolean hasRestructuring = false;
         String msg = "";
-        if (Objects.isNull(plafondClient)) {
-            return new JSONObject().put("msg", msg).put("hasRestructuring", hasRestructuring).put("montantToBePaid",
-                    montantToBePaid);
-        }
-        if ((montantToBePaid > plafondClient) || (encoursClient < consoMensuelleClient + montantToBePaid)) {
-            hasRestructuring = true;
-            if (encoursClient < consoMensuelleClient + montantToBePaid) {
-                montantToBePaid = encoursClient - consoMensuelleClient;
-                msg = "Le tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                        + tierspayantName
-                        + "</span> ne peut prendre en compte <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                        + DateConverter.amountFormat(montantToBePaid)
-                        + " </span><br/> . Votre plafond est atteint:[ <span style='font-weight:900;color:blue;'> "
-                        + DateConverter.amountFormat(encoursClient) + " </span>]<br/> ";
-            }
-            if (montantToBePaid > plafondClient) {
-                montantToBePaid = plafondClient;
-                msg = "Le tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                        + tierspayantName
-                        + "</span> ne peut prendre en compte <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                        + DateConverter.amountFormat(montantToBePaid)
-                        + " </span><br/> .Votre plafond vente est atteint: [ <span style='font-weight:900;color:blue;'> "
-                        + DateConverter.amountFormat(plafondClient) + " </span>]<br/> ";
-            }
+        boolean isPlafondClient = plafondClient != 0;
+        boolean isEncoursClient = encoursClient != 0;
 
+        boolean isMontantToBePaidLess = isPlafondClient && (montantToBePaid > plafondClient);
+        boolean isMontantToBePaidLessEncour = isEncoursClient
+                && (encoursClient < (consoMensuelleClient + montantToBePaid));
+
+        if (isMontantToBePaidLessEncour) {
+            hasRestructuring = true;
+            montantToBePaid = encoursClient - consoMensuelleClient;
+            msg = "Le tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'>"
+                    + tierspayantName
+                    + "</span> ne peut prendre en compte <span style='font-weight:900;color:blue;text-decoration: underline;'>"
+                    + DateConverter.amountFormat(montantToBePaid)
+                    + " </span><br/> . Votre plafond est atteint:[ <span style='font-weight:900;color:blue;'> "
+                    + DateConverter.amountFormat(encoursClient) + " </span>]<br/> ";
+
+        }
+        if (isMontantToBePaidLess) {
+            hasRestructuring = true;
+            montantToBePaid = plafondClient;
+            msg = "Le tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'>"
+                    + tierspayantName
+                    + "</span> ne peut prendre en compte <span style='font-weight:900;color:blue;text-decoration: underline;'>"
+                    + DateConverter.amountFormat(montantToBePaid)
+                    + " </span><br/> .Votre plafond vente est atteint: [ <span style='font-weight:900;color:blue;'> "
+                    + DateConverter.amountFormat(plafondClient) + " </span>]<br/> ";
         }
 
         return new JSONObject().put("msg", msg).put("hasRestructuring", hasRestructuring).put("montantToBePaid",
                 montantToBePaid);
     }
 
-    private JSONObject chechTiersPayantConsumption(Integer plafondTierPayant, Integer consoMensuelleTierPayant,
-            Integer montantToBePaid, String tierspayantName) {
+    private JSONObject chechTiersPayantConsumption(int plafondTierPayant, int consoMensuelleTierPayant,
+            int montantToBePaid, String tierspayantName) {
         boolean hasRestructuring = false;
         String msg = "";
-        if (Objects.isNull(plafondTierPayant)) {
+        boolean isPlafondTierPayant = plafondTierPayant != 0;
+        if (!isPlafondTierPayant) {
             return new JSONObject().put("msg", msg).put("hasRestructuring", hasRestructuring).put("montantToBePaid",
                     montantToBePaid);
         }
@@ -3727,10 +3723,11 @@ public class SalesServiceImpl implements SalesService {
             int remiseCarnet = 0;
             int montantvente;
             int totalTp = 0;
-            int netCustomer;
+            int netCustomer = 0;
             MontantAPaye montantAPaye;
             int diffMontantTotalAndCmuAmount = 0;
             int cmuAmount = 0;
+
             boolean isCmu = tierspayants.stream().allMatch(TiersPayantParams::isCmu);
             List<TiersPayantParams> resultat = new ArrayList<>();
             TClient client = oreenregistrement.getClient();
@@ -3739,14 +3736,12 @@ public class SalesServiceImpl implements SalesService {
                 remise = remise != null ? remise : client.getRemise();
                 if (remise != null) {
                     montantAPaye = getRemiseVno(oreenregistrement, remise, oreenregistrement.getIntPRICE());
-                    montantvente = montantAPaye.getMontant();
                     remiseCarnet = montantAPaye.getRemise();
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                    montantvente = montantAPaye.getMontant();
 
                 }
-
+                montantvente = montantAPaye.getMontant();
                 int tpnet = montantvente - remiseCarnet;
                 totalTp = tpnet;
                 JSONObject json = chechCustomerTiersPayantConsumption(tierspayants.get(0).getCompteTp(), tpnet);
@@ -3764,11 +3759,14 @@ public class SalesServiceImpl implements SalesService {
                 tp.setDiscount(remiseCarnet);
                 tp.setTaux(100);
                 if (totalTp != tpnet) {
+
                     tp.setTaux((int) Math.ceil((Double.valueOf(totalTp) * 100) / tpnet));
+
                 }
 
                 resultat.add(tp);
-                netCustomer = montantvente - totalTp;
+                netCustomer = tpnet - totalTp;
+
             } else {
                 int montantVariable;
                 TRemise remise = oreenregistrement.getRemise();
@@ -3776,19 +3774,14 @@ public class SalesServiceImpl implements SalesService {
                 if (remise != null) {
                     montantAPaye = getRemiseVno(oreenregistrement, remise, oreenregistrement.getIntPRICE());
                     cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
-                    // montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() :
-                    // montantAPaye.getMontant();
-                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
-                    montantVariable = montantvente;
+
                     remiseCarnet = montantAPaye.getRemise();
                 } else {
                     montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-                    // montantvente = montantAPaye.getCmuAmount() > 0 ? montantAPaye.getCmuAmount() :
-                    // montantAPaye.getMontant();
-                    cmuAmount = isCmu ? montantAPaye.getCmuAmount() : 0;
-                    montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
-                    montantVariable = montantvente;
+
                 }
+                montantvente = cmuAmount > 0 ? cmuAmount : montantAPaye.getMontant();
+                montantVariable = montantvente;
                 diffMontantTotalAndCmuAmount = montantAPaye.getMontant() - cmuAmount;
                 for (TiersPayantParams tierspayant : tierspayants) {
                     TiersPayantParams tp = new TiersPayantParams();
@@ -3797,7 +3790,7 @@ public class SalesServiceImpl implements SalesService {
                     Integer tpnet = (int) Math.ceil(montantTp);
                     int taux2 = 0;
                     JSONObject json = chechCustomerTiersPayantConsumption(tierspayant.getCompteTp(), tpnet);
-                    System.err.println("chechCustomerTiersPayantConsumption =====>> " + json);
+
                     if (json.getBoolean("hasRestructuring")) {
                         msg += json.getString("msg") + " ";
                         hasRestructuring = json.getBoolean("hasRestructuring");
@@ -4347,16 +4340,16 @@ public class SalesServiceImpl implements SalesService {
             getEm().persist(newItem);
             updateCompteClientTiersPayantEncourAndPlafond(a);
             /*
-             * TCompteClient OTCompteClient = OTCompteClientTiersPayant.getLgCOMPTECLIENTID(); if (OTCompteClient !=
-             * null && OTCompteClientTiersPayant.getDblPLAFOND() != null && OTCompteClientTiersPayant.getDblPLAFOND() !=
+             * TCompteClient oTCompteClient = oTCompteClientTiersPayant.getLgCOMPTECLIENTID(); if (oTCompteClient !=
+             * null && oTCompteClientTiersPayant.getDblPLAFOND() != null && oTCompteClientTiersPayant.getDblPLAFOND() !=
              * 0) {
-             * OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE((OTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE(
-             * ) != null ? OTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE());
-             * OTCompteClientTiersPayant.setDtUPDATED(new Date()); getEm().merge(OTCompteClientTiersPayant); } if
-             * (OTCompteClient != null && OTCompteClient.getDblPLAFOND() != null && OTCompteClient.getDblPLAFOND() != 0)
-             * { OTCompteClient.setDblQUOTACONSOMENSUELLE((OTCompteClient.getDblQUOTACONSOMENSUELLE() != null ?
-             * OTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE()); OTCompteClient.setDtUPDATED(new
-             * Date()); getEm().merge(OTCompteClient); }
+             * oTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE((oTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE(
+             * ) != null ? oTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE());
+             * oTCompteClientTiersPayant.setDtUPDATED(new Date()); getEm().merge(oTCompteClientTiersPayant); } if
+             * (oTCompteClient != null && oTCompteClient.getDblPLAFOND() != null && oTCompteClient.getDblPLAFOND() != 0)
+             * { oTCompteClient.setDblQUOTACONSOMENSUELLE((oTCompteClient.getDblQUOTACONSOMENSUELLE() != null ?
+             * oTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE()); oTCompteClient.setDtUPDATED(new
+             * Date()); getEm().merge(oTCompteClient); }
              */
         }
 
