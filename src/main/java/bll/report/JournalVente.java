@@ -1150,94 +1150,6 @@ public class JournalVente extends bll.bllBase {
         return lstTPreenregistrement;
     }
 
-    // fin facture subrogatoire
-    // derniere bonne liste des caisses
-    /*
-     * public List<EntityData> getListeCaisse(String dt_date_debut, String dt_date_fin, String h_debut, String h_fin,
-     * String lg_USER_ID, String lg_TYPE_REGLEMENT_ID) { // a decommenter en cas de probleme 02/11/2016
-     *
-     * List<EntityData> lstEntityData = new ArrayList<EntityData>(); EntityData OEntityData; String lg_EMPLACEMENT_ID =
-     * ""; privilege Oprivilege = new privilege(this.getOdataManager(), this.getOTUser()); TparameterManager
-     * OTparameterManager = new TparameterManager(this.getOdataManager()); TParameters OTParameters = null; try {
-     * jconnexion Ojconnexion = new jconnexion(); Ojconnexion.initConnexion(); Ojconnexion.OpenConnexion();
-     *
-     * OTParameters = OTparameterManager.getParameter(Parameter.KEY_MOVEMENT_FALSE);
-     *
-     * if (Oprivilege.isColonneStockMachineIsAuthorize(Parameter.P_SHOW_ALL_ACTIVITY)) { lg_EMPLACEMENT_ID = "%%"; }
-     * else { lg_EMPLACEMENT_ID = this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID(); }
-     *
-     * String qry = "SELECT * FROM v_caisse t WHERE DATE(t.dt_CREATED) >= '" + dt_date_debut +
-     * "' AND DATE(t.dt_CREATED) <= '" + dt_date_fin + "'  AND (TIME(t.dt_CREATED) >= '" + h_debut +
-     * "' and TIME(t.dt_CREATED) <= '" + h_fin + "') AND t.lg_USER_ID LIKE '" + lg_USER_ID +
-     * "' AND t.lg_TYPE_REGLEMENT_ID LIKE '" + lg_TYPE_REGLEMENT_ID + "' AND t.lg_EMPLACEMENT_ID LIKE '" +
-     * lg_EMPLACEMENT_ID + "' AND t.bool_CHECKED = true GROUP BY str_RESSOURCE_REF ORDER BY t.dt_CREATED ASC"; new
-     * logger().OCategory.info(qry); Ojconnexion.set_Request(qry); ResultSetMetaData rsmddatas =
-     * Ojconnexion.get_resultat().getMetaData(); while (Ojconnexion.get_resultat().next()) {
-     *
-     * OEntityData = new EntityData();
-     * OEntityData.setStr_value1(Ojconnexion.get_resultat().getString("str_RESSOURCE_REF_BIS"));
-     * OEntityData.setStr_value2(Ojconnexion.get_resultat().getString("str_FIRST_LAST_NAME"));
-     * OEntityData.setStr_value3(Ojconnexion.get_resultat().getString("dt_CREATED"));
-     * OEntityData.setStr_value4(Ojconnexion.get_resultat().getString("str_NAME"));
-     * OEntityData.setStr_value5(Ojconnexion.get_resultat().getString("str_NAME_TYE_REGLEMENT"));
-     * OEntityData.setStr_value6(Ojconnexion.get_resultat().getString("str_NAME_TYPE_MVT_CAISSE")); //
-     * OEntityData.setStr_value7(Ojconnexion.get_resultat().getString("int_AMOUNT")); //a decommenter en cas de probleme
-     * 23/08/2016 OEntityData.setStr_value7((OTParameters != null && Integer.parseInt(OTParameters.getStrVALUE()) == 1)
-     * ? Ojconnexion.get_resultat().getString("int_AMOUNT_OTHER") : Ojconnexion.get_resultat().getString("int_AMOUNT"));
-     * OEntityData.setStr_value8(Ojconnexion.get_resultat().getString("str_FIRST_LAST_NAME_CLIENT"));
-     * OEntityData.setStr_value9(Ojconnexion.get_resultat().getString("str_NUMERO_COMPTE"));
-     *
-     * lstEntityData.add(OEntityData); }
-     *
-     * Ojconnexion.CloseConnexion(); } catch (Exception ex) { ex.printStackTrace();
-     *
-     * }
-     *
-     * return lstEntityData; }
-     *
-     * public List<EntityData> getListeCaisse(String dt_date_debut, String dt_date_fin, String h_debut, String h_fin,
-     * String lg_USER_ID, String lg_TYPE_REGLEMENT_ID, int start, int limit) {
-     *
-     * List<EntityData> lstEntityData = new ArrayList<EntityData>(); EntityData OEntityData; String lg_EMPLACEMENT_ID =
-     * ""; privilege Oprivilege = new privilege(this.getOdataManager(), this.getOTUser()); TparameterManager
-     * OTparameterManager = new TparameterManager(this.getOdataManager()); TParameters OTParameters = null; try {
-     * jconnexion Ojconnexion = new jconnexion(); Ojconnexion.initConnexion(); Ojconnexion.OpenConnexion();
-     *
-     * OTParameters = OTparameterManager.getParameter(Parameter.KEY_MOVEMENT_FALSE);
-     *
-     * if (Oprivilege.isColonneStockMachineIsAuthorize(Parameter.P_SHOW_ALL_ACTIVITY)) { lg_EMPLACEMENT_ID = "%%"; }
-     * else { lg_EMPLACEMENT_ID = this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID(); }
-     *
-     * String qry = "SELECT * FROM v_caisse t WHERE DATE(t.dt_CREATED) >= '" + dt_date_debut +
-     * "' AND DATE(t.dt_CREATED) <= '" + dt_date_fin + "'  AND (TIME(t.dt_CREATED) >= '" + h_debut +
-     * "' and TIME(t.dt_CREATED) <= '" + h_fin + "') AND t.lg_USER_ID LIKE '" + lg_USER_ID +
-     * "' AND t.lg_TYPE_REGLEMENT_ID LIKE '" + lg_TYPE_REGLEMENT_ID + "' AND t.lg_EMPLACEMENT_ID LIKE '" +
-     * lg_EMPLACEMENT_ID +
-     * "' AND t.bool_CHECKED = true GROUP BY str_RESSOURCE_REF ORDER BY t.dt_CREATED ASC LIMIT "+start+","+limit; new
-     * logger().OCategory.info(qry); Ojconnexion.set_Request(qry); ResultSetMetaData rsmddatas =
-     * Ojconnexion.get_resultat().getMetaData(); while (Ojconnexion.get_resultat().next()) {
-     *
-     * OEntityData = new EntityData();
-     * OEntityData.setStr_value1(Ojconnexion.get_resultat().getString("str_RESSOURCE_REF_BIS"));
-     * OEntityData.setStr_value2(Ojconnexion.get_resultat().getString("str_FIRST_LAST_NAME"));
-     * OEntityData.setStr_value3(Ojconnexion.get_resultat().getString("dt_CREATED"));
-     * OEntityData.setStr_value4(Ojconnexion.get_resultat().getString("str_NAME"));
-     * OEntityData.setStr_value5(Ojconnexion.get_resultat().getString("str_NAME_TYE_REGLEMENT"));
-     * OEntityData.setStr_value6(Ojconnexion.get_resultat().getString("str_NAME_TYPE_MVT_CAISSE")); //
-     * OEntityData.setStr_value7(Ojconnexion.get_resultat().getString("int_AMOUNT")); //a decommenter en cas de probleme
-     * 23/08/2016 OEntityData.setStr_value7((OTParameters != null && Integer.parseInt(OTParameters.getStrVALUE()) == 1)
-     * ? Ojconnexion.get_resultat().getString("int_AMOUNT_OTHER") : Ojconnexion.get_resultat().getString("int_AMOUNT"));
-     * OEntityData.setStr_value8(Ojconnexion.get_resultat().getString("str_FIRST_LAST_NAME_CLIENT"));
-     * OEntityData.setStr_value9(Ojconnexion.get_resultat().getString("str_NUMERO_COMPTE"));
-     *
-     * lstEntityData.add(OEntityData); }
-     *
-     * Ojconnexion.CloseConnexion(); } catch (Exception ex) { ex.printStackTrace();
-     *
-     * }
-     *
-     * return lstEntityData; }
-     */
     public int getTotalListeCaisse(String dt_date_debut, String dt_date_fin, String h_debut, String h_fin,
             String lg_USER_ID, String lg_TYPE_REGLEMENT_ID) {
         Double result = 0.0;
@@ -2294,16 +2206,6 @@ public class JournalVente extends bll.bllBase {
         return result;
     }
 
-    /*
-     * public int getTotalNbreBon(List<EntityData> lstEntityData) { //a decommenter en cas de probleme 20/11/2016 int
-     * result = 0; List<String> data = new ArrayList<String>(); try { for (EntityData OEntityData : lstEntityData) { if
-     * (data.size() == 0) { data.add(OEntityData.getStr_value14()); result++; } else { if
-     * (!data.get(0).equalsIgnoreCase(OEntityData.getStr_value14())) { data.clear(); result++;
-     * data.add(OEntityData.getStr_value14()); } } new logger().OCategory.info("result:" + result); } } catch (Exception
-     * e) { e.printStackTrace(); } return result; }
-     */
-    // fin total general des ventes a credit a afficher sur la facture subrogatoire
-    // Liste des ventes effectué dans tous les depot extension de l'officine
     public List<EntityData> getListeVenteInDepotForBalanceVenteCaisse(String dt_date_debut, String dt_date_fin,
             String lg_TYPE_REGLEMENT_ID, String lg_EMPLACEMENT_ID) {
 

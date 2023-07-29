@@ -429,15 +429,7 @@ Ext.define('testextjs.view.Dashboard.Recap', {
                                     align: 'right',
                                     flex: 1
                                 }
-                            ]/*,
-                             bbar: {
-                             xtype: 'pagingtoolbar',
-                             store: achats,
-                             dock: 'bottom',
-                             pageSize: 999,
-                             displayInfo: true
-                             
-                             }*/
+                            ]
                         }
                     ]
 
