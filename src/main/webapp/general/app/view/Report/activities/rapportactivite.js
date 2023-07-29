@@ -504,7 +504,6 @@ Ext.define('testextjs.view.Report.activities.rapportactivite', {
                                         id: 'crediSearch',
                                         width: 350,
                                         enableKeyEvents: true,
-
                                         listeners: {
                                             specialKey: function (field, e, options) {
                                                 if (e.getKey() === e.ENTER) {

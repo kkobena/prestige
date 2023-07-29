@@ -105,7 +105,7 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
             e.setDtUPDATED(new Date());
             getEntityManager().merge(e);
             mouvementProduitService.saveMvtProduit(pkey, DateConverter.TMVTP_RETOUR_DEPOT, e.getLgFAMILLEID(), user,
-                    getEmplacement("1"), qtyMvt, qtyDebut, e.getIntNUMBERAVAILABLE(),  0);
+                    getEmplacement("1"), qtyMvt, qtyDebut, e.getIntNUMBERAVAILABLE(), 0);
         });
     }
 

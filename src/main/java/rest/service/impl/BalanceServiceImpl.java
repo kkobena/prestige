@@ -366,7 +366,6 @@ public class BalanceServiceImpl implements BalanceService {
 
     private List<Tuple> fetchRecapPreenregistrements(BalanceParamsDTO balanceParams) {
 
-        // String sql = String.format(RAPPORT_SQL_QUERY, subQueryGroupBy, typeMvtCaisseGroupBy);
         String sql = replacePlaceHolder(RAPPORT_SQL_QUERY, balanceParams);
         LOG.log(Level.INFO, "sql--- RAPPORT_SQL_QUERY vente {0}", sql);
         try {
@@ -435,24 +434,6 @@ public class BalanceServiceImpl implements BalanceService {
         o.setLocalOperation(mvDate);
         o.setDateOperation(mvDate.format(DateTimeFormatter.ofPattern(TVA_DATE_PATERN)));
         return o;
-    }
-
-    private List<BalanceVenteItemDTO> fetchRemises(BalanceParamsDTO balanceParams, String subQueryMvtDate,
-            String subQuery, String subQueryGroupBy, boolean remisePara) { // AND p.`int_PRICE`>?0
-        String sql = String.format(REMISE_SQL_QUERY, subQueryMvtDate, subQuery, subQueryGroupBy);
-        LOG.log(Level.INFO, "sql--- remiseSqlQuery  {0}", sql);
-        try {
-            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, remisePara)
-                    .setParameter(2, balanceParams.getEmplacementId()).setParameter(3, DateConverter.DEPOT_EXTENSION)
-                    .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtStart()))
-                    .setParameter(5, java.sql.Date.valueOf(balanceParams.getDtEnd()));
-            List<Tuple> list = query.getResultList();
-            return list.stream().map(this::buildRemiseFromTuple).collect(Collectors.toList());
-
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return new ArrayList<>();
-        }
     }
 
     private List<BalanceVenteItemDTO> othersTypeMvts(BalanceParamsDTO balanceParams) {
