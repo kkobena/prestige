@@ -260,8 +260,6 @@ Ext.define('testextjs.controller.FactureCtr', {
                 codegroup: codegroup,
                 tpid: tpid,
                 groupTp: groupTp
-
-
             }
         });
     },

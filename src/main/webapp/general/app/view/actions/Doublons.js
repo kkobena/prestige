@@ -113,16 +113,12 @@ Ext.define('testextjs.view.actions.Doublons', {
                                         query = cmd.getValue(), printInvoicereport2pxw = Ext.getCmp('printInvoicereport2pxw'), printInvoicereport = Ext.getCmp('printInvoicereport');
 
                                 if (query === '1') {
-//                                    doublonOFStore.loadPage(1);
                                     grid.reconfigure(doublonOFStore, me.buildDetailsColumns());
                                     pagingbar.bindStore(doublonOFStore);
                                 } else {
-//                                    doublonsEmStore.loadPage(1);
                                     grid.reconfigure(doublonsEmStore, me.buildGroupColumns());
                                     pagingbar.bindStore(doublonsEmStore);
                                 }
-
-                                //  var val = Ext.getCmp('rechecherFacture').getValue();
 
                                 grid.getStore().load({
                                     params: {
