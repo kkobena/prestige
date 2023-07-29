@@ -700,7 +700,6 @@ Ext.application({
         'testextjs.view.configmanagement.devise.action.add',
         'testextjs.view.tierspayantmanagement.tierspayant.TiersPayantDesactiveManager',
         'testextjs.view.configmanagement.client.ClientDesactiveManager',
-        'testextjs.view.sm_user.journalvente.FactureSubrogatoireBisManager',
         'testextjs.view.stockmanagement.dodepot.action.importOrder',
         'testextjs.view.stockmanagement.etiquette.action.addBis',
         'testextjs.view.configmanagement.famille.action.detailArticleOther',
@@ -837,7 +836,8 @@ Ext.application({
         'BalanceVenteCarnetCtr',
         'MotifReglementCtr',
         'EtatControlAnnuelCtr',
-        'TableauBoardCarnetCtr'
+        'TableauBoardCarnetCtr',
+        'FactureSubrogatoireCtr'
         
     ],
     stores: [
