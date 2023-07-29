@@ -610,18 +610,15 @@ Ext.define('testextjs.view.Report.comparaisonCAFamilles.CAFamilleManager', {
                             ];
 
 
-                            // store.loadPage(1);
+                           
                             grid.reconfigure(null, columns);
 
                             grid.getStore().load({
                                 params: {
-                                    dt_start_vente: dt_start_vente,
-//                                    search_value: search_value
+                                    dt_start_vente: dt_start_vente
                                 }
                             });
-                            // store.loadPage(1);
-                            // Ext.getCmp('pagindCA').bindStore(store);
-
+                            
                             var combofamilleca = Ext.getCmp('CombofamilleCa');
                             combofamilleca.clearValue();
                             combofamilleca.bindStore(grid.getStore());
