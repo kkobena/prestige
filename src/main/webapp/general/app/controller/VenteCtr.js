@@ -671,12 +671,12 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.checkPlafondVenteStatut();
     },
     cheickCaisse: function () {
-        var me = this;
+        const me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/vente/cheick-caisse',
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.caisse = result.data;
                 }
@@ -685,7 +685,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
     },
     hideAssureContainer: function () {
-        var me = this, assureContainer = me.getAssureContainer(),
+        const me = this;
+        let assureContainer = me.getAssureContainer(),
                 ayantDroyCmp = me.getAyantDroyCmp(), montantTp = me.getMontantTp(), sansBon = me.getSansBon();
         if (assureContainer.isVisible()) {
             me.client = null;
@@ -702,7 +703,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         sansBon.hide();
     },
     showAssureContainer: function (typevente) {
-        var me = this, assureContainer = me.getAssureContainer(), ayantDroyCmp = me.getAyantDroyCmp(),
+        const me = this;
+        let assureContainer = me.getAssureContainer(), ayantDroyCmp = me.getAyantDroyCmp(),
                 montantTp = me.getMontantTp(), sansBon = me.getSansBon();
         montantTp.show(), sansBon.show();
         me.updateAssurerResetCmp();
@@ -804,7 +806,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 cmp.clearValue();
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
-                    width: 320,
+                    width: 550,
                     msg: "Veuillez ajouter un client à la vente",
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.ERROR,
@@ -853,6 +855,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         remiseCombo.focus(false, 100);
     },
     onComputeNet: function () {
+
         const me = this;
         const typeVente = me.getTypeVenteCombo().getValue();
         if (typeVente === '1') {
@@ -902,7 +905,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             if (!client) {
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
-                    width: 320,
+                    width: 550,
                     msg: "Veuillez ajouter un client à la vente",
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.ERROR,
@@ -951,7 +954,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             } else {
                 Ext.MessageBox.show({
                     title: 'Message',
-                    width: 320,
+                    width: 550,
                     msg: 'Veuillez saisir le montant à payer',
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.WARNING,
@@ -992,7 +995,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     if (qte > 999) {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
-                            width: 320,
+                            width: 550,
                             msg: "Impossible de saisir une quantit&eacute; sup&eacute;rieure &agrave; 1000",
                             buttons: Ext.MessageBox.OK,
                             icon: Ext.MessageBox.WARNING,
@@ -1016,7 +1019,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                         if (boolDECONDITIONNE === 1) {
                             Ext.MessageBox.show({
                                 title: 'Message d\'erreur',
-                                width: 320,
+                                width: 550,
                                 msg: "Stock insuffisant. Voulez-vous faire un déconditionnement ?",
                                 buttons: Ext.MessageBox.YESNO,
                                 icon: Ext.MessageBox.WARNING,
@@ -1044,7 +1047,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                                                         Ext.MessageBox.show({
                                                             title: 'Message d\'erreur',
-                                                            width: 320,
+                                                            width: 550,
                                                             msg: "Le stock est insuffisant",
                                                             buttons: Ext.MessageBox.OK,
                                                             icon: Ext.MessageBox.ERROR,
@@ -1059,7 +1062,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                                                     Ext.MessageBox.show({
                                                         title: 'Message d\'erreur',
-                                                        width: 320,
+                                                        width: 550,
                                                         msg: "Impossible de poursuivre",
                                                         buttons: Ext.MessageBox.OK,
                                                         icon: Ext.MessageBox.ERROR,
@@ -1169,7 +1172,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 } else {
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
-                        width: 320,
+                        width: 550,
                         msg: result.msg,
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.ERROR,
@@ -1191,10 +1194,10 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
     },
     doBeforechangeVno: function (page, currentPage) {
-        var me = this;
-        var myProxy = me.getVnogrid().getStore().getProxy();
-        var vente = me.getCurrent();
-        var venteId = null;
+        const me = this;
+        let myProxy = me.getVnogrid().getStore().getProxy();
+        let vente = me.getCurrent();
+        let venteId = null;
         if (vente) {
             venteId = vente.lgPREENREGISTREMENTID;
         }
@@ -1296,7 +1299,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             if (typeRegleId === '1' && parseInt(montantRecu) < parseInt(netTopay)) {
                 Ext.MessageBox.show({
                     title: 'Avertissement',
-                    width: 320,
+                    width: 550,
                     msg: 'Le montant saisi est inférieur au montant total à payer',
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.WARNING,
@@ -1364,7 +1367,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             icon: Ext.MessageBox.QUESTION
                         });
                     } else {
-                        var codeError = result.codeError;
+                        let codeError = result.codeError;
                         //il faut ajouter un medecin à la vente 
                         if (codeError === 1) {
                             me.showMedicinWindow();
@@ -1372,7 +1375,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             // il faut ajouter un client
 //ajoute le 26 09 2020 pour gestion des ordonnancies
                             me.getInfosClientStandard().show();
-                            var win = Ext.create('testextjs.view.vente.user.ClientLambda');
+                            let win = Ext.create('testextjs.view.vente.user.ClientLambda');
                             win.add(me.buildLambdaClientGrid());
                             win.show();
 
@@ -1380,7 +1383,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                         } else {
                             Ext.MessageBox.show({
                                 title: 'Message d\'erreur',
-                                width: 320,
+                                width: 550,
                                 msg: result.msg,
                                 buttons: Ext.MessageBox.OK,
                                 icon: Ext.MessageBox.ERROR,
@@ -1726,7 +1729,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
-                        width: 320,
+                        width: 550,
                         msg: result.msg,
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.ERROR
@@ -1764,7 +1767,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                         progress.hide();
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
-                            width: 320,
+                            width: 550,
                             msg: result.msg,
                             buttons: Ext.MessageBox.OK,
                             icon: Ext.MessageBox.ERROR
@@ -1810,7 +1813,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         if (boolDECONDITIONNE === 1 && stock < qte) {
             Ext.MessageBox.show({
                 title: 'Message d\'erreur',
-                width: 320,
+                width: 550,
                 msg: "Stock insuffisant. Voulez-vous faire un déconditionnement ?",
                 buttons: Ext.MessageBox.YESNO,
                 icon: Ext.MessageBox.WARNING,
@@ -1864,7 +1867,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                                         Ext.MessageBox.show({
                                             title: 'Message d\'erreur',
-                                            width: 320,
+                                            width: 550,
                                             msg: "Le stock est insuffisant",
                                             buttons: Ext.MessageBox.OK,
                                             icon: Ext.MessageBox.ERROR,
@@ -1879,7 +1882,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                 } else {
                                     Ext.MessageBox.show({
                                         title: 'Message d\'erreur',
-                                        width: 320,
+                                        width: 550,
                                         msg: "Impossible de poursuivre",
                                         buttons: Ext.MessageBox.OK,
                                         icon: Ext.MessageBox.ERROR,
@@ -1978,7 +1981,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 me.refresh();
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
-                    width: 320,
+                    width: 550,
                     msg: 'La quantité servie ne peut pas être supérieure à la quantité demandée',
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.ERROR,
@@ -2007,7 +2010,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 me.refresh();
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
-                    width: 320,
+                    width: 550,
                     msg: "Vous n'êts pas autorisé à modifier le prix de vente",
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.ERROR,
@@ -2339,14 +2342,21 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
     resetAll: function (montantRemis) {
         const me = this;
+        me.current = null;
         if (montantRemis !== undefined) {
             me.getDernierMonnaie().setValue(montantRemis);
         }
         me.getMontantRecu().enable();
         me.getMontantRecu().setReadOnly(false);
-        me.getVnogrid().getStore().load();
+        me.getVnogrid().getStore().loadPage(1, {
+            params: {
+                venteId: null,
+                query: null,
+                statut: null
+            }
+        });
         me.netAmountToPay = null;
-        me.current = null;
+
         me.client = null;
         me.ayantDroit = null;
         me.ancienTierspayant = null;
@@ -2369,6 +2379,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.updateComboxFields(null, null, null, null, null);
         me.resetTitle(null);
         me.toRecalculate = true;
+
     },
     resetClientLambdaInfos: function () {
         const me = this;
@@ -2772,7 +2783,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     } else {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
-                            width: 320,
+                            width: 550,
                             msg: result.msg,
                             buttons: Ext.MessageBox.OK,
                             icon: Ext.MessageBox.ERROR
@@ -2871,7 +2882,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     } else {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
-                            width: 320,
+                            width: 550,
                             msg: result.msg,
                             buttons: Ext.MessageBox.OK,
                             icon: Ext.MessageBox.ERROR
@@ -3189,7 +3200,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                                                     } else {
                                                         Ext.MessageBox.show({
                                                             title: 'Message d\'erreur',
-                                                            width: 320,
+                                                            width: 550,
                                                             msg: result.msg,
                                                             buttons: Ext.MessageBox.OK,
                                                             icon: Ext.MessageBox.ERROR
@@ -3637,17 +3648,17 @@ Ext.define('testextjs.controller.VenteCtr', {
         return cmp;
     },
     closePrevente: function () {
-        var me = this
-        const venteId = me.getCurrent().lgPREENREGISTREMENTID;
-        var url = '../api/v1/vente/terminerprevente/' + venteId;
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        const me = this;
+        let venteId = me.getCurrent().lgPREENREGISTREMENTID;
+        let url = '../api/v1/vente/terminerprevente/' + venteId;
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             url: url,
             success: function (response, options) {
                 progress.hide();
-                var result = Ext.JSON.decode(response.responseText, true);
+                let result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.resetAll();
                     me.getVnoproduitCombo().focus(false, 100, function () {
@@ -3655,7 +3666,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 } else {
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
-                        width: 320,
+                        width: 550,
                         msg: result.msg,
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.ERROR
@@ -3673,14 +3684,15 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
     doCloture: function () {
-        var me = this, typeRegle = me.getVnotypeReglement().getValue(),
+        const me = this;
+        let typeRegle = me.getVnotypeReglement().getValue(),
                 typeVenteCombo = me.getTypeVenteCombo().getValue();
 
         if (me.getMontantRecu().getValue() != null) {
             if (me.getToRecalculate()) {
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
-                    width: 320,
+                    width: 550,
                     msg: 'Le net à payer sera recalculer',
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.ERROR,
@@ -3701,13 +3713,13 @@ Ext.define('testextjs.controller.VenteCtr', {
                         if (typeRegle === '1') {
                             me.onbtncloturerVnoComptant(typeRegle);
                         } else {
-                            var client = me.getClient();
+                            let client = me.getClient();
                             if (client) {
                                 me.onbtncloturerVnoComptant(typeRegle);
                             } else {
                                 Ext.MessageBox.show({
                                     title: 'Message d\'erreur',
-                                    width: 320,
+                                    width: 550,
                                     msg: 'Veuillez ajouter un client à la vente',
                                     buttons: Ext.MessageBox.OK,
                                     icon: Ext.MessageBox.ERROR,
@@ -3720,29 +3732,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             }
                         }
 
-                        /*    if (typeRegle === '1' || '4') {
-                         if (typeRegle === '4') {
-                         var client = me.getClient();
-                         if (client) {
-                         me.onbtncloturerVnoComptant(typeRegle);
-                         } else {
-                         Ext.MessageBox.show({
-                         title: 'Message d\'erreur',
-                         width: 320,
-                         msg: 'Veuillez ajouter un client pour la vente différée',
-                         buttons: Ext.MessageBox.OK,
-                         icon: Ext.MessageBox.ERROR,
-                         fn: function (buttonId) {
-                         if (buttonId === "ok") {
-                         me.showAndHideInfosStandardClient(true);
-                         }
-                         }
-                         });
-                         }
-                         } else {
-                         me.onbtncloturerVnoComptant(typeRegle);
-                         }
-                         }*/
+
                     } else {
                         me.onbtncloturerAssurance(typeRegle);
                     }
@@ -3753,7 +3743,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         } else {
             Ext.MessageBox.show({
                 title: 'Message',
-                width: 320,
+                width: 550,
                 msg: 'Veuillez saisir le montant à payer',
                 buttons: Ext.MessageBox.OK,
                 icon: Ext.MessageBox.WARNING,
@@ -3766,16 +3756,17 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     onbtncloturerAssurance: function (typeRegleId) {
-        var me = this, sansBon = me.getSansBon().getValue(), montantTp = me.getMontantTp().getValue();
+        const me = this;
+        let sansBon = me.getSansBon().getValue(), montantTp = me.getMontantTp().getValue();
         const vente = me.getCurrent();
         const client = me.getClient();
-        var clientId = null;
-        var commentaire = '';
+        let clientId = null;
+        let commentaire = '';
         if (client) {
             clientId = client.get('lgCLIENTID');
             commentaire = me.getCommentaire().getValue();
         }
-        var nom = "", banque = "", lieux = "";
+        let nom = "", banque = "", lieux = "";
         if (typeRegleId !== '1' && typeRegleId !== '4') {
             if (me.getRefCb()) {
                 nom = me.getRefCb().getValue();
@@ -3784,20 +3775,20 @@ Ext.define('testextjs.controller.VenteCtr', {
             }
         }
         if (vente) {
-            var venteId = vente.lgPREENREGISTREMENTID;
-            var url = '../api/v1/vente/cloturer/assurance';
-            var data = me.getNetAmountToPay();
-            var netTopay = data.montantNet;
-            var typeVenteCombo = me.getTypeVenteCombo().getValue(),
+            let venteId = vente.lgPREENREGISTREMENTID;
+            let url = '../api/v1/vente/cloturer/assurance';
+            let data = me.getNetAmountToPay();
+            let netTopay = data.montantNet;
+            let typeVenteCombo = me.getTypeVenteCombo().getValue(),
                     remiseId = me.getVnoremise().getValue(),
                     natureCombo = me.getNatureCombo().getValue(),
                     userCombo = me.getUserCombo().getValue(),
                     montantRecu = me.getMontantRecu().getValue();
-            var medecinId = me.getMedecinId();
+            let medecinId = me.getMedecinId();
             if (typeRegleId === '1' && parseInt(montantRecu) < parseInt(netTopay)) {
                 Ext.MessageBox.show({
                     title: 'Avertissement',
-                    width: 320,
+                    width: 550,
                     msg: 'Le montant saisi est inférieur au montant total à payer',
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.WARNING,
@@ -3810,13 +3801,13 @@ Ext.define('testextjs.controller.VenteCtr', {
                 });
                 return false;
             }
-            var ayantDroit = me.getAyantDroit(), ayantDroitId = null;
+            let ayantDroit = me.getAyantDroit(), ayantDroitId = null;
             if (ayantDroit) {
                 ayantDroitId = ayantDroit.lgAYANTSDROITSID;
             }
-            var montantRemis = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
-            var totalRecap = data.montant, montantPaye = montantRecu - montantRemis;
-            var param = {
+            let montantRemis = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
+            let totalRecap = data.montant, montantPaye = montantRecu - montantRemis;
+            let param = {
                 "typeVenteId": typeVenteCombo,
                 "ayantDroitId": ayantDroitId,
                 "natureVenteId": natureCombo,
@@ -3840,14 +3831,14 @@ Ext.define('testextjs.controller.VenteCtr', {
                 "marge": data.marge,
                 "medecinId": medecinId
             };
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 url: url,
                 params: Ext.JSON.encode(param),
                 success: function (response, options) {
-                    var result = Ext.JSON.decode(response.responseText, true);
+                    let result = Ext.JSON.decode(response.responseText, true);
                     progress.hide();
                     if (result.success) {
                         Ext.MessageBox.show({
@@ -3870,14 +3861,14 @@ Ext.define('testextjs.controller.VenteCtr', {
                             icon: Ext.MessageBox.QUESTION
                         });
                     } else {
-                        var codeError = result.codeError;
+                        let codeError = result.codeError;
                         //il faut ajouter un medecin à la vente 
                         if (codeError === 1) {
                             me.showMedicinWindow();
                         } else {
                             Ext.MessageBox.show({
                                 title: 'Message d\'erreur',
-                                width: 320,
+                                width: 550,
                                 msg: result.msg,
                                 buttons: Ext.MessageBox.OK,
                                 icon: Ext.MessageBox.ERROR,
@@ -3903,11 +3894,12 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     checkEmptyBonRef: function () {
-        var me = this, tpContainerForm = me.getTpContainerForm();
-        var items = tpContainerForm.items;
-        var result = null;
-        var emptyRef = false;
-        var numBonField;
+        const me = this;
+        let tpContainerForm = me.getTpContainerForm();
+        let items = tpContainerForm.items;
+        let result = null;
+        let emptyRef = false;
+        let numBonField;
         Ext.each(items.items, function (item) {
             if (item.items) {
                 numBonField = item.items.items[1].items.items[0];
@@ -3953,13 +3945,15 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     showNetPaidWithPlafondVente: function () {
-        let me = this, sansBon = me.getSansBon();
+        const me = this;
+        let sansBon = me.getSansBon();
         let result = me.checkEmptyBonRef();
         if (result) {
+            console.log(" me.getVenteSansBon()", me.getVenteSansBon(), sansBon);
             if (!me.getVenteSansBon()) {
                 Ext.MessageBox.show({
                     title: 'Message',
-                    width: 320,
+                    width: 550,
                     msg: "Veuillez renseigner le numéro de bon",
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.INFO,
@@ -3974,7 +3968,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 if (!sansBon) {
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
-                        width: 320,
+                        width: 550,
                         msg: "Veuillez cocher la vente sans bon ou renseigner le numéro de bon",
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.WARNING,
@@ -4014,7 +4008,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                             if (result.hasRestructuring) {
                                 Ext.MessageBox.show({
                                     title: 'Message d\'alert',
-                                    width: 320,
+                                    width: 550,
                                     msg: result.msg,
                                     buttons: Ext.MessageBox.OK,
                                     icon: Ext.MessageBox.WARNING,
@@ -4025,8 +4019,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                                     }
                                 });
                             }
-
-
                             me.netAmountToPay = result.data;
                             me.toRecalculate = false;
                             let montantNet = me.getNetAmountToPay().montantNet;
@@ -4058,12 +4050,13 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     showNetPaidAssurance: function () {
-        let me = this, sansBon = me.getVenteSansBon();
+        const me = this;
+        let sansBon = me.getVenteSansBon();
         let result = me.checkEmptyBonRef();
         if (result && !sansBon) {
             Ext.MessageBox.show({
                 title: 'Message',
-                width: 320,
+                width: 550,
                 msg: "Veuillez renseigner le numéro de bon",
                 buttons: Ext.MessageBox.OK,
                 icon: Ext.MessageBox.WARNING,
@@ -4074,16 +4067,11 @@ Ext.define('testextjs.controller.VenteCtr', {
                 }
             });
 
-
-
-
         } else {
-
             if (result && sansBon && !me.getSansBon().getValue()) {
-
                 Ext.MessageBox.show({
                     title: 'Message d\'erreur',
-                    width: 320,
+                    width: 550,
                     msg: "Veuillez cocher la vente sans bon ou renseigner le numéro de bon",
                     buttons: Ext.MessageBox.OK,
                     icon: Ext.MessageBox.WARNING,
@@ -4095,20 +4083,20 @@ Ext.define('testextjs.controller.VenteCtr', {
                 });
                 return;
             } else {
-                var vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
+                let vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
                 if (vente) {
-                    var venteId = vente.lgPREENREGISTREMENTID;
-                    var tierspayants = me.buildAssuranceData();
+                    let venteId = vente.lgPREENREGISTREMENTID;
+                    let tierspayants = me.buildAssuranceData();
                     if (tierspayants.length === 0) {
                         Ext.Msg.alert("Message", 'Veuillez ajouter un tiers-payant à la vente');
                         return false;
                     }
-                    var data = {
+                    let data = {
                         "remiseId": remiseId,
                         "venteId": venteId,
                         "tierspayants": tierspayants
                     };
-                    var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                    const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
                     Ext.Ajax.request({
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
@@ -4116,11 +4104,11 @@ Ext.define('testextjs.controller.VenteCtr', {
                         params: Ext.JSON.encode(data),
                         success: function (response, options) {
                             progress.hide();
-                            var result = Ext.JSON.decode(response.responseText, true);
+                            const result = Ext.JSON.decode(response.responseText, true);
                             if (result.success) {
                                 me.netAmountToPay = result.data;
                                 me.toRecalculate = false;
-                                var montantNet = me.getNetAmountToPay().montantNet;
+                                let montantNet = me.getNetAmountToPay().montantNet;
                                 me.getMontantNet().setValue(me.getNetAmountToPay().montantNet);
                                 me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
                                 me.getMontantTp().setValue(me.getNetAmountToPay().montantTp);
@@ -4152,21 +4140,21 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     buildSaleParams: function (record, qte, typeVente) {
-        var me = this;
-        var params = null;
-        const client = me.getClient();
-        var clientId = null;
+        const me = this;
+        let params = null;
+        let client = me.getClient();
+        let clientId = null;
         if (client) {
             clientId = client.get('lgCLIENTID');
         }
 
         const vente = me.getCurrent();
-        var venteId = null;
+        let venteId = null;
         if (vente) {
             venteId = vente.lgPREENREGISTREMENTID;
         }
         if (record) {
-            var user = me.getUserCombo().getValue(),
+            let user = me.getUserCombo().getValue(),
                     nature = me.getNatureCombo().getValue()
                     , remiseId = me.getVnoremise().getValue();
             const isPrevente = me.getCategorie() === 'PREVENTE';
@@ -4185,11 +4173,11 @@ Ext.define('testextjs.controller.VenteCtr', {
                     "prevente": isPrevente
                 };
             } else {
-                var ayantDroit = me.getAyantDroit(), ayantDroitId = null;
+                let ayantDroit = me.getAyantDroit(), ayantDroitId = null;
                 if (ayantDroit) {
                     ayantDroitId = ayantDroit.lgAYANTSDROITSID;
                 }
-                var tierspayants = me.buildAssuranceData();
+                let tierspayants = me.buildAssuranceData();
                 params = {
                     "typeVenteId": typeVente,
                     "natureVenteId": nature,
@@ -4212,11 +4200,12 @@ Ext.define('testextjs.controller.VenteCtr', {
         return params;
     },
     addVenteAssuarnce: function (data, url, field, comboxProduit) {
-        var me = this, client = me.getClient();
+        const me = this;
+        let client = me.getClient();
         if (!client) {
             Ext.MessageBox.show({
                 title: 'Message d\'erreur',
-                width: 320,
+                width: 550,
                 msg: "Veuillez ajouter un client à la vente",
                 buttons: Ext.MessageBox.OK,
                 icon: Ext.MessageBox.ERROR,
@@ -4228,7 +4217,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             });
             return false;
         }
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -4236,7 +4225,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             params: Ext.JSON.encode(data),
             success: function (response, options) {
                 progress.hide();
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.updateStockField(0);
                     me.getVnoemplacementField().setValue('');
@@ -4249,7 +4238,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 } else {
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
-                        width: 320,
+                        width: 550,
                         msg: result.msg,
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.ERROR,
@@ -4270,16 +4259,17 @@ Ext.define('testextjs.controller.VenteCtr', {
         });
     },
     removetierspayant: function (compteClientTpId) {
-        var me = this, current = me.getCurrent();
+        const me = this;
+        let current = me.getCurrent();
         if (current) {
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'GET',
                 headers: {'Content-Type': 'application/json'},
                 url: '../api/v1/vente/removetp/' + compteClientTpId + '/' + current.lgPREENREGISTREMENTID,
                 success: function (response, options) {
                     progress.hide();
-                    var result = Ext.JSON.decode(response.responseText, true);
+                    const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         me.getVnoproduitCombo().focus(true, 100);
                     } else {
@@ -4295,10 +4285,11 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     addtierspayant: function (compteClientId, taux) {
-        var me = this, current = me.getCurrent();
+        const me = this;
+        let current = me.getCurrent();
         if (current) {
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-            var data = {"typeVenteId": compteClientId, "qte": taux};
+            const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            let data = {"typeVenteId": compteClientId, "qte": taux};
             Ext.Ajax.request({
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -4306,7 +4297,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 params: Ext.JSON.encode(data),
                 success: function (response, options) {
                     progress.hide();
-                    var result = Ext.JSON.decode(response.responseText, true);
+                    const result = Ext.JSON.decode(response.responseText, true);
                     if (!result.success) {
                         Ext.Msg.alert("Message", 'Le tiers-payant n\'a pas été ajouté');
                     }
@@ -4321,7 +4312,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
     montantRecuFocus: function () {
-        var me = this;
+        const me = this;
         const typeVente = me.getTypeVenteCombo().getValue();
         if (me.getToRecalculate()) {
             if (typeVente === '1') {
@@ -4333,9 +4324,9 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     buildMedecinGrid: function () {
-        var me = this;
+        const me = this;
         me.getMedecinform().setVisible(false);
-        var grid = {
+        let grid = {
 
             xtype: 'grid',
             itemId: 'medecinGrid',
@@ -4441,27 +4432,27 @@ Ext.define('testextjs.controller.VenteCtr', {
         return grid;
     },
     closeMedecinWindow: function () {
-        var me = this;
+        const me = this;
         me.getMedecin().destroy();
 
     },
     addMedecinForm: function () {
-        var me = this;
+        const me = this;
         me.getMedecinGrid().setVisible(false);
         me.getMedecinform().setVisible(true);
         me.getNomMedecin().focus(true, 100);
         me.getBtnNewMedecin().enable();
     },
     btnAjouterMedecin: function (grid, rowIndex, colIndex) {
-        var me = this;
-        var record = grid.getStore().getAt(colIndex);
+        const me = this;
+        const record = grid.getStore().getAt(colIndex);
         me.closeMedecinWindow();
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         me.updateVenteMedecin(record.get('id'), progress);
     },
     updateVenteMedecin: function (medecinId, progress) {
-        var me = this;
-        var venteId = me.getCurrent().lgPREENREGISTREMENTID;
+        const me = this;
+        let venteId = me.getCurrent().lgPREENREGISTREMENTID;
         Ext.Ajax.request({
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -4471,19 +4462,19 @@ Ext.define('testextjs.controller.VenteCtr', {
             }),
             success: function (response, options) {
                 progress.hide();
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.medecinId = medecinId;
                     if (!result.clientExist) {
                         Ext.MessageBox.show({
                             title: 'Message ',
-                            width: 320,
+                            width: 550,
                             msg: 'Opération effectuée avec succes. Veuillez ajouter le client',
                             buttons: Ext.MessageBox.OK,
                             icon: Ext.MessageBox.INFO,
                             fn: function (buttonId) {
                                 if (buttonId === "ok") {
-                                    var win = Ext.create('testextjs.view.vente.user.ClientLambda');
+                                    const win = Ext.create('testextjs.view.vente.user.ClientLambda');
                                     win.add(me.buildLambdaClientGrid());
                                     win.show();
                                 }
@@ -4497,7 +4488,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                     Ext.MessageBox.show({
                         title: 'Message d\'erreur',
-                        width: 320,
+                        width: 550,
                         msg: result.msg,
                         buttons: Ext.MessageBox.OK,
                         icon: Ext.MessageBox.ERROR
@@ -4515,16 +4506,16 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
     onMedecinSpecialKey: function (field, e, options) {
         if (e.getKey() === e.ENTER) {
-            var me = this;
+            const me = this;
             me.registerNewMedecin();
         }
 
     },
 
     registerNewMedecin: function () {
-        var me = this, form = me.getMedecinform();
+        const me = this, form = me.getMedecinform();
         if (form.isValid()) {
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
@@ -4532,20 +4523,20 @@ Ext.define('testextjs.controller.VenteCtr', {
                 params: Ext.JSON.encode(form.getValues()),
                 success: function (response, options) {
                     progress.hide();
-                    var result = Ext.JSON.decode(response.responseText, true);
+                    const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         me.medecinId = result.medecinId;
                         me.closeMedecinWindow();
                         if (!result.clientExist) {
                             Ext.MessageBox.show({
                                 title: 'Message ',
-                                width: 320,
+                                width: 550,
                                 msg: 'Opération effectuée avec succes. Veuillez ajouter le client',
                                 buttons: Ext.MessageBox.OK,
                                 icon: Ext.MessageBox.INFO,
                                 fn: function (buttonId) {
                                     if (buttonId === "ok") {
-                                        var win = Ext.create('testextjs.view.vente.user.ClientLambda');
+                                        const win = Ext.create('testextjs.view.vente.user.ClientLambda');
                                         win.add(me.buildLambdaClientGrid());
                                         win.show();
                                     }
@@ -4564,7 +4555,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
-                            width: 320,
+                            width: 550,
                             msg: result.msg,
                             buttons: Ext.MessageBox.OK,
                             icon: Ext.MessageBox.ERROR
@@ -4583,15 +4574,15 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
     showMedicinWindow: function () {
-        var me = this;
+        const me = this;
 
-        var win = Ext.create('testextjs.view.vente.user.Medecin');
+        const win = Ext.create('testextjs.view.vente.user.Medecin');
         win.add(me.buildMedecinGrid());
         win.show();
     },
 
     queryMedecin: function () {
-        var me = this, query = me.getQueryMedecin().getValue();
+        const me = this, query = me.getQueryMedecin().getValue();
         if (query && query.trim() !== "") {
             me.getMedecinGrid().getStore().load({
                 params: {
@@ -4603,24 +4594,24 @@ Ext.define('testextjs.controller.VenteCtr', {
     onMedecinKey: function (field, e, options) {
         if (e.getKey() === e.ENTER) {
             if (field.getValue() && field.getValue().trim() !== "") {
-                var me = this;
+                const me = this;
                 me.queryMedecin();
             }
         }
     },
     putToStandBy: function () {
-        var me = this;
+        const me = this;
         me.resetAll();
         me.getVnoproduitCombo().focus(false, 100, function () {
         });
     },
     oncheckUg: function () {
-        var me = this;
+        const me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/common/checkug',
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.checkUg = result.data;
                 }
@@ -4630,39 +4621,27 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     onbtnModifierAyantDroitInfo: function () {
-        var me = this, client = me.getClient();
+        const me = this, client = me.getClient();
         if (client) {
             me.loadAyantDroits(client.get('lgCLIENTID'));
-            /*
-             var ayantDroitWin = Ext.create('testextjs.view.vente.user.AyantDroitGrid');
-             me.getAyantdroiGrid().getStore().load({
-             params: {"clientId": client.get('lgCLIENTID')},
-             callback: function (records, operation, successful) {
-             
-             if (successful) {                   
-             ayantDroitWin.show();
-             }
-             }
-             
-             }
-             
-             );*/
+
         }
 
     },
     onBtnCancelBtnAyantDroit: function () {
-        var me = this, win = me.getAyantdroitView();
+        const me = this;
+        const win = me.getAyantdroitView();
         win.destroy();
     },
     loadAyantDroits: function (clientId) {
-        var me = this;
+        const me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/client/ayant-droits',
             params: {"clientId": clientId},
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
-                var ayantDroitWin = Ext.create('testextjs.view.vente.user.AyantDroitGrid');
+                const result = Ext.JSON.decode(response.responseText, true);
+                const ayantDroitWin = Ext.create('testextjs.view.vente.user.AyantDroitGrid');
                 me.getAyantdroiGrid().getStore().loadData(result.data);
                 ayantDroitWin.show();
             }
