@@ -264,7 +264,7 @@ public class VisualisationCaisseDTO implements Serializable {
     }
 
     public VisualisationCaisseDTO(MvtTransaction m, TClient cl, TTiersPayant payant) {
-        System.out.println("cl ----------------------->>  " + cl);
+    
         TTypeMvtCaisse mvt = m.gettTypeMvtCaisse();
         this.typeMouvement = mvt.getStrNAME();
         this.typeMvt = mvt.getLgTYPEMVTCAISSEID();
