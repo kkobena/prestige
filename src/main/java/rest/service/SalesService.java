@@ -61,8 +61,6 @@ public interface SalesService {
 
     JSONObject shownetpayVno(TPreenregistrement p) throws JSONException;
 
-    JSONObject shownetpayVo(SalesParams params) throws JSONException;
-
     JSONObject addRemisse(SalesParams params) throws JSONException;
 
     JSONObject addDevisRemisse(SalesParams params) throws JSONException;
@@ -107,8 +105,6 @@ public interface SalesService {
 
     JSONObject modificationVentetierpayantprincipal(String venteId, ClotureVenteParams params) throws JSONException;
 
-    JSONObject shownetpayVoWithEncour(SalesParams params);
-
     JSONObject updateMedecin(String idVente, MedecinDTO medecinDTO) throws JSONException;
 
     JSONObject updateMedecin(String idVente, String medecinId) throws JSONException;
@@ -127,5 +123,7 @@ public interface SalesService {
 
     void updateVenteTva();
 
-    void upadteVente();
+    void updateVente();
+
+    JSONObject computeVONet(SalesParams params);
 }
