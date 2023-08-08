@@ -143,7 +143,7 @@ public class VenteRessource {
     @POST
     @Path("net/assurance")
     public Response netPayerAssurance(SalesParams params) throws JSONException {
-        JSONObject json = salesService.shownetpayVo(params);
+        JSONObject json = salesService.computeVONet(params);
         return Response.ok().entity(json.toString()).build();
     }
 

@@ -18,17 +18,17 @@ import util.DateConverter;
 public class SalesParams implements Serializable {
 
     private String typeVenteId, natureVenteId, remiseId, userVendeurId, stockId, produitId, typeDepoId;
-    private int qte, qteServie, qteUg = 0;
+    private int qte, qteServie, qteUg ;
     private String bonRef = "";
-    private boolean sansBon, checkUg = false;
+    private boolean sansBon, checkUg ;
     private TUser userId;
     private String venteId;
     private String itemId;
     private Integer itemPu;
     private Integer remiseDepot = 0;
-    private boolean devis = false;
-    private boolean depot = false;
-    private boolean prevente = false;
+    private boolean devis ;
+    private boolean depot ;
+    private boolean prevente ;
     private String clientId;
     private String ayantDroitId;
     private Integer montantTp;
