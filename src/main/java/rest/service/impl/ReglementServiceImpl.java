@@ -371,7 +371,7 @@ public class ReglementServiceImpl implements ReglementService {
                     getEmg().merge(a);
                 });
                 logService.updateItem(clotureVenteParams.getUserId(), caisse.getLgMVTCAISSEID(), Description,
-                        TypeLog.MVT_DE_CAISSE, caisse, getEmg());
+                        TypeLog.MVT_DE_CAISSE, caisse);
                 notificationService
                         .save(new Notification().canal(Canal.SMS_EMAIL).typeNotification(TypeNotification.MVT_DE_CAISSE)
                                 .message(Description).addUser(clotureVenteParams.getUserId()));
@@ -574,7 +574,7 @@ public class ReglementServiceImpl implements ReglementService {
                     }
                 });
                 logService.updateItem(clotureVenteParams.getUserId(), caisse.getLgMVTCAISSEID(), Description,
-                        TypeLog.MVT_DE_CAISSE, caisse, getEmg());
+                        TypeLog.MVT_DE_CAISSE, caisse);
                 notificationService
                         .save(new Notification().canal(Canal.SMS_EMAIL).typeNotification(TypeNotification.MVT_DE_CAISSE)
                                 .message(Description).addUser(clotureVenteParams.getUserId()));

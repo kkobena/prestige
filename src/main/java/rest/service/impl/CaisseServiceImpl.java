@@ -1095,8 +1095,7 @@ public class CaisseServiceImpl implements CaisseService {
                     + OTResumeCaisse.getLgUSERID().getStrFIRSTNAME() + " "
                     + OTResumeCaisse.getLgUSERID().getStrLASTNAME() + " par " + o.getStrFIRSTNAME() + " "
                     + o.getStrLASTNAME() + " effectuée avec succès";
-            logService.updateItem(o, idCaisse, Description, TypeLog.ANNULATION_DE_CAISSE, OTResumeCaisse,
-                    getEntityManager());
+            logService.updateItem(o, idCaisse, Description, TypeLog.ANNULATION_DE_CAISSE, OTResumeCaisse);
             createNotification(Description, TypeNotification.ANNULATION_CLOTURE_DE_CAISSE, o);
 
             json.put("success", true).put("msg", "Opération effectuée avec succes ");
@@ -1130,8 +1129,7 @@ public class CaisseServiceImpl implements CaisseService {
             OTCaisse.setLgUPDATEDBY(o.getStrLOGIN());
             OTCaisse.setDtUPDATED(new Date());
             getEntityManager().merge(OTCaisse);
-            logService.updateItem(o, idCaisse, Description, TypeLog.VALIDATION_DE_CAISSE, OTResumeCaisse,
-                    getEntityManager());
+            logService.updateItem(o, idCaisse, Description, TypeLog.VALIDATION_DE_CAISSE, OTResumeCaisse);
             json.put("success", true).put("msg", " Validation de cloture de caisse effectuée avec succes ");
             createNotification(Description, TypeNotification.VALIDATION_DE_CAISSE, o);
         } catch (Exception e) {
@@ -1421,8 +1419,7 @@ public class CaisseServiceImpl implements CaisseService {
                     mvtCaisse.getStrREFTICKET());
             addtransactionComptant(OTTypeMvtCaisse, Description, motifReglement, transac, mvtCaisse, tTypeReglement,
                     OTReglement, user, emg);
-            logService.updateItem(user, mvtCaisse.getStrREFTICKET(), Description, TypeLog.MVT_DE_CAISSE, mvtCaisse,
-                    emg);
+            logService.updateItem(user, mvtCaisse.getStrREFTICKET(), Description, TypeLog.MVT_DE_CAISSE, mvtCaisse);
             createNotification(Description, TypeNotification.MVT_DE_CAISSE, user);
             return json.put("success", true).put("msg", "Opération effectuée .").put("mvtId",
                     mvtCaisse.getLgMVTCAISSEID());
@@ -1633,7 +1630,7 @@ public class CaisseServiceImpl implements CaisseService {
                 + OTCoffreCaisse.getIntAMOUNT().intValue() + " par " + operateur.getStrFIRSTNAME() + " "
                 + operateur.getStrLASTNAME();
         logService.updateItem(operateur, OTCoffreCaisse.getIdCoffreCaisse(), Description,
-                TypeLog.ATTRIBUTION_DE_FOND_DE_CAISSE, OTCoffreCaisse, emg);
+                TypeLog.ATTRIBUTION_DE_FOND_DE_CAISSE, OTCoffreCaisse);
         createNotification(Description, TypeNotification.MVT_DE_CAISSE, operateur);
     }
 
@@ -1739,7 +1736,7 @@ public class CaisseServiceImpl implements CaisseService {
             TMvtCaisse OTMvtCaisse = addTMvtCaisse(user, typeMvtCaisse, reglement, Description, "1",
                     OTCoffreCaisse.getIntAMOUNT());
             logService.updateItem(user, OTMvtCaisse.getStrREFTICKET(), Description,
-                    TypeLog.VALIDATION_DE_FOND_DE_CAISSE, OTCoffreCaisse, getEntityManager());
+                    TypeLog.VALIDATION_DE_FOND_DE_CAISSE, OTCoffreCaisse);
             transactionService.addTransaction(user, user, OTMvtCaisse.getLgMVTCAISSEID(),
                     OTCoffreCaisse.getIntAMOUNT().intValue(), OTMvtCaisse.getIntAMOUNT().intValue(),
                     OTCoffreCaisse.getIntAMOUNT().intValue(), 0, Boolean.TRUE, CategoryTransaction.DEBIT,

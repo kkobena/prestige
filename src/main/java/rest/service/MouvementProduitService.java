@@ -37,7 +37,7 @@ public interface MouvementProduitService {
 
     void saveMvtProduit(Integer prixUn, TPreenregistrementDetail preenregistrementDetail, Typemvtproduit typemvtproduit,
             TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt, Integer qteDebut,
-            Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked, int ug);
+            Integer qteFinale, Integer valeurTva, boolean checked, int ug);
 
     void saveMvtProduit2(Integer prixUn, String pkey, Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID,
             TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, Integer valeurTva,

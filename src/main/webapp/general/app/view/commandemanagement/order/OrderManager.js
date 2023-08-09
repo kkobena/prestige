@@ -30,7 +30,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                     '<p> {str_FAMILLE_ITEM}</p>',
                     {
                         formatChange: function (v) {
-                            var color = v >= 0 ? 'green' : 'red';
+                            const color = v >= 0 ? 'green' : 'red';
                             return '<span style="color: ' + color + ';">' + Ext.util.Format.usMoney(v) + '</span>';
                         }
                     })
@@ -349,14 +349,16 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 'Imprimer la commande en cours?',
                 function (btn) {
                     if (btn === 'yes') {
-                        Me.onPdfClick(rec.get('lg_ORDER_ID'));
+                        Me.onPdfClick(rec);
 
                     }
                 });
 
     },
-    onPdfClick: function (lg_ORDER_ID) {
-        const linkUrl = '../webservices/commandemanagement/order/ws_generate_pdf.jsp?str_STATUT=is_Process&lg_ORDER_ID=' + lg_ORDER_ID;
+    onPdfClick: function (rec) {
+     
+          const linkUrl = '../EditionCommandeServlet?orderId=' + rec.get('lg_ORDER_ID') + '&refCommande=' +rec.get('str_REF_ORDER');
+     
         window.open(linkUrl);
 
     },
@@ -486,7 +488,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 'Confirmer la suppresssion',
                 function (btn) {
                     if (btn === 'yes') {
-                        var rec = grid.getStore().getAt(rowIndex);
+                        const rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
                             url: url_services_transaction_order + 'delete',
@@ -496,10 +498,10 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                             success: function (response) {
 
                                 testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
+                                const object = Ext.JSON.decode(response.responseText, false);
                                 if (object.success === "0") {
                                     Ext.MessageBox.alert('Error Message', object.errors);
-                                    return;
+                         
                                 } else {
                                     Ext.MessageBox.alert('Confirmation', object.errors);
                                     grid.getStore().reload();
@@ -526,7 +528,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
     },
     onCheckChange: function (column, rowIndex, checked, eOpts) {
         Array.prototype.unset = function (val) {
-            var index = this.indexOf(val);
+            let index = this.indexOf(val);
             if (index > -1) {
                 this.splice(index, 1);
             }
@@ -567,7 +569,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
                 },
                 success: function (response) {
                     testextjs.app.getController('App').StopWaitingProcess();
-                    var object = Ext.JSON.decode(response.responseText, false);
+                    let object = Ext.JSON.decode(response.responseText, false);
 
                     if (object.success === "1") {
 

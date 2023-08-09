@@ -125,7 +125,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
     @Override
     public void saveMvtProduit(Integer prixUn, TPreenregistrementDetail preenregistrementDetail,
             Typemvtproduit typemvtproduit, TFamille famille, TUser lgUSERID, TEmplacement emplacement, Integer qteMvt,
-            Integer qteDebut, Integer qteFinale, EntityManager emg, Integer valeurTva, boolean checked, int ug) {
+            Integer qteDebut, Integer qteFinale, Integer valeurTva, boolean checked, int ug) {
         HMvtProduit h = new HMvtProduit();
         h.setUuid(UUID.randomUUID().toString());
         h.setCreatedAt(LocalDateTime.now());
@@ -144,7 +144,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
         h.setQteFinale(qteFinale);
         h.setPreenregistrementDetail(preenregistrementDetail);
         h.setUg(ug);
-        emg.persist(h);
+        this.getEmg().persist(h);
     }
 
     @Override
@@ -240,11 +240,11 @@ public class MouvementProduitImpl implements MouvementProduitService {
 
     }
 
-    private void ajusterProduitAjustement(Params params, TAjustement ajustement, EntityManager emg) {
-        TAjustementDetail OTAjustementDetail = updateAjustementDetail(params, emg);
+    private void ajusterProduitAjustement(Params params, TAjustement ajustement) {
+        TAjustementDetail OTAjustementDetail = updateAjustementDetail(params);
         if (OTAjustementDetail == null) {
             TEmplacement emplacement = ajustement.getLgUSERID().getLgEMPLACEMENTID();
-            TFamilleStock familleStock = findByProduitId(params.getRefTwo(), emplacement.getLgEMPLACEMENTID(), emg);
+            TFamilleStock familleStock = findByProduitId(params.getRefTwo(), emplacement.getLgEMPLACEMENTID());
             Integer currentStock = familleStock.getIntNUMBERAVAILABLE();
             OTAjustementDetail = new TAjustementDetail();
             OTAjustementDetail.setLgAJUSTEMENTDETAILID(UUID.randomUUID().toString());
@@ -256,18 +256,17 @@ public class MouvementProduitImpl implements MouvementProduitService {
             OTAjustementDetail.setDtCREATED(new Date());
             OTAjustementDetail.setDtUPDATED(new Date());
             OTAjustementDetail.setStrSTATUT(commonparameter.statut_is_Process);
-            emg.persist(OTAjustementDetail);
+            em.persist(OTAjustementDetail);
         }
     }
 
     @Override
     public JSONObject creerAjustement(Params params) throws JSONException {
-        EntityManager emg = this.getEmg();
+
         JSONObject json = new JSONObject();
         try {
             String str_NAME = "Ajustement du "
                     + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy H:mm"));
-            // emg.getTransaction().begin();
             TAjustement OTAjustement = new TAjustement();
             OTAjustement.setLgAJUSTEMENTID(UUID.randomUUID().toString());
             OTAjustement.setLgUSERID(params.getOperateur());
@@ -276,16 +275,13 @@ public class MouvementProduitImpl implements MouvementProduitService {
             OTAjustement.setDtCREATED(new Date());
             OTAjustement.setDtUPDATED(new Date());
             OTAjustement.setStrSTATUT(commonparameter.statut_is_Process);
-            emg.persist(OTAjustement);
-            ajusterProduitAjustement(params, OTAjustement, emg);
-            // emg.getTransaction().commit();
+            this.getEmg().persist(OTAjustement);
+            ajusterProduitAjustement(params, OTAjustement);
+
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             json.put("data", new JSONObject().put("lgAJUSTEMENTID", OTAjustement.getLgAJUSTEMENTID()));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
-            // if (emg.getTransaction().isActive()) {
-            // emg.getTransaction().rollback();
-            // }
+            LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "L'opération a échoué");
         }
         return json;
@@ -297,16 +293,11 @@ public class MouvementProduitImpl implements MouvementProduitService {
         JSONObject json = new JSONObject();
         try {
             TAjustement ajustement = emg.find(TAjustement.class, params.getRefParent());
-            // emg.getTransaction().begin();
-            ajusterProduitAjustement(params, ajustement, emg);
-            // emg.getTransaction().commit();
+            ajusterProduitAjustement(params, ajustement);
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             json.put("data", new JSONObject().put("lgAJUSTEMENTID", ajustement.getLgAJUSTEMENTID()));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
-            // if (emg.getTransaction().isActive()) {
-            // emg.getTransaction().rollback();
-            // }
+            LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "L'opération a échoué");
 
         }
@@ -325,12 +316,12 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 json.put("success", false).put("msg", "L'opération a échoué");
                 return json;
             }
-            // emg.getTransaction().begin();
+
             ajustementDetail.setIntNUMBER(params.getValue());
             ajustementDetail.setIntNUMBERAFTERSTOCK(params.getValue() + params.getValueTwo());
             ajustementDetail.setDtUPDATED(new Date());
             emg.merge(ajustementDetail);
-            // emg.getTransaction().commit();
+
             json.put("success", true).put("msg", "L'opération effectuée avec success");
             json.put("data",
                     new JSONObject().put("lgAJUSTEMENTID", ajustementDetail.getLgAJUSTEMENTID().getLgAJUSTEMENTID()));
@@ -338,10 +329,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             return json;
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
-            // if (emg.getTransaction().isActive()) {
-            // emg.getTransaction().rollback();
-            // }
+            LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "L'opération a échoué");
             return json;
         }
@@ -361,13 +349,13 @@ public class MouvementProduitImpl implements MouvementProduitService {
             }
             TUser tUser = ajustement.getLgUSERID();
             TEmplacement emplacement = tUser.getLgEMPLACEMENTID();
-            // emg.getTransaction().begin();
+
             List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(ajustement.getLgAJUSTEMENTID(),
                     emg);
             ajustementDetails.forEach(it -> {
                 TFamille famille = it.getLgFAMILLEID();
-                TFamilleStock familleStock = findByProduitId(famille.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID(),
-                        emg);
+                TFamilleStock familleStock = findByProduitId(famille.getLgFAMILLEID(),
+                        emplacement.getLgEMPLACEMENTID());
                 Integer initStock = familleStock.getIntNUMBERAVAILABLE();
                 familleStock.setIntNUMBERAVAILABLE(it.getIntNUMBERAFTERSTOCK());
                 familleStock.setIntNUMBER(familleStock.getIntNUMBERAVAILABLE());
@@ -381,7 +369,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 String desc = "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME()
                         + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER()
                         + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
-                logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
+                logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille);
                 it.setStrSTATUT(commonparameter.statut_enable);
                 it.setDtUPDATED(new Date());
                 emg.merge(it);
@@ -398,10 +386,8 @@ public class MouvementProduitImpl implements MouvementProduitService {
             return json;
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
-            // if (emg.getTransaction().isActive()) {
-            // emg.getTransaction().rollback();
-            // }
+            LOG.log(Level.SEVERE, null, e);
+
             json.put("success", false).put("msg", "L'opération a échoué");
             return json;
         }
@@ -518,10 +504,10 @@ public class MouvementProduitImpl implements MouvementProduitService {
         return json;
     }
 
-    public TFamilleStock findByProduitId(String produitId, String emplecementId, EntityManager emg) {
+    private TFamilleStock findByProduitId(String produitId, String emplecementId) {
         TFamilleStock familleStock = null;
         try {
-            TypedQuery<TFamilleStock> query = emg.createQuery(
+            TypedQuery<TFamilleStock> query = em.createQuery(
                     "SELECT t FROM TFamilleStock t WHERE  t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable' ORDER BY t.dtCREATED DESC",
                     TFamilleStock.class);
             query.setParameter(1, produitId);
@@ -544,7 +530,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             query.setMaxResults(1);
             famille = query.getSingleResult();
         } catch (Exception e) {
-            // e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
         return famille;
     }
@@ -566,22 +552,22 @@ public class MouvementProduitImpl implements MouvementProduitService {
 
     }
 
-    private TAjustementDetail updateAjustementDetail(Params params, EntityManager emg) {
+    private TAjustementDetail updateAjustementDetail(Params params) {
         try {
             if (params.getRef() == null) {
                 return null;
             }
-            TAjustementDetail ajustementDetail = emg.find(TAjustementDetail.class, params.getRef());
+            TAjustementDetail ajustementDetail = em.find(TAjustementDetail.class, params.getRef());
             if (ajustementDetail == null) {
                 return null;
             }
             ajustementDetail.setIntNUMBER(ajustementDetail.getIntNUMBER() + params.getValue());
             ajustementDetail.setIntNUMBERAFTERSTOCK(ajustementDetail.getIntNUMBERAFTERSTOCK() + params.getValue());
             ajustementDetail.setDtUPDATED(new Date());
-            return emg.merge(ajustementDetail);
+            return em.merge(ajustementDetail);
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
 
@@ -594,15 +580,12 @@ public class MouvementProduitImpl implements MouvementProduitService {
         try {
 
             TAjustementDetail ajustementDetail = emg.find(TAjustementDetail.class, id);
-            // emg.getTransaction().begin();
+
             emg.remove(ajustementDetail);
-            // emg.getTransaction().commit();
+
             return json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-            e.printStackTrace(System.err);
-            // if (emg.getTransaction().isActive()) {
-            // emg.getTransaction().rollback();
-            // }
+            LOG.log(Level.SEVERE, null, e);
             return json.put("success", false).put("msg", "Opération a échoué");
         }
     }
@@ -655,18 +638,15 @@ public class MouvementProduitImpl implements MouvementProduitService {
 
             TAjustement ajustement = emg.find(TAjustement.class, id);
             List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(id, emg);
-            // emg.getTransaction().begin();
+
             ajustementDetails.forEach(c -> {
                 emg.remove(c);
             });
             emg.remove(ajustement);
-            // emg.getTransaction().commit();
+
             return json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-            e.printStackTrace(System.err);
-            // if (emg.getTransaction().isActive()) {
-            // emg.getTransaction().rollback();
-            // }
+            LOG.log(Level.SEVERE, null, e);
             return json.put("success", false).put("msg", "Opération a échoué");
         }
     }
@@ -756,7 +736,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
             query.setMaxResults(1);
             familleStock = query.getSingleResult();
         } catch (Exception e) {
-            // e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
         return familleStock;
     }
@@ -767,7 +747,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
         TFamilleStock familleStock;
 
         boolean isDetail = (OTFamille.getLgFAMILLEPARENTID() != null && !"".equals(OTFamille.getLgFAMILLEPARENTID()));
-        familleStock = findByProduitId(OTFamille.getLgFAMILLEID(), OTEmplacement.getLgEMPLACEMENTID(), emg);
+        familleStock = findByProduitId(OTFamille.getLgFAMILLEID(), OTEmplacement.getLgEMPLACEMENTID());
         if (familleStock != null) {
             initStock = familleStock.getIntNUMBERAVAILABLE();
             familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() + qty);
@@ -830,7 +810,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 if (!checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
                     TFamille OTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
                     TFamilleStock stockParent = findByProduitId(OTFamilleParent.getLgFAMILLEID(),
-                            emplacement.getLgEMPLACEMENTID(), emg);
+                            emplacement.getLgEMPLACEMENTID());
                     familleStock = deconditionner(tu, emplacement, tFamille, OTFamilleParent, stockParent, familleStock,
                             it.getIntQUANTITY(), emg);
                     saveMvtProduit(it.getLgPREENREGISTREMENTDETAILID(), typemvtproduit, tFamille, tu, emplacement,
