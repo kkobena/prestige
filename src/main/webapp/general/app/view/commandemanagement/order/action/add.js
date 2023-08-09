@@ -4,7 +4,7 @@
 var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
 var url_services_data_grossiste_suggerer = '../webservices/configmanagement/grossiste/ws_data.jsp';
 var url_services_data_famille_select_dovente = '../webservices/sm_user/famille/ws_data_jdbc.jsp';
-var url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
+
 var Me_Window;
 var Omode;
 var ref;
@@ -650,11 +650,10 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                     border: '0',
                     items: ['->',
                         {
-                            text: 'Enregistrer',
+                            text: 'Passer la commande',
                             id: 'btn_save',
                             iconCls: 'icon-clear-group',
                             scope: this,
-                            hidden: true,
                             handler: this.onbtnsave
                         },
                         {
@@ -663,7 +662,6 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                             iconCls: 'icon-clear-group',
                             scope: this,
                             hidden: false,
-                            //disabled: true,
                             handler: this.onbtncancel
                         }
                     ]
@@ -680,7 +678,6 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         }
 
         if (titre === "Modifier les informations de la commande") {
-
             Ext.getCmp('lgGROSSISTEID').setValue(this.getOdatasource().str_GROSSISTE_LIBELLE);
             int_montant_achat = Ext.util.Format.number(this.getOdatasource().PRIX_ACHAT_TOTAL, '0,000.');
             int_montant_vente = Ext.util.Format.number(this.getOdatasource().PRIX_VENTE_TOTAL, '0,000.');
@@ -775,7 +772,6 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         });
     },
     onbtncancel: function () {
-
         let xtype = "";
         if (str_STATUT === "is_Process" || str_STATUT === "is_Process") {
             xtype = "i_order_manager";
@@ -985,26 +981,32 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     },
 
     onbtnsave: function () {
-
+        const me = this;
+        const xtype = "orderpassmanager";
         Ext.MessageBox.confirm('Message',
-                'Confirmer l\'enregistrement de la commande',
+                'Confirme la passation',
                 function (btn) {
                     if (btn === 'yes') {
-
+                        testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_order + 'passeorder',
-                            params: {
-                                lg_ORDER_ID: Me_Window.getNameintern()
-                            },
-                            success: function (response) {
-                                let object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success == "0") {
-                                    Ext.MessageBox.alert('Error Message', object.errors);
-                                    return;
-                                }
+                            method: 'GET',
+                            url: '../api/v1/commande/statut/' + Me_Window.getNameintern() + '/passe',
+                            success: function () {
+                                testextjs.app.getController('App').StopWaitingProcess();
+                                Ext.MessageBox.confirm('Message',
+                                        'Imprimer le bon de commande?',
+                                        function (btn) {
+                                            if (btn === 'yes') {
+                                                me.onPdfClick( );
+                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
+                                            } else {
+                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
+                                            }
+                                        });
+
                             },
                             failure: function (response) {
-                              
+                                testextjs.app.getController('App').StopWaitingProcess();
                                 console.log("Bug " + response.responseText);
                                 Ext.MessageBox.alert('Error Message', response.responseText);
                             }
@@ -1021,7 +1023,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             titre: "Detail sur l'article [" + rec.get('lg_FAMILLE_NAME') + "]"
         });
     },
-  
+
     onRechClick: function () {
         const me = this;
         const val = Ext.getCmp('rechercherDetail');
@@ -1043,10 +1045,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             url: '../api/v1/commande/amount/' + id,
             success: function (response, options) {
                 const data = Ext.JSON.decode(response.responseText, true);
-                if (data.prixAchat === 0) {
-//                    me.onbtncancel();
-///laborex/webservices/sm_user/famille/ws_transaction.jsp
-                }
+
                 me.updateAmountFields(data);
 
             }
@@ -1062,6 +1061,11 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
         }
 
+    },
+    onPdfClick: function () {
+        const me = this;
+        const linkUrl = '../EditionCommandeServlet?orderId=' + me.getNameintern() + '&refCommande=' + me.getOdatasource().str_REF_ORDER;
+        window.open(linkUrl);
     },
     onAddNewItem: function () {
         const  me = this;
@@ -1105,7 +1109,3 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 });
 
 
-function setTitleFrame(str_data) {
-    this.title = this.title + " :: Ref " + str_data;
-
-}

@@ -260,4 +260,15 @@ public class CommandeRessource {
 
     }
 
+    @GET
+    @Path("statut/{id}/passe")
+    public Response passerCommande(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.orderService.passerLaCommande(id);
+        return Response.ok().build();
+    }
 }

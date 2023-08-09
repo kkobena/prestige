@@ -2,35 +2,33 @@
 <%@page import="bll.stock.Stock"%>
 <%@page import="org.json.JSONObject"%>
 <%@page import="org.json.JSONArray"%>
-<%@page import="dal.TFamilleStock"%>
+
 <%@page import="toolkits.utils.jdom"%>
 <%@page import="java.io.File"%>
 <%@page import="org.apache.commons.fileupload.FileItem"%>
 <%@page import="org.apache.commons.fileupload.DiskFileUpload"%>
 <%@page import="org.apache.commons.fileupload.FileUpload"%>
 <%@page import="bll.commandeManagement.suggestionManagement"%>
-<%@page import="bll.configManagement.familleGrossisteManagement"%>
+
 <%@page import="dal.TOrderDetail"%>
 <%@page import="bll.commandeManagement.bonLivraisonManagement"%>
 <%@page import="dal.TFamille"%>
-<%@page import="dal.TGrossiste"%>
-<%@page import="dal.TFamilleGrossiste"%>
+
 <%@page import="bll.commandeManagement.orderManagement"%>
-<%@page import="bll.warehouse.WarehouseManager"%>
+
 <%@page import="dal.TOrder"%>
-<%@page import="dal.TTypeRemise"%>
+
 <%@page import="toolkits.utils.logger"  %>
 <%@page import="dal.dataManager"  %>
 <%@page import="dal.TUser"  %>
-<%@page import="dal.TRole"  %>
+
 <%@page import="bll.bllBase"  %>
 <%@page import="java.util.*"  %>
 <%@page import="multilangue.Translate"  %>
 <%@page import="toolkits.utils.date"  %>
-<%@page import="bll.userManagement.privilege"  %>
+
 <%@page import="toolkits.parameters.commonparameter"  %>
-<%@page import="java.math.BigInteger"  %>
-<%@page import="bll.configManagement.familleManagement"  %>
+
 
 <%
     Translate oTranslate = new Translate();
@@ -238,7 +236,7 @@ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
             try {
                 stock.deleteOrder(lg_ORDER_ID);
                 ObllBase.setMessage("1");
-                ObllBase.setDetailmessage("Opération effectuée avec success");
+                ObllBase.setDetailmessage("Opï¿½ration effectuï¿½e avec success");
             } catch (Exception e) {
                 ObllBase.setMessage("0");
                 ObllBase.setDetailmessage("Echec " + e.getLocalizedMessage());
@@ -274,13 +272,7 @@ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
            
             str_REF = OTOrderDetail.getLgORDERID().getLgORDERID();
 
-        } else if (request.getParameter("mode").equals("passeorder")) {
-
-            OTOrder = OorderManagement.PasseOrderToGrossiste(lg_ORDER_ID);
-            ObllBase.setMessage(OorderManagement.getMessage());
-            ObllBase.setDetailmessage(OorderManagement.getDetailmessage());
-
-        } else if (request.getParameter("mode").equals("updateBL")) {
+        }  else if (request.getParameter("mode").equals("updateBL")) {
 
         } else if (request.getParameter("mode").equals("createBL")) {
             bonLivraisonManagement ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, OTUser);

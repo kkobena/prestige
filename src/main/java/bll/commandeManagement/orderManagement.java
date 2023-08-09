@@ -72,8 +72,6 @@ import util.DateConverter;
  */
 public class orderManagement extends bllBase {
 
-    Object OtableTOrder = dal.TOrder.class;
-
     public orderManagement(dataManager OdataManager, TUser OTUser) {
         super.setOTUser(OTUser);
         super.setOdataManager(OdataManager);
@@ -83,86 +81,6 @@ public class orderManagement extends bllBase {
     public orderManagement(dataManager OdataManager) {
         super.setOdataManager(OdataManager);
         super.checkDatamanager();
-    }
-
-    public void csvv(String chemin, String lg_GROSSISTE_ID) {
-
-        try {
-
-            BufferedReader fichier_source = new BufferedReader(new FileReader(chemin));
-            String chaine;
-            int i = 1;
-            TOrder OTOrder = null;
-            TOrderDetail OTOrderDetail = null;
-            TFamille OTFamille = null;
-
-            while ((chaine = fichier_source.readLine()) != null) {
-
-                if (OTOrder == null) {
-                    OTOrder = this.createOrder(lg_GROSSISTE_ID, commonparameter.statut_is_Process);
-                }
-                if (i > 0) {
-
-                    String[] tabChaine = chaine.split(";");
-
-                    OTFamille = (TFamille) this.getOdataManager().getEm()
-                            .createQuery("SELECT t FROM TFamille t WHERE t.intCIP = ?1 AND t.boolDECONDITIONNE = ?2")
-                            .setParameter(1, tabChaine[0]).setParameter(2, 0).getSingleResult();
-
-                    if (OTFamille != null) {
-                        OTOrderDetail = this.createOrderDetail(OTOrder.getLgORDERID(), OTFamille.getLgFAMILLEID(),
-                                lg_GROSSISTE_ID, Integer.parseInt(tabChaine[1]), OTFamille.getIntPRICE(),
-                                OTFamille.getIntPAF());
-                    } else {
-                        new logger().OCategory.info("OTFAMILLE null ");
-                    }
-
-                }
-                OTFamille = null;
-                i++;
-            }
-            fichier_source.close();
-        } catch (Exception e) {
-            System.out.println("Le fichier est introuvable !");
-        }
-    }
-
-    public String MoneyFormat(int Price) {
-
-        String s = "";
-
-        try {
-
-            // formated = Price + 0.00;
-            NumberFormat numberFormat = NumberFormat.getInstance(java.util.Locale.FRENCH);
-
-            s = numberFormat.format(Price);
-            new logger().OCategory.info("On a  " + s);
-        } catch (Exception e) {
-
-        }
-
-        return s;
-    }
-
-    public void basculerProduit(String lg_FAMILLE_ID, String lg_GROSSISTE_ID) {
-
-        // <editor-fold defaultstate="collapsed" desc="basculerPrduit - Envoyer l'article chez un autre grossiste">
-        TOrder OTOrder = null;
-        TOrderDetail OTOrderDetail = null;
-        TGrossiste OTGrossiste = null;
-        TFamille OTFamille = null;
-        TFamilleGrossiste OTFamilleGrossiste = null;
-
-        try {
-
-            OTGrossiste = this.getOdataManager().getEm().find(TGrossiste.class, lg_GROSSISTE_ID);
-            OTFamille = this.getOdataManager().getEm().find(TFamille.class, lg_FAMILLE_ID);
-
-        } catch (Exception e) {
-
-        }
-        // </editor-fold>
     }
 
     public TFamilleGrossiste getTProduct(String lg_FAMILLE_ID, String lg_GROSSISTE_ID) {
@@ -192,45 +110,6 @@ public class orderManagement extends bllBase {
             this.buildErrorTraceMessage(e.getMessage());
         }
         return OTFamilleGrossiste;
-    }
-
-    public List<TFamille> getallfamille() {
-
-        List<TFamille> lstTFamille = null;
-
-        TFamilleGrossiste OTFamilleGrossiste = null;
-
-        try {
-
-            lstTFamille = this.getOdataManager().getEm()
-                    .createQuery("SELECT t FROM TFamille t WHERE t.strSTATUT LIKE ?1")
-                    .setParameter(1, commonparameter.statut_enable).getResultList();
-            new logger().OCategory.info("lstTFamille " + lstTFamille.size());
-
-            for (TFamille OTFamille : lstTFamille) {
-
-                OTFamilleGrossiste = new TFamilleGrossiste();
-
-                OTFamilleGrossiste.setLgFAMILLEGROSSISTEID(this.getKey().getComplexId());
-                OTFamilleGrossiste.setLgFAMILLEID(OTFamille);
-                OTFamilleGrossiste.setLgGROSSISTEID(OTFamille.getLgGROSSISTEID());
-                OTFamilleGrossiste.setStrCODEARTICLE(OTFamille.getIntCIP());
-                OTFamilleGrossiste.setIntPRICE(OTFamille.getIntPRICE());
-
-                this.persiste(OTFamilleGrossiste);
-
-            }
-
-            new logger().OCategory.info("COOL ");
-
-        } catch (Exception Ex) {
-
-            new logger().OCategory.info("ECHEC  ");
-
-        }
-
-        return lstTFamille;
-
     }
 
     public List<TOrder> getOrderOfGrossiste(String lg_GROSSISTE_ID) {
@@ -529,117 +408,6 @@ public class orderManagement extends bllBase {
         return status;
     }
 
-    public void deleteOrder(String lg_ORDER_ID) {
-
-        TOrder OTOrder;
-        List<TOrderDetail> lstTOrderDetail;
-        int i = 0;
-        try {
-
-            OTOrder = this.FindOrder(lg_ORDER_ID);
-
-            lstTOrderDetail = this.getTOrderDetail(OTOrder.getLgORDERID(), OTOrder.getStrSTATUT());
-
-            for (TOrderDetail OTOrderDetails : lstTOrderDetail) {
-                new logger().OCategory.info("Ligne detail order *** " + OTOrderDetails.getLgORDERDETAILID());
-                TFamille Of = OTOrderDetails.getLgFAMILLEID();
-
-                if (this.delete(OTOrderDetails)) {
-                    int status = isCommandProcess(Of.getLgFAMILLEID());
-                    switch (status) {
-                    case 0:
-                        Of.setBCODEINDICATEUR((short) 0);
-                        break;
-                    case 1:
-                        Of.setBCODEINDICATEUR((short) 2);
-                        break;
-
-                    default:
-                        Of.setBCODEINDICATEUR((short) 1);
-                        break;
-                    }
-                    Of.setIntORERSTATUS((short) status);
-                    this.merge(Of);
-                    i++;
-                }
-
-            }
-
-            if (lstTOrderDetail.size() > 0) {
-                if (i == lstTOrderDetail.size()) {
-                    this.delete(OTOrder);
-                    this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-                } else {
-                    this.buildErrorTraceMessage(i + "/" + lstTOrderDetail.size() + " produit(s) supprimé(s)");
-                }
-
-            } else {
-                this.buildErrorTraceMessage("Aucune ligne trouvée dans la commande");
-            }
-
-        } catch (Exception E) {
-            E.printStackTrace();
-            this.buildErrorTraceMessage("Echec de suppression de la commande");
-        }
-
-    }
-
-    public void SuggestionDetailEnable(TSuggestionOrderDetails OTSuggestionOrderDetails) {
-
-        if (OTSuggestionOrderDetails != null) {
-            OTSuggestionOrderDetails.setStrSTATUT(commonparameter.statut_enable);
-            this.persiste(OTSuggestionOrderDetails);
-        }
-    }
-
-    public void SuggestionEnable(TSuggestionOrder OTSuggestionOrder) {
-
-        if (OTSuggestionOrder != null) {
-
-            OTSuggestionOrder.setStrSTATUT(commonparameter.statut_enable);
-            this.persiste(OTSuggestionOrder);
-        }
-
-    }
-
-    public TOrder PasseOrderToGrossiste(String lg_ORDER_ID) {
-
-        TOrder OTOrder = null;
-
-        try {
-            OTOrder = this.FindOrder(lg_ORDER_ID);
-            if (!this.getOdataManager().getEm().getTransaction().isActive()) {
-                this.getOdataManager().getEm().getTransaction().begin();
-            }
-
-            CriteriaBuilder cb = this.getOdataManager().getEm().getCriteriaBuilder();
-            CriteriaUpdate<TOrderDetail> cu = cb.createCriteriaUpdate(TOrderDetail.class);
-            Root<TOrderDetail> root = cu.from(TOrderDetail.class);
-            Join<TOrderDetail, TOrder> j = root.join("lgORDERID", JoinType.INNER);
-            cu.set(root.get(TOrderDetail_.strSTATUT), commonparameter.orderIsPassed)
-                    .set(root.get(TOrderDetail_.dtUPDATED), new Date())
-                    .set(root.get(TOrderDetail_.intORERSTATUS), (short) 3);
-            cu.where(cb.equal(j.get(TOrder_.lgORDERID), lg_ORDER_ID));
-            this.getOdataManager().getEm().createQuery(cu).executeUpdate();
-            OTOrder.setStrSTATUT(commonparameter.orderIsPassed);
-            OTOrder.setDtUPDATED(new Date());
-
-            this.getOdataManager().getEm().merge(OTOrder);
-            if (this.getOdataManager().getEm().getTransaction().isActive()) {
-                this.getOdataManager().getEm().getTransaction().commit();
-                this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-
-            }
-
-        } catch (Exception e) {
-            this.getOdataManager().getEm().getTransaction().rollback();
-            e.printStackTrace();
-            this.buildErrorTraceMessage("Echec d'enregistrement de la commande");
-        }
-
-        return OTOrder;
-    }
-
     // annulation d'une commande en cours
     public TOrder RollBackPasseOrderToCommandeProcess(String lg_ORDER_ID) {
 
@@ -860,64 +628,6 @@ public class orderManagement extends bllBase {
         }
     }
 
-    public TOrderDetail createTOrderDetailVIACSV(String lg_ORDER_ID, String lg_famille_id, String lg_GROSSISTE_ID,
-            int int_NUMBER, int int_PAF_DETAIL, int pu) {
-
-        TOrderDetail OTOrderDetail = null;
-        TGrossiste OTGrossiste = SearchGrossiste(lg_GROSSISTE_ID);
-
-        try {
-
-            OTOrderDetail = this.findFamilleInTOrderDetail(lg_ORDER_ID, lg_famille_id);
-            TFamille OTFamille = new familleManagement(this.getOdataManager()).getTFamille(lg_famille_id);
-
-            if (OTOrderDetail == null) {
-
-                new logger().OCategory.info(" OTOrderDetail is null creation dun nouveau detail ------ ***** ----- ");
-
-                OTOrderDetail = new TOrderDetail();
-                OTOrderDetail.setLgORDERDETAILID(this.getKey().getComplexId());
-                OTOrderDetail.setLgORDERID(this.FindOrder(lg_ORDER_ID));
-                OTOrderDetail.setLgFAMILLEID(OTFamille);
-                OTOrderDetail.setLgGROSSISTEID(OTGrossiste);
-                OTOrderDetail.setIntNUMBER(int_NUMBER);
-                OTOrderDetail.setIntQTEREPGROSSISTE(int_NUMBER);
-                OTOrderDetail.setIntQTEMANQUANT(int_NUMBER);
-                OTOrderDetail.setIntPRICE(int_NUMBER * int_PAF_DETAIL);
-                OTOrderDetail.setIntPRICEDETAIL(pu);
-                OTOrderDetail.setIntPAFDETAIL(int_PAF_DETAIL);
-                OTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
-                OTOrderDetail.setDtCREATED(new Date());
-                this.persiste(OTOrderDetail);
-            } else {
-
-                OTOrderDetail.setIntNUMBER(OTOrderDetail.getIntNUMBER() + int_NUMBER);
-                OTOrderDetail.setIntQTEMANQUANT(OTOrderDetail.getIntNUMBER());
-                OTOrderDetail.setIntPRICE(OTOrderDetail.getIntNUMBER() * int_PAF_DETAIL);
-                OTOrderDetail.setIntPRICEDETAIL(OTFamille.getIntPRICE());
-                OTOrderDetail.setIntPAFDETAIL(int_PAF_DETAIL);
-                OTOrderDetail.setIntQTEREPGROSSISTE(OTOrderDetail.getIntNUMBER());
-                OTOrderDetail.setDtUPDATED(new Date());
-                this.merge(OTOrderDetail);
-
-            }
-            OTOrderDetail.setIntORERSTATUS((short) 2);
-
-            new logger().OCategory.info(" creation de OTOrderDetail Details ------ ***** ----- ");
-
-            TFamille OF = OTOrderDetail.getLgFAMILLEID();
-            OF.setBCODEINDICATEUR((short) 1);
-            OF.setIntORERSTATUS((short) 2);
-            this.merge(OF);
-            this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-            return OTOrderDetail;
-        } catch (NoResultException e) {
-            e.printStackTrace();
-            new logger().OCategory.info("impossible de creer OTOrderDetail   " + e.toString());
-            return null;
-        }
-    }
-
     public TFamilleGrossiste getTProductItemStock(TFamille OTFamille) {
         TFamilleGrossiste OTFamilleGrossiste = null;
         try {
@@ -959,42 +669,6 @@ public class orderManagement extends bllBase {
         this.merge(OTFamille);
         new logger().OCategory.info("Mise a jour de OTOrderDetail " + OTOrderDetail.getIntNUMBER());
         this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-        return OTOrderDetail;
-    }
-
-    public TOrderDetail UpdateTOrderDetail(String lg_ORDERDETAIL_ID, String lg_ORDER_ID, String lg_famille_id,
-            String lg_GROSSISTE_ID, int int_NUMBER) {
-        TOrderDetail OTOrderDetail = null;
-        TGrossiste OTGrossiste = null;
-        TFamille OTFamille = null;
-        try {
-
-            OTOrderDetail = this.getOdataManager().getEm().find(TOrderDetail.class, lg_ORDERDETAIL_ID);
-            OTGrossiste = SearchGrossiste(lg_GROSSISTE_ID);
-            OTFamille = new familleManagement(this.getOdataManager()).getTFamille(lg_famille_id);
-            OTOrderDetail.setLgORDERID(this.FindOrder(lg_ORDER_ID));
-            OTOrderDetail.setLgFAMILLEID(OTFamille);
-            OTOrderDetail.setLgGROSSISTEID(OTGrossiste);
-            OTOrderDetail.setIntNUMBER(int_NUMBER);
-            OTOrderDetail.setIntQTEMANQUANT(int_NUMBER);
-            OTOrderDetail.setIntQTEREPGROSSISTE(OTOrderDetail.getIntNUMBER());
-            OTOrderDetail.setIntPRICE(OTOrderDetail.getIntQTEREPGROSSISTE() * OTFamille.getIntPAT());
-            OTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
-            OTOrderDetail.setDtUPDATED(new Date());
-            this.persiste(OTOrderDetail);
-            this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-            // this.refresh(OTOrderDetail);
-            // new logger().OCategory.info(" update de OTOrderDetail " + OTOrderDetail.getLgORDERDETAILID());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            this.buildErrorTraceMessage("Echec de mise a jour de l'article dans la commande");
-            /*
-             * OTOrderDetail = this.CreateTOrderDetail(lg_ORDER_ID, lg_famille_id, lg_GROSSISTE_ID, int_NUMBER); new
-             * logger().OCategory.info(" create de OTPreenregistrementDetail  " + OTOrderDetail.getLgORDERDETAILID() +
-             * "    " + e.toString()); return OTOrderDetail;
-             */
-        }
         return OTOrderDetail;
     }
 
@@ -1095,32 +769,6 @@ public class orderManagement extends bllBase {
     }
     // fin creation de commande
 
-    // mise a jour de commande
-    public TOrder UpdateOrder(String lg_ORDER_ID, String lgGROSSISTE_ID) {
-        TOrder OTOrder = null;
-        try {
-
-            OTOrder = this.FindOrder(lg_ORDER_ID);
-
-            try {
-                TGrossiste OTGrossiste = this.SearchGrossiste(lgGROSSISTE_ID);
-                if (OTGrossiste != null) {
-                    OTOrder.setLgGROSSISTEID(OTGrossiste);
-                }
-            } catch (Exception e) {
-            }
-            OTOrder.setDtUPDATED(new Date());
-            this.persiste(OTOrder);
-            this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            this.buildErrorTraceMessage("Echec de mise a jour de la commande");
-        }
-        return OTOrder;
-
-    }
-
     // fin mise a jour de commande
     public TSuggestionOrder createTSuggestionOrder(String lgGROSSISTE_ID, String str_STATUT) {
         TSuggestionOrder OTSuggestionOrder = null;
@@ -1146,48 +794,6 @@ public class orderManagement extends bllBase {
         return OTSuggestionOrder;
     }
 
-    // public TOrderDetail createOrderDetail(String lg_ORDER_ID, String lg_FAMILLE_ID, String lg_GROSSISTE_ID, int
-    // int_NUMBER) { ancienne bonne version. a decommenter en cas de probleme
-    //
-    // TOrderDetail oTOrderDetail = null;
-    // try {
-    // TFamille OTFamille = new familleManagement(this.getOdataManager()).getTFamille(lg_FAMILLE_ID);
-    // try {
-    // oTOrderDetail = this.findFamilleInTOrderDetail(lg_ORDER_ID, OTFamille.getLgFAMILLEID());
-    // // TOrderDetail OTOrderDetail = this.findFamilleInTOrderDetail(lg_ORDER_ID, OTFamille.getLgFAMILLEID());
-    //
-    // oTOrderDetail.setIntNUMBER(oTOrderDetail.getIntNUMBER() + int_NUMBER);
-    // oTOrderDetail.setIntQTEREPGROSSISTE(oTOrderDetail.getIntQTEREPGROSSISTE() + int_NUMBER);
-    // oTOrderDetail.setIntQTEMANQUANT(oTOrderDetail.getIntQTEMANQUANT() + int_NUMBER);
-    // oTOrderDetail.setDtUPDATED(new Date());
-    //
-    // } catch (Exception E) {
-    // oTOrderDetail = new TOrderDetail();
-    // oTOrderDetail.setLgORDERDETAILID(this.getKey().getComplexId());
-    // oTOrderDetail.setLgORDERID(this.FindOrder(lg_ORDER_ID));
-    // oTOrderDetail.setIntNUMBER(int_NUMBER);
-    // oTOrderDetail.setIntQTEREPGROSSISTE(oTOrderDetail.getIntNUMBER());
-    // oTOrderDetail.setIntQTEMANQUANT(int_NUMBER);
-    // oTOrderDetail.setLgFAMILLEID(OTFamille);
-    // try {
-    // TGrossiste OTGrossiste = this.SearchGrossiste(lg_GROSSISTE_ID);
-    // oTOrderDetail.setLgGROSSISTEID(OTGrossiste);
-    // } catch (Exception e) {
-    // }
-    // oTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
-    // oTOrderDetail.setDtCREATED(new Date());
-    // }
-    // oTOrderDetail.setIntPRICE(oTOrderDetail.getIntNUMBER() * OTFamille.getIntPAF());
-    // this.persiste(oTOrderDetail);
-    // this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-    // } catch (Exception e) {
-    // e.printStackTrace();
-    // this.buildErrorTraceMessage("Echec d'ajout de l'article à la commande");
-    // }
-    //
-    // return oTOrderDetail;
-    //
-    // }
     public TOrderDetail initTOrderDetail(String lg_ORDER_ID, int int_NUMBER, int int_PAF, int int_PRICE,
             TFamille OTFamille, String lg_GROSSISTE_ID) {
         TOrderDetail OTOrderDetail = null;
@@ -1327,41 +933,6 @@ public class orderManagement extends bllBase {
         return OTOrderDetail;
     }
 
-    public TOrderDetail UpdateOrderDetail(String lg_ORDERDETAIL_ID, String lg_ORDER_ID, String lg_FAMILLE_GROSSISTE_ID,
-            int int_NUMBER) {
-
-        TOrderDetail oTOrderDetail = null;
-
-        try {
-
-            oTOrderDetail = this.getOdataManager().getEm().find(TOrderDetail.class, lg_ORDERDETAIL_ID);
-
-            oTOrderDetail.setLgORDERID(this.FindOrder(lg_ORDER_ID));
-            oTOrderDetail.setIntNUMBER(int_NUMBER);
-            oTOrderDetail.setIntQTEMANQUANT(int_NUMBER);
-
-            dal.TFamilleGrossiste OTFamilleGrossiste = this.getOdataManager().getEm().find(TFamilleGrossiste.class,
-                    lg_FAMILLE_GROSSISTE_ID);
-            if (OTFamilleGrossiste != null) {
-                // oTOrderDetail.setLgFAMILLEGROSSISTEID(OTFamilleGrossiste);
-            }
-
-            oTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
-            oTOrderDetail.setDtUPDATED(new Date());
-
-            this.persiste(oTOrderDetail);
-            this.refresh(oTOrderDetail);
-
-            new logger().OCategory.info(" update de oTOrderDetail  " + oTOrderDetail.getLgORDERDETAILID());
-
-        } catch (Exception E) {
-
-            // oTOrderDetail = this.createOrderDetail(lg_ORDER_ID, lg_FAMILLE_GROSSISTE_ID, int_NUMBER);
-            new logger().OCategory.info(" CREATE de oTOrderDetail  " + oTOrderDetail.getLgORDERDETAILID());
-        }
-        return oTOrderDetail;
-    }
-
     public TOrderDetail findFamilleInTOrderDetail(String lg_ORDER_ID, String lg_FAMILLE_ID) {
         TOrderDetail OTOrderDetail = null;
         try {
@@ -1434,24 +1005,6 @@ public class orderManagement extends bllBase {
 
     }
 
-    public TOrder DeleteTOrder(String lg_ORDER_ID) {
-        TOrder OTOrder = this.FindOrder(lg_ORDER_ID);
-        List<TOrderDetail> lstT = this.getTOrderDetail("", lg_ORDER_ID, OTOrder.getStrSTATUT());
-        for (int i = 0; i < lstT.size(); i++) {
-
-            TOrderDetail OTOrderDetail = lstT.get(i);
-            OTOrderDetail.setStrSTATUT(commonparameter.statut_delete);
-
-            this.persiste(OTOrderDetail);
-            this.refresh(OTOrderDetail);
-
-        }
-        OTOrder.setStrSTATUT(commonparameter.statut_delete);
-        this.persiste(OTOrder);
-        this.refresh(OTOrder);
-        return OTOrder;
-    }
-
     public List<TOrderDetail> getTOrderDetail(String search_value, String lg_ORDER_ID, String str_STATUT) {
         List<TOrderDetail> lstT = new ArrayList<>();
         try {
@@ -1486,70 +1039,6 @@ public class orderManagement extends bllBase {
         return lstT;
     }
 
-    public List<TOrderDetail> getTOrderDetailNotDelete(String lg_ORDER_ID) {
-        List<TOrderDetail> lstT = new ArrayList<TOrderDetail>();
-        new logger().OCategory.info("lg_ORDER_ID " + lg_ORDER_ID);
-        try {
-            lstT = this.getOdataManager().getEm().createQuery(
-                    "SELECT t FROM TOrderDetail t WHERE t.strSTATUT NOT LIKE ?1 AND t.lgORDERID.lgORDERID LIKE ?2 ")
-                    .setParameter(1, commonparameter.statut_delete).setParameter(2, lg_ORDER_ID).getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return lstT;
-    }
-
-    public int Order_PrixDeVente(String lg_ORDER_ID) {
-
-        int PrixDeVenteTotal = 0;
-
-        try {
-            TOrder OTOrder = this.FindOrder(lg_ORDER_ID);
-            List<TOrderDetail> lstOrderDetail = this.getTOrderDetail("", lg_ORDER_ID, OTOrder.getStrSTATUT());
-
-            for (TOrderDetail olstOrderDetail : lstOrderDetail) {
-
-                PrixDeVenteTotal = olstOrderDetail.getLgFAMILLEID().getIntPRICE() + PrixDeVenteTotal;
-
-            }
-
-            new logger().OCategory.info("PrixDeVenteTotal   " + PrixDeVenteTotal);
-            return PrixDeVenteTotal;
-
-        } catch (Exception E) {
-
-            new logger().OCategory.info("PrixDeVenteTotal   " + PrixDeVenteTotal + " ERREUR" + E);
-            return PrixDeVenteTotal;
-        }
-
-    }
-
-    public int Order_PrixDAchat(String lg_ORDER_ID) {
-
-        int PrixDAchatTotal = 0;
-
-        try {
-            TOrder OTOrder = this.FindOrder(lg_ORDER_ID);
-            List<TOrderDetail> lstOrderDetail = this.getTOrderDetail("", lg_ORDER_ID, OTOrder.getStrSTATUT());
-
-            for (TOrderDetail olstOrderDetail : lstOrderDetail) {
-
-                PrixDAchatTotal = olstOrderDetail.getLgFAMILLEID().getIntPAT() + PrixDAchatTotal;
-
-            }
-
-            new logger().OCategory.info("PrixDAchatTotal   " + PrixDAchatTotal);
-            return PrixDAchatTotal;
-
-        } catch (Exception E) {
-
-            new logger().OCategory.info("PrixDAchatTotal   " + PrixDAchatTotal + " ERREUR" + E);
-            return PrixDAchatTotal;
-        }
-
-    }
-
     // gestion du bon de livraison
     // mise a jour des quantités en fonction des produits livrés
     public TBonLivraisonDetail UpdateTBonLivraisonDetailFromBonLivraison(String lg_BON_LIVRAISON_DETAIL,
@@ -1570,91 +1059,6 @@ public class orderManagement extends bllBase {
             e.printStackTrace();
             return OTBonLivraisonDetail;
         }
-    }
-
-    // mise a jour des quantités en fonction des produits livrés
-    public boolean ClosureOrder(String lg_ORDER_ID) {
-
-        boolean result = false;
-        List<TOrderDetail> lstTOrderDetail = new ArrayList<TOrderDetail>();
-        int i = 0;
-        try {
-
-            TOrder OTOrder = this.FindOrder(lg_ORDER_ID);
-            lstTOrderDetail = this.getTOrderDetail("", OTOrder.getLgORDERID(), OTOrder.getStrSTATUT());
-            new logger().OCategory.info("lstTOrderDetail size " + lstTOrderDetail.size());
-
-            for (TOrderDetail OTOrderDetail : lstTOrderDetail) {
-                this.refresh(OTOrderDetail);
-                new logger().OCategory.info("Statut " + OTOrderDetail.getStrSTATUT());
-                if (OTOrderDetail.getStrSTATUT().equals(commonparameter.statut_is_Closed)) {
-                    i++;
-                }
-            }
-            new logger().OCategory.info("valeur final i " + i);
-            if (i == lstTOrderDetail.size()) {
-                OTOrder.setStrSTATUT(commonparameter.statut_is_Closed);
-                OTOrder.setDtUPDATED(new Date());
-                this.persiste(OTOrder);
-            }
-
-            this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-
-            result = true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            this.buildErrorTraceMessage("Echec de clôture de la commande");
-            new logger().OCategory.info("Echec de clôture de la commande");
-        }
-        return result;
-    }
-
-    public boolean ClosureOrderForce(String lg_ORDER_ID) {
-
-        boolean result = false;
-        List<TOrderDetail> lstTOrderDetail = new ArrayList<TOrderDetail>();
-        int i = 0;
-        try {
-
-            TOrder OTOrder = this.FindOrder(lg_ORDER_ID);
-            lstTOrderDetail = this.getTOrderDetail("", OTOrder.getLgORDERID(), OTOrder.getStrSTATUT());
-            new logger().OCategory.info("lstTOrderDetail size " + lstTOrderDetail.size());
-
-            for (TOrderDetail OTOrderDetail : lstTOrderDetail) {
-                this.refresh(OTOrderDetail);
-                new logger().OCategory.info("Statut " + OTOrderDetail.getStrSTATUT());
-                OTOrderDetail.setStrSTATUT(commonparameter.statut_is_Closed);
-                OTOrderDetail.setDtUPDATED(new Date());
-                this.persiste(OTOrderDetail);
-            }
-            this.ClosureOrder(OTOrder.getLgORDERID());
-            // this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-
-            result = true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            this.buildErrorTraceMessage("Echec de clôture de la commande");
-            new logger().OCategory.info("Echec de clôture de la commande");
-        }
-        return result;
-    }
-
-    public TOrderDetail FindOrderDetail(String lg_ORDER_ID, String lg_FAMILLE_ID) {
-
-        TOrderDetail OTOrderDetail = null;
-
-        try {
-            OTOrderDetail = (TOrderDetail) this.getOdataManager().getEm().createQuery(
-                    "SELECT t FROM TOrderDetail t WHERE t.lgORDERID.lgORDERID = ?1 AND t.lgFAMILLEID.lgFAMILLEID = ?2 AND (t.strSTATUT LIKE ?3 OR t.strSTATUT LIKE ?4)")
-                    .setParameter(1, lg_ORDER_ID).setParameter(2, lg_FAMILLE_ID)
-                    .setParameter(3, commonparameter.orderIsPassed).setParameter(4, commonparameter.orderIsPartial)
-                    .getSingleResult();
-            new logger().OCategory.info("Succes OTOrderDetail trouve   " + OTOrderDetail.getLgORDERDETAILID());
-        } catch (NoResultException e) {
-
-            new logger().OCategory.info("Error Detail inexistant   " + e.toString());
-        }
-        return OTOrderDetail;
     }
 
     // liste des commandes d'un produit sur une periode
@@ -1723,31 +1127,6 @@ public class orderManagement extends bllBase {
     }
     // fin liste des commandes d'un produit sur une periode
 
-    // quantité d'entree ou sortie d'un article
-    public int getQauntityCmdeByArticle(String search_value, Date dtDEBUT, Date dtFin, String lg_FAMILLE_ID,
-            String lg_ORDER_ID, String lg_GROSSISTE_ID) {
-        int result = 0;
-        List<TOrderDetail> lstTOrderDetail = new ArrayList<TOrderDetail>();
-
-        try {
-            if (search_value.equalsIgnoreCase("") || search_value == null) {
-                search_value = "%%";
-            }
-            lstTOrderDetail = this.listeCommandeByProductAndPeriod(search_value, dtDEBUT, dtFin, lg_FAMILLE_ID,
-                    lg_ORDER_ID, lg_GROSSISTE_ID);
-            for (TOrderDetail OTOrderDetail : lstTOrderDetail) {
-                result += OTOrderDetail.getIntNUMBER();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            this.setMessage(commonparameter.PROCESS_FAILED);
-        }
-        new logger().OCategory.info("result:" + result);
-        return result;
-    }
-
-    // fin quantité d'entree ou sortie d'un article
-    // generation du numero de commande
     public String buildCommandeRef(Date ODate) throws JSONException {
         TParameters OTParameters = this.getOdataManager().getEm().find(TParameters.class,
                 "KEY_LAST_ORDER_COMMAND_NUMBER");
@@ -1818,77 +1197,6 @@ public class orderManagement extends bllBase {
     }
     // fin generation du numero de commande
 
-    // liste des artcles d'une commande
-    public List<TOrderDetail> listeOrderDetail(String lg_ORDER_ID) {
-        List<TOrderDetail> lstTOrderDetail = new ArrayList<TOrderDetail>();
-        try {
-            lstTOrderDetail = this.getOdataManager().getEm()
-                    .createQuery("SELECT t FROM TOrderDetail t WHERE t.lgORDERID.lgORDERID LIKE ?1")
-                    .setParameter(1, lg_ORDER_ID).getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        new logger().OCategory.info("lstTOrderDetail taille " + lstTOrderDetail.size());
-
-        return lstTOrderDetail;
-    }
-    // fin liste des artcles d'une commande
-
-    // liste des commandes
-    public List<TOrder> listeOrder(String search_value, String str_STATUT) {
-        List<TOrder> lstTOrder = new ArrayList<>();
-        try {
-            if (search_value.equalsIgnoreCase("") || search_value == null) {
-                search_value = "%%";
-            }
-            lstTOrder = this.getOdataManager().getEm().createQuery(
-                    "SELECT t FROM TOrder t, TOrderDetail to WHERE t.lgORDERID = to.lgORDERID.lgORDERID AND (t.strREFORDER LIKE ?1 OR t.lgGROSSISTEID.strLIBELLE LIKE ?1 OR to.lgFAMILLEID.intCIP LIKE ?1 OR to.lgFAMILLEID.intEAN13 LIKE ?1 OR to.lgFAMILLEID.strDESCRIPTION LIKE ?1) AND (t.strSTATUT LIKE ?3 OR t.strSTATUT LIKE ?4 ) GROUP BY to.lgORDERID.lgORDERID ORDER BY t.dtUPDATED DESC ")
-                    .setParameter(1, search_value + "%").setParameter(3, str_STATUT)
-                    .setParameter(4, DateConverter.STATUT_PHARMA).getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        new logger().OCategory.info("lstTOrder taille " + lstTOrder.size());
-
-        return lstTOrder;
-    }
-
-    public List<TOrder> listeOrder(String search_value) {
-        List<TOrder> lstTOrder = new ArrayList<>();
-        try {
-            if (search_value.equalsIgnoreCase("") || search_value == null) {
-                search_value = "%%";
-            }
-            lstTOrder = this.getOdataManager().getEm().createQuery(
-                    "SELECT t FROM TOrder t, TOrderDetail o WHERE o.lgORDERID.lgORDERID = t.lgORDERID AND (t.strREFORDER LIKE ?1 OR t.lgGROSSISTEID.strLIBELLE LIKE ?1 OR o.lgFAMILLEID.intCIP LIKE ?1 OR o.lgFAMILLEID.intEAN13 LIKE ?1) AND (t.strSTATUT LIKE ?2 OR t.strSTATUT LIKE ?3) GROUP BY t.lgORDERID ORDER BY t.dtCREATED DESC ")
-                    .setParameter(1, search_value + "%").setParameter(2, commonparameter.statut_is_Waiting)
-                    .setParameter(3, commonparameter.orderIsPassed).getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        new logger().OCategory.info("lstTOrder taille " + lstTOrder.size());
-
-        return lstTOrder;
-    }
-
-    public List<TOrder> listeOrder(String search_value, Date dtDEBUT, Date dtFin) {
-        List<TOrder> lstTOrder = new ArrayList<TOrder>();
-        try {
-            if (search_value.equalsIgnoreCase("") || search_value == null) {
-                search_value = "%%";
-            }
-            lstTOrder = this.getOdataManager().getEm().createQuery(
-                    "SELECT t FROM TOrder t WHERE (t.strREFORDER LIKE ?1 OR t.lgGROSSISTEID.strLIBELLE LIKE ?1) AND (t.strSTATUT LIKE ?2 OR t.strSTATUT LIKE ?3) AND (t.dtCREATED >= ?4 AND t.dtCREATED <= ?5) ORDER BY t.dtCREATED DESC ")
-                    .setParameter(1, search_value + "%").setParameter(2, commonparameter.statut_is_Waiting)
-                    .setParameter(3, commonparameter.orderIsPassed).setParameter(4, dtDEBUT).setParameter(5, dtFin)
-                    .getResultList();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        new logger().OCategory.info("lstTOrder taille " + lstTOrder.size());
-
-        return lstTOrder;
-    }
     // fin liste des artcles d'une commande
 
     public boolean ImportOrder(String str_FILE, String lg_ORDER_ID, String mode, String lg_GROSSISTE_ID, String format,
@@ -2148,20 +1456,6 @@ public class orderManagement extends bllBase {
         return result;
     }
     // fin mise a jour de la quantité reponse du grossiste
-
-    // lecture d'un fichier csv
-    public List<String[]> loadData(String file) {
-
-        List<String[]> allRows = new ArrayList<>();
-        try {
-            CSVReader reader = new CSVReader(new FileReader(file));
-            allRows = reader.readAll();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return allRows;
-    }
-    // fin lecture d'un fichier csv
 
     // recuperation d'un commande par la reference
     public TOrder getOrderByRef(String str_REF) {
@@ -2471,130 +1765,6 @@ public class orderManagement extends bllBase {
 
     }
 
-    public TOrderDetail createOrderDetail_(String lg_ORDER_ID, String lg_FAMILLE_ID, String lg_GROSSISTE_ID,
-            int int_NUMBER, int int_PRICE, int int_PAF) {
-
-        TOrderDetail oTOrderDetail = null;
-        try {
-            TFamille OTFamille = new familleManagement(this.getOdataManager()).getTFamille(lg_FAMILLE_ID);
-            try {
-                oTOrderDetail = this.findFamilleInTOrderDetail(lg_ORDER_ID, OTFamille.getLgFAMILLEID());
-                // TOrderDetail OTOrderDetail = this.findFamilleInTOrderDetail(lg_ORDER_ID, OTFamille.getLgFAMILLEID());
-
-                if (oTOrderDetail != null) {
-                    oTOrderDetail.setIntNUMBER(oTOrderDetail.getIntNUMBER() + int_NUMBER);
-                    oTOrderDetail.setIntQTEREPGROSSISTE(oTOrderDetail.getIntQTEREPGROSSISTE() + int_NUMBER);
-                    oTOrderDetail.setIntQTEMANQUANT(oTOrderDetail.getIntQTEMANQUANT() + int_NUMBER);
-                    oTOrderDetail.setDtUPDATED(new Date());
-                } else {
-                    oTOrderDetail.setIntNUMBER(int_NUMBER);
-                    oTOrderDetail.setIntQTEREPGROSSISTE(int_NUMBER);
-                    oTOrderDetail.setIntQTEMANQUANT(int_NUMBER);
-                    oTOrderDetail.setIntPAFDETAIL(int_PAF);
-                    oTOrderDetail.setIntPRICEDETAIL(int_PRICE);
-                    oTOrderDetail.setDtUPDATED(new Date());
-                }
-
-            } catch (Exception E) {
-                oTOrderDetail = new TOrderDetail();
-                oTOrderDetail.setLgORDERDETAILID(this.getKey().getComplexId());
-                oTOrderDetail.setLgORDERID(this.FindOrder(lg_ORDER_ID));
-                oTOrderDetail.setIntNUMBER(int_NUMBER);
-                oTOrderDetail.setIntQTEREPGROSSISTE(oTOrderDetail.getIntNUMBER());
-                oTOrderDetail.setIntQTEMANQUANT(int_NUMBER);
-                oTOrderDetail.setIntPAFDETAIL(int_PAF);
-                oTOrderDetail.setIntPRICEDETAIL(int_PRICE);
-                oTOrderDetail.setLgFAMILLEID(OTFamille);
-                try {
-                    TGrossiste OTGrossiste = this.SearchGrossiste(lg_GROSSISTE_ID);
-                    oTOrderDetail.setLgGROSSISTEID(OTGrossiste);
-                } catch (Exception e) {
-                }
-                oTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
-                oTOrderDetail.setDtCREATED(new Date());
-                oTOrderDetail.setDtUPDATED(new Date());
-            }
-            oTOrderDetail.setIntORERSTATUS((short) 2);
-            oTOrderDetail.setIntPRICE(oTOrderDetail.getIntNUMBER() * oTOrderDetail.getIntPAFDETAIL());
-            this.persiste(oTOrderDetail);
-            OTFamille.setIntORERSTATUS((short) 2);
-            this.merge(OTFamille);
-            this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            this.buildErrorTraceMessage("Echec d'ajout de l'article à la commande");
-        }
-
-        return oTOrderDetail;
-
-    }
-
-    public TOrderDetail UpdateOrderDetail_(String lg_ORDERDETAIL_ID, String lg_ORDER_ID, String lg_FAMILLE_GROSSISTE_ID,
-            int int_NUMBER) {
-
-        TOrderDetail oTOrderDetail = null;
-
-        try {
-
-            oTOrderDetail = this.getOdataManager().getEm().find(TOrderDetail.class, lg_ORDERDETAIL_ID);
-
-            oTOrderDetail.setLgORDERID(this.FindOrder(lg_ORDER_ID));
-            oTOrderDetail.setIntNUMBER(int_NUMBER);
-            oTOrderDetail.setIntQTEMANQUANT(int_NUMBER);
-
-            dal.TFamilleGrossiste OTFamilleGrossiste = this.getOdataManager().getEm().find(TFamilleGrossiste.class,
-                    lg_FAMILLE_GROSSISTE_ID);
-            if (OTFamilleGrossiste != null) {
-                // oTOrderDetail.setLgFAMILLEGROSSISTEID(OTFamilleGrossiste);
-            }
-
-            oTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
-            oTOrderDetail.setDtUPDATED(new Date());
-
-            this.persiste(oTOrderDetail);
-            this.refresh(oTOrderDetail);
-
-            new logger().OCategory.info(" update de oTOrderDetail  " + oTOrderDetail.getLgORDERDETAILID());
-
-        } catch (Exception E) {
-
-            // oTOrderDetail = this.createOrderDetail(lg_ORDER_ID, lg_FAMILLE_GROSSISTE_ID, int_NUMBER);
-            new logger().OCategory.info(" CREATE de oTOrderDetail  " + oTOrderDetail.getLgORDERDETAILID());
-        }
-        return oTOrderDetail;
-    }
-
-    public TOrderDetail findFamilleInTOrderDetail_(String lg_ORDER_ID, String lg_FAMILLE_ID) {
-        TOrderDetail OTOrderDetail = null;
-        try {
-            new logger().OCategory.info("lg_ORDER_ID " + lg_ORDER_ID + " lg_FAMILLE_ID " + lg_FAMILLE_ID);
-            OTOrderDetail = (TOrderDetail) this.getOdataManager().getEm().createQuery(
-                    "SELECT t FROM TOrderDetail t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgORDERID.lgORDERID LIKE ?2 AND (t.strSTATUT LIKE ?3 OR t.strSTATUT LIKE ?4) ")
-                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, lg_ORDER_ID)
-                    .setParameter(3, commonparameter.orderIsPassed).setParameter(4, commonparameter.statut_is_Process)
-                    .getSingleResult();
-        } catch (Exception e) {
-            this.buildErrorTraceMessage(e.getMessage());
-        }
-        return OTOrderDetail;
-    }
-
-    // gestion des evaluations des offres de prix
-    /*
-     * public TEvaluationoffreprix addProductToEvaluateOffer(String str_PRESTATAIRE) { TEvaluationoffreprix
-     * OTEvaluationoffreprix = null; try {
-     *
-     * OTEvaluationoffreprix = new TEvaluationoffreprix();
-     * OTEvaluationoffreprix.setLgEVALUATIONOFFREPRIXID(this.getKey().getComplexId());
-     * OTEvaluationoffreprix.setStrPRESTATAIRE(str_PRESTATAIRE); OTEvaluationoffreprix.setIntPRICEOFFRE(0);
-     * OTEvaluationoffreprix.setStrSTATUT(commonparameter.statut_is_Process); OTEvaluationoffreprix.setDtCREATED(new
-     * Date()); if (this.persiste(OTEvaluationoffreprix)) { this.buildSuccesTraceMessage("Produit ajouté avec succès");
-     * } else { this.buildErrorTraceMessage("Echec d'ajout produit"); }
-     *
-     * } catch (Exception e) { e.printStackTrace();
-     * this.buildErrorTraceMessage("Echec d'ajout produit. Veuillez contacter votre administrateur"); } return
-     * OTEvaluationoffreprix; }
-     */
     public boolean addProductToEvaluateOffer(String lg_PRODUCT_ID, int int_NUMBER, int int_NUMBER_GRATUIT,
             int int_PRICE_OFFRE) {
         boolean result = false;
@@ -2620,17 +1790,7 @@ public class orderManagement extends bllBase {
             OTEvaluationoffreprix.setIntNUMBERGRATUIT(OTEvaluationoffreprix.getIntNUMBERGRATUIT() + int_NUMBER_GRATUIT);
             OTEvaluationoffreprix.setIntPRICEOFFRE(int_PRICE_OFFRE);
             OTEvaluationoffreprix.setDtUPDATED(now);
-            // int_PRICE_OFFRE_TOTAL_NEW = OTEvaluationoffreprix.getIntPRICEOFFRE() - int_PRICE_OFFRE_OLD +
-            // ((OTEvaluationoffreprixDetail.getIntNUMBER() + OTEvaluationoffreprixDetail.getIntNUMBERGRATUIT()) *
-            // OTEvaluationoffreprixDetail.getIntPRICEOFFRE());
 
-            /*
-             * new
-             * logger().OCategory.info("int_PRICE_OFFRE_TOTAL_NEW:"+int_PRICE_OFFRE_TOTAL_NEW+"|int_PRICE_OFFRE_OLD:"+
-             * int_PRICE_OFFRE_OLD); //mise a jour du montant total de l'evaluation depuis la base
-             * OTEvaluationoffreprix.setIntPRICEOFFRE(int_PRICE_OFFRE_TOTAL_NEW);
-             * this.getOdataManager().getEm().merge(OTEvaluationoffreprix);
-             */
             if (this.persiste(OTEvaluationoffreprix)) {
                 this.buildSuccesTraceMessage("Produit ajouté avec succès");
                 result = true;
@@ -2700,24 +1860,6 @@ public class orderManagement extends bllBase {
         return OTEvaluationoffreprix;
     }
 
-    /*
-     * public TEvaluationoffreprix updateProductToEvaluateOffer(String lg_EVALUATIONOFFREPRIX_ID, String
-     * str_PRESTATAIRE) {
-     *
-     * TEvaluationoffreprix OTEvaluationoffreprix = null; try { OTEvaluationoffreprix =
-     * this.getOdataManager().getEm().find(TEvaluationoffreprix.class, lg_EVALUATIONOFFREPRIX_ID); if
-     * (OTEvaluationoffreprix == null) {
-     * this.buildErrorTraceMessage("Echec de mise à jour, produit inexistant dans l'offre"); return null; }
-     *
-     * OTEvaluationoffreprix.setStrPRESTATAIRE(str_PRESTATAIRE); OTEvaluationoffreprix.setDtUPDATED(new Date()); if
-     * (this.persiste(OTEvaluationoffreprix)) {
-     * this.buildSuccesTraceMessage("Produit mise à jour effectué avec succès"); } else {
-     * this.buildErrorTraceMessage("Echec de mise à jour du produit dans l'offre"); }
-     *
-     * } catch (Exception e) { e.printStackTrace();
-     * this.buildErrorTraceMessage("Echec de mise à jour. Veuillez contacter votre administrateur"); } return
-     * OTEvaluationoffreprix; }
-     */
     public TEvaluationoffreprix updateProductToEvaluateOffer(String lg_EVALUATIONOFFREPRIX_ID, int int_NUMBER,
             int int_NUMBER_GRATUIT, int int_PRICE_OFFRE) {
 
@@ -2766,17 +1908,6 @@ public class orderManagement extends bllBase {
         return OEvaluationoffreprix;
     }
 
-    /*
-     * public boolean deleteProductToEvaluateOffer(String lg_EVALUATIONOFFREPRIX_ID) { boolean result = false; long
-     * count = 0; try { Object resultat =
-     * this.getOdataManager().getEm().createNativeQuery("CALL `proc_evaluationoffreprix`('"
-     * +lg_EVALUATIONOFFREPRIX_ID+"', '"+commonparameter.statut_delete+"')").getSingleResult(); count =
-     * Long.valueOf(String.valueOf(resultat)); new logger().OCategory.info(count); result = true;
-     * this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES")); } catch (Exception e) {
-     * e.printStackTrace(); this.buildErrorTraceMessage("Echec de suppression de l'évaluation de l'offre");
-     *
-     * } return result; }
-     */
     public boolean deleteProductToEvaluateOffer(String lg_EVALUATIONOFFREPRIXL_ID) {
         boolean result = false;
         TEvaluationoffreprix OTEvaluationoffreprix = null;
@@ -2852,26 +1983,6 @@ public class orderManagement extends bllBase {
         return result;
     }
 
-    /*
-     * public List<TEvaluationoffreprixDetail> getAllTEvaluationoffreprixDetail(String search_value, String
-     * lg_EVALUATIONOFFREPRIX_ID, String str_STATUT, int start, int limit) { List<TEvaluationoffreprixDetail>
-     * lstTEvaluationoffreprixDetail = new ArrayList<TEvaluationoffreprixDetail>(); try { lstTEvaluationoffreprixDetail
-     * = this.getOdataManager().getEm().
-     * createQuery("SELECT t FROM TEvaluationoffreprixDetail t WHERE (t.lgFAMILLEID.strDESCRIPTION LIKE ?1 OR t.lgFAMILLEID.intCIP LIKE ?1 OR t.lgFAMILLEID.intEAN13 LIKE ?1) AND t.strSTATUT = ?2 AND t.lgEVALUATIONOFFREPRIXID.lgEVALUATIONOFFREPRIXID = ?3 ORDER BY t.lgFAMILLEID.strDESCRIPTION"
-     * ) .setParameter(1, search_value + "%").setParameter(2, commonparameter.statut_enable).setParameter(3,
-     * lg_EVALUATIONOFFREPRIX_ID).setFirstResult(start).setMaxResults(limit).getResultList(); } catch (Exception e) { }
-     * return lstTEvaluationoffreprixDetail; }
-     *
-     * public List<TEvaluationoffreprixDetail> getAllTEvaluationoffreprixDetail(String search_value, String
-     * lg_EVALUATIONOFFREPRIX_ID, String str_STATUT) { List<TEvaluationoffreprixDetail> lstTEvaluationoffreprixDetail =
-     * new ArrayList<TEvaluationoffreprixDetail>(); try { lstTEvaluationoffreprixDetail =
-     * this.getOdataManager().getEm().
-     * createQuery("SELECT t FROM TEvaluationoffreprixDetail t WHERE (t.lgFAMILLEID.strDESCRIPTION LIKE ?1 OR t.lgFAMILLEID.intCIP LIKE ?1 OR t.lgFAMILLEID.intEAN13 LIKE ?1) AND t.strSTATUT = ?2 AND t.lgEVALUATIONOFFREPRIXID.lgEVALUATIONOFFREPRIXID = ?3 ORDER BY t.lgFAMILLEID.strDESCRIPTION"
-     * ) .setParameter(1, search_value + "%").setParameter(2, commonparameter.statut_enable).setParameter(3,
-     * lg_EVALUATIONOFFREPRIX_ID).getResultList(); } catch (Exception e) { } return lstTEvaluationoffreprixDetail; }
-     */
-    // fin gestion des evaluations des offres de prix
-    // check des produits d'une commande
     public List<String> checkImport(List<String> lstData, String format) {
         List<String> lst = new ArrayList<String>();
         TFamille OTFamille = null;
@@ -2928,30 +2039,6 @@ public class orderManagement extends bllBase {
             e.printStackTrace();
         }
         return status;
-    }
-
-    public TSuggestionOrder createTSuggestionOrderBACK(String lgGROSSISTE_ID, String str_STATUT) {
-        TSuggestionOrder OTSuggestionOrder = null;
-        TGrossiste OTGrossiste = null;
-        try {
-            OTSuggestionOrder = new TSuggestionOrder();
-            OTSuggestionOrder.setLgSUGGESTIONORDERID(this.getKey().getComplexId());
-            OTSuggestionOrder.setStrREF("REF_" + this.getKey().getShortId(7));
-            OTGrossiste = new grossisteManagement(this.getOdataManager()).getGrossiste(lgGROSSISTE_ID);
-            if (OTGrossiste == null) {
-                this.buildErrorTraceMessage("Echec d'enregistrement de la suggestion. Grossiste inexistant");
-                return null;
-            }
-            OTSuggestionOrder.setLgGROSSISTEID(OTGrossiste);
-            OTSuggestionOrder.setStrSTATUT(str_STATUT);
-            OTSuggestionOrder.setDtCREATED(new Date());
-            OTSuggestionOrder.setDtUPDATED(new Date());
-            this.getOdataManager().getEm().merge(OTSuggestionOrder);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return OTSuggestionOrder;
     }
 
     public TSuggestionOrder createSuggestionOrder(String lgGROSSISTE_ID, String str_STATUT) {

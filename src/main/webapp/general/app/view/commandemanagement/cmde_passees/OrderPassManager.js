@@ -1,5 +1,5 @@
 var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
-var url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
+
 
 var Me;
 var store_order;
@@ -33,7 +33,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
         }],
     initComponent: function () {
 
-        url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
+       
         Me = this;
         let itemsPerPage = 20;
         const store_order = new Ext.data.Store({
@@ -348,17 +348,18 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
                 'Imprimer le bon de commande?',
                 function (btn) {
                     if (btn == 'yes') {
-                        Me.onPdfClick(rec.get('lg_ORDER_ID'));
+                        Me.onPdfClick(rec);
 
                     }
                 });
 
     },
-    onPdfClick: function (lg_ORDER_ID) {
+    onPdfClick: function (rec) {
 
-        const linkUrl = url_services_pdf + '?lg_ORDER_ID=' + lg_ORDER_ID;
-
+            const linkUrl = '../EditionCommandeServlet?orderId=' +rec.get('lg_ORDER_ID') + '&refCommande=' + rec.get('str_REF_ORDER');
         window.open(linkUrl);
+
+     
 
     }
 });

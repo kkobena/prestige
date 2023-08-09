@@ -574,8 +574,7 @@ public class SalesServiceImpl implements SalesService {
                 familleStock.setIntUG(familleStock.getIntUG() - newCopieItem.getIntUG());
                 mouvementProduitService.saveMvtProduit(newCopieItem.getIntPRICEUNITAIR(), newCopieItem, typemvtproduit,
                         oFamille, ooTUser, emplacement, newCopieItem.getIntQUANTITY(), initStock,
-                        initStock - newCopieItem.getIntQUANTITY(), emg, newCopieItem.getValeurTva(), checked,
-                        e.getIntUG());
+                        initStock - newCopieItem.getIntQUANTITY(), newCopieItem.getValeurTva(), checked, e.getIntUG());
 
                 updateReelStockApresAnnulation(familleStock, newCopieItem.getIntQUANTITY());
                 if (!tp.getPkBrand().isEmpty()) {
@@ -587,7 +586,7 @@ public class SalesServiceImpl implements SalesService {
 
             String desc = "Annulation de la [ " + tp.getStrREF() + " montant  " + tp.getIntPRICE() + " ] par "
                     + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
-            logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.ANNULATION_DE_VENTE, tp, emg);
+            logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.ANNULATION_DE_VENTE, tp);
             notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
                     .typeNotification(TypeNotification.ANNULATION_DE_VENTE).message(desc).addUser(ooTUser));
             json.put("success", true);
@@ -3010,7 +3009,7 @@ public class SalesServiceImpl implements SalesService {
             emg.persist(mt);
             emg.merge(tp);
 
-            mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emg, emplacement);
+            mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emplacement);
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref",
                     tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
@@ -3096,7 +3095,7 @@ public class SalesServiceImpl implements SalesService {
                     TypeTransaction.VENTE_COMPTANT, findById(clotureVenteParams.getTypeRegleId(), emg),
                     typeMvtCaisse.get(), clotureVenteParams.getMontantPaye(), clotureVenteParams.getMarge(),
                     tp.getIntACCOUNT(), clotureVenteParams.getData());
-            mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emg, emplacement);
+            mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emplacement);
             mvtTransaction.setPreenregistrement(tp);
             emg.persist(mvtTransaction);
             emg.merge(tp);
@@ -3984,7 +3983,7 @@ public class SalesServiceImpl implements SalesService {
                 int initStock = familleStock.getIntNUMBERAVAILABLE();
                 mouvementProduitService.saveMvtProduit(newItem.getIntPRICEUNITAIR(), newItem, typemvtproduit, oFamille,
                         ooTUser, emplacement, newItem.getIntQUANTITY(), initStock, initStock - newItem.getIntQUANTITY(),
-                        emg, newItem.getValeurTva(), checked, e.getIntUG());
+                        newItem.getValeurTva(), checked, e.getIntUG());
 
                 updateReelStockApresAnnulation(familleStock, newItem.getIntQUANTITY());
                 if (StringUtils.isNotEmpty(tp.getPkBrand())) {
@@ -4077,28 +4076,17 @@ public class SalesServiceImpl implements SalesService {
             newItem.setStrLASTTRANSACTION(a.getStrLASTTRANSACTION());
             getEm().persist(newItem);
             updateCompteClientTiersPayantEncourAndPlafond(a);
-            /*
-             * TCompteClient oTCompteClient = oTCompteClientTiersPayant.getLgCOMPTECLIENTID(); if (oTCompteClient !=
-             * null && oTCompteClientTiersPayant.getDblPLAFOND() != null && oTCompteClientTiersPayant.getDblPLAFOND() !=
-             * 0) {
-             * oTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE((oTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE(
-             * ) != null ? oTCompteClientTiersPayant.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE());
-             * oTCompteClientTiersPayant.setDtUPDATED(new Date()); getEm().merge(oTCompteClientTiersPayant); } if
-             * (oTCompteClient != null && oTCompteClient.getDblPLAFOND() != null && oTCompteClient.getDblPLAFOND() != 0)
-             * { oTCompteClient.setDblQUOTACONSOMENSUELLE((oTCompteClient.getDblQUOTACONSOMENSUELLE() != null ?
-             * oTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE()); oTCompteClient.setDtUPDATED(new
-             * Date()); getEm().merge(oTCompteClient); }
-             */
+
         }
 
     }
 
-    private void cloneMvtTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement _newP,
+    private void cloneMvtTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement newP,
             TPreenregistrement old) {
         cashTransaction.setChecked(Boolean.FALSE);
         getEm().merge(cashTransaction);
-        addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), _newP.getLgPREENREGISTREMENTID(), cashTransaction,
-                getEm(), _newP.getStrREF(), cashTransaction.getCreatedAt(), cashTransaction.getMvtDate());
+        addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), newP.getLgPREENREGISTREMENTID(), cashTransaction,
+                getEm(), newP.getStrREF(), cashTransaction.getCreatedAt(), cashTransaction.getMvtDate());
 
     }
 
@@ -4146,13 +4134,12 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    private Optional<TPreenregistrementCompteClientTiersPayent> getTPreenregistrementCompteClientTiersPayent(
-            String lg_PREENREGISTREMENT_ID, String lg_COMPTE_CLIENT_TIERS_PAYANT_ID) {
+    private Optional<TPreenregistrementCompteClientTiersPayent> getTPreenregistrementCompteClientTiersPayent(String id,
+            String cpId) {
         try {
             TypedQuery<TPreenregistrementCompteClientTiersPayent> q = getEm().createQuery(
                     "SELECT t FROM TPreenregistrementCompteClientTiersPayent t WHERE t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1 AND t.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID = ?2",
-                    TPreenregistrementCompteClientTiersPayent.class).setParameter(1, lg_PREENREGISTREMENT_ID)
-                    .setParameter(2, lg_COMPTE_CLIENT_TIERS_PAYANT_ID);
+                    TPreenregistrementCompteClientTiersPayent.class).setParameter(1, id).setParameter(2, cpId);
             q.setMaxResults(1);
             return Optional.ofNullable(q.getSingleResult());
 
@@ -4233,21 +4220,21 @@ public class SalesServiceImpl implements SalesService {
         return r;
     }
 
-    public Reference buildRef(LocalDate ODate, TEmplacement emplacement) {
+    public Reference buildRef(LocalDate oDate, TEmplacement emplacement) {
         Reference r = null;
         try {
-            Optional<Reference> o = getReferenceByDateAndEmplacementId(ODate, emplacement.getLgEMPLACEMENTID(), false);
+            Optional<Reference> o = getReferenceByDateAndEmplacementId(oDate, emplacement.getLgEMPLACEMENTID(), false);
             if (o.isPresent()) {
                 r = o.get();
                 r.setLastIntValue(r.getLastIntValue() + 1);
-                r.setReference(ODate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
+                r.setReference(oDate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
                         + StringUtils.leftPad(String.valueOf(r.getLastIntValue()), 5, '0'));
             } else {
                 r = new Reference().addEmplacement(emplacement)
-                        .id(ODate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))).lastIntValue(1).lastIntTmpValue(1)
-                        .referenceTemp(ODate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
+                        .id(oDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))).lastIntValue(1).lastIntTmpValue(1)
+                        .referenceTemp(oDate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
                                 + StringUtils.leftPad(String.valueOf(1), 5, '0'))
-                        .reference(ODate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
+                        .reference(oDate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
                                 + StringUtils.leftPad(String.valueOf(1), 5, '0'));
             }
             getEm().merge(r);
@@ -4257,19 +4244,19 @@ public class SalesServiceImpl implements SalesService {
         return r;
     }
 
-    public Reference buildRefDevis(LocalDate ODate, TEmplacement emplacement) {
+    public Reference buildRefDevis(LocalDate oDate, TEmplacement emplacement) {
         Reference r = null;
         try {
-            Optional<Reference> o = getReferenceByDateAndEmplacementId(ODate, emplacement.getLgEMPLACEMENTID(), true);
+            Optional<Reference> o = getReferenceByDateAndEmplacementId(oDate, emplacement.getLgEMPLACEMENTID(), true);
             if (o.isPresent()) {
                 r = o.get();
                 r.setLastIntValue(r.getLastIntValue() + 1);
-                r.setReference(ODate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
+                r.setReference(oDate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
                         + StringUtils.leftPad(String.valueOf(r.getLastIntValue()), 5, '0'));
             } else {
                 r = new Reference().addEmplacement(emplacement)
-                        .id(ODate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))).lastIntValue(1)
-                        .reference(ODate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
+                        .id(oDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))).lastIntValue(1)
+                        .reference(oDate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
                                 + StringUtils.leftPad(String.valueOf(1), 5, '0'));
             }
             r.setLastIntTmpValue(r.getLastIntValue());
