@@ -232,29 +232,6 @@ public class OrderServiceImpl implements OrderService {
         return q.getResultList();
     }
 
-    private void changeOrderStatuts(TOrder order) {
-        Date toDay = new Date();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaUpdate<TOrderDetail> cq = cb.createCriteriaUpdate(TOrderDetail.class);
-            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
-
-            cq.set(root.get(TOrderDetail_.strSTATUT), Constant.STATUT_PASSED)
-                    .set(root.get(TOrderDetail_.dtUPDATED), toDay)
-                    .set(root.get(TOrderDetail_.intORERSTATUS), (short) 3);
-
-            cq.where(cb.equal(root.get(TOrderDetail_.lgORDERID), order));
-            getEmg().createQuery(cq).executeUpdate();
-            order.setStrSTATUT(Constant.STATUT_PASSED);
-            order.setDtUPDATED(toDay);
-            getEmg().merge(order);
-
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-
-        }
-    }
-
     @Override
     public TOrderDetail findByCipAndOrderId(String codeCip, String idCommande) {
         try {
@@ -1206,6 +1183,67 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void passerLaCommande(String orderId) {
-        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId));
+        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_PASSED, (short) 3);
+    }
+
+    @Override
+    public void changerEnCommandeEnCours(String orderId) {
+        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_IS_PROGRESS, (short) 2);
+    }
+
+    private void changeOrderStatuts(TOrder order) {
+        Date toDay = new Date();
+        try {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaUpdate<TOrderDetail> cq = cb.createCriteriaUpdate(TOrderDetail.class);
+            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
+            cq.set(root.get(TOrderDetail_.strSTATUT), Constant.STATUT_PASSED)
+                    .set(root.get(TOrderDetail_.dtUPDATED), toDay)
+                    .set(root.get(TOrderDetail_.intORERSTATUS), (short) 3);
+
+            cq.where(cb.equal(root.get(TOrderDetail_.lgORDERID), order));
+            getEmg().createQuery(cq).executeUpdate();
+            order.setStrSTATUT(Constant.STATUT_PASSED);
+            order.setDtUPDATED(toDay);
+            getEmg().merge(order);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+
+        }
+    }
+
+    private void changeOrderStatuts(TOrder order, String status, short statutOrder) {
+        Date toDay = new Date();
+        // (short) 3
+
+        order.getTOrderDetailCollection().forEach(it -> {
+            updateOrderItemStatut(it, status, statutOrder, toDay);
+            updateFamilleStatut(it.getLgFAMILLEID(), statutOrder, toDay);
+        });
+
+        // order.setStrSTATUT(Constant.STATUT_PASSED);
+        order.setDtUPDATED(toDay);
+        order.setStrSTATUT(status);
+        getEmg().merge(order);
+
+    }
+
+    private void updateOrderItemStatut(TOrderDetail detail, String status, short statutOrder, Date date) {
+        detail.setStrSTATUT(status);
+        detail.setIntORERSTATUS(statutOrder);
+        detail.setDtUPDATED(date);
+        getEmg().merge(detail);
+
+    }
+
+    private void updateFamilleStatut(TFamille famille, short statutOrder, Date date) {
+        short st = famille.getIntORERSTATUS();
+        if (st < 4) {
+            famille.setIntORERSTATUS(statutOrder);
+            famille.setDtUPDATED(date);
+            getEmg().merge(famille);
+        }
+
     }
 }

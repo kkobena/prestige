@@ -16,7 +16,7 @@ function amountformat(val) {
 Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
     extend: 'Ext.grid.Panel',
     xtype: 'i_order_manager',
-    id: 'i_order_managerID',
+   
     frame: true,
     animCollapse: false,
     title: 'Liste des commandes en cours ',

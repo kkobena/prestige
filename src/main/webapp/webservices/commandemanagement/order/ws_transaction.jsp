@@ -166,7 +166,7 @@
 
     TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
     OdataManager.initEntityManager();
-TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
+    TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     bllBase ObllBase = new bllBase();
     ObllBase.setOTUser(user);
     ObllBase.LoadDataManger(OdataManager);
@@ -174,10 +174,9 @@ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
     ObllBase.setMessage(commonparameter.PROCESS_FAILED);
 
     ObllBase.setDetailmessage("SUGGESTION WS TRANSACTION");
-    
+
     orderManagement OorderManagement = new orderManagement(OdataManager, user);
     suggestionManagement OsuggestionManagement = new suggestionManagement(OdataManager, user);
-  
 
     if (request.getParameter("mode") != null) {
 
@@ -214,7 +213,7 @@ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
             //MODE MODIFICATION
         } else if (request.getParameter("mode").equals("update")) {
             //mise a jour des prix
-           OTOrder = OorderManagement.FindOrder(lg_ORDER_ID);
+            OTOrder = OorderManagement.FindOrder(lg_ORDER_ID);
             OsuggestionManagement.updateItemPriceWhenOrdering(lg_GROSSISTE_ID, lg_FAMILLE_ID, lg_FAMILLE_PRIX_VENTE, int_PRIX_REFERENCE, int_PAF, lg_FAMILLE_PRIX_ACHAT, str_ACTION, OTOrder.getStrREFORDER(), "");
             ObllBase.setMessage(OsuggestionManagement.getMessage());
             ObllBase.setDetailmessage(OsuggestionManagement.getDetailmessage());
@@ -242,13 +241,7 @@ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
                 ObllBase.setDetailmessage("Echec " + e.getLocalizedMessage());
             }
 
-            // OorderManagement.deleteOrder(lg_ORDER_ID);
-        } else if (request.getParameter("mode").equals("RollBackPasseOrderToCommandeProcess")) {
-
-            OorderManagement.RollBackPasseOrderToCommandeProcess(lg_ORDER_ID);
-            ObllBase.setMessage(OorderManagement.getMessage());
-            ObllBase.setDetailmessage(OorderManagement.getDetailmessage());
-
+            
         } else if (request.getParameter("mode").equals("deleteItem")) {
             String lgFAMILLEID = request.getParameter("lg_FAMILLE_ID");
             String strREFLIVRAISON = request.getParameter("str_REF_LIVRAISON");
@@ -257,7 +250,7 @@ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
             ObllBase.setDetailmessage(OorderManagement.getDetailmessage());
         } else if (request.getParameter("mode").equals("deleteDetail")) {
 
-             Stock stock = new StockImpl(OdataManager.getEm());
+            Stock stock = new StockImpl(OdataManager.getEm());
             OTOrderDetail = ObllBase.getOdataManager().getEm().find(dal.TOrderDetail.class, lg_ORDERDETAIL_ID);
 
             TFamille Of = OTOrderDetail.getLgFAMILLEID();
@@ -269,10 +262,10 @@ TUser user = OdataManager.getEm().find(TUser.class, OTUser.getLgUSERID());
             PRIX_ACHAT_TOTAL = OorderManagement.getPriceTotalAchat(lstTOrderDetail);
             PRIX_VENTE_TOTAL = OorderManagement.getPriceTotalVente(lstTOrderDetail);
             total_lineproduct = lstTOrderDetail.size();
-           
+
             str_REF = OTOrderDetail.getLgORDERID().getLgORDERID();
 
-        }  else if (request.getParameter("mode").equals("updateBL")) {
+        } else if (request.getParameter("mode").equals("updateBL")) {
 
         } else if (request.getParameter("mode").equals("createBL")) {
             bonLivraisonManagement ObonLivraisonManagement = new bonLivraisonManagement(OdataManager, OTUser);

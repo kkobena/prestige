@@ -101,4 +101,6 @@ public interface OrderService {
     Map<String, List<CommandeCsvDTO>> commandeEncoursCsv(String idCommande);
 
     void passerLaCommande(String orderId);
+
+    void changerEnCommandeEnCours(String orderId);
 }

@@ -113,7 +113,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     header: 'Etat.cmde',
                     dataIndex: 'STATUS',
                     renderer: function (v, m, r) {
-                        var STATUS = r.data.STATUS;
+                        const STATUS = r.data.STATUS;
                         switch (STATUS) {
                             case 1:
                                 m.style = 'background-color:#73C774;';
@@ -143,7 +143,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     dataIndex: 'int_CIP',
                     flex: 0.6,
                     renderer: function (v, m, r) {
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -160,7 +160,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 2,
                     renderer: function (v, m, r) {
 
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -178,7 +178,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 0.5,
                     renderer: function (v, m, r) {
 
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -195,7 +195,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     align: 'right',
                     flex: 0.5,
                     renderer: function (v, m, r) {
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -215,7 +215,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 0.5,
                     renderer: function (v, m, r) {
 
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -233,7 +233,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 0.5,
                     renderer: function (v, m, r) {
 
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -251,7 +251,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     ,
                     renderer: function (v, m, r) {
 
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -269,7 +269,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     ,
                     renderer: function (v, m, r) {
 
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -287,7 +287,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     ,
                     renderer: function (v, m, r) {
 
-                        var Stock = r.data.int_NUMBER_AVAILABLE;
+                        const Stock = r.data.int_NUMBER_AVAILABLE;
                         if (Stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
                         } else if (Stock > 0) {
@@ -305,7 +305,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     xtype: 'checkcolumn',
                     listeners: {
                         checkChange: function (column, rowIndex, checked, eOpts) {
-                            var record = store.getAt(rowIndex);
+                            const record = store.getAt(rowIndex);
                             Ext.Ajax.request({
                                 url: '../webservices/sm_user/famille/ws_updateperemptiondate.jsp',
                                 params: {
@@ -314,7 +314,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 },
                                 success: function (response)
                                 {
-                                    var object = Ext.JSON.decode(response.responseText, false);
+                                    const object = Ext.JSON.decode(response.responseText, false);
                                     if (object.success === 1) {
                                         record.commit();
                                     }
@@ -339,7 +339,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     xtype: 'checkcolumn',
                     listeners: {
                         checkChange: function (column, rowIndex, checked, eOpts) {
-                            var record = store.getAt(rowIndex);
+                            const record = store.getAt(rowIndex);
                             Ext.Ajax.request({
                                 url: '../api/v1/commande/update/scheduled',
                                 method: 'POST',
@@ -350,7 +350,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 }),
                                 success: function (response)
                                 {
-                                    var result = Ext.JSON.decode(response.responseText, true);
+                                    const result = Ext.JSON.decode(response.responseText, true);
                                     if (result.success) {
                                         record.commit();
                                     }
@@ -359,7 +359,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 failure: function (response)
                                 {
 
-                                    var object = Ext.JSON.decode(response.responseText, false);
+                                    const object = Ext.JSON.decode(response.responseText, false);
 
                                     Ext.MessageBox.alert('Error Message', response.responseText);
 
@@ -536,7 +536,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             scope: this,
                             handler:
                                     function (grid, rowIndex) {
-                                        var rec = grid.getStore().getAt(rowIndex);
+                                        const rec = grid.getStore().getAt(rowIndex);
                                         Me_Workflow.showPeriodeForm(rec.get('lg_FAMILLE_ID'), rec.get('str_NAME'));
 
                                     }
@@ -631,20 +631,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     scope: this,
                     handler: this.onbtnimport
                 }, '-',
-              //  {
-               //     text: 'Exporter CSV',
-               //     tooltip: 'EXPORTER CSV',
-               //    iconCls: 'export_csv_icon',
-               //     scope: this,
-               //     handler: this.onbtnexportCsv
-               // }, '-',
-              //  {
-              //      text: 'Exporter EXCEL',
-              //      tooltip: 'EXPORTER EXCEL',
-              //      iconCls: 'export_excel_icon',
-              //      scope: this,
-              //      handler: this.onbtnexportExcel
-              //  }, '-', 
+              
               {
                     text: 'Verifier l\'importation',
                     tooltip: 'Verifier l\'importation',
@@ -721,16 +708,16 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 plugins: new Ext.ux.ProgressBarPager(),
                 listeners: {
                     beforechange: function (page, currentPage) {
-                        var myProxy = this.store.getProxy();
+                        const myProxy = this.store.getProxy();
                         myProxy.params = {
                             search_value: '',
                             str_TYPE_TRANSACTION: '',
                             lg_DCI_ID: ''
                         };
 
-                        var lg_DCI_PRINCIPAL_ID = Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue();
-                        var str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
-                        var search_value = Ext.getCmp('rechecher').getValue();
+                        const lg_DCI_PRINCIPAL_ID = Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue();
+                        const str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
+                        const search_value = Ext.getCmp('rechecher').getValue();
 
                         myProxy.setExtraParam('str_TYPE_TRANSACTION', str_TYPE_TRANSACTION);
                         myProxy.setExtraParam('lg_DCI_ID', lg_DCI_PRINCIPAL_ID);
@@ -742,7 +729,6 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             listeners: {
                 afterrender: function () { // a decommenter apres les tests
                     Ext.getCmp('rechecher').focus();
-//                    alert(lg_EMPLACEMENT_ID);
                     if (lg_EMPLACEMENT_ID == "1") {
                         Ext.getCmp('btn_add').show();
                         Ext.getCmp('btn_import').show();
@@ -886,37 +872,6 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
                         });
 
-
-
-//                        Ext.Ajax.request({
-//                            url: url_services_transaction_famille + 'delete',
-//                            params: {
-//                                lg_FAMILLE_ID: rec.get('lg_FAMILLE_ID')
-//                            },
-//                            success: function (response)
-//                            {
-//                                var object = Ext.JSON.decode(response.responseText, false);
-//                                if (object.success == "0") {
-//                                    Ext.MessageBox.alert('Erreur Message', object.errors);
-//                                    return;
-//                                } else {
-//                                    Ext.MessageBox.alert('Confirmation', object.errors);
-//                                    grid.getStore().reload();
-//                                }
-//
-//                            },
-//                            failure: function (response)
-//                            {
-//
-//                                var object = Ext.JSON.decode(response.responseText, false);
-//                                //  alert(object);
-//
-//                                console.log("Bug " + response.responseText);
-//                                Ext.MessageBox.alert('Error Message', response.responseText);
-//
-//                            }
-//                        });
-//                        return;
                     }
                 });
 
@@ -957,47 +912,15 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
                         });
 
-//                        Ext.Ajax.request({
-//                            url: url_services_transaction_famille + 'disable',
-//                            params: {
-//                                lg_FAMILLE_ID: rec.get('lg_FAMILLE_ID')
-//                            },
-//                            success: function (response)
-//                            {
-//                                var object = Ext.JSON.decode(response.responseText, false);
-//                                if (object.success === 0) {
-//                                    Ext.MessageBox.alert('Desactivation ' + '[' + rec.get('str_NAME') + ']', 'Impossible de desactiver cette ligne');
-//                                    return;
-//                                } else {
-//                                    Ext.MessageBox.alert('Desactivation ' + '[' + rec.get('str_NAME') + ']', 'Desactivation effectuee avec succes');
-////                                    
-//                                }
-//                                grid.getStore().reload();
-//                            },
-//                            failure: function (response)
-//                            {
-//
-//                                var object = Ext.JSON.decode(response.responseText, false);
-//                                //  alert(object);
-//
-//                                console.log("Bug " + response.responseText);
-//                                Ext.MessageBox.alert('Error Message', response.responseText);
-//
-//                            }
-//                        });
-//                        return;
+
                     }
                 });
 
 
     },
-    onChooseProductClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
-//        alert("oki depuis famillemanager");
-
-    },
+  
     onEditClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
 
         if (rec.get('lg_EMPLACEMENT_ID') == "1") {
             new testextjs.view.configmanagement.famille.action.add({
@@ -1008,7 +931,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 titre: "Modification Article [" + rec.get('str_DESCRIPTION') + "]"
             });
         } else {
-//            alert(rec.get('lg_EMPLACEMENT_ID'));
+
             new testextjs.view.configmanagement.famille.action.updatezonegeo({
                 odatasource: rec.data,
                 parentview: this,
@@ -1020,7 +943,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
     },
     onDetailClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.configmanagement.famille.action.detailArticle({
             odatasource: rec.data,
             parentview: this,
@@ -1029,7 +952,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         });
     },
     onCreateDeconditionClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
 
         if (rec.get('bool_DECONDITIONNE') == "1") {
             Ext.MessageBox.alert('Alerte Message', 'Ceci est un article deconditionne');
@@ -1048,7 +971,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         }
 
     }, onDeconditionClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
 
         if (rec.get('bool_DECONDITIONNE') == "1") {
             Ext.MessageBox.alert('Alerte Message', 'Ceci est un article deconditionne. Il ne peut pas etre deconditionne');
@@ -1073,7 +996,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
     },
     onRechClick: function () {
-        var val = Ext.getCmp('rechecher');
+        const val = Ext.getCmp('rechecher');
 
         Ext.getCmp('GridArticleID').getStore().load({
             params: {
@@ -1082,14 +1005,14 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 lg_DCI_ID: Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue()
 
             }
-        }, url_services_data_famille_famille);
+        });
         Ext.getCmp('rechecher').focus(true, 100, function () {
 //            Ext.getCmp('rechecher').selectText(0, 1);
         });
     },
     onAddGrossisteClick: function (grid, rowIndex) {
 
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
 
         new testextjs.view.configmanagement.famille.action.addgrossiste({
             obtntext: "Grossiste",
@@ -1912,7 +1835,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 dock: 'bottom',
                                 displayInfo: true,
                                 beforechange: function (page, currentPage) {
-                                    var myProxy = storeProduits.getProxy();
+                                    const myProxy = storeProduits.getProxy();
                                     myProxy.params = {
                                         produitId: null,
                                         dtStart: null,
