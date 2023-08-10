@@ -155,15 +155,16 @@ public class CaisseRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        LocalDate dtSt = LocalDate.now();
+        LocalDate dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(dtStart);
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean cancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_CLOTURE_CAISSE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean cancel = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_BT_ANNULER_CLOTURE_CAISSE);
+        boolean allActivitis = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
         JSONObject json = caisseService.resumeCaisse(dtSt, dtEn, tu, cancel, allActivitis, start, limit, false, userId);
         return Response.ok().entity(json.toString()).build();
     }
@@ -178,24 +179,9 @@ public class CaisseRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
-            dtSt = LocalDate.parse(dtStart);
-            dtEn = LocalDate.parse(dtEnd);
-        } catch (Exception e) {
-        }
-        JSONObject json;
-        if (!this.balanceService.useLastUpdateStats()) {
 
-            if (monthly) {
-                json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
-            } else {
-                json = caisseService.tableauBoardDatas(dtSt, dtEn, true, tu, 0, 0, true);
-            }
-        } else {
-            json = this.balanceService.tableauBoardDatas(BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd)
-                    .byMonth(monthly).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
-        }
+        JSONObject json = this.balanceService.tableauBoardDatas(BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd)
+                .byMonth(monthly).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
 
         return Response.ok().entity(json.toString()).build();
     }
@@ -269,25 +255,6 @@ public class CaisseRessource {
     }
 
     @GET
-    @Path("tableauboard-old")
-    public Response tableauBoardOld(@QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
-            dtSt = LocalDate.parse(dtStart);
-            dtEn = LocalDate.parse(dtEnd);
-        } catch (Exception e) {
-        }
-        JSONObject json = caisseService.tableauBoardDatasOld(dtSt, dtEn, true, tu, 0, 0, true);
-        return Response.ok().entity(json.toString()).build();
-    }
-
-    @GET
     @Path("mvtcaisses")
     public Response mvtcaisses(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "user") String lg_USER_ID, @QueryParam(value = "dtStart") String dt_Date_Debut,
@@ -332,26 +299,6 @@ public class CaisseRessource {
         } catch (Exception e) {
         }
         JSONObject json = caisseService.venteUg(dtSt, dtEn, null);
-        return Response.ok().entity(json.toString()).build();
-    }
-
-    @GET
-    @Path("tableauboard-groupbymonth")
-    public Response tableauBoardGroupByMonth(@QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
-            dtSt = LocalDate.parse(dtStart);
-            dtEn = LocalDate.parse(dtEnd);
-
-        } catch (Exception e) {
-        }
-        JSONObject json = caisseService.tableauBoardDatasGroupByMonth(dtSt, dtEn, true, tu, 0, 0, true);
         return Response.ok().entity(json.toString()).build();
     }
 
