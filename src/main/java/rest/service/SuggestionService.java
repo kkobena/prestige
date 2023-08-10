@@ -33,8 +33,6 @@ public interface SuggestionService {
 
     Integer getQuantityReapportByCodeGestionArticle(TFamilleStock familleStock, TFamille famille, EntityManager emg);
 
-    Integer quantiteVendue(LocalDate dtDEBUT, LocalDate dtFin, String produitId, EntityManager emg);
-
     List<TCalendrier> nombresJourVente(LocalDate begin, EntityManager emg);
 
     List<TSuggestionOrderDetails> findFamillesBySuggestion(String suggestionId);

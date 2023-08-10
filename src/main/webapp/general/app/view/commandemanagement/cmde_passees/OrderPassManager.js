@@ -1,5 +1,3 @@
-var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
-
 
 var Me;
 var store_order;
@@ -299,25 +297,18 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
                 'Confirmer l\'annulation de cette commande',
                 function (btn) {
                     if (btn === 'yes') {
-                        var rec = grid.getStore().getAt(rowIndex);
+                        let rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_order + 'RollBackPasseOrderToCommandeProcess',
+                              
+                            method: 'GET',
+                            url: '../api/v1/commande/statut/' +rec.get('lg_ORDER_ID') + '/rollback',
                             timeout: 2400000,
-                            params: {
-                                lg_ORDER_ID: rec.get('lg_ORDER_ID')
-                            },
+                           
                             success: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success == "0") {
-                                    Ext.MessageBox.alert('Error Message', object.errors);
-                                    return;
-                                } else {
-                                    Ext.MessageBox.alert('Confirmation', object.errors);
-                                    grid.getStore().reload();
-                                }
+                                grid.getStore().reload();
                             },
                             failure: function (response)
                             {

@@ -362,86 +362,11 @@ public class orderManagement extends bllBase {
         return filepath;
     }
 
-    public List<TOrder> listeOrderBySearch(String search_value, String lg_GROSSISTE_ID, String dt_DEBUT,
-            String dt_FIN) {
-        List<TOrder> lstTOrder = new ArrayList<TOrder>();
-        Date dtFin;
-        try {
-            if (search_value.equalsIgnoreCase("") || lg_GROSSISTE_ID == null) {
-                lg_GROSSISTE_ID = "%%";
-            }
-            if (search_value.equalsIgnoreCase("") || search_value == null) {
-                search_value = "%%";
-            }
-            new logger().OCategory.info("search_value:" + search_value);
-
-            if (dt_DEBUT.equalsIgnoreCase("") || dt_DEBUT == null) {
-                dt_DEBUT = "2015-04-20";
-                new logger().OCategory.info("dt_DEBUT:" + dt_DEBUT);
-            }
-            if (dt_FIN.equalsIgnoreCase("") || dt_FIN == null) {
-                dtFin = new Date();
-            } else {
-                dtFin = this.getKey().stringToDate(dt_FIN, this.getKey().formatterMysqlShort);
-            }
-            Date dtDEBUT = this.getKey().stringToDate(dt_DEBUT, this.getKey().formatterMysqlShort);
-            new logger().OCategory
-                    .info("dtDEBUT   " + dtDEBUT + " dtFin " + dtFin + " lg_GROSSISTE_ID " + lg_GROSSISTE_ID);
-
-            lstTOrder = this.getOdataManager().getEm().createQuery(
-                    "SELECT t FROM TOrder t WHERE t.strREFORDER LIKE ?1 AND (t.strSTATUT = ?2 OR t.strSTATUT = ?3 OR t.strSTATUT = ?4) AND t.lgGROSSISTEID.lgGROSSISTEID LIKE ?5 AND (t.dtCREATED BETWEEN ?6 AND ?7) ORDER BY t.dtCREATED DESC")
-                    .setParameter(1, "%" + search_value + "%").setParameter(2, commonparameter.statut_is_Process)
-                    .setParameter(3, commonparameter.orderIsPassed).setParameter(4, commonparameter.statut_is_Closed)
-                    .setParameter(5, lg_GROSSISTE_ID).setParameter(6, dtDEBUT).setParameter(7, dtFin).getResultList();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        new logger().OCategory.info("lstTOrder size " + lstTOrder.size());
-        return lstTOrder;
-    }
-
     public int isCommandProcess(String lgFamilleID) {
         bonLivraisonManagement bl = new bonLivraisonManagement(this.getOdataManager());
         int status = bl.articleStatus(lgFamilleID);
 
         return status;
-    }
-
-    // annulation d'une commande en cours
-    public TOrder RollBackPasseOrderToCommandeProcess(String lg_ORDER_ID) {
-
-        TOrder OTOrder = null;
-        List<TOrderDetail> lstTOrderDetail;
-        int i = 0;
-
-        try {
-            OTOrder = this.FindOrder(lg_ORDER_ID);
-            lstTOrderDetail = this.getTOrderDetail("", lg_ORDER_ID, OTOrder.getStrSTATUT());
-            if (!this.getOdataManager().getEm().getTransaction().isActive()) {
-                this.getOdataManager().getEm().getTransaction().begin();
-            }
-            for (TOrderDetail OTOrderDetail : lstTOrderDetail) {
-                OTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
-                OTOrderDetail.setDtUPDATED(new Date());
-                this.getOdataManager().getEm().merge(OTOrderDetail);
-
-            }
-            OTOrder.setStrSTATUT(commonparameter.statut_is_Process);
-            OTOrder.setDtUPDATED(new Date());
-            this.getOdataManager().getEm().merge(OTOrder);
-            if (this.getOdataManager().getEm().getTransaction().isActive()) {
-                this.getOdataManager().getEm().getTransaction().commit();
-                this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES"));
-            }
-
-        } catch (Exception e) {
-
-            this.buildErrorTraceMessage("Echec de l'annulation de la commande");
-            e.printStackTrace();
-        }
-
-        return OTOrder;
     }
 
     public void deleteUg(String str_REF_LIVRAISON, String lg_FAMILLE_ID) {

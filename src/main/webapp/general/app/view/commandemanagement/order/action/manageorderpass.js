@@ -10,7 +10,7 @@ var ref;
 Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
     extend: 'Ext.window.Window',
     xtype: 'manageorderpasse',
-    id: 'manageorderpassID',
+
     requires: [
         'Ext.form.*',
         'Ext.window.Window',
@@ -226,9 +226,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                                                 Ext.getCmp('BTN_EXPORT').show();
                                                 Ext.getCmp('URL').show();
                                                 Ext.getCmp('URL').setValue("<a href = " + "'" + Ext.getCmp('str_GROSSISTE_URLEXTRANET').getValue() + "'" + "target='google'>REDIRECTION VERS LE SITE DU GROSSISTE</a>");
-                                           
+
                                                 Ext.getCmp('btnValiderId').enable();
-                                           
+
                                                 Ext.getCmp('str_GROSSISTE_TELEPHONE').hide();
                                                 Ext.getCmp('str_GROSSISTE_MOBILE').hide();
                                             }
@@ -394,8 +394,6 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
 
             ]
         });
-        //Initialisation des valeur
-
 
         if (Omode === "passed") {
             ref = this.getOdatasource().lg_ORDER_ID;
@@ -419,7 +417,6 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
             buttons: [{
                     text: 'Valider',
                     id: 'btnValiderId',
-                    disabled: true,
                     handler: this.onbtnsave
                 }, {
                     text: 'Annuler',
@@ -494,17 +491,15 @@ Ext.define('testextjs.view.commandemanagement.order.action.manageorderpass', {
                             success: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
-                                let object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success === 0) {
-                                    Ext.MessageBox.alert('Error Message', object.errors);
-                                    return;
-                                }
+
                                 Ext.MessageBox.confirm('Message',
                                         'Imprimer le bon de commande?',
                                         function (btn) {
                                             if (btn === 'yes') {
                                                 Me.onPdfClick( );
+
                                             }
+                                            testextjs.app.getController('App').onLoadNewComponentWithDataSource('i_order_manager', "", "", "");
                                         });
                             },
 
