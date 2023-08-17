@@ -19,13 +19,16 @@ import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import dal.TPreenregistrement_;
 import dal.TUser;
-import dal.dataManager;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -41,6 +44,7 @@ import javax.servlet.http.HttpSession;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import toolkits.parameters.commonparameter;
 
 /**
@@ -49,19 +53,21 @@ import toolkits.parameters.commonparameter;
  */
 public class Doublons extends HttpServlet {
 
-    private final dataManager OdataManager = new dataManager();
-    TUser OTUser = null;
+    private static final Logger LOG = Logger.getLogger(Doublons.class.getName());
+    @PersistenceContext(unitName = "JTA_UNIT")
+    private EntityManager em;
+    TUser user = null;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        OdataManager.initEntityManager();
+
         response.setContentType("application/json;charset=UTF-8");
 
         HttpSession session = request.getSession();
-        OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
-        TEmplacement emplacement = OTUser.getLgEMPLACEMENTID();
+        user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TEmplacement emplacement = user.getLgEMPLACEMENTID();
         String action = request.getParameter("action");
-        String lg_FAMILLE_STOCK_ID = request.getParameter("lg_FAMILLE_STOCK_ID");
+        String familleStock = request.getParameter("lg_FAMILLE_STOCK_ID");
 
         String lgEMPLACEMENTID = "";
         if (request.getParameter("lgEMPLACEMENTID") != null) {
@@ -83,11 +89,11 @@ public class Doublons extends HttpServlet {
                 out.println(json);
                 break;
             case "updateStock":
-                json = updateStockProducts(lg_FAMILLE_STOCK_ID);
+                json = updateStockProducts(familleStock);
                 out.println(json);
                 break;
             case "update":
-                json = updateFamille(lg_FAMILLE_STOCK_ID);
+                json = updateFamille(familleStock);
                 out.println(json);
                 break;
 
@@ -114,14 +120,10 @@ public class Doublons extends HttpServlet {
         return "Short description";
     }
 
-    private EntityManager getEntityManager() {
-        return OdataManager.getEm();
-    }
-
     private JSONObject getDoublonsProducts(String empl, String search) {
         JSONObject json = new JSONObject();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        EntityManager em = getEntityManager();
+
         List<TFamille> finalList = new ArrayList<>();
         JSONArray myarray = new JSONArray();
         try {
@@ -151,6 +153,7 @@ public class Doublons extends HttpServlet {
                     try {
                         _json.put("DATEINVENTAIRE", dateDerniereInventare(t.getLgFAMILLEID(), empl));
                     } catch (Exception e) {
+                        LOG.log(Level.SEVERE, null, e);
                     }
 
                     try {
@@ -158,12 +161,14 @@ public class Doublons extends HttpServlet {
                         String dateVente = dateDerniereVente(t.getLgFAMILLEID(), empl);
                         _json.put("DATEVENTE", dateVente);
                     } catch (Exception e) {
+                        LOG.log(Level.SEVERE, null, e);
                     }
 
                     try {
                         String dateEntree = dateEntree(t.getLgFAMILLEID(), empl);
                         _json.put("DATEENTREE", dateEntree);
                     } catch (Exception e) {
+                        LOG.log(Level.SEVERE, null, e);
                     }
 
                 } catch (JSONException ex) {
@@ -174,6 +179,7 @@ public class Doublons extends HttpServlet {
             json.put("data", myarray);
             json.put("total", myarray.length());
         } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
         }
         return json;
     }
@@ -181,12 +187,12 @@ public class Doublons extends HttpServlet {
     private int getStock(String id, String empl) {
         Integer stock = 0;
         try {
-            EntityManager em = getEntityManager();
+
             stock = (Integer) em.createQuery(
                     "SELECT o.intNUMBERAVAILABLE FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID =?1 AND o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2")
                     .setParameter(1, id).setParameter(2, empl).setFirstResult(0).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
         }
         return stock;
     }
@@ -194,7 +200,7 @@ public class Doublons extends HttpServlet {
     public String dateDerniereVente(String lgFAMILLEID, String empl) {
         String date = "";
         try {
-            EntityManager em = getEntityManager();
+
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<String> cq = cb.createQuery(String.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
@@ -219,7 +225,7 @@ public class Doublons extends HttpServlet {
             date = (String) q.getSingleResult();
 
         } catch (Exception e) {
-            // e.printStackTrace();
+            // LOG.log(Level.SEVERE, null, e);
         }
         return date;
     }
@@ -227,8 +233,6 @@ public class Doublons extends HttpServlet {
     public String dateEntree(String lgFAMILLEID, String empl) {
         String date = "";
         try {
-
-            EntityManager em = getEntityManager();
 
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<String> cq = cb.createQuery(String.class);
@@ -251,7 +255,7 @@ public class Doublons extends HttpServlet {
             date = (String) q.getSingleResult();
 
         } catch (Exception e) {
-            // e.printStackTrace();
+            // LOG.log(Level.SEVERE, null, e);
 
         }
         return date;
@@ -260,7 +264,7 @@ public class Doublons extends HttpServlet {
     public String dateDerniereInventare(String lgFAMILLEID, String empl) {
         String date = "";
         try {
-            EntityManager em = getEntityManager();
+
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<String> cq = cb.createQuery(String.class);
             Root<TInventaireFamille> root = cq.from(TInventaireFamille.class);
@@ -282,7 +286,7 @@ public class Doublons extends HttpServlet {
             date = (String) q.getSingleResult();
 
         } catch (Exception e) {
-            // e.printStackTrace();
+            // LOG.log(Level.SEVERE, null, e);
         }
         return date;
     }
@@ -290,7 +294,7 @@ public class Doublons extends HttpServlet {
     private JSONObject getStockProducts(String empl, String search) {
         JSONObject json = new JSONObject();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        EntityManager em = getEntityManager();
+
         List<TFamilleStock> finalList = new ArrayList<>();
         JSONArray myarray = new JSONArray();
         try {
@@ -346,7 +350,7 @@ public class Doublons extends HttpServlet {
             json.put("total", myarray.length());
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
         }
         return json;
     }
@@ -354,14 +358,12 @@ public class Doublons extends HttpServlet {
     private JSONObject updateStockProducts(String lg_FAMILLE_STOCK_ID) {
         JSONObject json = new JSONObject();
 
-        EntityManager em = getEntityManager();
-
         try {
-            em.getTransaction().begin();
+
             TFamilleStock familleStock = em.find(TFamilleStock.class, lg_FAMILLE_STOCK_ID);
             familleStock.setStrSTATUT(commonparameter.statut_delete);
             em.merge(familleStock);
-            em.getTransaction().commit();
+
             json.put("result", 1);
 
         } catch (Exception e) {
@@ -369,10 +371,8 @@ public class Doublons extends HttpServlet {
                 json.put("result", 0);
             } catch (JSONException ex) {
             }
-            e.printStackTrace();
-            em.getTransaction().rollback();
-            em.clear();
-            // em.close();
+            LOG.log(Level.SEVERE, null, e);
+
         }
         return json;
     }
@@ -380,14 +380,12 @@ public class Doublons extends HttpServlet {
     private JSONObject updateFamille(String lg_FAMILLE_ID) {
         JSONObject json = new JSONObject();
 
-        EntityManager em = getEntityManager();
-
         try {
-            em.getTransaction().begin();
+
             TFamille familleStock = em.find(TFamille.class, lg_FAMILLE_ID);
             familleStock.setStrSTATUT(commonparameter.statut_delete);
             em.merge(familleStock);
-            em.getTransaction().commit();
+
             json.put("result", 1);
 
         } catch (Exception e) {
@@ -395,25 +393,10 @@ public class Doublons extends HttpServlet {
                 json.put("result", 0);
             } catch (JSONException ex) {
             }
-            e.printStackTrace();
-            em.getTransaction().rollback();
-            em.clear();
-            // em.close();
+            LOG.log(Level.SEVERE, null, e);
+
         }
         return json;
-    }
-
-    private TFamilleStock getStockFamille(String id, String empl) {
-        TFamilleStock stock = null;
-        try {
-            EntityManager em = getEntityManager();
-            stock = (TFamilleStock) em.createQuery(
-                    "SELECT o FROM TFamilleStock o WHERE o.lgFAMILLESTOCKID =?1 AND o.strSTATUT='enable' AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2")
-                    .setParameter(1, id).setParameter(2, empl).setFirstResult(0).setMaxResults(1).getSingleResult();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return stock;
     }
 
 }
