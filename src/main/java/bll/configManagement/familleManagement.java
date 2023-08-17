@@ -5744,8 +5744,6 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         return count;
     }
 
-   
-
     public JSONArray getAllArticle(String search_value, String lg_DCI_ID, TEmplacement emp, String str_TYPE_TRANSACTION,
             boolean all, int maxResults, int firstResult) {
         JSONArray jsonarray = new JSONArray();

@@ -1583,10 +1583,6 @@ public class suggestionManagement extends bllBase {
         return status;
     }
 
-
-  
-
-
     public void makeSuggestionAuto(TFamilleStock OTFamilleStock, TFamille famille) {
 
         TSuggestionOrder OTSuggestionOrder;

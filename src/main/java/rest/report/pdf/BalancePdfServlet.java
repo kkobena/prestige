@@ -102,8 +102,7 @@ public class BalancePdfServlet extends HttpServlet {
             if (!"".equals(userId)) {
                 params.setRef(userId);
             }
-            List<TPrivilege> lstTPrivilege = (List<TPrivilege>) session
-                    .getAttribute(Constant.USER_LIST_PRIVILEGE);
+            List<TPrivilege> lstTPrivilege = (List<TPrivilege>) session.getAttribute(Constant.USER_LIST_PRIVILEGE);
             file = balance.gestionCaissepdf(params, lstTPrivilege);
             break;
         case TABLEAU:
