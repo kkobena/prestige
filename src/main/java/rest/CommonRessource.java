@@ -312,16 +312,6 @@ public class CommonRessource {
     }
 
     @GET
-    @Path("plafond-vente")
-    public Response plafondVente() {
-        Boolean hasAutority = commonService.plafondVenteIsActive();
-        CacheControl cc = new CacheControl();
-        cc.setMaxAge(86400);
-        cc.setPrivate(true);
-        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(hasAutority, 1)).build();
-    }
-
-    @GET
     @Path("datemisajour")
     public Response datemisajour() throws JSONException {
         JSONObject json = commonService.findDateMiseAJour();

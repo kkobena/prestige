@@ -43,7 +43,7 @@ Ext.application({
         'testextjs.view.sm_user.skin.action.add',
         'testextjs.view.sm_user.language.action.add',
         'testextjs.view.sm_user.language.LanguageManager',
-        'testextjs.model.dd.Simple',
+       
         'testextjs.view.sm_user.role.action.addPrivilege',
         'testextjs.view.sm_user.role.action.addPrivilegeItem',
         'testextjs.model.Notification',
@@ -81,7 +81,7 @@ Ext.application({
         'testextjs.view.sm_user.skin.action.add',
         'testextjs.view.sm_user.language.action.add',
         'testextjs.view.sm_user.language.LanguageManager',
-        'testextjs.model.dd.Simple',
+       
         'testextjs.view.sm_user.role.action.addPrivilege',
         'testextjs.view.sm_user.role.action.addPrivilegeItem',
         'testextjs.model.Notification',
@@ -442,11 +442,10 @@ Ext.application({
         'testextjs.view.commandemanagement.order.action.add',
         'testextjs.model.TSuggestionOrderDetails',
         'testextjs.model.OrderDetail',
-        'testextjs.view.commandemanagement.suivi_order.SuiviOrderManager',
+
         'testextjs.view.sm_user.suggerercde.SuggerercdeManager',
         'testextjs.view.commandemanagement.suggestions_commandees.suggestionsCommandeesManager',
         'testextjs.view.commandemanagement.suggestion.Suggestion_Manager',
-        'testextjs.view.commandemanagement.suivi_order.action.add',
         'testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
         //  Fiche Societe
         'testextjs.model.FicheSociete',
@@ -469,11 +468,9 @@ Ext.application({
         'testextjs.view.configmanagement.dci.DciManager',
         'testextjs.model.Dci',
         'testextjs.view.configmanagement.dci.action.add',
-        //Etiquette      
-        // 'testextjs.view.configmanagement.etiquette.EtiquetteManager',
+       
         'testextjs.model.Etiquette',
-        //'testextjs.view.configmanagement.etiquette.action.add',
-        //Taux de Marque
+       
         'testextjs.view.configmanagement.tauxmarque.TauxmarqueManager',
         'testextjs.model.TauxMarque',
         'testextjs.view.configmanagement.tauxmarque.action.add',
@@ -594,12 +591,11 @@ Ext.application({
         'testextjs.model.DetailBon',
         'testextjs.model.Reglement',
         'testextjs.view.sm_user.factureregle.FactureRegleManager',
-        // 'testextjs.view.sms_user.facturation.action.add'
+      
 
         //Report
        
         'testextjs.model.Statistiquefamille',
-//        'testextjs.view.Report.statistiquevente.statistiqueventemanager',
 
         'testextjs.model.Statistiquevente',
         'testextjs.model.Statistiqueunitevendue',
@@ -662,10 +658,9 @@ Ext.application({
         'testextjs.model.Dci_famille',
         //ajustement
         'testextjs.model.Ajustement',
-//        'testextjs.view.stockmanagement.ajustementmanagement.ajustementManager',
-//        'testextjs.view.stockmanagement.ajustementmanagement.action.add',
+
         'testextjs.model.DetailsAjustement',
-//        'testextjs.view.stockmanagement.ajustementmanagement.action.detailAjustement',
+
         'testextjs.view.stockmanagement.suivistockvente.action.detailOther',
         //fin ajustement
 

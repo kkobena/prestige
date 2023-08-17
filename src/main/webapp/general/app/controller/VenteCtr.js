@@ -668,7 +668,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.checkShowStock();
         me.oncheckUg();
         me.checkSansBon();
-        me.checkPlafondVenteStatut();
+
     },
     cheickCaisse: function () {
         const me = this;
@@ -861,12 +861,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         if (typeVente === '1') {
             me.showNetPaidVno();
         } else {
-            if (me.getPlafondVente()) {
-                me.showNetPaidWithPlafondVente();
-            } else {
-                me.showNetPaidAssurance();
-            }
-
+            me.showNetPaidAssurance();
+          
         }
     },
     onNetBtnClick: function () {
@@ -2246,20 +2242,6 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     },
 
-    checkPlafondVenteStatut: function () {
-        let me = this;
-        Ext.Ajax.request({
-            method: 'GET',
-            url: '../api/v1/common/plafond-vente',
-            success: function (response, options) {
-                const result = Ext.JSON.decode(response.responseText, true);
-                if (result.success) {
-                    me.plafondVente = result.data;
-                }
-            }
-
-        });
-    },
     checkSansBon: function () {
         let me = this;
         Ext.Ajax.request({
@@ -3944,110 +3926,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         return tierspayants;
     },
 
-    showNetPaidWithPlafondVente: function () {
-        const me = this;
-        let sansBon = me.getSansBon();
-        let result = me.checkEmptyBonRef();
-        if (result) {
-            console.log(" me.getVenteSansBon()", me.getVenteSansBon(), sansBon);
-            if (!me.getVenteSansBon()) {
-                Ext.MessageBox.show({
-                    title: 'Message',
-                    width: 550,
-                    msg: "Veuillez renseigner le numéro de bon",
-                    buttons: Ext.MessageBox.OK,
-                    icon: Ext.MessageBox.INFO,
-                    fn: function (buttonId) {
-                        if (buttonId === "ok") {
-                            result.focus(true, 50);
-                        }
-                    }
-                });
-
-            } else {
-                if (!sansBon) {
-                    Ext.MessageBox.show({
-                        title: 'Message d\'erreur',
-                        width: 550,
-                        msg: "Veuillez cocher la vente sans bon ou renseigner le numéro de bon",
-                        buttons: Ext.MessageBox.OK,
-                        icon: Ext.MessageBox.WARNING,
-                        fn: function (buttonId) {
-                            if (buttonId === "ok") {
-                                result.focus(true, 50);
-                            }
-                        }
-                    });
-                    return;
-                }
-            }
-        } else {
-            let vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
-            if (vente) {
-                let venteId = vente.lgPREENREGISTREMENTID;
-                let tierspayants = me.buildAssuranceData();
-                if (tierspayants.length === 0) {
-                    Ext.Msg.alert("Message", 'Veuillez ajouter un tiers-payant à la vente');
-                    return false;
-                }
-                let data = {
-                    "remiseId": remiseId,
-                    "venteId": venteId,
-                    "tierspayants": tierspayants
-                };
-                let progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
-                Ext.Ajax.request({
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    url: '../api/v1/vente/net/outstanding',
-                    params: Ext.JSON.encode(data),
-                    success: function (response, options) {
-                        progress.hide();
-                        const result = Ext.JSON.decode(response.responseText, true);
-                        if (result.success) {
-                            if (result.hasRestructuring) {
-                                Ext.MessageBox.show({
-                                    title: 'Message d\'alert',
-                                    width: 550,
-                                    msg: result.msg,
-                                    buttons: Ext.MessageBox.OK,
-                                    icon: Ext.MessageBox.WARNING,
-                                    fn: function (buttonId) {
-                                        if (buttonId === "ok") {
-                                            me.getMontantRecu().focus(true, 50);
-                                        }
-                                    }
-                                });
-                            }
-                            me.netAmountToPay = result.data;
-                            me.toRecalculate = false;
-                            let montantNet = me.getNetAmountToPay().montantNet;
-                            me.getMontantNet().setValue(me.getNetAmountToPay().montantNet);
-                            me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
-                            me.getMontantTp().setValue(me.getNetAmountToPay().montantTp);
-                            if (montantNet === 0) {
-                                me.getMontantRecu().disable();
-                                me.getVnobtnCloture().enable();
-                                me.getVnobtnCloture().focus();
-                            } else {
-                                me.getMontantRecu().setReadOnly(false);
-                                me.getMontantRecu().focus(true, 50);
-                            }
-                        } else {
-                            me.getMontantRecu().focus(true, 50);
-
-                        }
-
-                    },
-                    failure: function (response, options) {
-                        progress.hide();
-                        Ext.Msg.alert("Message", 'Un problème s\'est produit avec le server ' + response.status);
-                    }
-
-                });
-            }
-        }
-    },
+   
 
     showNetPaidAssurance: function () {
         const me = this;

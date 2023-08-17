@@ -42,10 +42,6 @@ public interface OrderService {
 
     List<TOrderDetail> findByOrderId(String idCommande);
 
-    void changeOrderStatuts(TOrder order);
-
-    void removeItemsFromOrder(List<TOrderDetail> items);
-
     TOrderDetail findByCipAndOrderId(String codeCip, String idCommande);
 
     Rupture creerRupture(TOrder order);
@@ -83,8 +79,6 @@ public interface OrderService {
 
     TFamilleGrossiste findOrCreateFamilleGrossisteByFamilleAndGrossiste(TFamille famille, TGrossiste grossiste);
 
-    TFamille findFamilleByCipOrEan(String cipOrEan);
-
     TGrossiste findGrossiste(String id);
 
     JSONObject updateScheduled(String idProduit, boolean scheduled) throws JSONException;
@@ -105,4 +99,8 @@ public interface OrderService {
     JSONObject addItem(OrderDetailDTO orderDetail, TUser user);
 
     Map<String, List<CommandeCsvDTO>> commandeEncoursCsv(String idCommande);
+
+    void passerLaCommande(String orderId);
+
+    void changerEnCommandeEnCours(String orderId);
 }

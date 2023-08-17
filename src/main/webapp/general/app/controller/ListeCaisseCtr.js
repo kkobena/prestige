@@ -32,10 +32,7 @@ Ext.define('testextjs.controller.ListeCaisseCtr', {
             selector: 'listecaissemanager #reglement'
         }, {ref: 'userComboField',
             selector: 'listecaissemanager #user'
-        }, /* {
-         ref: 'usernameField',
-         selector: 'listecaissemanager userform textfield[name=username]'
-         },*/
+        }, 
         {ref: 'rechercherButton',
             selector: 'listecaissemanager #rechercher'
 

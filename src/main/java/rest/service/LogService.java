@@ -26,7 +26,7 @@ public interface LogService {
 
     void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T);
 
-    void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, EntityManager em);
+    void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T);
 
     JSONObject filtres(String query) throws JSONException;
 

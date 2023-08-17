@@ -10,6 +10,7 @@ import dal.TUser;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Objects;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -20,15 +21,25 @@ public class ResumeCaisseDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-    private String ldCAISSEID, dtCREATED, statut, dtUPDATED, strSTATUT, userFullName;
-    private Integer intSOLDEMATIN = 0, soldeTotal = 0, intSOLDESOIR = 0, billetage = 0, ecart = 0, montantAnnule = 0;
+    private String ldCAISSEID;
+    private String dtCREATED;
+    private String statut;
+    private String dtUPDATED;
+    private String strSTATUT;
+    private String userFullName;
+    private int intSOLDEMATIN;
+    private int soldeTotal;
+    private int intSOLDESOIR;
+    private int billetage;
+    private int ecart;
+    private int montantAnnule;
     boolean cancel = false;
 
     public String getLdCAISSEID() {
         return ldCAISSEID;
     }
 
-    public Integer getSoldeTotal() {
+    public int getSoldeTotal() {
         return soldeTotal;
     }
 
@@ -40,7 +51,7 @@ public class ResumeCaisseDTO implements Serializable {
         this.statut = statut;
     }
 
-    public void setSoldeTotal(Integer soldeTotal) {
+    public void setSoldeTotal(int soldeTotal) {
         this.soldeTotal = soldeTotal;
     }
 
@@ -80,15 +91,15 @@ public class ResumeCaisseDTO implements Serializable {
         this.userFullName = userFullName;
     }
 
-    public Integer getIntSOLDEMATIN() {
+    public int getIntSOLDEMATIN() {
         return intSOLDEMATIN;
     }
 
-    public void setIntSOLDEMATIN(Integer intSOLDEMATIN) {
+    public void setIntSOLDEMATIN(int intSOLDEMATIN) {
         this.intSOLDEMATIN = intSOLDEMATIN;
     }
 
-    public Integer getIntSOLDESOIR() {
+    public int getIntSOLDESOIR() {
         return intSOLDESOIR;
     }
 
@@ -96,27 +107,27 @@ public class ResumeCaisseDTO implements Serializable {
         this.intSOLDESOIR = intSOLDESOIR;
     }
 
-    public Integer getBilletage() {
+    public int getBilletage() {
         return billetage;
     }
 
-    public void setBilletage(Integer billetage) {
+    public void setBilletage(int billetage) {
         this.billetage = billetage;
     }
 
-    public Integer getEcart() {
+    public int getEcart() {
         return ecart;
     }
 
-    public void setEcart(Integer ecart) {
+    public void setEcart(int ecart) {
         this.ecart = ecart;
     }
 
-    public Integer getMontantAnnule() {
+    public int getMontantAnnule() {
         return montantAnnule;
     }
 
-    public void setMontantAnnule(Integer montantAnnule) {
+    public void setMontantAnnule(int montantAnnule) {
         this.montantAnnule = montantAnnule;
     }
 
@@ -150,7 +161,7 @@ public class ResumeCaisseDTO implements Serializable {
         return Objects.equals(this.ldCAISSEID, other.ldCAISSEID);
     }
 
-    public ResumeCaisseDTO(TResumeCaisse caisse, Integer montantBilletage, Integer montantAnnule, boolean cancel) {
+    public ResumeCaisseDTO(TResumeCaisse caisse, int montantBilletage, int montantAnnule, boolean cancel) {
 
         this.ldCAISSEID = caisse.getLdCAISSEID();
         this.dtCREATED = dateFormat.format(caisse.getDtCREATED());
@@ -173,9 +184,9 @@ public class ResumeCaisseDTO implements Serializable {
             this.strSTATUT = "En cours d'utilisation ";
         } else {
             this.ecart = montantBilletage
-                    - (Math.abs(caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN()) - montantAnnule);
+                    - (Math.abs(caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN())/* - montantAnnule */);
             this.intSOLDESOIR = caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN();
-            if (caisse.getStrSTATUT().equals(DateConverter.STATUT_PROCESS)) {
+            if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_PROGRESS)) {
                 this.strSTATUT = "Fermée ";
 
             }
@@ -184,7 +195,7 @@ public class ResumeCaisseDTO implements Serializable {
     }
 
     // constructeur pour les officines qui prennent en compte le fond de caisse dans la recette
-    public ResumeCaisseDTO(TResumeCaisse caisse, Integer montantBilletage, Integer montantAnnule, boolean cancel,
+    public ResumeCaisseDTO(TResumeCaisse caisse, int montantBilletage, int montantAnnule, boolean cancel,
             boolean prendreEnCompteFondCaisse) {
 
         this.ldCAISSEID = caisse.getLdCAISSEID();
@@ -203,13 +214,13 @@ public class ResumeCaisseDTO implements Serializable {
         this.cancel = cancel;
         this.soldeTotal = caisse.getIntSOLDESOIR();
         this.statut = caisse.getStrSTATUT();
-        if (caisse.getStrSTATUT().equals(DateConverter.STATUT_IS_IN_USE)) {
+        if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_USING)) {
             this.intSOLDESOIR = caisse.getIntSOLDESOIR();
             this.strSTATUT = "En cours d'utilisation ";
         } else {
-            this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR()) - montantAnnule);
+            this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR()) /*- montantAnnule*/);
             this.intSOLDESOIR = caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN();
-            if (caisse.getStrSTATUT().equals(DateConverter.STATUT_PROCESS)) {
+            if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_PROGRESS)) {
                 this.strSTATUT = "Fermée ";
 
             }
