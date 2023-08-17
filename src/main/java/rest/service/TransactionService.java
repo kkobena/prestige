@@ -5,10 +5,8 @@
  */
 package rest.service;
 
-import dal.MvtTransaction;
 import dal.TBonLivraison;
 import dal.TGrossiste;
-import dal.TPreenregistrement;
 import dal.TTypeMvtCaisse;
 import dal.TTypeReglement;
 import dal.TUser;
@@ -26,11 +24,8 @@ import javax.persistence.EntityManager;
 // @Remote
 public interface TransactionService {
 
-    void copyTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement _newP,
-            TPreenregistrement old, EntityManager emg);
-
     void addTransaction(TUser ooTUser, String pkey, Integer montant, Integer montantNet, Integer montantVerse,
-            TGrossiste grossiste, EntityManager emg, Integer montantTva, String reference);
+            TGrossiste grossiste, Integer montantTva, String reference);
 
     void addTransaction(TUser ooTUser, TUser caisse, String pkey, Integer montant, Integer voidAmount,
             Integer montantNet, Integer montantVerse, Boolean checked, CategoryTransaction categoryTransaction,
@@ -56,6 +51,6 @@ public interface TransactionService {
             Integer montantPaye, Integer montantTva, Integer marge, String reference, String organisme,
             Integer montantRestant);
 
-    void addTransactionBL(TUser ooTUser, TBonLivraison bl, EntityManager emg);
+    void addTransactionBL(TUser ooTUser, TBonLivraison bl);
 
 }

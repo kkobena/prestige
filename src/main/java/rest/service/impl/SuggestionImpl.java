@@ -83,7 +83,7 @@ public class SuggestionImpl implements SuggestionService {
                     int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now().minusMonths(mois_histo), emg).stream()
                             .map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
                     qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(mois_histo), LocalDate.now(),
-                            famille.getLgFAMILLEID(), emg);
+                            famille.getLgFAMILLEID());
 
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
 
@@ -98,14 +98,13 @@ public class SuggestionImpl implements SuggestionService {
                     }
 
                 } else if (OTCodeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equalsIgnoreCase("2")) {
-                    lstTCoefficientPonderations = getListTCoefficientPonderation(OTCodeGestion.getLgCODEGESTIONID(),
-                            emg);
+                    lstTCoefficientPonderations = getListTCoefficientPonderation(OTCodeGestion.getLgCODEGESTIONID());
                     mois_histo = OTCodeGestion.getIntMOISHISTORIQUEVENTE();
                     if (lstTCoefficientPonderations.size() < OTCodeGestion.getIntMOISHISTORIQUEVENTE()) {
                         mois_histo = lstTCoefficientPonderations.size();
                     }
                     qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(mois_histo), LocalDate.now(),
-                            famille.getLgFAMILLEID(), emg);
+                            famille.getLgFAMILLEID());
 
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
 
@@ -131,7 +130,7 @@ public class SuggestionImpl implements SuggestionService {
                     int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now(), emg).stream()
                             .map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
                     qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(mois_histo), LocalDate.now(),
-                            famille.getLgFAMILLEID(), emg);
+                            famille.getLgFAMILLEID());
 
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
 
@@ -172,24 +171,24 @@ public class SuggestionImpl implements SuggestionService {
         return qteReappro;
     }
 
-    public List<TCoefficientPonderation> getListTCoefficientPonderation(String lg_CODE_GESTION_ID, EntityManager emg) {
+    private List<TCoefficientPonderation> getListTCoefficientPonderation(String code) {
         List<TCoefficientPonderation> lst = new ArrayList<>();
         try {
-            lst = emg.createQuery(
+            lst = this.getEmg().createQuery(
                     "SELECT t FROM TCoefficientPonderation t WHERE t.lgCODEGESTIONID.lgCODEGESTIONID = ?1 AND t.strSTATUT = ?2 ORDER BY t.intINDICEMONTH ASC")
-                    .setParameter(1, lg_CODE_GESTION_ID).setParameter(2, Constant.STATUT_ENABLE).getResultList();
+                    .setParameter(1, code).setParameter(2, Constant.STATUT_ENABLE).getResultList();
         } catch (Exception e) {
 
         }
         return lst;
     }
 
-    public TCalendrier getTCalendrier(String lg_MONTH_ID, int int_ANNEE, EntityManager emg) {
+    public TCalendrier getTCalendrier(String monthId, int year) {
         TCalendrier oTCalendrier = null;
         try {
-            oTCalendrier = (TCalendrier) emg
+            oTCalendrier = (TCalendrier) this.getEmg()
                     .createQuery("SELECT t FROM TCalendrier t WHERE t.lgMONTHID.lgMONTHID = ?1 AND t.intANNEE = ?2")
-                    .setParameter(1, lg_MONTH_ID).setParameter(2, int_ANNEE).getSingleResult();
+                    .setParameter(1, monthId).setParameter(2, year).getSingleResult();
         } catch (Exception e) {
             //
         }
@@ -271,11 +270,11 @@ public class SuggestionImpl implements SuggestionService {
         return oTSuggestionOrderDetails;
     }
 
-    public List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp, EntityManager emg) {
+    public List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp) {
 
         try {
 
-            return emg.createQuery(
+            return this.getEmg().createQuery(
                     "SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1")
                     .setParameter(1, tp.getLgPREENREGISTREMENTID()).getResultList();
 
@@ -291,7 +290,7 @@ public class SuggestionImpl implements SuggestionService {
         try {
             TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, oTPreenregistrement);
             TUser user = preenregistrement.getLgUSERID();
-            List<TPreenregistrementDetail> list = getTPreenregistrementDetail(preenregistrement, emg);
+            List<TPreenregistrementDetail> list = getTPreenregistrementDetail(preenregistrement);
             makeSuggestionAuto(list, user.getLgEMPLACEMENTID());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -480,12 +479,11 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-    @Override
-    public Integer quantiteVendue(LocalDate dtDEBUT, LocalDate dtFin, String produitId, EntityManager emg) {
+    private Integer quantiteVendue(LocalDate dtDEBUT, LocalDate dtFin, String produitId) {
         Integer qty = 0;
         try {
             List<Predicate> predicates = new ArrayList<>();
-            CriteriaBuilder cb = emg.getCriteriaBuilder();
+            CriteriaBuilder cb = this.getEmg().getCriteriaBuilder();
             CriteriaQuery<Integer> cq = cb.createQuery(Integer.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             cq.select(cb.sum(root.get(TPreenregistrementDetail_.intQUANTITY)));
@@ -496,7 +494,7 @@ public class SuggestionImpl implements SuggestionService {
                     java.sql.Date.valueOf(dtDEBUT), java.sql.Date.valueOf(dtFin));
             predicates.add(cb.and(btw));
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            Query q = emg.createQuery(cq);
+            Query q = this.getEmg().createQuery(cq);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
 
@@ -731,6 +729,7 @@ public class SuggestionImpl implements SuggestionService {
     @Override
     public void removeItem(String itemId) {
         TSuggestionOrderDetails item = getItem(itemId);
+        TFamille famille = item.getLgFAMILLEID();
         TSuggestionOrder suggestion = item.getLgSUGGESTIONORDERID();
         if (CollectionUtils.isNotEmpty(suggestion.getTSuggestionOrderDetailsCollection())
                 && suggestion.getTSuggestionOrderDetailsCollection().size() == 1) {
@@ -741,7 +740,7 @@ public class SuggestionImpl implements SuggestionService {
             suggestion.setDtUPDATED(new Date());
             getEmg().persist(suggestion);
         }
-
+        updateProduitStatut(famille);
     }
 
     @Override
@@ -908,8 +907,8 @@ public class SuggestionImpl implements SuggestionService {
             TFamille famille = item.getLgFAMILLEID();
             TFamilleGrossiste familleGrossiste = findFamilleGrossiste(famille.getLgFAMILLEID(),
                     suggestionOrder.getLgGROSSISTEID().getLgGROSSISTEID());
-            if (status == 1) {
-
+            switch (status) {
+            case 1:
                 items += "<span style='background-color:#73C774;'> <b><span style='display:inline-block;width: 7%;'>"
                         + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP())
                         + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION()
@@ -919,7 +918,8 @@ public class SuggestionImpl implements SuggestionService {
                         + " F CFA </span><span style='display:inline-block;width: 15%;'>"
                         + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA "
                         + "</span></b></span><br> ";
-            } else if (status == 2) {
+                break;
+            case 2:
                 items += "<span style='background-color:#5fa2dd;'> <b><span style='display:inline-block;width: 7%;'>"
                         + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP())
                         + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION()
@@ -929,7 +929,8 @@ public class SuggestionImpl implements SuggestionService {
                         + " F CFA </span><span style='display:inline-block;width: 15%;'>"
                         + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA "
                         + "</span></b></span><br> ";
-            } else {
+                break;
+            default:
                 items += " <b><span style='display:inline-block;width: 7%;'>"
                         + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP())
                         + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION()
@@ -938,6 +939,7 @@ public class SuggestionImpl implements SuggestionService {
                         + NumberUtils.formatLongToString(item.getIntPAFDETAIL())
                         + " F CFA </span><span style='display:inline-block;width: 15%;'>"
                         + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA " + "</span></b><br> ";
+                break;
             }
 
         }
@@ -1017,7 +1019,18 @@ public class SuggestionImpl implements SuggestionService {
         TSuggestionOrder order = this.getEmg().find(TSuggestionOrder.class, id);
         order.setStrSTATUT(Constant.STATUT_PENDING);
         this.getEmg().merge(order);
-
     }
 
+    private void updateProduitStatut(TFamille famille) {
+        short statut = famille.getIntORERSTATUS();
+        if (statut == 1) {
+            int st = isOnAnotherSuggestion(famille);
+            if (st == 1) {
+                famille.setIntORERSTATUS((short) 0);
+                famille.setDtUPDATED(new Date());
+                this.getEmg().merge(famille);
+            }
+        }
+
+    }
 }

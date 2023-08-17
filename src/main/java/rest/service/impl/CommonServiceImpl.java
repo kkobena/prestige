@@ -95,7 +95,6 @@ public class CommonServiceImpl implements Serializable, CommonService {
     private Integer maximunproduit;
     private Boolean voirNumeroTicket;
     private Boolean sansBon;
-    private Boolean plafondVenteIsActive;
 
     public LocalDate getDateUpdat() {
         return dateUpdat;
@@ -163,14 +162,6 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
     public void setVoirNumeroTicket(Boolean voirNumeroTicket) {
         this.voirNumeroTicket = voirNumeroTicket;
-    }
-
-    public Boolean getPlafondVenteIsActive() {
-        return plafondVenteIsActive;
-    }
-
-    public void setPlafondVenteIsActive(Boolean plafondVenteIsActive) {
-        this.plafondVenteIsActive = plafondVenteIsActive;
     }
 
     @Override
@@ -446,7 +437,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.like(root.get(TVille_.strName), query + "%"));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -469,7 +460,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.like(root.get(TRisque_.strLIBELLERISQUE), query + "%"));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -491,7 +482,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             if (query != null && !query.equals("")) {
                 predicates.add(cb.like(root.get(TCategorieAyantdroit_.strLIBELLECATEGORIEAYANTDROIT), query + "%"));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -512,20 +503,6 @@ public class CommonServiceImpl implements Serializable, CommonService {
 
         }
         return sansBon;
-    }
-
-    @Override
-    public boolean plafondVenteIsActive() {
-        if (plafondVenteIsActive == null) {
-            try {
-                TParameters tp = getEntityManager().find(TParameters.class, "KEY_ACTIVATION_PLAFOND_VENTE");
-                plafondVenteIsActive = (tp != null && tp.getStrVALUE().trim().equals("1"));
-            } catch (Exception e) {
-
-            }
-        }
-        return plafondVenteIsActive;
-
     }
 
     @Override

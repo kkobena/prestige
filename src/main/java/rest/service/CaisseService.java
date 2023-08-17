@@ -29,11 +29,11 @@ import java.util.List;
 import java.util.Map;
 import javax.ejb.Local;
 import javax.persistence.EntityManager;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- *
  * @author Kobena
  */
 @Local
@@ -57,23 +57,13 @@ public interface CaisseService {
      * properties = new HashMap<>(); properties.put("javax.persistence.fetchgraph", entityGraph); Author author =
      * entityManager.find(Author.class, id, properties);
      */
-    List<VisualisationCaisseDTO> listCaisses(CaisseParamsDTO caisseParams, boolean all);
-
-    List<TCashTransaction> cashTransactions(CaisseParamsDTO caisseParams, boolean all);
-
-    long countcashTransactions(CaisseParamsDTO caisseParams);
 
     List<SumCaisseDTO> getCaisse(CaisseParamsDTO caisseParams);
-
-    List<SumCaisseDTO> montantCaisseAnnule(CaisseParamsDTO caisseParams);
 
     SumCaisseDTO cumul(CaisseParamsDTO caisseParams, boolean all);
 
     GenericDTO balanceVenteCaisseReport(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
             Boolean excludeSome);
-
-    JSONObject balanceVenteCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
-            Boolean excludeSome) throws JSONException;
 
     List<VisualisationCaisseDTO> findAllMvtCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId);
@@ -88,20 +78,7 @@ public interface CaisseService {
 
     JSONObject closeCaisse(TUser o, String idCaisse) throws JSONException;
 
-    JSONObject tableauBoardDatas(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user, int start, int limit,
-            boolean all) throws JSONException;
-
-    JSONObject tableauBoardDatasOld(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user, int start,
-            int limit, boolean all) throws JSONException;
-
-    Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatas(LocalDate dtStart, LocalDate dtEnd,
-            Boolean checked, TUser user, int ration, int start, int limit, boolean all);
-
-    List<Typemvtproduit> findAllTypeMvtProduit();
-
     JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException;
-
-    JSONObject removeMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException;
 
     boolean checkCaisse(TUser user, EntityManager emg);
 
@@ -113,12 +90,7 @@ public interface CaisseService {
 
     Map<Params, List<RapportDTO>> rapportGestion(Params params);
 
-    Integer margeAchatVente(LocalDate dtStart, LocalDate dtEnd, TUser user, String empl);
-
     JSONObject donneeCaisses(CaisseParamsDTO caisseParams, boolean all);
-
-    Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatasOld(LocalDate dtStart, LocalDate dtEnd,
-            Boolean checked, TUser user, int ration, int start, int limit, boolean all);
 
     Integer totalVenteDepot(LocalDate dtStart, LocalDate dtEnd, String empl);
 
@@ -127,8 +99,6 @@ public interface CaisseService {
     List<VisualisationCaisseDTO> mouvementCaisses(CaisseParamsDTO caisseParams, boolean all);
 
     JSONObject mouvementCaisses(CaisseParamsDTO caisseParams) throws JSONException;
-
-    List<TPreenregistrement> getTtVente(String dt_start, String dt_end, String lgEmp);
 
     Integer montantCa(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
             TypeTransaction transaction, String typrReglement);
@@ -157,12 +127,6 @@ public interface CaisseService {
     JSONObject balancePara(LocalDate dtStart, LocalDate dtEnd, String emplacementId) throws JSONException;
 
     GenericDTO balanceVenteCaisseReportPara(LocalDate dtStart, LocalDate dtEnd, String emplacementId);
-
-    JSONObject tableauBoardDatasGroupByMonth(LocalDate dtStart, LocalDate dtEnd, Boolean checked, TUser user, int start,
-            int limit, boolean all) throws JSONException;
-
-    Map<TableauBaordSummary, List<TableauBaordPhDTO>> tableauBoardDatasMonthly(LocalDate dtStart, LocalDate dtEnd,
-            Boolean checked, TUser user, int ration, int start, int limit, boolean all);
 
     long montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
             TypeTransaction transaction, String typrReglement, String typeMvtCaisse);

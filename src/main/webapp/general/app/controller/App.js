@@ -233,7 +233,6 @@ Ext.define('testextjs.controller.App', {
     },
 
     onLoadNewComponentWithDataSource: function (ComponentXtype, ComponentLabel, name_ressource, ODatatasource) {
-        // alert(ComponentXtype);
 
         var text = ComponentLabel,
                 xtype = ComponentXtype,
@@ -423,10 +422,7 @@ Ext.define('testextjs.controller.App', {
                 contentPanel = this.getContentPanel(),
                 themeName = Ext.themeName,
                 cmp;
-        alert(xtype);
-        //alert("Ok -> " + record.get('id'));
 
-        //alert("Ok -> " + record.get('id'));
 
 
         if (xtype) { // only leaf nodes have ids

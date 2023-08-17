@@ -75,7 +75,7 @@ public class LogServiceImpl implements LogService {
     }
 
     @Override
-    public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object t, EntityManager em) {
+    public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object t) {
         TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
         eventLog.setLgUSERID(user);
         eventLog.setDtCREATED(new Date());
@@ -86,7 +86,7 @@ public class LogServiceImpl implements LogService {
         eventLog.setTypeLog(typeLog);
         eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
         eventLog.setStrTYPELOG(ref);
-        em.persist(eventLog);
+        this.getEntityManager().persist(eventLog);
     }
 
     Comparator<LogDTO> comparatorOrder = Comparator.comparing(LogDTO::getOrder);

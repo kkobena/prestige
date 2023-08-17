@@ -2,6 +2,7 @@ package rest.service.dto;
 
 import dal.TFamille;
 import dal.TFamilleGrossiste;
+import dal.TFamilleStock;
 import dal.TGrossiste;
 import dal.TOrder;
 import dal.TOrderDetail;
@@ -60,7 +61,7 @@ public class CommandeEncourDetailDTO {
     private final Integer produitPrixReference;
     private final boolean prixDiff;
     private final int qteLivree;
-    private final Integer seuil;//
+    private final Integer seuil;
     private int qteReasor;
     private int stock;
     private String codeArticle;
@@ -241,7 +242,7 @@ public class CommandeEncourDetailDTO {
         if (CollectionUtils.isNotEmpty(tFamilleGrossisteCollection)) {
             famille.getTFamilleGrossisteCollection().stream()
                     .filter((t) -> t.getLgGROSSISTEID().equals(grossiste) && "enable".equals(t.getStrSTATUT()))
-                    .findFirst().ifPresentOrElse((t) -> {
+                    .findFirst().ifPresentOrElse(t -> {
                         this.produitCip = t.getStrCODEARTICLE();
                         this.codeArticle = t.getStrCODEARTICLE();
                     }, () -> {
@@ -295,4 +296,58 @@ public class CommandeEncourDetailDTO {
         this.codeArticle = codeArticle;
     }
 
+    public CommandeEncourDetailDTO(TOrderDetail detail, TFamilleStock familleStock) {
+        this.prixUnitaire = detail.getPrixUnitaire();
+        this.prixAchat = detail.getPrixAchat();
+        this.lgORDERDETAILID = detail.getLgORDERDETAILID();
+        this.intNUMBER = detail.getIntNUMBER();
+        this.intPRICE = detail.getIntPRICE();
+        this.intPAFDETAIL = detail.getIntPAFDETAIL();
+        this.intPRICEDETAIL = detail.getIntPRICEDETAIL();
+        this.intQTEMANQUANT = detail.getIntQTEMANQUANT();
+        this.intQTEREPGROSSISTE = detail.getIntQTEREPGROSSISTE();
+        this.boolBL = detail.getBoolBL();
+        this.strSTATUT = detail.getStrSTATUT();
+        this.dtCREATED = DateCommonUtils.formatDate(detail.getDtCREATED());
+        this.dtUPDATED = Objects.isNull(detail.getDtUPDATED()) ? this.dtCREATED
+                : DateCommonUtils.formatDate(detail.getDtUPDATED());
+
+        TOrder order = detail.getLgORDERID();
+        TGrossiste grossiste = order.getLgGROSSISTEID();
+        this.lgGROSSISTEID = grossiste.getLgGROSSISTEID();
+        TFamille famille = detail.getLgFAMILLEID();
+
+        Collection<TFamilleGrossiste> tFamilleGrossisteCollection = famille.getTFamilleGrossisteCollection();
+        if (CollectionUtils.isNotEmpty(tFamilleGrossisteCollection)) {
+            famille.getTFamilleGrossisteCollection().stream()
+                    .filter((t) -> t.getLgGROSSISTEID().equals(grossiste) && "enable".equals(t.getStrSTATUT()))
+                    .findFirst().ifPresentOrElse((t) -> {
+                        this.produitCip = t.getStrCODEARTICLE();
+                        this.codeArticle = t.getStrCODEARTICLE();
+                    }, () -> {
+                        this.produitCip = famille.getIntCIP();
+                        this.codeArticle = "";
+                    });
+        } else {
+            this.produitCip = famille.getIntCIP();
+            this.codeArticle = "";
+        }
+
+        this.lgORDERID = order.getLgORDERID();
+        this.lgFAMILLEID = famille.getLgFAMILLEID();
+        this.produitName = famille.getStrNAME();
+        this.grossisteLibelle = grossiste.getStrLIBELLE();
+        this.intORERSTATUS = detail.getIntORERSTATUS();
+        this.ug = detail.getUg();
+        this.produitPrixAchat = famille.getIntPAF();
+        this.produitPrixVente = detail.getIntPRICEDETAIL();
+        this.produitPrixReference = famille.getIntPRICETIPS();
+        this.produitPrixMachine = famille.getIntPRICE();
+        this.prixDiff = detail.getIntPRICEDETAIL().compareTo(famille.getIntPRICE()) != 0;
+        this.qteLivree = detail.getIntNUMBER() - detail.getIntQTEMANQUANT();
+        this.seuil = famille.getIntSEUILMIN();
+        this.stock = familleStock.getIntNUMBERAVAILABLE();
+        this.qteReasor = Math.abs(familleStock.getIntNUMBERAVAILABLE() - famille.getIntSEUILMIN());
+
+    }
 }

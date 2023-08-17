@@ -34,9 +34,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.doDecondition', {
 
         Me = this;
         var itemsPerPage = 20;
-
-
-
         str_DESCRIPTION = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
@@ -126,12 +123,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.doDecondition', {
                                 change: function (field) {
 //                                    var int_NUMBER_AVAILABLE = (Ext.getCmp('int_NUMBER_AVAILABLE').getValue());
                                     Me.DisplayQuantity(field.getValue(), int_NUMBERDETAIL);
-                                }/*,
-                                 keypress: function(field, e) {
-                                 if (e.getKey() === e.ENTER) {
-                                 Me.onbtnsave();
-                                 }
-                                 }*/
+                                }
 
 
 

@@ -6,7 +6,6 @@
 package rest.service.impl;
 
 import bll.common.Parameter;
-import bll.configManagement.familleGrossisteManagement;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.Params;
@@ -61,11 +60,24 @@ public class OrderServiceImpl implements OrderService {
         return em;
     }
 
-    public TFamilleStock getTProductItemStock(String produitId, String emp) {
+    private TFamilleStock getTProductItemStock(String produitId, String emp) {
         try {
             TypedQuery<TFamilleStock> q = getEmg().createQuery(
                     "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgFAMILLEID.strSTATUT='enable'  AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT ='enable' ",
                     TFamilleStock.class).setParameter(1, produitId).setParameter(2, emp);
+            q.setMaxResults(1);
+            return q.getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
+
+    private TFamilleStock getTProductItemStock(String produitId) {
+        try {
+            TypedQuery<TFamilleStock> q = getEmg().createQuery(
+                    "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1   AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT ='enable' ",
+                    TFamilleStock.class).setParameter(1, produitId).setParameter(2, "1");
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
@@ -114,86 +126,57 @@ public class OrderServiceImpl implements OrderService {
                     erro.add(famille.getIntCIP());
                 }
             });
-            OTOrder.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
+            OTOrder.setStrSTATUT(Constant.STATUT_IS_CLOSED);
             OTOrder.setIntPRICE(montant.intValue());
             OTOrder.setDtUPDATED(new Date());
             getEmg().merge(OTOrder);
             return json.put("success", true).put("count", count.intValue()).put("nb", count2.intValue())
                     .put("data", new JSONArray(erro)).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return json.put("success", false).put("msg", "Echec de création du BL");
         }
     }
 
-    private TBonLivraisonDetail createBLDetail(TBonLivraison OTBonLivraison, TGrossiste OTGrossiste, TFamille OTFamille,
-            int int_QTE_CMDE, int int_QTE_RECUE, int int_PRIX_REFERENCE, String str_LIVRAISON_ADP,
-            String str_MANQUE_FORCES, String str_ETAT_ARTICLE, int int_PRIX_VENTE, int int_PAF, int int_PA_REEL,
-            TZoneGeographique OTZoneGeographique, int int_INITSTOCK) {
-        TBonLivraisonDetail OTBonLivraisonDetail = new TBonLivraisonDetail();
-        OTBonLivraisonDetail.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
-        OTBonLivraisonDetail.setLgBONLIVRAISONID(OTBonLivraison);
-        OTBonLivraisonDetail.setLgGROSSISTEID(OTGrossiste);
-        OTBonLivraisonDetail.setLgFAMILLEID(OTFamille);
-        OTBonLivraisonDetail.setLgZONEGEOID(OTZoneGeographique);
-        OTBonLivraisonDetail.setIntQTECMDE(int_QTE_CMDE);
-        OTBonLivraisonDetail.setIntQTERECUE(int_QTE_RECUE);
-        OTBonLivraisonDetail.setIntPAF(int_PAF);
-        OTBonLivraisonDetail.setIntPAREEL(int_PAF);
-        OTBonLivraisonDetail.setIntINITSTOCK(int_INITSTOCK);
-        OTBonLivraisonDetail.setIntPRIXREFERENCE(int_PRIX_REFERENCE);
-        OTBonLivraisonDetail.setIntPRIXVENTE(int_PRIX_VENTE);
-        OTBonLivraisonDetail.setStrETATARTICLE(str_ETAT_ARTICLE);
-        OTBonLivraisonDetail.setStrLIVRAISONADP(str_LIVRAISON_ADP);
-        OTBonLivraisonDetail.setStrMANQUEFORCES(str_MANQUE_FORCES);
-        OTBonLivraisonDetail.setIntQTEMANQUANT(OTBonLivraisonDetail.getIntQTECMDE());
-        OTBonLivraisonDetail.setDtCREATED(new Date());
-        OTBonLivraisonDetail.setDtUPDATED(new Date());
-        OTBonLivraisonDetail.setStrSTATUT(DateConverter.STATUT_ENABLE);
-        getEmg().persist(OTBonLivraisonDetail);
-        return OTBonLivraisonDetail;
+    private TBonLivraisonDetail createBLDetail(TBonLivraison oTBonLivraison, TGrossiste oTGrossiste, TFamille oTFamille,
+            TOrderDetail d, TZoneGeographique oTZoneGeographique, int initStock) {
+        TBonLivraisonDetail oTBonLivraisonDetail = new TBonLivraisonDetail();
+        oTBonLivraisonDetail.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
+        oTBonLivraisonDetail.setLgBONLIVRAISONID(oTBonLivraison);
+        oTBonLivraisonDetail.setLgGROSSISTEID(oTGrossiste);
+        oTBonLivraisonDetail.setLgFAMILLEID(oTFamille);
+        oTBonLivraisonDetail.setLgZONEGEOID(oTZoneGeographique);
+        oTBonLivraisonDetail.setIntQTECMDE(d.getIntQTEREPGROSSISTE());
+        oTBonLivraisonDetail.setIntQTERECUE(d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT());
+        oTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
+        oTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
+        oTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
+        oTBonLivraisonDetail.setIntPAREEL(d.getIntPAFDETAIL());
+        oTBonLivraisonDetail.setPrixUni(d.getPrixUnitaire());
+        oTBonLivraisonDetail.setPrixTarif(d.getPrixAchat());
+        oTBonLivraisonDetail.setStrETATARTICLE("");
+        oTBonLivraisonDetail.setStrLIVRAISONADP("");
+        oTBonLivraisonDetail.setStrMANQUEFORCES("");
+        oTBonLivraisonDetail.setIntINITSTOCK(initStock);
+        oTBonLivraisonDetail.setIntQTEMANQUANT(oTBonLivraisonDetail.getIntQTECMDE());
+        oTBonLivraisonDetail.setDtCREATED(new Date());
+        oTBonLivraisonDetail.setDtUPDATED(oTBonLivraisonDetail.getDtCREATED());
+        oTBonLivraisonDetail.setStrSTATUT(Constant.STATUT_ENABLE);
+        getEmg().persist(oTBonLivraisonDetail);
+        return oTBonLivraisonDetail;
 
     }
 
-    private TBonLivraisonDetail createBLDetail(TBonLivraison OTBonLivraison, TGrossiste OTGrossiste, TFamille OTFamille,
-            TOrderDetail d, TZoneGeographique OTZoneGeographique, int initStock) {
-        TBonLivraisonDetail OTBonLivraisonDetail = new TBonLivraisonDetail();
-        OTBonLivraisonDetail.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
-        OTBonLivraisonDetail.setLgBONLIVRAISONID(OTBonLivraison);
-        OTBonLivraisonDetail.setLgGROSSISTEID(OTGrossiste);
-        OTBonLivraisonDetail.setLgFAMILLEID(OTFamille);
-        OTBonLivraisonDetail.setLgZONEGEOID(OTZoneGeographique);
-        OTBonLivraisonDetail.setIntQTECMDE(d.getIntQTEREPGROSSISTE());
-        OTBonLivraisonDetail.setIntQTERECUE(d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT());
-        OTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
-        OTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
-        OTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
-        OTBonLivraisonDetail.setIntPAREEL(d.getIntPAFDETAIL());
-        OTBonLivraisonDetail.setPrixUni(d.getPrixUnitaire());
-        OTBonLivraisonDetail.setPrixTarif(d.getPrixAchat());
-        OTBonLivraisonDetail.setStrETATARTICLE("");
-        OTBonLivraisonDetail.setStrLIVRAISONADP("");
-        OTBonLivraisonDetail.setStrMANQUEFORCES("");
-        OTBonLivraisonDetail.setIntINITSTOCK(initStock);
-        OTBonLivraisonDetail.setIntQTEMANQUANT(OTBonLivraisonDetail.getIntQTECMDE());
-        OTBonLivraisonDetail.setDtCREATED(new Date());
-        OTBonLivraisonDetail.setDtUPDATED(OTBonLivraisonDetail.getDtCREATED());
-        OTBonLivraisonDetail.setStrSTATUT(DateConverter.STATUT_ENABLE);
-        getEmg().persist(OTBonLivraisonDetail);
-        return OTBonLivraisonDetail;
-
-    }
-
-    private List<TOrderDetail> getTOrderDetail(String lg_ORDER_ID, String str_STATUT) {
+    private List<TOrderDetail> getTOrderDetail(String orderId, String statut) {
 
         try {
             TypedQuery<TOrderDetail> q = getEmg()
                     .createQuery("SELECT t FROM TOrderDetail t WHERE t.strSTATUT = ?1 AND t.lgORDERID.lgORDERID = ?2",
                             TOrderDetail.class)
-                    .setParameter(1, str_STATUT).setParameter(2, lg_ORDER_ID);
+                    .setParameter(1, statut).setParameter(2, orderId);
             return q.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
 
@@ -250,33 +233,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void changeOrderStatuts(TOrder order) {
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaUpdate<TOrderDetail> cq = cb.createCriteriaUpdate(TOrderDetail.class);
-            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
-            cq.set(root.get(TOrderDetail_.strSTATUT), DateConverter.PASSE).set(root.get(TOrderDetail_.dtUPDATED),
-                    new Date());
-            cq.where(cb.equal(root.get(TOrderDetail_.lgORDERID), order));
-            getEmg().createQuery(cq).executeUpdate();
-            order.setStrSTATUT(DateConverter.PASSE);
-            order.setDtUPDATED(new Date());
-            getEmg().merge(order);
-
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-
-        }
-    }
-
-    @Override
-    public void removeItemsFromOrder(List<TOrderDetail> items) {
-        items.forEach(x -> {
-            getEmg().remove(x);
-        });
-    }
-
-    @Override
     public TOrderDetail findByCipAndOrderId(String codeCip, String idCommande) {
         try {
             TypedQuery<TOrderDetail> q = getEmg().createQuery(
@@ -329,7 +285,7 @@ public class OrderServiceImpl implements OrderService {
             cq.where(cb.equal(root.get(RuptureDetail_.rupture), r));
             getEmg().createQuery(cq).executeUpdate();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
         }
     }
@@ -397,7 +353,7 @@ public class OrderServiceImpl implements OrderService {
             cq.select(root.get(RuptureDetail_.rupture)).distinct(true)
                     .orderBy(cb.desc(root.get(RuptureDetail_.rupture).get(Rupture_.dtUpdated)));
             List<Predicate> predicates = predicats(cb, root, dtStart, dtEnd, grossisteId, query);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Rupture> q = getEmg().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -406,7 +362,7 @@ public class OrderServiceImpl implements OrderService {
             return q.getResultList().stream().map(x -> new RuptureDTO(x, ruptureDetaisDtoByRupture(x.getId()).stream()
                     .map(RuptureDetailDTO::new).collect(Collectors.toList()))).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
 
@@ -432,7 +388,7 @@ public class OrderServiceImpl implements OrderService {
                                     .collect(Collectors.toList())))
                     .filter(e -> e.getNbreProduit() > 0).collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
 
@@ -445,7 +401,7 @@ public class OrderServiceImpl implements OrderService {
             Root<Rupture> root = cq.from(Rupture.class);
             cq.select(cb.count(root));
             List<Predicate> predicates = predicats(cb, root, dtStart, dtEnd, grossisteId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEmg().createQuery(cq);
             return (long) q.getSingleResult();
         } catch (Exception e) {
@@ -493,13 +449,13 @@ public class OrderServiceImpl implements OrderService {
             Root<RuptureDetail> root = cq.from(RuptureDetail.class);
             cq.select(root).orderBy(cb.asc(root.get(RuptureDetail_.produit).get(TFamille_.strNAME)));
             List<Predicate> predicates = predicats(cb, root, dtStart, dtEnd, grossisteId, query);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<RuptureDetail> q = getEmg().createQuery(cq);
             return q.getResultList().stream()
                     .map(x -> new RuptureDetailDTO(x, findProduitStock(x.getProduit().getLgFAMILLEID(), emplacementId)))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -514,7 +470,7 @@ public class OrderServiceImpl implements OrderService {
             q.setMaxResults(1);
             return ((Integer) q.getSingleResult());
         } catch (Exception e) {
-            e.printStackTrace();
+
             return 0;
         }
     }
@@ -562,21 +518,21 @@ public class OrderServiceImpl implements OrderService {
             });
 
             datas.getDatas().forEach(s -> {
-                // updateRuptureDetail(rupture, s);
+
                 this.getEmg().remove(this.getEmg().find(Rupture.class, s));
             });
             return new JSONObject().put("success", true).put("ruptureId", rupture.getId());
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false);
         }
 
     }
 
     public String genererReferenceCommande() {
-        TParameters OTParameters = this.getEmg().find(TParameters.class, "KEY_LAST_ORDER_COMMAND_NUMBER");
-        TParameters OTParameters_KEY_SIZE_ORDER_NUMBER = this.getEmg().find(TParameters.class, "KEY_SIZE_ORDER_NUMBER");
-        JSONArray jsonArray = new JSONArray(OTParameters.getStrVALUE());
+        TParameters oTParameters = this.getEmg().find(TParameters.class, "KEY_LAST_ORDER_COMMAND_NUMBER");
+        TParameters param = this.getEmg().find(TParameters.class, "KEY_SIZE_ORDER_NUMBER");
+        JSONArray jsonArray = new JSONArray(oTParameters.getStrVALUE());
         JSONObject jsonObject = jsonArray.getJSONObject(0);
         LocalDate date = LocalDate.parse(jsonObject.getString("str_last_date"),
                 DateTimeFormatter.ofPattern("yyyy/MM/dd"));
@@ -588,14 +544,13 @@ public class OrderServiceImpl implements OrderService {
         }
         lastCode++;
 
-        String left = StringUtils.leftPad("" + lastCode,
-                Integer.parseInt(OTParameters_KEY_SIZE_ORDER_NUMBER.getStrVALUE()), '0');
+        String left = StringUtils.leftPad("" + lastCode, Integer.parseInt(param.getStrVALUE()), '0');
         jsonObject.put("int_last_code", left);
         jsonObject.put("str_last_date", date.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
         jsonArray = new JSONArray();
         jsonArray.put(jsonObject);
-        OTParameters.setStrVALUE(jsonArray.toString());
-        this.getEmg().merge(OTParameters);
+        oTParameters.setStrVALUE(jsonArray.toString());
+        this.getEmg().merge(oTParameters);
         return LocalDate.now().format(DateTimeFormatter.ofPattern("ddMMyyyy")).concat("_") + left;
     }
 
@@ -616,7 +571,7 @@ public class OrderServiceImpl implements OrderService {
             this.getEmg().persist(familleGrossiste);
             return familleGrossiste;
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "findOrCreateFamilleGrossiste ---->>> {0}", e);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
     }
@@ -678,7 +633,7 @@ public class OrderServiceImpl implements OrderService {
             String desc = "Modification du prix d'achat du produit : " + f.getIntCIP() + " " + f.getStrNAME()
                     + " ancien prix: " + produitGrossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
             logService.updateItem(user, produitGrossiste.getStrCODEARTICLE(), desc,
-                    TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
+                    TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f);
             notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
                     .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE).message(desc).addUser(user));
             saveMouvementPrice(f, dto.getPrixAchat(), produitGrossiste.getIntPAF(), f.getIntCIP(), user);
@@ -690,11 +645,10 @@ public class OrderServiceImpl implements OrderService {
         detail.setIntQTEMANQUANT(dto.getStock());
         detail.setIntPRICE(dto.getStock() * dto.getPrixAchat());
         detail.setIntPAFDETAIL(dto.getPrixAchat());
-        // detail.setIntPRICEDETAIL(dto.getPrixVente());
-        detail.setStrSTATUT(DateConverter.STATUT_PROCESS);
+
+        detail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
         detail.setDtUPDATED(new Date());
         detail.setPrixAchat(produitGrossiste.getIntPAF());
-        // detail.setPrixUnitaire(produitGrossiste.getIntPRICE());
 
         this.getEmg().merge(detail);
         order.setDtUPDATED(detail.getDtUPDATED());
@@ -718,7 +672,7 @@ public class OrderServiceImpl implements OrderService {
             mouvementprice.setLgFAMILLEID(OTFamille);
             this.getEmg().persist(mouvementprice);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
 
         }
 
@@ -764,21 +718,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public TFamille findFamilleByCipOrEan(String cipOrEan) {
-        try {
-            TypedQuery<TFamille> q = this.getEmg().createQuery(
-                    "SELECT o FROM TFamille o WHERE (o.intCIP =?1 OR o.intEAN13=?1 ) AND o.strSTATUT='enable' ",
-                    TFamille.class);
-            q.setParameter(1, cipOrEan);
-            q.setMaxResults(1);
-            return q.getSingleResult();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return null;
-        }
-    }
-
-    @Override
     public TGrossiste findGrossiste(String id) {
         return getEmg().find(TGrossiste.class, id);
     }
@@ -807,7 +746,7 @@ public class OrderServiceImpl implements OrderService {
             cq.select(root).orderBy(cb.desc(root.get(TOrderDetail_.dtUPDATED)),
                     cb.asc(root.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
             List<Predicate> predicates = fetchOrderItemsPredicats(cb, root, orderId, filtre, query);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TOrderDetail> q = getEmg().createQuery(cq);
             if (!all && filtre != CommandeFiltre.PRIX_VENTE_PLUS_30) {
                 q.setFirstResult(start);
@@ -817,7 +756,9 @@ public class OrderServiceImpl implements OrderService {
                 return q.getResultList().stream().filter(FunctionUtils.ECART_PRIX_VENTE_30)
                         .map(CommandeEncourDetailDTO::new).collect(Collectors.toList());
             }
-            return q.getResultList().stream().map(CommandeEncourDetailDTO::new).collect(Collectors.toList());
+            return q.getResultList().stream().map(
+                    e -> new CommandeEncourDetailDTO(e, this.getTProductItemStock(e.getLgFAMILLEID().getLgFAMILLEID())))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
@@ -870,7 +811,7 @@ public class OrderServiceImpl implements OrderService {
         String desc = "Modification du prix de vente du produit :" + f.getStrNAME() + " prix importé: "
                 + detail.getIntPRICEDETAIL() + " nouveau prix :" + dto.getPrixVente();
         logService.updateItem(user, produitGrossiste.getStrCODEARTICLE(), desc,
-                TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f, this.getEmg());
+                TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f);
         notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
                 .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE).message(desc).addUser(user));
         saveMouvementPrice(f, dto.getPrixVente(), detail.getIntPRICEDETAIL(), f.getIntCIP(), user);
@@ -1237,6 +1178,72 @@ public class OrderServiceImpl implements OrderService {
         TOrder order = this.getEmg().find(TOrder.class, idCommande);
         return Map.of(order.getStrREFORDER(), order.getTOrderDetailCollection().stream().map(this::buildFromOrderDetail)
                 .collect(Collectors.toList()));
+
+    }
+
+    @Override
+    public void passerLaCommande(String orderId) {
+        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_PASSED, (short) 3);
+    }
+
+    @Override
+    public void changerEnCommandeEnCours(String orderId) {
+        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_IS_PROGRESS, (short) 2);
+    }
+
+    private void changeOrderStatuts(TOrder order) {
+        Date toDay = new Date();
+        try {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaUpdate<TOrderDetail> cq = cb.createCriteriaUpdate(TOrderDetail.class);
+            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
+            cq.set(root.get(TOrderDetail_.strSTATUT), Constant.STATUT_PASSED)
+                    .set(root.get(TOrderDetail_.dtUPDATED), toDay)
+                    .set(root.get(TOrderDetail_.intORERSTATUS), (short) 3);
+
+            cq.where(cb.equal(root.get(TOrderDetail_.lgORDERID), order));
+            getEmg().createQuery(cq).executeUpdate();
+            order.setStrSTATUT(Constant.STATUT_PASSED);
+            order.setDtUPDATED(toDay);
+            getEmg().merge(order);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+
+        }
+    }
+
+    private void changeOrderStatuts(TOrder order, String status, short statutOrder) {
+        Date toDay = new Date();
+        // (short) 3
+
+        order.getTOrderDetailCollection().forEach(it -> {
+            updateOrderItemStatut(it, status, statutOrder, toDay);
+            updateFamilleStatut(it.getLgFAMILLEID(), statutOrder, toDay);
+        });
+
+        // order.setStrSTATUT(Constant.STATUT_PASSED);
+        order.setDtUPDATED(toDay);
+        order.setStrSTATUT(status);
+        getEmg().merge(order);
+
+    }
+
+    private void updateOrderItemStatut(TOrderDetail detail, String status, short statutOrder, Date date) {
+        detail.setStrSTATUT(status);
+        detail.setIntORERSTATUS(statutOrder);
+        detail.setDtUPDATED(date);
+        getEmg().merge(detail);
+
+    }
+
+    private void updateFamilleStatut(TFamille famille, short statutOrder, Date date) {
+        short st = famille.getIntORERSTATUS();
+        if (st < 4) {
+            famille.setIntORERSTATUS(statutOrder);
+            famille.setDtUPDATED(date);
+            getEmg().merge(famille);
+        }
 
     }
 }

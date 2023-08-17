@@ -27,6 +27,8 @@ public final class Constant {
     public static final String P_SHOW_ALL_ACTIVITY = "P_SHOW_ALL_ACTIVITY";
     public static final String STATUT_DELETE = "delete";
     public static final String STATUT_CANCEL = "cancel";
+    public static final String DEFAUL_TYPEETIQUETTE = "2";
+    public static final String STATUT_IS_USING = "is_Using";
 
     private Constant() {
     }

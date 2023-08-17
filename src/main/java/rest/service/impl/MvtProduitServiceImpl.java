@@ -113,10 +113,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         this.getEmg().persist(mouvementprice);
     }
 
-    private TEmplacement emplacementFromId(String lgEMPLACEMENTID) {
-        return getEmg().find(TEmplacement.class, lgEMPLACEMENTID);
-    }
-
     public List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp) {
         try {
             return getEmg().createQuery(
@@ -148,28 +144,28 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public void updateStockDepot(TUser user, TPreenregistrement tp, TEmplacement OTEmplacement) throws Exception {
+    public void updateStockDepot(TUser user, TPreenregistrement tp, TEmplacement emplacement) throws Exception {
         List<TPreenregistrementDetail> list = getTPreenregistrementDetail(tp);
         user = (user == null) ? tp.getLgUSERID() : user;
         final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.ENTREE_EN_STOCK);
         for (TPreenregistrementDetail d : list) {
             TFamille tFamille = d.getLgFAMILLEID();
-            updateStockDepot(typemvtproduit, user, tFamille, d.getIntQUANTITY(), OTEmplacement);
+            updateStockDepot(typemvtproduit, user, tFamille, d.getIntQUANTITY(), emplacement);
         }
     }
 
-    private TFamille findProduitById(String id, EntityManager emg) {
+    private TFamille findProduitById(String id) {
 
         try {
-            return emg.find(TFamille.class, id);
+            return em.find(TFamille.class, id);
         } catch (Exception e) {
             return null;
         }
     }
 
     @Override
-    public void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg,
-            TEmplacement depot) throws Exception {
+    public void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, TEmplacement depot)
+            throws Exception {
         TUser tu = tp.getLgUSERID();
         final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
         final String emplacementId = emplacement.getLgEMPLACEMENTID();
@@ -187,27 +183,27 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de "
                         + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
                         + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
-                logService.updateItem(tu, tp.getStrREF(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tp, emg);
+                logService.updateItem(tu, tp.getStrREF(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tp);
                 notificationService.save(new Notification().canal(Canal.EMAIL)
                         .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
             }
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
             int initStock = familleStock.getIntNUMBERAVAILABLE();
             if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-                TFamille oTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
+                TFamille oTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID());
                 TFamilleStock stockParent = findStockByProduitId(oTFamilleParent.getLgFAMILLEID(),
                         emplacement.getLgEMPLACEMENTID());
                 deconditionner(tu, emplacement, tFamille, oTFamilleParent, stockParent, familleStock,
-                        it.getIntQUANTITY(), emg);
+                        it.getIntQUANTITY());
 
             }
 
             updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot);
             mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
-                    emplacement, it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), emg,
-                    it.getValeurTva(), tp.getChecked(), it.getIntUG());
+                    emplacement, it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), it.getValeurTva(),
+                    tp.getChecked(), it.getIntUG());
 
-            emg.merge(it);
+            this.getEmg().merge(it);
             updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITY(), depot);
             suggestionService.makeSuggestionAuto(familleStock, tFamille);
         });
@@ -233,6 +229,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 it.setIntUG(ugVendue);
             }
         } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
         }
 
     }
@@ -267,7 +264,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                             + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
                             + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
                     logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT,
-                            tFamille, emg);
+                            tFamille);
                     notificationService.save(new Notification().canal(Canal.EMAIL)
                             .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc)
                             .addUser(tu));
@@ -276,7 +273,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 Integer initStock = familleStock.getIntNUMBERAVAILABLE();
 
                 if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-                    TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID(), emg);
+                    TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID());
                     TFamilleStock stockParent = findStockByProduitId(otFamilleParent.getLgFAMILLEID(),
                             emplacement.getLgEMPLACEMENTID());
                     deconditionner(tu, stockParent, familleStock, it.getIntQUANTITY());
@@ -285,7 +282,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot);
                 mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
                         emplacement, it.getIntQUANTITY(), initStock,
-                        familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY(), emg, it.getValeurTva(), true,
+                        familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY(), it.getValeurTva(), true,
                         it.getIntUG());
                 updateStock(familleStock, tp, it);
                 emg.merge(familleStock);
@@ -298,13 +295,13 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         }
     }
 
-    private void updateStockDepot(Typemvtproduit typemvtproduit, TUser ooTUser, TFamille OTFamille, Integer qty,
+    private void updateStockDepot(Typemvtproduit typemvtproduit, TUser ooTUser, TFamille oTFamille, Integer qty,
             TEmplacement OTEmplacement) {
         Integer initStock = 0;
         TFamilleStock familleStock;
-        boolean isDetail = (OTFamille.getLgFAMILLEPARENTID() != null && !"".equals(OTFamille.getLgFAMILLEPARENTID()));
+        boolean isDetail = (oTFamille.getLgFAMILLEPARENTID() != null && !"".equals(oTFamille.getLgFAMILLEPARENTID()));
 
-        familleStock = findStockByProduitId(OTFamille.getLgFAMILLEID(), OTEmplacement.getLgEMPLACEMENTID());
+        familleStock = findStockByProduitId(oTFamille.getLgFAMILLEID(), OTEmplacement.getLgEMPLACEMENTID());
 
         if (familleStock != null) {
             initStock = familleStock.getIntNUMBERAVAILABLE();
@@ -316,9 +313,9 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         } else {
 
             if (isDetail) {
-                familleStock = findByParent(OTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID());
+                familleStock = findByParent(oTFamille.getLgFAMILLEPARENTID(), OTEmplacement.getLgEMPLACEMENTID());
                 if (familleStock == null) {
-                    familleStock = createStock(OTFamille, qty, OTEmplacement);
+                    familleStock = createStock(oTFamille, qty, OTEmplacement);
                 } else {
                     initStock = familleStock.getIntNUMBERAVAILABLE();
                     familleStock.setIntNUMBERAVAILABLE(familleStock.getIntNUMBERAVAILABLE() + qty);
@@ -326,23 +323,23 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     familleStock.setDtUPDATED(new Date());
                     getEmg().merge(familleStock);
                 }
-                TFamilleStock familleStock2 = findStockByProduitId(OTFamille.getLgFAMILLEPARENTID(),
+                TFamilleStock familleStock2 = findStockByProduitId(oTFamille.getLgFAMILLEPARENTID(),
                         OTEmplacement.getLgEMPLACEMENTID());
                 if (familleStock2 == null) {
-                    TFamille p = findProduitById(OTFamille.getLgFAMILLEPARENTID(), getEmg());
+                    TFamille p = findProduitById(oTFamille.getLgFAMILLEPARENTID());
                     if (p != null) {
                         createStock(p, 0, OTEmplacement);
                     }
 
                 }
             } else {
-                familleStock = createStock(OTFamille, qty, OTEmplacement);
+                familleStock = createStock(oTFamille, qty, OTEmplacement);
 
             }
 
         }
-        mouvementProduitService.saveMvtProduit2(OTFamille.getIntPRICE(), familleStock.getLgFAMILLESTOCKID(),
-                typemvtproduit, OTFamille, ooTUser, OTEmplacement, qty, initStock, initStock - qty, 0, false, 0);
+        mouvementProduitService.saveMvtProduit2(oTFamille.getIntPRICE(), familleStock.getLgFAMILLESTOCKID(),
+                typemvtproduit, oTFamille, ooTUser, OTEmplacement, qty, initStock, initStock - qty, 0, false, 0);
 
     }
 
@@ -387,7 +384,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             query.setMaxResults(1);
             famille = query.getSingleResult();
         } catch (Exception e) {
-            // LOG.log(Level.SEVERE, null, e);
+
         }
         return famille;
     }
@@ -414,7 +411,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     private void deconditionner(TUser tu, TEmplacement te, TFamille tFamilleChild, TFamille tFamilleParent,
-            TFamilleStock ofamilleStockParent, TFamilleStock familleStockChild, Integer qteVendue, EntityManager emg) {
+            TFamilleStock ofamilleStockParent, TFamilleStock familleStockChild, Integer qteVendue) {
         Integer numberToDecondition = 0;
         Integer qtyDetail = tFamilleParent.getIntNUMBERDETAIL();
         Integer stockInitDetail = familleStockChild.getIntNUMBERAVAILABLE();
@@ -436,8 +433,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     familleStockChild.getIntNUMBERAVAILABLE() + (numberToDecondition * qtyDetail) - qteVendue);
             familleStockChild.setIntNUMBER(familleStockChild.getIntNUMBERAVAILABLE());
             familleStockChild.setDtUPDATED(new Date());
-            emg.merge(ofamilleStockParent);
-            emg.merge(familleStockChild);
+            this.getEmg().merge(ofamilleStockParent);
+            this.getEmg().merge(familleStockChild);
             TDeconditionnement parent = createDecondtionne(tFamilleParent, numberToDecondition, tu);
             TDeconditionnement child = createDecondtionne(tFamilleChild, (numberToDecondition * qtyDetail), tu);
 
@@ -455,7 +452,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     + " stock détail initial  " + stockInitDetail + " stock détail final = "
                     + (stockInitDetail + (numberToDecondition * qtyDetail) - qteVendue) + " . Opérateur : "
                     + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
-            logService.updateItem(tu, tFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, tFamilleParent, emg);
+            logService.updateItem(tu, tFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, tFamilleParent);
 
             notificationService.save(new Notification().canal(Canal.EMAIL)
                     .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(tu));
@@ -630,7 +627,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 String desc = "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME()
                         + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER()
                         + " ] :Quantité finale [ " + familleStock.getIntNUMBERAVAILABLE() + " ]";
-                logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille, emg);
+                logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille);
 
                 emg.merge(it);
 
@@ -906,7 +903,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                         + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty
                         + " . Retour effectué par " + params.getOperateur().getStrFIRSTNAME() + " "
                         + params.getOperateur().getStrLASTNAME();
-                logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
+                logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf);
                 notificationService
                         .save(new Notification().canal(Canal.SMS).typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
                                 .message(desc).addUser(params.getOperateur()));
@@ -956,14 +953,14 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em) {
+    public int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug) {
         TFamilleStock stock = findStock(tf.getLgFAMILLEID(), emplacementId);
         int stockInit = stock.getIntNUMBERAVAILABLE();
         stock.setIntNUMBERAVAILABLE(stock.getIntNUMBERAVAILABLE() + qty);
         stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());
         stock.setIntUG((stock.getIntUG() != null ? (stock.getIntUG() + ug) : ug));
         stock.setDtUPDATED(new Date());
-        em.merge(stock);
+        this.getEmg().merge(stock);
         return stockInit;
     }
 
@@ -1262,7 +1259,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit
                     + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty
                     + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-            logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
+            logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf);
             notificationService.save(new Notification().canal(Canal.SMS)
                     .typeNotification(TypeNotification.RETOUR_FOURNISSEUR).message(desc).addUser(user));
         });
@@ -1307,7 +1304,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit
                     + " qté retournée= " + retourFournisseurDetail.getIntNUMBERRETURN() + " qté après retour = "
                     + finalQty + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-            logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf, emg);
+            logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf);
             notificationService.save(new Notification().canal(Canal.SMS)
                     .typeNotification(TypeNotification.RETOUR_FOURNISSEUR).message(desc).addUser(user));
             this.getEmg().merge(bonLivraisonDetail);
@@ -1381,8 +1378,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     + " stock détail initial  " + stockInitDetail + " stock détail final = "
                     + (stockInitDetail + (numberToDecondition * qtyDetail)) + " . Opérateur : " + tu.getStrFIRSTNAME()
                     + " " + tu.getStrLASTNAME();
-            logService.updateItem(tu, tFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, tFamilleParent,
-                    this.getEmg());
+            logService.updateItem(tu, tFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, tFamilleParent);
 
             notificationService.save(new Notification().canal(Canal.EMAIL)
                     .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(tu));
