@@ -83,7 +83,7 @@ public class Balance {
     @EJB
     private BalanceService balanceService;
 
-    public String generatepdf(Params parasm, boolean exludeSome, boolean showAllAmount) throws IOException {
+    public String generatepdf(Params parasm, boolean exludeSome, boolean showAllAmount) {
         TUser tu = parasm.getOperateur();
         TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_balancevente_caissev2";
@@ -697,51 +697,6 @@ public class Balance {
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
                 jdom.scr_report_pdf + "suivi_mvt_article_" + report_generate_file, datas);
         return "/data/reports/pdf/suivi_mvt_article_" + report_generate_file;
-    }
-
-    public String tableauBordPharmationOld(Params parasm, boolean ratio) {
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
-            dtSt = LocalDate.parse(parasm.getDtStart());
-            dtEn = LocalDate.parse(parasm.getDtEnd());
-        } catch (Exception e) {
-        }
-        TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = caisseService.findOfficine();
-        String scr_report_file = "rp_pharma_dashboard";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        if (!dtEn.isEqual(dtSt)) {
-            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        }
-        parameters.put("P_H_CLT_INFOS", "TABLEAU DE BORD DU PHARMACIEN \nARRETE " + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<TableauBaordPhDTO> datas = new ArrayList<>();
-        Map<TableauBaordSummary, List<TableauBaordPhDTO>> map = caisseService.tableauBoardDatasOld(dtSt, dtEn,
-                Boolean.TRUE, tu, 0, 0, 0, true);
-        if (!map.isEmpty()) {
-            map.forEach((k, v) -> {
-                datas.addAll(v);
-                parameters.put("montantEsp", k.getMontantEsp());
-                parameters.put("montantNet", k.getMontantNet());
-                parameters.put("ration", ratio);
-                parameters.put("montantRemise", k.getMontantRemise());
-                parameters.put("montantCredit", k.getMontantCredit());
-                parameters.put("nbreVente", k.getNbreVente());
-                parameters.put("montantAchatOne", k.getMontantAchatOne());
-                parameters.put("montantAchatTwo", k.getMontantAchatTwo());
-                parameters.put("montantAchatThree", k.getMontantAchatThree());
-                parameters.put("montantAchatFour", k.getMontantAchatFour());
-                parameters.put("montantAchatFive", k.getMontantAchatFive());
-                parameters.put("montantAchat", k.getMontantAchat());
-                parameters.put("montantAvoir", k.getMontantAvoir());
-                parameters.put("ratioVA", k.getRatioVA());
-                parameters.put("rationAV", k.getRationAV());
-            });
-        }
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
-                jdom.scr_report_pdf + "tableau_de_bord_" + report_generate_file, datas);
-        return "/data/reports/pdf/tableau_de_bord_" + report_generate_file;
     }
 
     public String recap(Params parasm) {

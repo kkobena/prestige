@@ -1,5 +1,3 @@
-var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
-var url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
 
 var Me;
 var store_order;
@@ -33,7 +31,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
         }],
     initComponent: function () {
 
-        url_services_pdf = '../webservices/commandemanagement/order/ws_generate_pdf.jsp';
+       
         Me = this;
         let itemsPerPage = 20;
         const store_order = new Ext.data.Store({
@@ -299,25 +297,18 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
                 'Confirmer l\'annulation de cette commande',
                 function (btn) {
                     if (btn === 'yes') {
-                        var rec = grid.getStore().getAt(rowIndex);
+                        let rec = grid.getStore().getAt(rowIndex);
                         testextjs.app.getController('App').ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_order + 'RollBackPasseOrderToCommandeProcess',
+                              
+                            method: 'GET',
+                            url: '../api/v1/commande/statut/' +rec.get('lg_ORDER_ID') + '/rollback',
                             timeout: 2400000,
-                            params: {
-                                lg_ORDER_ID: rec.get('lg_ORDER_ID')
-                            },
+                           
                             success: function (response)
                             {
                                 testextjs.app.getController('App').StopWaitingProcess();
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success == "0") {
-                                    Ext.MessageBox.alert('Error Message', object.errors);
-                                    return;
-                                } else {
-                                    Ext.MessageBox.alert('Confirmation', object.errors);
-                                    grid.getStore().reload();
-                                }
+                                grid.getStore().reload();
                             },
                             failure: function (response)
                             {
@@ -348,17 +339,18 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.OrderPassManager', {
                 'Imprimer le bon de commande?',
                 function (btn) {
                     if (btn == 'yes') {
-                        Me.onPdfClick(rec.get('lg_ORDER_ID'));
+                        Me.onPdfClick(rec);
 
                     }
                 });
 
     },
-    onPdfClick: function (lg_ORDER_ID) {
+    onPdfClick: function (rec) {
 
-        const linkUrl = url_services_pdf + '?lg_ORDER_ID=' + lg_ORDER_ID;
-
+            const linkUrl = '../EditionCommandeServlet?orderId=' +rec.get('lg_ORDER_ID') + '&refCommande=' + rec.get('str_REF_ORDER');
         window.open(linkUrl);
+
+     
 
     }
 });

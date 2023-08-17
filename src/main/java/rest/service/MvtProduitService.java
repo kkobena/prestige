@@ -35,8 +35,8 @@ public interface MvtProduitService {
 
     void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list);
 
-    void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg,
-            TEmplacement depot) throws Exception;
+    void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, TEmplacement depot)
+            throws Exception;
 
     void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement) throws Exception;
 
@@ -60,7 +60,7 @@ public interface MvtProduitService {
 
     TFamilleStock updateStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em);
 
-    int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em);
+    int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug);
 
     JSONObject loadetourFournisseur(String dtStart, String dtEnd, int start, int limit, String fourId, String query,
             boolean cunRemove, String filtre) throws JSONException;

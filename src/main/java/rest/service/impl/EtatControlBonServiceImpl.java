@@ -71,7 +71,7 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
         cq.select(root).distinct(true).orderBy(cb.desc(root.get(TBonLivraison_.dtDATELIVRAISON)));
         List<Predicate> predicates = listPredicates(cb, root, LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
                 grossisteId, search);
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<TBonLivraison> q = em.createQuery(cq);
         if (!all) {
             q.setFirstResult(start);
@@ -90,7 +90,7 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
         cq.select(cb.countDistinct(root));
         List<Predicate> predicates = listPredicates(cb, root, LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
                 grossisteId, search);
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<Long> q = em.createQuery(cq);
         return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
 

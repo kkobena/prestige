@@ -35,6 +35,7 @@ import rest.report.ReportUtil;
 import rest.service.CaisseService;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -52,9 +53,9 @@ public class BalancePdfServlet extends HttpServlet {
     ReportUtil reportUtil;
 
     private enum Action {
-        BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, TABLEAUOLD, RECAP, TVA_JOUR,
-        STAT_FAMILLE_ARTICLE, EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS,
-        BALANCE_PARA, SAISIE_PERIMES, STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE, BALANCE_CARNET, TABLEAU_CARNET
+        BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, RECAP, TVA_JOUR, STAT_FAMILLE_ARTICLE,
+        EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS, BALANCE_PARA, SAISIE_PERIMES,
+        STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE, BALANCE_CARNET, TABLEAU_CARNET
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -66,15 +67,16 @@ public class BalancePdfServlet extends HttpServlet {
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
         boolean checkug = false;
-        boolean ration = false;
-        boolean monthly = false;
+        boolean ration;
+        boolean monthly;
         try {
             checkug = Boolean.parseBoolean(request.getParameter("checkug"));
         } catch (Exception e) {
         }
         Params params = new Params();
         params.setOperateur(OTUser);
-        String codeFamile, codeRayon;
+        String codeFamile;
+        String codeRayon;
         String codeGrossiste;
         String query;
         String file = "";
@@ -100,9 +102,8 @@ public class BalancePdfServlet extends HttpServlet {
             if (!"".equals(userId)) {
                 params.setRef(userId);
             }
-            List<TPrivilege> LstTPrivilege = (List<TPrivilege>) session
-                    .getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-            file = balance.gestionCaissepdf(params, LstTPrivilege);
+            List<TPrivilege> lstTPrivilege = (List<TPrivilege>) session.getAttribute(Constant.USER_LIST_PRIVILEGE);
+            file = balance.gestionCaissepdf(params, lstTPrivilege);
             break;
         case TABLEAU:
             ration = Boolean.parseBoolean(request.getParameter("ration"));
@@ -113,10 +114,6 @@ public class BalancePdfServlet extends HttpServlet {
             ration = Boolean.parseBoolean(request.getParameter("ration"));
             monthly = Boolean.parseBoolean(request.getParameter("monthly"));
             file = balance.tableauBordPharmation(params, ration, monthly, true);
-            break;
-        case TABLEAUOLD:
-            boolean _ration = Boolean.parseBoolean(request.getParameter("ration"));
-            file = balance.tableauBordPharmationOld(params, _ration);
             break;
 
         case TVA:
@@ -193,13 +190,13 @@ public class BalancePdfServlet extends HttpServlet {
             codeRayon = request.getParameter("codeRayon");
             codeGrossiste = request.getParameter("codeGrossiste");
             query = request.getParameter("query");
-            int _n = 0;
+            int nbre = 0;
             try {
-                _n = Integer.parseInt(request.getParameter("nbre"));
+                nbre = Integer.parseInt(request.getParameter("nbre"));
             } catch (Exception e) {
             }
 
-            file = balance.produitPerimes(query, _n, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste);
+            file = balance.produitPerimes(query, nbre, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste);
             break;
         case SAISIE_PERIMES:
             codeFamile = request.getParameter("codeFamile");

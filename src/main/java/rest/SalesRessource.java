@@ -224,7 +224,7 @@ public class SalesRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject json = salesService.shownetpayVo(params);
+        JSONObject json = salesService.computeVONet(params);
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -624,8 +624,7 @@ public class SalesRessource {
     @POST
     @Path("net/outstanding")
     public Response shownetpayVoWithEncour(SalesParams params) throws JSONException {
-        JSONObject json = salesService.shownetpayVoWithEncour(params);
-        return Response.ok().entity(json.toString()).build();
+        return netPayerAssurance(params);
     }
 
     @GET
@@ -738,7 +737,7 @@ public class SalesRessource {
     @GET
     @Path("test")
     public Response test() throws JSONException {
-        salesService.upadteVente();
+        salesService.updateVente();
         return Response.ok().build();
     }
 

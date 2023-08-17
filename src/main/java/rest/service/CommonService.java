@@ -81,8 +81,6 @@ public interface CommonService {
 
     boolean sansBon();
 
-    boolean plafondVenteIsActive();
-
     Integer maximunproduit();
 
     List<ComboDTO> loadGroupeFournisseur();

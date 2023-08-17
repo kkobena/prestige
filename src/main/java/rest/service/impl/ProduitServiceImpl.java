@@ -214,7 +214,7 @@ public class ProduitServiceImpl implements ProduitService {
             desc += " du produit " + famille.getIntCIP() + " " + famille.getStrNAME() + " stock = "
                     + getFamilleStockByProduitId(id, u.getLgEMPLACEMENTID().getLgEMPLACEMENTID()) + ", par "
                     + u.getStrFIRSTNAME() + u.getStrLASTNAME();
-            logService.updateItem(u, famille.getIntCIP(), desc, typeLog, famille, getEntityManager());
+            logService.updateItem(u, famille.getIntCIP(), desc, typeLog, famille);
             notificationService.save(
                     new Notification().canal(Canal.SMS_EMAIL).typeNotification(notification).message(desc).addUser(u));
         } catch (Exception e) {
