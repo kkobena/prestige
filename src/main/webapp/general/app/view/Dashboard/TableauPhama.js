@@ -3,17 +3,14 @@
 Ext.define('testextjs.view.Dashboard.TableauPhama', {
     extend: 'Ext.tab.Panel',
     xtype: 'tableauPhama',
-
     frame: true,
     width: '97%',
     height: 'auto',
     minHeight: 570,
     fullscreen: true,
-    // border:1,
-//    cls: 'custompanel',
     tabPosition: "top",
     initComponent: function () {
-        var data = new Ext.data.Store({
+        let data = new Ext.data.Store({
             fields: [
                 {
                     name: 'dateOperation',
@@ -95,7 +92,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                 timeout: 2400000
             }
         });
-        var me = this;
+        const me = this;
         Ext.applyIf(me, {
             dockedItems: [
                 {
