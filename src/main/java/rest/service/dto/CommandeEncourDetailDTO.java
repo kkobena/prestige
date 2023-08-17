@@ -241,7 +241,8 @@ public class CommandeEncourDetailDTO {
         Collection<TFamilleGrossiste> tFamilleGrossisteCollection = famille.getTFamilleGrossisteCollection();
         if (CollectionUtils.isNotEmpty(tFamilleGrossisteCollection)) {
             famille.getTFamilleGrossisteCollection().stream()
-                    .filter((t) -> t.getLgGROSSISTEID().equals(grossiste) && "enable".equals(t.getStrSTATUT()))
+                    .filter((t) -> t.getLgGROSSISTEID().getLgGROSSISTEID().equals(grossiste.getLgGROSSISTEID())
+                            && "enable".equals(t.getStrSTATUT()))
                     .findFirst().ifPresentOrElse(t -> {
                         this.produitCip = t.getStrCODEARTICLE();
                         this.codeArticle = t.getStrCODEARTICLE();

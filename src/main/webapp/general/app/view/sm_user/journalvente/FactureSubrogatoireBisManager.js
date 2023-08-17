@@ -312,7 +312,7 @@ Ext.define('testextjs.view.sm_user.journalvente.FactureSubrogatoireBisManager', 
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('showItems', view, rowIndex, colIndex, item, e, record, row);
                                     }
-//                                    handler: this.onDetailTransactionClick
+
                                 }]
                         }
 
