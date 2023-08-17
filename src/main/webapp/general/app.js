@@ -794,7 +794,6 @@ Ext.application({
         'MvtArticleCtr',
         'DiffereCtr',
         'FaireReglementCtr',
-        'DashBoardCtr',
         'RecapCtr',
         'FactureCtr',
         'FamilleArticleStatsCtr',
