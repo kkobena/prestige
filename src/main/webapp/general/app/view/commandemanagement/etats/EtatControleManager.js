@@ -43,15 +43,15 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
         }],
 //    iconCls: 'icon-grid',
     initComponent: function () {
-//        url_services_data_etats_list = '../webservices/commandemanagement/etats/ws_data.jsp';
+
 
         let store_grossiste = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
-            pageSize: 20,
+            pageSize: 999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_grossiste,
+                   url: '../api/v1/grossiste/all',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -378,6 +378,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                     typeAhead: true,
                     queryMode: 'remote',
                     flex: 1,
+                    pageSize: 999,
                     emptyText: 'Sectionner grossiste...',
                     listeners: {
                         select: function (cmp) {
@@ -546,7 +547,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                         }
                         const dtEnd = Ext.getCmp('datefin').getSubmitValue();
                         const dtStart = Ext.getCmp('datedebut').getSubmitValue();
-                       
+
                         const linkUrl = '../EtatControlStockServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
                                 + '&grossisteId=' + lg_GROSSISTE_ID + '&search=' + valeur;
                         window.open(linkUrl);

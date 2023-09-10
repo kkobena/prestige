@@ -59,14 +59,14 @@ Ext.define('testextjs.view.commandemanagement.suggestion.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_grossiste_suggerer,
+                  url: '../api/v1/grossiste/all',
                 reader: {
                     type: 'json',
                     root: 'results',
                     totalProperty: 'total'
                 }
-            },
-            autoLoad: true
+            }
+        
 
         });
 

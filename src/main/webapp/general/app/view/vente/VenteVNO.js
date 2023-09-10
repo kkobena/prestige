@@ -21,7 +21,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
         align: 'stretch'
     },
     initComponent: function () {
-        var store_typereglement = new Ext.data.Store({
+        let store_typereglement = new Ext.data.Store({
             model: 'testextjs.model.caisse.Reglement',
             pageSize: null,
             autoLoad: false,
@@ -35,7 +35,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                 }
             }
         });
-        var produit = new Ext.data.Store({
+        let produit = new Ext.data.Store({
             model: 'testextjs.model.caisse.Produit',
             pageSize: 10,
             autoLoad: false,
@@ -49,7 +49,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                 }
             }
         });
-        var typeremise = new Ext.data.Store({
+        let typeremise = new Ext.data.Store({
             model: 'testextjs.model.caisse.TypeRemise',
             pageSize: null,
             autoLoad: false,

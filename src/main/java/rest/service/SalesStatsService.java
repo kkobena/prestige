@@ -18,7 +18,6 @@ import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,7 +27,6 @@ import org.json.JSONObject;
  * @author Kobena
  */
 @Local
-// @Remote
 public interface SalesStatsService {
 
     JSONObject getListeTPreenregistrement(SalesStatsParams params) throws JSONException;

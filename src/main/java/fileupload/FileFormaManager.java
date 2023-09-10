@@ -24,8 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -69,6 +67,7 @@ import toolkits.parameters.commonparameter;
 import toolkits.utils.date;
 import toolkits.utils.jdom;
 import toolkits.utils.logger;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -79,8 +78,6 @@ import util.DateConverter;
 @MultipartConfig(fileSizeThreshold = 5242880, maxFileSize = 20971520L, maxRequestSize = 41943040L)
 public class FileFormaManager extends HttpServlet {
 
-    DateFormat df = new SimpleDateFormat("dd_MM_YYYY_HH_mm_ss");
-    private JsonBuilderFactory factory;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @Inject
@@ -104,25 +101,25 @@ public class FileFormaManager extends HttpServlet {
         String modeBL = request.getParameter("modeBL");
         items = new ArrayList<>();
 
-        factory = Json.createBuilderFactory(null);
+        JsonBuilderFactory factory = Json.createBuilderFactory(null);
         JsonObjectBuilder json = factory.createObjectBuilder();
         Part part = request.getPart("fichier");
         String fileName = part.getSubmittedFileName();
         String extension = fileName.substring(fileName.indexOf(".") + 1, fileName.length());
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
 
-        JSONObject _json = new JSONObject();
+        JSONObject responseJson = new JSONObject();
         //
         try (PrintWriter out = response.getWriter()) {
             switch (extension) {
             case "csv":
-                _json = bulkInsertFormatCSV(part, lg_GROSSISTE_ID, em, Format.valueOf(modeBL), OTUser);
+                responseJson = bulkInsertFormatCSV(part, lg_GROSSISTE_ID, Format.valueOf(modeBL), user);
 
                 break;
 
             case "txt":
-                _json = bulkInsertTxt(part, lg_GROSSISTE_ID, em, Format.valueOf(modeBL), OTUser);
+                responseJson = bulkInsertTxt(part, lg_GROSSISTE_ID, user);
                 break;
             default:
 
@@ -134,14 +131,14 @@ public class FileFormaManager extends HttpServlet {
                 String finalFile = fichierReponse(request.getServletContext(),
                         fileName.substring(0, fileName.indexOf('.') - 1), Format.valueOf(modeBL), true, items);
                 jdom.InitRessource();
-                json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/"
-                        + _json.getInt("ligne")
+                json.add("success", "<span style='color:blue;font-weight:800;'>" + responseJson.getInt("count") + "/"
+                        + responseJson.getInt("ligne")
                         + "\n</span> produits reconnus/retrouvés <a href=\"../VericationCommande?fileName=" + finalFile
                         + " \" style=\"color:red !important;\">Cliquer sur le lien pour télécharger les produits non reconnus ou non pris en compte</a>");
             } else {
                 json.add("toBe", false);
-                json.add("success", "<span style='color:blue;font-weight:800;'>" + _json.getInt("count") + "/"
-                        + _json.getInt("ligne") + "</span> produits mis à jour");
+                json.add("success", "<span style='color:blue;font-weight:800;'>" + responseJson.getInt("count") + "/"
+                        + responseJson.getInt("ligne") + "</span> produits mis à jour");
             }
             json.add("statut", 1);
 
@@ -151,7 +148,7 @@ public class FileFormaManager extends HttpServlet {
         }
     }
 
-    public String buildCommandeRef(Date ODate, EntityManager em) throws JSONException {
+    public String buildCommandeRef(Date ODate) throws JSONException {
         TParameters OTParameters = em.find(TParameters.class, "KEY_LAST_ORDER_COMMAND_NUMBER");
         TParameters OTParameters_KEY_SIZE_ORDER_NUMBER = em.find(TParameters.class, "KEY_SIZE_ORDER_NUMBER");
 
@@ -214,34 +211,34 @@ public class FileFormaManager extends HttpServlet {
         return str_code;
     }
 
-    public TOrder createOrder(TGrossiste OTGrossiste, String str_STATUT, EntityManager em, TUser OTUser) {
-        TOrder OTOrder = null;
+    public TOrder createOrder(TGrossiste grossiste, TUser user) {
+        TOrder order = null;
         try {
 
-            OTOrder = new TOrder();
+            order = new TOrder();
 
-            OTOrder.setLgORDERID(RandomStringUtils.randomAlphanumeric(20));
-            OTOrder.setLgUSERID(OTUser);
+            order.setLgORDERID(RandomStringUtils.randomAlphanumeric(20));
+            order.setLgUSERID(user);
 
             try {
 
-                if (OTGrossiste != null) {
-                    OTOrder.setLgGROSSISTEID(OTGrossiste);
-                    OTOrder.setStrREFORDER(this.buildCommandeRef(new Date(), em));
+                if (grossiste != null) {
+                    order.setLgGROSSISTEID(grossiste);
+                    order.setStrREFORDER(this.buildCommandeRef(new Date()));
                 }
             } catch (Exception e) {
             }
 
-            OTOrder.setStrSTATUT(str_STATUT);
-            OTOrder.setDtCREATED(new Date());
-            OTOrder.setDtUPDATED(new Date());
-            em.persist(OTOrder);
+            order.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+            order.setDtCREATED(new Date());
+            order.setDtUPDATED(order.getDtCREATED());
+            em.persist(order);
 
         } catch (Exception e) {
             e.printStackTrace();
 
         }
-        return OTOrder;
+        return order;
 
     }
 
@@ -262,29 +259,26 @@ public class FileFormaManager extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    enum ArticleHeader {
-        LOCATION, GROSSISTE, DESCRIPTION, CIP, AEN, QTE, PU, PA
-    }
-
-    private JSONObject bulkInsertTxt(Part part, String lgGROSSISTE, EntityManager em, Format mode, TUser OTUser)
-            throws Exception {
+    private JSONObject bulkInsertTxt(Part part, String lgGROSSISTE, TUser user) throws Exception {
         int count = 0;
         int i = 0;
         JSONObject json = new JSONObject();
 
         TGrossiste grossiste = em.find(TGrossiste.class, lgGROSSISTE);
         userTransaction.begin();
-        TOrder order = createOrder(grossiste, commonparameter.statut_is_Process, em, OTUser);
+        TOrder order = createOrder(grossiste, user);
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(part.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] row = line.split("\t");
-                int ligne = createTOrderDetailVIACSV(em, grossiste, order, row[1], Integer.valueOf(row[3]),
-                        Integer.valueOf(row[2]), Integer.valueOf(row[5]), 0);
+                int ligne = createTOrderDetailVIACSV(grossiste, order, row[1], Integer.parseInt(row[3]),
+                        Integer.parseInt(row[2]), Integer.parseInt(row[5]), 0);
                 i += ligne;
                 if (ligne == 0) {
-                    items.add(new OrderItem(row[1], Integer.valueOf(row[3]), row[1], Integer.valueOf(row[3]),
-                            Double.valueOf(row[5])));
+                    /*
+                     * items.add(new OrderItem(row[1], Integer.valueOf(row[3]), row[1], Integer.valueOf(row[3]),
+                     * Double.valueOf(row[5])));
+                     */
                 }
                 if ((count % 20) == 0) {
                     em.flush();
@@ -302,15 +296,14 @@ public class FileFormaManager extends HttpServlet {
         return json;
     }
 
-    private JSONObject bulkInsertFormatCSV(Part part, String lgGROSSISTE, EntityManager em, Format mode, TUser OTUser)
-            throws Exception {
+    private JSONObject bulkInsertFormatCSV(Part part, String lgGROSSISTE, Format mode, TUser user) throws Exception {
         int count = 0;
         int i = 0;
         JSONObject json = new JSONObject();
         try {
             TGrossiste grossiste = em.find(TGrossiste.class, lgGROSSISTE);
             userTransaction.begin();
-            TOrder order = createOrder(grossiste, commonparameter.statut_is_Process, em, OTUser);
+            TOrder order = createOrder(grossiste, user);
             CSVParser parser = new CSVParser(new InputStreamReader(part.getInputStream()),
                     CSVFormat.EXCEL.withDelimiter(';'));
             switch (mode) {
@@ -318,8 +311,8 @@ public class FileFormaManager extends HttpServlet {
 
                 for (CSVRecord cSVRecord : parser) {
                     if (count > 0) {
-                        int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(2),
-                                Integer.valueOf(cSVRecord.get(5)), Double.valueOf(cSVRecord.get(6)).intValue(),
+                        int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(2),
+                                Integer.parseInt(cSVRecord.get(5)), Double.valueOf(cSVRecord.get(6)).intValue(),
                                 Double.valueOf(cSVRecord.get(7)).intValue(), 0);
                         if (ligne == 0) {
                             // printer.printRecord("N° Facture", "N° ligne", "CIP/EAN13", "Libellé du produit", "Qté
@@ -347,9 +340,9 @@ public class FileFormaManager extends HttpServlet {
 
                 for (CSVRecord cSVRecord : parser) {
                     if (count > 0) {
-                        int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(4),
-                                Integer.valueOf(cSVRecord.get(9)), Double.valueOf(cSVRecord.get(11)).intValue(),
-                                Integer.valueOf(cSVRecord.get(13)), Integer.valueOf(cSVRecord.get(10)));
+                        int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(4),
+                                Integer.parseInt(cSVRecord.get(9)), Double.valueOf(cSVRecord.get(11)).intValue(),
+                                Integer.parseInt(cSVRecord.get(13)), Integer.parseInt(cSVRecord.get(10)));
                         i += ligne;
                         if (ligne == 0) {
                             OrderItem orderItem = new OrderItem().dateBl(cSVRecord.get(0))
@@ -376,16 +369,13 @@ public class FileFormaManager extends HttpServlet {
             case TEDIS:
 
                 for (CSVRecord cSVRecord : parser) {
-
-                    if (count > 0) {
-
-                    }
-                    int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(0),
-                            Integer.valueOf(cSVRecord.get(3)), Integer.valueOf(cSVRecord.get(4)), 0, 0);
+                    // int ligne,String cip,int prixAchat, Integer cmdeL,double tva, int prixUn
+                    int ligne = buildOrderDetailTedisRecord(order, cSVRecord);
                     i += ligne;
                     if (ligne == 0) {
-                        items.add(new OrderItem(cSVRecord.get(0), Integer.valueOf(cSVRecord.get(1)), cSVRecord.get(0),
-                                Integer.valueOf(cSVRecord.get(3)), Double.valueOf(cSVRecord.get(4))));
+                        items.add(new OrderItem(Integer.parseInt(cSVRecord.get(0)), cSVRecord.get(1),
+                                Integer.parseInt(cSVRecord.get(2)), Integer.valueOf(cSVRecord.get(3)),
+                                Double.parseDouble(cSVRecord.get(4)), Integer.parseInt(cSVRecord.get(5))));
                     }
 
                     if ((count % 20) == 0) {
@@ -402,8 +392,8 @@ public class FileFormaManager extends HttpServlet {
             case DPCI:
 
                 for (CSVRecord cSVRecord : parser) {
-                    int ligne = createTOrderDetailVIACSV(em, grossiste, order, cSVRecord.get(2),
-                            Integer.valueOf(cSVRecord.get(6)), Double.valueOf(cSVRecord.get(3)).intValue(),
+                    int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(2),
+                            Integer.parseInt(cSVRecord.get(6)), Double.valueOf(cSVRecord.get(3)).intValue(),
                             Double.valueOf(cSVRecord.get(4)).intValue(), 0);
                     i += ligne;
                     if (ligne == 0) {
@@ -412,7 +402,7 @@ public class FileFormaManager extends HttpServlet {
                                 .cmdeL(Integer.valueOf(cSVRecord.get(6))).ligne(Integer.valueOf(cSVRecord.get(0)))
                                 .prixUn(Double.valueOf(cSVRecord.get(4)).intValue())
                                 .cmde(Integer.valueOf(cSVRecord.get(7)))// c'est valeur n'est pas explique a cette
-                                                                        // date19/12/2020
+                                // date19/12/2020
                                 .prixAchat(Double.valueOf(cSVRecord.get(3)).intValue());
                         items.add(orderItem);
                     }
@@ -493,13 +483,25 @@ public class FileFormaManager extends HttpServlet {
         return json;
     }
 
-    public TOrderDetail findFamilleInTOrderDetail(String lg_ORDER_ID, String lg_FAMILLE_ID, EntityManager em) {
+    private int buildOrderDetailTedisRecord(TOrder order, CSVRecord cSVRecord) {
+        System.err.println(" 0 " + cSVRecord.get(0));
+        System.err.println(" 1 " + cSVRecord.get(1));
+        System.err.println(" 2 " + cSVRecord.get(2));
+        System.err.println(" 3 " + cSVRecord.get(3));
+        System.err.println(" 4 " + cSVRecord.get(4));
+        System.err.println(" 5 " + cSVRecord.get(5));
+        return createTOrderDetailVIACSV(order.getLgGROSSISTEID(), order, cSVRecord.get(1),
+                Integer.parseInt(cSVRecord.get(3)), Integer.parseInt(cSVRecord.get(2)),
+                Integer.parseInt(cSVRecord.get(5)), 0);
+    }
+
+    public TOrderDetail findFamilleInTOrderDetail(String lgOrderId, String lgFAMILLEID) {
         TOrderDetail OTOrderDetail = null;
         try {
 
             Query qry = em.createQuery(
                     "SELECT t FROM TOrderDetail t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgORDERID.lgORDERID = ?2 ")
-                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, lg_ORDER_ID);
+                    .setParameter(1, lgFAMILLEID).setParameter(2, lgOrderId);
             if (qry.getResultList().size() > 0) {
                 OTOrderDetail = (TOrderDetail) qry.getSingleResult();
             }
@@ -510,14 +512,14 @@ public class FileFormaManager extends HttpServlet {
         return OTOrderDetail;
     }
 
-    public int createTOrderDetailVIACSV(EntityManager em, TGrossiste OTGrossiste, TOrder lg_ORDER_ID,
-            String lg_famille_id, int qty, int int_PAF_DETAIL, int pu, int ug) {
+    public int createTOrderDetailVIACSV(TGrossiste grossiste, TOrder order, String lgFamilleId, int qty,
+            int intPafDetail, int pu, int ug) {
         TOrderDetail OTOrderDetail;
         TFamille OTFamille = null;
         TFamilleGrossiste OTFamilleGrossiste = null;
         try {
             try {
-                OTFamilleGrossiste = getTFamilleGrossiste(lg_famille_id.trim(), em);
+                OTFamilleGrossiste = getTFamilleGrossiste(lgFamilleId.trim());
                 if (OTFamilleGrossiste != null) {
                     OTFamille = OTFamilleGrossiste.getLgFAMILLEID();
                 }
@@ -525,32 +527,32 @@ public class FileFormaManager extends HttpServlet {
 
             }
             if (OTFamille != null) {
-                OTOrderDetail = findFamilleInTOrderDetail(lg_ORDER_ID.getLgORDERID(), OTFamille.getLgFAMILLEID(), em);
+                OTOrderDetail = findFamilleInTOrderDetail(order.getLgORDERID(), OTFamille.getLgFAMILLEID());
                 if (OTOrderDetail == null) {
                     OTOrderDetail = new TOrderDetail();
                     OTOrderDetail.setLgORDERDETAILID(RandomStringUtils.randomAlphanumeric(20));
-                    OTOrderDetail.setLgORDERID(lg_ORDER_ID);
+                    OTOrderDetail.setLgORDERID(order);
                     OTOrderDetail.setLgFAMILLEID(OTFamille);
-                    OTOrderDetail.setLgGROSSISTEID(OTGrossiste);
+                    OTOrderDetail.setLgGROSSISTEID(grossiste);
                     OTOrderDetail.setIntNUMBER(qty);
                     OTOrderDetail.setIntQTEREPGROSSISTE(qty);
                     OTOrderDetail.setIntQTEMANQUANT(qty);
-                    OTOrderDetail.setIntPRICE(qty * int_PAF_DETAIL);
+                    OTOrderDetail.setIntPRICE(qty * intPafDetail);
                     OTOrderDetail.setIntPRICEDETAIL((pu == 0 ? OTFamilleGrossiste.getIntPRICE() : pu));
-                    OTOrderDetail.setIntPAFDETAIL(int_PAF_DETAIL);
+                    OTOrderDetail.setIntPAFDETAIL(intPafDetail);
                     OTOrderDetail.setPrixAchat(OTOrderDetail.getIntPAFDETAIL());
                     // OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
-                    OTOrderDetail.setStrSTATUT(commonparameter.statut_is_Process);
-                    OTOrderDetail.setDtCREATED(new Date());
+                    OTOrderDetail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+                    OTOrderDetail.setDtCREATED(order.getDtCREATED());
                     OTOrderDetail.setUg(ug);
+                    OTOrderDetail.setDtUPDATED(OTOrderDetail.getDtCREATED());
                     em.persist(OTOrderDetail);
                 } else {
                     OTOrderDetail.setUg(OTOrderDetail.getUg() + ug);
                     OTOrderDetail.setIntNUMBER(OTOrderDetail.getIntNUMBER() + qty);
                     OTOrderDetail.setIntQTEMANQUANT(OTOrderDetail.getIntNUMBER());
-                    OTOrderDetail.setIntPRICE(OTOrderDetail.getIntNUMBER() * int_PAF_DETAIL);
+                    OTOrderDetail.setIntPRICE(OTOrderDetail.getIntNUMBER() * intPafDetail);
                     OTOrderDetail.setIntQTEREPGROSSISTE(OTOrderDetail.getIntNUMBER());
-                    OTOrderDetail.setDtUPDATED(new Date());
                     em.merge(OTOrderDetail);
 
                 }
@@ -560,14 +562,14 @@ public class FileFormaManager extends HttpServlet {
 
                 return 0;
             }
-        } catch (NoResultException e) {
+        } catch (Exception e) {
 
-            new logger().OCategory.info("impossible de creer OTOrderDetail   " + e.toString());
+            new logger().OCategory.info("impossible de creer OTOrderDetail   " + e);
             return 0;
         }
     }
 
-    public TFamilleGrossiste getTFamilleGrossiste(String lg_FAMILLE_ID, EntityManager em) {
+    public TFamilleGrossiste getTFamilleGrossiste(String lgFAMILLEID) {
 
         TFamilleGrossiste familleGrossiste = null;
         try {
@@ -577,9 +579,8 @@ public class FileFormaManager extends HttpServlet {
             Join<TFamilleGrossiste, TFamille> j = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate criteria = cb.conjunction();
             criteria = cb.and(criteria,
-                    cb.or(cb.like(j.get("intCIP"), lg_FAMILLE_ID + "%"),
-                            cb.like(j.get("intEAN13"), lg_FAMILLE_ID + "%"),
-                            cb.like(root.get("strCODEARTICLE"), lg_FAMILLE_ID + "%")));
+                    cb.or(cb.like(j.get("intCIP"), lgFAMILLEID + "%"), cb.like(j.get("intEAN13"), lgFAMILLEID + "%"),
+                            cb.like(root.get("strCODEARTICLE"), lgFAMILLEID + "%")));
             criteria = cb.and(criteria, cb.equal(j.get("boolDECONDITIONNE"), Short.valueOf("0")));
             criteria = cb.and(criteria, cb.equal(root.get(TFamilleGrossiste_.strSTATUT), "enable"));
             criteria = cb.and(criteria, cb.equal(j.get(TFamille_.strSTATUT), "enable"));
@@ -629,8 +630,8 @@ public class FileFormaManager extends HttpServlet {
             case TEDIS:
                 for (OrderItem item : list) {
 
-                    printer.printRecord(item.getCip(), item.getCmde(), item.getCip(), item.getCmdeL(),
-                            item.getMontant().intValue());
+                    printer.printRecord(item.getLigne(), item.getCip(), item.getPrixAchat(), item.getCmdeL(),
+                            item.getTva(), item.getPrixUn());
 
                 }
                 break;
@@ -671,14 +672,14 @@ public class FileFormaManager extends HttpServlet {
         return fileName;
     }
 
-    public int createTOrderDetailVIACSV(TGrossiste OTGrossiste, TOrder lg_ORDER_ID, String codeCip, int qty,
+    public int createTOrderDetailVIACSV(TGrossiste oTGrossiste, TOrder order, String codeCip, int qty,
             Integer prixAchat) {
         TOrderDetail OTOrderDetail;
         TFamille OTFamille = null;
         TFamilleGrossiste OTFamilleGrossiste;
         try {
             try {
-                OTFamilleGrossiste = getTFamilleGrossiste(codeCip.trim(), em);
+                OTFamilleGrossiste = getTFamilleGrossiste(codeCip.trim());
                 if (OTFamilleGrossiste != null) {
                     OTFamille = OTFamilleGrossiste.getLgFAMILLEID();
                 }
@@ -689,13 +690,13 @@ public class FileFormaManager extends HttpServlet {
                 OTFamille = findByCodeCipOrEan(codeCip.trim());
             }
             if (OTFamille != null) {
-                OTOrderDetail = findFamilleInTOrderDetail(lg_ORDER_ID.getLgORDERID(), OTFamille.getLgFAMILLEID(), em);
+                OTOrderDetail = findFamilleInTOrderDetail(order.getLgORDERID(), OTFamille.getLgFAMILLEID());
                 if (OTOrderDetail == null) {
                     OTOrderDetail = new TOrderDetail();
                     OTOrderDetail.setLgORDERDETAILID(RandomStringUtils.randomAlphanumeric(20));
-                    OTOrderDetail.setLgORDERID(lg_ORDER_ID);
+                    OTOrderDetail.setLgORDERID(order);
                     OTOrderDetail.setLgFAMILLEID(OTFamille);
-                    OTOrderDetail.setLgGROSSISTEID(OTGrossiste);
+                    OTOrderDetail.setLgGROSSISTEID(oTGrossiste);
                     OTOrderDetail.setIntNUMBER(qty);
                     OTOrderDetail.setIntQTEREPGROSSISTE(qty);
                     OTOrderDetail.setIntQTEMANQUANT(qty);
