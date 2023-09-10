@@ -11,7 +11,6 @@ Ext.define('testextjs.store.Search', {
     autoLoad: false,
     proxy: {
         type: 'ajax',
-//        url: '../webservices/commandemanagement/order/ws_data_init.jsp',
         url: '../api/v1/produit-search/produits',
         reader: {
             type: 'json',

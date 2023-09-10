@@ -13,6 +13,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SearchProduitServcie;
@@ -54,8 +55,8 @@ public class SearchProduitServcieRessource {
     @GET
     @Path("/produits")
     public Response getProduits(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "search_value") String search, @QueryParam(value = "produitId") String produitId)
-            throws JSONException {
+            @QueryParam(value = "produitId") String produitId, @QueryParam(value = "query") String query,
+            @QueryParam(value = "search_value") String search_value) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -63,7 +64,8 @@ public class SearchProduitServcieRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
 
-        JSONObject jsono = this.searchProduitServcie.fetchOrderProduits(tu, produitId, search, limit, start);
+        JSONObject jsono = this.searchProduitServcie.fetchOrderProduits(tu, produitId,
+                StringUtils.isNotEmpty(query) ? query : search_value, limit, start);
         return Response.ok().entity(jsono.toString()).build();
     }
 }
