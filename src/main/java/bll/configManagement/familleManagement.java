@@ -5744,8 +5744,8 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         return count;
     }
 
-    public JSONArray getAllArticle(String search_value, String lg_DCI_ID, TEmplacement emp, String str_TYPE_TRANSACTION,
-            boolean all, int maxResults, int firstResult) {
+    public JSONArray getAllArticle(String produitId, String search_value, String lg_DCI_ID, TEmplacement emp,
+            String str_TYPE_TRANSACTION, boolean all, int maxResults, int firstResult) {
         JSONArray jsonarray = new JSONArray();
         String lg_EMPLACEMENT_ID;
         SnapshotManager OSnapshotManager = new SnapshotManager(this.getOdataManager(), this.getOTUser());
@@ -6031,7 +6031,8 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         return OTMouvement;
     }
 
-    public int allCount(String search_value, String lg_DCI_ID, String str_TYPE_TRANSACTION, TEmplacement emp) {
+    public int allCount(String produitId, String search_value, String lg_DCI_ID, String str_TYPE_TRANSACTION,
+            TEmplacement emp) {
 
         String lg_EMPLACEMENT_ID = "";
         SnapshotManager OSnapshotManager = new SnapshotManager(this.getOdataManager(), this.getOTUser());

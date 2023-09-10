@@ -38,7 +38,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.importOrder', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_grossiste,
+                  url: '../api/v1/grossiste/all',
                 reader: {
                     type: 'json',
                     root: 'results',

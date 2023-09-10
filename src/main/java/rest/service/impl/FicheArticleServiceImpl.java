@@ -85,7 +85,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                 new JSONObject(p.getLeft()));
     }
 
-    VenteDetailsDTO produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TEmplacement emp,
+    private VenteDetailsDTO produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TEmplacement emp,
             String codeFamille, String codeRayon, String codeGrossiste) throws Exception {
         CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
@@ -97,7 +97,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                 cb.sum(cb.prod(fa.get(TFamille_.intPAF), root.get(TFamilleStock_.intNUMBERAVAILABLE))),
                 cb.sum(cb.prod(fa.get(TFamille_.intPRICE), root.get(TFamilleStock_.intNUMBERAVAILABLE))),
                 cb.sumAsLong(root.get(TFamilleStock_.intNUMBERAVAILABLE))));
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
         q.setMaxResults(1);
         return q.getSingleResult();
@@ -151,7 +151,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                         .orderBy(cb.desc(fa.get(TFamille_.dtPEREMPTION)));
             }
 
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -292,7 +292,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
             List<Predicate> predicates = surStockPredicats(cb, root, item, stock, query, codeFamile, codeRayon,
                     codeGrossiste, emId, nbreMois);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Object[]> typedQuery = getEntityManager().createQuery(cq);
 
             List<Object[]> resultList = typedQuery.getResultList();
@@ -300,9 +300,9 @@ public class FicheArticleServiceImpl implements FicheArticleService {
             return resultList.stream().map(x -> {
                 Map<String, Integer> conso = consomationArticle(x[0] + "", emId, nbreConsommation);
                 return new ArticleDTO().id(x[0] + "").code(x[1] + "").libelle(x[2] + "").filterId(x[3] + "")
-                        .filterLibelle(x[4] + "").prixAchat(Integer.valueOf(x[5] + ""))
-                        .prixVente(Integer.valueOf(x[6] + "")).codeGrossiste(x[7] + "")
-                        .stock(Integer.valueOf(x[8] + "")).consommation(Integer.valueOf(x[9] + ""))
+                        .filterLibelle(x[4] + "").prixAchat(Integer.parseInt(x[5] + ""))
+                        .prixVente(Integer.parseInt(x[6] + "")).codeGrossiste(x[7] + "")
+                        .stock(Integer.parseInt(x[8] + "")).consommation(Integer.parseInt(x[9] + ""))
                         .datePeremption(x[11] + "")
                         .consommationUn(
                                 conso.getOrDefault(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")), 0))
@@ -731,7 +731,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     public Date dateBonLivraison(String idProduit) {
         try {
 
-            return bonLivraisonByArticleId(idProduit).getDtUPDATED();
+            return bonLivraisonByArticleId(idProduit).getLgBONLIVRAISONID().getDtDATELIVRAISON();
 
         } catch (Exception e) {
 
@@ -826,7 +826,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
                                 .get(TPreenregistrement_.strREFTICKET), query + "%")));
             }
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TPreenregistrementDetail> typedQuery = getEntityManager().createQuery(cq);
 
             List<TPreenregistrementDetail> resultList = typedQuery.getResultList();

@@ -38,11 +38,12 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
         Me = this;
         var storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
-            pageSize: 20,
+            pageSize: 999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/grossiste/ws_data.jsp',
+                     url: '../api/v1/grossiste/all',
+//                url: '../webservices/configmanagement/grossiste/ws_data.jsp',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -89,8 +90,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
                             store: storerepartiteur,
                             valueField: 'lg_GROSSISTE_ID',
                             displayField: 'str_LIBELLE',
-                            
-                            pageSize: 20,
+                            pageSize: 999,
                             queryMode: 'remote',
                             // width: 450,
                             emptyText: 'Choisir un repartiteur...'

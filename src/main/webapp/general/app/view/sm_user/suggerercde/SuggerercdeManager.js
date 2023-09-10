@@ -73,7 +73,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         var store = Ext.create('testextjs.store.SearchStore');
         var storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
-            pageSize: itemsPerPage,
+            pageSize: 999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
@@ -187,13 +187,13 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     displayField: 'str_LIBELLE',
                                     typeAhead: true,
                                     queryMode: 'remote',
+                                    pageSize: 999,
                                     emptyText: 'Choisir un repartiteur...',
                                     listeners: {
                                         select: function (cmp) {
-                                            var value = cmp.getValue();
-
+                                            let value = cmp.getValue();
                                             if (titre === 'Suggerer une commande') {
-                                                // alert("Titre 2" + titre);
+                                        
                                                 Me_Window.onchangeGrossiste();
                                             }
 

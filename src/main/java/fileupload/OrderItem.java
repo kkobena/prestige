@@ -182,12 +182,13 @@ public class OrderItem implements Serializable {
     }
 
     // tedis csv
-    public OrderItem(String cip, Integer cmde, String ean, Integer cmdeL, Double montant) {
+    public OrderItem(int ligne, String cip, int prixAchat, Integer cmdeL, double tva, int prixUn) {
         this.cip = cip;
-        this.cmde = cmde;
-        this.montant = montant;
+        this.prixUn = prixUn;
         this.cmdeL = cmdeL;
-        this.ean = ean;
+        this.ligne = ligne;
+        this.prixAchat = prixAchat;
+        this.tva = tva;
 
     }
 
@@ -269,6 +270,14 @@ public class OrderItem implements Serializable {
         this.tva = tva;
         this.ligne = ligne;
         this.facture = facture;
+    }
+
+    @Override
+    public String toString() {
+        return "OrderItem{" + "cip=" + cip + ", ean=" + ean + ", libelle=" + libelle + ", cmde=" + cmde + ", cmdeL="
+                + cmdeL + ", refBl=" + refBl + ", dateBl=" + dateBl + ", montant=" + montant + ", ug=" + ug
+                + ", prixUn=" + prixUn + ", tva=" + tva + ", ligne=" + ligne + ", facture=" + facture + ", prixAchat="
+                + prixAchat + '}';
     }
 
 }

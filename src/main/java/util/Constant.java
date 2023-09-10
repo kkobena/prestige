@@ -1,5 +1,8 @@
 package util;
 
+import dal.TPrivilege;
+import java.util.List;
+
 /**
  * @author koben
  */
@@ -29,8 +32,13 @@ public final class Constant {
     public static final String STATUT_CANCEL = "cancel";
     public static final String DEFAUL_TYPEETIQUETTE = "2";
     public static final String STATUT_IS_USING = "is_Using";
+    public static final String ACTION_DESACTIVE_PRODUIT = "ACTION_DESACTIVE_PRODUIT";
 
     private Constant() {
     }
 
+    public static boolean hasAuthorityByName(List<TPrivilege> LstTPrivilege, String authorityName) {
+        java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(authorityName);
+        return LstTPrivilege.stream().anyMatch(p);
+    }
 }
