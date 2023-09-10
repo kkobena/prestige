@@ -35,11 +35,12 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
         });
         ImportXLSStore = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
-            pageSize: 10,
+            pageSize: 999,
             // autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url: '../webservices/configmanagement/grossiste/ws_data.jsp',
+                     url: '../api/v1/grossiste/all',
+//                url: '../webservices/configmanagement/grossiste/ws_data.jsp',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -98,6 +99,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
                         displayField: 'str_LIBELLE',
                         typeAhead: true,
                         queryMode: 'remote',
+                             pageSize: 999,
                         emptyText: 'Choisir un grossiste...',
                         store: ImportXLSStore
                     }

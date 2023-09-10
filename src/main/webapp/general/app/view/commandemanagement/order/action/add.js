@@ -2,7 +2,6 @@
 
 
 var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
-var url_services_data_grossiste_suggerer = '../webservices/configmanagement/grossiste/ws_data.jsp';
 var url_services_data_famille_select_dovente = '../webservices/sm_user/famille/ws_data_jdbc.jsp';
 
 var Me_Window;
@@ -34,7 +33,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         'testextjs.model.Famille',
         'testextjs.controller.LaborexWorkFlow',
         'testextjs.model.Grossiste',
-        'testextjs.model.OrderDetail'
+        'testextjs.model.OrderDetail',
+        'testextjs.view.configmanagement.famille.action.detailArticle'
     ],
     config: {
         odatasource: '',
@@ -66,6 +66,20 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         ref_final = ref;
         titre = this.getTitre();
         this.title = titre;
+        let produitStore = new Ext.data.Store({
+            model: 'testextjs.model.caisse.Produit',
+            pageSize: 10,
+            autoLoad: false,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/vente/search',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+            }
+        });
         let store = Ext.create('testextjs.store.Search');
         comboDefaultvalue = this.getOdatasource().lg_GROSSISTE_ID;
         let store_type = new Ext.data.Store({
@@ -84,11 +98,12 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
         storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
-            pageSize: itemsPerPage,
+            pageSize: 999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_grossiste_suggerer,
+                 url: '../api/v1/grossiste/all',
+                //url: '../webservices/configmanagement/grossiste/ws_data.jsp',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -190,7 +205,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     valueField: 'lg_GROSSISTE_ID',
                                     displayField: 'str_LIBELLE',
                                     typeAhead: true,
-                                    pageSize: itemsPerPage,
+                                    pageSize: 999,
                                     queryMode: 'remote',
                                     width: 450,
                                     emptyText: 'Choisir un repartiteur...',
@@ -199,7 +214,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             field.focus(true, 50);
                                         },
                                         select: function (cmp) {
-                                            let value = cmp.getValue();
+
                                             if (titre === 'Modifier les informations de la commande') {
                                                 Me_Window.onchangeGrossiste();
                                             } else {
@@ -241,10 +256,59 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 {
                                     xtype: 'combobox',
                                     fieldLabel: 'Article',
+                                   // id: 'str_NAME',
+                                    store: produitStore,
+                                    pageSize: 10,
+                                    valueField: 'lgFAMILLEID',
+                                    displayField: 'strNAME',
+                                    width: 600,
+                                    margins: '0 10 5 10',
+                                    queryMode: 'remote',
+                                    autoSelect: true,
+                                    typeAhead: false,
+                                    typeAheadDelay: 0,
+                                    forceSelection: true,
+                                    enableKeyEvents: true,
+                                    minChars: 3,
+                                    queryCaching: false,
+//                                    selectOnFocus: true,
+  hidden: true,
+                                    emptyText: 'Choisir un article par Nom ou Cip...',
+//                                    triggerAction: 'all',
+                                    listConfig: {
+                                        loadingText: 'Recherche...',
+                                        emptyText: 'Pas de données trouvées.',
+                                        getInnerTpl: function () {
+                                            return '<tpl for="."><tpl if="intNUMBERAVAILABLE <=0"><span style="color:#17987e;font-weight:bold;"><span style="width:100px;display:inline-block;">{intCIP}</span>{strNAME} <span style="float: right;"> ( {intPRICE} )</span></span><tpl else><span style="font-weight:bold;"><span style="width:100px;display:inline-block;">{intCIP}</span>{strNAME} <span style="float: right; "> ( {intPRICE} )</span></span></tpl></tpl>';
+
+                                        }
+                                    },
+                                    listeners: {
+                                        select: function (cmp) {
+                                            let value = cmp.getValue();
+                                            let record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
+                                            Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
+                                            if (value === "0" || value === "Ajouter un nouvel article") {
+                                                Me_Window.onbtnaddArticle();
+                                            } else {
+                                                Ext.getCmp('int_QUANTITE').focus(true, 100, function () {
+                                                    Ext.getCmp('int_QUANTITE').selectText(0, 1);
+                                                });
+                                            }
+                                            Ext.getCmp('btn_detail').enable();
+
+                                        }
+                                    }
+
+                                },
+                                {
+                                    xtype: 'combobox',
+                                    fieldLabel: 'Article',
                                     name: 'str_NAME',
-                                    id: 'str_NAME',
+                                     id: 'str_NAME',
                                     store: store,
                                     margins: '0 10 5 10',
+                                  
                                     valueField: 'CIP',
                                     displayField: 'str_DESCRIPTION',
                                     enableKeyEvents: true,
@@ -736,10 +800,12 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     loadStore: function () {
         Me_Window.onRechClick();
     },
-
+   
     onbtndetail: function () {
-        new testextjs.view.configmanagement.famille.action.detailArticleOther({
-            odatasource: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
+        
+        new testextjs.view.configmanagement.famille.action.detailArticle({
+
+            produitId: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
             parentview: this,
             mode: "detail",
             titre: "Detail sur l'article [" + Ext.getCmp('str_NAME').getValue() + "]"
