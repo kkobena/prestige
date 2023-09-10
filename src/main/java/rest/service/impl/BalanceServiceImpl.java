@@ -218,7 +218,6 @@ public class BalanceServiceImpl implements BalanceService {
         long montantCheque = 0;
         long montantVirement = 0;
         long montantCB = 0;
-        long montantMobilePayment = 0;
         long montantTva = 0;
         long marge = 0;
         long montantAchat = 0;
@@ -313,7 +312,6 @@ public class BalanceServiceImpl implements BalanceService {
         balance.setMontantCB(montantCB);
         balance.setMontantCheque(montantCheque);
         balance.setMontantEsp(montantEsp);
-        balance.setMontantMobilePayment(montantMobilePayment);
         balance.setMontantTTC(montantTTC);
         balance.setMontantNet(montantNet);
         balance.setMontantRemise(montantRemise);
@@ -326,6 +324,8 @@ public class BalanceServiceImpl implements BalanceService {
         balance.setMontantWave(montantWave);
         balance.setMontantOrange(montantOrange);
         balance.setMontantMtn(montantMtn);
+        balance.setMontantMobilePayment(balance.getMontantOrange() + balance.getMontantMoov() + balance.getMontantMtn()
+                + balance.getMontantWave());
         return balance;
     }
 
@@ -465,11 +465,6 @@ public class BalanceServiceImpl implements BalanceService {
             LOG.log(Level.SEVERE, null, e);
             return 0;
         }
-    }
-
-    private BalanceVenteItemDTO buildRemiseFromTuple(Tuple tuple) {
-        return BalanceVenteItemDTO.builder().typeVente(tuple.get("typeVente", String.class))
-                .montantRemise(tuple.get("montantRemise", BigDecimal.class)).build();
     }
 
     private BalanceVenteItemDTO buildFromTuple(Tuple tuple) {
