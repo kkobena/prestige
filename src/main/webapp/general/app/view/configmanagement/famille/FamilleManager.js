@@ -50,14 +50,14 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         lg_EMPLACEMENT_ID = loadEmplacement();
 
 
-        var itemsPerPage = 20;
-        var store = new Ext.data.Store({
+        let itemsPerPage = 20;
+        const store = new Ext.data.Store({
             model: 'testextjs.model.Famille',
             pageSize: itemsPerPage,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_famille_famille,
+                url: '../api/v1/produit-search/fiche',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -206,8 +206,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         return amountformat(v);
                     }
                 },
-                
-                
+
                 {
                     header: 'P.A F',
                     dataIndex: 'int_PAF',
@@ -323,7 +322,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 failure: function (response)
                                 {
 
-                                  
+
                                     Ext.MessageBox.alert('Error Message', response.responseText);
 
                                 }
@@ -631,8 +630,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     scope: this,
                     handler: this.onbtnimport
                 }, '-',
-              
-              {
+
+                {
                     text: 'Verifier l\'importation',
                     tooltip: 'Verifier l\'importation',
                     id: 'btn_checkimport',
@@ -822,23 +821,19 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         window.location = '../MigrationServlet?table_name=TABLE_FAMILLE' + "&extension=" + extension + "&liste_param=" + liste_param;
     },
     onPdfClick: function () {
-        var lg_DCI_PRINCIPAL_ID = "", str_TYPE_TRANSACTION = "";
+        let lg_DCI_PRINCIPAL_ID = "", str_TYPE_TRANSACTION = "";
         if (Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue() != null) {
             lg_DCI_PRINCIPAL_ID = Ext.getCmp('lg_DCI_PRINCIPAL_ID').getValue();
         }
         if (Ext.getCmp('str_TYPE_TRANSACTION').getValue() != null) {
             str_TYPE_TRANSACTION = Ext.getCmp('str_TYPE_TRANSACTION').getValue();
         }
-        var linkUrl = url_services_article_generate_pdf + '?str_TYPE_TRANSACTION=' + str_TYPE_TRANSACTION + '&lg_DCI_ID=' + lg_DCI_PRINCIPAL_ID + '&search_value=' + Ext.getCmp('rechecher').getValue();
+        const linkUrl = url_services_article_generate_pdf + '?str_TYPE_TRANSACTION=' + str_TYPE_TRANSACTION + '&lg_DCI_ID=' + lg_DCI_PRINCIPAL_ID + '&search_value=' + Ext.getCmp('rechecher').getValue();
 
 
         window.open(linkUrl);
     },
-    onListArticleDeconditionClick: function () {
-        var OGrid = Ext.getCmp('GridArticleID');
-        OGrid.getStore().getProxy().url = url_services_data_famille_famille + "?action=DECONDITION";
-        OGrid.getStore().reload();
-    },
+
     onRemoveClick: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
                 'Confirmer la suppresssion',
@@ -918,7 +913,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
 
     },
-  
+
     onEditClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
 
@@ -946,6 +941,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.configmanagement.famille.action.detailArticle({
             odatasource: rec.data,
+            produitId: rec.get('lg_FAMILLE_ID'),
             parentview: this,
             mode: "update",
             titre: "Detail sur l'article [" + rec.get('str_DESCRIPTION') + "]"
@@ -1034,40 +1030,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             titre: "Valeur maximale de vente des produits"
         });
     },
-    onCheckBoxClick: function ()
-    {
-        var internal_url = "";
-        bool_check = Ext.getCmp('checkRemiseId').getValue();
-        //Ext.MessageBox.alert("checkRemiseId",bool_check);
-        internal_url = url_services_transaction_app_remise + 'update&bool_check=' + bool_check;
 
-        Ext.Ajax.request({
-            url: internal_url,
-            params: {
-                //int_NUMBER_AVAILABLE: Ext.getCmp('int_NUMBER_AVAILABLE').getValue()          
-
-            },
-            success: function (response)
-            {
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.success === 0) {
-                    //Ext.MessageBox.alert('Error Message', object.errors);
-                    return;
-                } else {
-                    //Ext.MessageBox.alert('Confirmation', object.errors);
-                }
-
-            },
-            failure: function (response)
-            {
-
-                var object = Ext.JSON.decode(response.responseText, false);
-                console.log("Bug " + response.responseText);
-                Ext.MessageBox.alert('Error Message', response.responseText);
-
-            }
-        });
-    },
     showPeriodeForm: function (id, str_NAME) {
         var win = Ext.create("Ext.window.Window", {
             title: "Choisir une periode",
@@ -1162,18 +1125,18 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
                                         var dt_debut = Ext.getCmp('dt_debut').getSubmitValue();
                                         var dt_fin = Ext.getCmp('dt_fin').getSubmitValue();
-                                     /*   new testextjs.view.stockmanagement.suivistockvente.action.detailStock({
-                                            odatasource: id,
-                                            parentview: this,
-                                            mode: "update",
-                                            datedebut: dt_debut,
-                                            datedin: dt_fin,
-                                            titre: str_NAME
-                                        });
-                                        */
-                                        Me_Workflow.buildDetail(id,dt_debut,dt_fin,str_NAME);
-                                        
-                                        
+                                        /*   new testextjs.view.stockmanagement.suivistockvente.action.detailStock({
+                                         odatasource: id,
+                                         parentview: this,
+                                         mode: "update",
+                                         datedebut: dt_debut,
+                                         datedin: dt_fin,
+                                         titre: str_NAME
+                                         });
+                                         */
+                                        Me_Workflow.buildDetail(id, dt_debut, dt_fin, str_NAME);
+
+
                                         win.close();
                                     }
                                 }
@@ -1211,7 +1174,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             success: function (formulaire, action) {
 
                 if (action.result.statut === 1) {
-                    var grid = Ext.getCmp('GridArticleID');
+                    const grid = Ext.getCmp('GridArticleID');
                     Ext.MessageBox.alert('Confirmation', action.result.success);
                     grid.getStore().reload();
                 } else {
@@ -1396,7 +1359,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         });
 
     },
-     buildDetail: function (id,dtStart,dtEnd,libelle) {
+    buildDetail: function (id, dtStart, dtEnd, libelle) {
         var me = this;
         var storeProduits = new Ext.data.Store({
             fields:
@@ -1458,7 +1421,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             name: 'qtyEntree',
                             type: 'number'
                         },
-                         {
+                        {
                             name: 'ecartInventaire',
                             type: 'number'
                         }
@@ -1495,7 +1458,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             params: {
                 produitId: id,
                 dtStart: dtStart,
-                dtEnd:dtEnd
+                dtEnd: dtEnd
             }
         });
         var form = Ext.create('Ext.window.Window',
@@ -1527,7 +1490,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                     tooltip: 'imprimer',
                                     scope: this,
                                     handler: function () {
-                                       
+
                                         var linkUrl = '../BalancePdfServlet?mode=SUIVIMVT&dtStart=' + dtStart + '&dtEnd=' + dtEnd + "&produitId=" + id;
                                         window.open(linkUrl);
                                     }
@@ -1852,7 +1815,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 });
 
     }
-    
+
 
 });
 

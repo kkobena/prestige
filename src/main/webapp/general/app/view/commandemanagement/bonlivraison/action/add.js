@@ -1,7 +1,7 @@
 /* global Ext */
 
 var url_services_data_famille_select_order = '../webservices/sm_user/famille/ws_data_initial.jsp';
-var url_services_data_grossiste_suggerer = '../webservices/configmanagement/grossiste/ws_data.jsp';
+
 var url_services_data_bonlivraisondetails = '../webservices/commandemanagement/bonlivraisondetail/ws_data.jsp?lg_BON_LIVRAISON_ID=';
 var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
 var url_services_pdf_bonlivraison = '../webservices/commandemanagement/bonlivraison/ws_generate_pdf.jsp';

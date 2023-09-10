@@ -71,11 +71,12 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.livraison', {
 
         var storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
-            pageSize: itemsPerPage,
+            pageSize: 999,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_grossiste_suggerer,
+                     url: '../api/v1/grossiste/all',
+//                url: url_services_data_grossiste_suggerer,
                 reader: {
                     type: 'json',
                     root: 'results',

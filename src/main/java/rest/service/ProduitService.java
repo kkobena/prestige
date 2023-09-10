@@ -86,12 +86,12 @@ public interface ProduitService {
     TFamille findById(String produitId);
 
     JSONObject valorisationStock(int mode, LocalDate dtStart, String lgGROSSISTEID, String lgFAMILLEARTICLEID,
-            String lgZONEGEOID, String END, String BEGIN, String emplacementId) throws JSONException;
+            String lgZONEGEOID, String end, String begin, String emplacementId) throws JSONException;
 
     Params getValeurStock(int mode, LocalDate dtStart, String lgGROSSISTEID, String lgFAMILLEARTICLEID,
-            String lgZONEGEOID, String END, String BEGIN, String emplacementId);
+            String lgZONEGEOID, String end, String begin, String emplacementId);
 
     ValorisationDTO getValeurStockPdf(int mode, LocalDate dtStart, String lgGROSSISTEID, String lgFAMILLEARTICLEID,
-            String lgZONEGEOID, String END, String BEGIN, String emplacementId);
+            String lgZONEGEOID, String end, String begin, String emplacementId);
 
 }

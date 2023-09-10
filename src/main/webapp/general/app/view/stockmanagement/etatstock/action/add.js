@@ -2,7 +2,6 @@
 
 var url_services_data_entreestock = '../webservices/sm_user/entreestock/ws_data.jsp';
 var url_services_transaction_entreestock = '../webservices/sm_user/entreestock/ws_transaction.jsp?mode=';
-var url_services_data_grossiste = '../webservices/configmanagement/grossiste/ws_data.jsp';
 var url_services_data_typeetiquette = '../webservices/configmanagement/typeetiquette/ws_data.jsp';
 
 var Oview;
