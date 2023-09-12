@@ -77,4 +77,13 @@ public class BalanceVenteRessource {
 
         return Response.ok().entity(json.toString()).build();
     }
+
+    @GET
+    @Path("etat-annuel")
+    public Response etatLastThreeYears() {
+
+        JSONObject json = balanceService.etatLastThreeYears();
+        return Response.ok().entity(json.toString()).build();
+
+    }
 }

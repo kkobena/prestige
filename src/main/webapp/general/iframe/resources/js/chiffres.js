@@ -117,7 +117,6 @@ function buildChart(htmlEl, lineHtml, datas) {
         yearMinusOne.fevrier, yearMinusOne.mars, yearMinusOne.avril, yearMinusOne.mai, yearMinusOne.juin, yearMinusOne.juillet, yearMinusOne.aout, yearMinusOne.septembre, yearMinusOne.octobre, yearMinusOne.novembre, yearMinusOne.decembre];
     const yearMinusTwoData = [yearMinusTwo.janvier,
         yearMinusTwo.fevrier, yearMinusTwo.mars, yearMinusTwo.avril, yearMinusTwo.mai, yearMinusTwo.juin, yearMinusTwo.juillet, yearMinusTwo.aout, yearMinusTwo.septembre, yearMinusTwo.octobre, yearMinusTwo.novembre, yearMinusTwo.decembre];
-
     const data = [yearMinusTwoData, yearMinusOneData, currentYearData];
     new Chart(htmlEl, barChartConfig(data, 'bar'));
     new Chart(lineHtml, barChartConfig(data, 'line'));

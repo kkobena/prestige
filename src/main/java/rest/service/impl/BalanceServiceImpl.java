@@ -41,6 +41,8 @@ import org.json.JSONObject;
 import rest.service.BalanceService;
 import rest.service.dto.BalanceParamsDTO;
 import rest.service.dto.BalanceVenteItemDTO;
+import rest.service.dto.EtatAnnuelDTO;
+import rest.service.dto.EtatAnnuelWrapperDTO;
 import util.Constant;
 import util.DateConverter;
 import util.FunctionUtils;
@@ -82,6 +84,7 @@ public class BalanceServiceImpl implements BalanceService {
 
     private static final String TVAS_SQL = "SELECT {byDay} SUM(d.int_PRICE) AS montantTTC,SUM(d.int_UG*d.int_PRICE_UNITAIR) AS montantUg,d.valeurTva AS valeurTva FROM t_preenregistrement_detail d,t_preenregistrement p,t_user u ,mvttransaction m WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND p.`lg_PREENREGISTREMENT_ID`=m.pkey  AND  d.`bool_ACCOUNT` "
             + " AND p.lg_TYPE_VENTE_ID <> ?1 AND p.str_STATUT='is_Closed'  AND p.imported=0 AND DATE(p.dt_UPDATED)  BETWEEN ?2 AND ?3 AND p.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?4 {excludeStatement} {tvaVnoOnly} GROUP BY d.`valeurTva` {groupByDay}";
+
     private static final String AMOUNT_TO_REMOVE = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc, COALESCE(SUM(m.`montant`),0) AS montant FROM mvttransaction m,t_preenregistrement p WHERE m.flag IS TRUE AND m.flag_id IS NULL AND m.`typeTransaction` =0  AND p.imported=0 AND p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.`dt_UPDATED`) BETWEEN  ?1 AND ?2 AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?3 AND m.`lg_EMPLACEMENT_ID` =?4 ";
 
     private static final String TVA_VNO_ONLY = " AND m.`typeTransaction` =0 ";
@@ -99,6 +102,9 @@ public class BalanceServiceImpl implements BalanceService {
 
     private static final String FLAGED_AMOUNT = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL AND p.imported=0 ";
     private static final String FLAGED_AMOUNT_GROUP_BY_DAY = "SELECT m.mvtdate AS mvtdate,COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL  AND p.imported=0 GROUP BY mvtdate";
+
+    private static final String STAT_LAST_THREE_YEARS = "SELECT YEAR(p.`dt_UPDATED`) AS annee, MONTH(p.`dt_UPDATED`) AS mois,SUM(d.int_PRICE) AS montantTTC FROM t_preenregistrement_detail d,t_preenregistrement p,t_user u ,mvttransaction m WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND p.`lg_PREENREGISTREMENT_ID`=m.pkey  AND  d.`bool_ACCOUNT` "
+            + " AND p.lg_TYPE_VENTE_ID <> ?1 AND p.str_STATUT='is_Closed'  AND p.imported=0 AND YEAR(p.dt_UPDATED)  BETWEEN ?2 AND ?3 AND p.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?4 GROUP BY annee,mois ";
 
     private final Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
 
@@ -1016,6 +1022,40 @@ public class BalanceServiceImpl implements BalanceService {
         }
     }
 
+    @Override
+    public JSONObject etatLastThreeYears() {
+        EtatAnnuelWrapperDTO annuelWrapper = new EtatAnnuelWrapperDTO();
+        LocalDate now = LocalDate.now();
+        Map<Integer, List<EtatAnnuelDTO>> map = buildLastThreeYears().stream()
+                .collect(Collectors.groupingBy(EtatAnnuelDTO::getAnnee));
+        map.forEach((annee, value) -> {
+            EtatAnnuelDTO annuel = new EtatAnnuelDTO();
+            annuel.setAnnee(annee);
+            value.forEach(e -> {
+                annuel.setJanvier(annuel.getJanvier() + e.getJanvier());
+                annuel.setFevrier(annuel.getFevrier() + e.getFevrier());
+                annuel.setMars(annuel.getMars() + e.getMars());
+                annuel.setAvril(annuel.getAvril() + e.getAvril());
+                annuel.setMai(annuel.getMai() + e.getMai());
+                annuel.setJuin(annuel.getJuin() + e.getJuin());
+                annuel.setJuillet(annuel.getJuillet() + e.getJuillet());
+                annuel.setAout(annuel.getAout() + e.getAout());
+                annuel.setSeptembre(annuel.getSeptembre() + e.getSeptembre());
+                annuel.setOctobre(annuel.getOctobre() + e.getOctobre());
+                annuel.setNovembre(annuel.getNovembre() + e.getNovembre());
+                annuel.setDecembre(annuel.getDecembre() + e.getDecembre());
+            });
+            if (annee == now.getYear()) {
+                annuelWrapper.setCurrentYear(annuel);
+            } else if (annee == now.minusYears(1).getYear()) {
+                annuelWrapper.setYearMinusOne(annuel);
+            } else if (annee == now.minusYears(2).getYear()) {
+                annuelWrapper.setYearMinusTwo(annuel);
+            }
+        });
+        return new JSONObject(annuelWrapper);
+    }
+
     private final class FlagedAmount {
 
         private final LocalDate mvtDate;
@@ -1107,5 +1147,76 @@ public class BalanceServiceImpl implements BalanceService {
             balances.add(balanceVo);
         }
         return updatePourcent(balances);
+    }
+
+    private List<Tuple> etatLastThreeYearsQuery() {
+        LocalDate now = LocalDate.now();
+        try {
+
+            Query query = em.createNativeQuery(STAT_LAST_THREE_YEARS, Tuple.class)
+                    .setParameter(1, DateConverter.DEPOT_EXTENSION).setParameter(2, now.minusYears(2).getYear())
+                    .setParameter(3, now.getYear()).setParameter(4, "1");
+            return (List<Tuple>) query.getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return List.of();
+        }
+
+    }
+
+    private EtatAnnuelDTO buildLastThreeYear(Tuple tuple) {
+        EtatAnnuelDTO annuel = new EtatAnnuelDTO();
+        annuel.setAnnee(tuple.get("annee", Integer.class));
+        int mois = tuple.get("mois", Integer.class);
+
+        long montantTtc = tuple.get("montantTTC", BigDecimal.class).longValue();
+        switch (mois) {
+        case 1:
+            annuel.setJanvier(montantTtc);
+            break;
+        case 2:
+            annuel.setFevrier(montantTtc);
+            break;
+        case 3:
+            annuel.setMars(montantTtc);
+            break;
+        case 4:
+            annuel.setAvril(montantTtc);
+            break;
+        case 5:
+            annuel.setMai(montantTtc);
+            break;
+        case 6:
+            annuel.setJuin(montantTtc);
+            break;
+        case 7:
+            annuel.setJuillet(montantTtc);
+            break;
+        case 8:
+            annuel.setAout(montantTtc);
+            break;
+        case 9:
+            annuel.setSeptembre(montantTtc);
+            break;
+        case 10:
+            annuel.setOctobre(montantTtc);
+            break;
+        case 11:
+            annuel.setNovembre(montantTtc);
+            break;
+        case 12:
+            annuel.setDecembre(montantTtc);
+            break;
+        default:
+            break;
+        }
+        return annuel;
+
+    }
+
+    private List<EtatAnnuelDTO> buildLastThreeYears() {
+        return etatLastThreeYearsQuery().stream().map(this::buildLastThreeYear).collect(Collectors.toList());
+
     }
 }

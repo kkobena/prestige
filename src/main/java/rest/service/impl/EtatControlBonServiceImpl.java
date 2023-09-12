@@ -241,7 +241,7 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
     }
 
     @Override
-    public JSONObject etatBonAnnuel() {
+    public JSONObject etatLastThreeYears() {
         EtatAnnuelWrapperDTO annuelWrapper = new EtatAnnuelWrapperDTO();
         LocalDate now = LocalDate.now();
         Map<Integer, List<EtatAnnuelDTO>> map = etatBonAnnuelQuery().stream()
@@ -284,7 +284,7 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
