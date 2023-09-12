@@ -1080,7 +1080,7 @@ public class OrderServiceImpl implements OrderService {
 
     private TFamilleGrossiste createIfNotExist(OrderDetailDTO orderDetailDTO, TOrder order) {
         TFamilleGrossiste familleGrossiste = findFamilleGrossiste(orderDetailDTO.getFamilleId(),
-                orderDetailDTO.getGrossisteId());
+                order.getLgGROSSISTEID().getLgGROSSISTEID());
         if (familleGrossiste == null) {
             TFamille famille = this.getEmg().find(TFamille.class, orderDetailDTO.getFamilleId());
             familleGrossiste = new TFamilleGrossiste();
