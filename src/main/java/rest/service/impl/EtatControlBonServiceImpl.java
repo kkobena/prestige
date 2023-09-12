@@ -1,6 +1,5 @@
 package rest.service.impl;
 
-import commonTasks.dto.TvaDTO;
 import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
 import dal.TBonLivraisonDetail_;
@@ -17,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +35,8 @@ import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import rest.service.EtatControlBonService;
+import rest.service.dto.EtatAnnuelDTO;
+import rest.service.dto.EtatAnnuelWrapperDTO;
 import rest.service.dto.EtatControlAnnuelDTO;
 import rest.service.dto.EtatControlAnnuelWrapperDTO;
 import rest.service.dto.EtatControlBon;
@@ -55,7 +57,8 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
 
     private static final String BON_ANNUEL_SQL_GROUP = " SELECT  SUM(b.`int_MHT`) AS montantHtaxe,SUM(b.`int_TVA`) montantTaxe, sum(b.`int_HTTC`) montantTtc,COUNT(b.`lg_BON_LIVRAISON_ID`) AS nbreBon, SUM(item.itemPrixVente) AS montantVenteTtc  FROM  t_bon_livraison b,t_order o,t_grossiste g,groupefournisseur gp,(SELECT d.`lg_BON_LIVRAISON_ID` AS bonId,   SUM(d.`int_PRIX_VENTE`* d.`int_QTE_RECUE`) AS itemPrixVente FROM t_bon_livraison_detail d GROUP BY bonId) AS item"
             + "  WHERE item.bonId =b.`lg_BON_LIVRAISON_ID` AND  DATE(b.`dt_DATE_LIVRAISON`) BETWEEN  ?1 AND ?2 AND b.`str_STATUT`='is_Closed' AND b.`lg_ORDER_ID` =o.`lg_ORDER_ID` AND o.`lg_GROSSISTE_ID` =g.`lg_GROSSISTE_ID` AND g.`groupeId`=gp.id  {grossisteIdClose} {groupeIdClose}  ";
-
+    private static final String BON_ETATANNUEL_SQL = "SELECT YEAR(b.`dt_DATE_LIVRAISON`) AS annee, MONTH(b.`dt_DATE_LIVRAISON`) AS mois, SUM(b.`int_MHT`) AS montantHtaxe,SUM(b.`int_TVA`) montantTaxe, sum(b.`int_HTTC`) montantTtc  FROM  t_bon_livraison b\n"
+            + " WHERE  YEAR(b.`dt_DATE_LIVRAISON`) BETWEEN  ?1 AND ?2  AND b.`str_STATUT`='is_Closed' GROUP BY annee,mois";
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -235,5 +238,102 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
         }
 
         return sql;
+    }
+
+    @Override
+    public JSONObject etatBonAnnuel() {
+        EtatAnnuelWrapperDTO annuelWrapper = new EtatAnnuelWrapperDTO();
+        LocalDate now = LocalDate.now();
+        Map<Integer, List<EtatAnnuelDTO>> map = etatBonAnnuelQuery().stream()
+                .collect(Collectors.groupingBy(EtatAnnuelDTO::getAnnee));
+        map.forEach((annee, value) -> {
+            EtatAnnuelDTO annuel = new EtatAnnuelDTO();
+            annuel.setAnnee(annee);
+            value.forEach(e -> {
+                annuel.setJanvier(annuel.getJanvier() + e.getJanvier());
+                annuel.setFevrier(annuel.getFevrier() + e.getFevrier());
+                annuel.setMars(annuel.getMars() + e.getMars());
+                annuel.setAvril(annuel.getAvril() + e.getAvril());
+                annuel.setMai(annuel.getMai() + e.getMai());
+                annuel.setJuin(annuel.getJuin() + e.getJuin());
+                annuel.setJuillet(annuel.getJuillet() + e.getJuillet());
+                annuel.setAout(annuel.getAout() + e.getAout());
+                annuel.setSeptembre(annuel.getSeptembre() + e.getSeptembre());
+                annuel.setOctobre(annuel.getOctobre() + e.getOctobre());
+                annuel.setNovembre(annuel.getNovembre() + e.getNovembre());
+                annuel.setDecembre(annuel.getDecembre() + e.getDecembre());
+            });
+            if (annee == now.getYear()) {
+                annuelWrapper.setCurrentYear(annuel);
+            } else if (annee == now.minusYears(1).getYear()) {
+                annuelWrapper.setYearMinusOne(annuel);
+            } else if (annee == now.minusYears(2).getYear()) {
+                annuelWrapper.setYearMinusTwo(annuel);
+            }
+        });
+        return new JSONObject(annuelWrapper);
+    }
+
+    private List<EtatAnnuelDTO> etatBonAnnuelQuery() {
+        LocalDate now = LocalDate.now();
+        try {
+            Query query = em.createNativeQuery(BON_ETATANNUEL_SQL, Tuple.class)
+                    .setParameter(1, now.minusYears(2).getYear()).setParameter(2, now.getYear());
+            return ((List<Tuple>) query.getResultList()).stream().map(this::buildEtatAnnuelDTO)
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.EMPTY_LIST;
+        }
+    }
+
+    private EtatAnnuelDTO buildEtatAnnuelDTO(Tuple tuple) {
+        EtatAnnuelDTO annuel = new EtatAnnuelDTO();
+        annuel.setAnnee(tuple.get("annee", Integer.class));
+        int mois = tuple.get("mois", Integer.class);
+        // long montantHtaxe=tuple.get("montantHtaxe", BigDecimal.class).longValue();
+        long montantTtc = tuple.get("montantTtc", BigDecimal.class).longValue();
+        switch (mois) {
+        case 1:
+            annuel.setJanvier(montantTtc);
+            break;
+        case 2:
+            annuel.setFevrier(montantTtc);
+            break;
+        case 3:
+            annuel.setMars(montantTtc);
+            break;
+        case 4:
+            annuel.setAvril(montantTtc);
+            break;
+        case 5:
+            annuel.setMai(montantTtc);
+            break;
+        case 6:
+            annuel.setJuin(montantTtc);
+            break;
+        case 7:
+            annuel.setJuillet(montantTtc);
+            break;
+        case 8:
+            annuel.setAout(montantTtc);
+            break;
+        case 9:
+            annuel.setSeptembre(montantTtc);
+            break;
+        case 10:
+            annuel.setOctobre(montantTtc);
+            break;
+        case 11:
+            annuel.setNovembre(montantTtc);
+            break;
+        case 12:
+            annuel.setDecembre(montantTtc);
+            break;
+        default:
+            break;
+        }
+        return annuel;
     }
 }

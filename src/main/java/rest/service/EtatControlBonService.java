@@ -24,4 +24,6 @@ public interface EtatControlBonService {
 
     JSONObject listBonAnnuelView(String groupBy, String dtStart, String dtEnd, String grossisteId, Integer groupeId);
 
+    JSONObject etatBonAnnuel();
+
 }
