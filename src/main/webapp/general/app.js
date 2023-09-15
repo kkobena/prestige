@@ -766,7 +766,9 @@ Ext.application({
         'testextjs.view.configmanagement.famille.Products',
         'testextjs.view.depot.Export',
         'testextjs.view.depot.Import',
-        'testextjs.view.depot.Export'
+        'testextjs.view.depot.Export',
+        'testextjs.view.achat',
+         'testextjs.view.chiffreAnnuel'
     ],
     controllers: [
         'App',
