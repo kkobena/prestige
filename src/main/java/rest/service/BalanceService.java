@@ -41,4 +41,6 @@ public interface BalanceService {
     List<TvaDTO> statistiqueTvaPeriodique(BalanceParamsDTO balanceParams);
 
     List<BalanceDTO> recapBalance(BalanceParamsDTO balanceParams);
+
+    JSONObject etatLastThreeYears();
 }

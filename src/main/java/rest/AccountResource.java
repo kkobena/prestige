@@ -57,11 +57,11 @@ public class AccountResource {
             json.put("str_LAST_NAME", tu.getStrLASTNAME());
             json.put("str_PHONE", tu.getStrPHONE());
             hs.setAttribute(Constant.AIRTIME_USER, tu);
-            TRoleUser OTRoleUser = userService.getTRoleUser(tu.getLgUSERID());
-            if (OTRoleUser != null && OTRoleUser.getLgROLEID() != null) {
-                xtypeuser = (OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_PHARMACIEN)
-                        || OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)
-                        || OTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_ADMIN)
+            TRoleUser oTRoleUser = userService.getTRoleUser(tu.getLgUSERID());
+            if (oTRoleUser != null && oTRoleUser.getLgROLEID() != null) {
+                xtypeuser = (oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_PHARMACIEN)
+                        || oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)
+                        || oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_ADMIN)
                                 ? "dashboard" : "mainmenumanager");
             }
             json.put("xtypeuser", xtypeuser);
@@ -72,9 +72,9 @@ public class AccountResource {
                     tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)
                             ? userService.getOfficine().getStrNOMABREGE()
                             : tu.getLgEMPLACEMENTID().getStrDESCRIPTION());
-            List<TPrivilege> LstTPrivilege = userService.getAllPrivilege(tu);
-            hs.setAttribute(commonparameter.USER_LIST_PRIVILEGE, LstTPrivilege);
-            boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_UPDATE_PRICE_EDIT);
+            List<TPrivilege> lstTPrivilege = userService.getAllPrivilege(tu);
+            hs.setAttribute(commonparameter.USER_LIST_PRIVILEGE, lstTPrivilege);
+            boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_BT_UPDATE_PRICE_EDIT);
             hs.setAttribute(commonparameter.UPDATE_PRICE, asAuthority);
             json.put("success", true);
             return Response.ok().entity(json.toString()).build();
