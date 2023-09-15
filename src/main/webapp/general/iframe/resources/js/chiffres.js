@@ -51,12 +51,19 @@ const COLORS = [
     '#8549ba'
 ];
 $(document).ready(function () {
-   
-    $.get('../api/v1/balance/etat-annuel', function (data, status) {
-        buildChart( $('#caChart'), $('#lineChart'), data);
+
+    $.ajax({
+        url: '../api/v1/balance/etat-annuel',
+        method: "GET",
+        dataType: "json"
+
+    }).done(function (data) {
+
+        buildChart($('#caChart'), $('#lineChart'), data);
+    }).always(function () {
+        $('#spinner1').hide();
+        $('#spinner2').hide();
     });
-
-
 });
 
 
