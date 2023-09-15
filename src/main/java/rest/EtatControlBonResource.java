@@ -51,4 +51,13 @@ public class EtatControlBonResource {
         return Response.ok().entity(json.toString()).build();
 
     }
+
+    @GET
+    @Path("etat-annuel")
+    public Response etatLastThreeYears() {
+
+        JSONObject json = etatControlBonService.etatLastThreeYears();
+        return Response.ok().entity(json.toString()).build();
+
+    }
 }
