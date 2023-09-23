@@ -129,9 +129,6 @@ public class MainteanceServiceImpl implements MainteanceService {
         addNexConstraint();
     }
 
-   
-
-
     private class MvtTransactionDTO {
 
         private final String uuid;
@@ -322,7 +319,12 @@ public class MainteanceServiceImpl implements MainteanceService {
             return cmuAmount;
         }
 
-        public MvtTransactionDTO(String uuid, Integer montant, Integer montantRestant, Integer montantRegle, Integer montantCredit, Integer montantNet, Integer montantRemise, Integer montantPaye, Integer avoidAmount, Integer montantAcc, Boolean checked, LocalDate mvtDate, LocalDateTime createdAt, String user, String magasin, String reglement, String tTypeMvtCaisse, Integer typeTransaction, Integer categoryTransaction, String pkey, String reference, String caisse, String organisme, String preenregistrement, Boolean flaged) {
+        public MvtTransactionDTO(String uuid, Integer montant, Integer montantRestant, Integer montantRegle,
+                Integer montantCredit, Integer montantNet, Integer montantRemise, Integer montantPaye,
+                Integer avoidAmount, Integer montantAcc, Boolean checked, LocalDate mvtDate, LocalDateTime createdAt,
+                String user, String magasin, String reglement, String tTypeMvtCaisse, Integer typeTransaction,
+                Integer categoryTransaction, String pkey, String reference, String caisse, String organisme,
+                String preenregistrement, Boolean flaged) {
             this.uuid = uuid;
             this.montant = montant;
             this.montantRestant = montantRestant;
@@ -448,7 +450,10 @@ public class MainteanceServiceImpl implements MainteanceService {
             return preenregistrementDetail;
         }
 
-        public HMvtProduitDTO(String uuid, LocalDate mvtDate, LocalDateTime createdAt, Integer qteDebut, Integer qteFinale, Integer qteMvt, String pkey, String famille, String typemvtproduit, Integer prixUn, Integer prixAchat, Integer valeurTva, Boolean checked, Integer ug, Integer cmuPrice, String preenregistrementDetail) {
+        public HMvtProduitDTO(String uuid, LocalDate mvtDate, LocalDateTime createdAt, Integer qteDebut,
+                Integer qteFinale, Integer qteMvt, String pkey, String famille, String typemvtproduit, Integer prixUn,
+                Integer prixAchat, Integer valeurTva, Boolean checked, Integer ug, Integer cmuPrice,
+                String preenregistrementDetail) {
             this.uuid = uuid;
             this.mvtDate = mvtDate;
             this.createdAt = createdAt;
@@ -467,6 +472,5 @@ public class MainteanceServiceImpl implements MainteanceService {
             this.preenregistrementDetail = preenregistrementDetail;
         }
     }
-
 
 }
