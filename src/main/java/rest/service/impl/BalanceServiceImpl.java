@@ -1,6 +1,5 @@
 package rest.service.impl;
 
-import com.google.common.collect.HashBiMap;
 import commonTasks.dto.BalanceDTO;
 import commonTasks.dto.GenericDTO;
 import commonTasks.dto.SummaryDTO;
