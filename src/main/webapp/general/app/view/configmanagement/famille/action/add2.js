@@ -10,7 +10,6 @@ var url_services_transaction_famille = '../webservices/sm_user/famille/ws_transa
 var url_services_data_typeetiquette = '../webservices/configmanagement/typeetiquette/ws_data.jsp';
 var url_services_data_remise = '../webservices/configmanagement/remise/ws_data.jsp';
 var url_services_data_codetva = '../webservices/sm_user/famille/ws_data_codetva.jsp';
-var url_services_data_remise_article = '../webservices/configmanagement/workflowremisearticle/ws_data.jsp';
 var url_services_data_dci = '../webservices/configmanagement/famillearticle/ws_data_initial.jsp';
 var url_services_data_dci_famille = '../webservices/configmanagement/dci/ws_data_dci_famille.jsp';
 var url_services_transaction_dci_famille = '../webservices/configmanagement/dci/ws_transaction_dci_famille.jsp?mode=';
@@ -141,24 +140,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
 
         });
         
-        var store_remisearticle = new Ext.data.Store({
-            model: 'testextjs.model.Workflowremisearticle',
-            pageSize: itemsPerPage,
-            autoLoad: true,
-            proxy: {
-                type: 'ajax',
-                url: url_services_data_remise_article,
-                reader: {
-                    type: 'json',
-                    root: 'results',
-                    totalProperty: 'total'
-                }
-            }
-
-        });
-
-
-
+        
         var form = new Ext.form.Panel({
             bodyPadding: 10,
             fieldDefaults: {
@@ -244,21 +226,6 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                         },
                         
                         {
-                            xtype: 'combobox',
-                            fieldLabel: 'Code Remise',
-                            name: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
-                            width: 400,
-                            id: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
-                            store: store_remisearticle,
-                            valueField: 'lg_WORKFLOW_REMISE_ARTICLE_ID',
-                            displayField: 'str_CODE_REMISE_ARTICLE',
-                            typeAhead: true,
-                            allowBlank: false,
-                            queryMode: 'remote',
-                            emptyText: 'Choisir un code remise...'
-                        },
-                        
-                        {
                             fieldLabel: 'Prix Achat Facture',
                             xtype: 'textfield',
                             maskRe: /[0-9.]/,
@@ -330,19 +297,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
 //                            allowBlank: false,
 
                         }
-                        //Ajout ligne code remise
-                        //,
-                        //{
-                        //    fieldLabel: 'Code Remise',
-                        //    xtype: 'textfield',
-//                            maskRe: /[0-9.]/,
-                        //    width: 350,
-                        //    emptyText: 'CODE REMISE',
-                        //    name: 'str_CODE_REMISE',
-                        //    id: 'str_CODE_REMISE'
-//                            allowBlank: false,
-
-                        //}
+                        
 
                     ]
                 }]
@@ -368,21 +323,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
             Ext.getCmp('lg_CODE_TVA_ID').setValue(this.getOdatasource().lg_CODE_TVA_ID);
 
             Ext.getCmp('lg_CODE_TVA_ID').hide();
-            
-            Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').setValue(this.getOdatasource().lg_WORKFLOW_REMISE_ARTICLE_ID);
-            //
-            //
-            //alert(this.getOdatasource().bool_RESERVE);
-
-
-            // Ext.getCmp('int_PRICE_DETAIL').setValue(this.getOdatasource().int_PRICE_DETAIL);
-            //Ext.getCmp('bool_DECONDITIONNE').setValue(isBoolT_F);
-            // alert('ref '+int_NUMBERDETAIL);
-
-
+           
         }
-
-
 
         var win = new Ext.window.Window({
             autoShow: true,
@@ -431,11 +373,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                 return;
             }
             
-            //controle sur la zone code remise qui sera ajouté
-            if (parseInt(Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').getValue()) === "") {
-              Ext.MessageBox.alert('Impossible', 'ou est la remise');
-                return;
-             } 
+           
             
             var str_DESCRIPTION = Ext.getCmp('str_DESCRIPTION').getValue();
 
@@ -452,7 +390,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                     str_DESCRIPTION: Ext.getCmp('str_DESCRIPTION').getValue(),
                     int_CIP: Ext.getCmp('int_CIP').getValue(),
                     lg_CODE_TVA_ID: Ext.getCmp('lg_CODE_TVA_ID').getValue(),
-                    lg_WORKFLOW_REMISE_ARTICLE_ID: Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').getValue(),
+                    //lg_WORKFLOW_REMISE_ARTICLE_ID: Ext.getCmp('lg_WORKFLOW_REMISE_ARTICLE_ID').getValue(),
                     int_T: Ext.getCmp('int_T').getValue(),
                     int_EAN13: Ext.getCmp('EAN').getValue()
                 },
