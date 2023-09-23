@@ -886,23 +886,23 @@ public class BalanceServiceImpl implements BalanceService {
 
                 case DateConverter.LABOREXCI:
 
-                    o.setMontantAchatOne(montant - avoir2);
+                    o.setMontantAchatOne(montant );
 
                     break;
                 case DateConverter.DPCI:
-                    o.setMontantAchatTwo(montant - avoir2);
+                    o.setMontantAchatTwo(montant);
 
                     break;
                 case DateConverter.COPHARMED:
-                    o.setMontantAchatThree(montant - avoir2);
+                    o.setMontantAchatThree(montant );
 
                     break;
                 case DateConverter.TEDIS:
-                    o.setMontantAchatFour(montant - avoir2);
+                    o.setMontantAchatFour(montant );
 
                     break;
                 case DateConverter.AUTRES:
-                    o.setMontantAchatFive(montant - avoir2);
+                    o.setMontantAchatFive(montant );
                     break;
                 default:
                     break;
