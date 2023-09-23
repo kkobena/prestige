@@ -1083,62 +1083,62 @@ public class SalesServiceImpl implements SalesService {
                 return json.put("success", false).put("msg", "Impossible de forcer le stock « voir le gestionnaire »");
             }
             TFamille tf = emg.find(TFamille.class, salesParams.getProduitId());
-            TTypeVente OTTypeVente = typeVenteFromId(salesParams.getTypeVenteId(), emg);
+            TTypeVente oTTypeVente = typeVenteFromId(salesParams.getTypeVenteId(), emg);
             TNatureVente oTNatureVente = natureVenteFromId(salesParams.getNatureVenteId(), emg);
-            TRemise OTRemise = remiseFromId(salesParams.getRemiseId(), emg);
+            TRemise oTRemise = remiseFromId(salesParams.getRemiseId(), emg);
             TUser vendeur = userFromId(salesParams.getUserVendeurId(), emg);
-            TPreenregistrement OTPreenregistrement = new TPreenregistrement(UUID.randomUUID().toString());
-            OTPreenregistrement.setLgUSERVENDEURID(vendeur != null ? vendeur : salesParams.getUserId());
-            OTPreenregistrement.setLgUSERCAISSIERID(salesParams.getUserId());
-            OTPreenregistrement.setLgUSERID(salesParams.getUserId());
-            OTPreenregistrement.setIntREMISEPARA(0);
-            OTPreenregistrement.setPkBrand("");
+            TPreenregistrement op = new TPreenregistrement(UUID.randomUUID().toString());
+            op.setLgUSERVENDEURID(vendeur != null ? vendeur : salesParams.getUserId());
+            op.setLgUSERCAISSIERID(salesParams.getUserId());
+            op.setLgUSERID(salesParams.getUserId());
+            op.setIntREMISEPARA(0);
+            op.setPkBrand("");
             Medecin medecin = findMedecin(salesParams.getMedecinId());
-            OTPreenregistrement.setMedecin(medecin);
+            op.setMedecin(medecin);
             if (!salesParams.isDevis()) {
-                OTPreenregistrement.setStrREF(
+                op.setStrREF(
                         buildRefTmp(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID()).getReferenceTemp());
             } else {
                 findClientById(salesParams.getClientId()).ifPresent(my -> {
-                    OTPreenregistrement.setClient(my);
+                    op.setClient(my);
                 });
-                OTPreenregistrement
+                op
                         .setStrREF(buildRefDevis(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID())
                                 .getReferenceTemp());
-                OTPreenregistrement.setStrREFTICKET(DateConverter.getShortId(10));
+                op.setStrREFTICKET(DateConverter.getShortId(10));
             }
-            OTPreenregistrement.setLgREMISEID(OTRemise != null ? OTRemise.getLgREMISEID() : "");
-            OTPreenregistrement.setRemise(OTRemise);
-            OTPreenregistrement.setStrFIRSTNAMECUSTOMER("");
-            OTPreenregistrement.setStrLASTNAMECUSTOMER("");
-            OTPreenregistrement.setStrPHONECUSTOME("");
-            OTPreenregistrement.setStrINFOSCLT("");
-            OTPreenregistrement.setDtCREATED(new Date());
-            OTPreenregistrement.setDtUPDATED(OTPreenregistrement.getDtCREATED());
-            OTPreenregistrement.setLgNATUREVENTEID(oTNatureVente);
-            OTPreenregistrement.setLgTYPEVENTEID(OTTypeVente);
-            OTPreenregistrement.setIntPRICE(0);
-            OTPreenregistrement.setIntACCOUNT(0);
-            OTPreenregistrement.setIntPRICEOTHER(0);
-            OTPreenregistrement.setBISCANCEL(false);
-            OTPreenregistrement.setBWITHOUTBON(false);
-            OTPreenregistrement.setIntCUSTPART(0);
-            OTPreenregistrement.setIntPRICEREMISE(0);
-            OTPreenregistrement.setIntSENDTOSUGGESTION(0);
-            OTPreenregistrement.setMontantTva(0);
-            OTPreenregistrement.setCopy(Boolean.FALSE);
-            OTPreenregistrement.setStrSTATUTVENTE(commonparameter.statut_nondiffere);
-            OTPreenregistrement.setStrSTATUT(salesParams.getStatut());
-            OTPreenregistrement.setStrTYPEVENTE(Parameter.KEY_VENTE_NON_ORDONNANCEE);
-            TPreenregistrementDetail dt = addPreenregistrementItem(OTPreenregistrement, tf, salesParams.getQte(),
+            op.setLgREMISEID(oTRemise != null ? oTRemise.getLgREMISEID() : "");
+            op.setRemise(oTRemise);
+            op.setStrFIRSTNAMECUSTOMER("");
+            op.setStrLASTNAMECUSTOMER("");
+            op.setStrPHONECUSTOME("");
+            op.setStrINFOSCLT("");
+            op.setDtCREATED(new Date());
+            op.setDtUPDATED(op.getDtCREATED());
+            op.setLgNATUREVENTEID(oTNatureVente);
+            op.setLgTYPEVENTEID(oTTypeVente);
+            op.setIntPRICE(0);
+            op.setIntACCOUNT(0);
+            op.setIntPRICEOTHER(0);
+            op.setBISCANCEL(false);
+            op.setBWITHOUTBON(false);
+            op.setIntCUSTPART(0);
+            op.setIntPRICEREMISE(0);
+            op.setIntSENDTOSUGGESTION(0);
+            op.setMontantTva(0);
+            op.setCopy(Boolean.FALSE);
+            op.setStrSTATUTVENTE(commonparameter.statut_nondiffere);
+            op.setStrSTATUT(salesParams.getStatut());
+            op.setStrTYPEVENTE(Parameter.KEY_VENTE_NON_ORDONNANCEE);
+            TPreenregistrementDetail dt = addPreenregistrementItem(op, tf, salesParams.getQte(),
                     salesParams.getQteServie(), salesParams.getQteUg(), salesParams.getItemPu(), emg);
-            OTPreenregistrement.setCmuAmount(computeCmuAmount(dt));
-            emg.persist(OTPreenregistrement);
+            op.setCmuAmount(computeCmuAmount(dt));
+            emg.persist(op);
             emg.persist(dt);
             JSONObject data = new JSONObject();
-            data.put("lgPREENREGISTREMENTID", OTPreenregistrement.getLgPREENREGISTREMENTID());
-            data.put("strREF", OTPreenregistrement.getStrREF());
-            data.put("intPRICE", OTPreenregistrement.getIntPRICE());
+            data.put("lgPREENREGISTREMENTID", op.getLgPREENREGISTREMENTID());
+            data.put("strREF", op.getStrREF());
+            data.put("intPRICE", op.getIntPRICE());
             json.put("success", true).put("msg", "Opération effectuée avec success").put("data", data);
             afficheurProduit(dt.getLgFAMILLEID().getStrNAME(), dt.getIntQUANTITY(), dt.getIntPRICEUNITAIR(),
                     dt.getIntPRICE());
@@ -1186,7 +1186,7 @@ public class SalesServiceImpl implements SalesService {
             int qteServie, int qteUg, Integer pu, EntityManager emg) {
         try {
             TCodeTva tva = OTFamille.getLgCODETVAID();
-            Optional<TParameters> KEY_TAKE_INTO_ACCOUNT = findParamettre("KEY_TAKE_INTO_ACCOUNT");
+            Optional<TParameters> param = findParamettre("KEY_TAKE_INTO_ACCOUNT");
             TPreenregistrementDetail tpd = new TPreenregistrementDetail(UUID.randomUUID().toString());
             tpd.setBoolACCOUNT(true);
             tpd.setCmuPrice(OTFamille.cmuPrice().get());
@@ -1214,8 +1214,8 @@ public class SalesServiceImpl implements SalesService {
             tp.setMontantTva(tpd.getMontantTva() + tp.getMontantTva());
             tp.setIntPRICEOTHER(tp.getIntPRICEOTHER() + tpd.getIntPRICE());
 
-            if (KEY_TAKE_INTO_ACCOUNT.isPresent()) {
-                if (Integer.parseInt(KEY_TAKE_INTO_ACCOUNT.get().getStrVALUE().trim()) == 1) {
+            if (param.isPresent()) {
+                if (Integer.parseInt(param.get().getStrVALUE().trim()) == 1) {
                     if (OTFamille.getLgZONEGEOID().getBoolACCOUNT() && OTFamille.getBoolACCOUNT()) {
                         tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
                     } else {
