@@ -1102,9 +1102,8 @@ public class SalesServiceImpl implements SalesService {
                 findClientById(salesParams.getClientId()).ifPresent(my -> {
                     op.setClient(my);
                 });
-                op
-                        .setStrREF(buildRefDevis(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID())
-                                .getReferenceTemp());
+                op.setStrREF(buildRefDevis(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID())
+                        .getReferenceTemp());
                 op.setStrREFTICKET(DateConverter.getShortId(10));
             }
             op.setLgREMISEID(oTRemise != null ? oTRemise.getLgREMISEID() : "");

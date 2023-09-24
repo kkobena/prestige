@@ -37,7 +37,7 @@ public class grossisteManagement extends bllBase {
 
     private Groupefournisseur findDefault(String groupeId) {
         try {
-            if (!StringUtils.isEmpty(groupeId)) {
+            if (StringUtils.isNotEmpty(groupeId)) {
                 return this.getOdataManager().getEm().find(Groupefournisseur.class, Integer.valueOf(groupeId));
             }
             return this.getOdataManager().getEm().find(Groupefournisseur.class, 5);
