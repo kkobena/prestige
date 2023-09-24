@@ -34,6 +34,7 @@ import javax.persistence.Query;
 import javax.persistence.Tuple;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -97,8 +98,7 @@ public class BalanceServiceImpl implements BalanceService {
             + " SUM(CASE WHEN d.`bool_ACCOUNT` THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatil,"
             + " SUM(CASE WHEN d.`bool_ACCOUNT` IS FALSE THEN d.`int_PRICE` ELSE 0 END) AS montantTTCDetatilToRemove,"
             + " SUM(d.`int_PRICE_REMISE`) AS montantRemiseDetail FROM t_preenregistrement_detail d WHERE   d.`bool_ACCOUNT` GROUP BY d.`lg_PREENREGISTREMENT_ID`  ) AS sqlQ  WHERE  sqlQ.idVente=p.`lg_PREENREGISTREMENT_ID` AND m.pkey=p.lg_PREENREGISTREMENT_ID AND  DATE(p.`dt_UPDATED`) BETWEEN  ?3 AND ?4 AND p.`str_STATUT`='is_Closed'  AND p.imported=0 AND p.`lg_TYPE_VENTE_ID` <> ?1 AND m.`lg_EMPLACEMENT_ID` =?2  {excludeStatement}  GROUP BY mvtDate";
-    private static final String TABLEAU_BOARD_SQL_ACHATS = "SELECT m.mvtdate AS mvtDate ,SUM(m.montant) AS montant,gf.libelle FROM  mvttransaction m,t_grossiste g,groupefournisseur gf WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` =2 "
-            + " AND m.`lg_EMPLACEMENT_ID` =?3 AND m.`grossisteId`=g.`lg_GROSSISTE_ID` AND g.`groupeId`=gf.id GROUP BY gf.id,mvtdate ORDER BY mvtDate";
+    private static final String TABLEAU_BOARD_SQL_ACHATS = "SELECT m.mvtdate AS mvtDate ,SUM(m.montant) AS montant,gf.libelle FROM mvttransaction m JOIN t_grossiste g ON m.grossisteId=g.`lg_GROSSISTE_ID` LEFT JOIN groupefournisseur gf ON g.`groupeId`=gf.id WHERE DATE(m.mvtdate) BETWEEN ?1 AND ?2 AND m.`typeTransaction` =2 AND m.`lg_EMPLACEMENT_ID` =?3  GROUP BY m.`grossisteId`,mvtdate ORDER BY mvtDate";
 
     private static final String FLAGED_AMOUNT = "SELECT COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL AND p.imported=0 ";
     private static final String FLAGED_AMOUNT_GROUP_BY_DAY = "SELECT m.mvtdate AS mvtdate,COALESCE(SUM(m.`montantAcc`),0) AS montantAcc  FROM  mvttransaction m,t_preenregistrement p where p.`lg_PREENREGISTREMENT_ID`=m.pkey AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2  AND m.flag_id IS NOT NULL  AND p.imported=0 GROUP BY mvtdate";
@@ -804,15 +804,16 @@ public class BalanceServiceImpl implements BalanceService {
 
     }
 
-    private long avoirFournisseur(LocalDate dtStart, LocalDate dtEnd) {
+    private List<Tuple> avoirFournisseur(LocalDate dtStart, LocalDate dtEnd) {
         try {
             Query q = em.createNativeQuery(
-                    "SELECT COALESCE(SUM(o.dl_AMOUNT),0) FROM  t_retour_fournisseur o where DATE(o.dt_UPDATED)  BETWEEN ?1 AND ?2 AND o.str_REPONSE_FRS <>'' AND o.str_STATUT='enable'")
-                    .setParameter(1, java.sql.Date.valueOf(dtStart)).setParameter(2, java.sql.Date.valueOf(dtEnd));
-            return ((Number) q.getSingleResult()).longValue();
+                    "SELECT SUM(o.dl_AMOUNT) as montant,gr.libelle FROM  t_retour_fournisseur o JOIN t_grossiste g ON o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` left JOIN groupefournisseur gr ON g.`groupeId`=gr.id WHERE DATE(o.dt_UPDATED)  BETWEEN ?1 AND ?2  AND o.str_REPONSE_FRS <>'' AND o.str_STATUT='enable' GROUP BY g.`groupeId` HAVING montant >0 ",
+                    Tuple.class).setParameter(1, java.sql.Date.valueOf(dtStart))
+                    .setParameter(2, java.sql.Date.valueOf(dtEnd));
+            return (List<Tuple>) q.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-            return 0;
+            return new ArrayList<>();
         }
 
     }
@@ -848,6 +849,20 @@ public class BalanceServiceImpl implements BalanceService {
         }
     }
 
+    private Map<String, Long> buildAvoir(List<Tuple> tuple) {
+        Map<String, Long> avoisMap = new HashMap<>();
+
+        if (CollectionUtils.isNotEmpty(tuple)) {
+
+            for (Tuple t : tuple) {
+                long montant = t.get("montant", Double.class).longValue();
+                String libelle = t.get("libelle", String.class);
+                avoisMap.put(StringUtils.isNotEmpty(libelle) ? libelle : DateConverter.AUTRES, montant);
+            }
+        }
+        return avoisMap;
+    }
+
     private List<TableauBaordPhDTO> buildBonAchats(List<Tuple> tuple) {
         List<TableauBaordPhDTO> list = new ArrayList<>();
 
@@ -858,11 +873,19 @@ public class BalanceServiceImpl implements BalanceService {
                 o.setVente(false);
                 o.setMvtDate(mvtDate.toLocalDate());
                 int montant = t.get("montant", BigDecimal.class).intValue();
-                o.setMontantAchat(montant);
-                switch (t.get("libelle", String.class)) {
+
+                String libelleGroupeGrossiste = Objects.nonNull(t.get("libelle", String.class))
+                        ? t.get("libelle", String.class) : DateConverter.AUTRES;
+                Map<String, Long> avoisMap = buildAvoir(avoirFournisseur(o.getMvtDate(), o.getMvtDate()));
+                Long avoir = avoisMap.get(libelleGroupeGrossiste);
+                int avoir2 = Objects.isNull(avoir) ? 0 : avoir.intValue();
+                o.setMontantAvoir(avoir2);
+                o.setMontantAchat(montant - avoir2);
+                switch (libelleGroupeGrossiste) {
 
                 case DateConverter.LABOREXCI:
-                    o.setMontantAchatOne(montant);
+
+                    o.setMontantAchatOne(montant );
 
                     break;
                 case DateConverter.DPCI:
@@ -870,15 +893,15 @@ public class BalanceServiceImpl implements BalanceService {
 
                     break;
                 case DateConverter.COPHARMED:
-                    o.setMontantAchatThree(montant);
+                    o.setMontantAchatThree(montant );
 
                     break;
                 case DateConverter.TEDIS:
-                    o.setMontantAchatFour(montant);
+                    o.setMontantAchatFour(montant );
 
                     break;
                 case DateConverter.AUTRES:
-                    o.setMontantAchatFive(montant);
+                    o.setMontantAchatFive(montant );
                     break;
                 default:
                     break;
@@ -930,17 +953,17 @@ public class BalanceServiceImpl implements BalanceService {
 
         for (Map.Entry<? extends TemporalAccessor, List<TableauBaordPhDTO>> entry : data.entrySet()) {
             TableauBaordPhDTO baordPh = new TableauBaordPhDTO();
-            int avoir;
+
             if (entry.getKey() instanceof LocalDate) {
                 LocalDate perode = (LocalDate) entry.getKey();
                 baordPh.setMvtDate(perode);
-                avoir = (int) avoirFournisseur(perode, perode);
+
             } else {
                 YearMonth perode = (YearMonth) entry.getKey();
                 baordPh.setMvtDate(perode.atEndOfMonth());
                 baordPh.setMvtDateInt(Integer.valueOf(perode.format(formatter)));
                 baordPh.setDateOperation(baordPh.getMvtDate().format(formatter2));
-                avoir = (int) avoirFournisseur(baordPh.getMvtDate().withDayOfMonth(1), baordPh.getMvtDate());
+
             }
             List<TableauBaordPhDTO> value = entry.getValue();
             for (TableauBaordPhDTO o : value) {
@@ -956,9 +979,10 @@ public class BalanceServiceImpl implements BalanceService {
                 baordPh.setMontantAchatFour(baordPh.getMontantAchatFour() + o.getMontantAchatFour());
                 baordPh.setMontantAchatFive(baordPh.getMontantAchatFive() + o.getMontantAchatFive());
                 baordPh.setMontantAchat(baordPh.getMontantAchat() + o.getMontantAchat());
+                baordPh.setMontantAvoir(baordPh.getMontantAvoir() + o.getMontantAvoir());
             }
             Integer montantNet2 = baordPh.getMontantNet();
-            Integer montantAchat2 = baordPh.getMontantAchat() - avoir;
+            Integer montantAchat2 = baordPh.getMontantAchat();
             if (montantAchat2.compareTo(0) > 0) {
                 baordPh.setRatioVA(BigDecimal.valueOf(Double.valueOf(montantNet2) / montantAchat2)
                         .setScale(2, RoundingMode.FLOOR).doubleValue());
@@ -967,7 +991,7 @@ public class BalanceServiceImpl implements BalanceService {
                 baordPh.setRationAV(BigDecimal.valueOf(Double.valueOf(montantAchat2) / montantNet2)
                         .setScale(2, RoundingMode.FLOOR).doubleValue());
             }
-            baordPh.setMontantAvoir(avoir);
+
             tableauBaords.add(baordPh);
         }
         tableauBaords.sort(comparator);
