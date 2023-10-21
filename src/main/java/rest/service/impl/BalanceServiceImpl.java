@@ -611,7 +611,10 @@ public class BalanceServiceImpl implements BalanceService {
 
             ratioVA = BigDecimal.valueOf(Double.valueOf(montantTTC) / montantAchat).setScale(2, RoundingMode.HALF_UP)
                     .doubleValue();
-            rationAV = BigDecimal.valueOf(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP)
+           
+        }
+        if(montantTTC>0){
+             rationAV = BigDecimal.valueOf(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP)
                     .doubleValue();
         }
         if (nbreVente > 0) {
