@@ -17,7 +17,10 @@ Ext.define('testextjs.view.sm_user.journalvente.FactureSubrogatoireBisManager', 
     width: '97%',
     height: 'auto',
     minHeight: 570,
-
+    /* integrer le menu a utiliser ici  */
+requires: [
+        'testextjs.view.vente.user.UpdateVenteClientTpForm'
+    ],
     layout: {
         type: 'fit'
     },
@@ -262,7 +265,12 @@ Ext.define('testextjs.view.sm_user.journalvente.FactureSubrogatoireBisManager', 
                             flex: 0.7
                         },
                         {
-                            header: 'No BON',
+                            header: 'Ticket',
+                            dataIndex: 'strREF',
+                            flex: 0.7
+                        },
+                        {
+                            header: 'Numero BON',
                             dataIndex: 'strREFBON',
                             flex: 1,
                             summaryType: "count",
@@ -314,9 +322,26 @@ Ext.define('testextjs.view.sm_user.journalvente.FactureSubrogatoireBisManager', 
                                     }
 
                                 }]
+                        },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/editer.png',
+                                    tooltip: 'Modifier info client',
+                                    menuDisabled: true,
+                                    handler: this.onDetailClick
+
+                                }]
                         }
 
+
+
                     ],
+       
+                    
                     selModel: {
                         selType: 'cellmodel'
                     },
@@ -337,8 +362,13 @@ Ext.define('testextjs.view.sm_user.journalvente.FactureSubrogatoireBisManager', 
 
         me.callParent(arguments);
 
+    },
+
+/* fonction appel ecran modification */
+ onDetailClick: function (grid, rowIndex) {
+        const rec = grid.getStore().getAt(rowIndex);
+        Ext.create('testextjs.view.vente.user.UpdateVenteClientTpForm', {venteId: rec.get('lg_PREENREGISTREMENT_ID')}).show();
+        
     }
-
-
 
 });
