@@ -6,117 +6,120 @@
 package dal;
 
 import java.io.Serializable;
-import java.util.Objects;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 /**
  *
  *
  */
 @Entity
-@Table(name = "rupture_detail")
-public class RuptureDetail implements Serializable {
+@Table(name = "vente_reglement", indexes = { @Index(name = "indexflag_idVenteReglement", columnList = "flag_id")
+
+})
+public class VenteReglement implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
-    @Column(name = "id", nullable = false, length = 40)
+    @Column(name = "id", nullable = false, length = 50)
     private String id = UUID.randomUUID().toString();
-    @Column(name = "qty")
-    private Integer qty = 0;
-    @JoinColumn(name = "produitId", referencedColumnName = "lg_FAMILLE_ID")
-    @ManyToOne
-    private TFamille produit;
-    @JoinColumn(name = "ruptureId", referencedColumnName = "id")
-    @ManyToOne
-    private Rupture rupture;
-    @Column(name = "prixAchat")
-    private Integer prixAchat = 0;
-    @Column(name = "prixVente")
-    private Integer prixVente = 0;
+    @NotNull
+    @Column(name = "montant", nullable = false)
+    private Integer montant = 0;
+    @NotNull
+    @Column(name = "montant_attentu", nullable = false)
+    private Integer montantAttentu = 0;
+    @NotNull
+    @Column(name = "flaged_amount", nullable = false)
+    private Integer flagedAmount = 0;
 
-    public RuptureDetail() {
-    }
+    @NotNull
+    @JoinColumn(name = "type_regelement", referencedColumnName = "lg_TYPE_REGLEMENT_ID")
+    @ManyToOne
+    private TTypeReglement typeReglement;
+    @NotNull
+    @JoinColumn(name = "vente_id", referencedColumnName = "lg_PREENREGISTREMENT_ID")
+    @ManyToOne
+    private TPreenregistrement preenregistrement;
+    @NotNull
+    @Column(name = "mvtDate")
+    private LocalDateTime mvtDate = LocalDateTime.now();
+
+    @Column(name = "flag_id")
+    private String flagId;
 
     public String getId() {
         return id;
+    }
+
+    public Integer getFlagedAmount() {
+        return flagedAmount;
+    }
+
+    public void setFlagedAmount(Integer flagedAmount) {
+        this.flagedAmount = flagedAmount;
+    }
+
+    public Integer getMontantAttentu() {
+        return montantAttentu;
+    }
+
+    public void setMontantAttentu(Integer montantAttentu) {
+        this.montantAttentu = montantAttentu;
     }
 
     public void setId(String id) {
         this.id = id;
     }
 
-    public Integer getQty() {
-        return qty;
+    public Integer getMontant() {
+        return montant;
     }
 
-    public void setQty(Integer qty) {
-        this.qty = qty;
+    public void setMontant(Integer montant) {
+        this.montant = montant;
     }
 
-    public TFamille getProduit() {
-        return produit;
+    public TTypeReglement getTypeReglement() {
+        return typeReglement;
     }
 
-    public void setProduit(TFamille produit) {
-        this.produit = produit;
+    public void setTypeReglement(TTypeReglement typeReglement) {
+        this.typeReglement = typeReglement;
     }
 
-    @Override
-    public String toString() {
-        return "RuptureDetail{" + "id=" + id + ", qty=" + qty + ", produit=" + produit + ", rupture=" + rupture + '}';
+    public TPreenregistrement getPreenregistrement() {
+        return preenregistrement;
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 13 * hash + Objects.hashCode(this.id);
-        return hash;
+    public void setPreenregistrement(TPreenregistrement preenregistrement) {
+        this.preenregistrement = preenregistrement;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final RuptureDetail other = (RuptureDetail) obj;
-        return Objects.equals(this.id, other.id);
+    public LocalDateTime getMvtDate() {
+        return mvtDate;
     }
 
-    public Rupture getRupture() {
-        return rupture;
+    public void setMvtDate(LocalDateTime mvtDate) {
+        this.mvtDate = mvtDate;
     }
 
-    public void setRupture(Rupture rupture) {
-        this.rupture = rupture;
+    public String getFlagId() {
+        return flagId;
     }
 
-    public Integer getPrixAchat() {
-        return prixAchat;
-    }
-
-    public void setPrixAchat(Integer prixAchat) {
-        this.prixAchat = prixAchat;
-    }
-
-    public Integer getPrixVente() {
-        return prixVente;
-    }
-
-    public void setPrixVente(Integer prixVente) {
-        this.prixVente = prixVente;
+    public void setFlagId(String flagId) {
+        this.flagId = flagId;
     }
 
 }

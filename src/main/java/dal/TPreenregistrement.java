@@ -6,8 +6,10 @@
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -195,6 +197,9 @@ public class TPreenregistrement implements Serializable {
     private Date completionDate = new Date();
     @Column(name = "cmu_amount")
     private Integer cmuAmount = 0;
+
+    @OneToMany(mappedBy = "preenregistrement")
+    private List<VenteReglement> venteReglements = new ArrayList<>();
 
     public boolean isImported() {
         return imported;
@@ -681,6 +686,14 @@ public class TPreenregistrement implements Serializable {
 
     public void setMontantTvaUg(Integer montantTvaUg) {
         this.montantTvaUg = montantTvaUg;
+    }
+
+    public List<VenteReglement> getVenteReglements() {
+        return venteReglements;
+    }
+
+    public void setVenteReglements(List<VenteReglement> venteReglements) {
+        this.venteReglements = venteReglements;
     }
 
 }

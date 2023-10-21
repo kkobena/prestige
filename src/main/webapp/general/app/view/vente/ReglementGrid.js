@@ -1,42 +1,47 @@
 /* global Ext */
 
-Ext.define('testextjs.view.vente.user.ClientGrid', {
+Ext.define('testextjs.view.vente.ReglementGrid', {
     extend: 'Ext.window.Window',
-    xtype: 'assuranceClient',
+    xtype: 'reglementGrid',
     autoShow: false,
-    height: 400,
-    width: '60%',
+    height: 350,
+    width: '35%',
     modal: true,
-    title: 'CLIENT(S) CORRESPONDANT(S) A LA RECHERCHE',
+    title: 'AJOUTEZ UN AUTRE MODE DE REGLEMENT',
     iconCls: 'icon-grid',
     closeAction: 'hide',
     closable: false,
     layout: {
         type: 'fit'
     },
-    config: {
-        data: null
-    },
-    initComponent: function () {
 
-        var me = this;
-        var clientStore=me.getData();
+    initComponent: function () {
+        const me = this;
+
+        const reglementStore = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
+            fields: [
+                {name: 'id', type: 'string'},
+                {name: 'libelle', type: 'string'}
+            ],
+            autoLoad: true,
+            pageSize: 100,
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/type-reglements/list/sans-espece',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+        });
+
+
         Ext.applyIf(me, {
             dockedItems: [
-                {
-                    xtype: 'toolbar',
-                    dock: 'top',
-                    items: [
-                        {
-                            text: 'Nouveau client',
-                            hidden:true,
-                            scope: this,
-                            itemId: 'addBtnClientAssurance',
-                            iconCls: 'addicon'
 
-                        }
-                    ]
-                },
                 {
                     xtype: 'toolbar',
                     dock: 'bottom',
@@ -49,9 +54,8 @@ Ext.define('testextjs.view.vente.user.ClientGrid', {
 
                         {
                             xtype: 'button',
-                            itemId: 'btnCancelClient',
+                            itemId: 'btnCancelModeReglement',
                             text: 'Annuler'
-
                         }
                     ]
                 }
@@ -60,63 +64,38 @@ Ext.define('testextjs.view.vente.user.ClientGrid', {
             items: [
                 {
                     xtype: 'gridpanel',
-                    store: clientStore,
+                    store: reglementStore,
                     viewConfig: {
                         forceFit: true,
                         columnLines: true
 
                     },
                     columns: [
+
                         {
+                            xtype: 'rownumberer',
+                            text: 'LG',
+                            width: 50,
+                              align: 'left', 
+                            sortable: true
+                        }, {
                             text: '#',
-                            width: 45,
-                            dataIndex: 'lgCLIENTID',
+                            width: 60,
+                            align: 'left',
+                            dataIndex: 'id',
                             hidden: true
 
                         },
                         {
-                            xtype: 'rownumberer',
-                            text: 'LG',
-                            width: 25,
-                            sortable: true
-                        },
-                        {
-                            text: 'Num SS',
-                            flex: 0.8,
-                            sortable: true,
-                            dataIndex: 'strNUMEROSECURITESOCIAL'
-                        },
-
-                        {
-                            text: 'Nom',
-                            flex: 0.9,
-                            sortable: true,
-                            dataIndex: 'strFIRSTNAME'
-                        },
-
-                        {
-                            header: 'Prénom(s)',
-                            dataIndex: 'strLASTNAME',
-                            flex: 1.5
-
-                        },
-                        {
-                            header: 'Téléphone',
-                            dataIndex: 'strADRESSE',
-                            flex:0.8
-
-                        },
-                        {
-                            header: 'RO',
+                            text: 'Mode reglement',
                             flex: 1,
-                            renderer: function (value, meta, record, colIndex, rowIndex, store, view) {
-                                return record.get('tiersPayants')[0].tpFullName;
-                            }
-
+                            dataIndex: 'libelle'
                         },
+
                         {
                             xtype: 'actioncolumn',
-                            width: 30,
+                            width: 60,
+                            align: 'center',
                             sortable: false,
                             menuDisabled: true,
                             items: [
@@ -130,34 +109,7 @@ Ext.define('testextjs.view.vente.user.ClientGrid', {
                     selModel: {
                         selType: 'rowmodel',
                         mode: 'SINGLE'
-                    },
-
-
-                    dockedItems: [
-                        {
-                            xtype: 'toolbar',
-                            dock: 'top',
-                            items: [
-                                {
-                                    xtype: 'textfield',
-                                    itemId: 'queryClientAssurance',
-                                    flex: 1,
-                                    height: 35,
-                                    enableKeyEvents: true,
-                                    emptyText: 'Taper ici pour rechercher un client'
-                                }/*, '-',
-                                 
-                                 {
-                                 text: 'rechercher',
-                                 tooltip: 'rechercher',
-                                 itemId: 'btnSearchClientAss',
-                                 scope: this,
-                                 iconCls: 'searchicon'
-                                 }*/
-                            ]
-                        }
-
-                    ]
+                    }
 
                 }]
 
