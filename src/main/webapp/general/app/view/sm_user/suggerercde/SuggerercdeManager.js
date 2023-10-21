@@ -1064,11 +1064,12 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     },
     onDetailClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
-        new testextjs.view.configmanagement.famille.action.detailArticleOther({
-            odatasource: rec.get('lg_FAMILLE_ID'),
+        new testextjs.view.configmanagement.famille.action.detailArticle({
+            odatasource: rec.data,
+            produitId: rec.get('lg_FAMILLE_ID'),
             parentview: this,
             mode: "detail",
-            titre: "Detail sur l'article [" + rec.get('str_FAMILLE_NAME') + "]"
+            titre: "Detail sur l'article [" + rec.get('str_DESCRIPTION') + "]"
         });
     },
 
