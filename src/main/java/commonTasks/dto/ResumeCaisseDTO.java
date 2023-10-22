@@ -179,7 +179,7 @@ public class ResumeCaisseDTO implements Serializable {
         this.cancel = cancel;
         this.soldeTotal = caisse.getIntSOLDESOIR();
         this.statut = caisse.getStrSTATUT();
-        if (caisse.getStrSTATUT().equals(DateConverter.STATUT_IS_IN_USE)) {
+        if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_USING)) {
             this.intSOLDESOIR = caisse.getIntSOLDESOIR();
             this.strSTATUT = "En cours d'utilisation ";
         } else {

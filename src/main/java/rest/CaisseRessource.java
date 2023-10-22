@@ -35,6 +35,7 @@ import rest.service.BalanceService;
 import rest.service.CaisseService;
 import rest.service.GenerateTicketService;
 import rest.service.dto.BalanceParamsDTO;
+import rest.service.dto.MvtCaisseSummaryDTO;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 import util.Constant;
@@ -257,8 +258,8 @@ public class CaisseRessource {
     @GET
     @Path("mvtcaisses")
     public Response mvtcaisses(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "user") String lg_USER_ID, @QueryParam(value = "dtStart") String dt_Date_Debut,
-            @QueryParam(value = "dtEnd") String dt_Date_Fin) {
+            @QueryParam(value = "user") String lgUSERID, @QueryParam(value = "dtStart") String dt_debut,
+            @QueryParam(value = "dtEnd") String dtFin) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -268,14 +269,14 @@ public class CaisseRessource {
         caisseParams.setLimit(limit);
         caisseParams.setStart(start);
 
-        if (!StringUtils.isEmpty(dt_Date_Fin)) {
-            caisseParams.setEnd(LocalDate.parse(dt_Date_Fin));
+        if (!StringUtils.isEmpty(dtFin)) {
+            caisseParams.setEnd(LocalDate.parse(dtFin));
         }
-        if (!StringUtils.isEmpty(dt_Date_Debut)) {
-            caisseParams.setStartDate(LocalDate.parse(dt_Date_Debut));
+        if (!StringUtils.isEmpty(dt_debut)) {
+            caisseParams.setStartDate(LocalDate.parse(dt_debut));
         }
-        if (!StringUtils.isEmpty(lg_USER_ID)) {
-            caisseParams.setUtilisateurId(lg_USER_ID);
+        if (!StringUtils.isEmpty(lgUSERID)) {
+            caisseParams.setUtilisateurId(lgUSERID);
         }
 
         caisseParams.setEmplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
@@ -333,4 +334,25 @@ public class CaisseRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    @GET
+    @Path("mvts-others")
+    public Response fetchMvtcaisses(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "user") String lgUSERID, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "userId") String userId, @QueryParam(value = "checked") boolean checked,
+            @QueryParam(value = "dtEnd") String dtEnd) {
+        JSONObject json = caisseService.getAllMvtCaisses(dtStart, dtEnd, checked, userId, limit, start);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("mvts-others-summary")
+    public Response fetchMvtcaisseSummary(@QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "user") String lgUSERID,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "userId") String userId,
+            @QueryParam(value = "checked") boolean checked, @QueryParam(value = "dtEnd") String dtEnd) {
+        JSONObject json = new JSONObject();
+        MvtCaisseSummaryDTO caisseSummary = caisseService.getAllMvtCaissesSummary(dtStart, dtEnd, userId, checked);
+        json.put("data", new JSONObject(caisseSummary));
+        return Response.ok().entity(json.toString()).build();
+    }
 }

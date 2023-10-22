@@ -113,7 +113,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
      * methode qui permet de rediriger l'impression du tiket selon que ça soit une ancienne version
      */
     checkIfODVersion: function () {
-        var me = this;
+        const me = this;
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/common/datemisajour',
@@ -128,14 +128,14 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
     },
     onEdite: function (view, rowIndex, colIndex, item, e, rec, row) {
         if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modification')) {
-            var data = {'isEdit': true, 'record': rec.data, 'isDevis': false, 'categorie': 'COPY'};
-            var xtype = "doventemanager";
+            const data = {'isEdit': true, 'record': rec.data, 'isDevis': false, 'categorie': 'COPY'};
+            const xtype = "doventemanager";
             testextjs.app.getController('App').onRedirectTo(xtype, data);
         }
 
     },
     testSuppression: function (view, rowIndex, colIndex, item, e, record, row) {
-        var me = this;
+        const me = this;
         if (record.get('intPRICE') > 0) {
             if (record.get('beCancel') && !record.get('cancel')) {
                 me.onRemoveClick(record);

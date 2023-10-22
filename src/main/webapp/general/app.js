@@ -43,12 +43,10 @@ Ext.application({
         'testextjs.view.sm_user.skin.action.add',
         'testextjs.view.sm_user.language.action.add',
         'testextjs.view.sm_user.language.LanguageManager',
-       
         'testextjs.view.sm_user.role.action.addPrivilege',
         'testextjs.view.sm_user.role.action.addPrivilegeItem',
         'testextjs.model.Notification',
         'testextjs.view.sm_user.notification.NotificationManager',
-
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.UserPhone',
         'testextjs.view.sm_user.user_phone.action.add',
@@ -81,7 +79,6 @@ Ext.application({
         'testextjs.view.sm_user.skin.action.add',
         'testextjs.view.sm_user.language.action.add',
         'testextjs.view.sm_user.language.LanguageManager',
-       
         'testextjs.view.sm_user.role.action.addPrivilege',
         'testextjs.view.sm_user.role.action.addPrivilegeItem',
         'testextjs.model.Notification',
@@ -91,10 +88,6 @@ Ext.application({
         'testextjs.view.sm_user.detailsvente.DetailsVenteManager',
         'testextjs.model.DetailsVente',
         'testextjs.view.sm_user.detailsvente.action.add',
-//
-//
-//
-//        //groupefamille
         'testextjs.model.GroupeFamille',
         'testextjs.view.configmanagement.groupefamille.GroupeFamilleManager',
         'testextjs.view.configmanagement.groupefamille.action.add',
@@ -132,9 +125,6 @@ Ext.application({
         'testextjs.view.sm_user.about.AboutManager',
         'testextjs.model.Preenregistrement',
         'testextjs.view.sm_user.dovente.action.displayAyantDroit',
-
-//
-//        //famille
         'testextjs.model.Famille',
         'testextjs.view.configmanagement.famille.FamilleManager',
 
@@ -241,11 +231,6 @@ Ext.application({
         'testextjs.view.sm_user.caisse.CaisseManager',
         // 'testextjs.model.Caisse',
         'testextjs.model.ResumeCaisse',
-
-        //  'testextjs.model.ResumeCaisse'
-
-
-        // Gerer Famille Order
         'testextjs.model.Familleorder',
         'testextjs.view.sm_user.familleorder.FamilleOrderManager',
         'testextjs.view.sm_user.familleorder.action.add',
@@ -327,11 +312,6 @@ Ext.application({
         'testextjs.view.configmanagement.client.action.addcltayantdroit',
         'testextjs.view.configmanagement.client.action.showclttierspayant',
         'testextjs.view.configmanagement.compteclient.action.addclttierspayant',
-//        'testextjs.view.configmanagement.client.action.addComptecltTierpayant',
-//        'testextjs.view.configmanagement.client.action.addComptecltTierpayantItem',
-        // Grille Remise
-
-        //retrocession
         'testextjs.view.sm_user.retrocession.retrocessionManager',
         'testextjs.model.Retrocession',
 
@@ -387,9 +367,6 @@ Ext.application({
         'testextjs.view.configmanagement.client.action.addcltayantdroit',
         'testextjs.view.configmanagement.client.action.showclttierspayant',
         'testextjs.view.configmanagement.compteclient.action.addclttierspayant',
-//        'testextjs.view.configmanagement.client.action.addComptecltTierpayant',
-//        'testextjs.view.configmanagement.client.action.addComptecltTierpayantItem',
-        // Grille Remise
 
         'testextjs.model.GrilleRemise',
         'testextjs.view.configmanagement.grilleremise.GrilleRemiseManager',
@@ -705,8 +682,6 @@ Ext.application({
         'testextjs.view.stockmanagement.etatstock.action.removeLot',
         'testextjs.view.sm_user.outboudmessage.action.add',
         'testextjs.view.configmanagement.zonegeographique.action.changeProduitEmplacement',
-
-        'testextjs.view.sm_user.mvtcaisse.MvtCaisseBisManager',
         'testextjs.view.sm_user.mvtcaisse.action.addBis',
         'testextjs.view.sm_user.vente.VendeurCaissierManager',
         'testextjs.view.commandemanagement.evaluation.Evaluationoffreprix',
@@ -768,7 +743,8 @@ Ext.application({
         'testextjs.view.depot.Import',
         'testextjs.view.depot.Export',
         'testextjs.view.achat',
-         'testextjs.view.chiffreAnnuel'
+         'testextjs.view.chiffreAnnuel',
+         'testextjs.view.sm_user.mvtcaisse.action.Detail'
     ],
     controllers: [
         'App',

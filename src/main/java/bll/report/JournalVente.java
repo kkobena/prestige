@@ -1799,9 +1799,6 @@ public class JournalVente extends bll.bllBase {
         String lg_EMPLACEMENT_ID = "";
         privilege Oprivilege = new privilege(this.getOdataManager(), this.getOTUser());
         try {
-            jconnexion Ojconnexion = new jconnexion();
-            Ojconnexion.initConnexion();
-            Ojconnexion.OpenConnexion();
 
             if (Oprivilege.isColonneStockMachineIsAuthorize(Parameter.P_SHOW_ALL_ACTIVITY)) {
                 lg_EMPLACEMENT_ID = "%%";
@@ -1822,6 +1819,9 @@ public class JournalVente extends bll.bllBase {
                     + " GROUP BY str_RESSOURCE_REF ORDER BY t.dt_CREATED ASC LIMIT " + start + "," + limit;
 
             new logger().OCategory.info(qry);
+            jconnexion Ojconnexion = new jconnexion();
+            Ojconnexion.initConnexion();
+            Ojconnexion.OpenConnexion();
             Ojconnexion.set_Request(qry);
             ResultSetMetaData rsmddatas = Ojconnexion.get_resultat().getMetaData();
             while (Ojconnexion.get_resultat().next()) {

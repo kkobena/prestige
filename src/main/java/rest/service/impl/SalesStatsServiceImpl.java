@@ -889,7 +889,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasRapport(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport0(params);
         }
         List<TvaDTO> datas = new ArrayList<>();
@@ -1101,7 +1101,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvaRapport(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport0(params);
         }
 
@@ -1662,7 +1662,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     // @Override
     public List<TvaDTO> tvasRapportcc(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport0(params);
         }
         List<TvaDTO> datas = new ArrayList<>();
@@ -1706,7 +1706,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasDataReport(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport0(params);
         }
         return donneesTvaV2(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true,
@@ -1832,7 +1832,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasRapport2(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport20(params);
         }
 
@@ -1941,7 +1941,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvaRapport2(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport20(params);
         }
         List<TvaDTO> datas;

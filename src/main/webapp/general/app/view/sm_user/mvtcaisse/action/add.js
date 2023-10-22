@@ -355,7 +355,6 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
             Ext.getCmp('str_NUM_COMPTE').setValue(this.getOdatasource().str_NUM_COMPTE);
             Ext.getCmp('int_MONTANT_Add_MvtCaisse').disable();
             Ext.getCmp('int_MONTANT_Add_MvtCaisse').setValue(this.getOdatasource().int_AMOUNT);
-//   Ext.getCmp('str_NUM_PIECE_COMPTABLE').setValue(this.getOdatasource().str_NUM_PIECE_COMPTABLE);
             Ext.getCmp('str_NUM_PIECE_COMPTABLE').setValue(this.getOdatasource().str_ref);
             Ext.getCmp('lg_MODE_REGLEMENT_ID').setValue(this.getOdatasource().lg_MODE_REGLEMENT_ID);
             Ext.getCmp('str_BANQUE').setValue(this.getOdatasource().str_BANQUE);
