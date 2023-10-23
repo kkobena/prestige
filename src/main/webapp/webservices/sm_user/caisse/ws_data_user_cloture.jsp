@@ -29,7 +29,7 @@
 
     Date dt_Date_debut = key.stringToDate(key.GetDateNowForSearch(0), key.formatterShort),
             dt_Date_Fin = key.stringToDate(key.GetDateNowForSearch(1), key.formatterShort);
-
+    System.err.println("dt_Date_debut " + dt_Date_debut + " " + dt_Date_Fin);
     double dbl_AMOUNT = 0;
     boolean display = false;
 
@@ -50,7 +50,7 @@
         json.put("dt_CREATED", date.DateToString(new Date(), date.formatterShort));
         dbl_AMOUNT = OTResumeCaisse.getIntSOLDEMATIN();
         display = true;
-    } 
+    }
     json.put("str_NAME_USER", OTUser.getStrFIRSTNAME() + " " + OTUser.getStrLASTNAME());
     json.put("lg_USER_ID", OTUser.getLgUSERID());
     json.put("int_AMOUNT_FOND_CAISSE", dbl_AMOUNT);

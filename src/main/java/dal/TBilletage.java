@@ -49,8 +49,7 @@ public class TBilletage implements Serializable {
     @Basic(optional = false)
     @Column(name = "ld_CAISSE_ID", nullable = false, length = 40)
     private String ldCAISSEID;
-    // @Max(value=?) @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce
-    // field validation
+
     @Column(name = "int_AMOUNT", precision = 12, scale = 2)
     private Double intAMOUNT;
     @Column(name = "dt_CREATED")

@@ -1,5 +1,5 @@
-var url_services_transaction_ouverturecaisse = '../webservices/sm_user/ouverturecaisse/ws_transaction.jsp?mode=';
-var url_services_pdf_ticket_mouvement = '../webservices/sm_user/mvtcaisse/ws_generate_pdf.jsp';
+
+
 var Me;
 
 
@@ -11,16 +11,16 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
     title: 'Ouverture de Caisse',
     bodyPadding: 10,
     autoScroll: true,
-    width: 355,
+    width: 420,
     fieldDefaults: {
-        labelAlign: 'right',
+        labelAlign: 'left',
         labelWidth: 115,
         msgTarget: 'side'
     },
     closable: false,
     initComponent: function () {
         Me = this;
-        var url_data = "../webservices/sm_user/ouverturecaisse/ws_data_user_ouverture.jsp";
+
 
         this.items = [{
                 xtype: 'fieldset',
@@ -72,23 +72,18 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
 
         this.callParent();
 
-        this.LoadData(url_data);
+        this.LoadData();
     },
     buttons: [{
             text: 'Valider',
             id: 'btn_validate',
-//            hidden: true,
             tooltip: 'Validation d\'ouverture de caisse',
             handler: function () {
                 testextjs.app.getController('App').ShowWaitingProcess();
                 Ext.Ajax.request({
                     method: 'PUT',
                     url: '../api/v1/caisse/validationfondcaisse/' + Ext.getCmp('ID_COFFRE_CAISSE').getValue(),
-//                    url: url_services_transaction_ouverturecaisse + 'validate',
-//                    params: {
-//                        int_AMOUNT: Ext.getCmp('int_AMOUNT').getValue(),
-//                        ID_COFFRE_CAISSE: Ext.getCmp('ID_COFFRE_CAISSE').getValue()
-//                    },
+
                     success: function (response)
                     {
                         testextjs.app.getController('App').StopWaitingProcess();
@@ -118,38 +113,24 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
 
             }
         }],
-    LoadData: function (url) {
+    LoadData: function () {
         Ext.Ajax.request({
-            url: url,
+            method: 'GET',
+            url: '../api/v1/billetage/ouventure-data',
             success: function (response)
             {
-
-                var object = Ext.JSON.decode(response.responseText, false);
-                /* if (object.errors_code == "0") {
-                 Ext.MessageBox.show({
-                 title: "Message d'erreur",
-                 width: 320,
-                 msg: object.errors,
-                 buttons: Ext.MessageBox.OK,
-                 icon: Ext.MessageBox.WARNING
-                 });
-                 }*/
-
-                var Caisse = object.results[0];
-                Ext.getCmp('str_NAME_USER').setValue(Caisse.str_NAME_USER);
-                Ext.getCmp('int_AMOUNT').setValue(Ext.util.Format.number(Caisse.int_AMOUNT, '0,000.') + " CFA");
-                Ext.getCmp('ID_COFFRE_CAISSE').setValue(Caisse.ID_COFFRE_CAISSE);
-                Ext.getCmp('dt_CREATED').setValue(Caisse.dt_CREATED);
-                Ext.getCmp('ld_CREATED_BY').setValue(Caisse.ld_CREATED_BY);
-                /*if(Caisse.display == true) {
-                 Ext.getCmp('btn_validate').show();
-                 }*/
-
-
+                const object = Ext.JSON.decode(response.responseText, false);
+                const caisse = object.data;
+                Ext.getCmp('str_NAME_USER').setValue(caisse?.userFullName);
+                Ext.getCmp('int_AMOUNT').setValue(Ext.util.Format.number(caisse?.amount, '0,000.') + " CFA");
+                Ext.getCmp('ID_COFFRE_CAISSE').setValue(caisse?.id);
+                Ext.getCmp('dt_CREATED').setValue(caisse?.createAt);
+                Ext.getCmp('ld_CREATED_BY').setValue(caisse?.createdByFullName);
             },
             failure: function (response)
             {
                 var object = Ext.JSON.decode(response.responseText, false);
+                console.log(object);
                 Ext.MessageBox.alert('Error Message', response.responseText);
 
             }
@@ -162,8 +143,8 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
                 function (btn) {
                     if (btn == 'yes') {
                         Me.lunchPrinter(ref);
-                        
-                    }else{
+
+                    } else {
                         testextjs.app.getController('App').onLoadNewComponent(xtypeload, "", "");
                     }
                     testextjs.app.getController('App').onLoadNewComponent(xtypeload, "", "");
@@ -173,7 +154,7 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
     lunchPrinter: function (str_REF) {
 
         Ext.Ajax.request({
-            url: url_services_pdf_ticket_mouvement + "?str_REF=" + str_REF,
+            url: "../webservices/sm_user/mvtcaisse/ws_generate_pdf.jsp?str_REF=" + str_REF,
             success: function (response)
             {
                 var object = Ext.JSON.decode(response.responseText, false);
@@ -186,7 +167,6 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
             },
             failure: function (response)
             {
-                var object = Ext.JSON.decode(response.responseText, false);
                 testextjs.app.getController('App').onLoadNewComponent("ouverturecaisseempmanager", "Attribution Caisse Emp");
             }
         });

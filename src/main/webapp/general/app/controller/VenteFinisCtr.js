@@ -378,7 +378,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                     Ext.MessageBox.alert('Error Message', response.responseText);
                                 }
                             });
-                            return;
+                       
                         }
                     });
         }

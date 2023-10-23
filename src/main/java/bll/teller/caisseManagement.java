@@ -447,7 +447,7 @@ public class caisseManagement extends bll.bllBase {
             OTCaisse.setLgCREATEDBY(this.getOTUser().getStrLOGIN());
 
             OTCaisse.setLgCAISSEID(this.getKey().getComplexId());
-            return null;
+            return OTCaisse;
         }
     }
 
@@ -515,7 +515,7 @@ public class caisseManagement extends bll.bllBase {
             oTResumeCaisse.setIntSOLDESOIR(this.OTCaisse.getIntSOLDE().intValue());
             oTResumeCaisse.setStrSTATUT(commonparameter.statut_is_Process);
             oTResumeCaisse.setDtUPDATED(new Date());
-            this.getOdataManager().getEm().persist(oTResumeCaisse);
+            this.getOdataManager().getEm().merge(oTResumeCaisse);
             // this.persiste(oTResumeCaisse);
 
             // String Description = "Cloture de la caisse de " + this.getOTUser().getStrLOGIN() + " avec un montant de "

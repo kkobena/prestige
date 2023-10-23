@@ -23,7 +23,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.Local;
-import javax.persistence.EntityManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,7 +73,7 @@ public interface CaisseService {
 
     JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException;
 
-    boolean checkCaisse(TUser user, EntityManager emg);
+    boolean checkCaisse(TUser user);
 
     JSONObject validerFondDeCaisse(String id, TUser user) throws JSONException;
 

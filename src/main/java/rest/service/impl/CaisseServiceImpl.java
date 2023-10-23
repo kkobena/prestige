@@ -975,11 +975,11 @@ public class CaisseServiceImpl implements CaisseService {
             }
             Integer billetage = getBilletageByCaisse(idCaisse);
             oResumeCaisse.setStrSTATUT(Constant.STATUT_IS_CLOSED);
-            TCaisse oTCaisse = getTCaisse(oResumeCaisse.getLdCAISSEID());
+            TCaisse oTCaisse = getTCaisse(oResumeCaisse.getLgUSERID().getLgUSERID());
             String description = "Validation de la Cloture de la caisse de  " + o.getStrLOGIN() + " avec un montant de "
                     + DateConverter.amountFormat(billetage, '.');
             oTCaisse.setIntSOLDE(0.0);
-            oTCaisse.setLgUPDATEDBY(o.getStrLOGIN());
+            oTCaisse.setLgUPDATEDBY(o.getLgUSERID());
             oTCaisse.setDtUPDATED(new Date());
             getEntityManager().merge(oTCaisse);
             logService.updateItem(o, idCaisse, description, TypeLog.VALIDATION_DE_CAISSE, oResumeCaisse);
@@ -993,40 +993,12 @@ public class CaisseServiceImpl implements CaisseService {
         return json;
     }
 
-    Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
-
-    private Integer avoirFournisseur(LocalDate date) {
-        try {
-            Query q = getEntityManager().createQuery(
-                    "SELECT SUM(o.dlAMOUNT) FROM TRetourFournisseur o WHERE FUNCTION('DATE',o.dtUPDATED)=?1 AND o.strREPONSEFRS <>'' AND o.strSTATUT='enable' ")
-                    .setParameter(1, java.sql.Date.valueOf(date));
-            return ((Double) q.getSingleResult()).intValue();
-        } catch (Exception e) {
-            // e.printStackTrace(System.err);
-            return 0;
-        }
-
-    }
-
-    private Integer avoirFournisseur(String dateString) {
-        try {
-            Query q = getEntityManager().createNativeQuery(
-                    "SELECT COALESCE(SUM(o.dl_AMOUNT),0) FROM  t_retour_fournisseur o where DATE_FORMAT(o.dt_UPDATED,'%Y%m')= ?1 AND o.str_REPONSE_FRS <>'' AND o.str_STATUT='enable'")
-                    .setParameter(1, dateString);
-            return ((Number) q.getSingleResult()).intValue();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return 0;
-        }
-
-    }
-
     @Override
     public JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException {
         JSONObject json = new JSONObject();
         EntityManager emg = getEntityManager();
         try {
-            if (!checkCaisse(user, emg)) {
+            if (!checkCaisse(user)) {
                 return json.put("success", false).put("msg", "Votre caisse est fermée.");
             }
             TTypeMvtCaisse typeMvtCaisse = emg.find(TTypeMvtCaisse.class, caisseDTO.getIdTypeMvt());
@@ -1144,9 +1116,9 @@ public class CaisseServiceImpl implements CaisseService {
     }
 
     @Override
-    public boolean checkCaisse(TUser ooTUser, EntityManager emg) {
+    public boolean checkCaisse(TUser ooTUser) {
         try {
-            TypedQuery<TResumeCaisse> q = emg.createQuery(
+            TypedQuery<TResumeCaisse> q = this.em.createQuery(
                     "SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID = ?1  AND t.strSTATUT = ?2 ",
                     TResumeCaisse.class);
             q.setParameter(1, ooTUser.getLgUSERID()).setParameter(2, DateConverter.STATUT_IS_IN_USE).setMaxResults(1);
@@ -1157,17 +1129,17 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-    private TCoffreCaisse getStatutCoffre(String userId, EntityManager emg) {
+    private TCoffreCaisse getStatutCoffre(String userId) {
 
         try {
-            TypedQuery<TCoffreCaisse> q = emg.createQuery(
+            TypedQuery<TCoffreCaisse> q = this.em.createQuery(
                     "SELECT t FROM TCoffreCaisse t WHERE t.lgUSERID.lgUSERID = ?1 AND  t.strSTATUT = ?2  AND   FUNCTION('DATE', t.dtCREATED)=CURRENT_DATE ",
                     TCoffreCaisse.class).setParameter(1, userId)
                     .setParameter(2, DateConverter.STATUT_IS_WAITING_VALIDATION);
             return q.getSingleResult();
 
         } catch (Exception e) {
-            // e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
 
         }
@@ -1181,16 +1153,15 @@ public class CaisseServiceImpl implements CaisseService {
 
         try {
             TUser user = emg.find(TUser.class, idUser);
-            emg.refresh(user);
 
             if (user.getBIsConnected() == null || user.getBIsConnected().equals(false)) {
                 return json.put("success", false).put("msg", "Cet utilisateur n'est pas connecté");
 
             }
-            if (checkCaisse(user, emg)) {
+            if (checkCaisse(user)) {
                 return json.put("success", false).put("msg", "La caisse de cet utilisateur est en cours d'utilisation");
             }
-            if (getStatutCoffre(idUser, emg) != null) {
+            if (getStatutCoffre(idUser) != null) {
                 return json.put("success", false).put("msg", "Cet utilisateur a déjà reçu un fond de caisse");
             }
             createCoffreCaisse(user, operateur, amount.doubleValue());
@@ -1207,7 +1178,7 @@ public class CaisseServiceImpl implements CaisseService {
         coffreCaisse.setLgUSERID(user);
         coffreCaisse.setIntAMOUNT(amount);
         coffreCaisse.setDtCREATED(new Date());
-        coffreCaisse.setStrSTATUT(DateConverter.STATUT_IS_WAITING_VALIDATION);
+        coffreCaisse.setStrSTATUT(Constant.STATUT_IS_WAITING_VALIDATION);
         coffreCaisse.setLdCREATEDBY(operateur.getLgUSERID());
         this.em.persist(coffreCaisse);
         String description = "Reaprovisionement de la caisse de " + user.getStrLOGIN() + " d'un montant de "
@@ -1240,7 +1211,7 @@ public class CaisseServiceImpl implements CaisseService {
         mvtCaisse.setStrNUMPIECECOMPTABLE(numComptable);
         mvtCaisse.setIntAMOUNT(amount);
         mvtCaisse.setStrCOMMENTAIRE("Attribution de fond de caisse");
-        mvtCaisse.setStrSTATUT(commonparameter.statut_enable);
+        mvtCaisse.setStrSTATUT(Constant.STATUT_ENABLE);
         mvtCaisse.setDtDATEMVT(new Date());
         mvtCaisse.setDtCREATED(mvtCaisse.getDtDATEMVT());
         mvtCaisse.setDtUPDATED(mvtCaisse.getDtDATEMVT());
@@ -1276,17 +1247,17 @@ public class CaisseServiceImpl implements CaisseService {
             oOTCaisse.setLgUPDATEDBY(user.getStrLOGIN());
             oOTCaisse.setIntSOLDE(0.0);
             oOTCaisse.setLgUSERID(user);
-            oOTCaisse.setLgCREATEDBY(user.getStrLOGIN());
+            oOTCaisse.setLgCREATEDBY(user.getLgUSERID());
             resumeCaisse.setLdCAISSEID(UUID.randomUUID().toString());
             resumeCaisse.setIntSOLDEMATIN(oCoffreCaisse.getIntAMOUNT().intValue());
             resumeCaisse.setLgUSERID(user);
             resumeCaisse.setDtCREATED(new Date());
             oCoffreCaisse.setDtUPDATED(resumeCaisse.getDtCREATED());
-            resumeCaisse.setLgCREATEDBY(user.getStrLOGIN());
+            resumeCaisse.setLgCREATEDBY(user.getLgUSERID());
             resumeCaisse.setIdCoffreCaisse(oCoffreCaisse);
             resumeCaisse.setIntSOLDESOIR(0);
-            resumeCaisse.setStrSTATUT(DateConverter.STATUT_IS_IN_USE);
-            oCoffreCaisse.setStrSTATUT(DateConverter.STATUT_IS_ASSIGN);
+            resumeCaisse.setStrSTATUT(Constant.STATUT_IS_USING);
+            oCoffreCaisse.setStrSTATUT(Constant.STATUT_IS_ASSIGN);
             oCoffreCaisse.setLdUPDATEDBY(user.getStrLOGIN());
             getEntityManager().merge(oOTCaisse);
             getEntityManager().persist(resumeCaisse);
@@ -1303,7 +1274,7 @@ public class CaisseServiceImpl implements CaisseService {
                     TypeTransaction.SORTIE, reglement, typeMvtCaisse, getEntityManager(), 0, 0, 0,
                     mvtCaisse.getStrREFTICKET());
             createNotification(description, TypeNotification.MVT_DE_CAISSE, user);
-            return json.put("success", true).put("msg", "Opération effectuée ").accumulate("mvtId",
+            return json.put("success", true).put("msg", "Opération effectuée ").put("mvtId",
                     mvtCaisse.getLgMVTCAISSEID());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
