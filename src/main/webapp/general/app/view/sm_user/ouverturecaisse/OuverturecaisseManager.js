@@ -154,7 +154,9 @@ Ext.define('testextjs.view.sm_user.ouverturecaisse.OuverturecaisseManager', {
     lunchPrinter: function (str_REF) {
 
         Ext.Ajax.request({
-            url: "../webservices/sm_user/mvtcaisse/ws_generate_pdf.jsp?str_REF=" + str_REF,
+              method: 'GET',
+            url: '../api/v1/caisse/ticke-mvt-caisse?mvtCaisseId=' + str_REF,
+            //url: "../webservices/sm_user/mvtcaisse/ws_generate_pdf.jsp?str_REF=" + str_REF,
             success: function (response)
             {
                 var object = Ext.JSON.decode(response.responseText, false);

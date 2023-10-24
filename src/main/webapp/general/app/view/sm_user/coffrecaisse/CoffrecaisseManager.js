@@ -260,19 +260,9 @@ Ext.define('testextjs.view.sm_user.coffrecaisse.CoffrecaisseManager', {
 
     },
     loadStore: function() {
-        this.getStore().load({
-            callback: this.onStoreLoad
-        });
+        this.getStore().load();
     },
-    onStoreLoad: function() {
-      /*  var grid = Ext.getCmp('Grid_Prevente_ID');
-        if (grid.getStore().getCount() > 0) {
-            var firstRec = grid.getStore().getAt(0);
-            if (firstRec.get('show') == false) { // cacher le champ stock machine
-               // testextjs.app.getController('App').findColumnByDataIndex(grid, 4).setVisible(false);
-            }
-        }*/
-    },
+   
     onAddClick: function() {
         new testextjs.view.sm_user.coffrecaisse.action.add({
             odatasource: "",

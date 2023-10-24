@@ -1,7 +1,5 @@
 
 var url_services_data_utilisateur = '../webservices/sm_user/utilisateur/ws_data.jsp';
-var url_services_data_listeCaisse_generate_pdf = '../webservices/sm_user/listacaisse/ws_generate_pdf.jsp';
-
 
 var Me;
 
@@ -89,6 +87,84 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
 
 
         Ext.apply(this, {
+            dockedItems: [{
+                    xtype: 'toolbar',
+                    dock: 'top', items: [
+                        {
+                            text: 'Creer',
+                            tooltip: 'Cr&eacute;er',
+                            scope: this,
+                            iconCls: 'addicon',
+                            handler: this.onAddClick
+                        },
+                        {
+                            xtype: 'datefield',
+                            fieldLabel: 'Du',
+                            name: 'dt_debut',
+                            id: 'dt_debut_journal',
+                            allowBlank: false,
+                            margin: '0 10 0 0',
+                            submitFormat: 'Y-m-d',
+                            flex: 1,
+                            labelWidth: 50,
+                            maxValue: new Date(),
+                            value: new Date(),
+                            format: 'd/m/Y'
+
+                        }, {
+                            xtype: 'datefield',
+                            fieldLabel: 'Au',
+                            name: 'dt_fin',
+                            id: 'dt_fin_journal',
+                            allowBlank: false,
+                            labelWidth: 50,
+                            flex: 1,
+                            maxValue: new Date(),
+                            value: new Date(),
+                            margin: '0 9 0 0',
+                            submitFormat: 'Y-m-d',
+                            format: 'd/m/Y'
+
+                        },
+                        {
+                            xtype: 'combobox',
+                            fieldLabel: 'Utilisateur',
+                            name: 'lg_USER_ID',
+                            id: 'lg_USER_ID',
+                            hidden: true,
+                            store: storeUser,
+                            pageSize: 20, //ajout la barre de pagination
+                            valueField: 'lg_USER_ID',
+                            displayField: 'str_FIRST_NAME',
+                            typeAhead: true,
+                            queryMode: 'remote',
+                            emptyText: 'Choisir un utilisateur...'
+                        }, {
+                            text: 'rechercher',
+                            tooltip: 'rechercher',
+                            scope: this,
+                            iconCls: 'searchicon',
+                            handler: this.onRechClick
+                        },
+
+                        , {
+                            xtype: 'tbseparator'
+                        }
+
+
+                        ,
+                        {
+                            width: 100,
+                            xtype: 'button',
+                            text: 'Imprimer',
+                            iconCls: 'printable',
+
+                            handler: this.onPdfPrint
+
+                        }
+                    ]
+                }],
+
             width: '98%',
             height: 580,
             id: 'gridmvtcaisseid',
@@ -168,96 +244,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
             selModel: {
                 selType: 'cellmodel'
             },
-            tbar: [
 
-                {
-                    text: 'Creer',
-                    tooltip: 'Cr&eacute;er',
-                    scope: this,
-                    iconCls: 'addicon',
-                    handler: this.onAddClick
-                },
-                {
-                    xtype: 'datefield',
-                    fieldLabel: 'Du',
-                    name: 'dt_debut',
-                    id: 'dt_debut_journal',
-                    allowBlank: false,
-                    margin: '0 10 0 0',
-                    submitFormat: 'Y-m-d',
-                    flex: 1,
-                    labelWidth: 50,
-                    maxValue: new Date(),
-                    value: new Date(),
-                    format: 'd/m/Y'
-
-                }, {
-                    xtype: 'datefield',
-                    fieldLabel: 'Au',
-                    name: 'dt_fin',
-                    id: 'dt_fin_journal',
-                    allowBlank: false,
-                    labelWidth: 50,
-                    flex: 1,
-                    maxValue: new Date(),
-                    value: new Date(),
-                    margin: '0 9 0 0',
-                    submitFormat: 'Y-m-d',
-                    format: 'd/m/Y'
-
-                },
-                {
-                    xtype: 'combobox',
-                    fieldLabel: 'Utilisateur',
-                    name: 'lg_USER_ID',
-                    id: 'lg_USER_ID',
-                    hidden: true,
-                    store: storeUser,
-                    pageSize: 20, //ajout la barre de pagination
-                    valueField: 'lg_USER_ID',
-                    displayField: 'str_FIRST_NAME',
-                    typeAhead: true,
-                    queryMode: 'remote',
-                    emptyText: 'Choisir un utilisateur...'
-                }, {
-                    text: 'rechercher',
-                    tooltip: 'rechercher',
-                    scope: this,
-                    iconCls: 'searchicon',
-                    handler: this.onRechClick
-                },
-
-                , {
-                    xtype: 'tbseparator'
-                }
-
-
-                ,
-                {
-                    width: 100,
-                    xtype: 'button',
-                    text: 'Imprimer',
-                    iconCls: 'printable',
-//                    glyph: 0xf1c1,
-                    listeners: {
-                        click: function () {
-                            let userId = "";
-                            if (Ext.getCmp('lg_USER_ID').getValue()) {
-                                userId = Ext.getCmp('lg_USER_ID').getValue();
-                            }
-
-                            const dtStart = Ext.getCmp('dt_debut_journal').getSubmitValue();
-                            const dtEnd = Ext.getCmp('dt_fin_journal').getSubmitValue();
-
-                            const linkUrl = "../webservices/sm_user/mvtcaisse/ws_generate_mvt_pdf.jsp" + "?dtStart=" + dtStart + "&dtEnd=" + dtEnd + "&userId=" + userId + "&checked=true";
-                            window.open(linkUrl);
-
-                        }
-                    }
-                }
-
-
-            ],
             bbar: {
 
                 dock: 'bottom',
@@ -319,6 +306,21 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
 
     loadStore: function () {
         Me.onRechClick();
+    },
+    onPdfPrint: function () {
+
+        let userId = "";
+        if (Ext.getCmp('lg_USER_ID').getValue()) {
+            userId = Ext.getCmp('lg_USER_ID').getValue();
+        }
+
+        const dtStart = Ext.getCmp('dt_debut_journal').getSubmitValue();
+        const dtEnd = Ext.getCmp('dt_fin_journal').getSubmitValue();
+
+        const linkUrl = "../CaisseServlet?dtStart=" + dtStart + "&dtEnd=" + dtEnd + "&userId=" + userId + "&checked=true";
+        window.open(linkUrl);
+
+
     },
     loadSummary: function () {
         let userId = "";

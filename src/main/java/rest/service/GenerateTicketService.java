@@ -86,4 +86,6 @@ public interface GenerateTicketService {
 
     JSONObject ticketReglementCarnet(String idDossier) throws JSONException;
 
+    void printMvtCaisse(String mvtCaisseId, TUser user);
+
 }

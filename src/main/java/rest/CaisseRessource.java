@@ -355,4 +355,17 @@ public class CaisseRessource {
         json.put("data", new JSONObject(caisseSummary));
         return Response.ok().entity(json.toString()).build();
     }
+
+    @GET
+    @Path("ticke-mvt-caisse")
+    public Response ticketMvtCaisse(@QueryParam(value = "mvtCaisseId") String mvtCaisseId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        generateTicketService.printMvtCaisse(mvtCaisseId, tu);
+        return Response.ok().build();
+    }
 }
