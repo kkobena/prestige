@@ -306,6 +306,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
 
     loadStore: function () {
         Me.onRechClick();
+        Me.loadSummary();
     },
     onPdfPrint: function () {
 
@@ -340,7 +341,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
             success: function (response, options) {
                 const result = Ext.JSON.decode(response.responseText, true);
                 const data = result.data;
-
+                Ext.getCmp('summaryCmp').removeAll();
 
                 if (data?.modes?.length > 0) {
                     Ext.getCmp('summaryCmp').add({
@@ -367,8 +368,6 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                     });
 
 
-                } else {
-                    Ext.getCmp('summaryCmp').removeAll();
                 }
 
             }
