@@ -55,7 +55,12 @@ Ext.define('testextjs.view.sm_user.journalvente.FactureSubrogatoireBisManager', 
                         , {
                             name: 'clientFullName',
                             type: 'string'
-                        }, {
+                        }, 
+                        {
+                            name: 'beneficiaireFullName',
+                            type: 'string'
+                        },
+                        {
                             name: 'strREF',
                             type: 'string'
                         }
@@ -276,8 +281,14 @@ Ext.define('testextjs.view.sm_user.journalvente.FactureSubrogatoireBisManager', 
                         },
 
                         {
-                            header: 'Client',
+                            header: 'Assuré Principal',
                             dataIndex: 'clientFullName',
+                            flex: 2.5
+
+                        },
+                        {
+                            header: 'Beneficiaire',
+                            dataIndex: 'beneficiaireFullName',
                             flex: 2.5
 
                         },
