@@ -61,7 +61,7 @@ public class BilletageServiceRessource {
         }
         JSONObject json = new JSONObject();
 
-        json.put("data", new JSONObject(billetageService.getUserCoffreCaisseDTO(dtStart, dtEnd, hStart, hEnd, tu)));
+        json.put("data", new JSONObject(billetageService.getUserCoffreCaisse(dtStart, dtEnd, hStart, hEnd, tu)));
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -76,5 +76,22 @@ public class BilletageServiceRessource {
         }
         this.billetageService.cloturerCaisse(billetage, tu);
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
+    }
+
+    @GET
+    @Path("/list-fond-caisse")
+    public Response getListFondCaisse(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "search") String search,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
+
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        return Response.ok()
+                .entity(this.billetageService.getListCoffreCaisses(dtStart, dtEnd, search, start, limit).toString())
+                .build();
     }
 }

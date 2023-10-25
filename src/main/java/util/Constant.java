@@ -39,6 +39,7 @@ public final class Constant {
     public static final String MODE_ESP = "1";
     public static String ACTION_OTHER = "OTHER";
     public static final String MVT_SORTIE_CAISSE = "4";
+    public static final String MVT_FOND_CAISSE = "1";
 
     private Constant() {
     }

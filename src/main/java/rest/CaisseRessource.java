@@ -35,6 +35,7 @@ import rest.service.BalanceService;
 import rest.service.CaisseService;
 import rest.service.GenerateTicketService;
 import rest.service.dto.BalanceParamsDTO;
+import rest.service.dto.CoffreCaisseDTO;
 import rest.service.dto.MvtCaisseSummaryDTO;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
@@ -213,15 +214,17 @@ public class CaisseRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-    @PUT
-    @Path("validationfondcaisse/{id}")
-    public Response validationFondCaisse(@PathParam("id") String id) throws JSONException {
+    @POST
+    @Path("ouvrir-caisse")
+    public Response validationFondCaisse(CoffreCaisseDTO coffreCaisse) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject json = caisseService.validerFondDeCaisse(id, tu);
+        JSONObject json = new JSONObject();
+
+        json.put("mvtId", caisseService.ouvrirCaisse(tu, coffreCaisse));
         return Response.ok().entity(json.toString()).build();
     }
 

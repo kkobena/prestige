@@ -2,6 +2,7 @@ package rest.service;
 
 import dal.TUser;
 import javax.ejb.Local;
+import org.json.JSONObject;
 import rest.service.dto.BilletageDTO;
 import rest.service.dto.CoffreCaisseDTO;
 import rest.service.dto.UserCaisseDataDTO;
@@ -21,4 +22,8 @@ public interface BilletageService {
             throws CashFundNotFoundExeception;
 
     void cloturerCaisse(BilletageDTO billetage, TUser user) throws CaisseUsingExeception;
+
+    CoffreCaisseDTO getUserCoffreCaisse(String dtStart, String dtEnd, String hStart, String hEnd, TUser user);
+
+    JSONObject getListCoffreCaisses(String dtStart, String dtEnd, String search, int start, int limit);
 }

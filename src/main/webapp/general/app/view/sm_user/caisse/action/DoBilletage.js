@@ -1,4 +1,4 @@
-var url_transaction_dobilletage = '../webservices/sm_user/caisse/ws_transaction.jsp?mode=dobilletage';
+
 
 
 var Me_dobilletage;
@@ -155,14 +155,7 @@ Ext.define('testextjs.view.sm_user.caisse.action.DoBilletage', {
                             flex: 1,
                             emptyText: 'AUTRE',
                             listeners: {
-                                /*  'render': function(cmp) {
-                                 cmp.getEl().on('keypress', function(e) {
-                                 if (e.getKey() === e.ENTER) {
-                                 Me_dobilletage.onbtnsave_dobilletage();
-                                 
-                                 }
-                                 });
-                                 },*/
+                              
                                 change: function () {
                                     Me_dobilletage.getTotalBilletage();
 

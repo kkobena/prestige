@@ -4,20 +4,28 @@ import dal.TBilletage;
 import dal.TBilletageDetails;
 import dal.TCaisse;
 import dal.TCoffreCaisse;
+import dal.TCoffreCaisse_;
+import dal.TEmplacement;
 import dal.TResumeCaisse;
 import dal.TUser;
+import dal.TUser_;
 import dal.enumeration.TypeLog;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -25,9 +33,15 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.json.JSONObject;
 import rest.service.BilletageService;
+import rest.service.CaisseService;
 import rest.service.LogService;
 import rest.service.dto.BilletageDTO;
 import rest.service.dto.CoffreCaisseDTO;
@@ -37,6 +51,7 @@ import rest.service.exception.CaisseUsingExeception;
 import rest.service.exception.CashFundNotFoundExeception;
 import util.Constant;
 import util.DateUtil;
+import util.FunctionUtils;
 
 /**
  *
@@ -54,6 +69,8 @@ public class BilletageServiceImpl implements BilletageService {
     private EntityManager em;
     @EJB
     private LogService logService;
+    @EJB
+    private CaisseService caisseService;
 
     private TCaisse getUserCaisse(TUser user) {
         try {
@@ -164,14 +181,14 @@ public class BilletageServiceImpl implements BilletageService {
     private TCoffreCaisse getCoffreCaisse(LocalDateTime dtStart, LocalDateTime dtEnd, TUser user, String status) {
         try {
             TypedQuery<TCoffreCaisse> q = this.em.createQuery(
-                    "SELECT o FROM TCoffreCaisse o WHERE o.lgUSERID.lgUSERID=?1 AND  o.dtCREATED BETWEEN ?2 AND ?3 AND o.strSTATUT=?4",
+                    "SELECT o FROM TCoffreCaisse o WHERE o.lgUSERID.lgUSERID=?1 AND  o.dtCREATED BETWEEN ?2 AND ?3 AND o.strSTATUT=?4 ORDER BY  o.dtCREATED DESC",
                     TCoffreCaisse.class).setParameter(1, user.getLgUSERID())
                     .setParameter(2, Timestamp.valueOf(dtStart), TemporalType.TIMESTAMP)
                     .setParameter(3, Timestamp.valueOf(dtEnd), TemporalType.TIMESTAMP).setParameter(4, status);
-
+            q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.INFO, "Cash fund not found");
             return null;
         }
     }
@@ -188,7 +205,7 @@ public class BilletageServiceImpl implements BilletageService {
         }
         TUser createdBy = em.find(TUser.class, caisse.getLdCREATEDBY());
         return CoffreCaisseDTO.builder().userId(user.getLgUSERID()).id(caisse.getIdCoffreCaisse())
-                .amount(caisse.getIntAMOUNT().intValue()).display(true)
+                .amount(caisse.getIntAMOUNT().intValue()).hidden(true)
                 .userFullName(user.getStrFIRSTNAME() + " " + user.getStrLASTNAME())
                 .createdByFullName(createdBy.getStrFIRSTNAME() + " " + createdBy.getStrLASTNAME())
                 .createAt(DateUtil.convertDateToDD_MM_YYYY_HH_mm(caisse.getDtCREATED()))
@@ -302,5 +319,120 @@ public class BilletageServiceImpl implements BilletageService {
             return 0;
         }
 
+    }
+
+    @Override
+    public CoffreCaisseDTO getUserCoffreCaisse(String dtStart, String dtEnd, String hStart, String hEnd, TUser user) {
+        Pair<LocalDateTime, LocalDateTime> pair = buildDateParam(dtStart, dtEnd, hStart, hEnd);
+        LocalDateTime start = pair.getLeft();
+        LocalDateTime end = pair.getRight();
+        TCoffreCaisse caisse = getCoffreCaisse(start, end, user, Constant.STATUT_IS_WAITING_VALIDATION);
+        boolean isUsing = caisseService.checkCaisse(user);
+
+        if (Objects.nonNull(caisse)) {
+            return CoffreCaisseDTO.builder().userId(user.getLgUSERID()).id(caisse.getIdCoffreCaisse())
+                    .amount(caisse.getIntAMOUNT().intValue()).hidden(true).inUse(isUsing)
+                    .userFullName(user.getStrFIRSTNAME() + " " + user.getStrLASTNAME())
+                    .createAt(DateUtil.convertDateToDD_MM_YYYY_HH_mm(caisse.getDtCREATED()))
+                    .updateAt(DateUtil.convertDateToDD_MM_YYYY_HH_mm(caisse.getDtUPDATED()))
+                    .statut(caisse.getStrSTATUT()).build();
+        }
+        if (isUsing) {
+            caisse = getCoffreCaisse(start, end, user, Constant.STATUT_IS_ASSIGN);
+        }
+        if (Objects.nonNull(caisse)) {
+            return CoffreCaisseDTO.builder().userId(user.getLgUSERID()).hidden(true).inUse(isUsing)
+                    .amount(caisse.getIntAMOUNT().intValue())
+                    .userFullName(user.getStrFIRSTNAME() + " " + user.getStrLASTNAME())
+                    .firstName(user.getStrFIRSTNAME())
+                    .createAt(DateUtil.convertDateToDD_MM_YYYY_HH_mm(caisse.getDtCREATED()))
+                    .lastName(user.getStrLASTNAME()).build();
+        }
+        return CoffreCaisseDTO.builder().userId(user.getLgUSERID()).hidden(false).inUse(isUsing)
+                .userFullName(user.getStrFIRSTNAME() + " " + user.getStrLASTNAME()).firstName(user.getStrFIRSTNAME())
+                .lastName(user.getStrLASTNAME()).build();
+
+    }
+
+    private List<CoffreCaisseDTO> fetchListCoffreCaisses(LocalDate dtStart, LocalDate end, String search, int start,
+            int limit) {
+        return getListCoffreCaisses(dtStart, end, search, start, limit).stream().map(this::buildFromTCoffreCaisse)
+                .collect(Collectors.toList());
+
+    }
+
+    List<Predicate> predicatesFondCaisses(LocalDate dtStart, LocalDate dtEnd, String search, CriteriaBuilder cb,
+            Root<TCoffreCaisse> root) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.between(cb.function("DATE", Date.class, root.get(TCoffreCaisse_.dtCREATED)),
+                java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)));
+
+        if (StringUtils.isNotEmpty(search)) {
+
+            predicates.add(cb.or(cb.like(root.get(TCoffreCaisse_.lgUSERID).get(TUser_.strFIRSTNAME), search + "%"),
+                    cb.like(root.get(TCoffreCaisse_.lgUSERID).get(TUser_.strLASTNAME), search + "%")));
+        }
+
+        return predicates;
+    }
+
+    private List<TCoffreCaisse> getListCoffreCaisses(LocalDate dtStart, LocalDate dtEnd, String search, int start,
+            int limit) {
+        try {
+            CriteriaBuilder cb = this.em.getCriteriaBuilder();
+            CriteriaQuery<TCoffreCaisse> cq = cb.createQuery(TCoffreCaisse.class);
+            Root<TCoffreCaisse> root = cq.from(TCoffreCaisse.class);
+            cq.select(root).orderBy(cb.desc(root.get(TCoffreCaisse_.dtCREATED)));
+            List<Predicate> predicates = predicatesFondCaisses(dtStart, dtEnd, search, cb, root);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            TypedQuery<TCoffreCaisse> q = this.em.createQuery(cq);
+            q.setFirstResult(start);
+            q.setMaxResults(limit);
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    private long countCoffreCaisses(LocalDate dtStart, LocalDate dtEnd, String search) {
+        try {
+            CriteriaBuilder cb = this.em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TCoffreCaisse> root = cq.from(TCoffreCaisse.class);
+            cq.select(cb.count(root));
+            List<Predicate> predicates = predicatesFondCaisses(dtStart, dtEnd, search, cb, root);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            Query q = this.em.createQuery(cq);
+            return (Long) q.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private CoffreCaisseDTO buildFromTCoffreCaisse(TCoffreCaisse coffreCaisse) {
+        TUser tUser = coffreCaisse.getLgUSERID();
+        TEmplacement emplacement = tUser.getLgEMPLACEMENTID();
+        return CoffreCaisseDTO.builder().amount(coffreCaisse.getIntAMOUNT().intValue())
+                .userFullName(tUser.getStrFIRSTNAME() + " " + tUser.getStrLASTNAME())
+                .emplacement(emplacement.getStrNAME())
+                .createAt(DateUtil.convertDateToDD_MM_YYYY_HH_mm(coffreCaisse.getDtCREATED())).build();
+    }
+
+    @Override
+    public JSONObject getListCoffreCaisses(String dtStart, String dtEnd, String search, int start, int limit) {
+        LocalDate dateStart = LocalDate.now();
+        LocalDate dateEnd = LocalDate.now();
+        if (StringUtils.isNotEmpty(dtStart)) {
+            dateStart = LocalDate.parse(dtStart);
+        }
+        if (StringUtils.isNotEmpty(dtEnd)) {
+            dateEnd = LocalDate.parse(dtEnd);
+        }
+        long count = countCoffreCaisses(dateStart, dateEnd, search);
+        List<CoffreCaisseDTO> data = fetchListCoffreCaisses(dateStart, dateEnd, search, start, limit);
+        return FunctionUtils.returnData(data, count);
     }
 }

@@ -26,7 +26,9 @@ import javax.ejb.Local;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.CoffreCaisseDTO;
 import rest.service.dto.MvtCaisseSummaryDTO;
+import rest.service.exception.CaisseUsingExeception;
 
 /**
  * @author Kobena
@@ -74,8 +76,6 @@ public interface CaisseService {
     JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException;
 
     boolean checkCaisse(TUser user);
-
-    JSONObject validerFondDeCaisse(String id, TUser user) throws JSONException;
 
     JSONObject attribuerFondDeCaisse(String idUser, TUser operateur, Integer amount) throws JSONException;
 
@@ -135,4 +135,6 @@ public interface CaisseService {
     MvtCaisseSummaryDTO getAllMvtCaissesSummary(String dtStart, String dtEnd, String userId, boolean checked);
 
     JSONObject getAllMvtCaisses(String dtStart, String dtEnd, boolean checked, String userId, int limit, int start);
+
+    String ouvrirCaisse(TUser user, CoffreCaisseDTO coffreCaisse) throws CaisseUsingExeception;
 }

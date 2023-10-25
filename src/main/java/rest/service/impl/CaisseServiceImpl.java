@@ -16,7 +16,6 @@ import commonTasks.dto.SumCaisseDTO;
 import commonTasks.dto.SummaryDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import commonTasks.dto.VisualisationCaisseDTO;
-import cust_barcode.barecodeManager;
 import dal.AnnulationRecette;
 import dal.AnnulationRecette_;
 import dal.MvtTransaction;
@@ -33,7 +32,6 @@ import dal.TEmplacement;
 import dal.TEmplacement_;
 import dal.TFamille_;
 import dal.TModeReglement;
-import dal.TMotifReglement;
 import dal.TMvtCaisse;
 import dal.TOfficine;
 import dal.TParameters;
@@ -52,7 +50,6 @@ import dal.TTypeReglement_;
 import dal.TUser;
 import dal.TUser_;
 import dal.enumeration.Canal;
-import dal.enumeration.CategorieMvtCaisse;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
@@ -105,13 +102,14 @@ import rest.service.CaisseService;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.TransactionService;
+import rest.service.dto.CoffreCaisseDTO;
 import rest.service.dto.MvtCaisseModeDTO;
 import rest.service.dto.MvtCaisseSummaryDTO;
+import rest.service.exception.CaisseUsingExeception;
 import toolkits.parameters.commonparameter;
 import util.Constant;
 import util.DateConverter;
 import util.FunctionUtils;
-import util.NumberUtils;
 
 /**
  *
@@ -1126,7 +1124,7 @@ public class CaisseServiceImpl implements CaisseService {
             TypedQuery<TResumeCaisse> q = this.em.createQuery(
                     "SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID = ?1  AND t.strSTATUT = ?2 ",
                     TResumeCaisse.class);
-            q.setParameter(1, ooTUser.getLgUSERID()).setParameter(2, DateConverter.STATUT_IS_IN_USE).setMaxResults(1);
+            q.setParameter(1, ooTUser.getLgUSERID()).setParameter(2, Constant.STATUT_IS_USING).setMaxResults(1);
             return (q.getSingleResult() != null);
         } catch (Exception e) {
             // LOG.log(Level.SEVERE, null, e);
@@ -1139,8 +1137,7 @@ public class CaisseServiceImpl implements CaisseService {
         try {
             TypedQuery<TCoffreCaisse> q = this.em.createQuery(
                     "SELECT t FROM TCoffreCaisse t WHERE t.lgUSERID.lgUSERID = ?1 AND  t.strSTATUT = ?2  AND   FUNCTION('DATE', t.dtCREATED)=CURRENT_DATE ",
-                    TCoffreCaisse.class).setParameter(1, userId)
-                    .setParameter(2, DateConverter.STATUT_IS_WAITING_VALIDATION);
+                    TCoffreCaisse.class).setParameter(1, userId).setParameter(2, Constant.STATUT_IS_WAITING_VALIDATION);
             return q.getSingleResult();
 
         } catch (Exception e) {
@@ -1215,7 +1212,7 @@ public class CaisseServiceImpl implements CaisseService {
         mvtCaisse.setStrNUMCOMPTE(typeMvtCaisse.getStrCODECOMPTABLE());
         mvtCaisse.setStrNUMPIECECOMPTABLE(numComptable);
         mvtCaisse.setIntAMOUNT(amount);
-        mvtCaisse.setStrCOMMENTAIRE("Attribution de fond de caisse");
+        mvtCaisse.setStrCOMMENTAIRE(typeMvtCaisse.getStrNAME());
         mvtCaisse.setStrSTATUT(Constant.STATUT_ENABLE);
         mvtCaisse.setDtDATEMVT(new Date());
         mvtCaisse.setDtCREATED(mvtCaisse.getDtDATEMVT());
@@ -1228,64 +1225,6 @@ public class CaisseServiceImpl implements CaisseService {
         getEntityManager().persist(mvtCaisse);
 
         return mvtCaisse;
-    }
-
-    @Override
-    public JSONObject validerFondDeCaisse(String id, TUser user) throws JSONException {
-        JSONObject json = new JSONObject();
-        try {
-            TTypeMvtCaisse typeMvtCaisse = getEntityManager().find(TTypeMvtCaisse.class, DateConverter.MVT_FOND_CAISSE);
-            TCoffreCaisse oCoffreCaisse = getEntityManager().find(TCoffreCaisse.class, id);
-            TTypeReglement reglement = getEntityManager().find(TTypeReglement.class, DateConverter.MODE_ESP);
-            if (oCoffreCaisse == null) {
-                return json.put("success", false).put("msg",
-                        "Aucune attribution de fond de caisse en cours pour cet utilisateur");
-            }
-            TResumeCaisse resumeCaisse = new TResumeCaisse();
-            TCaisse oOTCaisse = findByUser(user.getLgUSERID());
-            if (oOTCaisse == null) {
-                oOTCaisse = new TCaisse();
-                oOTCaisse.setLgCAISSEID(UUID.randomUUID().toString());
-                oOTCaisse.setDtCREATED(new Date());
-            }
-            oOTCaisse.setDtUPDATED(new Date());
-            oOTCaisse.setLgUPDATEDBY(user.getStrLOGIN());
-            oOTCaisse.setIntSOLDE(0.0);
-            oOTCaisse.setLgUSERID(user);
-            oOTCaisse.setLgCREATEDBY(user.getLgUSERID());
-            resumeCaisse.setLdCAISSEID(UUID.randomUUID().toString());
-            resumeCaisse.setIntSOLDEMATIN(oCoffreCaisse.getIntAMOUNT().intValue());
-            resumeCaisse.setLgUSERID(user);
-            resumeCaisse.setDtCREATED(new Date());
-            oCoffreCaisse.setDtUPDATED(resumeCaisse.getDtCREATED());
-            resumeCaisse.setLgCREATEDBY(user.getLgUSERID());
-            resumeCaisse.setIdCoffreCaisse(oCoffreCaisse);
-            resumeCaisse.setIntSOLDESOIR(0);
-            resumeCaisse.setStrSTATUT(Constant.STATUT_IS_USING);
-            oCoffreCaisse.setStrSTATUT(Constant.STATUT_IS_ASSIGN);
-            oCoffreCaisse.setLdUPDATEDBY(user.getStrLOGIN());
-            getEntityManager().merge(oOTCaisse);
-            getEntityManager().persist(resumeCaisse);
-            String description = "Validation de fond de caisse " + user.getStrLOGIN() + " d'un montant de "
-                    + oCoffreCaisse.getIntAMOUNT().intValue() + " par " + user.getStrFIRSTNAME() + " "
-                    + user.getStrLASTNAME();
-            TMvtCaisse mvtCaisse = addTMvtCaisse(user, typeMvtCaisse, reglement, description, "1",
-                    oCoffreCaisse.getIntAMOUNT());
-            logService.updateItem(user, mvtCaisse.getStrREFTICKET(), description, TypeLog.VALIDATION_DE_FOND_DE_CAISSE,
-                    oCoffreCaisse);
-            transactionService.addTransaction(user, user, mvtCaisse.getLgMVTCAISSEID(),
-                    oCoffreCaisse.getIntAMOUNT().intValue(), mvtCaisse.getIntAMOUNT().intValue(),
-                    oCoffreCaisse.getIntAMOUNT().intValue(), 0, Boolean.TRUE, CategoryTransaction.DEBIT,
-                    TypeTransaction.SORTIE, reglement, typeMvtCaisse, getEntityManager(), 0, 0, 0,
-                    mvtCaisse.getStrREFTICKET());
-            createNotification(description, TypeNotification.MVT_DE_CAISSE, user);
-            return json.put("success", true).put("msg", "Opération effectuée ").put("mvtId",
-                    mvtCaisse.getLgMVTCAISSEID());
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return json.put("success", false).put("msg", "Errreur:::: Echec de  validation ");
-        }
-
     }
 
     Comparator<RapportDTO> comparatorReport = Comparator.comparingInt(RapportDTO::getOder);
@@ -3246,4 +3185,104 @@ public class CaisseServiceImpl implements CaisseService {
 
     }
 
+    @Override
+    public String ouvrirCaisse(TUser user, CoffreCaisseDTO coffreCaisse) throws CaisseUsingExeception {
+        return attribuerFondDeCaisse(coffreCaisse, user);
+    }
+
+    private String attribuerFondDeCaisse(CoffreCaisseDTO coffreCaisseDto, TUser user) throws CaisseUsingExeception {
+
+        if (checkCaisse(user)) {
+            throw new CaisseUsingExeception("La caisse de cet utilisateur est en cours d'utilisation");
+        }
+        if (getStatutCoffre(user.getLgUSERID()) != null) {
+            throw new CaisseUsingExeception("Cet utilisateur a déjà reçu un fond de caisse");
+        }
+        String description = "Ouverture de la caisse de " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME()
+                + " d'un montant de " + coffreCaisseDto.getAmount();
+        TCoffreCaisse coffreCaisse = createCoffreCaisse(user, coffreCaisseDto);
+        TMvtCaisse mvtCaisse = validerFondDeCaisse(coffreCaisse, user, description);
+        logService.updateItem(user, coffreCaisse.getIdCoffreCaisse(), description, TypeLog.OUVERTURE_CAISSE,
+                coffreCaisse);
+        createNotification(description, TypeNotification.MVT_DE_CAISSE, user);
+        return mvtCaisse.getLgMVTCAISSEID();
+
+    }
+
+    private TCoffreCaisse createCoffreCaisse(TUser user, CoffreCaisseDTO coffreCaisseDTO) {
+        TCoffreCaisse coffreCaisse = new TCoffreCaisse();
+        coffreCaisse.setIdCoffreCaisse(UUID.randomUUID().toString());
+        coffreCaisse.setLgUSERID(user);
+        coffreCaisse.setIntAMOUNT(Double.valueOf(coffreCaisseDTO.getAmount()));
+        coffreCaisse.setDtCREATED(new Date());
+        coffreCaisse.setDtUPDATED(coffreCaisse.getDtCREATED());
+        coffreCaisse.setStrSTATUT(Constant.STATUT_IS_ASSIGN);
+        coffreCaisse.setLdCREATEDBY(user.getLgUSERID());
+        coffreCaisse.setLdUPDATEDBY(user.getStrLOGIN());
+        this.em.persist(coffreCaisse);
+
+        return coffreCaisse;
+    }
+
+    private TCaisse updateTCaisse(TCaisse oOTCaisse, TUser user) {
+        oOTCaisse.setDtUPDATED(new Date());
+        oOTCaisse.setLgUPDATEDBY(user.getStrLOGIN());
+        oOTCaisse.setIntSOLDE(0.0);
+        oOTCaisse.setLgUSERID(user);
+        oOTCaisse.setLgCREATEDBY(user.getLgUSERID());
+        getEntityManager().merge(oOTCaisse);
+        return oOTCaisse;
+
+    }
+
+    private TCaisse createTCaisse(TUser user) {
+        TCaisse oOTCaisse = new TCaisse();
+        oOTCaisse.setLgCAISSEID(UUID.randomUUID().toString());
+        oOTCaisse.setDtCREATED(new Date());
+        oOTCaisse.setDtUPDATED(oOTCaisse.getDtCREATED());
+        oOTCaisse.setLgUPDATEDBY(user.getStrLOGIN());
+        oOTCaisse.setIntSOLDE(0.0);
+        oOTCaisse.setLgUSERID(user);
+        oOTCaisse.setLgCREATEDBY(user.getLgUSERID());
+        getEntityManager().merge(oOTCaisse);
+        return oOTCaisse;
+
+    }
+
+    private void createResummerCaisse(TCoffreCaisse oCoffreCaisse, TUser user) {
+        TResumeCaisse resumeCaisse = new TResumeCaisse();
+        resumeCaisse.setLdCAISSEID(UUID.randomUUID().toString());
+        resumeCaisse.setIntSOLDEMATIN(oCoffreCaisse.getIntAMOUNT().intValue());
+        resumeCaisse.setLgUSERID(user);
+        resumeCaisse.setDtCREATED(new Date());
+        resumeCaisse.setLgCREATEDBY(user.getLgUSERID());
+        resumeCaisse.setIdCoffreCaisse(oCoffreCaisse);
+        resumeCaisse.setIntSOLDESOIR(0);
+        resumeCaisse.setStrSTATUT(Constant.STATUT_IS_USING);
+        getEntityManager().persist(resumeCaisse);
+    }
+
+    private TMvtCaisse validerFondDeCaisse(TCoffreCaisse oCoffreCaisse, TUser user, String description) {
+
+        TTypeMvtCaisse typeMvtCaisse = getEntityManager().find(TTypeMvtCaisse.class, Constant.MVT_FOND_CAISSE);
+        TTypeReglement reglement = getEntityManager().find(TTypeReglement.class, Constant.MODE_ESP);
+
+        TCaisse oOTCaisse = findByUser(user.getLgUSERID());
+        if (Objects.nonNull(oOTCaisse)) {
+            updateTCaisse(oOTCaisse, user);
+
+        } else {
+            createTCaisse(user);
+        }
+        createResummerCaisse(oCoffreCaisse, user);
+        TMvtCaisse mvtCaisse = addTMvtCaisse(user, typeMvtCaisse, reglement, description, "1",
+                oCoffreCaisse.getIntAMOUNT());
+        int amount = oCoffreCaisse.getIntAMOUNT().intValue();
+        transactionService.addTransaction(user, user, mvtCaisse.getLgMVTCAISSEID(), amount, amount, amount, 0,
+                Boolean.TRUE, CategoryTransaction.DEBIT, TypeTransaction.SORTIE, reglement, typeMvtCaisse,
+                getEntityManager(), 0, 0, 0, mvtCaisse.getStrREFTICKET());
+
+        return mvtCaisse;
+
+    }
 }

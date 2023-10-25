@@ -733,7 +733,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)));
             List<Predicate> predicates = predicatesVentes(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
@@ -2113,7 +2113,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)).distinct(true);
             List<Predicate> predicates = predicatesVentes(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TPreenregistrement> q = getEntityManager().createQuery(cq);
             return buildFromPreenregistrement(q.getResultList());
 
@@ -2137,7 +2137,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     .orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
 
             List<Predicate> predicates = predicatesVentes(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -2174,8 +2174,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     public rest.service.dto.VenteDTO getOne(String id) {
         TPreenregistrement tp = this.getEntityManager().find(TPreenregistrement.class, id);
         MvtTransaction mt = findByVente(id);
-        rest.service.dto.VenteDTO v = VenteDTOBuilder.buildVenteDTO(tp, mt);
-        return v;
+        return VenteDTOBuilder.buildVenteDTO(tp, mt);
 
     }
 
