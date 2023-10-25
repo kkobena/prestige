@@ -37,6 +37,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.LogService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -81,7 +82,7 @@ public class LogServiceImpl implements LogService {
         eventLog.setDtCREATED(new Date());
         eventLog.setDtUPDATED(eventLog.getDtCREATED());
         eventLog.setStrCREATEDBY(user.getStrLOGIN());
-        eventLog.setStrSTATUT(commonparameter.statut_enable);
+        eventLog.setStrSTATUT(Constant.STATUT_ENABLE);
         eventLog.setStrTABLECONCERN(t.getClass().getName());
         eventLog.setTypeLog(typeLog);
         eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");

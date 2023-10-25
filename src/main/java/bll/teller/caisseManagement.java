@@ -19,6 +19,7 @@ import dal.TCaisse;
 import dal.TCashTransaction;
 import dal.TCoffreCaisse;
 import dal.TDepenses;
+import dal.TEventLog;
 import dal.TMvtCaisse;
 import dal.TParameters;
 import dal.TPreenregistrement;
@@ -32,6 +33,7 @@ import dal.TTypeRecette;
 import dal.TTypeReglement;
 import dal.TUser;
 import dal.dataManager;
+import dal.enumeration.TypeLog;
 import dal.jconnexion;
 import java.math.BigDecimal;
 import java.sql.CallableStatement;
@@ -47,13 +49,13 @@ import javax.persistence.ParameterMode;
 import javax.persistence.Query;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
 import rest.service.impl.Mail;
 import rest.service.impl.Sms;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.conversion;
 import toolkits.utils.date;
 import toolkits.utils.logger;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -64,6 +66,7 @@ public class caisseManagement extends bll.bllBase {
 
     private static final String SOLDE_SQL = "SELECT SUM(m.`montantRegle`) AS montantRegle FROM t_preenregistrement p,mvttransaction m,t_user u WHERE p.`lg_USER_CAISSIER_ID`=u.`lg_USER_ID` AND p.`lg_PREENREGISTREMENT_ID`=m.vente_id"
             + " AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND  p.`lg_USER_CAISSIER_ID`= ?2 AND p.`dt_UPDATED` BETWEEN ?3 AND ?4 AND m.`typeReglementId` =?5 ";
+    private static final String SOLDE_SQL_OTHERS = "SELECT SUM(m.int_AMOUNT) AS montant  FROM t_mvt_caisse m,t_user u WHERE m.`lg_USER_ID`=u.`lg_USER_ID` AND u.`lg_USER_ID`=?1 AND m.`dt_CREATED` BETWEEN ?2 AND ?3 AND  m.`lg_MODE_REGLEMENT_ID`=?4 AND m.`lg_TYPE_MVT_CAISSE_ID` <> '1'  ";
 
     public TCaisse OTCaisse;
 
@@ -137,10 +140,10 @@ public class caisseManagement extends bll.bllBase {
             }
             OTResumeCaisse.setLdCAISSEID(this.getKey().gettimeid());
             OTResumeCaisse.setIntSOLDEMATIN(OTCoffreCaisse.getIntAMOUNT().intValue());
-            // OTResumeCaisse.setIdAnneeScolaire(this.getOTAnneeScolaires());
+            // oTResumeCaisse.setIdAnneeScolaire(this.getOTAnneeScolaires());
             OTResumeCaisse.setLgUSERID(this.getOTUser());
             OTResumeCaisse.setDtCREATED(new Date());
-            // OTResumeCaisse.setDtDAY(new Date());
+            // oTResumeCaisse.setDtDAY(new Date());
             OTResumeCaisse.setLgCREATEDBY(this.getOTUser().getStrLOGIN());
             OTResumeCaisse.setIdCoffreCaisse(OTCoffreCaisse);
             OTResumeCaisse.setIntSOLDESOIR(0);
@@ -242,7 +245,7 @@ public class caisseManagement extends bll.bllBase {
             Date dt_Date_Fin = new Date(), dt_Date_debut = new Date();
             String OdateFin = this.getKey().DateToString(dt_Date_Fin, this.getKey().formatterMysqlShort2),
                     OdateDebut = this.getKey().DateToString(dt_Date_debut, this.getKey().formatterMysqlShort2);
-            ;
+
             dt_Date_Fin = this.getKey().getDate(OdateFin, "23:59");
             dt_Date_debut = this.getKey().getDate(OdateDebut, "00:00");
 
@@ -444,13 +447,13 @@ public class caisseManagement extends bll.bllBase {
             OTCaisse.setLgCREATEDBY(this.getOTUser().getStrLOGIN());
 
             OTCaisse.setLgCAISSEID(this.getKey().getComplexId());
-            return null;
+            return OTCaisse;
         }
     }
 
     private double caisseAmount(TResumeCaisse caisse) {
-        int fond = Objects.nonNull(caisse.getIntSOLDEMATIN()) ? caisse.getIntSOLDEMATIN() : 0;
-        double solde = fond;
+
+        double solde = 0;
         try {
             Query query = this.getOdataManager().getEm().createNativeQuery(SOLDE_SQL)
                     .setParameter(1, DateConverter.DEPOT_EXTENSION).setParameter(2, caisse.getLgUSERID().getLgUSERID())
@@ -458,7 +461,7 @@ public class caisseManagement extends bll.bllBase {
                     .setParameter(4, new Date(), TemporalType.TIMESTAMP).setParameter(5, DateConverter.MODE_ESP);
             BigDecimal sum = (BigDecimal) query.getSingleResult();
             if (Objects.nonNull(sum)) {
-                solde += sum.doubleValue();
+                solde = sum.doubleValue();
             }
 
         } catch (Exception e) {
@@ -468,46 +471,60 @@ public class caisseManagement extends bll.bllBase {
         return solde;
     }
 
-    public void CloseCaisse(String ld_CAISSE_ID) {
-        try {
-            TResumeCaisse OTResumeCaisse = this.getOdataManager().getEm().find(TResumeCaisse.class, ld_CAISSE_ID);
+    private double caisseAmountOtherMvts(TResumeCaisse caisse) {
 
-            if (OTResumeCaisse == null) {
+        double solde = 0;
+        try {
+            Query query = this.getOdataManager().getEm().createNativeQuery(SOLDE_SQL_OTHERS)
+                    .setParameter(1, caisse.getLgUSERID().getLgUSERID())
+                    .setParameter(2, caisse.getDtCREATED(), TemporalType.TIMESTAMP)
+                    .setParameter(3, new Date(), TemporalType.TIMESTAMP).setParameter(4, DateConverter.MODE_ESP);
+            Double sum = (Double) query.getSingleResult();
+            if (Objects.nonNull(sum)) {
+                solde = sum;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+        return solde;
+    }
+
+    public void CloseCaisse(String ldCAISSEID) {
+        try {
+            TResumeCaisse oTResumeCaisse = this.getOdataManager().getEm().find(TResumeCaisse.class, ldCAISSEID);
+
+            if (oTResumeCaisse == null) {
                 this.buildErrorTraceMessage("Impossible de cloturer la caisse. Ref Inconnu de la caisse inconnu");
                 return;
             }
 
-            if (OTResumeCaisse.getStrSTATUT().equals(commonparameter.statut_is_Process)) {
+            if (oTResumeCaisse.getStrSTATUT().equals(commonparameter.statut_is_Process)) {
                 this.buildErrorTraceMessage("Impossible de cloturer cette caisse",
                         "la fermeture de la caisse specifier est deja  "
-                                + this.getOTranslate().getValue(OTResumeCaisse.getStrSTATUT()));
+                                + this.getOTranslate().getValue(oTResumeCaisse.getStrSTATUT()));
                 return;
             }
 
-            this.setOTUser(OTResumeCaisse.getLgUSERID());
+            this.setOTUser(oTResumeCaisse.getLgUSERID());
             this.OTCaisse = new TCaisse();
-            // this.OTCaisse.setIntSOLDE(new Double(this.GetSoldeCaisse(this.getOTUser().getLgUSERID()))); // a
-            // decommenter en cas de probleme 26/03/2017
-            // this.OTCaisse.setIntSOLDE(this.GetSoldeCaisse(this.getOTUser(), OTResumeCaisse.getDtCREATED(), new
-            // Date()));
-            this.OTCaisse.setIntSOLDE(caisseAmount(OTResumeCaisse) + OTResumeCaisse.getIntSOLDEMATIN());
-            OTResumeCaisse.setLgUPDATEDBY(this.getOTUser().getStrLOGIN());
-            OTResumeCaisse.setIntSOLDESOIR(this.OTCaisse.getIntSOLDE().intValue());
-            OTResumeCaisse.setStrSTATUT(commonparameter.statut_is_Process);
-            OTResumeCaisse.setDtUPDATED(new Date());
-            this.persiste(OTResumeCaisse);
 
-            jconnexion Ojconnexion = new jconnexion();
-            Ojconnexion.initConnexion();
-            Ojconnexion.OpenConnexion();
+            this.OTCaisse.setIntSOLDE(caisseAmount(oTResumeCaisse) + caisseAmountOtherMvts(oTResumeCaisse));
+            oTResumeCaisse.setLgUPDATEDBY(this.getOTUser().getStrLOGIN());
+            oTResumeCaisse.setIntSOLDESOIR(this.OTCaisse.getIntSOLDE().intValue());
+            oTResumeCaisse.setStrSTATUT(commonparameter.statut_is_Process);
+            oTResumeCaisse.setDtUPDATED(new Date());
+            this.getOdataManager().getEm().merge(oTResumeCaisse);
+            // this.persiste(oTResumeCaisse);
+
             // String Description = "Cloture de la caisse de " + this.getOTUser().getStrLOGIN() + " avec un montant de "
-            // + Math.abs(OTResumeCaisse.getIntSOLDESOIR());
-            String Description = "Cloture de la caisse de  " + this.getOTUser().getStrLOGIN() + " avec succès";
-            this.do_event_log(Ojconnexion, commonparameter.ALL, Description, this.getOTUser().getStrLOGIN(),
-                    commonparameter.statut_enable, "t_coffre_caisse,t_resume_caisse,t_caisse", "caisse",
-                    "Mouvement de Caisse", this.getOTUser().getLgUSERID());
-            this.is_activity(Ojconnexion);
-            Ojconnexion.CloseConnexion();
+            // + Math.abs(oTResumeCaisse.getIntSOLDESOIR());
+            String description = "Cloture de la caisse de  " + this.getOTUser().getStrLOGIN()
+                    + " avec succès avec un montant de: " + this.OTCaisse.getIntSOLDE();
+
+            updateItem(this.getOTUser(), oTResumeCaisse.getLdCAISSEID(), description, TypeLog.CLOTURE_CAISSE,
+                    oTResumeCaisse);
             this.setMessage(commonparameter.PROCESS_SUCCESS);
 
         } catch (Exception e) {
@@ -515,6 +532,20 @@ public class caisseManagement extends bll.bllBase {
             this.buildErrorTraceMessage("Impossible de cloturer la caisse", e.getMessage());
 
         }
+    }
+
+    public void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object t) {
+        TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
+        eventLog.setLgUSERID(user);
+        eventLog.setDtCREATED(new Date());
+        eventLog.setDtUPDATED(eventLog.getDtCREATED());
+        eventLog.setStrCREATEDBY(user.getStrLOGIN());
+        eventLog.setStrSTATUT(Constant.STATUT_ENABLE);
+        eventLog.setStrTABLECONCERN(t.getClass().getName());
+        eventLog.setTypeLog(typeLog);
+        eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
+        eventLog.setStrTYPELOG(ref);
+        this.getOdataManager().getEm().persist(eventLog);
     }
 
     public boolean checkParameterByKey(String key) {
@@ -555,12 +586,12 @@ public class caisseManagement extends bll.bllBase {
 
                 this.setOTUser(OTResumeCaisse.getLgUSERID());
                 OTResumeCaisse.setStrSTATUT(commonparameter.statut_is_Closed);
-                // this.GetSoldeCaisse(OTResumeCaisse.getLgUSERID().getLgUSERID()); //
+                // this.GetSoldeCaisse(oTResumeCaisse.getLgUSERID().getLgUSERID()); //
                 OTCaisse = GetTCaisse(this.getOTUser().getLgUSERID());
                 OTBilletage = this.getBilletageByResumeCaisse(OTResumeCaisse.getLdCAISSEID());
 
                 // String Description = "Validation de la Cloture de la caisse de " + this.getOTUser().getStrLOGIN() + "
-                // avec un montant de " + Math.abs(OTCaisse.getIntSOLDE() - OTResumeCaisse.getIntSOLDEMATIN());
+                // avec un montant de " + Math.abs(OTCaisse.getIntSOLDE() - oTResumeCaisse.getIntSOLDEMATIN());
                 String Description = "Validation de la Cloture de la caisse de  " + this.getOTUser().getStrLOGIN()
                         + " avec un montant de " + (OTBilletage != null
                                 ? conversion.AmountFormat(OTBilletage.getIntAMOUNT().intValue(), '.') : 0);
@@ -570,7 +601,7 @@ public class caisseManagement extends bll.bllBase {
                 OTCaisse.setDtUPDATED(new Date());
                 /*
                  * this.getOdataManager().BeginTransaction(); //ancien bon code. a decommenter en cas de probleme
-                 * this.getOdataManager().getEm().persist(OTResumeCaisse);
+                 * this.getOdataManager().getEm().persist(oTResumeCaisse);
                  * this.getOdataManager().getEm().persist(OTCaisse); this.getOdataManager().CloseTransaction();
                  */
                 if (this.persiste(OTCaisse)) {
@@ -613,7 +644,7 @@ public class caisseManagement extends bll.bllBase {
             TCaisse OTCaisse = this.GetTCaisse();
             // a mettre le parametre de desactivation de la cloture automatique de la caisse
             if (OTParameters == null) { // replace true apres par la valeur boolean qui reprensente de la fermeture
-                                        // automatique. False = fermeture automatique desactivée
+                // automatique. False = fermeture automatique desactivée
                 this.buildErrorTraceMessage("Paramètre de gestion de clôture automatique de la caisse inexistant");
                 return false;
 
@@ -622,12 +653,12 @@ public class caisseManagement extends bll.bllBase {
             // OTResumeCaisseOld = this.getTResumeCaisseClosed(this.getOTUser().getLgUSERID());// a decommenter en cas
             // de probleme. 19/05/2016
             OTResumeCaisseOld = this.getTResumeCaisse(this.getOTUser().getLgUSERID(), commonparameter.statut_is_Using);// a
-                                                                                                                       // decommenter
-                                                                                                                       // en
-                                                                                                                       // cas
-                                                                                                                       // de
-                                                                                                                       // probleme.
-                                                                                                                       // 19/05/2016
+            // decommenter
+            // en
+            // cas
+            // de
+            // probleme.
+            // 19/05/2016
             if (OTResumeCaisseOld == null) {
                 this.buildErrorTraceMessage("Désolé. La caisse de " + this.getOTUser().getStrFIRSTNAME() + " "
                         + this.getOTUser().getStrLASTNAME() + " est fermée");
@@ -635,14 +666,14 @@ public class caisseManagement extends bll.bllBase {
             }
 
             if (Integer.valueOf(OTParameters.getStrVALUE()) == 0 && OTCaisse != null) { // si valeur 0, on passe en
-                                                                                        // cloture manuelle
+                // cloture manuelle
                 return true;
             }
 
             OTResumeCaisse = (TResumeCaisse) this.getOdataManager().getEm().createQuery(
                     "SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1  AND t.dtCREATED >= ?3  AND t.dtCREATED < ?4 AND t.strSTATUT LIKE ?5 ")
                     .setParameter(1, ooTUser.getLgUSERID()) // .setParameter(2,
-                                                            // this.getOTAnneeScolaires().getIdAnneeScolaire())
+                    // this.getOTAnneeScolaires().getIdAnneeScolaire())
                     .setParameter(3, dt_Date_debut).setParameter(4, dt_Date_Fin)
                     .setParameter(5, commonparameter.statut_is_Using).getSingleResult();
             if (OTResumeCaisse != null) {
@@ -670,7 +701,7 @@ public class caisseManagement extends bll.bllBase {
             TResumeCaisse OTResumeCaisse = (TResumeCaisse) this.getOdataManager().getEm().createQuery(
                     "SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1  AND t.dtCREATED >= ?3  AND t.dtCREATED < ?4 AND t.strSTATUT LIKE ?5 ")
                     .setParameter(1, ooTUser.getLgUSERID()) // .setParameter(2,
-                                                            // this.getOTAnneeScolaires().getIdAnneeScolaire())
+                    // this.getOTAnneeScolaires().getIdAnneeScolaire())
                     .setParameter(3, dt_Date_debut).setParameter(4, dt_Date_Fin)
                     .setParameter(5, commonparameter.statut_is_Closed).getSingleResult();
             soldfinal = OTResumeCaisse.getIntSOLDESOIR() - OTResumeCaisse.getIntSOLDEMATIN();
@@ -1076,7 +1107,7 @@ public class caisseManagement extends bll.bllBase {
             int nb_cinq_cent, int int_nb_autre) {
         TCaisse OTCaisse = null;
 
-        // OTResumeCaisse = this.GetTResumeCaisse(this.getOTUser().getLgUSERID());
+        OTResumeCaisse = this.GetTResumeCaisse(this.getOTUser().getLgUSERID());
         double int_billetage_amount = this.GetBilletageAmount(nb_dix, nb_cinq, nb_deux, nb_mil, nb_cinq_cent,
                 int_nb_autre);
 
@@ -1192,7 +1223,7 @@ public class caisseManagement extends bll.bllBase {
                     .getParameter(Parameter.KEY_ACTIVATE_CLOTURE_CAISSE_AUTO);
             // a mettre le parametre de desactivation de la cloture automatique de la caisse
             if (OTParameters == null) { // replace true apres par la valeur boolean qui reprensente de la fermeture
-                                        // automatique. False = fermeture automatique desactivée
+                // automatique. False = fermeture automatique desactivée
                 this.buildErrorTraceMessage("Paramètre de gestion de clôture automatique de la caisse inexistant");
                 return null;
 
@@ -1207,8 +1238,7 @@ public class caisseManagement extends bll.bllBase {
                 }
                 return OTResumeCaisse;
             }
-            System.err.println("dt_Date_debut " + dt_Date_debut);
-            System.err.println("dt_Date_Fin " + dt_Date_Fin);
+
             OTResumeCaisse = (TResumeCaisse) this.getOdataManager().getEm().createQuery(
                     "SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID LIKE ?1  AND  t.strSTATUT LIKE ?2 AND t.dtCREATED >= ?3  AND t.dtCREATED < ?4 ")
                     .setParameter(1, this.getOTUser().getLgUSERID()).setParameter(2, commonparameter.statut_is_Using)
@@ -1290,7 +1320,7 @@ public class caisseManagement extends bll.bllBase {
 
             TResumeCaisse OTResumeCaisse = this.getOdataManager().getEm().find(TResumeCaisse.class, ld_CAISSE_ID);
 
-            // if(OTResumeCaisse == null)
+            // if(oTResumeCaisse == null)
             if (OTResumeCaisse == null) {
                 this.buildErrorTraceMessage("Impossible de cloturer la caisse. Ref Inconnu de la caisse inconnu");
                 return;
@@ -1311,7 +1341,7 @@ public class caisseManagement extends bll.bllBase {
                 return;
             }
 
-            // this.setOTUser(OTResumeCaisse.getLgUSERID());
+            // this.setOTUser(oTResumeCaisse.getLgUSERID());
             this.OTCaisse = new TCaisse();
             this.OTCaisse.setIntSOLDE(OTResumeCaisse.getIntSOLDESOIR().doubleValue());
             OTResumeCaisse.setLgUPDATEDBY(this.getOTUser().getStrLOGIN());
@@ -1332,7 +1362,7 @@ public class caisseManagement extends bll.bllBase {
             Ojconnexion.initConnexion();
             Ojconnexion.OpenConnexion();
             // String Description = "Cloture de la caisse de " + this.getOTUser().getStrLOGIN() + " avec un montant de "
-            // + Math.abs(OTResumeCaisse.getIntSOLDESOIR());
+            // + Math.abs(oTResumeCaisse.getIntSOLDESOIR());
             String Description = "Annulation de la clôture de la caisse de "
                     + OTResumeCaisse.getLgUSERID().getStrFIRSTNAME() + " "
                     + OTResumeCaisse.getLgUSERID().getStrLASTNAME() + " par " + this.getOTUser().getStrFIRSTNAME() + " "

@@ -389,14 +389,7 @@ Ext.define('testextjs.view.vente.user.addClientAssurance', {
                                             selModel: {
                                                 selType: 'cellmodel',
                                                 mode: 'SINGLE'
-                                            }, /*
-                                             plugins: [
-                                             Ext.create('Ext.grid.plugin.CellEditing',
-                                             {
-                                             clicksToEdit: 1,
-                                             pluginId: 'cellplugin'
-                                             })
-                                             ],*/
+                                            }, 
                                             dockedItems: [
                                                 {
                                                     xtype: 'toolbar',

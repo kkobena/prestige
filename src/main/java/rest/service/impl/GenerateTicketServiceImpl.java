@@ -31,6 +31,7 @@ import dal.TTypeMvtCaisse;
 import dal.TTypeReglement;
 import dal.TUser;
 import dal.dataManager;
+import dal.enumeration.CategorieMvtCaisse;
 import dal.enumeration.TypeTransaction;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -68,6 +69,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
@@ -83,6 +85,7 @@ import toolkits.utils.Maths;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import toolkits.utils.jdom;
 import util.Afficheur;
+import util.Constant;
 
 import util.DateConverter;
 import util.FunctionUtils;
@@ -379,28 +382,28 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     @Override
-    public List<String> generateDataSeller(TPreenregistrement OTPreenregistrement) {
+    public List<String> generateDataSeller(TPreenregistrement opreenregistrement) {
         List<String> datas = new ArrayList<>();
         try {
             datas.add("Caissier(e):: "
-                    + DataStringManager.subStringData(OTPreenregistrement.getLgUSERCAISSIERID().getStrFIRSTNAME(), 0, 1)
-                    + "." + OTPreenregistrement.getLgUSERCAISSIERID().getStrLASTNAME() + "   |   " + "Vendeur:: "
-                    + DataStringManager.subStringData(OTPreenregistrement.getLgUSERVENDEURID().getStrFIRSTNAME(), 0, 1)
-                    + "." + OTPreenregistrement.getLgUSERVENDEURID().getStrLASTNAME());
-            if (OTPreenregistrement.getBISCANCEL() || OTPreenregistrement.getIntPRICE() < 0) {
+                    + DataStringManager.subStringData(opreenregistrement.getLgUSERCAISSIERID().getStrFIRSTNAME(), 0, 1)
+                    + "." + opreenregistrement.getLgUSERCAISSIERID().getStrLASTNAME() + "   |   " + "Vendeur:: "
+                    + DataStringManager.subStringData(opreenregistrement.getLgUSERVENDEURID().getStrFIRSTNAME(), 0, 1)
+                    + "." + opreenregistrement.getLgUSERVENDEURID().getStrLASTNAME());
+            if (opreenregistrement.getBISCANCEL() || opreenregistrement.getIntPRICE() < 0) {
                 datas.add("Annulée par :: "
-                        + DataStringManager.subStringData(OTPreenregistrement.getLgUSERID().getStrFIRSTNAME(), 0, 1)
-                        + "." + OTPreenregistrement.getLgUSERID().getStrLASTNAME());
+                        + DataStringManager.subStringData(opreenregistrement.getLgUSERID().getStrFIRSTNAME(), 0, 1)
+                        + "." + opreenregistrement.getLgUSERID().getStrLASTNAME());
             }
-            if (OTPreenregistrement.getLgNATUREVENTEID().getLgNATUREVENTEID()
+            if (opreenregistrement.getLgNATUREVENTEID().getLgNATUREVENTEID()
                     .equalsIgnoreCase(Parameter.KEY_NATURE_VENTE_DEPOT)) {
                 TEmplacement OTEmplacement = getEntityManager().find(TEmplacement.class,
-                        OTPreenregistrement.getPkBrand());
+                        opreenregistrement.getPkBrand());
                 datas.add(OTEmplacement != null ? "Dépôt: " + OTEmplacement.getStrDESCRIPTION() : " ");
                 datas.add("Client(e):: " + (OTEmplacement != null
                         ? OTEmplacement.getStrFIRSTNAME() + " " + OTEmplacement.getStrLASTNAME()
-                        : OTPreenregistrement.getStrFIRSTNAMECUSTOMER() + " "
-                                + OTPreenregistrement.getStrLASTNAMECUSTOMER()));
+                        : opreenregistrement.getStrFIRSTNAMECUSTOMER() + " "
+                                + opreenregistrement.getStrLASTNAMECUSTOMER()));
 
             }
         } catch (Exception e) {
@@ -1724,19 +1727,19 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     @Override
     public JSONObject generateVoTicketOnFly(ClotureVenteParams clotureVenteParams) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        // Tools | Templates.
     }
 
     @Override
     public JSONObject generateVoTicketOnFly(String venteId) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        // Tools | Templates.
     }
 
     @Override
     public JSONObject generateDepotTicketOnFly(String venteId) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        // Tools | Templates.
     }
 
     private int getMontantNetVo(TPreenregistrement OTPreenregistrement) {
@@ -1759,9 +1762,9 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return montantNet;
     }
 
-    private int getMontantNet(boolean isVo, TPreenregistrement OTPreenregistrement, Integer montantNet) {
+    private int getMontantNet(boolean isVo, TPreenregistrement preenregistrement, Integer montantNet) {
         if (isVo) {
-            return getMontantNetVo(OTPreenregistrement);
+            return getMontantNetVo(preenregistrement);
         }
         return getMontantNetVno(montantNet);
 
@@ -2015,31 +2018,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
         }
         return title;
-    }
-
-    List<MvtTransaction> ticketZData(Params params) {
-        try {
-            TypedQuery<MvtTransaction> q;
-            if (params.getDescription().equals("ALL")) {
-                q = getEntityManager().createQuery(
-                        "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac",
-                        MvtTransaction.class);
-                q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT,
-                        TypeTransaction.SORTIE, TypeTransaction.ENTREE));
-            } else {
-                q = getEntityManager().createQuery(
-                        "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac",
-                        MvtTransaction.class);
-                q.setParameter("typetransac", EnumSet.of(TypeTransaction.VENTE_COMPTANT, TypeTransaction.VENTE_CREDIT));
-            }
-            q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            q.setParameter("dtStart", LocalDate.parse(params.getDtStart(), DateTimeFormatter.ISO_DATE));
-            q.setParameter("dtEnd", LocalDate.parse(params.getDtEnd(), DateTimeFormatter.ISO_DATE));
-            return q.getResultList();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return Collections.emptyList();
-        }
     }
 
     private void updateParameters(TypedQuery<MvtTransaction> q, Params params) {
@@ -2592,4 +2570,102 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
     }
 
+    @Override
+    public void printMvtCaisse(String mvtCaisseId, TUser user) {
+
+        try {
+
+            rest.service.dto.MvtCaisseDTO mvtCaisse = getMvtCaisse(mvtCaisseId);
+
+            int numbretiket = nombreExemplaireMvtCaisseTicket();
+
+            String fileBarecode = buildLineBarecode(mvtCaisse.getTiket());
+            PrintService printService = findPrintService();
+            TImprimante imprimante = findImprimanteByName();
+            TOfficine officine = findOfficine();
+            List<String> datas = generateData(mvtCaisse);
+
+            ImpressionServiceImpl imp = new ImpressionServiceImpl();
+            imp.setoTImprimante(imprimante);
+            imp.setEmplacement(user.getLgEMPLACEMENTID());
+            imp.setOfficine(officine);
+            imp.setService(printService);
+            imp.setTypeTicket(Constant.ACTION_OTHER);
+            imp.setShowCodeBar(true);
+            imp.setOperation(mvtCaisse.getDateMvt());
+            imp.setIntBegin(0);
+
+            imp.setTitle(mvtCaisse.getTypeMvtCaisse());
+            imp.buildTicket(datas, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+                    buildComment(mvtCaisse.getCommentaire()), fileBarecode);
+            for (int i = 0; i < numbretiket; i++) {
+                imp.printTicketVente(1);
+            }
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+    }
+
+    private List<String> generateData(rest.service.dto.MvtCaisseDTO mvtCaisse) {
+        List<String> datas = new ArrayList<>();
+        // Constant.ACTION_OTHER
+        datas.add("Code comptable: ;" + mvtCaisse.getNumCompte() + "; ");
+        datas.add("Libellé: ;" + mvtCaisse.getModeReglement() + "; ");
+        datas.add("Montant: ;" + NumberUtils.formatLongToString(mvtCaisse.getMontant()) + "; F CFA");
+        datas.add("Opérateur: ;" + mvtCaisse.getUserAbrName() + "; ");
+
+        return datas;
+    }
+
+    private List<String> buildComment(String comment) {
+        List<String> commentSection = new ArrayList<>();
+        if (StringUtils.isNotEmpty(comment)) {
+            commentSection.add(" " + ";0");
+            commentSection.add(comment + ";0");
+        }
+        return commentSection;
+    }
+
+    private rest.service.dto.MvtCaisseDTO buildMvtCaisse(Tuple t) {
+
+        long amount = t.get("montant", Double.class).longValue();
+
+        return rest.service.dto.MvtCaisseDTO.builder().montant(amount)
+                .typeMvtCaisse(t.get("typeMvtCaisse", String.class)).modeReglement(t.get("modeReglement", String.class))
+                .userAbrName(t.get("userAbrName", String.class)).numCompte(t.get("numCompte", String.class))
+                .tiket(t.get("tiket", String.class)).heureOpreration(t.get("heureOpreration", String.class))
+                .dateOpreration(t.get("dateOpreration", java.sql.Date.class).toLocalDate()
+                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                .commentaire(t.get("commentaire", String.class)).dateMvt(t.get("dateMvt", java.sql.Date.class)).build();
+    }
+
+    private rest.service.dto.MvtCaisseDTO getMvtCaisse(String id) {
+        String sql = " SELECT DATE(m.dt_CREATED) AS dateMvt, tm.`lg_TYPE_MVT_CAISSE_ID` AS typeId, m.`str_COMMENTAIRE` as commentaire, tm.categorie AS categorie, m.str_NUM_COMPTE AS numCompte,DATE(m.dt_CREATED) AS dateOpreration,DATE_FORMAT(m.dt_CREATED,'%H:%i:%s') AS heureOpreration,m.int_AMOUNT AS montant,tm.str_DESCRIPTION AS typeMvtCaisse,CONCAT(SUBSTR(u.str_FIRST_NAME, 1, 1), '.', u.str_LAST_NAME)   AS userAbrName,tr.str_NAME AS modeReglement,m.str_REF_TICKET AS tiket FROM t_mvt_caisse m,t_type_mvt_caisse tm,t_user u, t_mode_reglement modeReglement,t_type_reglement tr  WHERE m.lg_TYPE_MVT_CAISSE_ID=tm.lg_TYPE_MVT_CAISSE_ID AND u.lg_USER_ID=m.lg_USER_ID AND m.lg_MODE_REGLEMENT_ID=modeReglement.lg_MODE_REGLEMENT_ID AND modeReglement.lg_TYPE_REGLEMENT_ID=tr.lg_TYPE_REGLEMENT_ID  AND m.`lg_MVT_CAISSE_ID`=?1";
+
+        try {
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, id).setMaxResults(1);
+
+            return Optional.ofNullable((Tuple) query.getSingleResult()).map(this::buildMvtCaisse).orElseThrow();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            throw e;
+
+        }
+    }
+
+    private int nombreExemplaireMvtCaisseTicket() {
+        try {
+            TParameters nbreTicket = getEntityManager().find(TParameters.class, "KEY_TICKET_COUNTMVT");
+
+            if (nbreTicket != null) {
+                return Integer.parseInt(nbreTicket.getStrVALUE().trim());
+            }
+            return 1;
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+
+    }
 }

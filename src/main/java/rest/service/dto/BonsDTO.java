@@ -29,6 +29,7 @@ public class BonsDTO {
     private String tiersPayantLibelle;
     private String tiersPayantId;
     private String clientFullName;
+    private String beneficiaireFullName;
     private String strREF;
     private String strNUMEROSECURITESOCIAL;
     private String lg_PREENREGISTREMENT_ID;

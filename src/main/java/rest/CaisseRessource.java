@@ -35,6 +35,8 @@ import rest.service.BalanceService;
 import rest.service.CaisseService;
 import rest.service.GenerateTicketService;
 import rest.service.dto.BalanceParamsDTO;
+import rest.service.dto.CoffreCaisseDTO;
+import rest.service.dto.MvtCaisseSummaryDTO;
 import toolkits.parameters.commonparameter;
 import util.DateConverter;
 import util.Constant;
@@ -65,10 +67,10 @@ public class CaisseRessource {
     @GET
     @Path("listecaisse")
     public Response geListeCaisse(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "page") int p, @QueryParam(value = "user") String lg_USER_ID,
-            @QueryParam(value = "reglement") String lg_TYPE_REGLEMENT_ID,
-            @QueryParam(value = "startDate") String dt_Date_Debut, @QueryParam(value = "endDate") String dt_Date_Fin,
-            @QueryParam(value = "startH") String h_debut, @QueryParam(value = "endH") String h_fin,
+            @QueryParam(value = "page") int p, @QueryParam(value = "user") String lgUserId,
+            @QueryParam(value = "reglement") String lgTypeReglementId,
+            @QueryParam(value = "startDate") String dtDateDebut, @QueryParam(value = "endDate") String dtDateFin,
+            @QueryParam(value = "startH") String hdebut, @QueryParam(value = "endH") String hfin,
             @QueryParam(value = "findClient") boolean findClient) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -79,23 +81,23 @@ public class CaisseRessource {
         caisseParams.setLimit(limit);
         caisseParams.setStart(start);
 
-        if (!StringUtils.isEmpty(dt_Date_Fin)) {
-            caisseParams.setEnd(LocalDate.parse(dt_Date_Fin));
+        if (!StringUtils.isEmpty(dtDateFin)) {
+            caisseParams.setEnd(LocalDate.parse(dtDateFin));
         }
-        if (!StringUtils.isEmpty(dt_Date_Debut)) {
-            caisseParams.setStartDate(LocalDate.parse(dt_Date_Debut));
+        if (!StringUtils.isEmpty(dtDateDebut)) {
+            caisseParams.setStartDate(LocalDate.parse(dtDateDebut));
         }
-        if (!StringUtils.isEmpty(h_debut)) {
-            caisseParams.setStartHour(LocalTime.parse(h_debut));
+        if (!StringUtils.isEmpty(hdebut)) {
+            caisseParams.setStartHour(LocalTime.parse(hdebut));
         }
-        if (!StringUtils.isEmpty(h_fin)) {
-            caisseParams.setStartEnd(LocalTime.parse(h_fin));
+        if (!StringUtils.isEmpty(hfin)) {
+            caisseParams.setStartEnd(LocalTime.parse(hfin));
         }
-        if (!StringUtils.isEmpty(lg_TYPE_REGLEMENT_ID)) {
-            caisseParams.setTypeReglementId(lg_TYPE_REGLEMENT_ID);
+        if (!StringUtils.isEmpty(lgTypeReglementId)) {
+            caisseParams.setTypeReglementId(lgTypeReglementId);
         }
-        if (!StringUtils.isEmpty(lg_USER_ID)) {
-            caisseParams.setUtilisateurId(lg_USER_ID);
+        if (!StringUtils.isEmpty(lgUserId)) {
+            caisseParams.setUtilisateurId(lgUserId);
         }
         caisseParams.setFindClient(findClient);
         caisseParams.setEmplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
@@ -212,15 +214,17 @@ public class CaisseRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-    @PUT
-    @Path("validationfondcaisse/{id}")
-    public Response validationFondCaisse(@PathParam("id") String id) throws JSONException {
+    @POST
+    @Path("ouvrir-caisse")
+    public Response validationFondCaisse(CoffreCaisseDTO coffreCaisse) throws JSONException {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject json = caisseService.validerFondDeCaisse(id, tu);
+        JSONObject json = new JSONObject();
+
+        json.put("mvtId", caisseService.ouvrirCaisse(tu, coffreCaisse));
         return Response.ok().entity(json.toString()).build();
     }
 
@@ -257,8 +261,8 @@ public class CaisseRessource {
     @GET
     @Path("mvtcaisses")
     public Response mvtcaisses(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "user") String lg_USER_ID, @QueryParam(value = "dtStart") String dt_Date_Debut,
-            @QueryParam(value = "dtEnd") String dt_Date_Fin) {
+            @QueryParam(value = "user") String lgUSERID, @QueryParam(value = "dtStart") String dt_debut,
+            @QueryParam(value = "dtEnd") String dtFin) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
         if (tu == null) {
@@ -268,14 +272,14 @@ public class CaisseRessource {
         caisseParams.setLimit(limit);
         caisseParams.setStart(start);
 
-        if (!StringUtils.isEmpty(dt_Date_Fin)) {
-            caisseParams.setEnd(LocalDate.parse(dt_Date_Fin));
+        if (!StringUtils.isEmpty(dtFin)) {
+            caisseParams.setEnd(LocalDate.parse(dtFin));
         }
-        if (!StringUtils.isEmpty(dt_Date_Debut)) {
-            caisseParams.setStartDate(LocalDate.parse(dt_Date_Debut));
+        if (!StringUtils.isEmpty(dt_debut)) {
+            caisseParams.setStartDate(LocalDate.parse(dt_debut));
         }
-        if (!StringUtils.isEmpty(lg_USER_ID)) {
-            caisseParams.setUtilisateurId(lg_USER_ID);
+        if (!StringUtils.isEmpty(lgUSERID)) {
+            caisseParams.setUtilisateurId(lgUSERID);
         }
 
         caisseParams.setEmplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
@@ -333,4 +337,38 @@ public class CaisseRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    @GET
+    @Path("mvts-others")
+    public Response fetchMvtcaisses(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "user") String lgUSERID, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "userId") String userId, @QueryParam(value = "checked") boolean checked,
+            @QueryParam(value = "dtEnd") String dtEnd) {
+        JSONObject json = caisseService.getAllMvtCaisses(dtStart, dtEnd, checked, userId, limit, start);
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("mvts-others-summary")
+    public Response fetchMvtcaisseSummary(@QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @QueryParam(value = "user") String lgUSERID,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "userId") String userId,
+            @QueryParam(value = "checked") boolean checked, @QueryParam(value = "dtEnd") String dtEnd) {
+        JSONObject json = new JSONObject();
+        MvtCaisseSummaryDTO caisseSummary = caisseService.getAllMvtCaissesSummary(dtStart, dtEnd, userId, checked);
+        json.put("data", new JSONObject(caisseSummary));
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("ticke-mvt-caisse")
+    public Response ticketMvtCaisse(@QueryParam(value = "mvtCaisseId") String mvtCaisseId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+
+        generateTicketService.printMvtCaisse(mvtCaisseId, tu);
+        return Response.ok().build();
+    }
 }

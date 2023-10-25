@@ -33,12 +33,19 @@ public final class Constant {
     public static final String DEFAUL_TYPEETIQUETTE = "2";
     public static final String STATUT_IS_USING = "is_Using";
     public static final String ACTION_DESACTIVE_PRODUIT = "ACTION_DESACTIVE_PRODUIT";
+    public static final String KEY_ACTIVATE_CLOTURE_CAISSE_AUTO = "KEY_ACTIVATE_CLOTURE_CAISSE_AUTO";
+    public static final String STATUT_IS_WAITING_VALIDATION = "is_Waiting_validation";
+    public static final String STATUT_IS_ASSIGN = "is_assign";
+    public static final String MODE_ESP = "1";
+    public static String ACTION_OTHER = "OTHER";
+    public static final String MVT_SORTIE_CAISSE = "4";
+    public static final String MVT_FOND_CAISSE = "1";
 
     private Constant() {
     }
 
-    public static boolean hasAuthorityByName(List<TPrivilege> LstTPrivilege, String authorityName) {
+    public static boolean hasAuthorityByName(List<TPrivilege> lstTPrivilege, String authorityName) {
         java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(authorityName);
-        return LstTPrivilege.stream().anyMatch(p);
+        return lstTPrivilege.stream().anyMatch(p);
     }
 }
