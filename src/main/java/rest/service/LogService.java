@@ -20,7 +20,6 @@ import org.json.JSONObject;
  * @author DICI
  */
 @Local
-// @Remote
 public interface LogService {
 
     void updateLogFile(TUser user, String ref, String desc, TypeLog typeLog, Object T);

@@ -733,7 +733,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)));
             List<Predicate> predicates = predicatesVentes(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
@@ -889,7 +889,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasRapport(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport0(params);
         }
         List<TvaDTO> datas = new ArrayList<>();
@@ -1101,7 +1101,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvaRapport(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport0(params);
         }
 
@@ -1662,7 +1662,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     // @Override
     public List<TvaDTO> tvasRapportcc(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport0(params);
         }
         List<TvaDTO> datas = new ArrayList<>();
@@ -1706,7 +1706,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasDataReport(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport0(params);
         }
         return donneesTvaV2(LocalDate.parse(params.getDtStart()), LocalDate.parse(params.getDtEnd()), true,
@@ -1832,7 +1832,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvasRapport2(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport20(params);
         }
 
@@ -1941,7 +1941,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     @Override
     public List<TvaDTO> tvaRapport2(Params params) {
-        if (caisseService.key_Take_Into_Account() || caisseService.key_Params()) {
+        if (caisseService.getKeyTakeIntoAccount() || caisseService.getKeyParams()) {
             return tvasRapport20(params);
         }
         List<TvaDTO> datas;
@@ -2113,7 +2113,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)).distinct(true);
             List<Predicate> predicates = predicatesVentes(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TPreenregistrement> q = getEntityManager().createQuery(cq);
             return buildFromPreenregistrement(q.getResultList());
 
@@ -2137,7 +2137,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     .orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
 
             List<Predicate> predicates = predicatesVentes(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -2174,8 +2174,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     public rest.service.dto.VenteDTO getOne(String id) {
         TPreenregistrement tp = this.getEntityManager().find(TPreenregistrement.class, id);
         MvtTransaction mt = findByVente(id);
-        rest.service.dto.VenteDTO v = VenteDTOBuilder.buildVenteDTO(tp, mt);
-        return v;
+        return VenteDTOBuilder.buildVenteDTO(tp, mt);
 
     }
 

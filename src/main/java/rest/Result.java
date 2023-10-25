@@ -23,7 +23,6 @@ public class Result<T> implements Serializable {
     final private String msg;
     final private long total;
     final private T metaData;
-    // final private int error;
 
     Result(boolean success, T data, long total) {
         this.success = success;

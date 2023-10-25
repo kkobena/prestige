@@ -559,7 +559,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
 
     },
     onRechClick: function () {
-        var lg_GROSSISTE_ID = "";
+        let lg_GROSSISTE_ID = "";
         if (Ext.getCmp('lg_GROSSISTE_ID').getValue() != null) {
             lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
         }
@@ -577,10 +577,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
             }
         });
     },
-    onPdfClick: function () {
-
-
-    },
+    
     onGestionQuinzaine: function () {
         const xtype = "quinzaineManager";
         testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion des quinzaines", "0");

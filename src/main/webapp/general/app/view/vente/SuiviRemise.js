@@ -218,12 +218,28 @@ Ext.define('testextjs.view.vente.SuiviRemise', {
                             header: 'Reference',
                             dataIndex: 'strREFTICKET',
                             flex: 1
+                        },
+                        
+                        {
+                            sortable: false,
+                            menuDisabled: true,
+                            header: 'Type Vente',
+                            dataIndex: 'strTYPEVENTE',
+                            flex: 1
+                        },
+                        
+                        {
+                            sortable: false,
+                            menuDisabled: true,
+                            header: 'Client',
+                            dataIndex: 'clientFullName',
+                            flex: 1
                         }
                       
                         , {
                             sortable: false,
                             menuDisabled: true,
-                            header: 'MONTANT',
+                            header: 'Montant Vente',
                             xtype: 'numbercolumn',
                               align: 'right',
                             dataIndex: 'intPRICE',
@@ -234,7 +250,7 @@ Ext.define('testextjs.view.vente.SuiviRemise', {
                         , {
                             sortable: false,
                             menuDisabled: true,
-                            header: 'MONTANT REMISE',
+                            header: 'Montant Remise',
                             xtype: 'numbercolumn',
                               align: 'right',
                             dataIndex: 'intPRICEREMISE',
@@ -255,6 +271,14 @@ Ext.define('testextjs.view.vente.SuiviRemise', {
                             menuDisabled: true,
                             header: 'Heure',
                             dataIndex: 'heure',
+                            flex: 0.6,
+                            align: 'center'
+                        }
+                        , {
+                            sortable: false,
+                            menuDisabled: true,
+                            header: 'Caissier(e)',
+                            dataIndex: 'userCaissierName',
                             flex: 0.6,
                             align: 'center'
                         }
