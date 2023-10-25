@@ -452,7 +452,8 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
                                 }
                             }
                         });
-                        Oview.getStore().reload();
+                       // Oview.getStore().load();
+                       Oview.onRechClick();
                         fenetre.destroy();
 
                     }

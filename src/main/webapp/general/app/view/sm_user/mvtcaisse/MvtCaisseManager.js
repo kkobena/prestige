@@ -91,7 +91,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                     xtype: 'toolbar',
                     dock: 'top', items: [
                         {
-                            text: 'Creer',
+                            text: 'Créer',
                             tooltip: 'Cr&eacute;er',
                             scope: this,
                             iconCls: 'addicon',
@@ -306,7 +306,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
 
     loadStore: function () {
         Me.onRechClick();
-        Me.loadSummary();
+       
     },
     onPdfPrint: function () {
 

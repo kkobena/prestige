@@ -38,6 +38,7 @@ public final class Constant {
     public static final String STATUT_IS_ASSIGN = "is_assign";
     public static final String MODE_ESP = "1";
     public static String ACTION_OTHER = "OTHER";
+    public static final String MVT_SORTIE_CAISSE = "4";
 
     private Constant() {
     }

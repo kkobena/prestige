@@ -33,6 +33,7 @@ import dal.TEmplacement;
 import dal.TEmplacement_;
 import dal.TFamille_;
 import dal.TModeReglement;
+import dal.TMotifReglement;
 import dal.TMvtCaisse;
 import dal.TOfficine;
 import dal.TParameters;
@@ -123,8 +124,8 @@ public class CaisseServiceImpl implements CaisseService {
     private static final String MVT_QUERY = "SELECT tm.`lg_TYPE_MVT_CAISSE_ID` AS typeId, m.`str_COMMENTAIRE` AS commentaire,tm.categorie AS categorie,m.lg_MVT_CAISSE_ID AS id,m.str_NUM_COMPTE AS numCompte,DATE(m.dt_CREATED) AS dateOpreration,DATE_FORMAT(m.dt_CREATED,'%H:%i:%s') AS heureOpreration,m.int_AMOUNT AS montant,tm.str_DESCRIPTION AS typeMvtCaisse,CONCAT(SUBSTR(u.str_FIRST_NAME, 1, 1), '.', u.str_LAST_NAME)   AS userAbrName,tr.str_NAME AS modeReglement,m.str_REF_TICKET AS tiket FROM t_mvt_caisse m,t_type_mvt_caisse tm,t_user u, t_mode_reglement modeReglement,t_type_reglement tr  WHERE m.lg_TYPE_MVT_CAISSE_ID=tm.lg_TYPE_MVT_CAISSE_ID"
             + " AND m.int_AMOUNT <> 0 AND u.lg_USER_ID=m.lg_USER_ID AND m.lg_MODE_REGLEMENT_ID=modeReglement.lg_MODE_REGLEMENT_ID AND modeReglement.lg_TYPE_REGLEMENT_ID=tr.lg_TYPE_REGLEMENT_ID AND m.bool_CHECKED=?1 AND DATE(m.dt_CREATED) BETWEEN ?2 AND ?3 {userId} ORDER BY m.dt_CREATED ";
 
-    private static final String MVT_SUMMARY_QUERY = "SELECT tm.`lg_TYPE_MVT_CAISSE_ID` AS typeId, SUM(m.int_AMOUNT) AS montant,tm.categorie AS categorie,tr.str_NAME AS modeReglement FROM t_mvt_caisse m,t_type_mvt_caisse tm,t_user u, t_mode_reglement modeReglement,t_type_reglement tr  "
-            + " WHERE m.lg_TYPE_MVT_CAISSE_ID=tm.lg_TYPE_MVT_CAISSE_ID AND tm.`lg_TYPE_MVT_CAISSE_ID` <> '1' AND u.lg_USER_ID=m.lg_USER_ID AND m.lg_MODE_REGLEMENT_ID=modeReglement.lg_MODE_REGLEMENT_ID AND modeReglement.lg_TYPE_REGLEMENT_ID=tr.lg_TYPE_REGLEMENT_ID AND m.bool_CHECKED=?1 AND DATE(m.dt_CREATED) BETWEEN ?2 AND ?3 %s GROUP BY tr.lg_TYPE_REGLEMENT_ID,tm.categorie,tm.`lg_TYPE_MVT_CAISSE_ID` ";
+    private static final String MVT_SUMMARY_QUERY = "SELECT tm.`lg_TYPE_MVT_CAISSE_ID` AS typeId, SUM(m.int_AMOUNT) AS montant,tr.str_NAME AS modeReglement FROM t_mvt_caisse m,t_type_mvt_caisse tm,t_user u, t_mode_reglement modeReglement,t_type_reglement tr  "
+            + " WHERE m.lg_TYPE_MVT_CAISSE_ID=tm.lg_TYPE_MVT_CAISSE_ID AND tm.`lg_TYPE_MVT_CAISSE_ID` <> '1' AND u.lg_USER_ID=m.lg_USER_ID AND m.lg_MODE_REGLEMENT_ID=modeReglement.lg_MODE_REGLEMENT_ID AND modeReglement.lg_TYPE_REGLEMENT_ID=tr.lg_TYPE_REGLEMENT_ID AND m.bool_CHECKED=?1 AND DATE(m.dt_CREATED) BETWEEN ?2 AND ?3 %s GROUP BY tr.lg_TYPE_REGLEMENT_ID,tm.`lg_TYPE_MVT_CAISSE_ID` ";
 
     private static final String MVT_QUERY_COUNT = "SELECT COUNT(m.lg_MVT_CAISSE_ID) FROM t_mvt_caisse m,t_user u WHERE  m.int_AMOUNT <> 0 AND u.lg_USER_ID=m.lg_USER_ID AND m.bool_CHECKED=?1 AND DATE(m.dt_CREATED) BETWEEN ?2 AND ?3 %s  ";
 
@@ -1009,7 +1010,9 @@ public class CaisseServiceImpl implements CaisseService {
             if (modeReglement == null) {
                 return json.put("success", false).put("msg", "Echec d'encaissement. Mode de règlement inexistant.");
             }
-
+            if (typeMvtCaisse.getLgTYPEMVTCAISSEID().equals(Constant.MVT_SORTIE_CAISSE)) {
+                caisseDTO.setAmount(caisseDTO.getAmount() * (-1));
+            }
             TMvtCaisse mvtCaisse = addTMvtCaisse(typeMvtCaisse, caisseDTO, emg, modeReglement, user);
             String description = "Mouvement d'une somme de  " + mvtCaisse.getIntAMOUNT().intValue()
                     + " Type de mouvement " + typeMvtCaisse.getStrDESCRIPTION() + " par " + user.getStrFIRSTNAME() + " "
@@ -3145,8 +3148,7 @@ public class CaisseServiceImpl implements CaisseService {
             long montant = 0;
             for (rest.service.dto.MvtCaisseDTO mvtCaisseDTO : v) {
 
-                montant += (mvtCaisseDTO.getCategorieMvtCaisse() == CategorieMvtCaisse.SORTIE_CAISSE)
-                        ? (-1) * mvtCaisseDTO.getMontant() : mvtCaisseDTO.getMontant();
+                montant += mvtCaisseDTO.getMontant();
             }
             modes.add(MvtCaisseModeDTO.builder().modeReglement(k).montant(montant).build());
             total.add(montant);
@@ -3224,12 +3226,10 @@ public class CaisseServiceImpl implements CaisseService {
     }
 
     private rest.service.dto.MvtCaisseDTO buildMvtCaisse(Tuple t) {
-        CategorieMvtCaisse categorieMvtCaisse = CategorieMvtCaisse.values()[t.get("categorie", Integer.class)];
+
         long amount = t.get("montant", Double.class).longValue();
         String typeMvtId = t.get("typeId", String.class);
-        if (categorieMvtCaisse == CategorieMvtCaisse.SORTIE_CAISSE && !"1".equals(typeMvtId)) {
-            amount = (-1) * amount;
-        }
+
         return rest.service.dto.MvtCaisseDTO.builder().montant(amount).id(t.get("id", String.class))
                 .typeMvtCaisse(t.get("typeMvtCaisse", String.class)).modeReglement(t.get("modeReglement", String.class))
                 .userAbrName(t.get("userAbrName", String.class)).numCompte(t.get("numCompte", String.class))
@@ -3240,15 +3240,10 @@ public class CaisseServiceImpl implements CaisseService {
     }
 
     private rest.service.dto.MvtCaisseDTO buildCaissesSummary(Tuple t) {
-        CategorieMvtCaisse categorieMvtCaisse = CategorieMvtCaisse.values()[t.get("categorie", Integer.class)];
+
         return rest.service.dto.MvtCaisseDTO.builder().montant(t.get("montant", Double.class).longValue())
-                .categorieMvtCaisse(categorieMvtCaisse).typeId(t.get("typeId", String.class))
-                .modeReglement(t.get("modeReglement", String.class)).build();
+                .typeId(t.get("typeId", String.class)).modeReglement(t.get("modeReglement", String.class)).build();
 
     }
 
-    public void printTicket(String mvtCaisseId) {
-        rest.service.dto.MvtCaisseDTO mvtCaisse = null;
-        barecodeManager obarecodeManager = new barecodeManager();
-    }
 }

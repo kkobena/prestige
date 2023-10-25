@@ -65,7 +65,7 @@ public class BilletageServiceImpl implements BilletageService {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return null;
-            // return createCaisse(user,0.0);
+
         }
 
     }
