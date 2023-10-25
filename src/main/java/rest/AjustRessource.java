@@ -122,8 +122,8 @@ public class AjustRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean canCancel = DateConverter.hasAuthorityByName(LstTPrivilege, DateConverter.ACTIONDELETEAJUSTEMENT);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+        boolean canCancel = DateConverter.hasAuthorityByName(lstTPrivilege, DateConverter.ACTIONDELETEAJUSTEMENT);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);

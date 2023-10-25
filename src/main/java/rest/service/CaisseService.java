@@ -12,32 +12,28 @@ import commonTasks.dto.Params;
 import commonTasks.dto.RapportDTO;
 import commonTasks.dto.ResumeCaisseDTO;
 import commonTasks.dto.SumCaisseDTO;
-import commonTasks.dto.TableauBaordPhDTO;
-import commonTasks.dto.TableauBaordSummary;
 import commonTasks.dto.VenteDetailsDTO;
 import commonTasks.dto.VisualisationCaisseDTO;
 import dal.MvtTransaction;
-import dal.TCashTransaction;
 import dal.TOfficine;
-import dal.TPreenregistrement;
 import dal.TUser;
-import dal.Typemvtproduit;
 import dal.enumeration.TypeTransaction;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.Local;
-import javax.persistence.EntityManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.CoffreCaisseDTO;
+import rest.service.dto.MvtCaisseSummaryDTO;
+import rest.service.exception.CaisseUsingExeception;
 
 /**
  * @author Kobena
  */
 @Local
-// @Remote
 public interface CaisseService {
 
     /*
@@ -57,7 +53,6 @@ public interface CaisseService {
      * properties = new HashMap<>(); properties.put("javax.persistence.fetchgraph", entityGraph); Author author =
      * entityManager.find(Author.class, id, properties);
      */
-
     List<SumCaisseDTO> getCaisse(CaisseParamsDTO caisseParams);
 
     SumCaisseDTO cumul(CaisseParamsDTO caisseParams, boolean all);
@@ -80,9 +75,7 @@ public interface CaisseService {
 
     JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException;
 
-    boolean checkCaisse(TUser user, EntityManager emg);
-
-    JSONObject validerFondDeCaisse(String id, TUser user) throws JSONException;
+    boolean checkCaisse(TUser user);
 
     JSONObject attribuerFondDeCaisse(String idUser, TUser operateur, Integer amount) throws JSONException;
 
@@ -105,9 +98,9 @@ public interface CaisseService {
 
     MvtTransaction findByVenteId(String venteId);
 
-    boolean key_Params();
+    boolean getKeyParams();
 
-    boolean key_Take_Into_Account();
+    boolean getKeyTakeIntoAccount();
 
     long montantAccount(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
             TypeTransaction transaction, String typrReglement);
@@ -135,4 +128,13 @@ public interface CaisseService {
             String typrReglement, String typeMvtCaisse);
 
     List<MvtTransaction> balanceVenteCaisse(LocalDate dtStart, boolean checked, String emplacementId);
+
+    List<rest.service.dto.MvtCaisseDTO> getAllMvtCaisses(String dtStart, String dtEnd, boolean checked, String userId,
+            int limit, int start, boolean all);
+
+    MvtCaisseSummaryDTO getAllMvtCaissesSummary(String dtStart, String dtEnd, String userId, boolean checked);
+
+    JSONObject getAllMvtCaisses(String dtStart, String dtEnd, boolean checked, String userId, int limit, int start);
+
+    String ouvrirCaisse(TUser user, CoffreCaisseDTO coffreCaisse) throws CaisseUsingExeception;
 }

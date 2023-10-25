@@ -547,12 +547,12 @@ public class ImpressionServiceImpl implements Printable {
     }
 
     public void buildSubCommentaire(Graphics2D graphics, int scale_texte, int start) {
-        List<String> _commentaires = this.getCommentaires();
+        List<String> commentaires = this.getCommentaires();
 
         Font font;
 
-        for (int i = 0; i < _commentaires.size(); i++) {
-            String[] parts = _commentaires.get(i).split(";");
+        for (int i = 0; i < commentaires.size(); i++) {
+            String[] parts = commentaires.get(i).split(";");
             if (parts[1].equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
                 font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
             } else {
@@ -563,7 +563,7 @@ public class ImpressionServiceImpl implements Printable {
 
         }
 
-        limit = start + (scale_texte * (_commentaires.size()));
+        limit = start + (scale_texte * (commentaires.size()));
     }
 
     public void buildFooter(Graphics2D graphics, int scale_image, int scale_texte, int start) {

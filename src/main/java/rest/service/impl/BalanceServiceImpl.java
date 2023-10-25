@@ -611,10 +611,10 @@ public class BalanceServiceImpl implements BalanceService {
 
             ratioVA = BigDecimal.valueOf(Double.valueOf(montantTTC) / montantAchat).setScale(2, RoundingMode.HALF_UP)
                     .doubleValue();
-           
+
         }
-        if(montantTTC>0){
-             rationAV = BigDecimal.valueOf(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP)
+        if (montantTTC > 0) {
+            rationAV = BigDecimal.valueOf(Double.valueOf(montantAchat) / montantTTC).setScale(2, RoundingMode.HALF_UP)
                     .doubleValue();
         }
         if (nbreVente > 0) {
@@ -888,7 +888,7 @@ public class BalanceServiceImpl implements BalanceService {
 
                 case DateConverter.LABOREXCI:
 
-                    o.setMontantAchatOne(montant );
+                    o.setMontantAchatOne(montant);
 
                     break;
                 case DateConverter.DPCI:
@@ -896,15 +896,15 @@ public class BalanceServiceImpl implements BalanceService {
 
                     break;
                 case DateConverter.COPHARMED:
-                    o.setMontantAchatThree(montant );
+                    o.setMontantAchatThree(montant);
 
                     break;
                 case DateConverter.TEDIS:
-                    o.setMontantAchatFour(montant );
+                    o.setMontantAchatFour(montant);
 
                     break;
                 case DateConverter.AUTRES:
-                    o.setMontantAchatFive(montant );
+                    o.setMontantAchatFive(montant);
                     break;
                 default:
                     break;

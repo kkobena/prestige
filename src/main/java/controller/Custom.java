@@ -46,7 +46,7 @@ public class Custom extends HttpServlet {
         }
         JSONObject json = new JSONObject();
         try (PrintWriter out = response.getWriter()) {
-            if (!caisseService.key_Params()) {
+            if (!caisseService.getKeyParams()) {
                 out.println(json);
                 return;
             }

@@ -354,17 +354,16 @@ Ext.define('testextjs.controller.AvoirCtr', {
             } else {
                 me.current = null;
                 me.client = null;
-//                me.updateComboxFields(null);
+
             }
         } else {
             me.current = null;
-            me.client = null;
-//            me.updateComboxFields(null);
+
         }
     },
 
     resetAlls: function () {
-        var me = this;
+        const me = this;
         me.current = null;
         me.client = null;
         me.getVnogrid().getStore().load();

@@ -23,7 +23,8 @@ public enum TypeLog {
     MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande"), QUANTITE_UG("Entrée quantité UG"),
     MODIFICATION_INFO_VENTE("Modification de vente"), RETOUR_FOURNISSEUR("Retour fournisseur"),
     SAISIS_PERIMES("Saisis de périmés"), VALIDATION_DE_FOND_DE_CAISSE("Validation de fond de caisse "),
-    AUTHENTIFICATION("Authentification"), DECONNECTION("Deconnection"),;
+    AUTHENTIFICATION("Authentification"), DECONNECTION("Deconnection"), CLOTURE_CAISSE("Cloture de caisse"),
+    OUVERTURE_CAISSE_AUTO("Ouverture de de caisse automatique"), OUVERTURE_CAISSE("Ouverture  de caisse");
 
     private final String value;
 

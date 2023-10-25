@@ -41,7 +41,7 @@ public class ListDesBonServiceImpl implements ListDesBonService {
     private static final String EXCLUDE_STATEMENT = " AND  p.`lg_PREENREGISTREMENT_ID` NOT IN (SELECT v.preenregistrement_id FROM vente_exclu v) ";
     private static final String QUERY = "SELECT  DATE_FORMAT(p.`dt_UPDATED`, \"%d/%m/%Y\") AS dtUPDATED,DATE_FORMAT(p.`dt_UPDATED`, \"%H:%i:%s\") AS HEURE, tp.lg_TIERS_PAYANT_ID AS tiersPayantId, tp.str_NAME AS libelleTiersPayant,typeTp.str_LIBELLE_TYPE_TIERS_PAYANT AS typeTiersPayant, \n"
             + " cp.int_PRICE AS cpAmount , p.`str_REF`, cp.`int_PERCENT`,cp.`int_PRICE_RESTE`, p.`int_PRICE_REMISE`\n"
-            + "  ,cp.lg_PREENREGISTREMENT_ID AS lg_PREENREGISTREMENT_ID , clt.`str_FIRST_NAME`,clt.`str_LAST_NAME`,cl.`str_NUMERO_SECURITE_SOCIAL`,cp.`str_REF_BON`\n"
+            + "  ,cp.lg_PREENREGISTREMENT_ID AS lg_PREENREGISTREMENT_ID ,p.`str_FIRST_NAME_CUSTOMER`, p.`str_LAST_NAME_CUSTOMER`, clt.`str_FIRST_NAME`,clt.`str_LAST_NAME`,cl.`str_NUMERO_SECURITE_SOCIAL`,cp.`str_REF_BON`\n"
             + "FROM  t_preenregistrement_compte_client_tiers_payent cp,\n"
             + "t_compte_client_tiers_payant cl, t_tiers_payant tp,\n"
             + " t_compte_client cpt,t_type_tiers_payant typeTp, t_client clt, t_preenregistrement p,mvttransaction m\n"
@@ -155,7 +155,9 @@ public class ListDesBonServiceImpl implements ListDesBonService {
         return BonsDTO.builder().dtUPDATED(tuple.get("dtUPDATED", String.class)).heure(tuple.get("HEURE", String.class))
                 .tiersPayantId(tuple.get("tiersPayantId", String.class))
                 .clientFullName(
-                        tuple.get("str_FIRST_NAME", String.class) + "" + tuple.get("str_LAST_NAME", String.class))
+                        tuple.get("str_FIRST_NAME", String.class) + " " + tuple.get("str_LAST_NAME", String.class))
+                .beneficiaireFullName(
+                        tuple.get("str_FIRST_NAME_CUSTOMER", String.class) + " " + tuple.get("str_LAST_NAME_CUSTOMER", String.class))
                 .strNUMEROSECURITESOCIAL(tuple.get("str_NUMERO_SECURITE_SOCIAL", String.class))
                 .strREFBON(tuple.get("str_REF_BON", String.class)).strREF(tuple.get("str_REF", String.class))
                 .tiersPayantLibelle(tuple.get("libelleTiersPayant", String.class))

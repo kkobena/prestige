@@ -179,13 +179,12 @@ public class ResumeCaisseDTO implements Serializable {
         this.cancel = cancel;
         this.soldeTotal = caisse.getIntSOLDESOIR();
         this.statut = caisse.getStrSTATUT();
-        if (caisse.getStrSTATUT().equals(DateConverter.STATUT_IS_IN_USE)) {
+        if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_USING)) {
             this.intSOLDESOIR = caisse.getIntSOLDESOIR();
             this.strSTATUT = "En cours d'utilisation ";
         } else {
-            this.ecart = montantBilletage
-                    - (Math.abs(caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN())/* - montantAnnule */);
-            this.intSOLDESOIR = caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN();
+            this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR())/* - montantAnnule */);
+            this.intSOLDESOIR = caisse.getIntSOLDESOIR();
             if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_PROGRESS)) {
                 this.strSTATUT = "Fermée ";
 
@@ -219,7 +218,7 @@ public class ResumeCaisseDTO implements Serializable {
             this.strSTATUT = "En cours d'utilisation ";
         } else {
             this.ecart = montantBilletage - (Math.abs(caisse.getIntSOLDESOIR()) /*- montantAnnule*/);
-            this.intSOLDESOIR = caisse.getIntSOLDESOIR() - caisse.getIntSOLDEMATIN();
+            this.intSOLDESOIR = caisse.getIntSOLDESOIR();
             if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_PROGRESS)) {
                 this.strSTATUT = "Fermée ";
 

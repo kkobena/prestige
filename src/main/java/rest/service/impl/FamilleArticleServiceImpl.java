@@ -146,38 +146,6 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
         return json;
     }
 
-    List<HMvtProduit> findHMvtProduits(LocalDate dtStart, LocalDate dtEnd, String query, String codeFamillle, TUser u) {
-        try {
-            List<Predicate> predicates = new ArrayList<>();
-            TEmplacement emp = u.getLgEMPLACEMENTID();
-            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaQuery<HMvtProduit> cq = cb.createQuery(HMvtProduit.class);
-            Root<HMvtProduit> root = cq.from(HMvtProduit.class);
-            Predicate btw = cb.between(root.get(HMvtProduit_.mvtDate), dtStart, dtEnd);
-            predicates.add(btw);
-            predicates.add(cb.equal(root.get(HMvtProduit_.emplacement), emp));
-            predicates.add(root.get(HMvtProduit_.typemvtproduit).get(Typemvtproduit_.id)
-                    .in(Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE)));
-            if (!StringUtils.isEmpty(query)) {
-                predicates.add(cb.or(
-                        cb.like(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID)
-                                .get(TFamillearticle_.strCODEFAMILLE), query + "%"),
-                        cb.like(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID)
-                                .get(TFamillearticle_.strLIBELLE), query + "%")));
-            }
-            if (!StringUtils.isEmpty(codeFamillle)) {
-                predicates.add(cb.equal(root.get(HMvtProduit_.famille).get(TFamille_.lgFAMILLEARTICLEID)
-                        .get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamillle));
-            }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
-            TypedQuery<HMvtProduit> q = getEntityManager().createQuery(cq);
-            return q.getResultList();
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            return Collections.emptyList();
-        }
-    }
-
     private List<Predicate> famillePredicats(CriteriaBuilder cb, Root<TPreenregistrementDetail> root,
             Join<TPreenregistrementDetail, TPreenregistrement> join, LocalDate dtStart, LocalDate dtEnd, String query,
             String codeFamillle, TUser u, String codeRayon, String codeGrossiste) {
@@ -239,7 +207,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID));
             List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
                     codeRayon, codeGrossiste);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -274,7 +242,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
             predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
                     DateConverter.DEPOT_EXTENSION));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             FamilleArticleStatDTO t = q.getSingleResult();
@@ -308,30 +276,11 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                     cb.diff(cb.sum(root.get(TPreenregistrementDetail_.intPRICE)),
                             cb.sum(root.get(TPreenregistrementDetail_.intPRICEREMISE))),
                     cb.sum(root.get(TPreenregistrementDetail_.montantTva))));
-            /*
-             * Predicate btw = cb.between(cb.function("DATE", Date.class, join.get(TPreenregistrement_.dtUPDATED)),
-             * java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)); predicates.add(btw);
-             * predicates.add(cb.equal(join.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID), emp));
-             * predicates.add(cb.equal(join.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-             * predicates.add(cb.isFalse(join.get(TPreenregistrement_.bISCANCEL)));
-             * predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0)); if
-             * (!StringUtils.isEmpty(query)) {
-             * predicates.add(cb.or(cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.
-             * lgFAMILLEARTICLEID).get(TFamillearticle_.strCODEFAMILLE), query + "%"),
-             * cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID).get(
-             * TFamillearticle_.strLIBELLE), query + "%"))); } if (!StringUtils.isEmpty(codeFamillle)) {
-             * predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEARTICLEID)
-             * .get(TFamillearticle_.lgFAMILLEARTICLEID), codeFamillle)); } if (!StringUtils.isEmpty(codeRayon)) {
-             * predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID).get(
-             * TZoneGeographique_.lgZONEGEOID), codeRayon)); } if (!StringUtils.isEmpty(codeGrossiste)) {
-             * predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID).get(
-             * TGrossiste_.lgGROSSISTEID), codeGrossiste)); }
-             */
-            // famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste);
+
             List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
                     codeRayon, codeGrossiste);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+
             Query q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             return ((Number) q.getSingleResult()).longValue();
@@ -402,7 +351,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                 predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
                         .get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             List<VenteDetailsDTO> _f = new ArrayList<>();
             List<VenteDetailsDTO> data = q.getResultList();
@@ -500,7 +449,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                 predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID)
                         .get(TGrossiste_.lgGROSSISTEID), codeGrossiste));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             return (int) Math.ceil(q.getSingleResult() * 0.8);
@@ -534,7 +483,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID));
             List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
                     codeRayon, codeGrossiste);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -566,7 +515,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgGROSSISTEID));
             List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
                     codeRayon, codeGrossiste);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -715,7 +664,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
             predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
                     DateConverter.DEPOT_EXTENSION));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             FamilleArticleStatDTO t = q.getSingleResult();
@@ -761,7 +710,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
             predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
                     DateConverter.DEPOT_EXTENSION));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             FamilleArticleStatDTO t = q.getSingleResult();
@@ -808,7 +757,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
                             join.get(TPreenregistrement_.strTYPEVENTE));
             List<Predicate> predicates = famillePredicats(cb, root, join, dtStart, dtEnd, query, codeFamillle, u,
                     codeRayon, codeGrossiste);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             List<FamilleArticleStatDTO> results = q.getResultList();
             results.addAll(buildArticleStatDTOs(dtStart, dtEnd, query, codeFamillle, u, codeRayon, codeGrossiste));
@@ -846,7 +795,7 @@ public class FamilleArticleServiceImpl implements FamilleArticleService {
             predicates.add(cb.greaterThan(join.get(TPreenregistrement_.intPRICE), 0));
             predicates.add(cb.notLike(join.get(TPreenregistrement_.lgTYPEVENTEID).get(TTypeVente_.lgTYPEVENTEID),
                     DateConverter.DEPOT_EXTENSION));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             q.setMaxResults(1);
             FamilleArticleStatDTO t = q.getSingleResult();
