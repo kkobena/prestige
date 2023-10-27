@@ -34,6 +34,7 @@ import org.json.JSONObject;
 import rest.service.BalanceService;
 import rest.service.CaisseService;
 import rest.service.GenerateTicketService;
+import rest.service.ListCaisseService;
 import rest.service.dto.BalanceParamsDTO;
 import rest.service.dto.CoffreCaisseDTO;
 import rest.service.dto.MvtCaisseSummaryDTO;
@@ -59,6 +60,8 @@ public class CaisseRessource {
     GenerateTicketService generateTicketService;
     @EJB
     private BalanceService balanceService;
+    @EJB
+    private ListCaisseService listCaisseService;
 
     public TUser getUser() {
         return Utils.getConnectedUser(servletRequest);
@@ -80,6 +83,7 @@ public class CaisseRessource {
         CaisseParamsDTO caisseParams = new CaisseParamsDTO();
         caisseParams.setLimit(limit);
         caisseParams.setStart(start);
+        caisseParams.setAll(false);
 
         if (!StringUtils.isEmpty(dtDateFin)) {
             caisseParams.setEnd(LocalDate.parse(dtDateFin));
@@ -102,7 +106,7 @@ public class CaisseRessource {
         caisseParams.setFindClient(findClient);
         caisseParams.setEmplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
 
-        JSONObject json = caisseService.donneeCaisses(caisseParams, false);
+        JSONObject json = listCaisseService.donneeCaisses(caisseParams);
         return Response.ok().entity(json.toString()).build();
     }
 

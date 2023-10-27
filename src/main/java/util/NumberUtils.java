@@ -24,4 +24,20 @@ public final class NumberUtils {
         }
         return result;
     }
+
+    public static String formatIntToString(int number) {
+        String result = "0";
+        try {
+
+            DecimalFormatSymbols amountSymbols = new DecimalFormatSymbols();
+
+            amountSymbols.setGroupingSeparator(' ');
+
+            DecimalFormat amountFormat = new DecimalFormat("###,###", amountSymbols);
+            result = amountFormat.format(number);
+        } catch (NumberFormatException ex) {
+
+        }
+        return result;
+    }
 }

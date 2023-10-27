@@ -40,6 +40,10 @@ public final class Constant {
     public static String ACTION_OTHER = "OTHER";
     public static final String MVT_SORTIE_CAISSE = "4";
     public static final String MVT_FOND_CAISSE = "1";
+    public static final String MVT_VENTE_VO = "8";
+    public static final String MVT_VENTE_VNO = "9";
+    public static final String ACTION_VENTE = "VENTE";
+    public static final String DIFFERE = "Differe";
 
     private Constant() {
     }

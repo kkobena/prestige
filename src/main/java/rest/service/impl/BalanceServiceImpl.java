@@ -108,7 +108,7 @@ public class BalanceServiceImpl implements BalanceService {
     private static final String STAT_LAST_THREE_YEARS = "SELECT YEAR(p.`dt_UPDATED`) AS annee, MONTH(p.`dt_UPDATED`) AS mois,SUM(d.int_PRICE) AS montantTTC FROM t_preenregistrement_detail d,t_preenregistrement p,t_user u ,mvttransaction m WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND p.`lg_PREENREGISTREMENT_ID`=m.pkey  AND  d.`bool_ACCOUNT` "
             + " AND p.lg_TYPE_VENTE_ID <> ?1 AND p.str_STATUT='is_Closed'  AND p.imported=0 AND YEAR(p.dt_UPDATED)  BETWEEN ?2 AND ?3 AND p.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?4 GROUP BY annee,mois ";
 
-    private static final String TYPE_REGELEMENT_QUERY = "SELECT vr.flaged_amount AS flaged_amount, p.`lg_TYPE_VENTE_ID` AS typeVente, r.`str_NAME` AS libelle, vr.type_regelement AS typeReglement,SUM(vr.montant) AS montant,SUM(vr.montant_attentu) AS montant_attendu FROM  vente_reglement vr JOIN t_preenregistrement p ON p.`lg_PREENREGISTREMENT_ID`=vr.vente_id JOIN mvttransaction m ON m.vente_id=p.`lg_PREENREGISTREMENT_ID` JOIN t_type_reglement r ON r.`lg_TYPE_REGLEMENT_ID`=vr.type_regelement WHERE DATE(p.`dt_UPDATED`) BETWEEN   ?3 AND ?4 AND p.`str_STATUT`='is_Closed'  AND p.`lg_TYPE_VENTE_ID` <>  ?1  AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement}  GROUP BY typeReglement,typeVente ";
+    private static final String TYPE_REGELEMENT_QUERY = "SELECT SUM(vr.flaged_amount) AS flaged_amount, p.`lg_TYPE_VENTE_ID` AS typeVente, r.`str_NAME` AS libelle, vr.type_regelement AS typeReglement,SUM(vr.montant) AS montant,SUM(vr.montant_attentu) AS montant_attendu FROM  vente_reglement vr JOIN t_preenregistrement p ON p.`lg_PREENREGISTREMENT_ID`=vr.vente_id JOIN mvttransaction m ON m.vente_id=p.`lg_PREENREGISTREMENT_ID` JOIN t_type_reglement r ON r.`lg_TYPE_REGLEMENT_ID`=vr.type_regelement WHERE DATE(p.`dt_UPDATED`) BETWEEN   ?3 AND ?4 AND p.`str_STATUT`='is_Closed'  AND p.`lg_TYPE_VENTE_ID` <>  ?1  AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement}  GROUP BY typeReglement,typeVente ";
 
     private final Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
 
@@ -138,6 +138,7 @@ public class BalanceServiceImpl implements BalanceService {
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_COMPTANT);
             BalanceDTO balanceVno = buildVenteBalance(vnoData, checkUg, balanceParams.isShowAllAmount(),
                     venteRegelementMap.remove("1"));
+
             balanceVno.setTypeVente(DateConverter.VENTE_COMPTANT);
             balanceVno.setBalanceId(balanceVno.getTypeVente());
             balanceVno.setMontantTTC((balanceVno.getMontantTTC() - this.montantToRemove(balanceParams)));
@@ -145,8 +146,10 @@ public class BalanceServiceImpl implements BalanceService {
         }
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_CREDIT)) {
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_CREDIT);
+
             BalanceDTO balanceVo = buildVenteBalance(vnoData, false, balanceParams.isShowAllAmount(),
                     venteRegelementMap.values().stream().flatMap(v -> v.stream()).collect(Collectors.toList()));
+
             balanceVo.setTypeVente(DateConverter.VENTE_ASSURANCE);
             balanceVo.setBalanceId(balanceVo.getTypeVente());
             balances.add(balanceVo);
@@ -174,7 +177,8 @@ public class BalanceServiceImpl implements BalanceService {
     public Map<TableauBaordSummary, List<TableauBaordPhDTO>> getTableauBoardData(BalanceParamsDTO balanceParams) {
 
         List<TableauBaordPhDTO> bons = buildBonAchats(fetchBonLivraisons(balanceParams));
-        List<TableauBaordPhDTO> ventes = buildVente(fetchPreenregistrements(balanceParams));
+        // List<TableauBaordPhDTO> ventes = buildVente(fetchPreenregistrements(balanceParams));
+        List<TableauBaordPhDTO> ventes = buildVente(fetchPreenregistrements(balanceParams), balanceParams);
         bons.addAll(ventes);
 
         if (!balanceParams.isByMonth()) {
@@ -942,6 +946,7 @@ public class BalanceServiceImpl implements BalanceService {
             summary.setMontantAchatFive(summary.getMontantAchatFive() + o.getMontantAchatFive());
             summary.setMontantAchat(summary.getMontantAchat() + o.getMontantAchat());
             summary.setMontantAvoir(summary.getMontantAvoir() + o.getMontantAvoir());
+            summary.setTotalModeReglement(summary.getTotalModeReglement() + o.getTotalModeReglement());
             Long montantNet2 = summary.getMontantNet();
             Long montantAchat2 = summary.getMontantAchat();
             if (montantAchat2.compareTo(0l) > 0) {
@@ -992,6 +997,7 @@ public class BalanceServiceImpl implements BalanceService {
                 baordPh.setMontantAchatFive(baordPh.getMontantAchatFive() + o.getMontantAchatFive());
                 baordPh.setMontantAchat(baordPh.getMontantAchat() + o.getMontantAchat());
                 baordPh.setMontantAvoir(baordPh.getMontantAvoir() + o.getMontantAvoir());
+                baordPh.setTotalModeReglement(o.getTotalModeReglement() + baordPh.getTotalModeReglement());
             }
             Integer montantNet2 = baordPh.getMontantNet();
             Integer montantAchat2 = baordPh.getMontantAchat();
@@ -1035,6 +1041,52 @@ public class BalanceServiceImpl implements BalanceService {
                 o.setMontantCredit(montantCredit + montantDiffere);
                 o.setNbreVente(totalVente);
 
+                list.add(o);
+            }
+
+            return list;
+        }
+        return list;
+    }
+
+    private List<TableauBaordPhDTO> buildVente(List<Tuple> tuple, BalanceParamsDTO balanceParams) {
+        List<TableauBaordPhDTO> list = new ArrayList<>();
+        boolean checkUg = checkUg();
+        if (CollectionUtils.isNotEmpty(tuple)) {
+            for (Tuple t : tuple) {
+                TableauBaordPhDTO o = new TableauBaordPhDTO();
+                // int montantRegle = 0;
+                int flagedAmountModeReglement = 0;
+                int montantAttentu = 0;
+                o.setVente(true);
+                o.setMvtDate(LocalDate.parse(t.get("mvtDate", String.class)));
+                int montantTTC = t.get("montantTTCDetatil", BigDecimal.class).intValue();
+                int montantNet = t.get("montantNet", BigDecimal.class).intValue();
+                int montantRemise = t.get("montantRemise", BigDecimal.class).intValue();
+                int montantCredit = t.get("montantCredit", BigDecimal.class).intValue();
+                int montantDiffere = t.get("montantDiffere", BigDecimal.class).intValue();
+                // int montantEsp = t.get("montantRegle", BigDecimal.class).intValue();
+                int totalVente = t.get("totalVente", BigDecimal.class).intValue();
+                int montantUg = checkUg ? t.get("montantUg", BigDecimal.class).intValue() : 0;
+                int flagedAmount = t.get("flagedAmount", BigDecimal.class).intValue();
+                o.setMontantTTC((montantTTC - montantUg) - flagedAmount);
+                o.setMontantNet((montantNet - montantUg) - flagedAmount);
+                o.setMontantRemise(montantRemise);
+                // o.setMontantEsp((montantEsp - montantUg) - flagedAmount);
+                o.setMontantCredit(montantCredit + montantDiffere);
+                o.setNbreVente(totalVente);
+                balanceParams.setDtStart(o.getMvtDate().toString());
+                balanceParams.setDtEnd(balanceParams.getDtStart());
+                List<VenteReglementReportDTO> reglementReports = fetchByModeReglements(balanceParams).stream()
+                        .map(this::buildVenteReglementReportDTO).collect(Collectors.toList());
+
+                for (VenteReglementReportDTO reglementReport : reglementReports) {
+                    // montantRegle += reglementReport.getMontant();
+                    flagedAmountModeReglement += reglementReport.getFlagedAmount();
+                    montantAttentu += reglementReport.getMontantAttentu();
+                }
+                o.setTotalModeReglement((montantAttentu - montantUg) - flagedAmountModeReglement);
+                o.setMontantEsp(o.getTotalModeReglement());
                 list.add(o);
             }
 
@@ -1313,6 +1365,7 @@ public class BalanceServiceImpl implements BalanceService {
         long montantMtn = 0;
         long montantWave = 0;
         long montantPaye = 0;
+        long totalModeReglement = 0;
 
         for (BalanceVenteItemDTO balanceVenteItem : values) {
             long montantRegle1 = balanceVenteItem.getMontantRegle().longValue();
@@ -1337,6 +1390,7 @@ public class BalanceServiceImpl implements BalanceService {
         }
         for (VenteReglementReportDTO reglementReport : reglementReports) {
             long amount = reglementReport.getMontant() - reglementReport.getFlagedAmount();
+            totalModeReglement += amount;
             switch (reglementReport.getTypeReglement()) {
 
             case DateConverter.MODE_ESP:
@@ -1406,6 +1460,7 @@ public class BalanceServiceImpl implements BalanceService {
         balance.setMontantMtn(montantMtn);
         balance.setMontantMobilePayment(balance.getMontantOrange() + balance.getMontantMoov() + balance.getMontantMtn()
                 + balance.getMontantWave());
+        balance.setTotalModeReglement(totalModeReglement);
         return balance;
     }
 

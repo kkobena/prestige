@@ -8,6 +8,7 @@ public class VenteReglementDTO {
     private @NotNull String typeReglement;
     private int montant;
     private int montantAttentu;
+    private String typeReglementId;
 
     public String getTypeReglement() {
         return typeReglement;
@@ -25,6 +26,14 @@ public class VenteReglementDTO {
     public VenteReglementDTO setMontant(int montant) {
         this.montant = montant;
         return this;
+    }
+
+    public String getTypeReglementId() {
+        return typeReglementId;
+    }
+
+    public void setTypeReglementId(String typeReglementId) {
+        this.typeReglementId = typeReglementId;
     }
 
     public int getMontantAttentu() {
