@@ -428,7 +428,7 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             return q.getSingleResult();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.INFO, "TBonLivraison not found");
             return null;
         }
     }
