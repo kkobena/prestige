@@ -156,8 +156,8 @@ public class ListDesBonServiceImpl implements ListDesBonService {
                 .tiersPayantId(tuple.get("tiersPayantId", String.class))
                 .clientFullName(
                         tuple.get("str_FIRST_NAME", String.class) + " " + tuple.get("str_LAST_NAME", String.class))
-                .beneficiaireFullName(
-                        tuple.get("str_FIRST_NAME_CUSTOMER", String.class) + " " + tuple.get("str_LAST_NAME_CUSTOMER", String.class))
+                .beneficiaireFullName(tuple.get("str_FIRST_NAME_CUSTOMER", String.class) + " "
+                        + tuple.get("str_LAST_NAME_CUSTOMER", String.class))
                 .strNUMEROSECURITESOCIAL(tuple.get("str_NUMERO_SECURITE_SOCIAL", String.class))
                 .strREFBON(tuple.get("str_REF_BON", String.class)).strREF(tuple.get("str_REF", String.class))
                 .tiersPayantLibelle(tuple.get("libelleTiersPayant", String.class))
