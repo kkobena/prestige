@@ -4127,7 +4127,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             String currentcip) {
         boolean isUpdate = false;
         String Codecip = CIP;
-        System.out.println(" current cip " + currentcip + " CIP " + CIP);
+
         TFamilleGrossiste familleGrossiste = getFamilleGrossisteByCIP(CIP, OGrossiste);
         TFamilleGrossiste OFamilleGrossiste = getFamilleGrossisteByIDANDLGROSSISTE(OFamille.getLgFAMILLEID(),
                 OGrossiste.getLgGROSSISTEID());
@@ -4140,8 +4140,10 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
 
             if (OFamille.getBoolDECONDITIONNEEXIST() == 1) {
                 OTFamilleDecontionne = this.getTFamilleDeconditionByParent(OFamille.getLgFAMILLEID());
-                OTFamilleGrossisteDeconditionne = this.getTFamilleGrossiste(OTFamilleDecontionne.getLgFAMILLEID(),
-                        OTFamilleDecontionne.getLgGROSSISTEID().getLgGROSSISTEID());
+                if (OTFamilleDecontionne != null) {
+                    OTFamilleGrossisteDeconditionne = this.getTFamilleGrossiste(OTFamilleDecontionne.getLgFAMILLEID(),
+                            OTFamilleDecontionne.getLgGROSSISTEID().getLgGROSSISTEID());
+                }
 
             }
             if (mode == 1) {
@@ -4192,7 +4194,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             }
 
         } else {
-            System.out.println(" famille grossiste est null " + familleGrossiste);
+
             if (OFamilleGrossiste != null) {
 
                 OFamilleGrossiste.setStrCODEARTICLE(Codecip);
