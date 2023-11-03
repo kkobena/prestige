@@ -27,6 +27,7 @@ public class OrderItem implements Serializable {
     private Integer ligne;
     private String facture;
     private Integer prixAchat;
+    private String etablissement;
 
     public Integer getPrixAchat() {
         return prixAchat;
@@ -255,11 +256,19 @@ public class OrderItem implements Serializable {
     public void setFacture(String facture) {
         this.facture = facture;
     }
+
+    public String getEtablissement() {
+        return etablissement;
+    }
+
+    public void setEtablissement(String etablissement) {
+        this.etablissement = etablissement;
+    }
+
     // printer.printRecord("N° Facture", "N° ligne", "CIP/EAN13", "Libellé du produit", "Qté commandée","Qté
     // livrée","Prix de cession","Prix public","N° commande","Tva");
-
-    public OrderItem(String facture, Integer ligne, String cip, String libelle, Integer cmde, Integer cmdeL,
-            Double montant, Double prixUn, String refBl, Double tva) {
+    public OrderItem(String etablissement, String facture, Integer ligne, String cip, String libelle, Integer cmde,
+            int ug, Integer cmdeL, Double montant, Double prixUn, String refBl, Double tva) {
         this.cip = cip;
         this.libelle = libelle;
         this.cmde = cmde;
@@ -270,6 +279,8 @@ public class OrderItem implements Serializable {
         this.tva = tva;
         this.ligne = ligne;
         this.facture = facture;
+        this.etablissement = etablissement;
+        this.ug = ug;
     }
 
     @Override
