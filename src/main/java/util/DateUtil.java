@@ -1,11 +1,12 @@
-
 package util;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author koben
@@ -62,6 +63,30 @@ public final class DateUtil {
         } else {
             return "";
         }
+    }
+
+    public static String convertToString(Date date, SimpleDateFormat simpleDateFormat) {
+
+        if (Objects.isNull(date)) {
+            date = new Date();
+        }
+        return simpleDateFormat.format(date);
+    }
+
+    public static String convertToString(LocalDate date, DateTimeFormatter dateTimeFormatter) {
+
+        if (Objects.isNull(date)) {
+            date = LocalDate.now();
+        }
+        return dateTimeFormatter.format(date);
+    }
+
+    public static LocalDate convertStringToLocalDate(String date, DateTimeFormatter dateTimeFormatter) {
+
+        if (StringUtils.isNotEmpty(date)) {
+            return LocalDate.parse(date, dateTimeFormatter);
+        }
+        return LocalDate.now();
     }
 
     private DateUtil() {
