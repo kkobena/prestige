@@ -37,8 +37,8 @@ public class StockImpl implements Stock {
         return em;
     }
 
-    public StockImpl(EntityManager _manager) {
-        em = _manager;
+    public StockImpl(EntityManager manager) {
+        em = manager;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class StockImpl implements Stock {
             em.getTransaction().commit();
         } catch (Exception e) {
             em.getTransaction().rollback();
-            e.printStackTrace();
+
         }
 
     }

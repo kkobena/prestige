@@ -24,8 +24,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -64,11 +66,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
-import toolkits.utils.date;
 import toolkits.utils.jdom;
 import toolkits.utils.logger;
 import util.Constant;
 import util.DateConverter;
+import util.DateUtil;
 
 /**
  *
@@ -78,6 +80,7 @@ import util.DateConverter;
 @MultipartConfig(fileSizeThreshold = 5242880, maxFileSize = 20971520L, maxRequestSize = 41943040L)
 public class FileFormaManager extends HttpServlet {
 
+    private static final Logger LOG = Logger.getLogger(FileFormaManager.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @Inject
@@ -92,10 +95,10 @@ public class FileFormaManager extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
 
-        String lg_GROSSISTE_ID = "";
+        String lgGROSSISTEID = "";
 
         if (request.getParameter("lg_GROSSISTE_ID") != null) {
-            lg_GROSSISTE_ID = request.getParameter("lg_GROSSISTE_ID");
+            lgGROSSISTEID = request.getParameter("lg_GROSSISTE_ID");
         }
 
         String modeBL = request.getParameter("modeBL");
@@ -110,16 +113,15 @@ public class FileFormaManager extends HttpServlet {
         TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
 
         JSONObject responseJson = new JSONObject();
-        //
         try (PrintWriter out = response.getWriter()) {
             switch (extension) {
             case "csv":
-                responseJson = bulkInsertFormatCSV(part, lg_GROSSISTE_ID, Format.valueOf(modeBL), user);
+                responseJson = bulkInsertFormatCSV(part, lgGROSSISTEID, Format.valueOf(modeBL), user);
 
                 break;
 
             case "txt":
-                responseJson = bulkInsertTxt(part, lg_GROSSISTE_ID, user);
+                responseJson = bulkInsertTxt(part, lgGROSSISTEID, user);
                 break;
             default:
 
@@ -129,7 +131,7 @@ public class FileFormaManager extends HttpServlet {
 
                 json.add("toBe", true);
                 String finalFile = fichierReponse(request.getServletContext(),
-                        fileName.substring(0, fileName.indexOf('.') - 1), Format.valueOf(modeBL), true, items);
+                        fileName.substring(0, fileName.indexOf('.') - 1), Format.valueOf(modeBL), items);
                 jdom.InitRessource();
                 json.add("success", "<span style='color:blue;font-weight:800;'>" + responseJson.getInt("count") + "/"
                         + responseJson.getInt("ligne")
@@ -144,70 +146,70 @@ public class FileFormaManager extends HttpServlet {
 
             out.println(json.build());
         } catch (Exception ex) {
-            Logger.getLogger(FileFormaManager.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
+
         }
     }
 
-    public String buildCommandeRef(Date ODate) throws JSONException {
-        TParameters OTParameters = em.find(TParameters.class, "KEY_LAST_ORDER_COMMAND_NUMBER");
-        TParameters OTParameters_KEY_SIZE_ORDER_NUMBER = em.find(TParameters.class, "KEY_SIZE_ORDER_NUMBER");
-
-        String jsondata = OTParameters.getStrVALUE();
-        int int_last_code = 0;
-        int_last_code = int_last_code + 1;
+    public String buildCommandeRef(LocalDate myDate) throws JSONException {
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        TParameters oParameters = em.find(TParameters.class, "KEY_LAST_ORDER_COMMAND_NUMBER");
+        TParameters orderNumberParam = em.find(TParameters.class, "KEY_SIZE_ORDER_NUMBER");
+        String stringDate = DateUtil.convertToString(myDate, dateTimeFormatter);
+        String jsondata = oParameters.getStrVALUE();
+        int intLastCode = 0;
+        intLastCode = intLastCode + 1;
 
         try {
             JSONArray jsonArray = new JSONArray(jsondata);
             JSONObject jsonObject = jsonArray.getJSONObject(0);
+            String strlastdate = jsonObject.getString("str_last_date");
+            intLastCode = Integer.parseInt(jsonObject.getString("int_last_code"));
+            LocalDate dtLastDate = DateUtil.convertStringToLocalDate(strlastdate, dateTimeFormatter);
 
-            int_last_code = Integer.parseInt(jsonObject.getString("int_last_code"));
-            Date dt_last_date = date.stringToDate(jsonObject.getString("str_last_date"), date.formatterMysqlShort2);
+            String strLasd = dtLastDate.format(dateTimeFormatter);
+            String strActd = stringDate;
 
-            String str_lasd = date.DateToString(dt_last_date, date.formatterMysqlShort2);
-            String str_actd = date.DateToString(ODate, date.formatterMysqlShort2);
-
-            if (!str_lasd.equals(str_actd)) {
-                int_last_code = 0;
+            if (!strLasd.equals(strActd)) {
+                intLastCode = 0;
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.INFO, null, e);
         }
 
         // KEY_SIZE_ORDER_NUMBER
-        Calendar now = Calendar.getInstance();
+        LocalDate now = LocalDate.now();
 
-        int mois = now.get(Calendar.MONTH) + 1;
-        int jour = now.get(Calendar.DAY_OF_MONTH);
-        String mois_tostring = "";
+        int mois = now.getMonthValue() + 1;
+        int jour = now.getDayOfMonth();
+        String moisTostring = "";
 
-        int intsize = ((int_last_code + 1) + "").length();
-        int intsize_tobuild = Integer.parseInt(OTParameters_KEY_SIZE_ORDER_NUMBER.getStrVALUE());
-        String str_last_code = "";
-        for (int i = 0; i < (intsize_tobuild - intsize); i++) {
-            str_last_code = str_last_code + "0";
+        int intsize = ((intLastCode + 1) + "").length();
+        int intsizeTobuild = Integer.parseInt(orderNumberParam.getStrVALUE());
+        String strLastCode = "";
+        for (int i = 0; i < (intsizeTobuild - intsize); i++) {
+            strLastCode = strLastCode + "0";
         }
 
-        str_last_code = str_last_code + (int_last_code + 1) + "";
+        strLastCode = strLastCode + (intLastCode + 1) + "";
 
-        // String str_code = jour + "" + mois + "" + this.getKey().getYear(ODate) + "_" + str_last_code;
         if (mois < 10) {
-            mois_tostring = "0" + mois;
+            moisTostring = "0" + mois;
         } else {
-            mois_tostring = String.valueOf(mois);
+            moisTostring = String.valueOf(mois);
         }
-        String str_code = jour + "" + mois_tostring + "" + DateConverter.convertDateToLocalDate(ODate).getYear() + "_"
-                + str_last_code;
+        String str_code = jour + "" + moisTostring + "" + myDate.getYear() + "_" + strLastCode;
         JSONObject json = new JSONObject();
         JSONArray arrayObj = new JSONArray();
-        json.put("int_last_code", str_last_code);
-        json.put("str_last_date", date.DateToString(ODate, date.formatterMysqlShort2));
+        json.put("int_last_code", strLastCode);
+        json.put("str_last_date", myDate.format(dateTimeFormatter));
         arrayObj.put(json);
         String jsonData = arrayObj.toString();
 
-        OTParameters.setStrVALUE(jsonData);
-        new logger().OCategory.info(jsonData);
-        new logger().OCategory.info(str_code);
+        oParameters.setStrVALUE(jsonData);
+        this.em.merge(oParameters);
+
         return str_code;
     }
 
@@ -224,9 +226,10 @@ public class FileFormaManager extends HttpServlet {
 
                 if (grossiste != null) {
                     order.setLgGROSSISTEID(grossiste);
-                    order.setStrREFORDER(this.buildCommandeRef(new Date()));
+                    order.setStrREFORDER(this.buildCommandeRef(LocalDate.now()));
                 }
             } catch (Exception e) {
+                LOG.log(Level.INFO, null, e);
             }
 
             order.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
@@ -235,7 +238,7 @@ public class FileFormaManager extends HttpServlet {
             em.persist(order);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, null, e);
 
         }
         return order;
@@ -271,8 +274,8 @@ public class FileFormaManager extends HttpServlet {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] row = line.split("\t");
-                int ligne = createTOrderDetailVIACSV(grossiste, order, row[1], Integer.parseInt(row[3]),
-                        Integer.parseInt(row[2]), Integer.parseInt(row[5]), 0);
+                int ligne = createOrderDetailViaCsv(order, row[1], Integer.parseInt(row[3]), Integer.parseInt(row[2]),
+                        Integer.parseInt(row[5]), 0);
                 i += ligne;
                 if (ligne == 0) {
                     /*
@@ -311,17 +314,9 @@ public class FileFormaManager extends HttpServlet {
 
                 for (CSVRecord cSVRecord : parser) {
                     if (count > 0) {
-                        int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(2),
-                                Integer.parseInt(cSVRecord.get(5)), Double.valueOf(cSVRecord.get(6)).intValue(),
-                                Double.valueOf(cSVRecord.get(7)).intValue(), 0);
+                        int ligne = buildOrderDetailFromLaborexRecord(order, cSVRecord);
                         if (ligne == 0) {
-                            // printer.printRecord("N° Facture", "N° ligne", "CIP/EAN13", "Libellé du produit", "Qté
-                            // commandée","Qté livrée","Prix de cession","Prix public","N° commande","Tva");
-                            items.add(new OrderItem(cSVRecord.get(0), Integer.valueOf(cSVRecord.get(1)),
-                                    cSVRecord.get(2), cSVRecord.get(3), Integer.valueOf(cSVRecord.get(4)),
-                                    Integer.valueOf(cSVRecord.get(5)), Double.valueOf(cSVRecord.get(6)),
-                                    Double.valueOf(cSVRecord.get(7)), cSVRecord.get(8),
-                                    Double.valueOf(cSVRecord.get(9))));
+                            buildOrderItemFromLaborexRecord(cSVRecord);
                         }
                         i += ligne;
                     }
@@ -340,9 +335,9 @@ public class FileFormaManager extends HttpServlet {
 
                 for (CSVRecord cSVRecord : parser) {
                     if (count > 0) {
-                        int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(4),
-                                Integer.parseInt(cSVRecord.get(9)), Double.valueOf(cSVRecord.get(11)).intValue(),
-                                Integer.parseInt(cSVRecord.get(13)), Integer.parseInt(cSVRecord.get(10)));
+                        int ligne = createOrderDetailViaCsv(order, cSVRecord.get(4), Integer.parseInt(cSVRecord.get(9)),
+                                Double.valueOf(cSVRecord.get(11)).intValue(), Integer.parseInt(cSVRecord.get(13)),
+                                Integer.parseInt(cSVRecord.get(10)));
                         i += ligne;
                         if (ligne == 0) {
                             OrderItem orderItem = new OrderItem().dateBl(cSVRecord.get(0))
@@ -392,9 +387,9 @@ public class FileFormaManager extends HttpServlet {
             case DPCI:
 
                 for (CSVRecord cSVRecord : parser) {
-                    int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(2),
-                            Integer.parseInt(cSVRecord.get(6)), Double.valueOf(cSVRecord.get(3)).intValue(),
-                            Double.valueOf(cSVRecord.get(4)).intValue(), 0);
+                    int ligne = createOrderDetailViaCsv(order, cSVRecord.get(2), Integer.parseInt(cSVRecord.get(6)),
+                            Double.valueOf(cSVRecord.get(3)).intValue(), Double.valueOf(cSVRecord.get(4)).intValue(),
+                            0);
                     i += ligne;
                     if (ligne == 0) {
                         OrderItem orderItem = new OrderItem().refBl(cSVRecord.get(8)).cip(cSVRecord.get(2))
@@ -425,7 +420,7 @@ public class FileFormaManager extends HttpServlet {
                     }
 
                     int qty = Integer.parseInt(cSVRecord.get(1));
-                    int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(0), qty, null);
+                    int ligne = createTOrderDetailViaCsv(order, cSVRecord.get(0), qty, null);
                     i += ligne;
                     if (ligne == 0) {
 
@@ -453,11 +448,11 @@ public class FileFormaManager extends HttpServlet {
                     }
                     int qty = Integer.parseInt(cSVRecord.get(3));
                     int prixAchat = Integer.parseInt(cSVRecord.get(4));
-                    int ligne = createTOrderDetailVIACSV(grossiste, order, cSVRecord.get(0), qty, prixAchat);
+                    int ligne = createTOrderDetailViaCsv(order, cSVRecord.get(0), qty, prixAchat);
                     i += ligne;
                     if (ligne == 0) {
 
-                        items.add(new OrderItem().cip(cSVRecord.get(0)).cmde(Integer.parseInt(cSVRecord.get(1)))
+                        items.add(new OrderItem().cip(cSVRecord.get(0)).cmde(Integer.valueOf(cSVRecord.get(1)))
                                 .cmdeL(qty).prixAchat(prixAchat));
                     }
 
@@ -484,76 +479,68 @@ public class FileFormaManager extends HttpServlet {
     }
 
     private int buildOrderDetailTedisRecord(TOrder order, CSVRecord cSVRecord) {
-        System.err.println(" 0 " + cSVRecord.get(0));
-        System.err.println(" 1 " + cSVRecord.get(1));
-        System.err.println(" 2 " + cSVRecord.get(2));
-        System.err.println(" 3 " + cSVRecord.get(3));
-        System.err.println(" 4 " + cSVRecord.get(4));
-        System.err.println(" 5 " + cSVRecord.get(5));
-        return createTOrderDetailVIACSV(order.getLgGROSSISTEID(), order, cSVRecord.get(1),
-                Integer.parseInt(cSVRecord.get(3)), Integer.parseInt(cSVRecord.get(2)),
-                Integer.parseInt(cSVRecord.get(5)), 0);
+
+        return createOrderDetailViaCsv(order, cSVRecord.get(1), Integer.parseInt(cSVRecord.get(3)),
+                Integer.parseInt(cSVRecord.get(2)), Integer.parseInt(cSVRecord.get(5)), 0);
     }
 
     public TOrderDetail findFamilleInTOrderDetail(String lgOrderId, String lgFAMILLEID) {
-        TOrderDetail OTOrderDetail = null;
+        TOrderDetail oTOrderDetail = null;
         try {
 
             Query qry = em.createQuery(
                     "SELECT t FROM TOrderDetail t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgORDERID.lgORDERID = ?2 ")
                     .setParameter(1, lgFAMILLEID).setParameter(2, lgOrderId);
-            if (qry.getResultList().size() > 0) {
-                OTOrderDetail = (TOrderDetail) qry.getSingleResult();
+            if (!qry.getResultList().isEmpty()) {
+                oTOrderDetail = (TOrderDetail) qry.getSingleResult();
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            // this.buildErrorTraceMessage(e.getMessage());
+            LOG.log(Level.INFO, null, e);
         }
-        return OTOrderDetail;
+        return oTOrderDetail;
     }
 
-    public int createTOrderDetailVIACSV(TGrossiste grossiste, TOrder order, String lgFamilleId, int qty,
-            int intPafDetail, int pu, int ug) {
-        TOrderDetail OTOrderDetail;
-        TFamille OTFamille = null;
-        TFamilleGrossiste OTFamilleGrossiste = null;
+    public int createOrderDetailViaCsv(TOrder order, String lgFamilleId, int qty, int intPafDetail, int pu, int ug) {
+        TOrderDetail oTOrderDetail;
+        TFamille oTFamille = null;
+        TFamilleGrossiste oTFamilleGrossiste = null;
         try {
             try {
-                OTFamilleGrossiste = getTFamilleGrossiste(lgFamilleId.trim());
-                if (OTFamilleGrossiste != null) {
-                    OTFamille = OTFamilleGrossiste.getLgFAMILLEID();
+                oTFamilleGrossiste = getTFamilleGrossiste(lgFamilleId.trim());
+                if (oTFamilleGrossiste != null) {
+                    oTFamille = oTFamilleGrossiste.getLgFAMILLEID();
                 }
             } catch (Exception e) {
 
             }
-            if (OTFamille != null) {
-                OTOrderDetail = findFamilleInTOrderDetail(order.getLgORDERID(), OTFamille.getLgFAMILLEID());
-                if (OTOrderDetail == null) {
-                    OTOrderDetail = new TOrderDetail();
-                    OTOrderDetail.setLgORDERDETAILID(RandomStringUtils.randomAlphanumeric(20));
-                    OTOrderDetail.setLgORDERID(order);
-                    OTOrderDetail.setLgFAMILLEID(OTFamille);
-                    OTOrderDetail.setLgGROSSISTEID(grossiste);
-                    OTOrderDetail.setIntNUMBER(qty);
-                    OTOrderDetail.setIntQTEREPGROSSISTE(qty);
-                    OTOrderDetail.setIntQTEMANQUANT(qty);
-                    OTOrderDetail.setIntPRICE(qty * intPafDetail);
-                    OTOrderDetail.setIntPRICEDETAIL((pu == 0 ? OTFamilleGrossiste.getIntPRICE() : pu));
-                    OTOrderDetail.setIntPAFDETAIL(intPafDetail);
-                    OTOrderDetail.setPrixAchat(OTOrderDetail.getIntPAFDETAIL());
-                    // OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
-                    OTOrderDetail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
-                    OTOrderDetail.setDtCREATED(order.getDtCREATED());
-                    OTOrderDetail.setUg(ug);
-                    OTOrderDetail.setDtUPDATED(OTOrderDetail.getDtCREATED());
-                    em.persist(OTOrderDetail);
+            if (oTFamille != null) {
+                oTOrderDetail = findFamilleInTOrderDetail(order.getLgORDERID(), oTFamille.getLgFAMILLEID());
+                if (oTOrderDetail == null) {
+                    oTOrderDetail = new TOrderDetail();
+                    oTOrderDetail.setLgORDERDETAILID(RandomStringUtils.randomAlphanumeric(20));
+                    oTOrderDetail.setLgORDERID(order);
+                    oTOrderDetail.setLgFAMILLEID(oTFamille);
+                    oTOrderDetail.setLgGROSSISTEID(order.getLgGROSSISTEID());
+                    oTOrderDetail.setIntNUMBER(qty);
+                    oTOrderDetail.setIntQTEREPGROSSISTE(qty);
+                    oTOrderDetail.setIntQTEMANQUANT(qty);
+                    oTOrderDetail.setIntPRICE(qty * intPafDetail);
+                    oTOrderDetail.setIntPRICEDETAIL((pu == 0 ? oTFamilleGrossiste.getIntPRICE() : pu));
+                    oTOrderDetail.setIntPAFDETAIL(intPafDetail);
+                    oTOrderDetail.setPrixAchat(oTOrderDetail.getIntPAFDETAIL());
+                    // oTOrderDetail.setPrixUnitaire(oTOrderDetail.getIntPRICEDETAIL());
+                    oTOrderDetail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+                    oTOrderDetail.setDtCREATED(order.getDtCREATED());
+                    oTOrderDetail.setUg(ug);
+                    oTOrderDetail.setDtUPDATED(oTOrderDetail.getDtCREATED());
+                    em.persist(oTOrderDetail);
                 } else {
-                    OTOrderDetail.setUg(OTOrderDetail.getUg() + ug);
-                    OTOrderDetail.setIntNUMBER(OTOrderDetail.getIntNUMBER() + qty);
-                    OTOrderDetail.setIntQTEMANQUANT(OTOrderDetail.getIntNUMBER());
-                    OTOrderDetail.setIntPRICE(OTOrderDetail.getIntNUMBER() * intPafDetail);
-                    OTOrderDetail.setIntQTEREPGROSSISTE(OTOrderDetail.getIntNUMBER());
-                    em.merge(OTOrderDetail);
+                    oTOrderDetail.setUg(oTOrderDetail.getUg() + ug);
+                    oTOrderDetail.setIntNUMBER(oTOrderDetail.getIntNUMBER() + qty);
+                    oTOrderDetail.setIntQTEMANQUANT(oTOrderDetail.getIntNUMBER());
+                    oTOrderDetail.setIntPRICE(oTOrderDetail.getIntNUMBER() * intPafDetail);
+                    oTOrderDetail.setIntQTEREPGROSSISTE(oTOrderDetail.getIntNUMBER());
+                    em.merge(oTOrderDetail);
 
                 }
                 return 1;
@@ -564,7 +551,7 @@ public class FileFormaManager extends HttpServlet {
             }
         } catch (Exception e) {
 
-            new logger().OCategory.info("impossible de creer OTOrderDetail   " + e);
+            LOG.log(Level.INFO, null, e);
             return 0;
         }
     }
@@ -590,13 +577,13 @@ public class FileFormaManager extends HttpServlet {
             familleGrossiste = q.getSingleResult();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.INFO, null, e);
         }
         return familleGrossiste;
     }
 
-    private String fichierReponse(ServletContext context, String fileName, Format mode, boolean isTxt,
-            List<OrderItem> list) throws IOException {
+    private String fichierReponse(ServletContext context, String fileName, Format mode, List<OrderItem> list)
+            throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(
                 Paths.get(context.getRealPath("WEB-INF") + File.separator + fileName + ".csv"),
                 StandardCharsets.UTF_8)) {
@@ -672,52 +659,51 @@ public class FileFormaManager extends HttpServlet {
         return fileName;
     }
 
-    public int createTOrderDetailVIACSV(TGrossiste oTGrossiste, TOrder order, String codeCip, int qty,
-            Integer prixAchat) {
-        TOrderDetail OTOrderDetail;
-        TFamille OTFamille = null;
-        TFamilleGrossiste OTFamilleGrossiste;
+    public int createTOrderDetailViaCsv(TOrder order, String codeCip, int qty, Integer prixAchat) {
+        TOrderDetail oTOrderDetail;
+        TFamille oTFamille = null;
+        TFamilleGrossiste oTFamilleGrossiste;
         try {
             try {
-                OTFamilleGrossiste = getTFamilleGrossiste(codeCip.trim());
-                if (OTFamilleGrossiste != null) {
-                    OTFamille = OTFamilleGrossiste.getLgFAMILLEID();
+                oTFamilleGrossiste = getTFamilleGrossiste(codeCip.trim());
+                if (oTFamilleGrossiste != null) {
+                    oTFamille = oTFamilleGrossiste.getLgFAMILLEID();
                 }
             } catch (Exception e) {
 
             }
-            if (OTFamille == null) {
-                OTFamille = findByCodeCipOrEan(codeCip.trim());
+            if (oTFamille == null) {
+                oTFamille = findByCodeCipOrEan(codeCip.trim());
             }
-            if (OTFamille != null) {
-                OTOrderDetail = findFamilleInTOrderDetail(order.getLgORDERID(), OTFamille.getLgFAMILLEID());
-                if (OTOrderDetail == null) {
-                    OTOrderDetail = new TOrderDetail();
-                    OTOrderDetail.setLgORDERDETAILID(RandomStringUtils.randomAlphanumeric(20));
-                    OTOrderDetail.setLgORDERID(order);
-                    OTOrderDetail.setLgFAMILLEID(OTFamille);
-                    OTOrderDetail.setLgGROSSISTEID(oTGrossiste);
-                    OTOrderDetail.setIntNUMBER(qty);
-                    OTOrderDetail.setIntQTEREPGROSSISTE(qty);
-                    OTOrderDetail.setIntQTEMANQUANT(qty);
-                    OTOrderDetail.setIntPRICEDETAIL(OTFamille.getIntPRICE());
-                    OTOrderDetail.setIntPAFDETAIL(prixAchat == null ? OTFamille.getIntPAF() : prixAchat);
-                    OTOrderDetail.setPrixAchat(OTOrderDetail.getIntPAFDETAIL());
-                    // OTOrderDetail.setPrixUnitaire(OTOrderDetail.getIntPRICEDETAIL());
-                    OTOrderDetail.setIntPRICE(qty * OTOrderDetail.getIntPAFDETAIL());
-                    OTOrderDetail.setStrSTATUT(DateConverter.STATUT_PROCESS);
-                    OTOrderDetail.setDtCREATED(new Date());
-                    OTOrderDetail.setDtUPDATED(OTOrderDetail.getDtCREATED());
-                    OTOrderDetail.setUg(0);
-                    em.persist(OTOrderDetail);
+            if (oTFamille != null) {
+                oTOrderDetail = findFamilleInTOrderDetail(order.getLgORDERID(), oTFamille.getLgFAMILLEID());
+                if (oTOrderDetail == null) {
+                    oTOrderDetail = new TOrderDetail();
+                    oTOrderDetail.setLgORDERDETAILID(RandomStringUtils.randomAlphanumeric(20));
+                    oTOrderDetail.setLgORDERID(order);
+                    oTOrderDetail.setLgFAMILLEID(oTFamille);
+                    oTOrderDetail.setLgGROSSISTEID(order.getLgGROSSISTEID());
+                    oTOrderDetail.setIntNUMBER(qty);
+                    oTOrderDetail.setIntQTEREPGROSSISTE(qty);
+                    oTOrderDetail.setIntQTEMANQUANT(qty);
+                    oTOrderDetail.setIntPRICEDETAIL(oTFamille.getIntPRICE());
+                    oTOrderDetail.setIntPAFDETAIL(prixAchat == null ? oTFamille.getIntPAF() : prixAchat);
+                    oTOrderDetail.setPrixAchat(oTOrderDetail.getIntPAFDETAIL());
+                    // oTOrderDetail.setPrixUnitaire(oTOrderDetail.getIntPRICEDETAIL());
+                    oTOrderDetail.setIntPRICE(qty * oTOrderDetail.getIntPAFDETAIL());
+                    oTOrderDetail.setStrSTATUT(DateConverter.STATUT_PROCESS);
+                    oTOrderDetail.setDtCREATED(new Date());
+                    oTOrderDetail.setDtUPDATED(oTOrderDetail.getDtCREATED());
+                    oTOrderDetail.setUg(0);
+                    em.persist(oTOrderDetail);
                 } else {
 
-                    OTOrderDetail.setIntNUMBER(OTOrderDetail.getIntNUMBER() + qty);
-                    OTOrderDetail.setIntQTEMANQUANT(OTOrderDetail.getIntNUMBER());
-                    OTOrderDetail.setIntPRICE(OTOrderDetail.getIntNUMBER() * OTOrderDetail.getIntPAFDETAIL());
-                    OTOrderDetail.setIntQTEREPGROSSISTE(OTOrderDetail.getIntNUMBER());
-                    OTOrderDetail.setDtUPDATED(new Date());
-                    em.merge(OTOrderDetail);
+                    oTOrderDetail.setIntNUMBER(oTOrderDetail.getIntNUMBER() + qty);
+                    oTOrderDetail.setIntQTEMANQUANT(oTOrderDetail.getIntNUMBER());
+                    oTOrderDetail.setIntPRICE(oTOrderDetail.getIntNUMBER() * oTOrderDetail.getIntPAFDETAIL());
+                    oTOrderDetail.setIntQTEREPGROSSISTE(oTOrderDetail.getIntNUMBER());
+                    oTOrderDetail.setDtUPDATED(new Date());
+                    em.merge(oTOrderDetail);
 
                 }
                 return 1;
@@ -728,7 +714,7 @@ public class FileFormaManager extends HttpServlet {
             }
         } catch (NoResultException e) {
 
-            new logger().OCategory.info("impossible de creer OTOrderDetail   " + e.toString());
+            LOG.log(Level.INFO, null, e);
             return 0;
         }
     }
@@ -748,12 +734,29 @@ public class FileFormaManager extends HttpServlet {
     private int skipFirstLigne(CSVRecord cSVRecord, int index) {
         if (index < 1) {
             try {
-                return Integer.valueOf(cSVRecord.get(1));
+                return Integer.parseInt(cSVRecord.get(1));
             } catch (Exception e) {
                 return -1;
             }
 
         }
         return 0;
+    }
+
+    private int buildOrderDetailFromLaborexRecord(TOrder order, CSVRecord cSVRecord) {
+        return createOrderDetailViaCsv(order, cSVRecord.get(3), Integer.parseInt(cSVRecord.get(7)),
+                Double.valueOf(cSVRecord.get(8)).intValue(), Double.valueOf(cSVRecord.get(9)).intValue(),
+                Integer.parseInt(cSVRecord.get(6)));
+    }
+
+    private void buildOrderItemFromLaborexRecord(CSVRecord cSVRecord) {
+
+        // String etablissement, String facture, Integer ligne, String cip, String libelle, Integer cmde, int ug,
+        // Integer cmdeL,
+        // Double montant, Double prixUn, String refBl, Double tva
+        items.add(new OrderItem(cSVRecord.get(0), cSVRecord.get(1), Integer.valueOf(cSVRecord.get(2)), cSVRecord.get(3),
+                cSVRecord.get(4), Integer.valueOf(cSVRecord.get(5)), Integer.parseInt(cSVRecord.get(6)),
+                Integer.valueOf(cSVRecord.get(7)), Double.valueOf(cSVRecord.get(8)), Double.valueOf(cSVRecord.get(9)),
+                cSVRecord.get(10), Double.valueOf(cSVRecord.get(11))));
     }
 }
