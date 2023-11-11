@@ -197,7 +197,7 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 

@@ -235,7 +235,7 @@
             try {
                 stock.deleteOrder(lg_ORDER_ID);
                 ObllBase.setMessage("1");
-                ObllBase.setDetailmessage("Opï¿½ration effectuï¿½e avec success");
+                ObllBase.setDetailmessage("Opération effectuée avec success");
             } catch (Exception e) {
                 ObllBase.setMessage("0");
                 ObllBase.setDetailmessage("Echec " + e.getLocalizedMessage());
