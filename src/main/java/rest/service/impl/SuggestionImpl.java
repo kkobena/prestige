@@ -888,7 +888,6 @@ public class SuggestionImpl implements SuggestionService {
 
     }
 
-
     private TSuggestionOrderDetails getItem(String id) {
         return getEmg().find(TSuggestionOrderDetails.class, id);
     }
