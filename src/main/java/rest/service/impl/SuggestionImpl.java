@@ -8,6 +8,8 @@ package rest.service.impl;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
 
@@ -50,6 +53,8 @@ import util.NumberUtils;
 public class SuggestionImpl implements SuggestionService {
 
     private static final Logger LOG = Logger.getLogger(SuggestionImpl.class.getName());
+    private static final String SUGGESTION_QUERY = "SELECT g.int_DATE_BUTOIR_ARTICLE AS dateButoir, SUM(d.`int_NUMBER` * d.`int_PRICE_DETAIL`) AS montantVente,SUM(d.`int_NUMBER` * d.`int_PAF_DETAIL`) AS montantAchat, o.`lg_SUGGESTION_ORDER_ID` AS id,o.`str_REF` AS reference,o.`str_STATUT` AS statut, DATE_FORMAT(o.`dt_CREATED`, '%d/%m/%Y') AS dateSuggession,DATE_FORMAT(o.`dt_CREATED`, '%k:%i:%s') AS heureSuggession, COUNT(d.`lg_SUGGESTION_ORDER_DETAILS_ID`) AS itemCount , SUM(d.`int_NUMBER`) AS productCount,o.`lg_GROSSISTE_ID` AS grossisteId,g.str_LIBELLE AS libelleGrossiste FROM  t_suggestion_order_details d JOIN t_suggestion_order o ON o.`lg_SUGGESTION_ORDER_ID`=d.`lg_SUGGESTION_ORDER_ID` JOIN t_famille f ON f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` JOIN t_grossiste g ON o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` WHERE o.`str_STATUT` IN ('is_Process','auto','pending') AND (o.`str_REF` LIKE ?1 OR f.int_CIP LIKE ?1 OR f.str_NAME LIKE ?1) GROUP BY id ORDER BY o.`dt_UPDATED` desc";
+    private static final String SUGGESTION_QUERY_COUNT = "SELECT COUNT( distinct o.`lg_SUGGESTION_ORDER_ID`) AS COUNT_SUGGESTION  FROM  t_suggestion_order_details d JOIN t_suggestion_order o ON o.`lg_SUGGESTION_ORDER_ID`=d.`lg_SUGGESTION_ORDER_ID` JOIN t_famille f ON f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` JOIN t_grossiste g ON o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` WHERE o.`str_STATUT` IN ('is_Process','auto','pending') AND (o.`str_REF` LIKE ?1 OR f.int_CIP LIKE ?1 OR f.str_NAME LIKE ?1)";
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -58,60 +63,65 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     @Override
-    public Integer getQuantityReapportByCodeGestionArticle(TFamilleStock OTFamilleStock, TFamille famille,
-            EntityManager emg) {
-        Integer result, int_TOTAL_JOURS_VENTE = 0, int_BUTOIR_CHOISI, mois_histo;
-        Integer qteReappro = 0, int_SEUIL_MIN_CALCULE, qteVenteArticle = 0, qteVenteJour;
+    public Integer getQuantityReapportByCodeGestionArticle(TFamilleStock oFamilleStock, TFamille famille) {
+        int result;
+        int totalJourVente = 0;
+        int buttoirChoisi;
+        int moisHisto;
+        Integer qteReappro = 0;
+        int seuilMinCalcule;
+        int qteVenteArticle = 0;
+        int qteVenteJour;
         try {
             List<TCoefficientPonderation> lstTCoefficientPonderations;
 
-            int JourDuMois = LocalDate.now().getDayOfMonth();
+            int dayOfMonth = LocalDate.now().getDayOfMonth();
 
-            TCodeGestion OTCodeGestion = famille.getLgCODEGESTIONID();
-            mois_histo = OTCodeGestion.getIntMOISHISTORIQUEVENTE();
+            TCodeGestion oCodeGestion = famille.getLgCODEGESTIONID();
+            moisHisto = oCodeGestion.getIntMOISHISTORIQUEVENTE();
             // choix du butoir
-            if (JourDuMois > OTCodeGestion.getIntDATEBUTOIRARTICLE()) {
-                int_BUTOIR_CHOISI = OTFamilleStock.getLgFAMILLEID().getLgGROSSISTEID().getIntDATEBUTOIRARTICLE();
-                result = int_BUTOIR_CHOISI - JourDuMois;
+            if (dayOfMonth > oCodeGestion.getIntDATEBUTOIRARTICLE()) {
+                buttoirChoisi = oFamilleStock.getLgFAMILLEID().getLgGROSSISTEID().getIntDATEBUTOIRARTICLE();
+                result = buttoirChoisi - dayOfMonth;
 
-                if (!(result < OTCodeGestion.getIntJOURSCOUVERTURESTOCK())) {
-                    result = OTCodeGestion.getIntJOURSCOUVERTURESTOCK();
+                if (!(result < oCodeGestion.getIntJOURSCOUVERTURESTOCK())) {
+                    result = oCodeGestion.getIntJOURSCOUVERTURESTOCK();
                 }
 
                 //
-                if (OTCodeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("1")) {
-                    int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now().minusMonths(mois_histo), emg).stream()
+                if (oCodeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("1")) {
+                    totalJourVente = nombresJourVente(LocalDate.now().minusMonths(moisHisto)).stream()
                             .map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
-                    qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(mois_histo), LocalDate.now(),
+                    qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(moisHisto), LocalDate.now(),
                             famille.getLgFAMILLEID());
 
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
 
                         try {
                             double finalQty = Math
-                                    .ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(mois_histo),
-                                            LocalDate.now(), famille, emg) / famille.getIntNUMBERDETAIL());
+                                    .ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(moisHisto),
+                                            LocalDate.now(), famille) / famille.getIntNUMBERDETAIL());
                             qteVenteArticle += (int) finalQty;
                         } catch (Exception e) {
                         }
 
                     }
 
-                } else if (OTCodeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equalsIgnoreCase("2")) {
-                    lstTCoefficientPonderations = getListTCoefficientPonderation(OTCodeGestion.getLgCODEGESTIONID());
-                    mois_histo = OTCodeGestion.getIntMOISHISTORIQUEVENTE();
-                    if (lstTCoefficientPonderations.size() < OTCodeGestion.getIntMOISHISTORIQUEVENTE()) {
-                        mois_histo = lstTCoefficientPonderations.size();
+                } else if (oCodeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equalsIgnoreCase("2")) {
+                    lstTCoefficientPonderations = getListTCoefficientPonderation(oCodeGestion.getLgCODEGESTIONID());
+                    moisHisto = oCodeGestion.getIntMOISHISTORIQUEVENTE();
+                    if (lstTCoefficientPonderations.size() < oCodeGestion.getIntMOISHISTORIQUEVENTE()) {
+                        moisHisto = lstTCoefficientPonderations.size();
                     }
-                    qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(mois_histo), LocalDate.now(),
+                    qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(moisHisto), LocalDate.now(),
                             famille.getLgFAMILLEID());
 
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
 
                         try {
                             double finalQty = Math
-                                    .ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(mois_histo),
-                                            LocalDate.now(), famille, emg) / famille.getIntNUMBERDETAIL());
+                                    .ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(moisHisto),
+                                            LocalDate.now(), famille) / famille.getIntNUMBERDETAIL());
                             qteVenteArticle += (int) finalQty;
                         } catch (Exception e) {
                         }
@@ -119,50 +129,50 @@ public class SuggestionImpl implements SuggestionService {
                     }
                     qteVenteArticle = qteVenteArticle * 2;// a revoir
 
-                    int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now().minusMonths(mois_histo), emg).stream()
+                    totalJourVente = nombresJourVente(LocalDate.now().minusMonths(moisHisto)).stream()
                             .map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
                 }
 
             } else {
-                int_BUTOIR_CHOISI = OTCodeGestion.getIntDATEBUTOIRARTICLE();
-                result = int_BUTOIR_CHOISI - JourDuMois;
-                if (OTCodeGestion.getIntDATELIMITEEXTRAPOLATION() <= JourDuMois) {
-                    int_TOTAL_JOURS_VENTE = nombresJourVente(LocalDate.now(), emg).stream()
-                            .map(TCalendrier::getIntNUMBERJOUR).reduce(0, Integer::sum);
-                    qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(mois_histo), LocalDate.now(),
+                buttoirChoisi = oCodeGestion.getIntDATEBUTOIRARTICLE();
+                result = buttoirChoisi - dayOfMonth;
+                if (oCodeGestion.getIntDATELIMITEEXTRAPOLATION() <= dayOfMonth) {
+                    totalJourVente = nombresJourVente(LocalDate.now()).stream().map(TCalendrier::getIntNUMBERJOUR)
+                            .reduce(0, Integer::sum);
+                    qteVenteArticle += quantiteVendue(LocalDate.now().minusMonths(moisHisto), LocalDate.now(),
                             famille.getLgFAMILLEID());
 
                     if (famille.getBoolDECONDITIONNEEXIST() == 1) {
 
                         try {
                             Double finalQty = Math
-                                    .ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(mois_histo),
-                                            LocalDate.now(), famille, emg) / famille.getIntNUMBERDETAIL());
+                                    .ceil(quantiteDeconditionnesVentes(LocalDate.now().minusMonths(moisHisto),
+                                            LocalDate.now(), famille) / famille.getIntNUMBERDETAIL());
                             qteVenteArticle += finalQty.intValue();
                         } catch (Exception e) {
                         }
 
                     }
-                    qteVenteArticle = qteVenteArticle * OTCodeGestion.getIntCOEFFICIENTPONDERATION();// a revoir
-                    mois_histo++;
+                    qteVenteArticle = qteVenteArticle * oCodeGestion.getIntCOEFFICIENTPONDERATION();// a revoir
+                    moisHisto++;
                 }
             }
-            qteVenteJour = qteVenteArticle / int_TOTAL_JOURS_VENTE;
-            int_SEUIL_MIN_CALCULE = qteVenteJour * result;
-            if (OTCodeGestion.getBoolOPTIMISATIONSEUILCMDE()) {
-                int_SEUIL_MIN_CALCULE = qteVenteJour * famille.getLgGROSSISTEID().getIntDELAIREAPPROVISIONNEMENT();
-                if (int_SEUIL_MIN_CALCULE > OTFamilleStock.getIntNUMBERAVAILABLE()) {
+            qteVenteJour = qteVenteArticle / totalJourVente;
+            seuilMinCalcule = qteVenteJour * result;
+            if (oCodeGestion.getBoolOPTIMISATIONSEUILCMDE()) {
+                seuilMinCalcule = qteVenteJour * famille.getLgGROSSISTEID().getIntDELAIREAPPROVISIONNEMENT();
+                if (seuilMinCalcule > oFamilleStock.getIntNUMBERAVAILABLE()) {
                     qteReappro = qteVenteJour * result;
-                    qteReappro = (int_SEUIL_MIN_CALCULE - OTFamilleStock.getIntNUMBERAVAILABLE()) + qteReappro;
+                    qteReappro = (seuilMinCalcule - oFamilleStock.getIntNUMBERAVAILABLE()) + qteReappro;
 
                     Double qteReappro2 = Math
                             .ceil(qteReappro + ((famille.getLgGROSSISTEID().getIntCOEFSECURITY() * qteReappro) / 100));
                     qteReappro = qteReappro2.intValue();
                 }
             } else {
-                if (OTFamilleStock.getLgFAMILLEID().getIntSEUILMIN() > OTFamilleStock.getIntNUMBERAVAILABLE()) {
-                    Double qteReapp = Math.ceil((famille.getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE())
-                            + int_SEUIL_MIN_CALCULE);
+                if (oFamilleStock.getLgFAMILLEID().getIntSEUILMIN() > oFamilleStock.getIntNUMBERAVAILABLE()) {
+                    Double qteReapp = Math
+                            .ceil((famille.getIntSEUILMIN() - oFamilleStock.getIntNUMBERAVAILABLE()) + seuilMinCalcule);
                     qteReappro = qteReapp.intValue();
                 }
             }
@@ -384,7 +394,7 @@ public class SuggestionImpl implements SuggestionService {
                 if (grossiste != null) {
                     oSuggestionOrder = checkSuggestionGrossiteExiste(grossiste.getLgGROSSISTEID());
                     if (statut == 0) {
-                        intQTEASUGGERE = calcQteReappro(oFamilleStock, famille, emg);
+                        intQTEASUGGERE = calcQteReappro(oFamilleStock, famille);
                         if (oSuggestionOrder == null) {
                             oSuggestionOrder = createSuggestionOrder(grossiste, Constant.STATUT_AUTO);
                             createTSuggestionOrderDetails(oSuggestionOrder, famille, grossiste, intQTEASUGGERE);
@@ -393,7 +403,7 @@ public class SuggestionImpl implements SuggestionService {
                         }
                     } else {
                         if (oSuggestionOrder != null) {
-                            intQTEASUGGERE = calcQteReappro(oFamilleStock, famille, emg);
+                            intQTEASUGGERE = calcQteReappro(oFamilleStock, famille);
                             addToTSuggestionOrderDetails(famille, grossiste, oSuggestionOrder, intQTEASUGGERE, emg);
                         }
 
@@ -502,13 +512,13 @@ public class SuggestionImpl implements SuggestionService {
         return qty;
     }
 
-    public Integer calcQteReappro(TFamilleStock oFamilleStock, TFamille tf, EntityManager emg) {
+    public Integer calcQteReappro(TFamilleStock oFamilleStock, TFamille tf) {
         int qteReappro = 1;
         try {
             TCodeGestion codeGestion = tf.getLgCODEGESTIONID();
             if (codeGestion != null
                     && (!codeGestion.getLgOPTIMISATIONQUANTITEID().getStrCODEOPTIMISATION().equals("0"))) {
-                qteReappro = getQuantityReapportByCodeGestionArticle(oFamilleStock, tf, emg);
+                qteReappro = getQuantityReapportByCodeGestionArticle(oFamilleStock, tf);
 
             } else if (Objects.nonNull(tf.getIntQTEREAPPROVISIONNEMENT()) && Objects.nonNull(tf.getIntSEUILMIN())
                     && tf.getIntSEUILMIN() >= oFamilleStock.getIntNUMBERAVAILABLE()) {
@@ -523,12 +533,11 @@ public class SuggestionImpl implements SuggestionService {
         return (qteReappro > 0 ? qteReappro : 1);
     }
 
-    public Integer quantiteDeconditionnesVentes(LocalDate dtDEBUT, LocalDate dtFin, TFamille produitId,
-            EntityManager emg) {
+    public Integer quantiteDeconditionnesVentes(LocalDate dtDEBUT, LocalDate dtFin, TFamille produitId) {
         Integer qty = 0;
         try {
             List<Predicate> predicates = new ArrayList<>();
-            CriteriaBuilder cb = emg.getCriteriaBuilder();
+            CriteriaBuilder cb = this.getEmg().getCriteriaBuilder();
             CriteriaQuery<Integer> cq = cb.createQuery(Integer.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             cq.select(cb.sum(root.get(TPreenregistrementDetail_.intQUANTITY)));
@@ -540,7 +549,7 @@ public class SuggestionImpl implements SuggestionService {
                     java.sql.Date.valueOf(dtDEBUT), java.sql.Date.valueOf(dtFin));
             predicates.add(cb.and(btw));
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            Query q = emg.createQuery(cq);
+            Query q = this.getEmg().createQuery(cq);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
 
@@ -549,9 +558,9 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     @Override
-    public List<TCalendrier> nombresJourVente(LocalDate begin, EntityManager emg) {
+    public List<TCalendrier> nombresJourVente(LocalDate begin) {
         try {
-            TypedQuery<TCalendrier> tq = emg
+            TypedQuery<TCalendrier> tq = this.getEmg()
                     .createQuery("SELECT o FROM TCalendrier o WHERE o.lgMONTHID.lgMONTHID   =?1", TCalendrier.class);
             tq.setParameter(1, begin.getMonthValue());
             return tq.getResultList();
@@ -635,11 +644,11 @@ public class SuggestionImpl implements SuggestionService {
             Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream()
                     .collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
             groupingByGrossisteId.forEach((k, v) -> {
-                TGrossiste OTGrossiste = getEmg().find(TGrossiste.class, k);
-                TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, Constant.STATUT_IS_PROGRESS);
+                TGrossiste oGrossiste = getEmg().find(TGrossiste.class, k);
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, Constant.STATUT_IS_PROGRESS);
                 v.forEach(o -> {
-                    TFamille OTFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
-                    initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, o.getIntQUANTITY());
+                    TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
+                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste, o.getIntQUANTITY());
                     count.increment();
                 });
 
@@ -659,11 +668,11 @@ public class SuggestionImpl implements SuggestionService {
             Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream()
                     .collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
             groupingByGrossisteId.forEach((k, v) -> {
-                TGrossiste OTGrossiste = getEmg().find(TGrossiste.class, k);
-                TSuggestionOrder suggestionOrder = createSuggestionOrder(OTGrossiste, Constant.STATUT_IS_PROGRESS);
+                TGrossiste oGrossiste = getEmg().find(TGrossiste.class, k);
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, Constant.STATUT_IS_PROGRESS);
                 v.forEach(o -> {
-                    TFamille OTFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
-                    initTSuggestionOrderDetail(suggestionOrder, OTFamille, OTGrossiste, o.getIntQUANTITY());
+                    TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
+                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste, o.getIntQUANTITY());
                     count.increment();
                 });
 
@@ -871,129 +880,17 @@ public class SuggestionImpl implements SuggestionService {
 
     @Override
     public JSONObject fetch(String search, int start, int limit) {
-        long count = count(search);
-        return FunctionUtils.returnData(getSuggestions(search, start, limit), count);
+        search = StringUtils.isNotEmpty(search) ? search + "%" : "%%";
+        int count = getSuggestionCount(search);
+
+        return FunctionUtils.returnData(getListSuggestion(search, start, limit).stream()
+                .map(this::buildSuggestionsFromTuple).collect(Collectors.toList()), count);
 
     }
 
-    private List<SuggestionsDTO> getSuggestions(String search, int start, int limit) {
-        CriteriaBuilder cb = getEmg().getCriteriaBuilder();
-        CriteriaQuery<TSuggestionOrder> cq = cb.createQuery(TSuggestionOrder.class);
-        Root<TSuggestionOrder> root = cq.from(TSuggestionOrder.class);
-        Join<TSuggestionOrder, TSuggestionOrderDetails> join = root
-                .join(TSuggestionOrder_.tSuggestionOrderDetailsCollection);
-        cq.select(root).distinct(true).orderBy(cb.desc(root.get(TSuggestionOrder_.dtUPDATED)));
-        List<Predicate> predicates = listPredicates(cb, root, join, search);
-        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-        TypedQuery<TSuggestionOrder> q = getEmg().createQuery(cq);
-        q.setFirstResult(start);
-        q.setMaxResults(limit);
-        return q.getResultList().stream().map(this::buildSuggestionsDTO).collect(Collectors.toList());
-    }
-
-    private SuggestionsDTO buildSuggestionsDTO(TSuggestionOrder suggestionOrder) {
-        int montantAchat = 0;
-        int montantVente = 0;
-        int nbreLigne = 0;
-        int totalQty = 0;
-        String items = " ";
-
-        for (TSuggestionOrderDetails item : suggestionOrder.getTSuggestionOrderDetailsCollection()) {
-            montantAchat += item.getIntPRICE();
-            montantVente += (item.getIntPRICEDETAIL() * item.getIntNUMBER());
-            nbreLigne++;
-            totalQty += item.getIntNUMBER();
-            int status = isOnAnotherSuggestion(item.getLgFAMILLEID());
-            TFamille famille = item.getLgFAMILLEID();
-            TFamilleGrossiste familleGrossiste = findFamilleGrossiste(famille.getLgFAMILLEID(),
-                    suggestionOrder.getLgGROSSISTEID().getLgGROSSISTEID());
-            switch (status) {
-            case 1:
-                items += "<span style='background-color:#73C774;'> <b><span style='display:inline-block;width: 7%;'>"
-                        + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP())
-                        + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION()
-                        + "</span><span style='display:inline-block;width: 10%;'>(" + item.getIntNUMBER()
-                        + ")</span><span style='display:inline-block;width: 15%;'>"
-                        + NumberUtils.formatLongToString(item.getIntPAFDETAIL())
-                        + " F CFA </span><span style='display:inline-block;width: 15%;'>"
-                        + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA "
-                        + "</span></b></span><br> ";
-                break;
-            case 2:
-                items += "<span style='background-color:#5fa2dd;'> <b><span style='display:inline-block;width: 7%;'>"
-                        + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP())
-                        + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION()
-                        + "</span><span style='display:inline-block;width: 10%;'>(" + item.getIntNUMBER()
-                        + ")</span><span style='display:inline-block;width: 15%;'>"
-                        + NumberUtils.formatLongToString(item.getIntPAFDETAIL())
-                        + " F CFA </span><span style='display:inline-block;width: 15%;'>"
-                        + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA "
-                        + "</span></b></span><br> ";
-                break;
-            default:
-                items += " <b><span style='display:inline-block;width: 7%;'>"
-                        + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP())
-                        + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION()
-                        + "</span><span style='display:inline-block;width: 10%;'>(" + item.getIntNUMBER()
-                        + ")</span><span style='display:inline-block;width: 15%;'>"
-                        + NumberUtils.formatLongToString(item.getIntPAFDETAIL())
-                        + " F CFA </span><span style='display:inline-block;width: 15%;'>"
-                        + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA " + "</span></b><br> ";
-                break;
-            }
-
-        }
-        return new SuggestionsDTO(suggestionOrder, items, montantAchat, montantVente, nbreLigne, totalQty);
-    }
 
     private TSuggestionOrderDetails getItem(String id) {
         return getEmg().find(TSuggestionOrderDetails.class, id);
-    }
-
-    private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TSuggestionOrder> root,
-            Join<TSuggestionOrder, TSuggestionOrderDetails> join, String search) {
-        List<Predicate> predicates = new ArrayList<>();
-
-        predicates.add(root.get(TSuggestionOrder_.strSTATUT)
-                .in(Set.of(Constant.STATUT_IS_PROGRESS, Constant.STATUT_AUTO, Constant.STATUT_PENDING)));
-
-        if (StringUtils.isNotEmpty(search)) {
-            search = search + "%";
-            predicates.add(cb.or(cb.like(root.get(TSuggestionOrder_.strREF), search),
-                    cb.like(join.get(TSuggestionOrderDetails_.lgFAMILLEID).get(TFamille_.intCIP), search),
-                    cb.like(join.get(TSuggestionOrderDetails_.lgFAMILLEID).get(TFamille_.strNAME), search)));
-        }
-        return predicates;
-    }
-
-    private long count(String search) {
-        CriteriaBuilder cb = getEmg().getCriteriaBuilder();
-        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-        Root<TSuggestionOrder> root = cq.from(TSuggestionOrder.class);
-        Join<TSuggestionOrder, TSuggestionOrderDetails> join = root
-                .join(TSuggestionOrder_.tSuggestionOrderDetailsCollection);
-        cq.select(cb.countDistinct(root));
-        List<Predicate> predicates = listPredicates(cb, root, join, search);
-        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-        TypedQuery<Long> q = getEmg().createQuery(cq);
-        return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
-
-    }
-
-    private TFamilleGrossiste findFamilleGrossiste(String familleId, String grossisteId) {
-
-        try {
-            Query qry = getEmg().createQuery(
-                    "SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgGROSSISTEID.lgGROSSISTEID = ?2 OR t.lgGROSSISTEID.strDESCRIPTION = ?2) AND t.strSTATUT = ?3 ")
-                    .setParameter(1, familleId).setParameter(2, grossisteId).setParameter(3, Constant.STATUT_ENABLE);
-            qry.setMaxResults(1);
-            return (TFamilleGrossiste) qry.getSingleResult();
-
-        } catch (Exception e) {
-            return null;
-
-        }
-
     }
 
     private int isOnAnotherSuggestion(TFamille lgFamilleID) {
@@ -1031,6 +928,48 @@ public class SuggestionImpl implements SuggestionService {
                 this.getEmg().merge(famille);
             }
         }
+    }
 
+    private List<Tuple> getListSuggestion(String query, int start, int limit) {
+        try {
+            Query q = em.createNativeQuery(SUGGESTION_QUERY, Tuple.class).setParameter(1, query);
+            q.setFirstResult(start);
+            q.setMaxResults(limit);
+            return q.getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new ArrayList<>();
+        }
+    }
+
+    private int getSuggestionCount(String query) {
+        try {
+            Query q = em.createNativeQuery(SUGGESTION_QUERY_COUNT).setParameter(1, query);
+
+            return ((Number) q.getSingleResult()).intValue();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private SuggestionsDTO buildSuggestionsFromTuple(Tuple t) {
+        SuggestionsDTO suggestions = new SuggestionsDTO();
+        suggestions.setDateButoir(t.get("dateButoir", Integer.class));
+        suggestions.setMontantAchat(t.get("montantAchat", BigDecimal.class).intValue());
+        suggestions.setMontantVente(t.get("montantVente", BigDecimal.class).intValue());
+        suggestions.setLgGROSSISTEID(t.get("grossisteId", String.class));
+        suggestions.setGrossisteId(t.get("libelleGrossiste", String.class));
+        suggestions.setGrossisteId(t.get("libelleGrossiste", String.class));
+        suggestions.setNbreLigne(t.get("itemCount", BigInteger.class).intValue());
+        suggestions.setTotalQty(t.get("productCount", BigDecimal.class).intValue());
+        suggestions.setDtCREATED(t.get("dateSuggession", String.class));
+        suggestions.setDtUPDATED(t.get("heureSuggession", String.class));
+        suggestions.setStrREF(t.get("reference", String.class));
+        suggestions.setStrSTATUT(t.get("statut", String.class));
+        suggestions.setLgSUGGESTIONORDERID(t.get("id", String.class));
+        return suggestions;
     }
 }

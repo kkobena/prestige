@@ -23,22 +23,12 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
     plain: true,
     maximizable: true,
     closable: false,
-    plugins: [{
-            ptype: 'rowexpander',
-            rowBodyTpl: new Ext.XTemplate(
-                    '<p> {str_FAMILLE_ITEM}</p>',
-                    {
-                        formatChange: function (v) {
-                            var color = v >= 0 ? 'green' : 'red';
-                            return '<span style="color: ' + color + ';">' + Ext.util.Format.usMoney(v) + '</span>';
-                        }
-                    })
-        }],
+  
     initComponent: function () {
         _myAppController = Ext.create('testextjs.controller.App', {});
         Me = this;
 
-        const itemsPerPage = 10;
+        const itemsPerPage = 18;
         const store_suggestion = new Ext.data.Store({
 
             fields: [
@@ -111,7 +101,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                 reader: {
                     type: 'json',
                     root: 'data',
-                    totalProperty: 'total',
+                    totalProperty: 'total'
                 }
             }
 
@@ -298,7 +288,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
             ],
             bbar: {
                 xtype: 'pagingtoolbar',
-                pageSize: 10,
+                pageSize: itemsPerPage,
                 store: store_suggestion,
                 displayInfo: true,
                 plugins: new Ext.ux.ProgressBarPager()
