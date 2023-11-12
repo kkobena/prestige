@@ -2063,6 +2063,7 @@ Ext.define('testextjs.controller.VenteCtr', {
 
     goBack: function () {
         const me = this;
+        me.resetAll();
         let xtype = 'cloturerventemanager';
         if (me.getCategorie() === 'PREVENTE') {
             xtype = 'preenregistrementmanager';
@@ -3846,7 +3847,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                             });
                         }
 
-
                     }
 
                 },
@@ -3875,7 +3875,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                 }
             }
         });
-
         if (emptyRef) {
             result = numBonField;
 
@@ -4007,7 +4006,6 @@ Ext.define('testextjs.controller.VenteCtr', {
         if (client) {
             clientId = client.get('lgCLIENTID');
         }
-
         const vente = me.getCurrent();
         let venteId = null;
         if (vente) {
@@ -4187,7 +4185,6 @@ Ext.define('testextjs.controller.VenteCtr', {
         const me = this;
         me.getMedecinform().setVisible(false);
         let grid = {
-
             xtype: 'grid',
             itemId: 'medecinGrid',
             selModel: {
@@ -4506,16 +4503,20 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     handleExtraModePayment: function (netTopay) {
+        const me = this;
         Ext.MessageBox.show({
             title: 'Avertissement',
             width: 550,
             msg: 'le montant de la vente est de <span style="color: black; font-size: 1rem;font-weight: 900;">' + Ext.util.Format.number(netTopay, '0,000.') + '</span> voulez vous ajouter un autre mode ?',
-            buttons: Ext.MessageBox.OK,
+            buttons: Ext.MessageBox.YESNO,
             icon: Ext.MessageBox.WARNING,
             fn: function (buttonId) {
-                if (buttonId === "ok") {
+
+                if (buttonId === "yes") {
                     Ext.create('testextjs.view.vente.ReglementGrid').show();
 
+                } else {
+                    me.getMontantRecu().focus(true, 50);
                 }
             }
         });
@@ -4538,8 +4539,6 @@ Ext.define('testextjs.controller.VenteCtr', {
         montantExtra.labelWidth = modeRegelement.libelle.length + 2;
         montantExtra.setFieldLabel(modeRegelement.libelle.toUpperCase());
         me.handleExtraAmountInputValue();
-
-
     },
 
     resetExtraModeCmp: function () {
@@ -4570,8 +4569,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 montantExtra.setValue(montantExtraValue);
 
             }
-
-            me.getMontantRecu().focus(true, 50);
+            
         }
 
     },
