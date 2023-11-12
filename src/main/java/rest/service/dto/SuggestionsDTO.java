@@ -155,6 +155,9 @@ public class SuggestionsDTO {
         return this;
     }
 
+    public SuggestionsDTO() {
+    }
+
     public SuggestionsDTO(TSuggestionOrder suggestionOrder, String items, int montantAchat, int montantVente,
             int nbreLigne, int totalQty) {
         TGrossiste grossiste = suggestionOrder.getLgGROSSISTEID();
@@ -167,12 +170,10 @@ public class SuggestionsDTO {
         this.lgSUGGESTIONORDERID = suggestionOrder.getLgSUGGESTIONORDERID();
         this.strREF = suggestionOrder.getStrREF();
         this.grossisteId = grossiste.getStrLIBELLE();
-        this.grossisteId = grossiste.getStrLIBELLE();
         this.lgGROSSISTEID = grossiste.getLgGROSSISTEID();
         this.strSTATUT = suggestionOrder.getStrSTATUT();
         this.dtCREATED = DateCommonUtils.formatDate(suggestionOrder.getDtCREATED());
         this.dtUPDATED = DateCommonUtils.formatToHour(suggestionOrder.getDtCREATED());
-        ;
 
     }
 }
