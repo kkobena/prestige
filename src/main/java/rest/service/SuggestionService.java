@@ -14,7 +14,6 @@ import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
 
 import javax.ejb.Local;
-import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -31,9 +30,9 @@ public interface SuggestionService {
 
     void makeSuggestionAuto(String preenregistrement);
 
-    Integer getQuantityReapportByCodeGestionArticle(TFamilleStock familleStock, TFamille famille, EntityManager emg);
+    Integer getQuantityReapportByCodeGestionArticle(TFamilleStock familleStock, TFamille famille);
 
-    List<TCalendrier> nombresJourVente(LocalDate begin, EntityManager emg);
+    List<TCalendrier> nombresJourVente(LocalDate begin);
 
     List<TSuggestionOrderDetails> findFamillesBySuggestion(String suggestionId);
 
