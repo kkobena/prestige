@@ -63,7 +63,7 @@ public class ReportUtil {
         try (InputStream resource = new FileInputStream(reportPath + reportName + ".jasper")) {
             return (JasperReport) JRLoader.loadObject(resource);
         } catch (FileNotFoundException e) {
-            LOG.log(Level.INFO, "Le fichier n'est pas accessible {0}", reportName);
+            LOG.log(Level.SEVERE, "Le fichier n'est pas accessible {0}", reportName);
             return compileReport(reportName, reportPath);
         }
 
@@ -76,16 +76,15 @@ public class ReportUtil {
         File jasperFile = null;
 
         try {
-            // File jrxmlFile = new File(ReportUtil.class.getResource(reportPath + reportName + ".jrxml").getFile());
+           
             File jrxmlFile = new File(reportPath + reportName + ".jrxml");
             File dir = jrxmlFile.getParentFile();
             jasperFile = new File(dir, reportName + ".jasper");
             in = new FileInputStream(jrxmlFile);
-            // in = ReportUtil.class.getResourceAsStream(reportPath + reportName + ".jrxml");
+          
             out = new FileOutputStream(jasperFile);
             JasperCompileManager.compileReportToStream(in, out);
-            in2 = new FileInputStream(jasperFile);// ReportUtil.class.getResourceAsStream(reportPath + reportName +
-                                                  // ".jasper");
+            in2 = new FileInputStream(jasperFile);
             return (JasperReport) JRLoader.loadObject(in2);
 
         } catch (FileNotFoundException | JRException e) {
@@ -112,7 +111,7 @@ public class ReportUtil {
     public JasperReport getDefaultReport(String reportName, String reportPath) {
         InputStream resource = null;
         try {
-            resource = ReportUtil.class.getResourceAsStream(reportPath + reportName + ".jasper"); //$NON-NLS-1$
+            resource = ReportUtil.class.getResourceAsStream(reportPath + reportName + ".jasper");
             return (JasperReport) JRLoader.loadObject(resource);
 
         } catch (JRException e) {
@@ -125,7 +124,7 @@ public class ReportUtil {
                     resource.close();
                 }
             } catch (IOException e) {
-                // TODO Auto-generated catch block
+                
                 LOG.log(Level.SEVERE, null, e);
             }
         }
@@ -160,25 +159,25 @@ public class ReportUtil {
     public Map<String, Object> officineData(TOfficine oTOfficine, TUser op) {
         Map<String, Object> parameters = new HashMap<>();
         try {
-            String P_H_LOGO = jdom.scr_report_file_logo;
-            String P_H_INSTITUTION = oTOfficine.getStrNOMABREGE();
-            String P_INSTITUTION_ADRESSE = oTOfficine.getStrADRESSSEPOSTALE();
-            String P_FOOTER_RC = "";
-            parameters.put("P_H_LOGO", P_H_LOGO);
-            parameters.put("P_H_INSTITUTION", P_H_INSTITUTION);
+            String logo = jdom.scr_report_file_logo;
+            String institution = oTOfficine.getStrNOMABREGE();
+            String adresseInstition = oTOfficine.getStrADRESSSEPOSTALE();
+            String footer = "";
+            parameters.put("P_H_LOGO", logo);
+            parameters.put("P_H_INSTITUTION", institution);
             parameters.put("P_PRINTED_BY", " " + op.getStrFIRSTNAME() + "  " + op.getStrLASTNAME());
             parameters.put("P_AUTRE_DESC", oTOfficine.getStrFIRSTNAME() + " " + oTOfficine.getStrLASTNAME());
             if (StringUtils.isNotEmpty(oTOfficine.getStrREGISTRECOMMERCE())) {
-                P_FOOTER_RC += "RC N° " + oTOfficine.getStrREGISTRECOMMERCE();
+                footer += "RC N° " + oTOfficine.getStrREGISTRECOMMERCE();
             }
             if (StringUtils.isNotEmpty(oTOfficine.getStrCOMPTECONTRIBUABLE())) {
-                P_FOOTER_RC += " - CC N° " + oTOfficine.getStrCOMPTECONTRIBUABLE();
+                footer += " - CC N° " + oTOfficine.getStrCOMPTECONTRIBUABLE();
             }
             if (StringUtils.isNotEmpty(oTOfficine.getStrREGISTREIMPOSITION())) {
-                P_FOOTER_RC += " - Régime d'Imposition " + oTOfficine.getStrREGISTREIMPOSITION();
+                footer += " - Régime d'Imposition " + oTOfficine.getStrREGISTREIMPOSITION();
             }
             if (StringUtils.isNotEmpty(oTOfficine.getStrCENTREIMPOSITION())) {
-                P_FOOTER_RC += " - Centre des Impôts: " + oTOfficine.getStrCENTREIMPOSITION();
+                footer += " - Centre des Impôts: " + oTOfficine.getStrCENTREIMPOSITION();
             }
 
             if (StringUtils.isNotEmpty(oTOfficine.getStrPHONE())) {
@@ -190,16 +189,16 @@ public class ReportUtil {
                         finalphonestring += " / " + DateConverter.phoneNumberFormat(va);
                     }
                 }
-                P_INSTITUTION_ADRESSE += " -  " + finalphonestring;
+                adresseInstition += " -  " + finalphonestring;
             }
             if (StringUtils.isNotEmpty(oTOfficine.getStrCOMPTEBANCAIRE())) {
-                P_INSTITUTION_ADRESSE += " - Compte Bancaire: " + oTOfficine.getStrCOMPTEBANCAIRE();
+                adresseInstition += " - Compte Bancaire: " + oTOfficine.getStrCOMPTEBANCAIRE();
             }
             if (StringUtils.isNotEmpty(oTOfficine.getStrNUMCOMPTABLE())) {
-                P_INSTITUTION_ADRESSE += " - CPT N°: " + oTOfficine.getStrNUMCOMPTABLE();
+                adresseInstition += " - CPT N°: " + oTOfficine.getStrNUMCOMPTABLE();
             }
-            parameters.put("P_INSTITUTION_ADRESSE", P_INSTITUTION_ADRESSE);
-            parameters.put("P_FOOTER_RC", P_FOOTER_RC);
+            parameters.put("P_INSTITUTION_ADRESSE", adresseInstition);
+            parameters.put("P_FOOTER_RC", footer);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
         }

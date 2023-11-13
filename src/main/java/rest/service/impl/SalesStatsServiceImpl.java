@@ -169,7 +169,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(st.get(TPreenregistrement_.lgPREENREGISTREMENTID));
             List<Predicate> predicates = predicatesVentesAnnulees(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             cm.where(cb.and(cb.greaterThan(mv.get(MvtTransaction_.montantPaye), 0),
                     cb.equal(mv.get(MvtTransaction_.reglement).get(TTypeReglement_.lgTYPEREGLEMENTID),
                             DateConverter.MODE_ESP),
@@ -244,7 +244,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             cq.select(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)).distinct(true)
                     .orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
             List<Predicate> predicates = predicatesVentesAnnulees(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
 
             List<TPreenregistrement> list = q.getResultList();
@@ -268,7 +268,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)));
             List<Predicate> predicates = predicatesVentesAnnulees(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
