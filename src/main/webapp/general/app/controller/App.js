@@ -597,14 +597,16 @@ Ext.define('testextjs.controller.App', {
         });
     },
     updateDescription: function (clsProto) {
-        var description = clsProto.exampleDescription,
+        let description = clsProto.exampleDescription,
                 descriptionPanel = this.getDescriptionPanel();
 
         if (Ext.isArray(description)) {
             clsProto.exampleDescription = description = description.join('');
         }
+        if (description != null && description != undefined) {
+            descriptionPanel.update(description);
+        }
 
-        descriptionPanel.update(description);
     },
     centerContent: function () {
         var contentPanel = this.getContentPanel(),
@@ -683,9 +685,7 @@ Ext.define('testextjs.controller.App', {
             var url_final = url + "?search_value=" + OComponent_val;
 
             if (OComponent_length >= 3) {
-                //OFamille_store.getStore().getProxy().url = url_final;
-                // OFamille_store.getStore().reload();
-
+             
                 var store = OFamille_store.getStore();
                 store.getProxy().url = url_final;
                 store.load({
@@ -696,20 +696,12 @@ Ext.define('testextjs.controller.App', {
                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(rec.get('lg_FAMILLE_ID'));
 
                         }
-//                        alert("ok"+store.getCount());
                     }
                 });
-                /*alert(store.getCount());
-                 if (store.getCount() === 1) {
-                 // var record=store.getAt(0);
-                 //OFamille_store.setValue(record.get('str_DESCRIPTION_PLUS'));
-                 
-                 
-                 }*/
-
+          
             }
         } else {
-            //alert('ici');
+          
             OFamille_store.getStore().getProxy().url = url;
             OFamille_store.getStore().reload();
 

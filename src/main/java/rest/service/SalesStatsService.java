@@ -21,6 +21,7 @@ import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.ArticleVenduDTO;
 
 /**
  *
@@ -129,4 +130,5 @@ public interface SalesStatsService {
     List<VenteDTO> venteAvecRemise(SalesStatsParams params);
 
     rest.service.dto.VenteDTO getOne(String id);
+
 }

@@ -44,7 +44,6 @@ import rest.service.dto.SuggestionsDTO;
 import util.Constant;
 import util.DateConverter;
 import util.FunctionUtils;
-import util.NumberUtils;
 
 /**
  * @author Kobena
@@ -887,7 +886,6 @@ public class SuggestionImpl implements SuggestionService {
                 .map(this::buildSuggestionsFromTuple).collect(Collectors.toList()), count);
 
     }
-
 
     private TSuggestionOrderDetails getItem(String id) {
         return getEmg().find(TSuggestionOrderDetails.class, id);

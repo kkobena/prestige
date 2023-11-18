@@ -809,7 +809,8 @@ Ext.application({
         'MotifReglementCtr',
         'EtatControlAnnuelCtr',
         'TableauBoardCarnetCtr',
-        'FactureSubrogatoireCtr'
+        'FactureSubrogatoireCtr',
+        'ProuduitsVenteAnnulesCtr'
         
     ],
     stores: [
