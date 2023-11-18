@@ -18,8 +18,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import rest.report.ReportUtil;
 import rest.service.CommonService;
-import rest.service.EtatControlBonService;
-import rest.service.dto.EtatControlBon;
+import rest.service.dto.ArticleVenduDTO;
 import rest.service.dto.StatistiqueProduitAnnuelleDTO;
 import rest.service.report.StatistiqueProduitService;
 import toolkits.parameters.commonparameter;
@@ -39,9 +38,17 @@ public class StatProduitServlet extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        TOfficine oTOfficine = commonService.findOfficine();
+        TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
         response.setContentType("application/pdf");
+        String mode = request.getParameter("mode");
+        if ("articleAnnules".equals(mode)) {
+            response.sendRedirect(request.getContextPath() + buildArticleAnnulesReport(request, user, oTOfficine));
+        } else {
+            response.sendRedirect(request.getContextPath() + buildReport(request, user, oTOfficine));
+        }
 
-        response.sendRedirect(request.getContextPath() + buildReport(request));
     }
 
     @Override
@@ -66,9 +73,8 @@ public class StatProduitServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    public String buildReport(HttpServletRequest request) {
-        HttpSession session = request.getSession();
-        TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+    private String buildReport(HttpServletRequest request, TUser user, TOfficine oTOfficine) {
+
         int period = Year.now().getValue();
         String year = request.getParameter("year");
         if (StringUtils.isNotEmpty(year)) {
@@ -77,7 +83,7 @@ public class StatProduitServlet extends HttpServlet {
         String rayonId = request.getParameter("rayonId");
 
         String search = request.getParameter("search");
-        TOfficine oTOfficine = commonService.findOfficine();
+
         LocalDate end;
         LocalDate dtSt = LocalDate.of(period, Month.JANUARY, 1);
         if (period == Year.now().getValue()) {
@@ -96,6 +102,29 @@ public class StatProduitServlet extends HttpServlet {
         parameters.put("P_H_CLT_INFOS", "QUANTITE PRODUITS VENDUS  DU  " + periode);
         List<StatistiqueProduitAnnuelleDTO> datas = this.statistiqueProduitService.getVenteProduits(period, search,
                 user.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), rayonId, 0, 0, true);
+
+        return reportUtil.buildReport(parameters, reportName, datas);
+
+    }
+
+    private String buildArticleAnnulesReport(HttpServletRequest request, TUser user, TOfficine oTOfficine) {
+
+        String dtStart = request.getParameter("dtStart");
+        String dtEnd = request.getParameter("dtEnd");
+        String userId = request.getParameter("userId");
+        LocalDate end = LocalDate.parse(dtEnd);
+        LocalDate dtSt = LocalDate.parse(dtStart);
+
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        periode += " AU " + end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+        String reportName = "article_inventaire";
+
+        parameters.put("P_H_CLT_INFOS", "ARTICLE ANNULES DU " + periode);
+        List<ArticleVenduDTO> datas = this.statistiqueProduitService.fetchListProduitAnnule(dtStart, dtEnd, userId, 0,
+                0, true);
 
         return reportUtil.buildReport(parameters, reportName, datas);
 

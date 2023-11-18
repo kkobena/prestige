@@ -55,4 +55,20 @@ public class StatistiqueProduitRessource {
 
         return Response.ok().entity(json.toString()).build();
     }
+
+    @GET
+    @Path("produit-annules")
+    public Response fetchListProduitsAnnules(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "userId") String userId,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject json = this.statistiqueProduitService.fetchListProduitAnnule(dtStart, dtEnd, userId, start, limit);
+
+        return Response.ok().entity(json.toString()).build();
+    }
 }
