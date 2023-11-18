@@ -17,3 +17,5 @@ CREATE TABLE `vente_reglement` (
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ;
+INSERT INTO vente_reglement(id,vente_id,type_regelement,montant,montant_attentu,`mvtDate`,flaged_amount,flag_id)SELECT LEFT(UUID(), 40) AS id, p.`lg_PREENREGISTREMENT_ID`,m.`typeReglementId`,m.`montantPaye`,m.`montantRegle`,m.`createdAt`, CASE WHEN m.flag_id IS NOT NULL THEN m.`montantAcc` ELSE 0 END AS flaged_amount,  flag_id FROM  mvttransaction m,t_preenregistrement p
+ where p.`lg_PREENREGISTREMENT_ID`=m.pkey;
