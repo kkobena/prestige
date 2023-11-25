@@ -43,6 +43,7 @@ public class TableauBaordPhDTO implements Serializable {
     private LocalDate mvtDate;
     private Integer mvtDateInt;
     private YearMonth yearMonth;
+    private int totalModeReglement;
 
     public Integer getMvtDateInt() {
         return mvtDateInt;
@@ -165,7 +166,7 @@ public class TableauBaordPhDTO implements Serializable {
         this.montantRemise = montantRemise;
     }
 
-    @JSONPropertyName("Comptant")
+    @JSONPropertyName("ComptantOld")
     public Integer getMontantEsp() {
         return montantEsp;
     }
@@ -258,6 +259,15 @@ public class TableauBaordPhDTO implements Serializable {
     @JSONPropertyName("Credit")
     public Integer getMontantCredit() {
         return montantCredit;
+    }
+
+    @JSONPropertyName("Comptant")
+    public int getTotalModeReglement() {
+        return totalModeReglement;
+    }
+
+    public void setTotalModeReglement(int totalModeReglement) {
+        this.totalModeReglement = totalModeReglement;
     }
 
     public void setMontantCredit(Integer montantCredit) {

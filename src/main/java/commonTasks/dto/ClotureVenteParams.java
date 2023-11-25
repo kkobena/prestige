@@ -8,7 +8,9 @@ package commonTasks.dto;
 import dal.TUser;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -27,6 +29,16 @@ public class ClotureVenteParams implements Serializable {
     private TiersPayantParams compteTp, compteTpNouveau;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
     private MontantAPaye data;
+    private Set<VenteReglementDTO> reglements = new HashSet<>();
+
+    public Set<VenteReglementDTO> getReglements() {
+        return reglements;
+    }
+
+    public ClotureVenteParams setReglements(Set<VenteReglementDTO> reglements) {
+        this.reglements = reglements;
+        return this;
+    }
 
     public MontantAPaye getData() {
         return data;

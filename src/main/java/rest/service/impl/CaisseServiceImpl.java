@@ -315,44 +315,44 @@ public class CaisseServiceImpl implements CaisseService {
                 }
             });
 
-            Integer _montantEspec = montantEspec.intValue();
-            Integer _montantCredit = montantCredit.intValue();
-            Integer _montantAnnulation = montantAnnulation.intValue();
-            Integer _montantSortie = montantSortie.intValue();
-            Integer _montantEntree = montantEntree.intValue();
-            Integer _montantVir = montantVir.intValue();
-            Integer _montantCb = montantCb.intValue();
-            Integer _montantcheque = montantcheque.intValue();
-            Integer _montantFondCaisse = montantFondCaisse.intValue();
-            int _montantMobileMoney = montantMobileMoney.intValue();
-            if (_montantFondCaisse.compareTo(0) != 0) {
-                os.add(new SumCaisseDTO(_montantFondCaisse, "Fond.Caisse"));
+            int montantTotalEspec = montantEspec.intValue();
+            int montantTotalCredit = montantCredit.intValue();
+            int montantTotalAnnulation = montantAnnulation.intValue();
+            int montantTotalSortie = montantSortie.intValue();
+            int montantTotalEntree = montantEntree.intValue();
+            int montantTotalVir = montantVir.intValue();
+            int montantTotalCb = montantCb.intValue();
+            int montantTotalcheque = montantcheque.intValue();
+            int montantTotalFondCaisse = montantFondCaisse.intValue();
+            int montantTotalMobileMoney = montantMobileMoney.intValue();
+            if (montantTotalFondCaisse != 0) {
+                os.add(new SumCaisseDTO(montantTotalFondCaisse, "Fond.Caisse"));
             }
 
-            if (_montantcheque.compareTo(0) != 0) {
-                os.add(new SumCaisseDTO(_montantcheque, "Chèque"));
+            if (montantTotalcheque != 0) {
+                os.add(new SumCaisseDTO(montantTotalcheque, "Chèque"));
             }
-            if (_montantCb.compareTo(0) != 0) {
-                os.add(new SumCaisseDTO(_montantCb, "Carte.Bancaire"));
+            if (montantTotalCb != 0) {
+                os.add(new SumCaisseDTO(montantTotalCb, "Carte.Bancaire"));
             }
-            if (_montantVir.compareTo(0) != 0) {
-                os.add(new SumCaisseDTO(_montantVir, "Virement"));
+            if (montantTotalVir != 0) {
+                os.add(new SumCaisseDTO(montantTotalVir, "Virement"));
             }
-            if (_montantCredit.compareTo(0) != 0) {
-                os.add(new SumCaisseDTO(_montantCredit, "Différé"));
+            if (montantTotalCredit != 0) {
+                os.add(new SumCaisseDTO(montantTotalCredit, "Différé"));
             }
-            if (_montantSortie.compareTo(0) != 0) {
-                os.add(new SumCaisseDTO(_montantSortie, "Sortie.Caisse"));
+            if (montantTotalSortie != 0) {
+                os.add(new SumCaisseDTO(montantTotalSortie, "Sortie.Caisse"));
             }
-            if (_montantEntree.compareTo(0) != 0) {
-                os.add(new SumCaisseDTO(_montantEntree, "Entrée.Caisse"));
+            if (montantTotalEntree != 0) {
+                os.add(new SumCaisseDTO(montantTotalEntree, "Entrée.Caisse"));
             }
-            if (_montantMobileMoney != 0) {
-                os.add(new SumCaisseDTO(_montantMobileMoney, "Paiement.Mobile"));
+            if (montantTotalMobileMoney != 0) {
+                os.add(new SumCaisseDTO(montantTotalMobileMoney, "Paiement.Mobile"));
             }
-            os.add(new SumCaisseDTO(_montantEspec, "Espèce"));
-            if (_montantAnnulation.compareTo(0) != 0) {
-                os.add(new SumCaisseDTO(_montantAnnulation, "Annulation"));
+            os.add(new SumCaisseDTO(montantTotalEspec, "Espèce"));
+            if (montantTotalAnnulation != 0) {
+                os.add(new SumCaisseDTO(montantTotalAnnulation, "Annulation"));
             }
             dTO.setSummary(os);
         } catch (Exception e) {
@@ -416,9 +416,7 @@ public class CaisseServiceImpl implements CaisseService {
             cq.where(cb.and(predicates.toArray(new Predicate[0])));
             Query q = getEntityManager().createQuery(cq);
             List<Object[]> data = q.getResultList();
-            data.forEach((objects) -> {
-                lis.add(new SumCaisseDTO(Long.valueOf(objects[0] + ""), objects[1] + ""));
-            });
+            data.forEach(objects -> lis.add(new SumCaisseDTO(Long.valueOf(objects[0] + ""), objects[1] + "")));
             return lis;
 
         } catch (Exception e) {
@@ -1461,8 +1459,8 @@ public class CaisseServiceImpl implements CaisseService {
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<MvtTransaction> root = cq.from(MvtTransaction.class);
             cq.select(cb.count(root));
-            predicates.add(cb.and(cb.equal(root.get(MvtTransaction_.magasin).get(TEmplacement_.lgEMPLACEMENTID),
-                    caisseParams.getEmplacementId())));
+            predicates.add(cb.equal(root.get(MvtTransaction_.magasin).get(TEmplacement_.lgEMPLACEMENTID),
+                    caisseParams.getEmplacementId()));
 
             predicates.add(cb.and(cb.notEqual(root.get(MvtTransaction_.typeTransaction), TypeTransaction.ACHAT)));
             if (caisseParams.getStartHour() != null && caisseParams.getStartEnd() != null) {
@@ -1471,21 +1469,20 @@ public class CaisseServiceImpl implements CaisseService {
                 Predicate btw = cb.between(
                         cb.function("TIMESTAMP", Timestamp.class, root.get(MvtTransaction_.createdAt)),
                         java.sql.Timestamp.valueOf(debut), java.sql.Timestamp.valueOf(fin));
-                predicates.add(cb.and(btw));
+                predicates.add(btw);
             } else if (caisseParams.getStartHour() == null && caisseParams.getStartEnd() == null) {
                 Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(MvtTransaction_.mvtDate)),
                         java.sql.Date.valueOf(caisseParams.getStartDate()),
                         java.sql.Date.valueOf(caisseParams.getEnd()));
-                predicates.add(cb.and(btw));
+                predicates.add(btw);
             }
             if (caisseParams.getTypeReglementId() != null) {
-                predicates
-                        .add(cb.and(cb.equal(root.get(MvtTransaction_.reglement).get(TTypeReglement_.lgTYPEREGLEMENTID),
-                                caisseParams.getTypeReglementId())));
+                predicates.add(cb.equal(root.get(MvtTransaction_.reglement).get(TTypeReglement_.lgTYPEREGLEMENTID),
+                        caisseParams.getTypeReglementId()));
             }
             if (caisseParams.getUtilisateurId() != null) {
-                predicates.add(cb.and(cb.equal(root.get(MvtTransaction_.caisse).get(TUser_.lgUSERID),
-                        caisseParams.getUtilisateurId())));
+                predicates.add(cb.equal(root.get(MvtTransaction_.caisse).get(TUser_.lgUSERID),
+                        caisseParams.getUtilisateurId()));
             }
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);

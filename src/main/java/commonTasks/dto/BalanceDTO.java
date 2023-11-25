@@ -43,6 +43,7 @@ public class BalanceDTO implements Serializable {
     private long montantMoov;
     private long montantMtn;
     private long montantWave;
+    private long totalModeReglement;
 
     public long getMontantOrange() {
         return montantOrange;
@@ -315,6 +316,14 @@ public class BalanceDTO implements Serializable {
 
     public void setMarge(long marge) {
         this.marge = marge;
+    }
+
+    public long getTotalModeReglement() {
+        return totalModeReglement;
+    }
+
+    public void setTotalModeReglement(long totalModeReglement) {
+        this.totalModeReglement = totalModeReglement;
     }
 
     public BalanceDTO() {
