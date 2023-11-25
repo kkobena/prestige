@@ -21,7 +21,6 @@ import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.service.dto.ArticleVenduDTO;
 
 /**
  *

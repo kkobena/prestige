@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -110,6 +111,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     private ReportUtil reportUtil;
     @EJB
     private SalesStatsService salesStatsService;
+    LongAdder add = new LongAdder();
 
     @Override
     public File buildBarecode(String data) {
@@ -2091,12 +2093,13 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     private void computeVenteTicketZDataByUser(TicketZDTO ticket, List<MvtTransaction> list) {
 
         for (MvtTransaction b : list) {
+            if (b.getTypeTransaction() == TypeTransaction.VENTE_CREDIT) {
+                ticket.setTotalCredit(ticket.getTotalCredit() + b.getMontantCredit());
+            }
             switch (b.getReglement().getLgTYPEREGLEMENTID()) {
             case DateConverter.MODE_ESP:
 
-                if (b.getTypeTransaction().equals(TypeTransaction.VENTE_CREDIT)) {
-                    ticket.setTotalCredit(ticket.getTotalCredit() + b.getMontantCredit());
-                } else {
+                if (b.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT) {
                     TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
                     if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
                         ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
@@ -2270,6 +2273,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     private Set<TicketZDTO> dataPerUser(Params params) {
         List<TicketZDTO> tickes = new LinkedList<>();
+
         if (params.getDescription().equals("ALL")) {
 
             ticketZEntreesData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse))
@@ -2301,9 +2305,9 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     });
 
         }
+
         ticketZVenteData(params).stream().collect(Collectors.groupingBy(MvtTransaction::getCaisse))
                 .forEach((user, trans) -> {
-
                     TicketZDTO userData = null;
                     ListIterator<TicketZDTO> listIterator = tickes.listIterator();
                     while (listIterator.hasNext()) {
