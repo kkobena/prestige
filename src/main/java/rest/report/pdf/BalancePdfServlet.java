@@ -33,6 +33,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import rest.report.ReportUtil;
 import rest.service.CaisseService;
+import rest.service.ListCaisseService;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
 import util.Constant;
@@ -46,16 +47,18 @@ public class BalancePdfServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     @EJB
-    Balance balance;
+    private Balance balance;
     @EJB
-    CaisseService caisseService;
+    private CaisseService caisseService;
     @EJB
-    ReportUtil reportUtil;
+    private ReportUtil reportUtil;
+    @EJB
+    private ListCaisseService listCaisseService;
 
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, RECAP, TVA_JOUR, STAT_FAMILLE_ARTICLE,
         EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS, BALANCE_PARA, SAISIE_PERIMES,
-        STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE, BALANCE_CARNET, TABLEAU_CARNET
+        STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE, BALANCE_CARNET, TABLEAU_CARNET, LISTECAISSE_V2
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -127,7 +130,8 @@ public class BalancePdfServlet extends HttpServlet {
             file = balance.reportGestion(params);
             break;
         case LISTECAISSE:
-            String lg_USER_ID = request.getParameter("user"), reglement = request.getParameter("reglement");
+        case LISTECAISSE_V2:
+            String lgUSERID = request.getParameter("user"), reglement = request.getParameter("reglement");
             String startDate = request.getParameter("startDate"), endDate = request.getParameter("endDate");
             String startH = request.getParameter("startH"), endH = request.getParameter("endH");
             CaisseParamsDTO caisseParams = new CaisseParamsDTO();
@@ -148,12 +152,18 @@ public class BalancePdfServlet extends HttpServlet {
 
                 caisseParams.setTypeReglementId(reglement);
             }
-            if (!StringUtils.isEmpty(lg_USER_ID)) {
-                caisseParams.setUtilisateurId(lg_USER_ID);
+            if (!StringUtils.isEmpty(lgUSERID)) {
+                caisseParams.setUtilisateurId(lgUSERID);
             }
             caisseParams.setFindClient(true);
-            file = listeCaisse(caisseParams, OTUser);
+            if (action.equalsIgnoreCase(Action.LISTECAISSE_V2.name())) {
+                file = listeCaisseVersion2(caisseParams, OTUser);
+            } else {
+                file = listeCaisse(caisseParams, OTUser);
+            }
+
             break;
+
         case SUIVIMVT:
             String dtSt = request.getParameter("dtStart"), dtEn = request.getParameter("dtEnd");
             String produitId = request.getParameter("produitId");
@@ -341,5 +351,42 @@ public class BalancePdfServlet extends HttpServlet {
         } catch (Exception e) {
         }
         return body;
+    }
+
+    public String listeCaisseVersion2(CaisseParamsDTO caisseParams, TUser tu) throws IOException {
+        caisseParams.setAll(true);
+        TOfficine oTOfficine = caisseService.findOfficine();
+        String scrreportfile = "rp_caisse_list";
+        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        final Comparator<rest.service.v2.dto.VisualisationCaisseDTO> comparatorCaisse = Comparator
+                .comparing(rest.service.v2.dto.VisualisationCaisseDTO::getDateOperation);
+
+        List<rest.service.v2.dto.VisualisationCaisseDTO> datas = new ArrayList<>();
+
+        Map<String, List<rest.service.v2.dto.VisualisationCaisseDTO>> map = this.listCaisseService
+                .fetchAll(caisseParams).stream()
+                .collect(Collectors.groupingBy(rest.service.v2.dto.VisualisationCaisseDTO::getOperateurId));
+        map.forEach((k, v) -> {
+            v.sort(comparatorCaisse);
+            rest.service.v2.dto.VisualisationCaisseDTO dto = new rest.service.v2.dto.VisualisationCaisseDTO();
+            rest.service.v2.dto.VisualisationCaisseDTO index0 = v.get(0);
+            dto.setDateOperation(index0.getDateOperation());
+            dto.setOperateur(index0.getOperateur());
+            dto.setOperateurId(k);
+            dto.setDatas(v);
+            datas.add(dto);
+        });
+        datas.sort(comparatorCaisse);
+        LocalDateTime debut = LocalDateTime.of(caisseParams.getStartDate(), caisseParams.getStartHour());
+        String periode = "PERIODE DU " + debut.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        LocalDateTime fin = LocalDateTime.of(caisseParams.getEnd(), caisseParams.getStartEnd());
+        periode += " AU " + fin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        parameters.put("P_H_CLT_INFOS", "LISTE DES CAISSES  " + periode);
+        String reportgeneratefile = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        parameters.put("totaux", this.listCaisseService.fetchSummary(caisseParams));
+        parameters.put("sub_reportUrl", jdom.scr_report_file);
+        reportUtil.buildReport(parameters, scrreportfile, jdom.scr_report_file,
+                jdom.scr_report_pdf + "listecaisses_" + reportgeneratefile, datas);
+        return "/data/reports/pdf/listecaisses_" + reportgeneratefile;
     }
 }

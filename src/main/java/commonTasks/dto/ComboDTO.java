@@ -15,7 +15,8 @@ import java.util.Objects;
 public class ComboDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private String id, libelle;
+    private String id;
+    private String libelle;
 
     public String getId() {
         return id;

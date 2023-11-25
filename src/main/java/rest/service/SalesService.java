@@ -9,7 +9,6 @@ import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.MedecinDTO;
 import commonTasks.dto.QueryDTO;
 import commonTasks.dto.SalesParams;
-import dal.MvtTransaction;
 import dal.TPreenregistrement;
 import dal.TUser;
 
@@ -22,9 +21,6 @@ import org.json.JSONObject;
 // @Local
 // @Remote
 public interface SalesService {
-
-    void cloneTransaction(MvtTransaction old, TPreenregistrement p);
-
     JSONObject annulerVente(TUser ooTUser, String id);
 
     JSONObject createPreVente(SalesParams salesParams);
@@ -49,11 +45,7 @@ public interface SalesService {
 
     JSONObject clotureravoir(String id, TUser tUser);
 
-    JSONObject updateVenteBonVente(String idCompteClientItem, String refBon);
-
     JSONObject closeventeBon(String id);
-
-    JSONObject addtierspayant(SalesParams params);
 
     JSONObject removetierspayant(SalesParams params);
 
@@ -62,8 +54,6 @@ public interface SalesService {
     JSONObject shownetpayVno(TPreenregistrement p) throws JSONException;
 
     JSONObject addRemisse(SalesParams params) throws JSONException;
-
-    JSONObject addDevisRemisse(SalesParams params) throws JSONException;
 
     JSONObject faireDevis(SalesParams params) throws JSONException;
 
@@ -74,8 +64,6 @@ public interface SalesService {
     JSONObject addtierspayant(String venteId, SalesParams params);
 
     JSONObject removetierspayant(String comptClientTpId, String venteId);
-
-    Integer productQtyByVente(String venteId);
 
     Integer nbreProduitsByVente(String venteId);
 
@@ -120,8 +108,6 @@ public interface SalesService {
     JSONObject closePreventeVente(TUser ooTUser, String id);
 
     JSONObject clonerDevis(TUser ooTUser, String devisId) throws JSONException;
-
-    void updateVenteTva();
 
     void updateVente();
 

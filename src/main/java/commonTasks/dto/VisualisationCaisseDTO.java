@@ -35,6 +35,7 @@ public class VisualisationCaisseDTO implements Serializable {
     private String id = UUID.randomUUID().toString();
     private String modeRegle, typeMvt;
     private String operateurId;
+    private List<VisualisationCaisseDTO> datas = new ArrayList<>();
 
     public String getOperateurId() {
         return operateurId;
@@ -43,8 +44,6 @@ public class VisualisationCaisseDTO implements Serializable {
     public void setOperateurId(String operateurId) {
         this.operateurId = operateurId;
     }
-
-    private List<VisualisationCaisseDTO> datas = new ArrayList<>();
 
     public void setDatas(List<VisualisationCaisseDTO> datas) {
         this.datas = datas;
