@@ -76,12 +76,12 @@ public class ReportUtil {
         File jasperFile = null;
 
         try {
-           
+
             File jrxmlFile = new File(reportPath + reportName + ".jrxml");
             File dir = jrxmlFile.getParentFile();
             jasperFile = new File(dir, reportName + ".jasper");
             in = new FileInputStream(jrxmlFile);
-          
+
             out = new FileOutputStream(jasperFile);
             JasperCompileManager.compileReportToStream(in, out);
             in2 = new FileInputStream(jasperFile);
@@ -124,7 +124,7 @@ public class ReportUtil {
                     resource.close();
                 }
             } catch (IOException e) {
-                
+
                 LOG.log(Level.SEVERE, null, e);
             }
         }
