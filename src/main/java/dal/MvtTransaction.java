@@ -107,7 +107,7 @@ public class MvtTransaction implements Serializable {
     private Integer montantnetug = 0;
     @Column(name = "montanttvaug")
     private Integer montantTvaUg = 0;
-    @JoinColumn(name = "vente_id", referencedColumnName = "lg_PREENREGISTREMENT_ID", nullable = true)
+    @JoinColumn(name = "vente_id", referencedColumnName = "lg_PREENREGISTREMENT_ID")
     @ManyToOne
     private TPreenregistrement preenregistrement;
     @Column(name = "flag")

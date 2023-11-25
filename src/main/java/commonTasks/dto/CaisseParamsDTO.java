@@ -21,9 +21,12 @@ public class CaisseParamsDTO implements Serializable {
     private LocalTime startEnd;
     private String typeReglementId;
     private String utilisateurId;
-    private int start, limit, page = 0;
+    private int start;
+    private int limit;
+    private int page;
     private String emplacementId;
-    private boolean findClient = false;
+    private boolean findClient;
+    private boolean all;
 
     public LocalDate getStartDate() {
         return startDate;
@@ -111,6 +114,14 @@ public class CaisseParamsDTO implements Serializable {
 
     public void setUtilisateurId(String utilisateurId) {
         this.utilisateurId = utilisateurId;
+    }
+
+    public boolean isAll() {
+        return all;
+    }
+
+    public void setAll(boolean all) {
+        this.all = all;
     }
 
     @Override
