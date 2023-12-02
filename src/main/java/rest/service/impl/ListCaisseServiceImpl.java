@@ -8,12 +8,14 @@ import dal.MvtTransaction_;
 import dal.TClient;
 import dal.TEmplacement_;
 import dal.TPreenregistrement;
+import dal.TPreenregistrement_;
 import dal.TTypeMvtCaisse;
 import dal.TTypeReglement;
 import dal.TTypeReglement_;
 import dal.TUser;
 import dal.TUser_;
 import dal.VenteReglement;
+import dal.VenteReglement_;
 import dal.enumeration.TypeTransaction;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -36,6 +38,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -86,7 +89,8 @@ public class ListCaisseServiceImpl implements ListCaisseService {
         return summaries;
     }
 
-    private List<Predicate> predicates(CaisseParamsDTO caisseParams, CriteriaBuilder cb, Root<MvtTransaction> root) {
+    private List<Predicate> predicates(CaisseParamsDTO caisseParams, CriteriaBuilder cb, Root<MvtTransaction> root,
+            CriteriaQuery cq) {
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(root.get(MvtTransaction_.magasin).get(TEmplacement_.lgEMPLACEMENTID),
                 caisseParams.getEmplacementId()));
@@ -103,9 +107,19 @@ public class ListCaisseServiceImpl implements ListCaisseService {
             predicates.add(cb.between(cb.function("DATE", Date.class, root.get(MvtTransaction_.mvtDate)),
                     java.sql.Date.valueOf(caisseParams.getStartDate()), java.sql.Date.valueOf(caisseParams.getEnd())));
         }
-        if (caisseParams.getTypeReglementId() != null) {
-            predicates.add(cb.equal(root.get(MvtTransaction_.reglement).get(TTypeReglement_.lgTYPEREGLEMENTID),
-                    caisseParams.getTypeReglementId()));
+        if (StringUtils.isNotEmpty(caisseParams.getTypeReglementId())) {
+
+            Subquery<String> sub = cq.subquery(String.class);
+            Root<VenteReglement> pr = sub.from(VenteReglement.class);
+            sub.select(pr.get(VenteReglement_.preenregistrement).get(TPreenregistrement_.lgPREENREGISTREMENTID))
+                    .where(cb.and(
+                            cb.equal(pr.get(VenteReglement_.preenregistrement)
+                                    .get(TPreenregistrement_.lgPREENREGISTREMENTID), root.get(MvtTransaction_.pkey)),
+                            cb.equal(pr.get(VenteReglement_.typeReglement).get(TTypeReglement_.lgTYPEREGLEMENTID),
+                                    caisseParams.getTypeReglementId())));
+
+            predicates.add(cb.in(root.get(MvtTransaction_.pkey)).value(sub));
+
         }
         if (caisseParams.getUtilisateurId() != null) {
             predicates.add(
@@ -123,7 +137,7 @@ public class ListCaisseServiceImpl implements ListCaisseService {
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<MvtTransaction> root = cq.from(MvtTransaction.class);
             cq.select(cb.count(root));
-            List<Predicate> predicates = predicates(caisseParams, cb, root);
+            List<Predicate> predicates = predicates(caisseParams, cb, root, cq);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
@@ -142,7 +156,7 @@ public class ListCaisseServiceImpl implements ListCaisseService {
             CriteriaQuery<MvtTransaction> cq = cb.createQuery(MvtTransaction.class);
             Root<MvtTransaction> root = cq.from(MvtTransaction.class);
             cq.select(root).orderBy(cb.asc(root.get(MvtTransaction_.createdAt)));
-            List<Predicate> predicates = predicates(caisseParams, cb, root);
+            List<Predicate> predicates = predicates(caisseParams, cb, root, cq);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<MvtTransaction> q = getEntityManager().createQuery(cq);
             if (!caisseParams.isAll()) {
@@ -158,38 +172,12 @@ public class ListCaisseServiceImpl implements ListCaisseService {
 
     }
 
-    private Optional<TClient> findClientByVenteId(String id) {
-        if (StringUtils.isEmpty(id)) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.ofNullable(getEntityManager().find(TClient.class, id));
-        } catch (Exception e) {
-            return Optional.empty();
-        }
-    }
-
     private TPreenregistrement findVenteByVenteId(String id) {
 
         try {
             return getEntityManager().find(TPreenregistrement.class, id);
         } catch (Exception e) {
             return null;
-        }
-    }
-
-    private List<VenteReglement> findByIdVente(String idVente) {
-        if (StringUtils.isEmpty(idVente)) {
-            return Collections.emptyList();
-        }
-        try {
-            TypedQuery<VenteReglement> q = getEntityManager().createQuery(
-                    "SELECT o FROM VenteReglement o WHERE o.preenregistrement.lgPREENREGISTREMENTID=?1 ",
-                    VenteReglement.class);
-            q.setParameter(1, idVente);
-            return q.getResultList();
-        } catch (Exception e) {
-            return Collections.emptyList();
         }
     }
 

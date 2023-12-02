@@ -854,7 +854,7 @@ public class SalesServiceImpl implements SalesService {
 
     private void copyRecette(TPreenregistrement newPreen, TRecettes old, TUser o) {
         TRecettes tr = old;
-        LOG.log(Level.INFO, "tr {0} ", new Object[]{tr});
+        LOG.log(Level.INFO, "tr {0} ", new Object[] { tr });
         tr.setLgUSERID(o);
         tr.setDtCREATED(newPreen.getDtUPDATED());
         tr.setDtUPDATED(newPreen.getDtUPDATED());
@@ -1651,37 +1651,37 @@ public class SalesServiceImpl implements SalesService {
     private TModeReglement findModeReglement(String idTypeRegl, EntityManager emg) {
         TModeReglement modeReglement;
         switch (idTypeRegl) {
-            case "1":
-            case "4":
-                modeReglement = findByIdMod("1", emg);
-                break;
-            case "2":
-                modeReglement = findByIdMod("2", emg);
-                break;
-            case "3":
-                modeReglement = findByIdMod("5", emg);
-                break;
-            case "6":
-                modeReglement = findByIdMod("7", emg);
-                break;
-            case "5":
-                modeReglement = findByIdMod("6", emg);
-                break;
-            case "7":
-                modeReglement = findByIdMod(DateConverter.MODE_ORANGE, emg);
-                break;
-            case "8":
-                modeReglement = findByIdMod("8", emg);
-                break;
-            case "9":
-                modeReglement = findByIdMod("9", emg);
-                break;
-            case "10":
-                modeReglement = findByIdMod("11", emg);
-                break;
-            default:
-                modeReglement = findByIdMod(idTypeRegl, emg);
-                break;
+        case "1":
+        case "4":
+            modeReglement = findByIdMod("1", emg);
+            break;
+        case "2":
+            modeReglement = findByIdMod("2", emg);
+            break;
+        case "3":
+            modeReglement = findByIdMod("5", emg);
+            break;
+        case "6":
+            modeReglement = findByIdMod("7", emg);
+            break;
+        case "5":
+            modeReglement = findByIdMod("6", emg);
+            break;
+        case "7":
+            modeReglement = findByIdMod(DateConverter.MODE_ORANGE, emg);
+            break;
+        case "8":
+            modeReglement = findByIdMod("8", emg);
+            break;
+        case "9":
+            modeReglement = findByIdMod("9", emg);
+            break;
+        case "10":
+            modeReglement = findByIdMod("11", emg);
+            break;
+        default:
+            modeReglement = findByIdMod(idTypeRegl, emg);
+            break;
 
         }
         return modeReglement;
@@ -2645,7 +2645,7 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                .cmuAmount(montantCMU.intValue());
+                        .cmuAmount(montantCMU.intValue());
     }
 
     @Override
@@ -2699,13 +2699,10 @@ public class SalesServiceImpl implements SalesService {
             Predicate predicate = cb.conjunction();
             if (StringUtils.isNotEmpty(params.getQuery())) {
                 String search = params.getQuery() + "%";
-                predicate = cb.and(predicate,
-                        cb.or(cb.like(root.get(TFamille_.strNAME), search),
-                                cb.like(root.get(TFamille_.intCIP), search),
-                                cb.like(root.get(TFamille_.intEAN13), search),
-                                cb.like(st.get("strCODEARTICLE"), search),
-                                cb.like(root.get(TFamille_.lgFAMILLEID), search),
-                                cb.like(root.get(TFamille_.strDESCRIPTION), search)));
+                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), search),
+                        cb.like(root.get(TFamille_.intCIP), search), cb.like(root.get(TFamille_.intEAN13), search),
+                        cb.like(st.get("strCODEARTICLE"), search), cb.like(root.get(TFamille_.lgFAMILLEID), search),
+                        cb.like(root.get(TFamille_.strDESCRIPTION), search)));
             }
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate,
@@ -2743,13 +2740,10 @@ public class SalesServiceImpl implements SalesService {
             Predicate predicate = cb.conjunction();
             if (StringUtils.isNotEmpty(params.getQuery())) {
                 String search = params.getQuery() + "%";
-                predicate = cb.and(predicate,
-                        cb.or(cb.like(root.get(TFamille_.strNAME), search),
-                                cb.like(root.get(TFamille_.intCIP), search),
-                                cb.like(root.get(TFamille_.intEAN13), search),
-                                cb.like(st.get("strCODEARTICLE"), search),
-                                cb.like(root.get(TFamille_.lgFAMILLEID), search),
-                                cb.like(root.get(TFamille_.strDESCRIPTION), search)));
+                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), search),
+                        cb.like(root.get(TFamille_.intCIP), search), cb.like(root.get(TFamille_.intEAN13), search),
+                        cb.like(st.get("strCODEARTICLE"), search), cb.like(root.get(TFamille_.lgFAMILLEID), search),
+                        cb.like(root.get(TFamille_.strDESCRIPTION), search)));
             }
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate,
@@ -2789,10 +2783,8 @@ public class SalesServiceImpl implements SalesService {
             Predicate p = cb.conjunction();
             if (StringUtils.isNotEmpty(params.getQuery())) {
                 String search = params.getQuery() + "%";
-                p = cb.and(p,
-                        cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), search),
-                                cb.like(pf.get(TFamille_.intCIP), search),
-                                cb.like(pf.get(TFamille_.intEAN13), search)));
+                p = cb.and(p, cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), search),
+                        cb.like(pf.get(TFamille_.intCIP), search), cb.like(pf.get(TFamille_.intEAN13), search)));
             }
             if (params.getStatut() != null && !"".equals(params.getStatut())) {
                 p = cb.and(p, cb.equal(join.get(TPreenregistrement_.strSTATUT), params.getStatut()));
@@ -2824,12 +2816,10 @@ public class SalesServiceImpl implements SalesService {
                     JoinType.INNER);
             Join<TPreenregistrementDetail, TFamille> pf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate p = cb.conjunction();
-          if (StringUtils.isNotEmpty(params.getQuery())) {
+            if (StringUtils.isNotEmpty(params.getQuery())) {
                 String search = params.getQuery() + "%";
-                p = cb.and(p,
-                        cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), search),
-                                cb.like(pf.get(TFamille_.intCIP), search),
-                                cb.like(pf.get(TFamille_.intEAN13), search)));
+                p = cb.and(p, cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), search),
+                        cb.like(pf.get(TFamille_.intCIP), search), cb.like(pf.get(TFamille_.intEAN13), search)));
             }
             if (params.getStatut() != null && !"".equals(params.getStatut())) {
                 p = cb.and(p, cb.equal(join.get(TPreenregistrement_.strSTATUT), params.getStatut()));
@@ -2923,8 +2913,7 @@ public class SalesServiceImpl implements SalesService {
             tp.setStrFIRSTNAMECUSTOMER(emplacement.getStrFIRSTNAME());
             tp.setStrLASTNAMECUSTOMER(emplacement.getStrLASTNAME());
             tp.setStrPHONECUSTOME(emplacement.getStrPHONE());
-            client.ifPresent(c -> tp.setClient(c)
-            );
+            client.ifPresent(c -> tp.setClient(c));
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement, "",
                     tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getBanque(), clotureVenteParams.getLieux(),
                     clotureVenteParams.getCommentaire(), STATUT_IS_CLOSED, "");
@@ -3321,9 +3310,8 @@ public class SalesServiceImpl implements SalesService {
 
     private TPreenregistrement findOneById(String idVente) {
         try {
-        return getEm().find(TPreenregistrement.class, idVente);
+            return getEm().find(TPreenregistrement.class, idVente);
 
-    
         } catch (Exception e) {
             return null;
         }
@@ -3477,8 +3465,7 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrementCompteClientTiersPayent clientTiersPayent = getTPreenregistrementCompteClientTiersPayent(
                     venteId, olClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID(), getEm());
             /**
-             * s'il y a modification de tu tiers-payant on rentre dans premiere
-             * condition
+             * s'il y a modification de tu tiers-payant on rentre dans premiere condition
              */
             if (!params.getTypeVenteId().equals(params.getAyantDroitId())) {
 
@@ -4077,14 +4064,14 @@ public class SalesServiceImpl implements SalesService {
         if (oCompteClient != null && payant.getDblPLAFOND() != null && payant.getDblPLAFOND() != 0) {
             payant.setDblQUOTACONSOMENSUELLE(
                     (payant.getDblQUOTACONSOMENSUELLE() != null ? payant.getDblQUOTACONSOMENSUELLE() : 0)
-                    + newItem.getIntPRICE());
+                            + newItem.getIntPRICE());
             payant.setDtUPDATED(old.getDtUPDATED());
             getEm().merge(payant);
         }
         if (oCompteClient != null && oCompteClient.getDblPLAFOND() != null && oCompteClient.getDblPLAFOND() != 0) {
             oCompteClient.setDblQUOTACONSOMENSUELLE(
                     (oCompteClient.getDblQUOTACONSOMENSUELLE() != null ? oCompteClient.getDblQUOTACONSOMENSUELLE() : 0)
-                    + newItem.getIntPRICE());
+                            + newItem.getIntPRICE());
             oCompteClient.setDtUPDATED(new Date());
             getEm().merge(oCompteClient);
         }
@@ -4313,8 +4300,8 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
-                .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
+                        .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
+                        .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
     }
 
     private MontantAPaye sumVenteSansRemise(List<TPreenregistrementDetail> list, TPreenregistrement p) {
@@ -4445,13 +4432,13 @@ public class SalesServiceImpl implements SalesService {
                         pt.setLgPREENREGISTREMENTID(newTp);
                         return pt;
                     }).map(pt -> {
-                pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
-                pt.setDtCREATED(newTp.getDtUPDATED());
-                pt.setDtUPDATED(newTp.getDtUPDATED());
-                return pt;
-            }).forEachOrdered(pt -> {
-                getEm().persist(pt);
-            });
+                        pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
+                        pt.setDtCREATED(newTp.getDtUPDATED());
+                        pt.setDtUPDATED(newTp.getDtUPDATED());
+                        return pt;
+                    }).forEachOrdered(pt -> {
+                        getEm().persist(pt);
+                    });
             JSONObject data = new JSONObject();
             data.put("lgPREENREGISTREMENTID", newTp.getLgPREENREGISTREMENTID());
             data.put("strREF", newTp.getStrREF());
@@ -4565,14 +4552,14 @@ public class SalesServiceImpl implements SalesService {
                 return detail;
             }).map(detail -> findHMvtProduitByPkey(detail.getLgPREENREGISTREMENTDETAILID()))
                     .filter(hMvtProduit -> (hMvtProduit != null)).map(hMvtProduit -> {
-                hMvtProduit.setMvtDate(toDay);
-                return hMvtProduit;
-            }).map(hMvtProduit -> {
-                hMvtProduit.setCreatedAt(venteDateNew);
-                return hMvtProduit;
-            }).forEachOrdered(hMvtProduit -> {
-                getEm().merge(hMvtProduit);
-            });
+                        hMvtProduit.setMvtDate(toDay);
+                        return hMvtProduit;
+                    }).map(hMvtProduit -> {
+                        hMvtProduit.setCreatedAt(venteDateNew);
+                        return hMvtProduit;
+                    }).forEachOrdered(hMvtProduit -> {
+                        getEm().merge(hMvtProduit);
+                    });
         }
 
     }
