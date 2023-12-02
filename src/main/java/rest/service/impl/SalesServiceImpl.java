@@ -321,20 +321,20 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void addTransactionCopy(TUser ooTUser, TUser caisse, String pkey, MvtTransaction old, EntityManager emg,
-            String ref, LocalDateTime localDateTime, LocalDate localDate) {
+    public void addTransactionCopy(TUser ooTUser, TUser caisse, MvtTransaction old, TPreenregistrement newP,
+            LocalDateTime localDateTime, LocalDate localDate) {
         MvtTransaction newTransaction = new MvtTransaction();
         newTransaction.setUuid(UUID.randomUUID().toString());
         newTransaction.setUser(ooTUser);
-        newTransaction.setPreenregistrement(old.getPreenregistrement());
+        newTransaction.setPreenregistrement(newP);
         newTransaction.setCreatedAt(localDateTime);
-        newTransaction.setPkey(pkey);
+        newTransaction.setPkey(newP.getLgPREENREGISTREMENTID());
         newTransaction.setMvtDate(localDate);
         newTransaction.setAvoidAmount((-1) * old.getAvoidAmount());
         newTransaction.setMontant((-1) * old.getMontant());
         newTransaction.setMagasin(ooTUser.getLgEMPLACEMENTID());
         newTransaction.setCaisse(caisse);
-        newTransaction.setReference(ref);
+        newTransaction.setReference(newP.getStrREF());
         newTransaction.setMontantCredit((-1) * old.getMontantCredit());
         newTransaction.setMontantVerse((-1) * old.getMontantVerse());
         newTransaction.setMontantRegle((-1) * old.getMontantRegle());
@@ -355,7 +355,7 @@ public class SalesServiceImpl implements SalesService {
         newTransaction.setMargeug((-1) * old.getMargeug());
         newTransaction.setMontantTvaUg((-1) * old.getMontantTvaUg());
         newTransaction.setChecked(false);
-        emg.persist(newTransaction);
+        this.em.persist(newTransaction);
     }
 
     @Override
@@ -450,21 +450,21 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void copyTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement _newP,
-            TPreenregistrement old, EntityManager emg) {
+    public void copyTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement newP,
+            TPreenregistrement old) {
 
         if (cashTransaction.getMvtDate().isEqual(LocalDate.now())) {
             cashTransaction.setChecked(Boolean.FALSE);
-            emg.merge(cashTransaction);
-            addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), _newP.getLgPREENREGISTREMENTID(), cashTransaction,
-                    emg, _newP.getStrREF(), LocalDateTime.now(), LocalDate.now());
+            em.merge(cashTransaction);
+            addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), cashTransaction, newP, LocalDateTime.now(),
+                    LocalDate.now());
         } else {
             MvtTransaction newTransaction = new MvtTransaction();
             newTransaction.setUuid(UUID.randomUUID().toString());
             newTransaction.setUser(ooTUser);
             newTransaction.setCreatedAt(LocalDateTime.now());
-            newTransaction.setPkey(_newP.getLgPREENREGISTREMENTID());
-            newTransaction.setPreenregistrement(_newP);
+            newTransaction.setPkey(newP.getLgPREENREGISTREMENTID());
+            newTransaction.setPreenregistrement(newP);
             newTransaction.setMvtDate(LocalDate.now());
             newTransaction.setAvoidAmount((-1) * cashTransaction.getAvoidAmount());
             newTransaction.setMontant((-1) * cashTransaction.getMontant());
@@ -482,14 +482,14 @@ public class SalesServiceImpl implements SalesService {
             newTransaction.setMargeug((-1) * cashTransaction.getMargeug());
             newTransaction.setMontantTvaUg((-1) * cashTransaction.getMontantTvaUg());
             newTransaction.setChecked(Boolean.TRUE);
-            newTransaction.setReference(_newP.getStrREF());
+            newTransaction.setReference(newP.getStrREF());
             newTransaction.setOrganisme(cashTransaction.getOrganisme());
             newTransaction.settTypeMvtCaisse(cashTransaction.gettTypeMvtCaisse());
             newTransaction.setReglement(cashTransaction.getReglement());
             newTransaction.setTypeTransaction(cashTransaction.getTypeTransaction());
             newTransaction.setCaisse(cashTransaction.getCaisse());
             newTransaction.setMagasin(cashTransaction.getMagasin());
-            emg.persist(newTransaction);
+            em.persist(newTransaction);
         }
 
     }
@@ -543,7 +543,7 @@ public class SalesServiceImpl implements SalesService {
 
             transaction(idVente, emg).ifPresent(tr -> {
 
-                copyTransaction(ooTUser, tr, newItem, tp, emg);
+                copyTransaction(ooTUser, tr, newItem, tp);
                 if (!checkResumeCaisse(tp.getLgUSERCAISSIERID(), emg).isPresent()) {
                     createAnnulationRecette(tp, tr, ooTUser);
                 }
@@ -570,7 +570,7 @@ public class SalesServiceImpl implements SalesService {
             TEmplacement emplacement = ooTUser.getLgEMPLACEMENTID();
             final Typemvtproduit typemvtproduit = checked ? findTypeMvtProduitById(DateConverter.ANNULATION_DE_VENTE)
                     : findTypeMvtProduitById(DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
-            preenregistrementDetails.forEach((e) -> {
+            preenregistrementDetails.forEach(e -> {
                 TPreenregistrementDetail newCopieItem = createItemCopy(ooTUser, e, newItem, emg);
                 TFamille oFamille = e.getLgFAMILLEID();
                 updateNbreVenteApresAnnulation(oFamille, ooTUser, newCopieItem.getIntQUANTITY());
@@ -3945,7 +3945,7 @@ public class SalesServiceImpl implements SalesService {
         List<TPreenregistrementCompteClientTiersPayent> clientTiersPayents = findClientTiersPayents(
                 oldPreenregistrement, getEm());
         for (TPreenregistrementCompteClientTiersPayent a : clientTiersPayents) {
-            TCompteClientTiersPayant OTCompteClientTiersPayant = a.getLgCOMPTECLIENTTIERSPAYANTID();
+            TCompteClientTiersPayant compte = a.getLgCOMPTECLIENTTIERSPAYANTID();
             TPreenregistrementCompteClientTiersPayent newItem = new TPreenregistrementCompteClientTiersPayent();
             newItem.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
             newItem.setLgPREENREGISTREMENTID(preenregistrement);
@@ -3954,7 +3954,7 @@ public class SalesServiceImpl implements SalesService {
             newItem.setStrSTATUT(DateConverter.STATUT_DELETE);
             newItem.setDtCREATED(a.getDtUPDATED());
             newItem.setDtUPDATED(a.getDtUPDATED());
-            newItem.setLgCOMPTECLIENTTIERSPAYANTID(OTCompteClientTiersPayant);
+            newItem.setLgCOMPTECLIENTTIERSPAYANTID(compte);
             newItem.setStrREFBON(a.getStrREFBON());
             newItem.setDblQUOTACONSOVENTE(a.getDblQUOTACONSOVENTE());
             newItem.setIntPERCENT(a.getIntPERCENT());
@@ -3972,8 +3972,8 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrement old) {
         cashTransaction.setChecked(Boolean.FALSE);
         getEm().merge(cashTransaction);
-        addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), newP.getLgPREENREGISTREMENTID(), cashTransaction,
-                getEm(), newP.getStrREF(), cashTransaction.getCreatedAt(), cashTransaction.getMvtDate());
+        addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), cashTransaction, newP, cashTransaction.getCreatedAt(),
+                cashTransaction.getMvtDate());
 
     }
 
@@ -4053,19 +4053,20 @@ public class SalesServiceImpl implements SalesService {
         newItem.setIntPRICERESTE(newItem.getIntPERCENT());
         newItem.setStrSTATUTFACTURE("unpaid");
         getEm().persist(newItem);
-        TCompteClient OTCompteClient = payant.getLgCOMPTECLIENTID();
-        if (OTCompteClient != null && payant.getDblPLAFOND() != null && payant.getDblPLAFOND() != 0) {
+        TCompteClient oCompteClient = payant.getLgCOMPTECLIENTID();
+        if (oCompteClient != null && payant.getDblPLAFOND() != null && payant.getDblPLAFOND() != 0) {
             payant.setDblQUOTACONSOMENSUELLE(
                     (payant.getDblQUOTACONSOMENSUELLE() != null ? payant.getDblQUOTACONSOMENSUELLE() : 0)
                             + newItem.getIntPRICE());
             payant.setDtUPDATED(old.getDtUPDATED());
             getEm().merge(payant);
         }
-        if (OTCompteClient != null && OTCompteClient.getDblPLAFOND() != null && OTCompteClient.getDblPLAFOND() != 0) {
-            OTCompteClient.setDblQUOTACONSOMENSUELLE((OTCompteClient.getDblQUOTACONSOMENSUELLE() != null
-                    ? OTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newItem.getIntPRICE());
-            OTCompteClient.setDtUPDATED(new Date());
-            getEm().merge(OTCompteClient);
+        if (oCompteClient != null && oCompteClient.getDblPLAFOND() != null && oCompteClient.getDblPLAFOND() != 0) {
+            oCompteClient.setDblQUOTACONSOMENSUELLE(
+                    (oCompteClient.getDblQUOTACONSOMENSUELLE() != null ? oCompteClient.getDblQUOTACONSOMENSUELLE() : 0)
+                            + newItem.getIntPRICE());
+            oCompteClient.setDtUPDATED(new Date());
+            getEm().merge(oCompteClient);
         }
         return newItem;
     }
@@ -4216,8 +4217,10 @@ public class SalesServiceImpl implements SalesService {
         return json;
     }
 
-    private MontantAPaye getRemiseVnoCheckUg(TPreenregistrement OTPreenregistrement, TRemise OTRemise) {
-        Integer int_TOTAL_REMISE, int_REMISE_PARA = 0, montantNet = 0;
+    private MontantAPaye getRemiseVnoCheckUg(TPreenregistrement oPreenregistrement, TRemise oTRemise) {
+        int intTOTALREMISE;
+        Integer intREMISEPARA = 0;
+        Integer montantNet = 0;
         LongAdder totalRemise = new LongAdder();
         LongAdder totalRemisePara = new LongAdder();
         LongAdder totalAmount = new LongAdder();
@@ -4227,9 +4230,9 @@ public class SalesServiceImpl implements SalesService {
         LongAdder montantTtcUg = new LongAdder();
         LongAdder margeUg = new LongAdder();
         LongAdder tvaUg = new LongAdder();
-        TEmplacement emplacement = OTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
-        boolean isVno = OTPreenregistrement.getStrTYPEVENTE().equals(DateConverter.VENTE_COMPTANT);
-        List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(OTPreenregistrement);
+        TEmplacement emplacement = oPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
+        boolean isVno = oPreenregistrement.getStrTYPEVENTE().equals(DateConverter.VENTE_COMPTANT);
+        List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(oPreenregistrement);
         lstTPreenregistrementDetail.forEach(x -> {
             totalAmount.add(x.getIntPRICE());
             montantTva.add(x.getMontantTva());
@@ -4237,59 +4240,59 @@ public class SalesServiceImpl implements SalesService {
             Integer remise = 0;
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
-                TGrilleRemise OTGrilleRemise = grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(), famille,
-                        OTRemise.getLgREMISEID());
-                if (OTGrilleRemise != null) {
-                    remise = (int) ((x.getIntPRICE() * OTGrilleRemise.getDblTAUX()) / 100);
+                TGrilleRemise oGrilleRemise = grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(), famille,
+                        oTRemise.getLgREMISEID());
+                if (oGrilleRemise != null) {
+                    remise = (int) ((x.getIntPRICE() * oGrilleRemise.getDblTAUX()) / 100);
                     if (!x.getBoolACCOUNT()) {
                         totalRemisePara.add(remise);
                     }
                     totalRemise.add(remise);
-                    x.setLgGRILLEREMISEID(OTGrilleRemise.getLgGRILLEREMISEID());
+                    x.setLgGRILLEREMISEID(oGrilleRemise.getLgGRILLEREMISEID());
                 }
 
             }
             x.setIntPRICEREMISE(remise);
             getEm().merge(x);
             if (x.getLgFAMILLEID().getBoolACCOUNT()) {
-                int _magre = (x.getIntPRICE() - remise - x.getMontantTva())
+                int magre0 = (x.getIntPRICE() - remise - x.getMontantTva())
                         - (x.getIntQUANTITY() * famille.getIntPAF());
-                marge.add(_magre);
+                marge.add(magre0);
                 montantAccount.add(x.getIntPRICE());
                 montantTva.add(x.getMontantTva());
                 if (isVno) {
-                    int _margeUg = ((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF()));
+                    int margeUg0 = ((x.getIntPRICE() - x.getMontantTva()) - (x.getIntQUANTITY() * famille.getIntPAF()));
 
                     TFamilleStock stock = this.findStock(famille.getLgFAMILLEID(), emplacement, getEm());
                     if (stock.getIntUG() > 0) {
                         int qtyUg = qtyUg(stock.getIntUG(), x.getIntQUANTITYSERVED());
-                        int _montant = qtyUg * x.getIntPRICEUNITAIR();
+                        int montant0 = qtyUg * x.getIntPRICEUNITAIR();
                         montantTtcUg.add(qtyUg * x.getIntPRICEUNITAIR());
-                        margeUg.add(margeUg(qtyUg, x.getIntQUANTITY(), _margeUg));
+                        margeUg.add(margeUg(qtyUg, x.getIntQUANTITY(), margeUg0));
                         if (x.getValeurTva() > 0) {
-                            Double HT = _montant / (1 + (Double.valueOf(x.getValeurTva()) / 100));
-                            int _montantTvaUg = _montant - HT.intValue();
-                            x.setMontantTvaUg(_montantTvaUg);
-                            tvaUg.add(_montantTvaUg);
+                            Double hortTaxe = montant0 / (1 + (Double.valueOf(x.getValeurTva()) / 100));
+                            int montantTvaUg = montant0 - hortTaxe.intValue();
+                            x.setMontantTvaUg(montantTvaUg);
+                            tvaUg.add(montantTvaUg);
                         }
                     }
                 }
             }
         });
-        Integer montantTotal = totalAmount.intValue();
-        int_TOTAL_REMISE = totalRemise.intValue();
+        int montantTotal = totalAmount.intValue();
+        intTOTALREMISE = totalRemise.intValue();
         int tva = montantTva.intValue();
-        montantNet = montantTotal - int_TOTAL_REMISE;
-        OTPreenregistrement.setIntPRICE(montantTotal);
-        OTPreenregistrement.setIntACCOUNT(montantAccount.intValue());
-        OTPreenregistrement.setIntPRICEREMISE(int_TOTAL_REMISE);
-        OTPreenregistrement.setIntREMISEPARA(int_REMISE_PARA);
-        OTPreenregistrement.setMontantTva(tva);
-        if (int_TOTAL_REMISE > 0 && OTRemise == null) {
-            OTPreenregistrement.setRemise(OTRemise);
+        montantNet = montantTotal - intTOTALREMISE;
+        oPreenregistrement.setIntPRICE(montantTotal);
+        oPreenregistrement.setIntACCOUNT(montantAccount.intValue());
+        oPreenregistrement.setIntPRICEREMISE(intTOTALREMISE);
+        oPreenregistrement.setIntREMISEPARA(intREMISEPARA);
+        oPreenregistrement.setMontantTva(tva);
+        if (intTOTALREMISE > 0 && oTRemise == null) {
+            oPreenregistrement.setRemise(oTRemise);
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
-                DateConverter.arrondiModuloOfNumber(int_TOTAL_REMISE, 5), marge.intValue(), tva)
+                DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
                         .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
                         .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
     }
