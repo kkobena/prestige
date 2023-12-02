@@ -19,7 +19,7 @@ Ext.define('testextjs.view.vente.DetailVente', {
         align: 'stretch'
     },
     initComponent: function () {
-        var me = this;
+        const me = this;
         const vente = me.getVente();
         const client = vente.client;
         const items = vente.items;
@@ -28,9 +28,10 @@ Ext.define('testextjs.view.vente.DetailVente', {
         const typeVente = vente.typeVente;
         const ayantDroit = vente.ayantDroit;
         const labelWith = 130;
+        const reglements = vente.reglements;
         this.title = "Detail de la vente  [" + vente.strREF + "]";
 
-        var detailsStore = Ext.create('Ext.data.Store', {
+        const detailsStore = Ext.create('Ext.data.Store', {
             idProperty: 'id',
             fields:
                     [
@@ -184,7 +185,23 @@ Ext.define('testextjs.view.vente.DetailVente', {
                                                     }
                                                 }
                                             ]
-                                        }, {
+                                        },
+                                        {
+                                            xtype: 'fieldset',
+                                            title: "Mode de règlements",
+                                            layout: 'vbox',
+                                            defaults: {
+                                                xtype: 'displayfield',
+                                                fieldStyle: "color:blue;font-weight:bold;font-size:1em",
+                                                labelWidth: labelWith
+                                            },
+                                            margin: '0 0 5 0',
+                                            items: me.buildReglements(reglements)
+
+                                            
+                                        },
+
+                                        {
                                             xtype: 'fieldset',
                                             title: "Infos.Client",
                                             layout: 'vbox',
@@ -382,6 +399,26 @@ Ext.define('testextjs.view.vente.DetailVente', {
                             value: item.intPERCENT
 
                         });
+
+            });
+        }
+        return datas;
+    },
+
+    buildReglements: function (reglements) {
+        let datas = [];
+        if (reglements && reglements.length > 0) {
+            Ext.each(reglements, function (item) {
+                datas.push(
+                        {
+                            fieldLabel: item.libelle,
+                            flex: 1,
+                            value: item.montant,
+                            renderer: function (v) {
+                                return Ext.util.Format.number(v, '0,000.');
+                            }
+                        }
+                        );
 
             });
         }

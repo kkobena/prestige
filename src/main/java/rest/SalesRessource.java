@@ -627,13 +627,6 @@ public class SalesRessource {
         return netPayerAssurance(params);
     }
 
-    @GET
-    @Path("testticket")
-    public Response testticket(@QueryParam("id") String id) throws JSONException {
-        generateTicketService.generateTicketOnFly(id);
-        return Response.ok().entity(new JSONObject().put("success", true)).build();
-    }
-
     @POST
     @Path("update/medecin")
     public Response updateMedecin(SalesParams params) {
