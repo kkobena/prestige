@@ -109,8 +109,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     @EJB
     private VenteReglementService venteReglementService;
 
-    @Override
-    public File buildBarecode(String data) {
+    private File buildBarecode(String data) {
         try {
             Barcode128 barcode128 = new Barcode128();
             barcode128.setCode(data);
@@ -415,8 +414,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return datas;
     }
 
-    @Override
-    public List<String> generateData(TPreenregistrement op) {
+    private List<String> generateData(TPreenregistrement op) {
 
         if (op.getIntPRICE() < 0) {
             return generateDataVenteSupprime(op);
@@ -424,7 +422,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         List<String> datas = new ArrayList<>();
         List<TPreenregistrementDetail> lstTPreenregistrementDetail = listeVenteByIdVente(op.getLgPREENREGISTREMENTID());
         lstTPreenregistrementDetail.sort(Comparator.comparing(TPreenregistrementDetail::getDtCREATED));
-        lstTPreenregistrementDetail.forEach((opr) -> {
+        lstTPreenregistrementDetail.forEach(opr -> {
             datas.add(
                     " " + opr.getIntQUANTITY() + "; *;"
                             + DataStringManager.subStringData(opr.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
@@ -523,40 +521,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
     }
 
-    @Override
-    public List<String> generateDataSummaryVno(TPreenregistrement p) {
-        String id = p.getLgPREENREGISTREMENTID();
-        MvtTransaction mvtTransaction = findByPkey(id);
-        TTypeReglement tTypeReglement = mvtTransaction.getReglement();
-        List<String> datas = new ArrayList<>();
-        if (mvtTransaction.getMontantRemise() > 0) {
-            datas.add("* ;(-) " + DateConverter.amountFormat(mvtTransaction.getMontantRemise()) + "; F CFA;1");
-        }
-        Integer venteNet = mvtTransaction.getMontantNet();
-        if (venteNet > 0) {
-            venteNet = DateConverter.arrondiModuloOfNumber(venteNet, 5);
-        } else {
-            venteNet = (-1) * DateConverter.arrondiModuloOfNumber(((-1) * venteNet), 5);
-        }
-        datas.add("Net à payer: ;     " + DateConverter.amountFormat(venteNet) + "; F CFA;1");
-        datas.add("Règlement: ;     " + tTypeReglement.getStrNAME() + "; ;0");
-
-        if (venteNet > 0) {
-
-            datas.add("Montant Versé: ;     " + DateConverter.amountFormat(mvtTransaction.getMontantVerse())
-                    + "; F CFA;0");
-            datas.add(
-                    "Monnaie: ;     "
-                            + DateConverter.amountFormat(
-                                    (mvtTransaction.getMontantVerse() - mvtTransaction.getMontantPaye() > 0
-                                            ? mvtTransaction.getMontantVerse() - mvtTransaction.getMontantPaye() : 0))
-                            + "; F CFA;0");
-        }
-        return datas;
-    }
-
-    @Override
-    public List<String> generateDataSummaryVno(TPreenregistrement p, MvtTransaction mvtTransaction) {
+    private List<String> generateDataSummaryVno(TPreenregistrement p, MvtTransaction mvtTransaction) {
         TTypeReglement tTypeReglement = mvtTransaction.getReglement();
         List<VenteReglement> venteReglements = p.getVenteReglements();
         List<String> datas = new ArrayList<>();
@@ -573,7 +538,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         datas.add("Net à payer: ;     " + DateConverter.amountFormat(venteNet) + "; F CFA;1");
         if (venteReglements.size() > 1) {
             for (VenteReglement vers : venteReglements) {
-                datas.add(vers.getTypeReglement().getStrNAME().toUpperCase() + ": ;     "
+                datas.add(vers.getTypeReglement().getStrNAME() + ": ;     "
                         + NumberUtils.formatIntToString(vers.getMontant()) + "; ;0");
             }
 
@@ -594,8 +559,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return datas;
     }
 
-    @Override
-    public List<String> generateCommentaire(TPreenregistrement p, MvtTransaction mvtTransaction) {
+    private List<String> generateCommentaire(TPreenregistrement p, MvtTransaction mvtTransaction) {
         TOfficine officine = findOfficine();
         List<String> datas = new ArrayList<>();
         if (p.getBISAVOIR()) {
@@ -638,7 +602,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     .setParameter(1, lgPREENREGISTREMENTID).getSingleResult();
 
         } catch (Exception e) {
-            // e.printStackTrace();
+
         }
         return ctl;
     }
@@ -867,11 +831,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     }
 
-    @Override
-    public List<String> generateDataSummaryVo(TPreenregistrement oPreenregistrement,
+    private List<String> generateDataSummaryVo(TPreenregistrement oPreenregistrement,
             ClotureVenteParams clotureVenteParams) {
         List<String> datas = new ArrayList<>();
         TTypeReglement reglement = oPreenregistrement.getLgREGLEMENTID().getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID();
+        List<VenteReglement> venteReglements = oPreenregistrement.getVenteReglements();
         if (oPreenregistrement.getIntCUSTPART() == 0) {
             if (oPreenregistrement.getIntPRICEREMISE() > 0) {
                 datas.add("* ;(-) " + DateConverter.amountFormat(oPreenregistrement.getIntPRICEREMISE()) + "; F CFA;1");
@@ -901,7 +865,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     + DateConverter.amountFormat(
                             Maths.arrondiModuloOfNumber((venteNet - oPreenregistrement.getIntPRICEREMISE()), 5))
                     + "; F CFA;1");
-            datas.add("Règlement: ;     " + reglement.getStrNAME() + "; ;0");
+            if (venteReglements.size() > 1) {
+                for (VenteReglement vers : venteReglements) {
+                    datas.add(vers.getTypeReglement().getStrNAME() + ": ;     "
+                            + NumberUtils.formatIntToString(vers.getMontant()) + "; ;0");
+                }
+
+            } else {
+                datas.add("Règlement: ;     " + reglement.getStrNAME() + "; ;0");
+            }
 
             if (oPreenregistrement.getIntPRICE() >= 0) {
 
@@ -920,10 +892,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return datas;
     }
 
-    public List<String> generateDataSummaryVo(TPreenregistrement oPreenregistrement,
+    private List<String> generateDataSummaryVo(TPreenregistrement oPreenregistrement,
             MvtTransaction clotureVenteParams) {
         List<String> datas = new ArrayList<>();
         TTypeReglement reglement = clotureVenteParams.getReglement();
+        List<VenteReglement> venteReglements = oPreenregistrement.getVenteReglements();
         int remise = clotureVenteParams.getMontantRemise();
 
         if (oPreenregistrement.getIntCUSTPART() == 0) {
@@ -955,7 +928,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             }
             datas.add("Net à payer: ;     "
                     + DateConverter.amountFormat(Maths.arrondiModuloOfNumber((venteNet - remise), 5)) + "; F CFA;1");
-            datas.add("Règlement: ;     " + reglement.getStrNAME() + "; ;0");
+            if (venteReglements.size() > 1) {
+                for (VenteReglement vers : venteReglements) {
+                    datas.add(vers.getTypeReglement().getStrNAME() + ": ;     "
+                            + NumberUtils.formatIntToString(vers.getMontant()) + "; ;0");
+                }
+
+            } else {
+                datas.add("Règlement: ;     " + reglement.getStrNAME() + "; ;0");
+            }
 
             if (oPreenregistrement.getIntPRICE() >= 0) {
 
