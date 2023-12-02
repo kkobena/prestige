@@ -481,7 +481,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                         change: this.montantRecuChangeListener,
                         specialkey: this.onMontantRecuVnoKey,
                         focus: this.montantRecuFocus
-
                     },
                     'doventemanager #contenu [xtype=gridpanel] [xtype=actioncolumn]': {
                         click: this.removeItemVno
@@ -494,9 +493,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     'clientLambda #btnAddNewLambda': {
                         click: this.addClientForm
                     },
-                    'clientLambda #lambdaClientGrid actioncolumn': {
-                        click: this.btnAjouterClientLambda
-                    },
+
                     "clientLambda form textfield": {
                         specialkey: this.onClientLambdaSpecialKey
                     },
@@ -606,7 +603,13 @@ Ext.define('testextjs.controller.VenteCtr', {
                     },
                     'reglementGrid #btnCancelModeReglement': {
                         click: this.onBtnCancelModeReglement
-                    }
+                    },
+                    'clientLambda #lambdaClientGrid actioncolumn': {
+                        click: this.btnAjouterClientLambda
+                    }/*,
+                     'clientLambda #lambdaClientGrid': {
+                     selectionchange: this.onClientStandarGridRowSelect
+                     }*/
 
                 });
     },
@@ -1669,9 +1672,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         };
 
     },
-    btnAjouterClientLambda: function (grid, rowIndex, colIndex) {
+    updateClientStandard: function (record) {
         const me = this;
-        const record = grid.getStore().getAt(colIndex);
         me.client = record;
         me.getNomClient().setValue(record.get('strFIRSTNAME'));
         me.getPrenomClient().setValue(record.get('strLASTNAME'));
@@ -1679,6 +1681,13 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.closeClientLambdaWindow();
         const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         me.updateVenteClient(record.get('lgCLIENTID'), progress);
+    },
+    btnAjouterClientLambda: function (grid, rowIndex, colIndex) {
+        const me = this;
+        const record = grid.getStore().getAt(colIndex);
+        me.updateClientStandard(record);
+        me.client = record;
+
     },
     onClientLambdaSpecialKey: function (field, e, options) {
         if (e.getKey() === e.ENTER) {
@@ -4526,6 +4535,13 @@ Ext.define('testextjs.controller.VenteCtr', {
         const modeRegelement = record[0].data;
         me.onModeReglementSelect(modeRegelement);
     },
+    onClientStandarGridRowSelect: function (g, record) {
+        const me = this;
+        console.warn(record);
+        const client = record[0].data;
+        me.updateClientStandard(client);
+
+    },
 
     onModeReglementSelect: function (modeRegelement) {
         const me = this;
@@ -4539,6 +4555,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         montantExtra.labelWidth = modeRegelement.libelle.length + 2;
         montantExtra.setFieldLabel(modeRegelement.libelle.toUpperCase());
         me.handleExtraAmountInputValue();
+        me.getMontantRecu().focus(true, 50);
     },
 
     resetExtraModeCmp: function () {
@@ -4569,7 +4586,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 montantExtra.setValue(montantExtraValue);
 
             }
-            
+
         }
 
     },

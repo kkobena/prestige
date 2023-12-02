@@ -7,12 +7,10 @@ package rest.service;
 
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.Params;
-import dal.MvtTransaction;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TPreenregistrementDetail;
 import dal.TUser;
-import java.io.File;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
@@ -30,11 +28,7 @@ public interface GenerateTicketService {
 
     String buildLineBarecode(String data);
 
-    File buildBarecode(String data);
-
     JSONObject printerForTicket(String p, TUser user) throws JSONException;
-
-    List<String> generateDataSummaryVno(TPreenregistrement p, MvtTransaction mvtTransaction);
 
     JSONObject lunchPrinterForTicket(ClotureVenteParams clotureVenteParams) throws JSONException;
 
@@ -52,19 +46,11 @@ public interface GenerateTicketService {
 
     List<String> generateDataSeller(TPreenregistrement p);
 
-    List<String> generateData(TPreenregistrement p);
-
     List<String> generateDataVenteSupprime(TPreenregistrement p);
 
     List<String> generateDataTiersPayant(TPreenregistrement p);
 
     List<String> generateDataTiersPayant(TPreenregistrement p, List<TPreenregistrementCompteClientTiersPayent> lstT);
-
-    List<String> generateDataSummaryVno(TPreenregistrement p);
-
-    List<String> generateDataSummaryVo(TPreenregistrement p, ClotureVenteParams clotureVenteParams);
-
-    List<String> generateCommentaire(TPreenregistrement p, MvtTransaction mvtTransaction);
 
     JSONObject lunchPrinterForTicketDepot(String id) throws JSONException;
 
