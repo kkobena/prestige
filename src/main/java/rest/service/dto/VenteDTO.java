@@ -4,6 +4,8 @@ import commonTasks.dto.AyantDroitDTO;
 import commonTasks.dto.ClientDTO;
 import commonTasks.dto.MedecinDTO;
 import commonTasks.dto.UserDTO;
+import commonTasks.dto.VenteReglementReportDTO;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -119,4 +121,6 @@ public class VenteDTO {
     private final List<VenteTiersPayantItemDTO> assurances;
     private final TransactionDTO reglement;
     private final List<VenteItemDTO> items;
+    @Builder.Default
+    private List<VenteReglementReportDTO> reglements = new ArrayList<>();
 }
