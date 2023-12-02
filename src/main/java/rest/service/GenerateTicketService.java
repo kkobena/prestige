@@ -62,8 +62,6 @@ public interface GenerateTicketService {
 
     List<String> generateDataSummaryVno(TPreenregistrement p);
 
-    List<String> generateDataSummaryVo(TPreenregistrement p);
-
     List<String> generateDataSummaryVo(TPreenregistrement p, ClotureVenteParams clotureVenteParams);
 
     List<String> generateCommentaire(TPreenregistrement p, MvtTransaction mvtTransaction);
@@ -75,14 +73,6 @@ public interface GenerateTicketService {
     JSONObject generateticket10(String venteId);
 
     void printReceintWithJasper(String venteId);
-
-    JSONObject generateTicketOnFly(String venteId) throws JSONException;
-
-    JSONObject generateVoTicketOnFly(ClotureVenteParams clotureVenteParams);
-
-    JSONObject generateVoTicketOnFly(String venteId);
-
-    JSONObject generateDepotTicketOnFly(String venteId);
 
     JSONObject ticketReglementCarnet(String idDossier) throws JSONException;
 

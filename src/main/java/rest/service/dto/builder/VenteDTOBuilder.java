@@ -3,6 +3,7 @@ package rest.service.dto.builder;
 import commonTasks.dto.AyantDroitDTO;
 import commonTasks.dto.ClientDTO;
 import commonTasks.dto.TiersPayantDTO;
+import commonTasks.dto.VenteReglementReportDTO;
 import dal.MvtTransaction;
 import dal.TAyantDroit;
 import dal.TClient;
@@ -13,6 +14,7 @@ import dal.TPreenregistrementDetail;
 import dal.TTiersPayant;
 import dal.TTypeReglement;
 import dal.TTypeVente;
+import dal.VenteReglement;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -45,6 +47,8 @@ public final class VenteDTOBuilder extends CommonBuilder {
                 .assurances(VenteDTOBuilder.assurances(p.getTPreenregistrementCompteClientTiersPayentCollection()))
                 .differes(VenteDTOBuilder.differes(p.getTPreenregistrementCompteClientCollection()))
                 .reglement(VenteDTOBuilder.buildReglementDTO(mt))
+                .reglements(p.getVenteReglements().stream().map(VenteDTOBuilder::buildFromEntity)
+                        .collect(Collectors.toList()))
                 .ayantDroit(VenteDTOBuilder.ayantDroit(p.getAyantDroit())).strTYPEVENTE(p.getStrTYPEVENTE()).build();
     }
 
@@ -143,5 +147,16 @@ public final class VenteDTOBuilder extends CommonBuilder {
         }
         return null;
 
+    }
+
+    private static VenteReglementReportDTO buildFromEntity(VenteReglement reglement) {
+        TTypeReglement tTypeReglement = reglement.getTypeReglement();
+        VenteReglementReportDTO venteReglement = new VenteReglementReportDTO();
+        venteReglement.setLibelle(tTypeReglement.getStrNAME());
+        venteReglement.setTypeReglement(tTypeReglement.getLgTYPEREGLEMENTID());
+        venteReglement.setMontant(reglement.getMontant());
+        venteReglement.setMontantAttentu(reglement.getMontantAttentu());
+        venteReglement.setFlagedAmount(reglement.getFlagedAmount());
+        return venteReglement;
     }
 }
