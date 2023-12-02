@@ -2697,14 +2697,15 @@ public class SalesServiceImpl implements SalesService {
             Join<TFamille, TFamilleGrossiste> st = root.join("tFamilleGrossisteCollection", JoinType.INNER);
             Join<TFamille, TFamilleStock> fa = root.join("tFamilleStockCollection", JoinType.INNER);
             Predicate predicate = cb.conjunction();
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
+            if (StringUtils.isNotEmpty(params.getQuery())) {
+                String search = params.getQuery() + "%";
                 predicate = cb.and(predicate,
-                        cb.or(cb.like(root.get(TFamille_.strNAME), params.getQuery() + "%"),
-                                cb.like(root.get(TFamille_.intCIP), params.getQuery() + "%"),
-                                cb.like(root.get(TFamille_.intEAN13), params.getQuery() + "%"),
-                                cb.like(st.get("strCODEARTICLE"), params.getQuery() + "%"),
-                                cb.like(root.get(TFamille_.lgFAMILLEID), params.getQuery() + "%"),
-                                cb.like(root.get(TFamille_.strDESCRIPTION), params.getQuery() + "%")));
+                        cb.or(cb.like(root.get(TFamille_.strNAME), search),
+                                cb.like(root.get(TFamille_.intCIP), search),
+                                cb.like(root.get(TFamille_.intEAN13), search),
+                                cb.like(st.get("strCODEARTICLE"), search),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), search),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), search)));
             }
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate,
@@ -2740,14 +2741,15 @@ public class SalesServiceImpl implements SalesService {
             Join<TFamille, TFamilleGrossiste> st = root.join("tFamilleGrossisteCollection", JoinType.INNER);
             Join<TFamille, TFamilleStock> fa = root.join("tFamilleStockCollection", JoinType.INNER);
             Predicate predicate = cb.conjunction();
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
+            if (StringUtils.isNotEmpty(params.getQuery())) {
+                String search = params.getQuery() + "%";
                 predicate = cb.and(predicate,
-                        cb.or(cb.like(root.get(TFamille_.strNAME), params.getQuery() + "%"),
-                                cb.like(root.get(TFamille_.intCIP), params.getQuery() + "%"),
-                                cb.like(root.get(TFamille_.intEAN13), params.getQuery() + "%"),
-                                cb.like(st.get("strCODEARTICLE"), params.getQuery() + "%"),
-                                cb.like(root.get(TFamille_.lgFAMILLEID), params.getQuery() + "%"),
-                                cb.like(root.get(TFamille_.strDESCRIPTION), params.getQuery() + "%")));
+                        cb.or(cb.like(root.get(TFamille_.strNAME), search),
+                                cb.like(root.get(TFamille_.intCIP), search),
+                                cb.like(root.get(TFamille_.intEAN13), search),
+                                cb.like(st.get("strCODEARTICLE"), search),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), search),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), search)));
             }
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate,
@@ -2785,11 +2787,12 @@ public class SalesServiceImpl implements SalesService {
                     JoinType.INNER);
             Join<TPreenregistrementDetail, TFamille> pf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate p = cb.conjunction();
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
+            if (StringUtils.isNotEmpty(params.getQuery())) {
+                String search = params.getQuery() + "%";
                 p = cb.and(p,
-                        cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), params.getQuery() + "%"),
-                                cb.like(pf.get(TFamille_.intCIP), params.getQuery() + "%"),
-                                cb.like(pf.get(TFamille_.intEAN13), params.getQuery() + "%")));
+                        cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), search),
+                                cb.like(pf.get(TFamille_.intCIP), search),
+                                cb.like(pf.get(TFamille_.intEAN13), search)));
             }
             if (params.getStatut() != null && !"".equals(params.getStatut())) {
                 p = cb.and(p, cb.equal(join.get(TPreenregistrement_.strSTATUT), params.getStatut()));
@@ -2821,11 +2824,12 @@ public class SalesServiceImpl implements SalesService {
                     JoinType.INNER);
             Join<TPreenregistrementDetail, TFamille> pf = root.join("lgFAMILLEID", JoinType.INNER);
             Predicate p = cb.conjunction();
-            if (params.getQuery() != null && !"".equals(params.getQuery())) {
+          if (StringUtils.isNotEmpty(params.getQuery())) {
+                String search = params.getQuery() + "%";
                 p = cb.and(p,
-                        cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), params.getQuery() + "%"),
-                                cb.like(pf.get(TFamille_.intCIP), params.getQuery() + "%"),
-                                cb.like(pf.get(TFamille_.intEAN13), params.getQuery() + "%")));
+                        cb.or(cb.like(pf.get(TFamille_.strDESCRIPTION), search),
+                                cb.like(pf.get(TFamille_.intCIP), search),
+                                cb.like(pf.get(TFamille_.intEAN13), search)));
             }
             if (params.getStatut() != null && !"".equals(params.getStatut())) {
                 p = cb.and(p, cb.equal(join.get(TPreenregistrement_.strSTATUT), params.getStatut()));
@@ -3317,9 +3321,9 @@ public class SalesServiceImpl implements SalesService {
 
     private TPreenregistrement findOneById(String idVente) {
         try {
-            TPreenregistrement p = getEm().find(TPreenregistrement.class, idVente);
+        return getEm().find(TPreenregistrement.class, idVente);
 
-            return p;
+    
         } catch (Exception e) {
             return null;
         }
