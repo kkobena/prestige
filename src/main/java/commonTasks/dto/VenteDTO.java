@@ -11,8 +11,10 @@ import dal.TPreenregistrement;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementDetail;
 import dal.TRemise;
+import dal.TTypeReglement;
 import dal.TTypeVente;
 import dal.TUser;
+import dal.VenteReglement;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,6 +58,15 @@ public class VenteDTO implements Serializable {
     private Integer intPRICERESTE;
     private String medecinId, nom, numOrder, commentaire;
     private boolean modificationClientTp;
+    private List<VenteReglementReportDTO> reglements = new ArrayList<>();
+
+    public List<VenteReglementReportDTO> getReglements() {
+        return reglements;
+    }
+
+    public void setReglements(List<VenteReglementReportDTO> reglements) {
+        this.reglements = reglements;
+    }
 
     public VenteDTO canexport(boolean canexport) {
         this.canexport = canexport;
@@ -528,6 +539,7 @@ public class VenteDTO implements Serializable {
                     + DateConverter.amountFormat(tpd.getIntPRICEUNITAIR(), '.') + " F CFA " + "</span></b><br> "
                     + this.details;
         });
+        this.reglements = tp.getVenteReglements().stream().map(this::buildFromEntity).collect(Collectors.toList());
     }
 
     private String heureAnnulation;
@@ -598,6 +610,7 @@ public class VenteDTO implements Serializable {
                     + DateConverter.amountFormat(tpd.getIntPRICEUNITAIR(), '.') + " F CFA " + "</span></b><br> "
                     + this.details;
         });
+        this.reglements = tp.getVenteReglements().stream().map(this::buildFromEntity).collect(Collectors.toList());
     }
 
     public MagasinDTO getMagasin() {
@@ -647,6 +660,7 @@ public class VenteDTO implements Serializable {
         if (c != null) {
             this.clientFullName = c.getStrFIRSTNAME() + " " + c.getStrLASTNAME();
         }
+        this.reglements = tp.getVenteReglements().stream().map(this::buildFromEntity).collect(Collectors.toList());
     }
 
     public VenteDTO(TPreenregistrement tp, List<TPreenregistrementDetail> tpds, MvtTransaction mt) {
@@ -704,6 +718,7 @@ public class VenteDTO implements Serializable {
                     + DateConverter.amountFormat(tpd.getIntPRICEUNITAIR(), '.') + " F CFA " + "</span></b><br> "
                     + this.details;
         });
+        this.reglements = tp.getVenteReglements().stream().map(this::buildFromEntity).collect(Collectors.toList());
     }
 
     public VenteDTO(TPreenregistrement tp, List<TPreenregistrementDetail> tpds) {
@@ -756,6 +771,7 @@ public class VenteDTO implements Serializable {
                     + DateConverter.amountFormat(tpd.getIntPRICEUNITAIR(), '.') + " F CFA " + "</span></b><br> "
                     + this.details;
         });
+        this.reglements = tp.getVenteReglements().stream().map(this::buildFromEntity).collect(Collectors.toList());
     }
 
     public VenteDTO(TPreenregistrement tp, List<TPreenregistrementDetail> tpds, boolean becancel,
@@ -809,7 +825,7 @@ public class VenteDTO implements Serializable {
             this.heureAnnulation = heureFormat.format(tp.getDtANNULER());
         } catch (Exception e) {
         }
-        tpds.forEach((tpd) -> {
+        tpds.forEach(tpd -> {
             if (tpd.getIntPRICEREMISE() != null && tpd.getIntPRICEREMISE() > 0) {
                 this.details = "<b><span style='display:inline-block;width: 7%;'>" + tpd.getLgFAMILLEID().getIntCIP()
                         + "</span><span style='display:inline-block;width: 25%;'>"
@@ -831,9 +847,23 @@ public class VenteDTO implements Serializable {
             }
 
         });
+
+        this.reglements = tp.getVenteReglements().stream().map(this::buildFromEntity).collect(Collectors.toList());
+    }
+
+    private VenteReglementReportDTO buildFromEntity(VenteReglement reglement) {
+        TTypeReglement tTypeReglement = reglement.getTypeReglement();
+        VenteReglementReportDTO venteReglement = new VenteReglementReportDTO();
+        venteReglement.setLibelle(tTypeReglement.getStrNAME());
+        venteReglement.setTypeReglement(tTypeReglement.getLgTYPEREGLEMENTID());
+        venteReglement.setMontant(reglement.getMontant());
+        venteReglement.setMontantAttentu(reglement.getMontantAttentu());
+        venteReglement.setFlagedAmount(reglement.getFlagedAmount());
+        return venteReglement;
     }
 
     public VenteDTO(TPreenregistrement tp, MagasinDTO magasin, List<TPreenregistrementDetail> tpds) {
+        this.reglements = tp.getVenteReglements().stream().map(this::buildFromEntity).collect(Collectors.toList());
         this.lgPREENREGISTREMENTID = tp.getLgPREENREGISTREMENTID();
         this.strREF = tp.getStrREF();
         this.strREFTICKET = tp.getStrREFTICKET();

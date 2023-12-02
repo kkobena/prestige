@@ -584,7 +584,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.INFO, "not found");
         }
         return null;
     }
@@ -630,7 +630,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     .orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
 
             List<Predicate> predicates = predicatesVentes(params, cb, root, st);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());

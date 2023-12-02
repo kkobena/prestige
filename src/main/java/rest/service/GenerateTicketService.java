@@ -62,8 +62,6 @@ public interface GenerateTicketService {
 
     List<String> generateDataSummaryVno(TPreenregistrement p);
 
-    List<String> generateDataSummaryVo(TPreenregistrement p);
-
     List<String> generateDataSummaryVo(TPreenregistrement p, ClotureVenteParams clotureVenteParams);
 
     List<String> generateCommentaire(TPreenregistrement p, MvtTransaction mvtTransaction);

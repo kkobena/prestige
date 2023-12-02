@@ -11,7 +11,6 @@ import com.itextpdf.text.pdf.Barcode128;
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.Params;
 import commonTasks.dto.TicketDTO;
-import commonTasks.dto.VenteDetailsDTO;
 import dal.MvtTransaction;
 import dal.TAyantDroit;
 import dal.TCashTransaction;
@@ -37,12 +36,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -59,7 +54,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -93,7 +87,6 @@ import util.Constant;
 import util.DateConverter;
 import util.FunctionUtils;
 import util.NumberUtils;
-import util.TicketTemplate;
 
 /**
  *
@@ -194,7 +187,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     public JSONObject lunchPrinterForTicket(String id) throws JSONException {
         JSONObject json = new JSONObject();
         int counter = 40;
-        // int copies = 1;
+
         int k = 0;
         int page;
         int pageCurrent = 0;
@@ -210,7 +203,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             MvtTransaction mvtTransaction = findByPkey(idVente);
             boolean isNotAchash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
                     .equals(DateConverter.TYPE_REGLEMENT_ESPECE);
-            // copies = nbreDeCopiesOranges(mvtTransaction, copies);
+
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
@@ -242,7 +235,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 imp.buildTicket(datas, infoSellers, infoClientAvoir,
                         generateDataSummaryVno(oTPreenregistrement, mvtTransaction),
                         generateCommentaire(oTPreenregistrement, mvtTransaction), fileBarecode);
-                // imp.printTicketVente(copies);
+
                 printCashierReceipt(imp, isNotAchash);
             } else {
                 page = datas.size() / counter;
@@ -288,7 +281,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     @Override
     public JSONObject lunchPrinterForTicketVo(String id) throws JSONException {
         JSONObject json = new JSONObject();
-        int counter = 40, k = 0, page, pageCurrent = 0, diff, counter_constante = 40;
+        int counter = 40;
+        int k = 0;
+        int page;
+        int pageCurrent = 0;
+        int diff;
+        int counterConstante = 40;
         String title;
         List<String> lstDataFinal = new ArrayList<>();
         List<String> infotiersPayants;
@@ -342,8 +340,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
                     k = counter;
                     diff = datas.size() - counter;
-                    if (diff > counter_constante) {
-                        counter = counter + counter_constante;
+                    if (diff > counterConstante) {
+                        counter = counter + counterConstante;
                     } else {
                         counter = counter + diff;
                     }
@@ -402,13 +400,13 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             }
             if (opreenregistrement.getLgNATUREVENTEID().getLgNATUREVENTEID()
                     .equalsIgnoreCase(Parameter.KEY_NATURE_VENTE_DEPOT)) {
-                TEmplacement OTEmplacement = getEntityManager().find(TEmplacement.class,
+                TEmplacement oEmplacement = getEntityManager().find(TEmplacement.class,
                         opreenregistrement.getPkBrand());
-                datas.add(OTEmplacement != null ? "Dépôt: " + OTEmplacement.getStrDESCRIPTION() : " ");
-                datas.add("Client(e):: " + (OTEmplacement != null
-                        ? OTEmplacement.getStrFIRSTNAME() + " " + OTEmplacement.getStrLASTNAME()
-                        : opreenregistrement.getStrFIRSTNAMECUSTOMER() + " "
-                                + opreenregistrement.getStrLASTNAMECUSTOMER()));
+                datas.add(oEmplacement != null ? "Dépôt: " + oEmplacement.getStrDESCRIPTION() : " ");
+                datas.add("Client(e):: "
+                        + (oEmplacement != null ? oEmplacement.getStrFIRSTNAME() + " " + oEmplacement.getStrLASTNAME()
+                                : opreenregistrement.getStrFIRSTNAMECUSTOMER() + " "
+                                        + opreenregistrement.getStrLASTNAMECUSTOMER()));
 
             }
         } catch (Exception e) {
@@ -418,45 +416,46 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     @Override
-    public List<String> generateData(TPreenregistrement OTPreenregistrement) {
+    public List<String> generateData(TPreenregistrement op) {
 
-        if (OTPreenregistrement.getIntPRICE() < 0) {
-            return generateDataVenteSupprime(OTPreenregistrement);
+        if (op.getIntPRICE() < 0) {
+            return generateDataVenteSupprime(op);
         }
         List<String> datas = new ArrayList<>();
-        List<TPreenregistrementDetail> lstTPreenregistrementDetail = listeVenteByIdVente(
-                OTPreenregistrement.getLgPREENREGISTREMENTID());
+        List<TPreenregistrementDetail> lstTPreenregistrementDetail = listeVenteByIdVente(op.getLgPREENREGISTREMENTID());
         lstTPreenregistrementDetail.sort(Comparator.comparing(TPreenregistrementDetail::getDtCREATED));
-        lstTPreenregistrementDetail.forEach((OTPreenregistrementDetail) -> {
-            datas.add(" " + OTPreenregistrementDetail.getIntQUANTITY() + "; *;"
-                    + DataStringManager.subStringData(
-                            OTPreenregistrementDetail.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0, 20)
-                    + ";" + DateConverter.amountFormat(OTPreenregistrementDetail.getIntPRICEUNITAIR()) + ";"
-                    + DateConverter.amountFormat(OTPreenregistrementDetail.getIntPRICE()));
+        lstTPreenregistrementDetail.forEach((opr) -> {
+            datas.add(
+                    " " + opr.getIntQUANTITY() + "; *;"
+                            + DataStringManager.subStringData(opr.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
+                                    20)
+                            + ";" + DateConverter.amountFormat(opr.getIntPRICEUNITAIR()) + ";"
+                            + DateConverter.amountFormat(opr.getIntPRICE()));
         });
 
         datas.add(";;;;------");
-        datas.add(";;;;" + DateConverter.amountFormat((OTPreenregistrement.getIntPRICE() >= 0)
-                ? OTPreenregistrement.getIntPRICE() : (-1) * OTPreenregistrement.getIntPRICE()));
+        datas.add(";;;;"
+                + DateConverter.amountFormat((op.getIntPRICE() >= 0) ? op.getIntPRICE() : (-1) * op.getIntPRICE()));
         return datas;
     }
 
     @Override
-    public List<String> generateDataVenteSupprime(TPreenregistrement OTPreenregistrement) {
+    public List<String> generateDataVenteSupprime(TPreenregistrement opr) {
         List<String> datas = new ArrayList<>();
         List<TPreenregistrementDetail> lstTPreenregistrementDetail = listeVenteByIdVente(
-                OTPreenregistrement.getLgPREENREGISTREMENTID());
+                opr.getLgPREENREGISTREMENTID());
         lstTPreenregistrementDetail.sort(Comparator.comparing(TPreenregistrementDetail::getDtCREATED));
-        lstTPreenregistrementDetail.forEach((OTPreenregistrementDetail) -> {
-            datas.add(" " + (-1 * OTPreenregistrementDetail.getIntQUANTITY()) + ";*;"
-                    + DataStringManager.subStringData(
-                            OTPreenregistrementDetail.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0, 16)
-                    + ";" + DateConverter.amountFormat(OTPreenregistrementDetail.getIntPRICEUNITAIR()) + ";"
-                    + DateConverter.amountFormat(OTPreenregistrementDetail.getIntPRICE() * (-1)));
+        lstTPreenregistrementDetail.forEach((ot) -> {
+            datas.add(
+                    " " + (-1 * ot.getIntQUANTITY()) + ";*;"
+                            + DataStringManager.subStringData(ot.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
+                                    16)
+                            + ";" + DateConverter.amountFormat(ot.getIntPRICEUNITAIR()) + ";"
+                            + DateConverter.amountFormat(ot.getIntPRICE() * (-1)));
         });
         datas.add(";;;;------");
-        datas.add(";;;;" + DateConverter.amountFormat((OTPreenregistrement.getIntPRICE() >= 0)
-                ? OTPreenregistrement.getIntPRICE() : (-1) * OTPreenregistrement.getIntPRICE()));
+        datas.add(";;;;"
+                + DateConverter.amountFormat((opr.getIntPRICE() >= 0) ? opr.getIntPRICE() : (-1) * opr.getIntPRICE()));
         return datas;
     }
 
@@ -596,85 +595,17 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     @Override
-    public List<String> generateDataSummaryVo(TPreenregistrement OTPreenregistrement) {
-        List<String> datas = new ArrayList<>();
-        Optional<TCashTransaction> OTCashTransaction = cashTransactionsByVenteId(
-                OTPreenregistrement.getLgPREENREGISTREMENTID()).stream().findFirst();
-        TTypeReglement reglement = OTPreenregistrement.getLgREGLEMENTID().getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID();
-        if (OTPreenregistrement.getIntCUSTPART() == 0) {
-            if (OTPreenregistrement.getIntPRICEREMISE() > 0) {
-                datas.add(
-                        "* ;(-) " + DateConverter.amountFormat(OTPreenregistrement.getIntPRICEREMISE()) + "; F CFA;1");
-            }
-            String lgTyvente = OTPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID();
-            OTCashTransaction.ifPresent(c -> {
-                if (lgTyvente.equals(Parameter.VENTE_ASSURANCE) || lgTyvente.equals(Parameter.VENTE_AVEC_CARNET)) {
-                    datas.add(
-                            "Vente à terme: ;    " + DateConverter.amountFormat((OTPreenregistrement.getIntPRICE() >= 0)
-                                    ? c.getIntAMOUNTDEBIT() : (-1) * c.getIntAMOUNTCREDIT()) + "; F CFA;1");
-                } else {
-                    datas.add(
-                            "Vente à terme: ;    " + DateConverter.amountFormat((OTPreenregistrement.getIntPRICE() >= 0)
-                                    ? c.getIntAMOUNTDEBIT() : OTPreenregistrement.getIntPRICE()) + "; F CFA;1");
-                }
-            });
-
-        } else {
-            Integer vente_net = OTPreenregistrement.getIntCUSTPART();
-            if (vente_net >= 0) {
-                vente_net = DateConverter.arrondiModuloOfNumber(vente_net, 5);
-            } else {
-                vente_net = (-1) * DateConverter.arrondiModuloOfNumber((-1) * vente_net, 5);
-            }
-
-            if (OTPreenregistrement.getIntPRICEREMISE() > 0) {
-                datas.add(
-                        "* ;(-) " + DateConverter.amountFormat(OTPreenregistrement.getIntPRICEREMISE()) + "; F CFA;1");
-            }
-            datas.add("Net à payer: ;     "
-                    + DateConverter.amountFormat(
-                            Maths.arrondiModuloOfNumber((vente_net - OTPreenregistrement.getIntPRICEREMISE()), 5))
-                    + "; F CFA;1");
-            datas.add("Règlement: ;     " + reglement.getStrNAME() + "; ;0");
-
-            if (OTPreenregistrement.getIntPRICE() >= 0) {
-                OTCashTransaction.ifPresent(c -> {
-                    datas.add("Montant Versé: ;     "
-                            + DateConverter.amountFormat(Maths.arrondiModuloOfNumber(c.getIntAMOUNTRECU(), 5))
-                            + "; F CFA;0");
-                    final Integer change = c.getIntAMOUNTRECU()
-                            - (DateConverter.arrondiModuloOfNumber(OTPreenregistrement.getIntCUSTPART(), 5)
-                                    - OTPreenregistrement.getIntPRICEREMISE());
-                    datas.add("Monnaie: ;     " + DateConverter.amountFormat((change >= 0 ? change : 0)) + "; F CFA;0");
-                });
-
-            }
-        }
-        return datas;
-    }
-
-    private List<TCashTransaction> cashTransactionsByVenteId(String id) {
-        TypedQuery<TCashTransaction> query = getEntityManager()
-                .createQuery("SELECT o FROM TCashTransaction o WHERE o.strRESSOURCEREF=?1 ", TCashTransaction.class);
-        query.setParameter(1, id);
-        return query.getResultList();
-    }
-
-    @Override
     public List<String> generateCommentaire(TPreenregistrement p, MvtTransaction mvtTransaction) {
         TOfficine officine = findOfficine();
         List<String> datas = new ArrayList<>();
         if (p.getBISAVOIR()) {
-            List<TPreenregistrementDetail> _lstPreenregistrementDetail = listeVenteByIdVente(
-                    p.getLgPREENREGISTREMENTID());
-            List<TPreenregistrementDetail> lstPreenregistrementDetail = _lstPreenregistrementDetail.stream()
-                    .filter(v -> v.getBISAVOIR()).collect(Collectors.toList());
-            Integer int_AMOUNT_ACCOMPTE = lstPreenregistrementDetail.stream()
-                    .map((OTPreenregistrementDetail) -> OTPreenregistrementDetail.getIntAVOIR()
-                            * OTPreenregistrementDetail.getIntPRICEUNITAIR())
-                    .reduce(0, Integer::sum);
+            List<TPreenregistrementDetail> items = listeVenteByIdVente(p.getLgPREENREGISTREMENTID());
+            List<TPreenregistrementDetail> lstPreenregistrementDetail = items.stream().filter(v -> v.getBISAVOIR())
+                    .collect(Collectors.toList());
+            int intAMOUNTACCOMPTE = lstPreenregistrementDetail.stream()
+                    .map((oP) -> oP.getIntAVOIR() * oP.getIntPRICEUNITAIR()).reduce(0, Integer::sum);
             datas.add(" ;0");
-            datas.add("ACOMPTE: " + DateConverter.amountFormat(int_AMOUNT_ACCOMPTE, ' ') + " F CFA;1");
+            datas.add("ACOMPTE: " + DateConverter.amountFormat(intAMOUNTACCOMPTE, ' ') + " F CFA;1");
             datas.add(" ;0");
         }
 
@@ -2438,7 +2369,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     private List<String> generateData(rest.service.dto.MvtCaisseDTO mvtCaisse) {
         List<String> datas = new ArrayList<>();
-        // Constant.ACTION_OTHER
         datas.add("Code comptable: ;" + mvtCaisse.getNumCompte() + "; ");
         datas.add("Libellé: ;" + mvtCaisse.getModeReglement() + "; ");
         datas.add("Montant: ;" + NumberUtils.formatLongToString(mvtCaisse.getMontant()) + "; F CFA");

@@ -16,6 +16,7 @@ import commonTasks.dto.SalesParams;
 import commonTasks.dto.SearchDTO;
 import commonTasks.dto.TiersPayantParams;
 import commonTasks.dto.VenteDetailsDTO;
+import commonTasks.dto.VenteReglementDTO;
 import commonTasks.dto.VenteRequest;
 import dal.AnnulationRecette;
 import dal.AnnulationSnapshot;
@@ -79,6 +80,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
@@ -100,6 +102,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import org.apache.commons.collections4.CollectionUtils;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -851,7 +854,7 @@ public class SalesServiceImpl implements SalesService {
 
     private void copyRecette(TPreenregistrement newPreen, TRecettes old, TUser o) {
         TRecettes tr = old;
-        LOG.log(Level.INFO, "tr {0} ", new Object[] { tr });
+        LOG.log(Level.INFO, "tr {0} ", new Object[]{tr});
         tr.setLgUSERID(o);
         tr.setDtCREATED(newPreen.getDtUPDATED());
         tr.setDtUPDATED(newPreen.getDtUPDATED());
@@ -1648,37 +1651,37 @@ public class SalesServiceImpl implements SalesService {
     private TModeReglement findModeReglement(String idTypeRegl, EntityManager emg) {
         TModeReglement modeReglement;
         switch (idTypeRegl) {
-        case "1":
-        case "4":
-            modeReglement = findByIdMod("1", emg);
-            break;
-        case "2":
-            modeReglement = findByIdMod("2", emg);
-            break;
-        case "3":
-            modeReglement = findByIdMod("5", emg);
-            break;
-        case "6":
-            modeReglement = findByIdMod("7", emg);
-            break;
-        case "5":
-            modeReglement = findByIdMod("6", emg);
-            break;
-        case "7":
-            modeReglement = findByIdMod(DateConverter.MODE_ORANGE, emg);
-            break;
-        case "8":
-            modeReglement = findByIdMod("8", emg);
-            break;
-        case "9":
-            modeReglement = findByIdMod("9", emg);
-            break;
-        case "10":
-            modeReglement = findByIdMod("11", emg);
-            break;
-        default:
-            modeReglement = findByIdMod(idTypeRegl, emg);
-            break;
+            case "1":
+            case "4":
+                modeReglement = findByIdMod("1", emg);
+                break;
+            case "2":
+                modeReglement = findByIdMod("2", emg);
+                break;
+            case "3":
+                modeReglement = findByIdMod("5", emg);
+                break;
+            case "6":
+                modeReglement = findByIdMod("7", emg);
+                break;
+            case "5":
+                modeReglement = findByIdMod("6", emg);
+                break;
+            case "7":
+                modeReglement = findByIdMod(DateConverter.MODE_ORANGE, emg);
+                break;
+            case "8":
+                modeReglement = findByIdMod("8", emg);
+                break;
+            case "9":
+                modeReglement = findByIdMod("9", emg);
+                break;
+            case "10":
+                modeReglement = findByIdMod("11", emg);
+                break;
+            default:
+                modeReglement = findByIdMod(idTypeRegl, emg);
+                break;
 
         }
         return modeReglement;
@@ -1881,8 +1884,7 @@ public class SalesServiceImpl implements SalesService {
                     clotureVenteParams.getMontantRecu(), true, typeReglement, typeMvtCaisse.get(),
                     clotureVenteParams.getPartTP(), clotureVenteParams.getMontantPaye(), clotureVenteParams.getMarge(),
                     isDiff, clotureVenteParams.getTypeRegleId());
-            clotureVenteParams.getReglements().forEach(p -> this.venteReglementService.createNew(tp,
-                    findById(p.getTypeReglement()), p.getMontant(), p.getMontantAttentu()));
+            addReglement(tp, mvtTransaction, clotureVenteParams);
 
             carnetAsDepotService.create(tp, mvtTransaction, this.getTiersPayant());
             json.put("success", true).put("copy", tp.getCopy()).put("msg", "Opération effectuée avec success")
@@ -1914,6 +1916,22 @@ public class SalesServiceImpl implements SalesService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private void addReglement(TPreenregistrement tp, MvtTransaction mt, ClotureVenteParams clotureVenteParams) {
+        Set<VenteReglementDTO> reglements = clotureVenteParams.getReglements();
+        if (CollectionUtils.isNotEmpty(reglements)) {
+            if (reglements.size() > 1) {
+                reglements.forEach(p -> this.venteReglementService.createNew(tp, findById(p.getTypeReglement()),
+                        p.getMontant(), p.getMontantAttentu()));
+            } else {
+                this.venteReglementService.createNew(tp,
+                        findById(reglements.stream().findFirst().get().getTypeReglement()), mt.getMontantPaye(),
+                        mt.getMontantRegle());
+            }
+
+        }
+
     }
 
     @Override
@@ -2025,12 +2043,12 @@ public class SalesServiceImpl implements SalesService {
             TTypeReglement tTypeReglement = findById(clotureVenteParams.getTypeRegleId());
             addRecette(clotureVenteParams.getMontantPaye(), "Vente VNO", tp.getLgPREENREGISTREMENTID(),
                     clotureVenteParams.getUserId(), emg);
-            addTransaction(tUser, tp, montant, tp.getIntACCOUNT(), amount, clotureVenteParams.getMontantRecu(), true,
-                    CategoryTransaction.CREDIT, TypeTransaction.VENTE_COMPTANT, tTypeReglement, typeMvtCaisse.get(),
+            MvtTransaction mt = addTransaction(tUser, tp, montant, tp.getIntACCOUNT(), amount,
+                    clotureVenteParams.getMontantRecu(), true, CategoryTransaction.CREDIT,
+                    TypeTransaction.VENTE_COMPTANT, tTypeReglement, typeMvtCaisse.get(),
                     clotureVenteParams.getMontantPaye(), clotureVenteParams.getMarge(), tp.getIntACCOUNT(),
                     clotureVenteParams.getData());
-            clotureVenteParams.getReglements().forEach(p -> this.venteReglementService.createNew(tp,
-                    findById(p.getTypeReglement()), p.getMontant(), p.getMontantAttentu()));
+            addReglement(tp, mt, clotureVenteParams);
 
             json.put("success", true).put("msg", "Opération effectuée avec success").put("copy", tp.getCopy())
                     .put("ref", tp.getLgPREENREGISTREMENTID());
@@ -2627,7 +2645,7 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                        .cmuAmount(montantCMU.intValue());
+                .cmuAmount(montantCMU.intValue());
     }
 
     @Override
@@ -2901,9 +2919,8 @@ public class SalesServiceImpl implements SalesService {
             tp.setStrFIRSTNAMECUSTOMER(emplacement.getStrFIRSTNAME());
             tp.setStrLASTNAMECUSTOMER(emplacement.getStrLASTNAME());
             tp.setStrPHONECUSTOME(emplacement.getStrPHONE());
-            client.ifPresent(c -> {
-                tp.setClient(c);
-            });
+            client.ifPresent(c -> tp.setClient(c)
+            );
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement, "",
                     tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getBanque(), clotureVenteParams.getLieux(),
                     clotureVenteParams.getCommentaire(), STATUT_IS_CLOSED, "");
@@ -2926,7 +2943,6 @@ public class SalesServiceImpl implements SalesService {
                     emg, clotureVenteParams.getMarge(), client.orElse(null));
             emg.persist(mt);
             emg.merge(tp);
-
             mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emplacement);
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref",
                     tp.getLgPREENREGISTREMENTID());
@@ -3017,8 +3033,7 @@ public class SalesServiceImpl implements SalesService {
             mvtTransaction.setPreenregistrement(tp);
             emg.persist(mvtTransaction);
             emg.merge(tp);
-            clotureVenteParams.getReglements().forEach(p -> this.venteReglementService.createNew(tp,
-                    findById(p.getTypeReglement()), p.getMontant(), p.getMontantAttentu()));
+            addReglement(tp, mvtTransaction, clotureVenteParams);
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref",
                     tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
@@ -3458,7 +3473,8 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrementCompteClientTiersPayent clientTiersPayent = getTPreenregistrementCompteClientTiersPayent(
                     venteId, olClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID(), getEm());
             /**
-             * s'il y a modification de tu tiers-payant on rentre dans premiere condition
+             * s'il y a modification de tu tiers-payant on rentre dans premiere
+             * condition
              */
             if (!params.getTypeVenteId().equals(params.getAyantDroitId())) {
 
@@ -4057,14 +4073,14 @@ public class SalesServiceImpl implements SalesService {
         if (oCompteClient != null && payant.getDblPLAFOND() != null && payant.getDblPLAFOND() != 0) {
             payant.setDblQUOTACONSOMENSUELLE(
                     (payant.getDblQUOTACONSOMENSUELLE() != null ? payant.getDblQUOTACONSOMENSUELLE() : 0)
-                            + newItem.getIntPRICE());
+                    + newItem.getIntPRICE());
             payant.setDtUPDATED(old.getDtUPDATED());
             getEm().merge(payant);
         }
         if (oCompteClient != null && oCompteClient.getDblPLAFOND() != null && oCompteClient.getDblPLAFOND() != 0) {
             oCompteClient.setDblQUOTACONSOMENSUELLE(
                     (oCompteClient.getDblQUOTACONSOMENSUELLE() != null ? oCompteClient.getDblQUOTACONSOMENSUELLE() : 0)
-                            + newItem.getIntPRICE());
+                    + newItem.getIntPRICE());
             oCompteClient.setDtUPDATED(new Date());
             getEm().merge(oCompteClient);
         }
@@ -4293,8 +4309,8 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                        .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
-                        .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
+                .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
+                .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
     }
 
     private MontantAPaye sumVenteSansRemise(List<TPreenregistrementDetail> list, TPreenregistrement p) {
@@ -4425,13 +4441,13 @@ public class SalesServiceImpl implements SalesService {
                         pt.setLgPREENREGISTREMENTID(newTp);
                         return pt;
                     }).map(pt -> {
-                        pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
-                        pt.setDtCREATED(newTp.getDtUPDATED());
-                        pt.setDtUPDATED(newTp.getDtUPDATED());
-                        return pt;
-                    }).forEachOrdered(pt -> {
-                        getEm().persist(pt);
-                    });
+                pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
+                pt.setDtCREATED(newTp.getDtUPDATED());
+                pt.setDtUPDATED(newTp.getDtUPDATED());
+                return pt;
+            }).forEachOrdered(pt -> {
+                getEm().persist(pt);
+            });
             JSONObject data = new JSONObject();
             data.put("lgPREENREGISTREMENTID", newTp.getLgPREENREGISTREMENTID());
             data.put("strREF", newTp.getStrREF());
@@ -4545,14 +4561,14 @@ public class SalesServiceImpl implements SalesService {
                 return detail;
             }).map(detail -> findHMvtProduitByPkey(detail.getLgPREENREGISTREMENTDETAILID()))
                     .filter(hMvtProduit -> (hMvtProduit != null)).map(hMvtProduit -> {
-                        hMvtProduit.setMvtDate(toDay);
-                        return hMvtProduit;
-                    }).map(hMvtProduit -> {
-                        hMvtProduit.setCreatedAt(venteDateNew);
-                        return hMvtProduit;
-                    }).forEachOrdered(hMvtProduit -> {
-                        getEm().merge(hMvtProduit);
-                    });
+                hMvtProduit.setMvtDate(toDay);
+                return hMvtProduit;
+            }).map(hMvtProduit -> {
+                hMvtProduit.setCreatedAt(venteDateNew);
+                return hMvtProduit;
+            }).forEachOrdered(hMvtProduit -> {
+                getEm().merge(hMvtProduit);
+            });
         }
 
     }
