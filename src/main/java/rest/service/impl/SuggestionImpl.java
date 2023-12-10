@@ -8,6 +8,8 @@ package rest.service.impl;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.*;
+import dal.enumeration.ProductStateEnum;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -24,6 +26,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -34,8 +37,10 @@ import javax.persistence.criteria.*;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.ProductStateService;
 import rest.service.SuggestionService;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
@@ -56,6 +61,8 @@ public class SuggestionImpl implements SuggestionService {
     private static final String SUGGESTION_QUERY_COUNT = "SELECT COUNT( distinct o.`lg_SUGGESTION_ORDER_ID`) AS COUNT_SUGGESTION  FROM  t_suggestion_order_details d JOIN t_suggestion_order o ON o.`lg_SUGGESTION_ORDER_ID`=d.`lg_SUGGESTION_ORDER_ID` JOIN t_famille f ON f.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` JOIN t_grossiste g ON o.`lg_GROSSISTE_ID`=g.`lg_GROSSISTE_ID` WHERE o.`str_STATUT` IN ('is_Process','auto','pending') AND (o.`str_REF` LIKE ?1 OR f.int_CIP LIKE ?1 OR f.str_NAME LIKE ?1)";
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private ProductStateService productStateService;
 
     public EntityManager getEmg() {
         return em;
@@ -462,6 +469,7 @@ public class SuggestionImpl implements SuggestionService {
         orderDetails.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
         orderDetails.setDtCREATED(new Date());
         orderDetails.setDtUPDATED(orderDetails.getDtCREATED());
+        this.productStateService.addState(famille, ProductStateEnum.SUGGESTION);
         getEmg().persist(orderDetails);
         return orderDetails;
 
@@ -748,7 +756,7 @@ public class SuggestionImpl implements SuggestionService {
             suggestion.setDtUPDATED(new Date());
             getEmg().persist(suggestion);
         }
-        updateProduitStatut(famille);
+        this.productStateService.remove(famille, ProductStateEnum.SUGGESTION);
     }
 
     @Override
@@ -782,8 +790,7 @@ public class SuggestionImpl implements SuggestionService {
                 order.getLgSUGGESTIONORDERID());
         if (Objects.isNull(suggestionOrderDetails)) {
             initTSuggestionOrderDetail(order, famille, grossiste, suggestionOrderDetail.getQte());
-            famille.setIntORERSTATUS((short) 1);
-            getEmg().merge(famille);
+            this.productStateService.addState(famille, ProductStateEnum.SUGGESTION);
         } else {
             suggestionOrderDetails.setIntNUMBER(suggestionOrderDetail.getQte() + suggestionOrderDetails.getIntNUMBER());
             suggestionOrderDetails
@@ -871,8 +878,7 @@ public class SuggestionImpl implements SuggestionService {
         Objects.requireNonNull(suggestionOrderDetail.getQte(), "La quantité ne doit pas être null");
         TGrossiste grossiste = order.getLgGROSSISTEID();
         TFamille famille = getEmg().find(TFamille.class, suggestionOrderDetail.getFamilleId());
-        famille.setIntORERSTATUS((short) 1);
-        getEmg().merge(famille);
+
         return initTSuggestionOrderDetail(order, famille, grossiste, suggestionOrderDetail.getQte());
 
     }
@@ -969,5 +975,237 @@ public class SuggestionImpl implements SuggestionService {
         suggestions.setStrSTATUT(t.get("statut", String.class));
         suggestions.setLgSUGGESTIONORDERID(t.get("id", String.class));
         return suggestions;
+    }
+
+    private List<TSuggestionOrderDetails> fetchSuggestionOrderDetails(String searchValue, String suggOrder, int start,
+            int limit) {
+
+        List<TSuggestionOrderDetails> detailses = new ArrayList<>();
+        try {
+
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<TSuggestionOrderDetails> cq = cb.createQuery(TSuggestionOrderDetails.class);
+            Root<TSuggestionOrderDetails> root = cq.from(TSuggestionOrderDetails.class);
+            Join<TSuggestionOrderDetails, TSuggestionOrder> join = root.join("lgSUGGESTIONORDERID", JoinType.INNER);
+            Join<TSuggestionOrderDetails, TFamille> f = root.join("lgFAMILLEID", JoinType.INNER);
+            cq.select(root).orderBy(cb.asc(f.get(TFamille_.strNAME)));
+            List<Predicate> predicates = fetchItemsPredicates(cb, f, join, searchValue, suggOrder);
+
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            TypedQuery<TSuggestionOrderDetails> q = em.createQuery(cq);
+
+            q.setFirstResult(start);
+            q.setMaxResults(limit);
+
+            detailses = q.getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return detailses;
+    }
+
+    private List<Predicate> fetchItemsPredicates(CriteriaBuilder cb, Join<TSuggestionOrderDetails, TFamille> f,
+            Join<TSuggestionOrderDetails, TSuggestionOrder> join, String searchValue, String suggOrder) {
+        List<Predicate> predicates = new ArrayList<>();
+        predicates.add(cb.equal(join.get(TSuggestionOrder_.lgSUGGESTIONORDERID), suggOrder));
+        if (StringUtils.isNotEmpty(searchValue)) {
+            searchValue = searchValue + "%";
+            predicates.add(cb.or(cb.like(f.get(TFamille_.intCIP), searchValue),
+                    cb.like(f.get(TFamille_.strNAME), searchValue), cb.like(f.get(TFamille_.intEAN13), searchValue)));
+
+        }
+        return predicates;
+    }
+
+    private int fetchItemsCount(String searchValue, String suggOrder) {
+
+        try {
+
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TSuggestionOrderDetails> root = cq.from(TSuggestionOrderDetails.class);
+            Join<TSuggestionOrderDetails, TSuggestionOrder> join = root.join("lgSUGGESTIONORDERID", JoinType.INNER);
+            Join<TSuggestionOrderDetails, TFamille> f = root.join("lgFAMILLEID", JoinType.INNER);
+            cq.select(cb.count(root));
+            List<Predicate> predicates = fetchItemsPredicates(cb, f, join, searchValue, suggOrder);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            Query q = em.createQuery(cq);
+            return ((Long) q.getSingleResult()).intValue();
+
+        } catch (Exception e) {
+
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private int getProduitQuantity(String lgFamille, int month, int year, String empl) {
+
+        try {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+            Join<TPreenregistrementDetail, TFamille> prf = root.join("lgFAMILLEID", JoinType.INNER);
+            Predicate criteria = cb.conjunction();
+            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("bISCANCEL"), false));
+            criteria = cb.and(criteria,
+                    cb.notLike(root.get("lgPREENREGISTREMENTID").get("lgTYPEVENTEID").get("lgTYPEVENTEID"), "5"));
+            criteria = cb.and(criteria, cb.equal(root.get("lgPREENREGISTREMENTID").get("strSTATUT"), "is_Closed"));
+            criteria = cb.and(criteria, cb.equal(
+                    root.get("lgPREENREGISTREMENTID").get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"),
+                    empl));
+            Predicate pu = cb.greaterThan(root.get("lgPREENREGISTREMENTID").get("intPRICE"), 0);
+            cb.and(criteria, pu);
+            Predicate pu2 = cb.greaterThan(root.get(TPreenregistrementDetail_.intQUANTITY), 0);
+            criteria = cb.and(criteria, cb.equal(prf.get(TFamille_.lgFAMILLEID), lgFamille));
+            Predicate btw = cb.equal(cb.function("MONTH", Integer.class, root.get("dtCREATED")), month);
+            Predicate btw2 = cb.equal(cb.function("YEAR", Integer.class, root.get("dtCREATED")), year);
+            cq.select(cb.sumAsLong(root.get(TPreenregistrementDetail_.intQUANTITY)));
+            cq.where(criteria, btw, pu2, btw2, pu);
+            Query q = em.createQuery(cq);
+            Long r = (Long) q.getSingleResult();
+            return (r != null ? r.intValue() : 0);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+
+    }
+
+    public TFamilleStock getTProductItemStock(String lgId, String lgEMPLACEMENTID) {
+        TFamilleStock productItemStock = null;
+
+        try {
+            productItemStock = em.createQuery(
+                    "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable'",
+                    TFamilleStock.class).setParameter(1, lgId).setParameter(2, lgEMPLACEMENTID).setFirstResult(0)
+                    .setMaxResults(1).getSingleResult();
+
+        } catch (Exception e) {
+
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return productItemStock;
+    }
+
+    public TFamilleGrossiste findFamilleGrossiste(String lgFAMILLEID, String lgGROSSISTEID) {
+        TFamilleGrossiste familleGrossiste = null;
+
+        try {
+            Query qry = em.createQuery(
+                    "SELECT DISTINCT t FROM TFamilleGrossiste t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2  AND t.strSTATUT = ?3 ")
+                    .setParameter(1, lgFAMILLEID).setParameter(2, lgGROSSISTEID)
+                    .setParameter(3, Constant.STATUT_ENABLE);
+            qry.setMaxResults(1);
+            familleGrossiste = (TFamilleGrossiste) qry.getSingleResult();
+
+        } catch (Exception e) {
+
+            LOG.log(Level.SEVERE, null, e);
+        }
+
+        return familleGrossiste;
+    }
+
+    @Override
+    public JSONObject fetchItems(String orderId, String searchValue, TUser tUser, int start, int limit) {
+        JSONObject data = new JSONObject();
+        int count = fetchItemsCount(searchValue, orderId);
+        if (count == 0) {
+            return data.put("total", count).put("data", Collections.emptyList());
+        }
+        List<TSuggestionOrderDetails> detailses = fetchSuggestionOrderDetails(searchValue, orderId, start, limit);
+        TGrossiste grossiste = detailses.get(0).getLgSUGGESTIONORDERID().getLgGROSSISTEID();
+        try {
+
+            JSONArray arrayObj = new JSONArray();
+            Integer intACHAT = 0;
+            Integer intVENTE = 0;
+            String empl = tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+            LocalDate today = LocalDate.now();
+            LocalDate moisUn = LocalDate.of(today.getYear(), today.getMonthValue(), 1);
+            LocalDate nMoinsUn = moisUn.minusMonths(1);
+            LocalDate nMoinsDeux = moisUn.minusMonths(2);
+            LocalDate nMoinsTrois = moisUn.minusMonths(3);
+            data.put("total", count);
+
+            for (TSuggestionOrderDetails order : detailses) {
+                TFamille famille = order.getLgFAMILLEID();
+                JSONObject json = new JSONObject();
+                TFamilleStock oTFamillestock = getTProductItemStock(famille.getLgFAMILLEID(), empl);
+                if (oTFamillestock == null) {
+                    continue;
+                }
+                TFamilleGrossiste familleGrossiste = findFamilleGrossiste(famille.getLgFAMILLEID(),
+                        grossiste.getLgGROSSISTEID());
+                json.put("lg_SUGGESTION_ORDER_DETAILS_ID", order.getLgSUGGESTIONORDERDETAILSID());
+                json.put("lg_FAMILLE_ID", famille.getLgFAMILLEID());
+                json.put("bool_DECONDITIONNE_EXIST", famille.getBoolDECONDITIONNEEXIST());
+                json.put("lg_GROSSISTE_ID", order.getLgGROSSISTEID().getLgGROSSISTEID());
+                json.put("str_FAMILLE_CIP",
+                        (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP()));
+                json.put("str_FAMILLE_NAME", famille.getStrDESCRIPTION());
+                json.put("int_DATE_BUTOIR_ARTICLE", (famille.getLgCODEGESTIONID() != null
+                        ? famille.getLgCODEGESTIONID().getIntDATEBUTOIRARTICLE() : 0));
+                json.put("int_STOCK", oTFamillestock.getIntNUMBERAVAILABLE());
+
+                json.put("int_NUMBER", order.getIntNUMBER());
+
+                json.put("produitStates", famille.getProductStates().stream()
+                        .map(e -> e.getProduitStateEnum().ordinal()).collect(Collectors.toSet()));
+                json.put("int_SEUIL", famille.getIntSEUILMIN());
+                json.put("str_STATUT", order.getStrSTATUT());
+                json.put("lg_FAMILLE_PRIX_VENTE", order.getIntPRICEDETAIL());
+                json.put("lg_FAMILLE_PRIX_ACHAT", famille.getIntPAT());
+                json.put("int_PAF_SUGG", order.getIntPAFDETAIL());
+                json.put("int_PRIX_REFERENCE", famille.getIntPRICETIPS());
+                json.put("lg_SUGGESTION_ORDER_ID", order.getLgSUGGESTIONORDERID().getLgSUGGESTIONORDERID());
+
+                int intQTEREASSORT = 0;
+                try {
+                    intQTEREASSORT = oTFamillestock.getIntNUMBERAVAILABLE() - famille.getIntSEUILMIN();
+
+                    if (intQTEREASSORT < 0) {
+                        intQTEREASSORT = -1 * intQTEREASSORT;
+                    } else {
+                        intQTEREASSORT = 0;
+                    }
+                } catch (Exception e) {
+                }
+                json.put("int_QTE_REASSORT", intQTEREASSORT);
+
+                intACHAT = intACHAT + order.getIntPAFDETAIL();
+
+                intVENTE = intVENTE + order.getIntPRICEDETAIL();
+
+                json.put("int_ACHAT", intACHAT);
+                json.put("int_VENTE", intVENTE);
+
+                json.put("int_VALUE0",
+                        getProduitQuantity(famille.getLgFAMILLEID(), moisUn.getMonthValue(), moisUn.getYear(), empl));
+                json.put("int_VALUE1", getProduitQuantity(famille.getLgFAMILLEID(), nMoinsUn.getMonthValue(),
+                        nMoinsUn.getYear(), empl));
+                json.put("int_VALUE2", getProduitQuantity(famille.getLgFAMILLEID(), nMoinsDeux.getMonthValue(),
+                        nMoinsDeux.getYear(), empl));
+                json.put("int_VALUE3", getProduitQuantity(famille.getLgFAMILLEID(), nMoinsTrois.getMonthValue(),
+                        nMoinsTrois.getYear(), empl));
+                arrayObj.put(json);
+
+            }
+            data.put("data", arrayObj);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return data;
+    }
+
+    @Override
+    public void deleteSuggestion(String suggestionId) {
+        TSuggestionOrder order = em.find(TSuggestionOrder.class, suggestionId);
+        for (TSuggestionOrderDetails details : order.getTSuggestionOrderDetailsCollection()) {
+            this.productStateService.remove(details.getLgFAMILLEID(), ProductStateEnum.SUGGESTION);
+            em.remove(details);
+        }
     }
 }

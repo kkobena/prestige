@@ -79,4 +79,8 @@ public interface SuggestionService {
 
     void makeSuggestionAuto(List<TPreenregistrementDetail> list, TEmplacement emplacementId);
 
+    JSONObject fetchItems(String orderId, String search, TUser tUser, int start, int limit);
+
+    void deleteSuggestion(String suggestionId);
+
 }

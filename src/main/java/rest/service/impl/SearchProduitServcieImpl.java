@@ -1,5 +1,6 @@
 package rest.service.impl;
 
+import dal.ProductState;
 import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
 import dal.TBonLivraison_;
@@ -23,12 +24,16 @@ import dal.TPreenregistrement_;
 import dal.TPrivilege;
 import dal.TTypeStockFamille;
 import dal.TUser;
+import dal.enumeration.ProductStateEnum;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -40,6 +45,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -64,17 +70,17 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             String diciId, String type, int limit, int start) {
         boolean checkExpirationdate = checkDatePeremption();
         JSONObject data = new JSONObject();
-        Object[] Obj = getPrivilegeProductByUser(user.getLgUSERID());
+        Object[] objs = getPrivilegeProductByUser(user.getLgUSERID());
         boolean canceledBtn = Constant.hasAuthorityByName(usersPrivileges, Constant.ACTION_DESACTIVE_PRODUIT);
         JSONArray arrayObj = new JSONArray();
         String empl = user.getLgEMPLACEMENTID().getLgEMPLACEMENTID();
         if (StringUtils.isNotEmpty(produitId)) {
             TFamille famille = this.em.find(TFamille.class, produitId);
-            arrayObj.put(buildProduitData(canceledBtn, famille, Obj, user, empl, checkExpirationdate));
+            arrayObj.put(buildProduitData(canceledBtn, famille, objs, user, empl, checkExpirationdate));
             data.put("total", 1);
         } else {
-            getAll(false, search, diciId, empl, type, true, start, limit)
-                    .forEach(t -> arrayObj.put(buildProduitData(canceledBtn, t, Obj, user, empl, checkExpirationdate)));
+            getAll(false, search, diciId, empl, type, true, start, limit).forEach(
+                    t -> arrayObj.put(buildProduitData(canceledBtn, t, objs, user, empl, checkExpirationdate)));
             data.put("total", getAllCount(search, diciId, empl, type, true));
         }
         data.put("results", arrayObj);
@@ -167,9 +173,9 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
 
     public Object[] getPrivilegeProductByUser(String userId) {
         try {
-            Object[] O = (Object[]) em.createNativeQuery("call proc_getprivilege_user_for_product(?)")
-                    .setParameter(1, userId).getSingleResult();
-            return O;
+            return (Object[]) em.createNativeQuery("call proc_getprivilege_user_for_product(?)").setParameter(1, userId)
+                    .getSingleResult();
+
         } catch (Exception e) {
             return null;
         }
@@ -239,25 +245,33 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
         json.put("CIP", t.getIntCIP());
         json.put("int_PAF", t.getIntPAF());
         json.put("int_PAT", t.getIntPAT());
-        json.put("lg_ZONE_GEO_ID",
-                (t.getLgZONEGEOID().getStrLIBELLEE() != null ? t.getLgZONEGEOID().getStrLIBELLEE() : ""));
+        json.put("lg_ZONE_GEO_ID", (t.getLgZONEGEOID() != null ? t.getLgZONEGEOID().getStrLIBELLEE() : ""));
         return json;
     }
 
-    private JSONObject buildProduitData(boolean canceledAction, TFamille t, Object[] Obj, TUser user, String empl,
+    private Set<Integer> getProductStates(TFamille famille) {
+        List<ProductState> productStates = famille.getProductStates();
+        if (CollectionUtils.isEmpty(productStates)) {
+            return Set.of(0);
+        }
+        return famille.getProductStates().stream().map(p -> p.getProduitStateEnum().ordinal())
+                .sorted(Comparator.reverseOrder()).collect(Collectors.toSet());
+    }
+
+    private JSONObject buildProduitData(boolean canceledAction, TFamille t, Object[] objArray, TUser user, String empl,
             boolean checkExpirationdate) {
         JSONObject json = new JSONObject();
         try {
 
             json.put("ACTION_DESACTIVE_PRODUIT", canceledAction);
-            json.put("BTNDELETE", Boolean.valueOf(Obj[1].toString()));
-            json.put("P_BT_UPDATE", Boolean.valueOf(Obj[2].toString()));
-            json.put("P_UPDATE_PAF", Boolean.valueOf(Obj[3].toString()));
-            json.put("P_UPDATE_PRIXVENTE", Boolean.valueOf(Obj[4].toString()));
-            json.put("P_UPDATE_CODETABLEAU", Boolean.valueOf(Obj[5].toString()));
-            json.put("P_UPDATE_CODEREMISE", Boolean.valueOf(Obj[6].toString()));
-            json.put("P_UPDATE_CIP", Boolean.valueOf(Obj[7].toString()));
-            json.put("P_UPDATE_DESIGNATION", Boolean.valueOf(Obj[8].toString()));
+            json.put("BTNDELETE", Boolean.valueOf(objArray[1].toString()));
+            json.put("P_BT_UPDATE", Boolean.valueOf(objArray[2].toString()));
+            json.put("P_UPDATE_PAF", Boolean.valueOf(objArray[3].toString()));
+            json.put("P_UPDATE_PRIXVENTE", Boolean.valueOf(objArray[4].toString()));
+            json.put("P_UPDATE_CODETABLEAU", Boolean.valueOf(objArray[5].toString()));
+            json.put("P_UPDATE_CODEREMISE", Boolean.valueOf(objArray[6].toString()));
+            json.put("P_UPDATE_CIP", Boolean.valueOf(objArray[7].toString()));
+            json.put("P_UPDATE_DESIGNATION", Boolean.valueOf(objArray[8].toString()));
             json.put("lg_FAMILLE_ID", t.getLgFAMILLEID());
             json.put("scheduled", t.isScheduled());
             json.put("cmu_price", t.getCmuPrice());
@@ -293,11 +307,11 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             json.put("lg_ZONE_GEO_ID",
                     (t.getLgZONEGEOID().getStrLIBELLEE() != null ? t.getLgZONEGEOID().getStrLIBELLEE() : ""));
             if (t.getBoolDECONDITIONNE() == 0 && t.getBoolDECONDITIONNEEXIST() == 1) {
-                TFamilleStock OTFamilleStock = getDecondionneParent(t.getLgFAMILLEID());
-                if (OTFamilleStock != null) {
-                    json.put("lg_FAMILLE_DECONDITION_ID", OTFamilleStock.getLgFAMILLEID().getLgFAMILLEID());
-                    json.put("str_DESCRIPTION_DECONDITION", OTFamilleStock.getLgFAMILLEID().getStrDESCRIPTION());
-                    json.put("int_NUMBER_AVAILABLE_DECONDITION", OTFamilleStock.getIntNUMBERAVAILABLE());
+                TFamilleStock oFamilleStock = getDecondionneParent(t.getLgFAMILLEID());
+                if (oFamilleStock != null) {
+                    json.put("lg_FAMILLE_DECONDITION_ID", oFamilleStock.getLgFAMILLEID().getLgFAMILLEID());
+                    json.put("str_DESCRIPTION_DECONDITION", oFamilleStock.getLgFAMILLEID().getStrDESCRIPTION());
+                    json.put("int_NUMBER_AVAILABLE_DECONDITION", oFamilleStock.getIntNUMBERAVAILABLE());
                 }
             }
             json.put("int_NUMBERDETAIL", t.getIntNUMBERDETAIL());
@@ -402,6 +416,10 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
         if (bonLivraison != null) {
             json.put("dt_DATE_LIVRAISON", DateConverter.convertDateToDD_MM_YYYY(bonLivraison.getDtDATELIVRAISON()));
         }
+        Set<Integer> states = getProductStates(t);
+        json.put("produitState", states.stream().findFirst().orElse(0));
+        json.put("produitStates", states.stream().map(e -> e.toString()).collect(Collectors.joining(",")));
+
         return json;
     }
 

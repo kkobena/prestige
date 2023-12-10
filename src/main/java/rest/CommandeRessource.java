@@ -37,6 +37,7 @@ import rest.service.CommandeService;
 import rest.service.OrderService;
 import rest.service.dto.CommandeCsvDTO;
 import rest.service.dto.CommandeFiltre;
+import rest.service.dto.CommandeIdsDTO;
 import rest.service.dto.OrderDetailDTO;
 import toolkits.parameters.commonparameter;
 import util.Constant;
@@ -281,6 +282,42 @@ public class CommandeRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         this.orderService.changerEnCommandeEnCours(id);
+        return Response.ok().build();
+    }
+
+    @DELETE
+    @Path("order/{id}")
+    public Response deleteOrder(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.orderService.removeOrder(id);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("transform-order/{id}")
+    public Response transformSuggestionToOrder(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.orderService.transformSuggestionToOrder(id, tu);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("merge-order")
+    public Response mergeOrder(CommandeIdsDTO commandeIds) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.orderService.mergeOrder(commandeIds);
         return Response.ok().build();
     }
 }

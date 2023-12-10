@@ -8,6 +8,8 @@ import java.util.List;
  */
 public final class Constant {
 
+    public static final String INVENTAIRE = "04";
+    public static final String STATUT_ENTREE_STOCK = "ENTREE_STOCK";
     public static final String DEPOT_EXTENSION = "5";
     public static final String DECONNECTED_MESSAGE = "Veuillez vous connecter";
     public static final String STATUT_AUTO = "auto";

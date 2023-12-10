@@ -33,7 +33,6 @@ public class SearchProduitServcieRessource {
     private HttpServletRequest servletRequest;
     private @EJB SearchProduitServcie searchProduitServcie;
 
-    // '../webservices/configmanagement/grossiste/ws_data.jsp'
     @GET
     @Path("fiche")
     public Response getAll(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
