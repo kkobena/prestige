@@ -421,7 +421,7 @@ Ext.application({
         'testextjs.model.OrderDetail',
 
         'testextjs.view.sm_user.suggerercde.SuggerercdeManager',
-        'testextjs.view.commandemanagement.suggestions_commandees.suggestionsCommandeesManager',
+ 
         'testextjs.view.commandemanagement.suggestion.Suggestion_Manager',
         'testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
         //  Fiche Societe

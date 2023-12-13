@@ -67,10 +67,10 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         myAppController = Ext.create('testextjs.controller.App', {});
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
 
-        var AppController = testextjs.app.getController('App');
+        const AppController = testextjs.app.getController('App');
         ref = this.getNameintern();
-        var store = Ext.create('testextjs.store.SearchStore');
-        var storerepartiteur = new Ext.data.Store({
+        const store = Ext.create('testextjs.store.SearchStore');
+        const storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
             pageSize: 999,
             autoLoad: false,
@@ -101,7 +101,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             }
 
         });
-        var int_BUTOIR = new Ext.form.field.Display(
+        const int_BUTOIR = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
                     fieldLabel: 'Butoir ::',
@@ -112,7 +112,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     margin: '0 15 0 0',
                     value: "0"
                 });
-        var int_VENTE = new Ext.form.field.Display(
+        const int_VENTE = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
                     fieldLabel: 'Valeur Vente ::',
@@ -123,7 +123,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     margin: '0 15 0 0',
                     value: "0"
                 });
-        var int_ACHAT = new Ext.form.field.Display(
+        const int_ACHAT = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
                     fieldLabel: 'Valeur Achat ::',
@@ -252,8 +252,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     },
                                     listeners: {
                                         select: function (cmp) {
-                                            var value = cmp.getValue();
-                                            var record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
+                                            const value = cmp.getValue();
+                                            const record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
 
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
                                             if (cmp.getValue() === "0" || cmp.getValue() === "Ajouter un nouvel article") {
@@ -1131,14 +1131,14 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
     },
     columnRenderer: function (v, m, r) {
-        const produitStates = r?.data?.produitStates;
-        m.style = Me_Window.manageColor(r);
+        const st = Me_Window.manageColor(r);
+        m.style = st;
         return v;
 
     },
     numberColumnRenderer: function (v, m, r) {
-
-        m.style = Me_Window.manageColor(r);
+        const st = Me_Window.manageColor(r);
+        m.style = st;
         return amountformat(v);
     }
 });

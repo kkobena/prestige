@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.DoubleAdder;
@@ -215,21 +216,19 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     private void updateQtyUg(TFamilleStock familleStock, TPreenregistrement tp, TPreenregistrementDetail it) {
-        try {
-            if (tp.getStrTYPEVENTE().equals(DateConverter.VENTE_COMPTANT) && familleStock.getIntUG() > 0) {
-                int ugVendue;
-                int stockUg = familleStock.getIntUG();
-                int qtyVendue = it.getIntQUANTITY();
-                if (qtyVendue <= stockUg) {
-                    ugVendue = qtyVendue;
-                } else {
-                    ugVendue = stockUg;
-                }
-                familleStock.setIntUG(familleStock.getIntUG() - ugVendue);
-                it.setIntUG(ugVendue);
+
+        if (Objects.nonNull(familleStock.getIntUG()) && tp.getStrTYPEVENTE().equals(Constant.VENTE_COMPTANT)
+                && familleStock.getIntUG() > 0) {
+            int ugVendue;
+            int stockUg = familleStock.getIntUG();
+            int qtyVendue = it.getIntQUANTITY();
+            if (qtyVendue <= stockUg) {
+                ugVendue = qtyVendue;
+            } else {
+                ugVendue = stockUg;
             }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            familleStock.setIntUG(familleStock.getIntUG() - ugVendue);
+            it.setIntUG(ugVendue);
         }
 
     }
@@ -245,54 +244,48 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     @Override
     public void updateVenteStock(TPreenregistrement tp, List<TPreenregistrementDetail> list) {
         EntityManager emg = this.getEmg();
-        try {
+        TUser tu = tp.getLgUSERID();
+        final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
+        final String emplacementId = emplacement.getLgEMPLACEMENTID();
+        final boolean isDepot = !("1".equals(emplacementId));
+        final Typemvtproduit typemvtproduit = getTypemvtproduitByID(Constant.VENTE);
+        final String statut = Constant.STATUT_IS_CLOSED;
+        list.stream().forEach(it -> {
 
-            TUser tu = tp.getLgUSERID();
-            final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
-            final String emplacementId = emplacement.getLgEMPLACEMENTID();
-            final boolean isDepot = !("1".equals(emplacementId));
-            final Typemvtproduit typemvtproduit = getTypemvtproduitByID(DateConverter.VENTE);
-            final String statut = "is_Closed";
-            list.stream().forEach(it -> {
+            it.setStrSTATUT(statut);
+            TFamille tFamille = it.getLgFAMILLEID();
+            if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
+                saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0,
+                        Constant.ACTION_VENTE, tp.getStrREF());
+                String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de "
+                        + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
+                        + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
+                logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT,
+                        tFamille);
+                notificationService.save(new Notification().canal(Canal.EMAIL)
+                        .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
+            }
+            TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
+            Integer initStock = familleStock.getIntNUMBERAVAILABLE();
 
-                it.setStrSTATUT(statut);
-                TFamille tFamille = it.getLgFAMILLEID();
-                if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
-                    saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0,
-                            commonparameter.str_ACTION_VENTE, tp.getStrREF());
-                    String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de "
-                            + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
-                            + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
-                    logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT,
-                            tFamille);
-                    notificationService.save(new Notification().canal(Canal.EMAIL)
-                            .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc)
-                            .addUser(tu));
-                }
-                TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
-                Integer initStock = familleStock.getIntNUMBERAVAILABLE();
+            if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
+                TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID());
+                TFamilleStock stockParent = findStockByProduitId(otFamilleParent.getLgFAMILLEID(),
+                        emplacement.getLgEMPLACEMENTID());
+                deconditionner(tu, stockParent, familleStock, it.getIntQUANTITY());
 
-                if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-                    TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID());
-                    TFamilleStock stockParent = findStockByProduitId(otFamilleParent.getLgFAMILLEID(),
-                            emplacement.getLgEMPLACEMENTID());
-                    deconditionner(tu, stockParent, familleStock, it.getIntQUANTITY());
+            }
+            updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot);
+            mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
+                    emplacement, it.getIntQUANTITY(), initStock,
+                    familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY(), it.getValeurTva(), true, it.getIntUG());
+            updateStock(familleStock, tp, it);
+            emg.merge(familleStock);
+            emg.merge(it);
 
-                }
-                updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot);
-                mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
-                        emplacement, it.getIntQUANTITY(), initStock,
-                        familleStock.getIntNUMBERAVAILABLE() - it.getIntQUANTITY(), it.getValeurTva(), true,
-                        it.getIntUG());
-                updateStock(familleStock, tp, it);
-                emg.merge(familleStock);
-                emg.merge(it);
+        });
+        makeSuggestionAutoAsync(list, emplacement);
 
-            });
-            makeSuggestionAutoAsync(list, emplacement);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-        }
     }
 
     private void updateStockDepot(Typemvtproduit typemvtproduit, TUser ooTUser, TFamille oTFamille, Integer qty,

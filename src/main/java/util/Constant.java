@@ -8,6 +8,7 @@ import java.util.List;
  */
 public final class Constant {
 
+    public static final String TMVTP_ANNUL_VENTE_DEPOT_EXTENSION = "14";
     public static final String INVENTAIRE = "04";
     public static final String STATUT_ENTREE_STOCK = "ENTREE_STOCK";
     public static final String DEPOT_EXTENSION = "5";
@@ -46,6 +47,13 @@ public final class Constant {
     public static final String MVT_VENTE_VNO = "9";
     public static final String ACTION_VENTE = "VENTE";
     public static final String DIFFERE = "Differe";
+    public static final String VENTE = "02";
+    public static final String KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE = "9";
+    public static final String KEY_PARAM_MVT_VENTE_ORDONNANCE = "8";
+    public static final String MODE_ORANGE = "10";
+    public static final String ANNULATION_DE_VENTE = "03";
+    public static final String REGL_DIFF = "4";
+    public static final String VENTE_AVEC_CARNET = "3";
 
     private Constant() {
     }
