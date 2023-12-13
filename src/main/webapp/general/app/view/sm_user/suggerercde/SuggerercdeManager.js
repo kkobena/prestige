@@ -1113,7 +1113,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     manageColor: function (r) {
         const produitStates = r?.data?.produitStates;
 
-        if (produitStates.length > 1) {
+        if (produitStates.length > 0) {
             if (Ext.Array.contains(produitStates, 1)) {
                 return 'background-color:#73C774;';
             }
