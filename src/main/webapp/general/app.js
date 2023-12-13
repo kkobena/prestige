@@ -410,7 +410,7 @@ Ext.application({
         'testextjs.view.configmanagement.motifretour.action.add',
         'testextjs.view.commandemanagement.cmde_passees.action.add',
         'testextjs.model.BonLivraison',
-        'testextjs.view.commandemanagement.suggestion.SuggestionManager',
+     
         'testextjs.model.Suggestion',
         'testextjs.model.SuggestionOrder',
         'testextjs.model.Order',
