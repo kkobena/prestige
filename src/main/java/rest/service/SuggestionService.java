@@ -36,8 +36,6 @@ public interface SuggestionService {
 
     List<TSuggestionOrderDetails> findFamillesBySuggestion(String suggestionId);
 
-    int verifierProduitDansLeProcessusDeCommande(TFamille famille);
-
     JSONObject makeSuggestion(List<VenteDetailsDTO> datas) throws JSONException;
 
     JSONObject makeSuggestionFromArticleInvendus(List<ArticleDTO> datas, TUser tu) throws JSONException;
