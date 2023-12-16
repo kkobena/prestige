@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -369,8 +370,9 @@ public class FileFormaManager extends HttpServlet {
                     i += ligne;
                     if (ligne == 0) {
                         items.add(new OrderItem(Integer.parseInt(cSVRecord.get(0)), cSVRecord.get(1),
-                                Integer.parseInt(cSVRecord.get(2)), Integer.valueOf(cSVRecord.get(3)),
-                                Double.parseDouble(cSVRecord.get(4)), Integer.parseInt(cSVRecord.get(5))));
+                                new BigDecimal(cSVRecord.get(2)).intValue(),
+                                new BigDecimal(cSVRecord.get(3)).intValue(), Double.parseDouble(cSVRecord.get(4)),
+                                new BigDecimal(cSVRecord.get(5)).intValue()));
                     }
 
                     if ((count % 20) == 0) {
@@ -478,10 +480,16 @@ public class FileFormaManager extends HttpServlet {
         return json;
     }
 
-    private int buildOrderDetailTedisRecord(TOrder order, CSVRecord cSVRecord) {
+    private int buildOrderDetailTedisRecord0(TOrder order, CSVRecord cSVRecord) {
 
         return createOrderDetailViaCsv(order, cSVRecord.get(1), Integer.parseInt(cSVRecord.get(3)),
                 Integer.parseInt(cSVRecord.get(2)), Integer.parseInt(cSVRecord.get(5)), 0);
+    }
+
+    private int buildOrderDetailTedisRecord(TOrder order, CSVRecord cSVRecord) {
+
+        return createOrderDetailViaCsv(order, cSVRecord.get(1), new BigDecimal(cSVRecord.get(3)).intValue(),
+                new BigDecimal(cSVRecord.get(2)).intValue(), new BigDecimal(cSVRecord.get(5)).intValue(), 0);
     }
 
     public TOrderDetail findFamilleInTOrderDetail(String lgOrderId, String lgFAMILLEID) {
