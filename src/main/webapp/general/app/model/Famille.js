@@ -478,7 +478,7 @@ Ext.define('testextjs.model.Famille', {
 
         {name: 'PAF',
             type: 'int'},
-        
+
         {name: 'intNUMBERAVAILABLE',
             type: 'int'},
 
@@ -495,7 +495,9 @@ Ext.define('testextjs.model.Famille', {
 
             type: 'boolean'
         },
-         {name: 'cmu_price',
-            type: 'int'}
+        {name: 'cmu_price', type: 'int'},
+        {name: 'produitState', type: 'int'},
+        {name: 'produitStates', type: 'string'}
+        
     ]
 });

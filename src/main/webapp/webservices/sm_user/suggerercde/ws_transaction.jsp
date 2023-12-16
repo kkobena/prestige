@@ -204,31 +204,12 @@
 
             ObllBase.setMessage(OsuggestionManagement.getMessage());
             ObllBase.setDetailmessage(OsuggestionManagement.getDetailmessage());
-        } else if (request.getParameter("mode").equals("delete")) {
-
-            new logger().OCategory.info(" *** OTSuggestionOrder  *** " + lg_SUGGESTION_ORDER_ID);
-
-            OWarehouseManager.deleteSuggestionOrder(lg_SUGGESTION_ORDER_ID);
-
-            new logger().OCategory.info(" *** Suppression  *** " + lg_SUGGESTION_ORDER_ID);
-        } else if (request.getParameter("mode").equals("makeorder")) {
-            OTSuggestionOrder = (TSuggestionOrder) ObllBase.find(lg_SUGGESTION_ORDER_ID, new TSuggestionOrder());
-            OorderManagement.MakeSuggestionToOrder(OTSuggestionOrder, OTSuggestionOrder.getStrSTATUT());
-            ObllBase.setMessage(OorderManagement.getMessage());
-            ObllBase.setDetailmessage(OorderManagement.getDetailmessage());
-        } else if (request.getParameter("mode").equals("delete_suggestion_order_detail")) {
+        }  else if (request.getParameter("mode").equals("delete_suggestion_order_detail")) {
 
             if (OWarehouseManager.removeSuggestionDetail(lg_SUGGESTION_ORDER_DETAILS_ID)) {
                 lstTSuggestionOrderDetails = OWarehouseManager.getTSuggestionOrderDetails(lg_SUGGESTION_ORDER_ID);
                 int_TOTAL_ACHAT = OWarehouseManager.getPriceTotalAchat(lstTSuggestionOrderDetails);
                 int_TOTAL_VENTE = OWarehouseManager.getPriceTotalVente(lstTSuggestionOrderDetails);
-
-            }
-
-        } else if (request.getParameter("mode").equals("delete_all")) {
-
-            if (OWarehouseManager.removeSuggestionDetail(lg_SUGGESTION_ORDER_DETAILS_ID)) {
-                OWarehouseManager.deleteSuggestionOrder(lg_SUGGESTION_ORDER_ID);
 
             }
 

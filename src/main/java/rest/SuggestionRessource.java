@@ -222,4 +222,29 @@ public class SuggestionRessource {
         this.suggestionService.setToPending(id);
         return Response.ok().build();
     }
+
+    @GET
+    @Path("list/items")
+    public Response fetchItems(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String search, @QueryParam(value = "orderId") String orderId) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        return Response.ok().entity(this.suggestionService.fetchItems(orderId, search, tu, start, limit).toString())
+                .build();
+    }
+
+    @DELETE
+    @Path("suggestion/{id}")
+    public Response deleteSuggestion(@PathParam("id") String id) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.deleteSuggestion(id);
+        return Response.ok().build();
+    }
 }

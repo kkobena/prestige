@@ -8,6 +8,7 @@ import dal.TOrder;
 import dal.TOrderDetail;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.json.JSONPropertyName;
 import util.DateCommonUtils;
@@ -65,6 +66,15 @@ public class CommandeEncourDetailDTO {
     private int qteReasor;
     private int stock;
     private String codeArticle;
+    private int[] produitStates;
+
+    public int[] getProduitStates() {
+        return produitStates;
+    }
+
+    public void setProduitStates(int[] produitStates) {
+        this.produitStates = produitStates;
+    }
 
     @JSONPropertyName("lg_GROSSISTE_LIBELLE")
     public String getGrossisteLibelle() {
@@ -241,7 +251,7 @@ public class CommandeEncourDetailDTO {
         Collection<TFamilleGrossiste> tFamilleGrossisteCollection = famille.getTFamilleGrossisteCollection();
         if (CollectionUtils.isNotEmpty(tFamilleGrossisteCollection)) {
             famille.getTFamilleGrossisteCollection().stream()
-                    .filter((t) -> t.getLgGROSSISTEID().getLgGROSSISTEID().equals(grossiste.getLgGROSSISTEID())
+                    .filter(t -> t.getLgGROSSISTEID().getLgGROSSISTEID().equals(grossiste.getLgGROSSISTEID())
                             && "enable".equals(t.getStrSTATUT()))
                     .findFirst().ifPresentOrElse(t -> {
                         this.produitCip = t.getStrCODEARTICLE();
@@ -278,6 +288,9 @@ public class CommandeEncourDetailDTO {
                     this.stock = 0;
                     this.qteReasor = 0;
                 });
+
+        // this.produitStates = famille.getProductStates().stream().mapToInt(e -> e.getProduitStateEnum().ordinal())
+        // .toArray();
 
     }
 
@@ -322,7 +335,7 @@ public class CommandeEncourDetailDTO {
         if (CollectionUtils.isNotEmpty(tFamilleGrossisteCollection)) {
             famille.getTFamilleGrossisteCollection().stream()
                     .filter((t) -> t.getLgGROSSISTEID().equals(grossiste) && "enable".equals(t.getStrSTATUT()))
-                    .findFirst().ifPresentOrElse((t) -> {
+                    .findFirst().ifPresentOrElse(t -> {
                         this.produitCip = t.getStrCODEARTICLE();
                         this.codeArticle = t.getStrCODEARTICLE();
                     }, () -> {
@@ -349,6 +362,8 @@ public class CommandeEncourDetailDTO {
         this.seuil = famille.getIntSEUILMIN();
         this.stock = familleStock.getIntNUMBERAVAILABLE();
         this.qteReasor = Math.abs(familleStock.getIntNUMBERAVAILABLE() - famille.getIntSEUILMIN());
+        // this.produitStates = famille.getProductStates().stream().mapToInt(e -> e.getProduitStateEnum().ordinal())
+        // .toArray();
 
     }
 }

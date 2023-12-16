@@ -199,6 +199,9 @@ public class CommandeDTO {
         return this;
     }
 
+    public CommandeDTO() {
+    }
+
     public CommandeDTO(TOrder order, String items, int montantAchat, int montantVente, int nbreLigne, int totalQty) {
         TGrossiste grossiste = order.getLgGROSSISTEID();
         TUser user = order.getLgUSERID();

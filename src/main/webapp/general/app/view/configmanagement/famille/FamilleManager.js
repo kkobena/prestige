@@ -68,7 +68,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
         });
 
-        var store_dci = new Ext.data.Store({
+        const store_dci = new Ext.data.Store({
             model: 'testextjs.model.Dci',
             pageSize: itemsPerPage,
             autoLoad: false,
@@ -85,7 +85,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         });
 
 
-        var store_type = new Ext.data.Store({
+        const store_type = new Ext.data.Store({
             fields: ['str_TYPE_TRANSACTION', 'str_desc'],
             data: [{str_TYPE_TRANSACTION: 'ALL', str_desc: 'Tous'}, {str_TYPE_TRANSACTION: 'DECONDITION', str_desc: 'Les articles deconditionnables'}, {str_TYPE_TRANSACTION: 'DECONDITIONNE', str_desc: 'Les articles deconditionnes'}, {str_TYPE_TRANSACTION: 'SANSEMPLACEMENT', str_desc: 'Les articles sans emplacement'}]
         });
@@ -111,10 +111,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 {
 
                     header: 'Etat.cmde',
-                    dataIndex: 'STATUS',
+                    dataIndex: 'produitState',
                     renderer: function (v, m, r) {
-                        const STATUS = r.data.STATUS;
-                        switch (STATUS) {
+                        const produitState = r.data.produitState;
+                        switch (produitState) {
                             case 1:
                                 m.style = 'background-color:#73C774;';
                                 break;
@@ -133,7 +133,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         }
 
 
-                        return v;
+                        return  r.data.produitStates;
                     },
                     width: 35
                 },

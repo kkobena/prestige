@@ -410,7 +410,7 @@ Ext.application({
         'testextjs.view.configmanagement.motifretour.action.add',
         'testextjs.view.commandemanagement.cmde_passees.action.add',
         'testextjs.model.BonLivraison',
-        'testextjs.view.commandemanagement.suggestion.SuggestionManager',
+     
         'testextjs.model.Suggestion',
         'testextjs.model.SuggestionOrder',
         'testextjs.model.Order',
@@ -421,7 +421,7 @@ Ext.application({
         'testextjs.model.OrderDetail',
 
         'testextjs.view.sm_user.suggerercde.SuggerercdeManager',
-        'testextjs.view.commandemanagement.suggestions_commandees.suggestionsCommandeesManager',
+ 
         'testextjs.view.commandemanagement.suggestion.Suggestion_Manager',
         'testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
         //  Fiche Societe

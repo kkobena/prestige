@@ -6,12 +6,10 @@
 package com.asc.prestige2.business.cash.concrete;
 
 import bll.bllBase;
-import bll.common.Parameter;
 import bll.entity.EntityData;
 import bll.userManagement.privilege;
 import bll.utils.TparameterManager;
 import com.asc.prestige2.business.cash.CashService;
-import dal.TParameters;
 import dal.TUser;
 import dal.dataManager;
 import dal.jconnexion;
@@ -19,8 +17,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import toolkits.utils.logger;
 
 /**

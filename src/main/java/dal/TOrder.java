@@ -43,7 +43,7 @@ public class TOrder implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
-    @Column(name = "lg_ORDER_ID", nullable = false, length = 20)
+    @Column(name = "lg_ORDER_ID", nullable = false, length = 50)
     private String lgORDERID;
     @Column(name = "str_REF_ORDER", length = 20)
     private String strREFORDER;
