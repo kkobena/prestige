@@ -321,15 +321,12 @@ public class TiersPayantExclusServiceImpl implements TiersPayantExclusService {
 
     @Override
     public void updateTiersPayantAccount(TTiersPayant payant, int montant) {
-        try {
-            if (payant != null) {
-                payant.setAccount(payant.getAccount() + montant);
-                getEntityManager().merge(payant);
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "updateTiersPayantAccount=====>> ", e);
 
+        if (payant != null) {
+            payant.setAccount(payant.getAccount() + montant);
+            getEntityManager().merge(payant);
         }
+
     }
 
     @Override

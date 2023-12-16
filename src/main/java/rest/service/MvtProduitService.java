@@ -38,7 +38,7 @@ public interface MvtProduitService {
     void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, TEmplacement depot)
             throws Exception;
 
-    void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement) throws Exception;
+    void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement emp) throws Exception;
 
     JSONObject creerAjustement(Params params) throws JSONException;
 

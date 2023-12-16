@@ -21,8 +21,6 @@ import dal.TGrossiste;
 import dal.TInventaire;
 import dal.TInventaireFamille;
 import dal.TLot;
-import dal.TMouvement;
-import dal.TMouvementSnapshot;
 import dal.TOfficine;
 import dal.TOrder;
 import dal.TOrderDetail;
@@ -35,6 +33,7 @@ import dal.TUser;
 import dal.TWarehouse;
 import dal.Typemvtproduit;
 import dal.enumeration.Canal;
+import dal.enumeration.ProductStateEnum;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 import java.io.IOException;
@@ -80,7 +79,6 @@ import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -95,8 +93,8 @@ import rest.service.MouvementProduitService;
 import rest.service.MvtProduitService;
 import rest.service.NotificationService;
 import rest.service.OrderService;
+import rest.service.ProductStateService;
 import rest.service.TransactionService;
-import toolkits.parameters.commonparameter;
 import util.Constant;
 import util.DateConverter;
 import util.FunctionUtils;
@@ -125,6 +123,8 @@ public class CommandeServiceImpl implements CommandeService {
     private EntityManager em;
     @EJB
     private NotificationService notificationService;
+    @EJB
+    private ProductStateService productStateService;
 
     public EntityManager getEm() {
         return em;
@@ -133,11 +133,11 @@ public class CommandeServiceImpl implements CommandeService {
     @Inject
     private UserTransaction userTransaction;
 
-    private List<TBonLivraisonDetail> bonLivraisonDetail(String lg_BON_LIVRAISON_ID) {
+    private List<TBonLivraisonDetail> bonLivraisonDetail(String id) {
         try {
             String query = "SELECT t FROM TBonLivraisonDetail t WHERE  t.lgBONLIVRAISONID.lgBONLIVRAISONID =?1";
             TypedQuery<TBonLivraisonDetail> q = this.em.createQuery(query, TBonLivraisonDetail.class).setParameter(1,
-                    lg_BON_LIVRAISON_ID);
+                    id);
             return q.getResultList();
 
         } catch (Exception e) {
@@ -146,14 +146,14 @@ public class CommandeServiceImpl implements CommandeService {
 
     }
 
-    public List<Object[]> listLot(String str_REF_LIVRAISON, String idArticle) {
+    public List<Object[]> listLot(String refBon, String idArticle) {
         try {
             CriteriaBuilder cb = this.getEm().getCriteriaBuilder();
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TLot> root = cq.from(TLot.class);
             cq.multiselect(cb.sum(root.get("intNUMBER")), cb.sum(root.get("intNUMBERGRATUIT")),
                     root.get("lgFAMILLEID").get("lgFAMILLEID")).groupBy(root.get("lgFAMILLEID").get("lgFAMILLEID"));
-            cq.where(cb.and(cb.equal(root.get("strREFLIVRAISON"), str_REF_LIVRAISON),
+            cq.where(cb.and(cb.equal(root.get("strREFLIVRAISON"), refBon),
                     cb.equal(root.get("lgFAMILLEID").get("lgFAMILLEID"), idArticle)));
             Query q = this.getEm().createQuery(cq);
             return q.getResultList();
@@ -268,7 +268,7 @@ public class CommandeServiceImpl implements CommandeService {
                 if (familleGrossiste != null) {
                     this.getEm().merge(familleGrossiste);
                 }
-
+                productStateService.removeByProduitAndState(oFamille, ProductStateEnum.ENTREE);
                 avoirs.stream().filter(e -> e.getLgFAMILLEID().equals(oFamille)).forEach(s -> avoirs0.add(s));
 
             }
@@ -490,7 +490,7 @@ public class CommandeServiceImpl implements CommandeService {
             cq.set(root.get("strSTATUT"), Constant.STATUT_IS_CLOSED).set(root.get("dtUPDATED"), new Date());
             cq.where(cb.equal(root.get("lgORDERID").get("lgORDERID"), order.getLgORDERID()));
             em.createQuery(cq).executeUpdate();
-            order.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
+            order.setStrSTATUT(Constant.STATUT_IS_CLOSED);
             order.setRecu(Boolean.TRUE);
             order.setDtUPDATED(new Date());
             em.merge(order);
@@ -546,7 +546,7 @@ public class CommandeServiceImpl implements CommandeService {
         try {
             TInventaire inventaire = emg.find(TInventaire.class, inventaireId);
             List<TInventaireFamille> list = findByInventaire(inventaireId);
-            Typemvtproduit typemvtproduit = findById(DateConverter.INVENTAIRE);
+            Typemvtproduit typemvtproduit = findById(Constant.INVENTAIRE);
             userTransaction.begin();
             LongAdder count = new LongAdder();
             LongAdder count2 = new LongAdder();
@@ -559,7 +559,7 @@ public class CommandeServiceImpl implements CommandeService {
                     stock.setIntNUMBER(s.getIntNUMBER());
                     stock.setDtUPDATED(new Date());
                     emg.merge(stock);
-                    s.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
+                    s.setStrSTATUT(Constant.STATUT_IS_CLOSED);
                     s.setDtUPDATED(new Date());
                     emg.merge(s);
 
@@ -575,7 +575,7 @@ public class CommandeServiceImpl implements CommandeService {
 
                 }
             });
-            inventaire.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
+            inventaire.setStrSTATUT(Constant.STATUT_IS_CLOSED);
             inventaire.setDtUPDATED(new Date());
             inventaire.setLgUSERID(user);
             emg.merge(inventaire);
@@ -805,13 +805,13 @@ public class CommandeServiceImpl implements CommandeService {
 
     @Override
     public void addRuptureHistory(TOrderDetail item, TGrossiste grossiste) {
-        TRuptureHistory OTRuptureHistory = new TRuptureHistory();
-        OTRuptureHistory.setLgRUPTUREHISTORYID(RandomStringUtils.randomAlphanumeric(20));
-        OTRuptureHistory.setLgFAMILLEID(item.getLgFAMILLEID());
-        OTRuptureHistory.setIntNUMBER(item.getIntNUMBER());
-        OTRuptureHistory.setDtCREATED(new Date());
-        OTRuptureHistory.setGrossisteId(grossiste);
-        getEm().persist(OTRuptureHistory);
+        TRuptureHistory ouptureHistory = new TRuptureHistory();
+        ouptureHistory.setLgRUPTUREHISTORYID(UUID.randomUUID().toString());
+        ouptureHistory.setLgFAMILLEID(item.getLgFAMILLEID());
+        ouptureHistory.setIntNUMBER(item.getIntNUMBER());
+        ouptureHistory.setDtCREATED(new Date());
+        ouptureHistory.setGrossisteId(grossiste);
+        getEm().persist(ouptureHistory);
         getEm().remove(item);
     }
 
@@ -835,7 +835,7 @@ public class CommandeServiceImpl implements CommandeService {
 
     }
 
-    JSONObject verificationCommandeCsv(Part part, String orderId, TUser OTUser) throws IOException {
+    JSONObject verificationCommandeCsv(Part part, String orderId, TUser oUser) throws IOException {
         try {
             CSVParser parser = new CSVParser(new InputStreamReader(part.getInputStream()),
                     CSVFormat.EXCEL.withDelimiter(';'));
@@ -1007,4 +1007,5 @@ public class CommandeServiceImpl implements CommandeService {
 
         }
     }
+
 }

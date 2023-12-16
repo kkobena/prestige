@@ -25,7 +25,7 @@ public interface UserService {
 
     TUser connexion(ManagedUserVM managedUser, HttpServletRequest request);
 
-    boolean deConnexion(HttpServletRequest request, TUser OTUser);
+    boolean deConnexion(HttpServletRequest request, TUser user);
 
     TRoleUser getTRoleUser(String userId);
 

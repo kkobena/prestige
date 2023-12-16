@@ -168,7 +168,7 @@ public class JobCalendar {
             q.where(cb.equal(root.get(TSuggestionOrderDetails_.lgSUGGESTIONORDERID), order));
             getEm().createQuery(q).executeUpdate();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
         }
     }
 
