@@ -23,7 +23,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
     plain: true,
     maximizable: true,
     closable: false,
-  
+
     initComponent: function () {
         _myAppController = Ext.create('testextjs.controller.App', {});
         Me = this;
@@ -331,21 +331,12 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
 
         testextjs.app.getController('App').ShowWaitingProcess();
         Ext.Ajax.request({
-            url: url_services_transaction_suggerercmde + 'makeorder',
+            url: '../api/v1/commande/transform-order/' + rec.get('lg_SUGGESTION_ORDER_ID'),
             timeout: 24000000,
-            params: {
-                lg_SUGGESTION_ORDER_ID: rec.get('lg_SUGGESTION_ORDER_ID'),
-                str_STATUT: rec.get('str_STATUT')
-            },
             success: function (response)
             {
                 testextjs.app.getController('App').StopWaitingProcess();
-                const object = Ext.JSON.decode(response.responseText, false);
-                if (object.errors_code == "0") {
-                    Ext.MessageBox.alert('Error Message', object.errors);
-                    return;
-                }
-                Ext.MessageBox.alert('Confirmation', object.errors);
+                Ext.MessageBox.alert('Confirmation', 'Opération terminée');
                 grid.getStore().reload();
 
             },
@@ -353,7 +344,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
             {
                 testextjs.app.getController('App').StopWaitingProcess();
 
-                console.log("Bug " + response.responseText);
+              
                 Ext.MessageBox.alert('Error Message', response.responseText);
 
             }
@@ -393,19 +384,15 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
                         const rec = grid.getStore().getAt(rowIndex);
                         _myAppController.ShowWaitingProcess();
                         Ext.Ajax.request({
-                            url: url_services_transaction_suggerercmde + 'delete',
+                            method: 'DELETE',
+                            url: '../api/v1/suggestion/suggestion/' + rec.get('lg_SUGGESTION_ORDER_ID'),
                             timeout: 2400000,
-                            params: {
-                                lg_SUGGESTION_ORDER_ID: rec.get('lg_SUGGESTION_ORDER_ID')
-                            },
+
                             success: function (response)
                             {
                                 _myAppController.StopWaitingProcess();
-                                const object = Ext.JSON.decode(response.responseText, false);
-                                if (object.success === 0) {
-                                    Ext.MessageBox.alert('Error Message', object.errors);
-                                    return;
-                                }
+                               
+                                Ext.MessageBox.alert('Confirmation', 'Opération terminée');
                                 grid.getStore().reload();
                             },
                             failure: function (response)

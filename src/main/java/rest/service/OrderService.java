@@ -103,4 +103,10 @@ public interface OrderService {
     void passerLaCommande(String orderId);
 
     void changerEnCommandeEnCours(String orderId);
+
+    void transformSuggestionToOrder(String suggestionId, TUser user);
+
+    void removeOrder(String orderId);
+
+    void mergeOrder(CommandeIdsDTO commandeIds);
 }

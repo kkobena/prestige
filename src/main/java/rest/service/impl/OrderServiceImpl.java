@@ -5,7 +5,6 @@
  */
 package rest.service.impl;
 
-import bll.common.Parameter;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.Params;
@@ -13,8 +12,11 @@ import commonTasks.dto.RuptureDTO;
 import commonTasks.dto.RuptureDetailDTO;
 import dal.*;
 import dal.enumeration.Canal;
+import dal.enumeration.ProductStateEnum;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -28,11 +30,11 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,6 +42,7 @@ import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.OrderService;
+import rest.service.ProductStateService;
 import rest.service.dto.*;
 import toolkits.parameters.commonparameter;
 import util.*;
@@ -54,7 +57,15 @@ public class OrderServiceImpl implements OrderService {
     private EntityManager em;
     private @EJB LogService logService;
     @EJB
-    NotificationService notificationService;
+    private NotificationService notificationService;
+    @EJB
+    private ProductStateService productStateService;
+
+    private static final String QUERY = "SELECT g.`str_TELEPHONE` AS telephone,g.`str_MOBILE` AS mobile,g.str_URL_PHARMAML AS urlPharma,g.str_URL_EXTRANET AS urlExtranet, o.`lg_ORDER_ID` AS orderId, u.`str_FIRST_NAME` AS userName,u.`str_LAST_NAME` AS userLastName, SUM(d.`int_PRICE_DETAIL` * d.`int_NUMBER`) AS montantVente, SUM(d.`int_PRICE`) AS montantAchat, o.`str_REF_ORDER` AS refernceOrder, o.`lg_GROSSISTE_ID` AS grossisteId,g.str_LIBELLE AS libelleGrossiste, DATE_FORMAT(o.`dt_CREATED`, '%d/%m/%Y') AS dateCreation,\n"
+            + " DATE_FORMAT(o.`dt_CREATED`, '%k:%i:%s') AS heureCreation, o.`lg_ORDER_ID`, o.`str_STATUT` AS status,COUNT(d.`lg_ORDERDETAIL_ID`) AS itemCount,SUM(d.`int_NUMBER`)AS productCount  FROM  t_order o JOIN t_grossiste g ON g.`lg_GROSSISTE_ID`=o.`lg_GROSSISTE_ID` JOIN t_user u ON u.`lg_USER_ID`=o.`lg_USER_ID`  JOIN t_order_detail d ON o.`lg_ORDER_ID`=d.`lg_ORDER_ID`\n"
+            + " JOIN t_famille p ON p.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID` WHERE o.`str_STATUT` IN (?1) {searchPlaceHolder} GROUP  BY o.`lg_ORDER_ID` ORDER BY o.`dt_UPDATED`  DESC ";
+    private static final String QUERY_COUNT = "SELECT COUNT( distinct o.`lg_ORDER_ID`)  FROM  t_order o JOIN t_grossiste g ON g.`lg_GROSSISTE_ID`=o.`lg_GROSSISTE_ID` JOIN t_user u ON u.`lg_USER_ID`=o.`lg_USER_ID`  JOIN t_order_detail d ON o.`lg_ORDER_ID`=d.`lg_ORDER_ID`\n"
+            + " JOIN t_famille p ON p.`lg_FAMILLE_ID`=d.`lg_FAMILLE_ID`  WHERE o.`str_STATUT` IN (?1) {searchPlaceHolder} ";
 
     public EntityManager getEmg() {
         return em;
@@ -91,31 +102,33 @@ public class OrderServiceImpl implements OrderService {
         JSONObject json = new JSONObject();
         List<String> erro = new ArrayList<>();
         try {
-            TOrder OTOrder = getEmg().find(TOrder.class, params.getRefParent());
-            if (OTOrder == null) {
+            TOrder order = getEmg().find(TOrder.class, params.getRefParent());
+            if (order == null) {
                 return json.put("success", false).put("msg", "Echec: La commande n'existe pas");
             }
-            TGrossiste grossiste = OTOrder.getLgGROSSISTEID();
+            TGrossiste grossiste = order.getLgGROSSISTEID();
             if (isRefBLExistForGrossiste(params.getRef(), grossiste.getLgGROSSISTEID())) {
                 return json.put("success", false).put("msg", "Cette référence a déjà été utilisé pour ce grossiste");
             }
             TEmplacement emplacement = params.getOperateur().getLgEMPLACEMENTID();
             String emp = emplacement.getLgEMPLACEMENTID();
-            TBonLivraison OTBonLivraison = createBL(OTOrder, params.getOperateur(), params.getRef(),
+            TBonLivraison oBonLivraison = createBL(order, params.getOperateur(), params.getRef(),
                     DateConverter.convertLocalDateToDate(LocalDate.parse(params.getDtStart())), params.getValue(),
                     params.getValueTwo());
-            List<TOrderDetail> ListTOrderDetail = getTOrderDetail(params.getRefParent(), DateConverter.PASSE);
+            List<TOrderDetail> listTOrderDetail = getTOrderDetail(params.getRefParent(), DateConverter.PASSE);
             LongAdder montant = new LongAdder();
             LongAdder count = new LongAdder();
             LongAdder count2 = new LongAdder();
-            ListTOrderDetail.forEach((d) -> {
+            listTOrderDetail.forEach((d) -> {
                 TFamille famille = d.getLgFAMILLEID();
                 TFamilleStock stock = getTProductItemStock(famille.getLgFAMILLEID(), emp);
                 if (stock != null) {
 
-                    createBLDetail(OTBonLivraison, grossiste, famille, d, famille.getLgZONEGEOID(),
+                    createBLDetail(oBonLivraison, grossiste, famille, d, famille.getLgZONEGEOID(),
                             stock.getIntNUMBERAVAILABLE());
-                    d.setStrSTATUT(Parameter.STATUT_ENTREE_STOCK);
+                    d.setStrSTATUT(Constant.STATUT_ENTREE_STOCK);
+                    this.productStateService.manageProduitState(famille, ProductStateEnum.COMMANDE_PASSE,
+                            ProductStateEnum.ENTREE);
                     d.setDtUPDATED(new Date());
                     d.setIntORERSTATUS((short) 4);
                     getEmg().merge(d);
@@ -126,10 +139,10 @@ public class OrderServiceImpl implements OrderService {
                     erro.add(famille.getIntCIP());
                 }
             });
-            OTOrder.setStrSTATUT(Constant.STATUT_IS_CLOSED);
-            OTOrder.setIntPRICE(montant.intValue());
-            OTOrder.setDtUPDATED(new Date());
-            getEmg().merge(OTOrder);
+            order.setStrSTATUT(Constant.STATUT_IS_CLOSED);
+            order.setIntPRICE(montant.intValue());
+            order.setDtUPDATED(new Date());
+            getEmg().merge(order);
             return json.put("success", true).put("count", count.intValue()).put("nb", count2.intValue())
                     .put("data", new JSONArray(erro)).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
@@ -182,13 +195,13 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    private boolean isRefBLExistForGrossiste(String str_REF_LIVRAISON, String lg_GROSSISTE_ID) {
+    private boolean isRefBLExistForGrossiste(String ref, String idGrossiste) {
 
         try {
             TypedQuery<TBonLivraison> q = getEmg().createQuery(
                     "SELECT t FROM TBonLivraison t WHERE t.strREFLIVRAISON = ?1 AND t.lgORDERID.lgGROSSISTEID.lgGROSSISTEID = ?2",
                     TBonLivraison.class);
-            q.setParameter(1, str_REF_LIVRAISON).setParameter(2, lg_GROSSISTE_ID).setMaxResults(1);
+            q.setParameter(1, ref).setParameter(2, idGrossiste).setMaxResults(1);
             return q.getSingleResult() != null;
         } catch (Exception e) {
             return false;
@@ -196,21 +209,21 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    private TBonLivraison createBL(TOrder OTOrder, TUser user, String str_REF_LIVRAISON, Date dt_DATE_LIVRAISON,
-            int int_MHT, int int_TVA) throws Exception {
-        TBonLivraison OTBonLivraison = new TBonLivraison(UUID.randomUUID().toString());
-        OTBonLivraison.setStrREFLIVRAISON(str_REF_LIVRAISON);
-        OTBonLivraison.setDtDATELIVRAISON(dt_DATE_LIVRAISON);
-        OTBonLivraison.setIntMHT(int_MHT);
-        OTBonLivraison.setLgUSERID(user);
-        OTBonLivraison.setIntTVA(int_TVA);
-        OTBonLivraison.setLgORDERID(OTOrder);
-        OTBonLivraison.setIntHTTC(OTBonLivraison.getIntMHT() + OTBonLivraison.getIntTVA());
-        OTBonLivraison.setStrSTATUT(DateConverter.STATUT_ENABLE);
-        OTBonLivraison.setDtCREATED(new Date());
-        OTBonLivraison.setDtUPDATED(dt_DATE_LIVRAISON);
-        getEmg().persist(OTBonLivraison);
-        return OTBonLivraison;
+    private TBonLivraison createBL(TOrder order, TUser user, String strREFLIVRAISON, Date dtDATELIVRAISON, int intMHT,
+            int intTVA) throws Exception {
+        TBonLivraison bonLivraison = new TBonLivraison(UUID.randomUUID().toString());
+        bonLivraison.setStrREFLIVRAISON(strREFLIVRAISON);
+        bonLivraison.setDtDATELIVRAISON(dtDATELIVRAISON);
+        bonLivraison.setIntMHT(intMHT);
+        bonLivraison.setLgUSERID(user);
+        bonLivraison.setIntTVA(intTVA);
+        bonLivraison.setLgORDERID(order);
+        bonLivraison.setIntHTTC(bonLivraison.getIntMHT() + bonLivraison.getIntTVA());
+        bonLivraison.setStrSTATUT(Constant.STATUT_ENABLE);
+        bonLivraison.setDtCREATED(new Date());
+        bonLivraison.setDtUPDATED(dtDATELIVRAISON);
+        getEmg().persist(bonLivraison);
+        return bonLivraison;
 
     }
 
@@ -336,7 +349,7 @@ public class OrderServiceImpl implements OrderService {
             Root<RuptureDetail> root = cq.from(RuptureDetail.class);
             cq.select(cb.countDistinct(root.get(RuptureDetail_.rupture)));
             List<Predicate> predicates = predicats(cb, root, dtStart, dtEnd, grossisteId, query);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEmg().createQuery(cq);
             return (long) q.getSingleResult();
         } catch (Exception e) {
@@ -376,7 +389,7 @@ public class OrderServiceImpl implements OrderService {
             Root<Rupture> root = cq.from(Rupture.class);
             cq.select(root).orderBy(cb.desc(root.get(Rupture_.dtUpdated)));
             List<Predicate> predicates = predicats(cb, root, dtStart, dtEnd, grossisteId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Rupture> q = getEmg().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -392,21 +405,6 @@ public class OrderServiceImpl implements OrderService {
             return Collections.emptyList();
         }
 
-    }
-
-    long listeRuptures(LocalDate dtStart, LocalDate dtEnd, String grossisteId) {
-        try {
-            CriteriaBuilder cb = getEmg().getCriteriaBuilder();
-            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<Rupture> root = cq.from(Rupture.class);
-            cq.select(cb.count(root));
-            List<Predicate> predicates = predicats(cb, root, dtStart, dtEnd, grossisteId);
-            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            Query q = getEmg().createQuery(cq);
-            return (long) q.getSingleResult();
-        } catch (Exception e) {
-            return 0l;
-        }
     }
 
     @Override
@@ -473,13 +471,6 @@ public class OrderServiceImpl implements OrderService {
 
             return 0;
         }
-    }
-
-    void updateRuptureDetail(Rupture r, String ruptureId) {
-        ruptureDetaisDtoByRupture(ruptureId).stream().forEach(e -> {
-            e.setRupture(r);
-            this.getEmg().merge(e);
-        });
     }
 
     @Override
@@ -611,13 +602,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public TOrder createOrder(TGrossiste grossiste, TUser u) {
-        TOrder order = new TOrder(RandomStringUtils.randomAlphabetic(20));
+        TOrder order = new TOrder(new KeyUtilGen().getComplexId());
         order.setDtCREATED(new Date());
-        order.setDtUPDATED(new Date());
+        order.setDtUPDATED(order.getDtCREATED());
         order.setLgGROSSISTEID(grossiste);
         order.setStrREFORDER(genererReferenceCommande());
-        order.setStrSTATUT(DateConverter.PASSE);
+        order.setStrSTATUT(Constant.STATUT_PASSED);
         order.setIntPRICE(0);
+        order.setLgUSERID(u);
         return order;
 
     }
@@ -656,20 +648,20 @@ public class OrderServiceImpl implements OrderService {
         return detail;
     }
 
-    private void saveMouvementPrice(TFamille OTFamille, int int_PRICE, int int_PRICE_OLD, String str_REF, TUser u) {
+    private void saveMouvementPrice(TFamille famille, int prix, int oldPrice, String ref, TUser u) {
 
         try {
             TMouvementprice mouvementprice = new TMouvementprice(UUID.randomUUID().toString());
             mouvementprice.setLgUSERID(u);
             mouvementprice.setStrACTION(commonparameter.code_action_commande);
             mouvementprice.setDtUPDATED(new Date());
-            mouvementprice.setDtCREATED(new Date());
-            mouvementprice.setIntPRICENEW(int_PRICE);
-            mouvementprice.setIntPRICEOLD(int_PRICE_OLD);
-            mouvementprice.setStrREF(str_REF);
+            mouvementprice.setDtCREATED(mouvementprice.getDtCREATED());
+            mouvementprice.setIntPRICENEW(prix);
+            mouvementprice.setIntPRICEOLD(oldPrice);
+            mouvementprice.setStrREF(ref);
             mouvementprice.setDtDAY(new Date());
-            mouvementprice.setStrSTATUT(commonparameter.statut_enable);
-            mouvementprice.setLgFAMILLEID(OTFamille);
+            mouvementprice.setStrSTATUT(Constant.STATUT_ENABLE);
+            mouvementprice.setLgFAMILLEID(famille);
             this.getEmg().persist(mouvementprice);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -846,8 +838,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public JSONObject fetch(String search, Set<String> status, int start, int limit) {
-        long count = count(search, status);
-        return FunctionUtils.returnData(getCommandes(search, status, start, limit), count);
+        long count = getOrderCount(search, status);
+        return FunctionUtils.returnData(getOrders(search, status, start, limit), count);
 
     }
 
@@ -950,6 +942,12 @@ public class OrderServiceImpl implements OrderService {
             order.setDtUPDATED(new Date());
             getEmg().persist(order);
         }
+        if (Constant.STATUT_IS_PROGRESS.equals(order.getStrSTATUT())) {
+            this.productStateService.remove(item.getLgFAMILLEID(), ProductStateEnum.COMMANDE_EN_COURS);
+        } else if (Constant.STATUT_PASSED.equals(order.getStrSTATUT())) {
+            this.productStateService.remove(item.getLgFAMILLEID(), ProductStateEnum.COMMANDE_PASSE);
+        }
+
     }
 
     @Override
@@ -1025,8 +1023,8 @@ public class OrderServiceImpl implements OrderService {
             Date dt_last_date = keyUtilGen.stringToDate(jsonObject.getString("str_last_date"),
                     keyUtilGen.formatterMysqlShort2);
 
-            String str_lasd = keyUtilGen.dateToString(dt_last_date, keyUtilGen.formatterMysqlShort2);
-            String str_actd = keyUtilGen.dateToString(date, keyUtilGen.formatterMysqlShort2);
+            String str_lasd = KeyUtilGen.dateToString(dt_last_date, keyUtilGen.formatterMysqlShort2);
+            String str_actd = KeyUtilGen.dateToString(date, keyUtilGen.formatterMysqlShort2);
 
             if (!str_lasd.equals(str_actd)) {
                 int_last_code = 0;
@@ -1059,7 +1057,7 @@ public class OrderServiceImpl implements OrderService {
         JSONObject json = new JSONObject();
         JSONArray arrayObj = new JSONArray();
         json.put("int_last_code", str_last_code);
-        json.put("str_last_date", keyUtilGen.dateToString(date, keyUtilGen.formatterMysqlShort2));
+        json.put("str_last_date", KeyUtilGen.dateToString(date, keyUtilGen.formatterMysqlShort2));
         arrayObj.put(json);
         String jsonData = arrayObj.toString();
 
@@ -1117,8 +1115,7 @@ public class OrderServiceImpl implements OrderService {
             detail.setIntORERSTATUS((short) 2);
             detail.setPrixAchat(familleGrossiste.getIntPAF());
             this.getEmg().persist(detail);
-            famille.setBCODEINDICATEUR((short) 1);
-            this.getEmg().merge(famille);
+            this.productStateService.addState(famille, ProductStateEnum.COMMANDE_EN_COURS);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             throw e;
@@ -1184,67 +1181,225 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void passerLaCommande(String orderId) {
-        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_PASSED, (short) 3);
+
+        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_PASSED,
+                ProductStateEnum.COMMANDE_EN_COURS, ProductStateEnum.COMMANDE_PASSE);
     }
 
     @Override
     public void changerEnCommandeEnCours(String orderId) {
-        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_IS_PROGRESS, (short) 2);
+        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_IS_PROGRESS,
+                ProductStateEnum.COMMANDE_PASSE, ProductStateEnum.COMMANDE_EN_COURS);
     }
 
-    private void changeOrderStatuts(TOrder order) {
+    private void changeOrderStatuts(TOrder order, String status, ProductStateEnum currentStaut,
+            ProductStateEnum productStateEnum) {
         Date toDay = new Date();
-        try {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaUpdate<TOrderDetail> cq = cb.createCriteriaUpdate(TOrderDetail.class);
-            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
-            cq.set(root.get(TOrderDetail_.strSTATUT), Constant.STATUT_PASSED)
-                    .set(root.get(TOrderDetail_.dtUPDATED), toDay)
-                    .set(root.get(TOrderDetail_.intORERSTATUS), (short) 3);
-
-            cq.where(cb.equal(root.get(TOrderDetail_.lgORDERID), order));
-            getEmg().createQuery(cq).executeUpdate();
-            order.setStrSTATUT(Constant.STATUT_PASSED);
-            order.setDtUPDATED(toDay);
-            getEmg().merge(order);
-
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-
-        }
-    }
-
-    private void changeOrderStatuts(TOrder order, String status, short statutOrder) {
-        Date toDay = new Date();
-        // (short) 3
 
         order.getTOrderDetailCollection().forEach(it -> {
-            updateOrderItemStatut(it, status, statutOrder, toDay);
-            updateFamilleStatut(it.getLgFAMILLEID(), statutOrder, toDay);
+            updateOrderItemStatut(it, status, toDay);
+            updateFamilleStatut(it.getLgFAMILLEID(), currentStaut, productStateEnum);
         });
-
-        // order.setStrSTATUT(Constant.STATUT_PASSED);
         order.setDtUPDATED(toDay);
         order.setStrSTATUT(status);
         getEmg().merge(order);
 
     }
 
-    private void updateOrderItemStatut(TOrderDetail detail, String status, short statutOrder, Date date) {
+    private void updateOrderItemStatut(TOrderDetail detail, String status, Date date) {
         detail.setStrSTATUT(status);
-        detail.setIntORERSTATUS(statutOrder);
         detail.setDtUPDATED(date);
         getEmg().merge(detail);
 
     }
 
-    private void updateFamilleStatut(TFamille famille, short statutOrder, Date date) {
-        short st = famille.getIntORERSTATUS();
-        if (st < 4) {
-            famille.setIntORERSTATUS(statutOrder);
-            famille.setDtUPDATED(date);
-            getEmg().merge(famille);
-        }
+    private void updateFamilleStatut(TFamille famille, ProductStateEnum currentStaut,
+            ProductStateEnum productStateEnum) {
+        productStateService.manageProduitState(famille, currentStaut, productStateEnum);
 
+    }
+
+    private TOrder createOrderFromSuggession(TGrossiste grossiste, TUser u, KeyUtilGen keyUtilGen) {
+        TOrder order = new TOrder(keyUtilGen.getComplexId());
+        order.setDtCREATED(new Date());
+        order.setDtUPDATED(order.getDtCREATED());
+        order.setLgGROSSISTEID(grossiste);
+        order.setStrREFORDER(genererReferenceCommande());
+        order.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        order.setIntPRICE(0);
+        order.setLgUSERID(u);
+        this.em.persist(order);
+        return order;
+
+    }
+
+    @Override
+    public void transformSuggestionToOrder(String suggestionId, TUser user) {
+        KeyUtilGen keyUtilGen = new KeyUtilGen();
+        TSuggestionOrder suggestionOrder = em.find(TSuggestionOrder.class, suggestionId);
+        TGrossiste grossiste = suggestionOrder.getLgGROSSISTEID();
+        TOrder order = createOrderFromSuggession(grossiste, user, keyUtilGen);
+        for (TSuggestionOrderDetails details : suggestionOrder.getTSuggestionOrderDetailsCollection()) {
+            createOrderDetail(order, details, grossiste, keyUtilGen);
+        }
+        em.remove(suggestionOrder);
+    }
+
+    private void createOrderDetail(TOrder order, TSuggestionOrderDetails details, TGrossiste grossiste,
+            KeyUtilGen keyUtilGen) {
+        TFamille famille = details.getLgFAMILLEID();
+
+        TOrderDetail orderDetail = new TOrderDetail();
+        orderDetail.setLgORDERDETAILID(keyUtilGen.getComplexId());
+        orderDetail.setLgORDERID(order);
+        orderDetail.setIntNUMBER(details.getIntNUMBER());
+        orderDetail.setIntQTEREPGROSSISTE(orderDetail.getIntNUMBER());
+        orderDetail.setIntQTEMANQUANT(orderDetail.getIntNUMBER());
+        orderDetail.setIntPAFDETAIL(details.getIntPAFDETAIL());
+        orderDetail.setIntPRICEDETAIL(details.getIntPRICEDETAIL());
+        orderDetail.setIntPRICE(orderDetail.getIntNUMBER() * orderDetail.getIntPRICEDETAIL());
+        orderDetail.setLgFAMILLEID(famille);
+        orderDetail.setLgGROSSISTEID(grossiste);
+        orderDetail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        orderDetail.setDtCREATED(order.getDtCREATED());
+        orderDetail.setDtUPDATED(order.getDtCREATED());
+        em.persist(orderDetail);
+        productStateService.manageProduitState(famille, ProductStateEnum.SUGGESTION,
+                ProductStateEnum.COMMANDE_EN_COURS);
+        em.remove(details);
+    }
+
+    @Override
+    public void removeOrder(String orderId) {
+        TOrder order = em.find(TOrder.class, orderId);
+        ProductStateEnum productStateEnum = Constant.STATUT_IS_PROGRESS.equals(order.getStrSTATUT())
+                ? ProductStateEnum.COMMANDE_EN_COURS : ProductStateEnum.COMMANDE_PASSE;
+        order.getTOrderDetailCollection().forEach(it -> {
+            TFamille famille = it.getLgFAMILLEID();
+            em.remove(it);
+            this.productStateService.remove(famille, productStateEnum);
+        });
+    }
+
+    private String buildQuery(String search, String sql) {
+        if (StringUtils.isNotEmpty(search)) {
+            search = search + "%";
+            return sql.replace("{searchPlaceHolder}",
+                    " AND (o.`str_REF_ORDER` LIKE '{search}' OR p.`int_CIP` LIKE '{search}'  OR p.`str_NAME` LIKE '{search}') "
+                            .replace("{search}", search));
+        }
+        return sql.replace("{searchPlaceHolder}", " ");
+    }
+
+    private List<Tuple> getListOrder(String search, Set<String> status, int start, int limit) {
+        try {
+            Query q = em.createNativeQuery(buildQuery(search, QUERY), Tuple.class).setParameter(1, status);
+            q.setFirstResult(start);
+            q.setMaxResults(limit);
+            return q.getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new ArrayList<>();
+        }
+    }
+
+    private int getOrderCount(String query, Set<String> status) {
+        try {
+            Query q = em.createNativeQuery(buildQuery(query, QUERY_COUNT)).setParameter(1, status);
+
+            return ((Number) q.getSingleResult()).intValue();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private List<CommandeDTO> getOrders(String search, Set<String> status, int start, int limit) {
+        return getListOrder(search, status, start, limit).stream().map(this::buildFromTuple)
+                .collect(Collectors.toList());
+    }
+
+    private CommandeDTO buildFromTuple(Tuple t) {
+
+        CommandeDTO commande = new CommandeDTO();
+        commande.setMobile(t.get("mobile", String.class));
+        commande.setTelephone(t.get("telephone", String.class));
+        commande.setLgGROSSISTEID(t.get("grossisteId", String.class));
+        commande.setLgORDERID(t.get("orderId", String.class));
+        commande.setLibelleGrossiste(t.get("libelleGrossiste", String.class));
+        commande.setUrlPharma(t.get("urlPharma", String.class));
+        commande.setUrlExtranet(t.get("urlExtranet", String.class));
+        commande.setUserFullName(t.get("userName", String.class).charAt(0) + "." + t.get("userLastName", String.class));
+        commande.setDtCREATED(t.get("dateCreation", String.class));
+        commande.setDtUPDATED(t.get("heureCreation", String.class));
+        commande.setStrSTATUT(t.get("status", String.class));
+        commande.setStrRefOrder(t.get("refernceOrder", String.class));
+        commande.setNbreLigne(t.get("itemCount", BigInteger.class).intValue());
+        commande.setTotalQty(t.get("productCount", BigDecimal.class).intValue());
+        commande.setMontantAchat(t.get("montantAchat", BigDecimal.class).intValue());
+        commande.setMontantVente(t.get("montantVente", BigDecimal.class).intValue());
+        return commande;
+    }
+
+    private TOrderDetail createMergeOrderDetail(TOrder order, TOrderDetail tod, TGrossiste grossiste,
+            KeyUtilGen keyUtilGen) {
+        TFamille famille = tod.getLgFAMILLEID();
+
+        TOrderDetail orderDetail = new TOrderDetail();
+        orderDetail.setLgORDERDETAILID(keyUtilGen.getComplexId());
+        orderDetail.setLgORDERID(order);
+        orderDetail.setIntNUMBER(tod.getIntNUMBER());
+        orderDetail.setIntQTEREPGROSSISTE(orderDetail.getIntNUMBER());
+        orderDetail.setIntQTEMANQUANT(orderDetail.getIntNUMBER());
+        orderDetail.setIntPAFDETAIL(tod.getIntPAFDETAIL());
+        orderDetail.setIntPRICEDETAIL(tod.getIntPRICEDETAIL());
+        orderDetail.setIntPRICE(orderDetail.getIntNUMBER() * orderDetail.getIntPRICEDETAIL());
+        orderDetail.setLgFAMILLEID(famille);
+        orderDetail.setLgGROSSISTEID(grossiste);
+        orderDetail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        orderDetail.setDtCREATED(order.getDtCREATED());
+        orderDetail.setDtUPDATED(order.getDtCREATED());
+        em.persist(orderDetail);
+
+        em.remove(tod);
+        return orderDetail;
+    }
+
+    @Override
+    public void mergeOrder(CommandeIdsDTO commandeIds) {
+        String[] orderIds = commandeIds.getOrderId();
+        String firstId = orderIds[0];
+        TOrder order = this.em.find(TOrder.class, firstId);
+        TGrossiste grossiste = order.getLgGROSSISTEID();
+        Collection<TOrderDetail> tOrderDetailCollection = order.getTOrderDetailCollection();
+        KeyUtilGen keyUtilGen = new KeyUtilGen();
+        for (String id : orderIds) {
+            if (!firstId.equals(id)) {
+                TOrder order0 = this.em.find(TOrder.class, id);
+                for (TOrderDetail tOrderDetail : order0.getTOrderDetailCollection()) {
+                    TFamille famille = tOrderDetail.getLgFAMILLEID();
+                    boolean isExist = false;
+                    for (TOrderDetail o : tOrderDetailCollection) {
+                        if (famille.getLgFAMILLEID().equals(o.getLgFAMILLEID().getLgFAMILLEID())) {
+                            o.setIntNUMBER(o.getIntNUMBER() + tOrderDetail.getIntNUMBER());
+                            this.em.merge(o);
+                            this.productStateService.remove(famille, ProductStateEnum.COMMANDE_EN_COURS);
+                            isExist = true;
+                        }
+                    }
+                    if (!isExist) {
+                        TOrderDetail orderDetail = createMergeOrderDetail(order, tOrderDetail, grossiste, keyUtilGen);
+                        tOrderDetailCollection.add(orderDetail);
+                        this.productStateService.addState(famille, ProductStateEnum.COMMANDE_EN_COURS);
+                    }
+                }
+                this.em.remove(order0);
+                order.setDtUPDATED(new Date());
+                this.em.merge(order);
+
+            }
+        }
     }
 }

@@ -15,7 +15,6 @@ var int_total_formated;
 var titre;
 var int_montant_vente;
 var LaborexWorkFlow, myAppController;
-var store_famille_dovente = null;
 var int_montant_achat;
 
 
@@ -67,11 +66,11 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         titre = this.getTitre();
         myAppController = Ext.create('testextjs.controller.App', {});
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
-        store_famille_dovente = LaborexWorkFlow.BuildStore('testextjs.model.Famille', itemsPerPage, url_services_data_famille_select_suggestion);
-        var AppController = testextjs.app.getController('App');
+
+        const AppController = testextjs.app.getController('App');
         ref = this.getNameintern();
-        var store = Ext.create('testextjs.store.SearchStore');
-        var storerepartiteur = new Ext.data.Store({
+        const store = Ext.create('testextjs.store.SearchStore');
+        const storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
             pageSize: 999,
             autoLoad: false,
@@ -87,22 +86,22 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
         });
 
-        var store_details_sugg = new Ext.data.Store({
+        const store_details_sugg = new Ext.data.Store({
             model: 'testextjs.model.TSuggestionOrderDetails',
             pageSize: itemsPerPageGrid,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../suggestion',
+                url: '../api/v1/suggestion/list/items',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 }
             }
 
         });
-        var int_BUTOIR = new Ext.form.field.Display(
+        const int_BUTOIR = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
                     fieldLabel: 'Butoir ::',
@@ -113,7 +112,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     margin: '0 15 0 0',
                     value: "0"
                 });
-        var int_VENTE = new Ext.form.field.Display(
+        const int_VENTE = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
                     fieldLabel: 'Valeur Vente ::',
@@ -124,7 +123,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     margin: '0 15 0 0',
                     value: "0"
                 });
-        var int_ACHAT = new Ext.form.field.Display(
+        const int_ACHAT = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
                     fieldLabel: 'Valeur Achat ::',
@@ -140,7 +139,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         });
         Ext.apply(this, {
             width: '98%',
-//            height:Ext.getBody().getViewSize().height*0.85,         
             fieldDefaults: {
                 labelAlign: 'left',
                 labelWidth: 90,
@@ -193,7 +191,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                         select: function (cmp) {
                                             let value = cmp.getValue();
                                             if (titre === 'Suggerer une commande') {
-                                        
+
                                                 Me_Window.onchangeGrossiste();
                                             }
 
@@ -250,13 +248,12 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                         emptyText: 'Pas de données trouvées.',
                                         getInnerTpl: function () {
                                             return '<tpl for="."><tpl if="int_NUMBER_AVAILABLE <=0"><span style="color:#17987e;font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right;"> ( {int_PRICE} )</span></span><tpl else><span style="font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right; "> ( {int_PRICE} )</span></span></tpl></tpl>';
-//                                            return '<span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right; font-weight:600;"> ({int_PRICE})</span><br>';
                                         }
                                     },
                                     listeners: {
                                         select: function (cmp) {
-                                            var value = cmp.getValue();
-                                            var record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
+                                            const value = cmp.getValue();
+                                            const record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
 
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
                                             if (cmp.getValue() === "0" || cmp.getValue() === "Ajouter un nouvel article") {
@@ -356,50 +353,22 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     flex: 0.7,
                                     sortable: true,
                                     dataIndex: 'str_FAMILLE_CIP',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return v;
-                                    }
+                                    renderer: Me_Window.columnRenderer
                                 },
                                 {
                                     text: 'LIBELLE',
                                     flex: 2.5,
                                     sortable: true,
                                     dataIndex: 'str_FAMILLE_NAME',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-                                        return v;
-                                    }
+                                    renderer: Me_Window.columnRenderer
                                 },
                                 {
                                     text: 'PRIX.VENTE',
                                     flex: 1,
                                     sortable: true,
                                     dataIndex: 'lg_FAMILLE_PRIX_VENTE',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    },
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer,
 
                                     editor: {
                                         xtype: 'numberfield',
@@ -414,16 +383,9 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     flex: 1,
                                     sortable: true,
                                     hidden: true,
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
 
-                                        return amountformat(v);
-                                    },
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer,
                                     dataIndex: 'lg_FAMILLE_PRIX_ACHAT',
                                     editor: {
                                         xtype: 'numberfield',
@@ -438,17 +400,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     flex: 1,
                                     sortable: true,
                                     dataIndex: 'int_PAF_SUGG',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    },
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer,
                                     editor: {
                                         xtype: 'numberfield',
                                         minValue: 1,
@@ -461,17 +414,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     flex: 1,
                                     sortable: true,
                                     hidden: true,
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    },
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer,
                                     dataIndex: 'int_PRIX_REFERENCE'
                                 },
                                 {
@@ -479,34 +423,16 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     flex: 1,
                                     sortable: true,
                                     dataIndex: 'int_STOCK',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    }
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer
                                 },
                                 {
                                     text: 'SEUIL',
                                     flex: 1,
                                     sortable: true,
                                     dataIndex: 'int_SEUIL',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    },
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer,
                                     editor: {
                                         xtype: 'numberfield',
                                         minValue: 1,
@@ -518,17 +444,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                 {
                                     header: 'Q.CDE',
                                     dataIndex: 'int_NUMBER',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    },
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer,
                                     flex: 1,
                                     editor: {
                                         xtype: 'numberfield',
@@ -541,69 +458,32 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                 {
                                     header: AppController.getMonthToDisplay(0, currentMonth),
                                     dataIndex: 'int_VALUE0',
-                                    align: 'center',
+
                                     flex: 1,
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    }
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer
                                 },
                                 {
                                     header: AppController.getMonthToDisplay(1, currentMonth),
                                     dataIndex: 'int_VALUE1',
-                                    align: 'center',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
+                                    align: 'right',
 
-
-                                        return amountformat(v);
-                                    },
+                                    renderer: Me_Window.numberColumnRenderer,
                                     flex: 0.7
                                 },
                                 {
                                     header: AppController.getMonthToDisplay(2, currentMonth),
                                     dataIndex: 'int_VALUE2',
-                                    align: 'center',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    },
+                                    align: 'right',
+                                    format: '0,000.',
+                                    renderer: Me_Window.numberColumnRenderer,
                                     flex: 0.7
                                 },
                                 {
                                     header: AppController.getMonthToDisplay(3, currentMonth),
                                     dataIndex: 'int_VALUE3',
-                                    align: 'center',
-                                    renderer: function (v, m, r) {
-                                        if (r.data.STATUS === 1) {
-                                            m.style = 'background-color:#73C774;';
-                                        }
-                                        if (r.data.STATUS === 2) {
-                                            m.style = 'background-color:#5fa2dd;';
-                                        }
-
-
-                                        return amountformat(v);
-                                    },
+                                    align: 'right',
+                                    renderer: Me_Window.numberColumnRenderer,
                                     flex: 0.7
                                 },
                                 {
@@ -684,18 +564,18 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     beforechange: function (page, currentPage) {
                                         const myProxy = this.store.getProxy();
                                         myProxy.params = {
-                                            search_value: '', lg_SUGGESTION_ORDER_ID: ''
+                                            query: '', orderId: ref
                                         };
 
-                                        myProxy.setExtraParam('search_value', Ext.getCmp('rechercherDetail').getValue());
-                                        myProxy.setExtraParam('lg_SUGGESTION_ORDER_ID', ref);
+                                        myProxy.setExtraParam('query', Ext.getCmp('rechercherDetail').getValue());
+                                        myProxy.setExtraParam('orderId', ref);
                                     }
 
                                 }
                             },
                             listeners: {
                                 scope: this
-                                        //selectionchange: this.onSelectionChange
+
                             }
                         }]
                 },
@@ -741,8 +621,14 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
             Ext.getCmp('int_DATE_BUTOIR_ARTICLE').setValue(this.getOdatasource().int_DATE_BUTOIR_ARTICLE);
             const url = '../suggestion?lg_SUGGESTION_ORDER_ID=' + ref;
-            OgridpanelSuggestionID.getStore().getProxy().url = url;
-            OgridpanelSuggestionID.getStore().load();
+//            OgridpanelSuggestionID.getStore().getProxy().url = url;
+            OgridpanelSuggestionID.getStore().load({
+                params: {
+                    orderId: ref,
+                    query: null
+                }
+
+            });
 
 
         }
@@ -865,12 +751,10 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             Ext.Ajax.request({
                 url: url_services_transaction_suggerercde + 'create',
                 params: {
-//                    lg_FAMILLE_ID: Ext.getCmp('str_NAME').getValue(), ancienne bonne version
                     lg_FAMILLE_ID: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
                     lg_SUGGESTION_ORDER_ID: ref,
                     lg_SUGGESTION_ORDER_DETAILS_ID: null,
                     lg_GROSSISTE_ID: Ext.getCmp('lg_GROSSISTE_ID').getValue(),
-//                    int_NUMBER: 1
                     int_NUMBER: Ext.getCmp('int_QUANTITE').getValue()
 
                 },
@@ -1223,5 +1107,38 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             }
         });
 
+    },
+    manageColor: function (r) {
+        const produitStates = r?.data?.produitStates;
+        const SUGGESTION = produitStates?.SUGGESTION;
+        const COMMANDE_EN_COURS = produitStates?.COMMANDE_EN_COURS;
+        const COMMANDE_PASSE = produitStates?.COMMANDE_PASSE;
+        const ENTREE = produitStates?.ENTREE;
+        if (SUGGESTION !== undefined && SUGGESTION > 1) {
+            return 'background-color:#73C774;';
+        }
+        if (COMMANDE_EN_COURS !== undefined && COMMANDE_EN_COURS > 0) {
+            return 'background-color:#5fa2dd;';
+        }
+        if (COMMANDE_PASSE !== undefined && COMMANDE_PASSE > 0) {
+            return 'background-color:#f98012;';
+        }
+        if (ENTREE !== undefined && ENTREE > 0) {
+            return 'background-color:#a62a3e;';
+        }
+
+        return '';
+
+    },
+    columnRenderer: function (v, m, r) {
+        const st = Me_Window.manageColor(r);
+        m.style = st;
+        return v;
+
+    },
+    numberColumnRenderer: function (v, m, r) {
+        const st = Me_Window.manageColor(r);
+        m.style = st;
+        return amountformat(v);
     }
 });

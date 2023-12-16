@@ -49,18 +49,18 @@ public class UserServiceImpl implements UserService {
                             "SELECT t FROM TUser t  WHERE t.strLOGIN = ?1 AND t.strPASSWORD = ?2 AND t.strSTATUT =?3 ",
                             TUser.class)
                     .setParameter(1, managedUser.getLogin()).setParameter(2, Md5.encode(managedUser.getPassword()))
-                    .setParameter(3, DateConverter.STATUT_ENABLE).setMaxResults(1);
-            TUser OTUser = q.getSingleResult();
-            OTUser.setStrLASTCONNECTIONDATE(new Date());
-            OTUser.setIntCONNEXION(OTUser.getIntCONNEXION() + 1);
-            OTUser.setBIsConnected(true);
-            getEm().merge(OTUser);
-            String desc = "Authentification de " + OTUser.getStrFIRSTNAME() + " " + OTUser.getStrLASTNAME()
+                    .setParameter(3, Constant.STATUT_ENABLE).setMaxResults(1);
+            TUser user = q.getSingleResult();
+            user.setStrLASTCONNECTIONDATE(new Date());
+            user.setIntCONNEXION(user.getIntCONNEXION() + 1);
+            user.setBIsConnected(true);
+            getEm().merge(user);
+            String desc = "Authentification de " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME()
                     + " à partir de l'adresse " + request.getRemoteAddr() + " : nom poste " + getHostName(request);
-            logService.updateLogFile(OTUser, OTUser.getStrLOGIN(), desc, TypeLog.AUTHENTIFICATION, OTUser,
+            logService.updateLogFile(user, user.getStrLOGIN(), desc, TypeLog.AUTHENTIFICATION, user,
                     getHostName(request), request.getRemoteAddr());
-            afficheur("Caisse: " + OTUser.getStrLASTNAME());
-            return OTUser;
+            afficheur("Caisse: " + user.getStrLASTNAME());
+            return user;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return null;

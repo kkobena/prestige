@@ -56,7 +56,6 @@ Ext.define('testextjs.model.TSuggestionOrderDetails', {
             type: 'string'
 
         },
-        //lg_FAMILLE_PRIX_VENTE
         {
             name: 'lg_FAMILLE_PRIX_VENTE',
             type: 'int'
@@ -73,7 +72,6 @@ Ext.define('testextjs.model.TSuggestionOrderDetails', {
             name: 'int_VENTE',
             type: 'string'
         },
-        // str_CODE_ARTICLE
         {
             name: 'str_CODE_ARTICLE',
             type: 'string'
@@ -215,7 +213,10 @@ Ext.define('testextjs.model.TSuggestionOrderDetails', {
             name: 'bool_DECONDITIONNE_EXIST',
             type: 'int'
         }
-        
-        //fin code ajouté
+        ,
+        {
+            name: 'produitStates',
+            type: 'auto'
+        }
     ]
 });
