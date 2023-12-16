@@ -6,8 +6,10 @@
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -295,6 +297,8 @@ public class TFamille implements Serializable {
     private boolean scheduled = false;
     @Column(name = "cmu_price")
     private Integer cmuPrice;
+    @OneToMany(mappedBy = "produit")
+    private List<ProductState> productStates = new ArrayList<>();
 
     public int getVersion() {
         return version;
@@ -322,6 +326,14 @@ public class TFamille implements Serializable {
 
     public void setGamme(GammeProduit gamme) {
         this.gamme = gamme;
+    }
+
+    public List<ProductState> getProductStates() {
+        return productStates;
+    }
+
+    public void setProductStates(List<ProductState> productStates) {
+        this.productStates = productStates;
     }
 
     public Laboratoire getLaboratoire() {

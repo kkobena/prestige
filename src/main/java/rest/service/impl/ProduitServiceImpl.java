@@ -1824,35 +1824,35 @@ public class ProduitServiceImpl implements ProduitService {
                 q.setParameter(k, v);
             });
             List<Object[]> result = q.getResultList();
-            LongAdder _montantFacture = new LongAdder();
-            LongAdder _montantPu = new LongAdder();
-            LongAdder _montantTarif = new LongAdder();
+            LongAdder montantFacture0 = new LongAdder();
+            LongAdder montantPu0 = new LongAdder();
+            LongAdder montantTarif0 = new LongAdder();
             LongAdder pmp = new LongAdder();
-            LongAdder _qty = new LongAdder();
-            result.forEach((_item) -> {
+            LongAdder qty0 = new LongAdder();
+            result.forEach(item0 -> {
                 ValorisationDTO dTO = new ValorisationDTO();
-                Integer montantFacture = Integer.valueOf(_item[0] + "");
-                _montantFacture.add(montantFacture);
+                Integer montantFacture = Integer.valueOf(item0[0] + "");
+                montantFacture0.add(montantFacture);
                 dTO.setMontantFacture(montantFacture);
-                Integer montantPu = Integer.valueOf(_item[1] + "");
+                Integer montantPu = Integer.valueOf(item0[1] + "");
                 dTO.setMontantPu(montantPu);
-                _montantPu.add(montantPu);
-                Integer montantTarif = Integer.valueOf(_item[2] + "");
-                _montantTarif.add(montantTarif);
+                montantPu0.add(montantPu);
+                Integer montantTarif = Integer.valueOf(item0[2] + "");
+                montantTarif0.add(montantTarif);
                 dTO.setMontantTarif(montantTarif);
-                Integer qty = Integer.valueOf(_item[3] + "");
-                _qty.add(qty);
-                int _pmp = Double.valueOf(_item[4] + "").intValue();
-                pmp.add(_pmp);
-                dTO.setMontantPmd(_pmp);
-                dTO.setLibelle("Tva " + _item[5]);
+                Integer qty = Integer.valueOf(item0[3] + "");
+                qty0.add(qty);
+                int pmp0 = Double.valueOf(item0[4] + "").intValue();
+                pmp.add(pmp0);
+                dTO.setMontantPmd(pmp0);
+                dTO.setLibelle("Tva " + item0[5]);
                 os.add(dTO);
             });
 
             valorisation.setDatas(os);
-            valorisation.setMontantFacture(_montantFacture.intValue());
-            valorisation.setMontantTarif(_montantTarif.intValue());
-            Integer montantPu = _montantPu.intValue();
+            valorisation.setMontantFacture(montantFacture0.intValue());
+            valorisation.setMontantTarif(montantTarif0.intValue());
+            Integer montantPu = montantPu0.intValue();
             valorisation.setMontantPu(montantPu);
             valorisation.setMontantPmd(pmp.intValue());
 

@@ -102,8 +102,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                 url: '../api/v1/grossiste/all',
-                //url: '../webservices/configmanagement/grossiste/ws_data.jsp',
+                url: '../api/v1/grossiste/all',
+
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -256,7 +256,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 {
                                     xtype: 'combobox',
                                     fieldLabel: 'Article',
-                                   // id: 'str_NAME',
+                                    // id: 'str_NAME',
                                     store: produitStore,
                                     pageSize: 10,
                                     valueField: 'lgFAMILLEID',
@@ -272,7 +272,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     minChars: 3,
                                     queryCaching: false,
 //                                    selectOnFocus: true,
-  hidden: true,
+                                    hidden: true,
                                     emptyText: 'Choisir un article par Nom ou Cip...',
 //                                    triggerAction: 'all',
                                     listConfig: {
@@ -305,10 +305,10 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     xtype: 'combobox',
                                     fieldLabel: 'Article',
                                     name: 'str_NAME',
-                                     id: 'str_NAME',
+                                    id: 'str_NAME',
                                     store: store,
                                     margins: '0 10 5 10',
-                                  
+
                                     valueField: 'CIP',
                                     displayField: 'str_DESCRIPTION',
                                     enableKeyEvents: true,
@@ -800,9 +800,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     loadStore: function () {
         Me_Window.onRechClick();
     },
-   
+
     onbtndetail: function () {
-        
+
         new testextjs.view.configmanagement.famille.action.detailArticle({
 
             produitId: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
