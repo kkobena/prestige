@@ -8,6 +8,10 @@ import java.util.List;
  */
 public final class Constant {
 
+    public static final String DECONDTIONNEMENT_POSITIF = "05";
+    public static final String DECONDTIONNEMENT_NEGATIF = "06";
+    public static final String AJUSTEMENT_NEGATIF = "07";
+    public static final String AJUSTEMENT_POSITIF = "08";
     public static final String TMVTP_ANNUL_VENTE_DEPOT_EXTENSION = "14";
     public static final String INVENTAIRE = "04";
     public static final String STATUT_ENTREE_STOCK = "ENTREE_STOCK";
@@ -54,6 +58,18 @@ public final class Constant {
     public static final String ANNULATION_DE_VENTE = "03";
     public static final String REGL_DIFF = "4";
     public static final String VENTE_AVEC_CARNET = "3";
+    public static final String VENTE_COMPTANT_ID = "1";
+    public static final String VENTE_ASSURANCE_ID = "2";
+    public static final String ENTREE_EN_STOCK = "01";
+    public static final String VENTE_DEPOT_AGREE = "4";
+    public static final String VENTE_DEPOT_EXTENSION = "5";
+    public static final String TMVTP_VENTE_DEPOT_EXTENSION = "12";
+    public static final String RETOUR_FOURNISSEUR = "09";
+    public static final String TMVTP_RETOUR_DEPOT = "13";
+    public static final String NOT = "NOT";
+    public static final String WITH = "WITH";
+    public static final String TOUT = "TOUT";
+    public static final String ALL = "ALL";
 
     private Constant() {
     }

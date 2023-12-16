@@ -115,10 +115,9 @@ import rest.service.*;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import util.Afficheur;
-import util.Constant;
 import util.DateConverter;
 
-import static util.Constant.STATUT_IS_CLOSED;
+import static util.Constant.*;
 
 /**
  * @author Kobena
@@ -237,7 +236,7 @@ public class SalesServiceImpl implements SalesService {
         MvtTransaction transactionNew = new MvtTransaction();
         Integer montantPaid = 0;
         int montantRestant = montantClient;
-        if (typeReglement.equals(Constant.MODE_ESP) || typeReglement.equals(Constant.REGL_DIFF)) {
+        if (typeReglement.equals(MODE_ESP) || typeReglement.equals(REGL_DIFF)) {
             if (montantVerse > 0 && montantClient > 0) {
                 int compare = montantClient.compareTo(montantVerse);
                 if (compare <= 0) {
@@ -402,7 +401,7 @@ public class SalesServiceImpl implements SalesService {
             TypedQuery<TResumeCaisse> q = emg.createQuery(
                     "SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID = ?1  AND t.strSTATUT = ?2 ",
                     TResumeCaisse.class);
-            q.setParameter(1, ooTUser.getLgUSERID()).setParameter(2, Constant.STATUT_IS_USING).setMaxResults(1);
+            q.setParameter(1, ooTUser.getLgUSERID()).setParameter(2, STATUT_IS_USING).setMaxResults(1);
             return Optional.ofNullable(q.getSingleResult());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -416,7 +415,7 @@ public class SalesServiceImpl implements SalesService {
             TypedQuery<TResumeCaisse> q = this.getEm().createQuery(
                     "SELECT t FROM TResumeCaisse t WHERE t.lgUSERID.lgUSERID = ?1  AND t.strSTATUT = ?2 ",
                     TResumeCaisse.class);
-            q.setParameter(1, ooTUser.getLgUSERID()).setParameter(2, Constant.STATUT_IS_USING).setMaxResults(1);
+            q.setParameter(1, ooTUser.getLgUSERID()).setParameter(2, STATUT_IS_USING).setMaxResults(1);
             return (q.getSingleResult() != null);
         } catch (Exception e) {
             return false;
@@ -532,7 +531,7 @@ public class SalesServiceImpl implements SalesService {
                 montantRestant.add(cp.getIntPRICERESTE());
                 cp.setIntPRICE(0);
                 cp.setIntPRICERESTE(0);
-                cp.setStrSTATUT(Constant.STATUT_DELETE);
+                cp.setStrSTATUT(STATUT_DELETE);
                 cp.setDtUPDATED(new Date());
                 emg.merge(cp);
             });
@@ -559,7 +558,7 @@ public class SalesServiceImpl implements SalesService {
             oprectte.ifPresent(re -> copyRecette(newItem, re, ooTUser));
 
             findClientTiersPayents(tp.getLgPREENREGISTREMENTID(), emg).forEach(cpClient -> {
-                cpClient.setStrSTATUT(Constant.STATUT_DELETE);
+                cpClient.setStrSTATUT(STATUT_DELETE);
                 cpClient.setDtUPDATED(new Date());
                 emg.merge(cpClient);
                 TTiersPayant p = cpClient.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID();
@@ -571,8 +570,8 @@ public class SalesServiceImpl implements SalesService {
 
             });
             TEmplacement emplacement = ooTUser.getLgEMPLACEMENTID();
-            final Typemvtproduit typemvtproduit = checked ? findTypeMvtProduitById(Constant.ANNULATION_DE_VENTE)
-                    : findTypeMvtProduitById(Constant.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
+            final Typemvtproduit typemvtproduit = checked ? findTypeMvtProduitById(ANNULATION_DE_VENTE)
+                    : findTypeMvtProduitById(TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
             preenregistrementDetails.forEach(e -> {
                 TPreenregistrementDetail newCopieItem = createItemCopy(ooTUser, e, newItem, emg);
                 TFamille oFamille = e.getLgFAMILLEID();
@@ -688,7 +687,7 @@ public class SalesServiceImpl implements SalesService {
         newTp.setDtCREATED(new Date());
         newTp.setDtUPDATED(newTp.getDtCREATED());
         newTp.setLgPARENTID(tp.getLgPREENREGISTREMENTID());
-        newTp.setStrSTATUT(Constant.STATUT_IS_CLOSED);
+        newTp.setStrSTATUT(STATUT_IS_CLOSED);
         newTp.setLgUSERVENDEURID(tp.getLgUSERVENDEURID());
         newTp.setLgUSERCAISSIERID(tp.getLgUSERCAISSIERID());
         newTp.setBISAVOIR(tp.getBISAVOIR());
@@ -742,7 +741,7 @@ public class SalesServiceImpl implements SalesService {
             newCtp.setLgPREENREGISTREMENTID(preenregistrement);
             newCtp.setIntPRICE(a.getIntPRICE() * (-1));
             newCtp.setLgUSERID(o);
-            newCtp.setStrSTATUT(Constant.STATUT_DELETE);
+            newCtp.setStrSTATUT(STATUT_DELETE);
             newCtp.setDtCREATED(new Date());
             newCtp.setDtUPDATED(newCtp.getDtCREATED());
             newCtp.setLgCOMPTECLIENTTIERSPAYANTID(cltP);
@@ -1004,8 +1003,8 @@ public class SalesServiceImpl implements SalesService {
                     salesParams.getQteServie(), salesParams.getQteUg(), salesParams.getItemPu(), emg);
             preenregistrement.setCmuAmount(computeCmuAmount(dp));
             if (!salesParams.isDepot()) {
-                preenregistrement.setStrTYPEVENTE(Constant.VENTE_ASSURANCE);
-                if (!salesParams.getTypeVenteId().equals(Constant.VENTE_AVEC_CARNET)) {
+                preenregistrement.setStrTYPEVENTE(VENTE_ASSURANCE);
+                if (!salesParams.getTypeVenteId().equals(VENTE_AVEC_CARNET)) {
                     findAyantDroit(salesParams.getAyantDroitId()).ifPresent(a -> {
                         preenregistrement.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
                         preenregistrement.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
@@ -1042,8 +1041,8 @@ public class SalesServiceImpl implements SalesService {
                 preenregistrement.setLgREMISEID(salesParams.getRemiseDepot() + "");
                 preenregistrement.setIntPRICEREMISE(
                         calculRemiseDepot(preenregistrement.getIntPRICE(), salesParams.getRemiseDepot()));
-                preenregistrement.setStrTYPEVENTE(
-                        (salesParams.getTypeDepoId().equals("1") ? Constant.VENTE_COMPTANT : Constant.VENTE_ASSURANCE));
+                preenregistrement
+                        .setStrTYPEVENTE((salesParams.getTypeDepoId().equals("1") ? VENTE_COMPTANT : VENTE_ASSURANCE));
                 preenregistrement.setStrREF(
                         buildRefTmp(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID()).getReferenceTemp());
                 emg.persist(preenregistrement);
@@ -1667,7 +1666,7 @@ public class SalesServiceImpl implements SalesService {
             modeReglement = findByIdMod("6");
             break;
         case "7":
-            modeReglement = findByIdMod(Constant.MODE_ORANGE);
+            modeReglement = findByIdMod(MODE_ORANGE);
             break;
         case "8":
             modeReglement = findByIdMod("8");
@@ -1788,7 +1787,7 @@ public class SalesServiceImpl implements SalesService {
             }
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
-            Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Constant.KEY_PARAM_MVT_VENTE_ORDONNANCE);
+            Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(KEY_PARAM_MVT_VENTE_ORDONNANCE);
             List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp);
             int montant = tp.getIntPRICE();
             if (diffAmount(montant, lstTPreenregistrementDetail)) {
@@ -1820,7 +1819,7 @@ public class SalesServiceImpl implements SalesService {
             if (result.has("success")) {
                 return result;
             }
-            if (clotureVenteParams.getTypeVenteId().equals(Parameter.VENTE_ASSURANCE)) {
+            if (clotureVenteParams.getTypeVenteId().equals(VENTE_ASSURANCE_ID)) {
                 Optional<TAyantDroit> ayantDroitop = findAyantDroit(clotureVenteParams.getAyantDroitId());
                 if (ayantDroitop.isPresent()) {
                     TAyantDroit ayantDroit = ayantDroitop.get();
@@ -1861,8 +1860,8 @@ public class SalesServiceImpl implements SalesService {
             tp.setLgUSERCAISSIERID(tp.getLgUSERID());
             tp.setStrREFTICKET(DateConverter.getShortId(10));
             tp.setBISAVOIR(isAvoir);
-            tp.setStrSTATUT(Constant.STATUT_IS_CLOSED);
-            tp.setStrTYPEVENTE(Constant.VENTE_ASSURANCE);
+            tp.setStrSTATUT(STATUT_IS_CLOSED);
+            tp.setStrTYPEVENTE(VENTE_ASSURANCE);
             tp.setStrSTATUTVENTE(statut);
             tp.setIntPRICEOTHER(tp.getIntPRICE());
             if (!tp.getCopy()) {
@@ -1878,7 +1877,7 @@ public class SalesServiceImpl implements SalesService {
             }
             if (amount > 0) {
 
-                addRecette(clotureVenteParams.getMontantPaye(), Constant.VENTE_ASSURANCE, tp.getLgPREENREGISTREMENTID(),
+                addRecette(clotureVenteParams.getMontantPaye(), VENTE_ASSURANCE, tp.getLgPREENREGISTREMENTID(),
                         clotureVenteParams.getUserId(), emg);
             }
             TTypeReglement typeReglement = findById(clotureVenteParams.getTypeRegleId());
@@ -1901,8 +1900,9 @@ public class SalesServiceImpl implements SalesService {
                     .put("ref", tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
 
-            LOG.log(Level.SEVERE, String.format("Erreur a la closture de la vente %s,%s,%s",
-                    tp.getLgPREENREGISTREMENTID(), tp.getStrREF(), tp.getLgUSERID().getLgUSERID()), e);
+            LOG.log(Level.SEVERE, String.format("Erreur a la closture de la vente %s,%s,%s date :: %s",
+                    tp.getLgPREENREGISTREMENTID(), tp.getStrREF(), tp.getLgUSERID().getLgUSERID(), LocalDateTime.now()),
+                    e);
 
             try {
                 json.put("success", false).put("msg", "Erreur: Echec de validation de la vente");
@@ -1982,7 +1982,7 @@ public class SalesServiceImpl implements SalesService {
             }
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
-            Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Constant.KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE);
+            Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE);
             int montant = tp.getIntPRICE();
             if (diffAmount(montant, lstTPreenregistrementDetail)) {
                 json.put("success", false);
@@ -2012,7 +2012,7 @@ public class SalesServiceImpl implements SalesService {
                 tp.setClient(client);
             }
 
-            if (clotureVenteParams.getTypeRegleId().equals(DateConverter.REGL_DIFF)) {
+            if (clotureVenteParams.getTypeRegleId().equals(REGL_DIFF)) {
                 addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
             }
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement, "",
@@ -2046,7 +2046,7 @@ public class SalesServiceImpl implements SalesService {
                 tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             }
             TTypeReglement tTypeReglement = findById(clotureVenteParams.getTypeRegleId());
-            addRecette(clotureVenteParams.getMontantPaye(), Constant.VENTE_COMPTANT, tp.getLgPREENREGISTREMENTID(),
+            addRecette(clotureVenteParams.getMontantPaye(), VENTE_COMPTANT, tp.getLgPREENREGISTREMENTID(),
                     clotureVenteParams.getUserId(), emg);
             MvtTransaction mt = addTransaction(tUser, tp, montant, tp.getIntACCOUNT(), amount,
                     clotureVenteParams.getMontantRecu(), true, CategoryTransaction.CREDIT,
@@ -2063,8 +2063,9 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", true).put("msg", "Opération effectuée avec success").put("copy", tp.getCopy())
                     .put("ref", tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, String.format("Erreur a la closture de la vente %s,%s,%s",
-                    tp.getLgPREENREGISTREMENTID(), tp.getStrREF(), tp.getLgUSERID().getLgUSERID()), e);
+            LOG.log(Level.SEVERE, String.format("Erreur a la closture de la vente %s,%s,%s date :: %s",
+                    tp.getLgPREENREGISTREMENTID(), tp.getStrREF(), tp.getLgUSERID().getLgUSERID(), LocalDateTime.now()),
+                    e);
 
             try {
                 json.put("success", false).put("msg", "Erreur: Echec de validation de la vente");
@@ -2906,7 +2907,7 @@ public class SalesServiceImpl implements SalesService {
             tp.setChecked(Boolean.FALSE);
             tp.setCopy(Boolean.FALSE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
-            Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Constant.KEY_PARAM_MVT_VENTE_ORDONNANCE);
+            Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(KEY_PARAM_MVT_VENTE_ORDONNANCE);
             List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp);
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
@@ -2973,7 +2974,7 @@ public class SalesServiceImpl implements SalesService {
             tp.setChecked(Boolean.TRUE);
             tp.setCopy(Boolean.FALSE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
-            Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(Constant.KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE);
+            Optional<TTypeMvtCaisse> typeMvtCaisse = getOne(KEY_PARAM_MVT_VENTE_NON_ORDONNANCEE);
             List<TPreenregistrementDetail> lstTPreenregistrementDetail = items(tp);
 
             int montant = tp.getIntPRICE();
@@ -3849,11 +3850,11 @@ public class SalesServiceImpl implements SalesService {
             montantRestant.add(cp.getIntPRICERESTE());
             cp.setIntPRICE(0);
             cp.setIntPRICERESTE(0);
-            cp.setStrSTATUT(Constant.STATUT_DELETE);
+            cp.setStrSTATUT(STATUT_DELETE);
             cp.setDtUPDATED(clonedPreen.getDtUPDATED());
             emg.merge(cp);
         });
-        if (tp.getStrTYPEVENTE().equals(Constant.VENTE_ASSURANCE)) {
+        if (tp.getStrTYPEVENTE().equals(VENTE_ASSURANCE)) {
             clonePreenregistrementTp(clonedPreen, idVente, ooTUser);
         }
 
@@ -3862,12 +3863,12 @@ public class SalesServiceImpl implements SalesService {
         oprectte.ifPresent(re -> copyRecette(clonedPreen, re, ooTUser));
 
         findClientTiersPayents(tp.getLgPREENREGISTREMENTID(), emg).forEach(action -> {
-            action.setStrSTATUT(Constant.STATUT_DELETE);
+            action.setStrSTATUT(STATUT_DELETE);
             emg.merge(action);
         });
         TEmplacement emplacement = ooTUser.getLgEMPLACEMENTID();
-        final Typemvtproduit typemvtproduit = checked ? findTypeMvtProduitById(Constant.ANNULATION_DE_VENTE)
-                : findTypeMvtProduitById(Constant.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
+        final Typemvtproduit typemvtproduit = checked ? findTypeMvtProduitById(ANNULATION_DE_VENTE)
+                : findTypeMvtProduitById(TMVTP_ANNUL_VENTE_DEPOT_EXTENSION);
         preenregistrementDetails.forEach(e -> {
             TPreenregistrementDetail newItem = createItemCopy(ooTUser, e, clonedPreen, emg);
             TFamille oFamille = e.getLgFAMILLEID();
@@ -3953,7 +3954,7 @@ public class SalesServiceImpl implements SalesService {
             newItem.setLgPREENREGISTREMENTID(preenregistrement);
             newItem.setIntPRICE(a.getIntPRICE() * (-1));
             newItem.setLgUSERID(o);
-            newItem.setStrSTATUT(Constant.STATUT_DELETE);
+            newItem.setStrSTATUT(STATUT_DELETE);
             newItem.setDtCREATED(a.getDtUPDATED());
             newItem.setDtUPDATED(a.getDtUPDATED());
             newItem.setLgCOMPTECLIENTTIERSPAYANTID(compte);
