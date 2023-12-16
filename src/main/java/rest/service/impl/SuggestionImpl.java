@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -1152,8 +1153,8 @@ public class SuggestionImpl implements SuggestionService {
 
                 json.put("int_NUMBER", order.getIntNUMBER());
 
-                json.put("produitStates", famille.getProductStates().stream()
-                        .map(e -> e.getProduitStateEnum().ordinal()).collect(Collectors.toSet()));
+                json.put("produitStates", famille.getProductStates().stream().map(ProductState::getProduitStateEnum)
+                        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting())));
                 json.put("int_SEUIL", famille.getIntSEUILMIN());
                 json.put("str_STATUT", order.getStrSTATUT());
                 json.put("lg_FAMILLE_PRIX_VENTE", order.getIntPRICEDETAIL());

@@ -38,15 +38,6 @@ public interface SuggestionService {
 
     int verifierProduitDansLeProcessusDeCommande(TFamille famille);
 
-    /**
-     * SUGGESTION DES 20/80
-     *
-     * @param datas
-     *
-     * @return
-     *
-     * @throws JSONException
-     */
     JSONObject makeSuggestion(List<VenteDetailsDTO> datas) throws JSONException;
 
     JSONObject makeSuggestionFromArticleInvendus(List<ArticleDTO> datas, TUser tu) throws JSONException;

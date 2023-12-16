@@ -751,12 +751,10 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             Ext.Ajax.request({
                 url: url_services_transaction_suggerercde + 'create',
                 params: {
-//                    lg_FAMILLE_ID: Ext.getCmp('str_NAME').getValue(), ancienne bonne version
                     lg_FAMILLE_ID: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
                     lg_SUGGESTION_ORDER_ID: ref,
                     lg_SUGGESTION_ORDER_DETAILS_ID: null,
                     lg_GROSSISTE_ID: Ext.getCmp('lg_GROSSISTE_ID').getValue(),
-//                    int_NUMBER: 1
                     int_NUMBER: Ext.getCmp('int_QUANTITE').getValue()
 
                 },
@@ -1112,21 +1110,23 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     },
     manageColor: function (r) {
         const produitStates = r?.data?.produitStates;
-
-        if (produitStates.length > 0) {
-            if (Ext.Array.contains(produitStates, 1)) {
-                return 'background-color:#73C774;';
-            }
-            if (Ext.Array.contains(produitStates, 2)) {
-                return 'background-color:#5fa2dd;';
-            }
-            if (Ext.Array.contains(produitStates, 3)) {
-                return 'background-color:#f98012;';
-            }
-            if (Ext.Array.contains(produitStates, 4)) {
-                return 'background-color:#a62a3e;';
-            }
+        const SUGGESTION = produitStates?.SUGGESTION;
+        const COMMANDE_EN_COURS = produitStates?.COMMANDE_EN_COURS;
+        const COMMANDE_PASSE = produitStates?.COMMANDE_PASSE;
+        const ENTREE = produitStates?.ENTREE;
+        if (SUGGESTION !== undefined && SUGGESTION > 1) {
+            return 'background-color:#73C774;';
         }
+        if (COMMANDE_EN_COURS !== undefined && COMMANDE_EN_COURS > 0) {
+            return 'background-color:#5fa2dd;';
+        }
+        if (COMMANDE_PASSE !== undefined && COMMANDE_PASSE > 0) {
+            return 'background-color:#f98012;';
+        }
+        if (ENTREE !== undefined && ENTREE > 0) {
+            return 'background-color:#a62a3e;';
+        }
+
         return '';
 
     },
