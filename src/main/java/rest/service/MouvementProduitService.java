@@ -56,7 +56,7 @@ public interface MouvementProduitService {
 
     JSONObject modifierProduitAjustement(Params params) throws JSONException;
 
-    TFamilleStock findStock(String OTFamille, TEmplacement emplacement);
+    TFamilleStock findStock(String produitId, TEmplacement emplacement);
 
     JSONObject cloreAjustement(Params params) throws JSONException;
 
@@ -73,7 +73,7 @@ public interface MouvementProduitService {
     void updateVenteStockDepot(TPreenregistrement tp, List<TPreenregistrementDetail> list, EntityManager emg,
             TEmplacement depot) throws Exception;
 
-    void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement OTEmplacement, EntityManager emg)
+    void updateStockDepot(TUser ooTUser, TPreenregistrement op, TEmplacement emplacement, EntityManager emg)
             throws Exception;
 
     Typemvtproduit getTypemvtproduitByID(String id);
