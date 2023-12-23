@@ -288,8 +288,8 @@ public class SalesServiceImpl implements SalesService {
         return transactionNew;
     }
 
-    public MvtTransaction addTransactionDepot(TUser ooTUser, TPreenregistrement tp, TTypeReglement reglement,
-            TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg, Integer marge, TClient client) {
+    public void addTransactionDepot(TUser ooTUser, TPreenregistrement tp, TTypeReglement reglement,
+            TTypeMvtCaisse tTypeMvtCaisse, Integer marge, TClient client) {
         MvtTransaction mvtTransac = new MvtTransaction();
         mvtTransac.setUuid(UUID.randomUUID().toString());
         mvtTransac.setUser(ooTUser);
@@ -319,7 +319,7 @@ public class SalesServiceImpl implements SalesService {
         if (client != null) {
             mvtTransac.setOrganisme(client.getLgCLIENTID());
         }
-        return mvtTransac;
+        this.getEm().persist(mvtTransac);
 
     }
 
@@ -2936,11 +2936,10 @@ public class SalesServiceImpl implements SalesService {
             tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             tp.setCompletionDate(new Date());
             cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
-            MvtTransaction mt = addTransactionDepot(tUser, tp, findById(DateConverter.MODE_ESP), typeMvtCaisse.get(),
-                    emg, clotureVenteParams.getMarge(), client.orElse(null));
-            emg.persist(mt);
-            emg.merge(tp);
+            addTransactionDepot(tUser, tp, findById(MODE_ESP), typeMvtCaisse.get(), clotureVenteParams.getMarge(),
+                    client.orElse(null));
             mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emplacement);
+            emg.merge(tp);
             json.put("success", true).put("msg", "Opération effectuée avec success").put("ref",
                     tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
@@ -2993,7 +2992,7 @@ public class SalesServiceImpl implements SalesService {
             tp.setStrFIRSTNAMECUSTOMER(emplacement.getStrFIRSTNAME());
             tp.setStrLASTNAMECUSTOMER(emplacement.getStrLASTNAME());
             tp.setStrPHONECUSTOME(emplacement.getStrPHONE());
-            if (clotureVenteParams.getTypeRegleId().equals(DateConverter.REGL_DIFF)) {
+            if (clotureVenteParams.getTypeRegleId().equals(REGL_DIFF)) {
                 findClientById(clotureVenteParams.getClientId()).ifPresent(c -> {
                     tp.setClient(c);
                     addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
