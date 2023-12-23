@@ -90,7 +90,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     private void updatefamillenbvente(TFamille famille, int qty, boolean updatable) {
         if (updatable) {
             famille.setDtLASTMOUVEMENT(new Date());
-            famille.setIntQTERESERVEE(famille.getIntNBRESORTIE() + qty);
+            famille.setIntNBRESORTIE(famille.getIntNBRESORTIE() + qty);
             this.getEmg().merge(famille);
         }
 
@@ -201,7 +201,8 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
                     emplacement, it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), it.getValeurTva(),
                     tp.getChecked(), it.getIntUG());
-
+            updateStock(familleStock, tp, it);
+            this.getEmg().merge(familleStock);
             this.getEmg().merge(it);
             updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITY(), depot);
             suggestionService.makeSuggestionAuto(familleStock, tFamille);
@@ -927,7 +928,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     }
 
     @Override
-    public TFamilleStock updateStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em) {
+    public TFamilleStock updateStock(TFamille tf, TEmplacement emplacementId, int qty, int ug) {
         TFamilleStock stock = findStock(tf.getLgFAMILLEID(), emplacementId);
         stock.setIntNUMBERAVAILABLE(stock.getIntNUMBERAVAILABLE() + qty);
         stock.setIntNUMBER(stock.getIntNUMBERAVAILABLE());

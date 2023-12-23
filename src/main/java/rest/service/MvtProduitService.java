@@ -22,7 +22,6 @@ import dal.TRetourFournisseur;
 import dal.TUser;
 import java.util.List;
 import javax.ejb.Local;
-import javax.persistence.EntityManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -58,7 +57,7 @@ public interface MvtProduitService {
 
     JSONObject validerRetourFournisseur(Params params) throws JSONException;
 
-    TFamilleStock updateStock(TFamille tf, TEmplacement emplacementId, int qty, int ug, EntityManager em);
+    TFamilleStock updateStock(TFamille tf, TEmplacement emplacementId, int qty, int ug);
 
     int updateStockReturnInitStock(TFamille tf, TEmplacement emplacementId, int qty, int ug);
 
@@ -81,4 +80,5 @@ public interface MvtProduitService {
 
     void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur, TMotifRetour motifRetour,
             List<TBonLivraisonDetail> bonLivraisonDetails);
+
 }
