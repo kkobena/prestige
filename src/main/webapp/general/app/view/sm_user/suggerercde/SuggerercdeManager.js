@@ -620,14 +620,12 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
             Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
             Ext.getCmp('int_DATE_BUTOIR_ARTICLE').setValue(this.getOdatasource().int_DATE_BUTOIR_ARTICLE);
-            const url = '../suggestion?lg_SUGGESTION_ORDER_ID=' + ref;
-//            OgridpanelSuggestionID.getStore().getProxy().url = url;
+
             OgridpanelSuggestionID.getStore().load({
                 params: {
                     orderId: ref,
                     query: null
                 }
-
             });
 
 
@@ -680,7 +678,12 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     params: Ext.JSON.encode(datas),
                     success: function (response, options) {
                         e.record.commit();
-                        OGrid.getStore().load();
+                        OGrid.getStore().load({
+                            params: {
+                                orderId: suggId,
+                                query: Ext.getCmp('rechercherDetail').getValue()
+                            }
+                        });
 
                         Me_Window.getSuggestionAmount(suggId);
                     },
@@ -705,7 +708,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 function (btn) {
                     if (btn == 'yes') {
                         Me_Window.onPdfClick(ref);
-                        return;
+                  
                     }
                 });
 
@@ -1085,7 +1088,9 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         const val = Ext.getCmp('rechercherDetail');
         Ext.getCmp('gridpanelSuggestionID').getStore().load({
             params: {
-                search_value: val.getValue()
+
+                orderId: ref,
+                query: val.getValue()
             }
         });
     },
