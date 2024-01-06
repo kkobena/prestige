@@ -35,6 +35,7 @@ import rest.report.ReportUtil;
 import rest.service.CaisseService;
 import rest.service.ListCaisseService;
 import toolkits.parameters.commonparameter;
+
 import toolkits.utils.jdom;
 import util.Constant;
 import util.DateConverter;
@@ -65,7 +66,7 @@ public class BalancePdfServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/pdf");
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser oUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
@@ -77,7 +78,7 @@ public class BalancePdfServlet extends HttpServlet {
         } catch (Exception e) {
         }
         Params params = new Params();
-        params.setOperateur(OTUser);
+        params.setOperateur(oUser);
         String codeFamile;
         String codeRayon;
         String codeGrossiste;
@@ -135,7 +136,7 @@ public class BalancePdfServlet extends HttpServlet {
             String startDate = request.getParameter("startDate"), endDate = request.getParameter("endDate");
             String startH = request.getParameter("startH"), endH = request.getParameter("endH");
             CaisseParamsDTO caisseParams = new CaisseParamsDTO();
-            caisseParams.setEmplacementId(OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            caisseParams.setEmplacementId(oUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             if (!StringUtils.isEmpty(endDate)) {
                 caisseParams.setEnd(LocalDate.parse(endDate));
             }
@@ -157,9 +158,9 @@ public class BalancePdfServlet extends HttpServlet {
             }
             caisseParams.setFindClient(true);
             if (action.equalsIgnoreCase(Action.LISTECAISSE_V2.name())) {
-                file = listeCaisseVersion2(caisseParams, OTUser);
+                file = listeCaisseVersion2(caisseParams, oUser);
             } else {
-                file = listeCaisse(caisseParams, OTUser);
+                file = listeCaisse(caisseParams, oUser);
             }
 
             break;
@@ -168,7 +169,7 @@ public class BalancePdfServlet extends HttpServlet {
             String dtSt = request.getParameter("dtStart"), dtEn = request.getParameter("dtEnd");
             String produitId = request.getParameter("produitId");
             file = balance.suivMvtArticle(LocalDate.parse(dtSt), LocalDate.parse(dtEn), produitId,
-                    OTUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), OTUser);
+                    oUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), oUser);
             break;
         case RECAP:
             params.setDescription(request.getParameter("query"));
@@ -179,21 +180,21 @@ public class BalancePdfServlet extends HttpServlet {
             codeRayon = request.getParameter("codeRayon");
             codeGrossiste = request.getParameter("codeGrossiste");
             query = request.getParameter("query");
-            file = balance.familleArticle(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste);
+            file = balance.familleArticle(dtStart, dtEnd, codeFamile, query, oUser, codeRayon, codeGrossiste);
             break;
         case STAT_FAMILLE_ARTICLE_VETO:
             codeFamile = request.getParameter("codeFamile");
             codeRayon = request.getParameter("codeRayon");
             codeGrossiste = request.getParameter("codeGrossiste");
             query = request.getParameter("query");
-            file = balance.familleArticleveto(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste);
+            file = balance.familleArticleveto(dtStart, dtEnd, codeFamile, query, oUser, codeRayon, codeGrossiste);
             break;
         case EDITION20_80:
             codeFamile = request.getParameter("codeFamile");
             codeRayon = request.getParameter("codeRayon");
             codeGrossiste = request.getParameter("codeGrossiste");
             boolean qtyOrCa = Boolean.parseBoolean(request.getParameter("qtyOrCa"));
-            file = balance.geVingtQuatreVingt(dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste, qtyOrCa);
+            file = balance.geVingtQuatreVingt(dtStart, dtEnd, oUser, codeFamile, codeRayon, codeGrossiste, qtyOrCa);
             break;
         case PERIMES:
             codeFamile = request.getParameter("codeFamile");
@@ -206,7 +207,7 @@ public class BalancePdfServlet extends HttpServlet {
             } catch (Exception e) {
             }
 
-            file = balance.produitPerimes(query, nbre, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste);
+            file = balance.produitPerimes(query, nbre, dtStart, dtEnd, oUser, codeFamile, codeRayon, codeGrossiste);
             break;
         case SAISIE_PERIMES:
             codeFamile = request.getParameter("codeFamile");
@@ -218,28 +219,27 @@ public class BalancePdfServlet extends HttpServlet {
                 groupby = Integer.valueOf(request.getParameter("groupby"));
             } catch (Exception e) {
             }
-            file = balance.saisiePerimes(query, dtStart, dtEnd, OTUser, codeFamile, codeRayon, codeGrossiste, groupby);
+            file = balance.saisiePerimes(query, dtStart, dtEnd, oUser, codeFamile, codeRayon, codeGrossiste, groupby);
             break;
         case STAT_PROVIDER_ARTICLE:
             codeFamile = request.getParameter("codeFamile");
             codeRayon = request.getParameter("codeRayon");
             codeGrossiste = request.getParameter("codeGrossiste");
             query = request.getParameter("query");
-            file = balance.statistiqueParGrossistes(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon,
-                    codeGrossiste);
+            file = balance.statistiqueParGrossistes(dtStart, dtEnd, codeFamile, query, oUser, codeRayon, codeGrossiste);
             break;
         case STAT_RAYONS_ARTICLE:
             codeFamile = request.getParameter("codeFamile");
             codeRayon = request.getParameter("codeRayon");
             codeGrossiste = request.getParameter("codeGrossiste");
             query = request.getParameter("query");
-            file = balance.statistiqueParRayons(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon, codeGrossiste);
+            file = balance.statistiqueParRayons(dtStart, dtEnd, codeFamile, query, oUser, codeRayon, codeGrossiste);
             break;
         case UNITES_AVOIRS:
 
             String hEnd = request.getParameter("hEnd");
             String hStart = request.getParameter("hStart");
-            SalesStatsParams body = buildSalesStatsParams(request, session, OTUser);
+            SalesStatsParams body = buildSalesStatsParams(request, session, oUser);
             body.setOnlyAvoir(true);
             body.setSansBon(false);
 
@@ -256,7 +256,7 @@ public class BalancePdfServlet extends HttpServlet {
             break;
         case SUIVI_REMISE:
             String tiersPayantId = request.getParameter("tiersPayantId");
-            SalesStatsParams bodySuivi = buildSalesStatsParams(request, session, OTUser);
+            SalesStatsParams bodySuivi = buildSalesStatsParams(request, session, oUser);
             bodySuivi.setTiersPayantId(tiersPayantId);
             bodySuivi.setDiscountStat(true);
             bodySuivi.sethStart(LocalTime.of(0, 0, 0));
@@ -290,7 +290,7 @@ public class BalancePdfServlet extends HttpServlet {
 
     public String listeCaisse(CaisseParamsDTO caisseParams, TUser tu) throws IOException {
         TOfficine oTOfficine = caisseService.findOfficine();
-        String scr_report_file = "rp_listecaisses1";
+        String scrreportfile = "rp_listecaisses1";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
         final Comparator<VisualisationCaisseDTO> comparatorCaisse = Comparator
                 .comparing(VisualisationCaisseDTO::getDateOperation);
@@ -311,16 +311,16 @@ public class BalancePdfServlet extends HttpServlet {
         });
         datas.sort(comparatorCaisse);
         LocalDateTime debut = LocalDateTime.of(caisseParams.getStartDate(), caisseParams.getStartHour());
-        String P_PERIODE = "PERIODE DU " + debut.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        String pPeriode = "PERIODE DU " + debut.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         LocalDateTime fin = LocalDateTime.of(caisseParams.getEnd(), caisseParams.getStartEnd());
-        P_PERIODE += " AU " + fin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        parameters.put("P_H_CLT_INFOS", "LISTE DES CAISSES  " + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        pPeriode += " AU " + fin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        parameters.put("P_H_CLT_INFOS", "LISTE DES CAISSES  " + pPeriode);
+        String reportGenerateFile = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         parameters.put("totaux", caisse.getSummary());
         parameters.put("sub_reportUrl", jdom.scr_report_file);
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
-                jdom.scr_report_pdf + "listecaisses_" + report_generate_file, datas);
-        return "/data/reports/pdf/listecaisses_" + report_generate_file;
+        reportUtil.buildReport(parameters, scrreportfile, jdom.scr_report_file,
+                jdom.scr_report_pdf + "listecaisses_" + reportGenerateFile, datas);
+        return "/data/reports/pdf/listecaisses_" + reportGenerateFile;
     }
 
     private SalesStatsParams buildSalesStatsParams(HttpServletRequest request, HttpSession session, TUser user) {
@@ -329,16 +329,15 @@ public class BalancePdfServlet extends HttpServlet {
         String typeVenteId = request.getParameter("typeVenteId");
         String query = request.getParameter("query");
         SalesStatsParams body = new SalesStatsParams();
-        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) session.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
-        boolean canCancel = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
-        boolean modification = DateConverter.hasAuthorityByName(lstTPrivilege,
-                DateConverter.P_BT_MODIFICATION_DE_VENTE);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) session.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
+        boolean allActivitis = DateConverter.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
+        boolean canCancel = DateConverter.hasAuthorityByName(lstTPrivilege, Constant.P_BT_ANNULER_VENTE);
+        boolean modification = DateConverter.hasAuthorityByName(lstTPrivilege, Constant.P_BT_MODIFICATION_DE_VENTE);
         body.setCanCancel(canCancel);
         body.setQuery(query);
         body.setTypeVenteId(typeVenteId);
-        body.setStatut(commonparameter.statut_is_Closed);
+        body.setStatut(Constant.STATUT_IS_CLOSED);
         body.setAll(true);
         body.setUserId(user);
         body.setShowAll(asAuthority);

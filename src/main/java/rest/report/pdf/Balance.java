@@ -700,7 +700,8 @@ public class Balance {
     }
 
     public String recap(Params parasm) {
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
+        LocalDate dtSt = LocalDate.now();
+        LocalDate dtEn = dtSt;
         try {
             dtSt = LocalDate.parse(parasm.getDtStart());
             dtEn = LocalDate.parse(parasm.getDtEnd());
@@ -708,14 +709,14 @@ public class Balance {
         }
         TUser tu = parasm.getOperateur();
         TOfficine oTOfficine = caisseService.findOfficine();
-        String scr_report_file = "rp_recap";
+        String scrreportfile = "rp_recap";
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String periode = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
-            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            periode += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
-        parameters.put("P_H_CLT_INFOS", "RAPPORT PERIODIQUE D'ACTIVITE" + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
+        parameters.put("P_H_CLT_INFOS", "RAPPORT PERIODIQUE D'ACTIVITE" + periode);
+        String reportgeneratefile = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
 
         List<RecapActiviteReglementDTO> totaux = new ArrayList<>();
         List<RecapActiviteReglementDTO> chiffres = new ArrayList<>();
@@ -760,9 +761,9 @@ public class Balance {
         parameters.put("nbreClient", summary.getNbreClient());
         parameters.put("nbreBons", summary.getNbreBons());
         parameters.put("montant", summary.getMontant());
-        reportUtil.buildReportEmptyDs(parameters, scr_report_file, jdom.scr_report_file,
-                jdom.scr_report_pdf + "recap_" + report_generate_file);
-        return "/data/reports/pdf/recap_" + report_generate_file;
+        reportUtil.buildReportEmptyDs(parameters, scrreportfile, jdom.scr_report_file,
+                jdom.scr_report_pdf + "recap_" + reportgeneratefile);
+        return "/data/reports/pdf/recap_" + reportgeneratefile;
     }
 
     public String tvaJourpdf(Params parasm) throws IOException {

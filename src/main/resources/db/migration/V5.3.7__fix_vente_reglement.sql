@@ -1,2 +1,0 @@
-UPDATE vente_reglement vr INNER JOIN mvttransaction m ON vr.vente_id=m.pkey SET vr.flag_id=m.flag_id ,vr.flaged_amount=m.montantAcc WHERE m.flag_id IS NOT NULL  AND DATE(m.mvtdate) 
-BETWEEN '2023-12-26' AND  CURRENT_DATE();
