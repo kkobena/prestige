@@ -114,7 +114,7 @@ public class SalesStatsRessource {
         }
 
         List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(hsAttribute, Constant.str_SHOW_VENTE);
+        boolean asAuthority = DateConverter.hasAuthorityByName(hsAttribute, Constant.SHOW_VENTE);
         boolean allActivitis = DateConverter.hasAuthorityByName(hsAttribute, Constant.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);

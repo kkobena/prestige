@@ -1761,7 +1761,7 @@ public class CaisseServiceImpl implements CaisseService {
     }
 
     @Override
-    public Integer montantCa(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
+    public long montantCa(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
             TypeTransaction transaction, String typrReglement) {
         try {
             TypedQuery<Long> query = getEntityManager().createQuery(
@@ -1773,7 +1773,7 @@ public class CaisseServiceImpl implements CaisseService {
             query.setParameter(4, checked);
             query.setParameter(5, transaction);
             query.setParameter(6, typrReglement);
-            return query.getSingleResult().intValue();
+            return query.getSingleResult().longValue();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return 0;

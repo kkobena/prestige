@@ -224,6 +224,7 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     private long getFlagedAmount(boolean showAllAmount, BigDecimal flagedAmount) {
+
         if (showAllAmount) {
             return 0;
         }
@@ -541,9 +542,9 @@ public class BalanceServiceImpl implements BalanceService {
         BalanceDTO balanceVO = null;
         for (BalanceDTO balance : balances) {
             totalMontantNet += balance.getMontantNet();
-            if (balance.getTypeVente().equals(DateConverter.VENTE_COMPTANT)) {
+            if (balance.getTypeVente().equals(Constant.VENTE_COMPTANT)) {
                 balanceVNO = balance;
-            } else if (balance.getTypeVente().equals(DateConverter.VENTE_ASSURANCE)) {
+            } else if (balance.getTypeVente().equals(Constant.VENTE_ASSURANCE)) {
                 balanceVO = balance;
             }
         }
@@ -1215,6 +1216,7 @@ public class BalanceServiceImpl implements BalanceService {
                 .collect(Collectors.toList());
 
         Map<TypeTransaction, List<BalanceVenteItemDTO>> groupByTypeVente = dataVentes.stream()
+
                 .collect(Collectors.groupingBy(BalanceVenteItemDTO::getTypeTransaction));
         Map<String, List<VenteReglementReportDTO>> venteRegelementMap = fetchByModeReglements(balanceParams).stream()
                 .map(this::buildVenteReglementReportDTO)
@@ -1224,20 +1226,22 @@ public class BalanceServiceImpl implements BalanceService {
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_COMPTANT);
             BalanceDTO balanceVno = buildVenteBalance(vnoData, checkUg, balanceParams.isShowAllAmount(),
                     venteRegelementMap.remove("1"));
-            balanceVno.setTypeVente(DateConverter.VENTE_COMPTANT);
+            balanceVno.setTypeVente(Constant.VENTE_COMPTANT);
             balanceVno.setTypeTransaction(TypeTransaction.VENTE_COMPTANT);
             balanceVno.setBalanceId(balanceVno.getTypeVente());
             balanceVno.setMontantTTC((balanceVno.getMontantTTC() - this.montantToRemove(balanceParams)));
             balances.add(balanceVno);
         }
         if (groupByTypeVente.containsKey(TypeTransaction.VENTE_CREDIT)) {
+
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_CREDIT);
             BalanceDTO balanceVo = buildVenteBalance(vnoData, false, balanceParams.isShowAllAmount(),
                     venteRegelementMap.values().stream().flatMap(v -> v.stream()).collect(Collectors.toList()));
-            balanceVo.setTypeVente(DateConverter.VENTE_ASSURANCE);
+            balanceVo.setTypeVente(Constant.VENTE_ASSURANCE);
             balanceVo.setTypeTransaction(TypeTransaction.VENTE_CREDIT);
             balanceVo.setBalanceId(balanceVo.getTypeVente());
             balances.add(balanceVo);
+
         }
         return updatePourcent(balances);
     }
@@ -1405,7 +1409,6 @@ public class BalanceServiceImpl implements BalanceService {
                 break;
             case DateConverter.MODE_VIREMENT:
                 montantVirement += amount;
-
                 break;
             case DateConverter.MODE_MOOV:
                 montantMoov += amount;
