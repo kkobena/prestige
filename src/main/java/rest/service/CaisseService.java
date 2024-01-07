@@ -93,7 +93,7 @@ public interface CaisseService {
 
     JSONObject mouvementCaisses(CaisseParamsDTO caisseParams) throws JSONException;
 
-    Integer montantCa(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
+    long montantCa(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
             TypeTransaction transaction, String typrReglement);
 
     MvtTransaction findByVenteId(String venteId);

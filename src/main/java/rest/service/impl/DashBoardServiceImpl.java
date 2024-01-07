@@ -264,7 +264,7 @@ public class DashBoardServiceImpl implements DashBoardService {
             recapActivite.setMontantNet(b.getMontantNet() + recapActivite.getMontantNet());
             recapActivite.setMontantRemise(b.getMontantRemise() + recapActivite.getMontantRemise());
             recapActivite.setMontantRegle(recapActivite.getMontantRegle() + b.getMontantRegle());
-            recapActivite.setMontantEsp(b.getMontantRegle() + recapActivite.getMontantEsp());
+            recapActivite.setMontantEsp(b.getMontantEsp() + recapActivite.getMontantEsp());
             recapActivite.setMontantCredit(recapActivite.getMontantCredit() + b.getMontantDiff() + b.getMontantTp());
             recapActivite.setMarge(b.getMarge() + recapActivite.getMarge());
             montantCb += b.getMontantCB();
@@ -315,7 +315,6 @@ public class DashBoardServiceImpl implements DashBoardService {
     public RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu) {
         RecapActiviteDTO recapActivite = buildVenteData(dtStart, dtEnd, emplacementId);
         List<MvtTransaction> mvtTransactions = findAllsTransaction(dtStart, dtEnd, emplacementId);
-
         List<RecapActiviteReglementDTO> mvtsCaisse = new ArrayList<>();
         List<AchatDTO> achats = new ArrayList<>();
 
@@ -354,9 +353,7 @@ public class DashBoardServiceImpl implements DashBoardService {
         Map<String, Long> mvts = mvtsCaisse.stream().collect(Collectors.groupingBy(
                 RecapActiviteReglementDTO::getLibelle, Collectors.summingLong(RecapActiviteReglementDTO::getMontant)));
         List<RecapActiviteReglementDTO> mvt = new ArrayList<>();
-        mvts.forEach((key, value) -> {
-            mvt.add(new RecapActiviteReglementDTO(key, value));
-        });
+        mvts.forEach((key, value) -> mvt.add(new RecapActiviteReglementDTO(key, value)));
         recapActivite.setMvtsCaisse(mvt);
         List<AchatDTO> achatsglobal = new ArrayList<>();
         achats.stream().collect(Collectors.groupingBy(AchatDTO::getLibelleGroupeGrossiste)).forEach((k, v) -> {
@@ -387,12 +384,15 @@ public class DashBoardServiceImpl implements DashBoardService {
         recapActivite.setMontantTotalTTC(totalAchat);
         recapActivite.setMontantTotalTVA(montantTotalTvaAchat);
         try {
+          
             int pourEp = (int) Math.ceil(
                     Double.valueOf(recapActivite.getMontantEsp()) * 100 / Math.abs(recapActivite.getMontantNet()));
-            int pourCr = (int) Math.ceil(
-                    Double.valueOf(recapActivite.getMontantCredit()) * 100 / Math.abs(recapActivite.getMontantNet()));
+            /*
+             * int pourCr = (int) Math.ceil( Double.valueOf(recapActivite.getMontantCredit()) * 100 /
+             * Math.abs(recapActivite.getMontantNet()));
+             */
             recapActivite.setPourcentageEsp(pourEp);
-            recapActivite.setPourcentageCredit(pourCr);
+            recapActivite.setPourcentageCredit(100 - pourEp);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
         }
