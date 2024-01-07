@@ -7,7 +7,7 @@ import java.util.List;
  * @author koben
  */
 public final class Constant {
-
+    public static final String P_BT_ANNULER_VENTE = "P_BT_ANNULER_VENTE";
     public static final String DECONDTIONNEMENT_POSITIF = "05";
     public static final String DECONDTIONNEMENT_NEGATIF = "06";
     public static final String AJUSTEMENT_NEGATIF = "07";
@@ -33,7 +33,7 @@ public final class Constant {
     public static final String VENTE_COMPTANT = "VNO";
     public static final String VENTE_ASSURANCE = "VO";
     public static final String USER_LIST_PRIVILEGE = "USER_LIST_PRIVILEGE";
-    public static final String str_SHOW_VENTE = "str_SHOW_VENTE";
+    public static final String SHOW_VENTE = "str_SHOW_VENTE";
     public static final String P_SHOW_ALL_ACTIVITY = "P_SHOW_ALL_ACTIVITY";
     public static final String STATUT_DELETE = "delete";
     public static final String STATUT_CANCEL = "cancel";
@@ -70,6 +70,7 @@ public final class Constant {
     public static final String WITH = "WITH";
     public static final String TOUT = "TOUT";
     public static final String ALL = "ALL";
+    public static final String P_BT_MODIFICATION_DE_VENTE = "P_BT_MODIFICATION_DE_VENTE";
 
     private Constant() {
     }
