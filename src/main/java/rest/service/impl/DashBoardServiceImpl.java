@@ -384,7 +384,7 @@ public class DashBoardServiceImpl implements DashBoardService {
         recapActivite.setMontantTotalTTC(totalAchat);
         recapActivite.setMontantTotalTVA(montantTotalTvaAchat);
         try {
-          
+
             int pourEp = (int) Math.ceil(
                     Double.valueOf(recapActivite.getMontantEsp()) * 100 / Math.abs(recapActivite.getMontantNet()));
             /*
