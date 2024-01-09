@@ -2187,26 +2187,24 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void cloturerItemsVente(String lg_PREENREGISTREMENT_ID, EntityManager emg) {
-        try {
-            CriteriaBuilder cb = emg.getCriteriaBuilder();
+    public void cloturerItemsVente(String venteId) {
+       
+            CriteriaBuilder cb = this.getEm().getCriteriaBuilder();
             CriteriaUpdate<TPreenregistrementDetail> cq = cb.createCriteriaUpdate(TPreenregistrementDetail.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             cq.set(root.get(TPreenregistrementDetail_.strSTATUT), STATUT_IS_CLOSED)
                     .where(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
-                            .get(TPreenregistrement_.lgPREENREGISTREMENTID), lg_PREENREGISTREMENT_ID));
-            emg.createQuery(cq).executeUpdate();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-        }
+                            .get(TPreenregistrement_.lgPREENREGISTREMENTID), venteId));
+            this.getEm().createQuery(cq).executeUpdate();
+       
     }
 
     @Override
-    public JSONObject clotureravoir(String lg_PREENREGISTREMENT_ID, TUser tUser) {
+    public JSONObject clotureravoir(String venteId, TUser tUser) {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
-            TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
+            TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, venteId);
             CriteriaBuilder cb = emg.getCriteriaBuilder();
             CriteriaUpdate<TPreenregistrementDetail> cq = cb.createCriteriaUpdate(TPreenregistrementDetail.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
@@ -2221,7 +2219,7 @@ public class SalesServiceImpl implements SalesService {
                                     cb.equal(
                                             root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
                                                     .get(TPreenregistrement_.lgPREENREGISTREMENTID),
-                                            lg_PREENREGISTREMENT_ID)));
+                                            venteId)));
             emg.createQuery(cq).executeUpdate();
             preenregistrement.setCompletionDate(new Date());
             preenregistrement.setBISAVOIR(false);
@@ -2935,7 +2933,7 @@ public class SalesServiceImpl implements SalesService {
             tp.setIntACCOUNT(tp.getIntPRICE());
             tp.setIntPRICEOTHER(tp.getIntACCOUNT());
             tp.setCompletionDate(new Date());
-            cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
+            cloturerItemsVente(tp.getLgPREENREGISTREMENTID());
             addTransactionDepot(tUser, tp, findById(MODE_ESP), typeMvtCaisse.get(), clotureVenteParams.getMarge(),
                     client.orElse(null));
             mvtProduitService.updateVenteStockDepot(tp, lstTPreenregistrementDetail, emplacement);
@@ -3017,7 +3015,7 @@ public class SalesServiceImpl implements SalesService {
             updateUgData(clotureVenteParams.getData(), tp);
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()),
                     clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
-            cloturerItemsVente(tp.getLgPREENREGISTREMENTID(), emg);
+            cloturerItemsVente(tp.getLgPREENREGISTREMENTID());
             addRecette(clotureVenteParams.getMontantPaye(), tp.getStrREFTICKET() + "_" + tp.getStrREF(),
                     tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
             MvtTransaction mvtTransaction = addTransaction(tUser, tp, montant, tp.getIntACCOUNT(), amount,
