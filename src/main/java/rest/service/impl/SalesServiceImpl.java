@@ -118,6 +118,7 @@ import util.Afficheur;
 import util.DateConverter;
 
 import static util.Constant.*;
+import util.DateCommonUtils;
 
 /**
  * @author Kobena
@@ -611,11 +612,6 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    private void copyVenteReglement(List<VenteReglement> reglements, TPreenregistrement copy) {
-        reglements.forEach(v -> this.venteReglementService.createNew(copy, v.getTypeReglement(), (-1) * v.getMontant(),
-                (-1) * v.getMontantAttentu()));
-    }
-
     private Optional<VenteExclus> findByVenteId(String venteId) {
         try {
             return Optional.ofNullable(this.getEm()
@@ -753,20 +749,20 @@ public class SalesServiceImpl implements SalesService {
             newCtp.setStrLASTTRANSACTION(a.getStrLASTTRANSACTION());
             emg.persist(newCtp);
 
-            TCompteClient OTCompteClient = cltP.getLgCOMPTECLIENTID();
-            if (OTCompteClient != null && cltP.getDblPLAFOND() != null && cltP.getDblPLAFOND() != 0) {
+            TCompteClient oTCompteClient = cltP.getLgCOMPTECLIENTID();
+            if (oTCompteClient != null && cltP.getDblPLAFOND() != null && cltP.getDblPLAFOND() != 0) {
                 cltP.setDblQUOTACONSOMENSUELLE(
                         (cltP.getDblQUOTACONSOMENSUELLE() != null ? cltP.getDblQUOTACONSOMENSUELLE() : 0)
                                 + newCtp.getIntPRICE());
                 cltP.setDtUPDATED(new Date());
                 emg.merge(cltP);
             }
-            if (OTCompteClient != null && OTCompteClient.getDblPLAFOND() != null
-                    && OTCompteClient.getDblPLAFOND() != 0) {
-                OTCompteClient.setDblQUOTACONSOMENSUELLE((OTCompteClient.getDblQUOTACONSOMENSUELLE() != null
-                        ? OTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newCtp.getIntPRICE());
-                OTCompteClient.setDtUPDATED(new Date());
-                emg.merge(OTCompteClient);
+            if (oTCompteClient != null && oTCompteClient.getDblPLAFOND() != null
+                    && oTCompteClient.getDblPLAFOND() != 0) {
+                oTCompteClient.setDblQUOTACONSOMENSUELLE((oTCompteClient.getDblQUOTACONSOMENSUELLE() != null
+                        ? oTCompteClient.getDblQUOTACONSOMENSUELLE() : 0) + newCtp.getIntPRICE());
+                oTCompteClient.setDtUPDATED(new Date());
+                emg.merge(oTCompteClient);
             }
         }
 
@@ -1924,18 +1920,34 @@ public class SalesServiceImpl implements SalesService {
 
     private void addReglement(TPreenregistrement tp, MvtTransaction mt, ClotureVenteParams clotureVenteParams) {
         Set<VenteReglementDTO> reglements = clotureVenteParams.getReglements();
+        LocalDateTime mvtDate = DateCommonUtils.convertDateToLocalDateTime(tp.getDtUPDATED());
         if (CollectionUtils.isNotEmpty(reglements)) {
             if (reglements.size() > 1) {
-                reglements.forEach(p -> this.venteReglementService.createNew(tp, findById(p.getTypeReglement()),
-                        p.getMontant(), p.getMontantAttentu()));
+                int totalUgNet = 0;
+                int totalUgTtc = 0;
+                if (Objects.nonNull(mt.getMontantttcug()) && mt.getMontantttcug().compareTo(0) != 0) {
+                    totalUgTtc = mt.getMontantttcug() / 2;
+                    totalUgNet = mt.getMontantnetug() / 2;
+                }
+                List<VenteReglementDTO> reglementsList = reglements.stream().collect(Collectors.toList());
+                VenteReglementDTO first = reglementsList.get(0);
+                VenteReglementDTO last = reglementsList.get(reglementsList.size() - 1);
+                venteReglementService.createVenteReglement(tp, first, findById(first.getTypeReglement()), mvtDate,
+                        totalUgTtc, totalUgNet);
+                venteReglementService.createVenteReglement(tp, last, findById(last.getTypeReglement()), mvtDate,
+                        mt.getMontantttcug() - totalUgTtc, mt.getMontantnetug() - totalUgNet);
+
             } else {
                 this.venteReglementService.createNew(tp,
-                        findById(reglements.stream().findFirst().get().getTypeReglement()), mt.getMontantPaye(),
-                        mt.getMontantRegle());
+                        findById(reglements.stream().findFirst().get().getTypeReglement()), mt);
             }
 
         }
 
+    }
+
+    private void copyVenteReglement(List<VenteReglement> reglements, TPreenregistrement copy) {
+        reglements.forEach(v -> this.venteReglementService.createCopyVenteReglement(copy, v));
     }
 
     @Override
@@ -2188,15 +2200,15 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public void cloturerItemsVente(String venteId) {
-       
-            CriteriaBuilder cb = this.getEm().getCriteriaBuilder();
-            CriteriaUpdate<TPreenregistrementDetail> cq = cb.createCriteriaUpdate(TPreenregistrementDetail.class);
-            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            cq.set(root.get(TPreenregistrementDetail_.strSTATUT), STATUT_IS_CLOSED)
-                    .where(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
-                            .get(TPreenregistrement_.lgPREENREGISTREMENTID), venteId));
-            this.getEm().createQuery(cq).executeUpdate();
-       
+
+        CriteriaBuilder cb = this.getEm().getCriteriaBuilder();
+        CriteriaUpdate<TPreenregistrementDetail> cq = cb.createCriteriaUpdate(TPreenregistrementDetail.class);
+        Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
+        cq.set(root.get(TPreenregistrementDetail_.strSTATUT), STATUT_IS_CLOSED)
+                .where(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
+                        .get(TPreenregistrement_.lgPREENREGISTREMENTID), venteId));
+        this.getEm().createQuery(cq).executeUpdate();
+
     }
 
     @Override
@@ -2214,12 +2226,9 @@ public class SalesServiceImpl implements SalesService {
                             root.get(TPreenregistrementDetail_.intQUANTITY))
                     .set(root.get(TPreenregistrementDetail_.intQUANTITYSERVED),
                             root.get(TPreenregistrementDetail_.intQUANTITY))
-                    .where(cb
-                            .and(cb.equal(root.get(TPreenregistrementDetail_.bISAVOIR), true),
-                                    cb.equal(
-                                            root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
-                                                    .get(TPreenregistrement_.lgPREENREGISTREMENTID),
-                                            venteId)));
+                    .where(cb.and(cb.equal(root.get(TPreenregistrementDetail_.bISAVOIR), true),
+                            cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
+                                    .get(TPreenregistrement_.lgPREENREGISTREMENTID), venteId)));
             emg.createQuery(cq).executeUpdate();
             preenregistrement.setCompletionDate(new Date());
             preenregistrement.setBISAVOIR(false);
