@@ -1,8 +1,11 @@
 package rest.service;
 
+import commonTasks.dto.VenteReglementDTO;
+import dal.MvtTransaction;
 import dal.TPreenregistrement;
 import dal.TTypeReglement;
 import dal.VenteReglement;
+import java.time.LocalDateTime;
 import java.util.List;
 import javax.ejb.Local;
 
@@ -13,7 +16,14 @@ import javax.ejb.Local;
 @Local
 public interface VenteReglementService {
 
-    void createNew(TPreenregistrement preenregistrement, TTypeReglement typeReglement, int montant, int montantAttendu);
-
     List<VenteReglement> getByVenteId(String venteId);
+
+    void createNew(VenteReglement venteReglement);
+
+    void createNew(TPreenregistrement preenregistrement, TTypeReglement typeReglement, MvtTransaction mt);
+
+    void createVenteReglement(TPreenregistrement tp, VenteReglementDTO p, TTypeReglement typeReglement,
+            LocalDateTime mvtDate, int montantTtcUg, int montantNetUg);
+
+    void createCopyVenteReglement(TPreenregistrement tp, VenteReglement venteReglement);
 }
