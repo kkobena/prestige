@@ -207,39 +207,6 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITY(), depot);
             suggestionService.makeSuggestionAuto(familleStock, tFamille);
         }
-        // list.stream().forEach(it -> {
-        // it.setStrSTATUT(STATUT_IS_CLOSED);
-        // TFamille tFamille = it.getLgFAMILLEID();
-        // if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
-        // saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0, ACTION_VENTE,
-        // tp.getStrREF());
-        // String desc = "Modification du prix du produit [ " + tFamille.getIntCIP() + " ] de "
-        // + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
-        // + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
-        // logService.updateItem(tu, tp.getStrREF(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tp);
-        // notificationService.save(new Notification().canal(Canal.EMAIL)
-        // .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
-        // }
-        // TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
-        // int initStock = familleStock.getIntNUMBERAVAILABLE();
-        // if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-        // TFamille oTFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID());
-        // TFamilleStock stockParent = findStockByProduitId(oTFamilleParent.getLgFAMILLEID(),
-        // emplacement.getLgEMPLACEMENTID());
-        // deconditionner(tu, tFamille, oTFamilleParent, stockParent, familleStock, it.getIntQUANTITY());
-        //
-        // }
-        //
-        // updatefamillenbvente(tFamille, it.getIntQUANTITY(), isDepot);
-        // mouvementProduitService.saveMvtProduit(it.getIntPRICEUNITAIR(), it, typemvtproduit, tFamille, tu,
-        // emplacement, it.getIntQUANTITY(), initStock, initStock - it.getIntQUANTITY(), it.getValeurTva(),
-        // tp.getChecked(), it.getIntUG());
-        // updateStock(familleStock, tp, it);
-        // this.getEmg().merge(familleStock);
-        // this.getEmg().merge(it);
-        // updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITY(), depot);
-        // suggestionService.makeSuggestionAuto(familleStock, tFamille);
-        // });
 
     }
 

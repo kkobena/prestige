@@ -57,6 +57,12 @@ public class VenteReglement implements Serializable {
 
     @Column(name = "flag_id")
     private String flagId;
+    @NotNull
+    @Column(name = "ug_amount", nullable = false, columnDefinition = "int default 0 ")
+    private Integer ugAmount = 0;
+    @NotNull
+    @Column(name = "ug_amount_net", nullable = false, columnDefinition = "int default 0 ")
+    private Integer ugNetAmount = 0;
 
     public String getId() {
         return id;
@@ -120,6 +126,22 @@ public class VenteReglement implements Serializable {
 
     public void setFlagId(String flagId) {
         this.flagId = flagId;
+    }
+
+    public Integer getUgAmount() {
+        return ugAmount;
+    }
+
+    public void setUgAmount(Integer ugAmount) {
+        this.ugAmount = ugAmount;
+    }
+
+    public Integer getUgNetAmount() {
+        return ugNetAmount;
+    }
+
+    public void setUgNetAmount(Integer ugNetAmount) {
+        this.ugNetAmount = ugNetAmount;
     }
 
 }

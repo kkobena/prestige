@@ -12,6 +12,8 @@ public class VenteReglementReportDTO {
     private long montant;
     private long montantAttentu;
     private long flagedAmount;
+    private long ugNetAmount;
+    private long ugTtcAmount;
 
     public VenteReglementReportDTO() {
     }
@@ -62,6 +64,22 @@ public class VenteReglementReportDTO {
 
     public void setMontantAttentu(long montantAttentu) {
         this.montantAttentu = montantAttentu;
+    }
+
+    public long getUgNetAmount() {
+        return ugNetAmount;
+    }
+
+    public void setUgNetAmount(long ugNetAmount) {
+        this.ugNetAmount = ugNetAmount;
+    }
+
+    public long getUgTtcAmount() {
+        return ugTtcAmount;
+    }
+
+    public void setUgTtcAmount(long ugTtcAmount) {
+        this.ugTtcAmount = ugTtcAmount;
     }
 
 }
