@@ -14,6 +14,7 @@ public class VenteReglementReportDTO {
     private long flagedAmount;
     private long ugNetAmount;
     private long ugTtcAmount;
+    private long amountNonCa;
 
     public VenteReglementReportDTO() {
     }
@@ -80,6 +81,14 @@ public class VenteReglementReportDTO {
 
     public void setUgTtcAmount(long ugTtcAmount) {
         this.ugTtcAmount = ugTtcAmount;
+    }
+
+    public long getAmountNonCa() {
+        return amountNonCa;
+    }
+
+    public void setAmountNonCa(long amountNonCa) {
+        this.amountNonCa = amountNonCa;
     }
 
 }

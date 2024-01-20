@@ -108,7 +108,7 @@ public class BalanceServiceImpl implements BalanceService {
     private static final String STAT_LAST_THREE_YEARS = "SELECT YEAR(p.`dt_UPDATED`) AS annee, MONTH(p.`dt_UPDATED`) AS mois,SUM(d.int_PRICE) AS montantTTC FROM t_preenregistrement_detail d,t_preenregistrement p,t_user u ,mvttransaction m WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND p.`lg_PREENREGISTREMENT_ID`=m.pkey  AND  d.`bool_ACCOUNT` "
             + " AND p.lg_TYPE_VENTE_ID <> ?1 AND p.str_STATUT='is_Closed'  AND p.imported=0 AND YEAR(p.dt_UPDATED)  BETWEEN ?2 AND ?3 AND p.lg_USER_ID=u.lg_USER_ID AND u.lg_EMPLACEMENT_ID=?4 GROUP BY annee,mois ";
 
-    private static final String TYPE_REGELEMENT_QUERY = "SELECT SUM(vr.flaged_amount) AS flaged_amount, p.`lg_TYPE_VENTE_ID` AS typeVente, r.`str_NAME` AS libelle, vr.type_regelement AS typeReglement,SUM(vr.montant) AS montant,SUM(vr.montant_attentu) AS montant_attendu,SUM(vr.ug_amount) AS ug_amount,SUM(vr.ug_amount_net) AS ug_amount_net FROM  vente_reglement vr JOIN t_preenregistrement p ON p.`lg_PREENREGISTREMENT_ID`=vr.vente_id JOIN mvttransaction m ON m.pkey=p.`lg_PREENREGISTREMENT_ID` JOIN t_type_reglement r ON r.`lg_TYPE_REGLEMENT_ID`=vr.type_regelement WHERE DATE(p.`dt_UPDATED`) BETWEEN   ?3 AND ?4 AND p.`str_STATUT`='is_Closed'  AND p.`lg_TYPE_VENTE_ID` <>  ?1  AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement}  GROUP BY typeReglement,typeVente ";
+    private static final String TYPE_REGELEMENT_QUERY = "SELECT SUM(vr.flaged_amount) AS flaged_amount, p.`lg_TYPE_VENTE_ID` AS typeVente, r.`str_NAME` AS libelle, vr.type_regelement AS typeReglement,SUM(vr.montant) AS montant,SUM(vr.montant_attentu) AS montant_attendu,SUM(vr.ug_amount) AS ug_amount,SUM(vr.ug_amount_net) AS ug_amount_net,SUM(vr.amount_non_ca) AS amount_non_ca FROM  vente_reglement vr JOIN t_preenregistrement p ON p.`lg_PREENREGISTREMENT_ID`=vr.vente_id JOIN mvttransaction m ON m.pkey=p.`lg_PREENREGISTREMENT_ID` JOIN t_type_reglement r ON r.`lg_TYPE_REGLEMENT_ID`=vr.type_regelement WHERE DATE(p.`dt_UPDATED`) BETWEEN   ?3 AND ?4 AND p.`str_STATUT`='is_Closed'  AND p.`lg_TYPE_VENTE_ID` <>  ?1  AND m.`lg_EMPLACEMENT_ID` =?2 AND p.imported=0 {excludeStatement}  GROUP BY typeReglement,typeVente ";
 
     private final Comparator<TableauBaordPhDTO> comparator = Comparator.comparing(TableauBaordPhDTO::getMvtDate);
 
@@ -1342,6 +1342,7 @@ public class BalanceServiceImpl implements BalanceService {
         venteReglement.setFlagedAmount(tuple.get("flaged_amount", BigDecimal.class).longValue());
         venteReglement.setUgNetAmount(tuple.get("ug_amount_net", BigDecimal.class).longValue());
         venteReglement.setUgTtcAmount(tuple.get("ug_amount", BigDecimal.class).longValue());
+        venteReglement.setAmountNonCa(tuple.get("amount_non_ca", BigDecimal.class).longValue());
         return venteReglement;
     }
 
@@ -1392,7 +1393,8 @@ public class BalanceServiceImpl implements BalanceService {
         }
         for (VenteReglementReportDTO reglementReport : reglementReports) {
             long ugNetAmount = checkUg ? reglementReport.getUgNetAmount() : 0;
-            long amount = (reglementReport.getMontant() - reglementReport.getFlagedAmount()) - ugNetAmount;
+            long amount = ((reglementReport.getMontant() - reglementReport.getFlagedAmount()) - ugNetAmount)
+                    - reglementReport.getAmountNonCa();
             totalModeReglement += amount;
             switch (reglementReport.getTypeReglement()) {
 

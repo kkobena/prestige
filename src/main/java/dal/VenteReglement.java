@@ -63,6 +63,9 @@ public class VenteReglement implements Serializable {
     @NotNull
     @Column(name = "ug_amount_net", nullable = false, columnDefinition = "int default 0 ")
     private Integer ugNetAmount = 0;
+    @NotNull
+    @Column(name = "amount_non_ca", nullable = false, columnDefinition = "int default 0 ")
+    private Integer amountNonCa = 0;
 
     public String getId() {
         return id;
@@ -142,6 +145,14 @@ public class VenteReglement implements Serializable {
 
     public void setUgNetAmount(Integer ugNetAmount) {
         this.ugNetAmount = ugNetAmount;
+    }
+
+    public Integer getAmountNonCa() {
+        return amountNonCa;
+    }
+
+    public void setAmountNonCa(Integer amountNonCa) {
+        this.amountNonCa = amountNonCa;
     }
 
 }
