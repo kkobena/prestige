@@ -18,7 +18,7 @@ import rest.report.ReportUtil;
 import rest.service.CaisseService;
 import rest.service.CommonService;
 import rest.service.dto.MvtCaisseSummaryDTO;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -30,8 +30,6 @@ public class CaisseServlet extends HttpServlet {
     private CaisseService caisseService;
     @EJB
     private ReportUtil reportUtil;
-    @EJB
-    private CommonService commonService;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -59,14 +57,14 @@ public class CaisseServlet extends HttpServlet {
 
     public String buildReport(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER);
 
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
         String userId = request.getParameter("userId");
 
         boolean checked = Boolean.parseBoolean(request.getParameter("checked"));
-        TOfficine oTOfficine = commonService.findOfficine();
+        TOfficine oTOfficine = caisseService.findOfficine();
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
         Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);

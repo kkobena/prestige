@@ -692,7 +692,7 @@ public class BalanceServiceImpl implements BalanceService {
     @Override
     public boolean useLastUpdateStats() {
         return true;
-        // return findParam(TVA_BALANCE_LAST_UPDATE);
+
     }
 
     private boolean checkUg() {

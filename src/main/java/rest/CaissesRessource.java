@@ -5,7 +5,6 @@
  */
 package rest;
 
-import commonTasks.dto.Params;
 import dal.TUser;
 import java.time.LocalDate;
 import javax.ejb.EJB;
@@ -18,13 +17,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.BalanceService;
 import rest.service.CaisseService;
 import rest.service.SalesStatsService;
 import toolkits.parameters.commonparameter;
-import rest.service.dto.BalanceParamsDTO;
 import util.Constant;
 
 /**
@@ -40,54 +37,6 @@ public class CaissesRessource {
     private HttpServletRequest servletRequest;
     @EJB
     private CaisseService caisseService;
-    @EJB
-    private SalesStatsService salesStatsService;
-
-    @EJB
-    private BalanceService balanceService;
-
-    @GET
-    @Path("balancesalecash")
-    public Response balanceCaisse(@QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
-            dtSt = LocalDate.parse(dtStart);
-            dtEn = LocalDate.parse(dtEnd);
-        } catch (Exception e) {
-        }
-        JSONObject json;
-        if (!this.balanceService.useLastUpdateStats()) {
-            json = caisseService.balanceVenteCaisseVersion2(dtSt, dtEn, true,
-                    tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), true);
-        } else {
-            json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd)
-                    .emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
-        }
-
-        return Response.ok().entity(json.toString()).build();
-    }
-
-    @Deprecated
-    public Response tvastatDeprecated(@QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        Params params = new Params();
-        params.setDtEnd(dtEnd);
-        params.setDtStart(dtStart);
-        params.setOperateur(tu);
-        JSONObject json = salesStatsService.tvasData(params);
-        return Response.ok().entity(json.toString()).build();
-    }
 
     @GET
     @Path("balanceparas")
