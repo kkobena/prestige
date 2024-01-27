@@ -18,12 +18,10 @@ public interface VenteReglementService {
 
     List<VenteReglement> getByVenteId(String venteId);
 
-    void createNew(VenteReglement venteReglement);
-
     void createNew(TPreenregistrement preenregistrement, TTypeReglement typeReglement, MvtTransaction mt);
 
     void createVenteReglement(TPreenregistrement tp, VenteReglementDTO p, TTypeReglement typeReglement,
-            LocalDateTime mvtDate, int montantTtcUg, int montantNetUg);
+            LocalDateTime mvtDate);
 
     void createCopyVenteReglement(TPreenregistrement tp, VenteReglement venteReglement);
 }

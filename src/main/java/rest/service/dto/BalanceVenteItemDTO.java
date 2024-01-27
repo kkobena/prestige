@@ -48,5 +48,6 @@ public class BalanceVenteItemDTO {
     private BigDecimal montantTTCDetatilToRemove;
     private BigDecimal flagedAmount;
     private BigDecimal montantTTCDetatilReal;
+    private long montantAchatDetatilToRemove;
 
 }
