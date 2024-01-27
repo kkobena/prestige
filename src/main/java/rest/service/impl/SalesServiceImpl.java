@@ -74,6 +74,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -106,6 +107,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.wst.common.project.facet.core.util.internal.CollectionsUtil;
 import org.hibernate.jpa.QueryHints;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -115,6 +117,7 @@ import rest.service.*;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import util.Afficheur;
+import util.Constant;
 import util.DateConverter;
 
 import static util.Constant.*;
@@ -1918,24 +1921,52 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
+    private int computeSumOfExclusVenteItemFromCa(TPreenregistrement tp) {
+        return tp.getTPreenregistrementDetailCollection().stream().filter(
+                e -> !e.getBoolACCOUNT() && tp.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Constant.VENTE_COMPTANT_ID))
+                .mapToInt(TPreenregistrementDetail::getIntPRICE).sum();
+    }
+
     private void addReglement(TPreenregistrement tp, MvtTransaction mt, ClotureVenteParams clotureVenteParams) {
+        int totalAmountNonCa = computeSumOfExclusVenteItemFromCa(tp);
         Set<VenteReglementDTO> reglements = clotureVenteParams.getReglements();
         LocalDateTime mvtDate = DateCommonUtils.convertDateToLocalDateTime(tp.getDtUPDATED());
         if (CollectionUtils.isNotEmpty(reglements)) {
+            List<VenteReglementDTO> reglementsList = reglements.stream()
+                    .sorted(Comparator.comparing(VenteReglementDTO::getMontant, Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
+
             if (reglements.size() > 1) {
-                int totalUgNet = 0;
-                int totalUgTtc = 0;
-                if (Objects.nonNull(mt.getMontantttcug()) && mt.getMontantttcug().compareTo(0) != 0) {
-                    totalUgTtc = mt.getMontantttcug() / 2;
-                    totalUgNet = mt.getMontantnetug() / 2;
-                }
-                List<VenteReglementDTO> reglementsList = reglements.stream().collect(Collectors.toList());
                 VenteReglementDTO first = reglementsList.get(0);
+
                 VenteReglementDTO last = reglementsList.get(reglementsList.size() - 1);
-                venteReglementService.createVenteReglement(tp, first, findById(first.getTypeReglement()), mvtDate,
-                        totalUgTtc, totalUgNet);
-                venteReglementService.createVenteReglement(tp, last, findById(last.getTypeReglement()), mvtDate,
-                        mt.getMontantttcug() - totalUgTtc, mt.getMontantnetug() - totalUgNet);
+                int totalUgNet;
+                int amountNonCa;
+                if (Objects.nonNull(mt.getMontantttcug()) && mt.getMontantttcug().compareTo(0) != 0) {
+
+                    if (first.getMontant() >= mt.getMontantnetug()) {
+                        first.setMontantTttcug(mt.getMontantttcug());
+                        first.setMontantnetug(mt.getMontantnetug());
+
+                    } else {
+                        totalUgNet = mt.getMontantnetug() - first.getMontant();
+                        first.setMontantTttcug(first.getMontant());
+                        first.setMontantnetug(first.getMontant());
+                        last.setMontantnetug(totalUgNet);
+                        last.setMontantTttcug(totalUgNet);
+                    }
+
+                }
+                if (first.getMontant() >= totalAmountNonCa) {
+                    first.setAmountNonCa(totalAmountNonCa);
+                } else {
+                    amountNonCa = totalAmountNonCa - first.getMontant();
+                    first.setAmountNonCa(first.getMontant());
+                    last.setAmountNonCa(amountNonCa);
+                }
+
+                venteReglementService.createVenteReglement(tp, first, findById(first.getTypeReglement()), mvtDate);
+                venteReglementService.createVenteReglement(tp, last, findById(last.getTypeReglement()), mvtDate);
 
             } else {
                 this.venteReglementService.createNew(tp,

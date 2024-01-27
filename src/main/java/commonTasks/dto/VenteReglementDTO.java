@@ -9,6 +9,9 @@ public class VenteReglementDTO {
     private int montant;
     private int montantAttentu;
     private String typeReglementId;
+    private int montantnetug;
+    private int montantTttcug;
+    private int amountNonCa;
 
     public String getTypeReglement() {
         return typeReglement;
@@ -55,6 +58,30 @@ public class VenteReglementDTO {
         }
         VenteReglementDTO that = (VenteReglementDTO) o;
         return Objects.equals(typeReglement, that.typeReglement);
+    }
+
+    public int getMontantnetug() {
+        return montantnetug;
+    }
+
+    public void setMontantnetug(int montantnetug) {
+        this.montantnetug = montantnetug;
+    }
+
+    public int getMontantTttcug() {
+        return montantTttcug;
+    }
+
+    public void setMontantTttcug(int montantTttcug) {
+        this.montantTttcug = montantTttcug;
+    }
+
+    public int getAmountNonCa() {
+        return amountNonCa;
+    }
+
+    public void setAmountNonCa(int amountNonCa) {
+        this.amountNonCa = amountNonCa;
     }
 
     @Override

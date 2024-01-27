@@ -131,13 +131,7 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             itemId: 'monthly'
                         },
 
-                        {
-                            text: 'rechercher',
-                            tooltip: 'rechercher',
-                            itemId: 'rechercher',
-                            scope: this,
-                            iconCls: 'searchicon'
-                        },
+                       
                         {
                             xtype: 'combo',
                             value: 'Ratio Ventes/Achats',
@@ -146,6 +140,12 @@ Ext.define('testextjs.view.Dashboard.TableauPhama', {
                             labelWidth: 60,
                             fieldLabel: 'Filtrer par',
                             store: ['Ratio Vente/Achat', 'Ratio Achat/Vente']
+                        }, {
+                            text: 'rechercher',
+                            tooltip: 'rechercher',
+                            itemId: 'rechercher',
+                            scope: this,
+                            iconCls: 'searchicon'
                         }
                         , {
                             text: 'imprimer',
