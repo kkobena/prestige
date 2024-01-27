@@ -136,9 +136,7 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
             dtStart: null
 
         };
-       /* if (me.getCheckUg()) {
-            myProxy.url = '../api/v1/balance/balancesalecash';
-        }*/
+      
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
 
@@ -153,9 +151,6 @@ Ext.define('testextjs.controller.BalanceVenteCtr', {
     doSearch: function () {
         const me = this;
         let store = me.getBalanceGrid().getStore();
-       /* if (me.getCheckUg()) {
-            store.getProxy().url = '../api/v1/caisse/balancesalecash';
-        }*/
         store.load({
             params: {
                 dtStart: me.getDtStart().getSubmitValue(),

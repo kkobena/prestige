@@ -66,18 +66,18 @@ public class Balance {
     @EJB
     CaisseService caisseService;
     @EJB
-    ReportUtil reportUtil;
+    private ReportUtil reportUtil;
 
     @EJB
-    SalesStatsService salesStatsService;
+    private SalesStatsService salesStatsService;
     @EJB
-    ProduitService produitService;
+    private ProduitService produitService;
     @EJB
-    DashBoardService dashBoardService;
+    private DashBoardService dashBoardService;
     @EJB
-    FamilleArticleService familleArticleService;
+    private FamilleArticleService familleArticleService;
     @EJB
-    FicheArticleService ficheArticleService;
+    private FicheArticleService ficheArticleService;
     @EJB
     private TvaService tvaService;
     @EJB
@@ -101,20 +101,9 @@ public class Balance {
         }
         BalanceDTO vo = new BalanceDTO();
         BalanceDTO vno = new BalanceDTO();
-        GenericDTO generic;
-        if (this.balanceService.useLastUpdateStats()) {
-            generic = this.balanceService.getBalanceVenteCaisseData(BalanceParamsDTO.builder().dtEnd(parasm.getDtEnd())
-                    .dtStart(parasm.getDtStart()).showAllAmount(showAllAmount)
-                    .emplacementId(parasm.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
-        } else {
-            if (!parasm.isCheckug()) {
-                generic = caisseService.balanceVenteCaisseReport(dtSt, dtEn, true, empl.getLgEMPLACEMENTID(),
-                        exludeSome);
-            } else {
-                generic = caisseService.balanceVenteCaisseReportVersion2(dtSt, dtEn, true, empl.getLgEMPLACEMENTID(),
-                        exludeSome);
-            }
-        }
+        GenericDTO generic = this.balanceService.getBalanceVenteCaisseData(BalanceParamsDTO.builder()
+                .dtEnd(parasm.getDtEnd()).dtStart(parasm.getDtStart()).showAllAmount(showAllAmount)
+                .emplacementId(parasm.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
 
         List<VisualisationCaisseDTO> findAllMvtCaisse = caisseService.findAllMvtCaisse(dtSt, dtEn, true,
                 empl.getLgEMPLACEMENTID());

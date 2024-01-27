@@ -57,9 +57,6 @@ public interface CaisseService {
 
     SumCaisseDTO cumul(CaisseParamsDTO caisseParams, boolean all);
 
-    GenericDTO balanceVenteCaisseReport(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
-            Boolean excludeSome);
-
     List<VisualisationCaisseDTO> findAllMvtCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId);
 
@@ -109,12 +106,6 @@ public interface CaisseService {
 
     JSONObject venteUg(LocalDate dtStart, LocalDate dtEnd, String query);
 
-    JSONObject balanceVenteCaisseVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
-            Boolean excludeSome) throws JSONException;
-
-    GenericDTO balanceVenteCaisseReportVersion2(LocalDate dtStart, LocalDate dtEnd, boolean checked,
-            String emplacementId, Boolean excludeSome);
-
     List<VenteDetailsDTO> venteUgDTO(LocalDate dtStart, LocalDate dtEnd, String query);
 
     JSONObject balancePara(LocalDate dtStart, LocalDate dtEnd, String emplacementId) throws JSONException;
@@ -137,4 +128,5 @@ public interface CaisseService {
     JSONObject getAllMvtCaisses(String dtStart, String dtEnd, boolean checked, String userId, int limit, int start);
 
     String ouvrirCaisse(TUser user, CoffreCaisseDTO coffreCaisse) throws CaisseUsingExeception;
+
 }
