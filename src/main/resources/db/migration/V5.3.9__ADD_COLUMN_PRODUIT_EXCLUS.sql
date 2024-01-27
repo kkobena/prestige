@@ -30,6 +30,3 @@ BEGIN
 
 END @@
 DELIMITER ;
-
-
-CALL  proc_update_vente_reglement_amount_non_ca();
