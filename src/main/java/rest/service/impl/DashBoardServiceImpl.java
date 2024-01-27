@@ -498,9 +498,12 @@ public class DashBoardServiceImpl implements DashBoardService {
         if (Objects.isNull(tuple)) {
             return new RecapActiviteCreditDTO(0, 0, 0);
         }
+        BigDecimal amount = tuple.get("amount", BigDecimal.class);
+        if (Objects.isNull(amount)) {
+            return new RecapActiviteCreditDTO(0, 0, 0);
+        }
         try {
-            return new RecapActiviteCreditDTO(tuple.get("amount", BigDecimal.class).longValue(),
-                    tuple.get("nbreClient", BigInteger.class).longValue(),
+            return new RecapActiviteCreditDTO(amount.longValue(), tuple.get("nbreClient", BigInteger.class).longValue(),
                     tuple.get("nbreBon", BigInteger.class).longValue());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
