@@ -1257,7 +1257,7 @@ public class OrderServiceImpl implements OrderService {
         orderDetail.setIntQTEMANQUANT(orderDetail.getIntNUMBER());
         orderDetail.setIntPAFDETAIL(details.getIntPAFDETAIL());
         orderDetail.setIntPRICEDETAIL(details.getIntPRICEDETAIL());
-        orderDetail.setIntPRICE(orderDetail.getIntNUMBER() * orderDetail.getIntPRICEDETAIL());
+        orderDetail.setIntPRICE(orderDetail.getIntNUMBER() * orderDetail.getIntPAFDETAIL());
         orderDetail.setLgFAMILLEID(famille);
         orderDetail.setLgGROSSISTEID(grossiste);
         orderDetail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
