@@ -59,23 +59,21 @@ public class AccountResource {
             hs.setAttribute(Constant.AIRTIME_USER, tu);
             TRoleUser oTRoleUser = userService.getTRoleUser(tu.getLgUSERID());
             if (oTRoleUser != null && oTRoleUser.getLgROLEID() != null) {
-                xtypeuser = (oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_PHARMACIEN)
-                        || oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)
-                        || oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(commonparameter.ROLE_ADMIN)
-                                ? "dashboard" : "mainmenumanager");
+                xtypeuser = (oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(Constant.ROLE_PHARMACIEN)
+                        || oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(Constant.ROLE_SUPERADMIN)
+                        || oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(Constant.ROLE_ADMIN) ? "dashboard"
+                                : "mainmenumanager");
             }
             json.put("xtypeuser", xtypeuser);
 
             json.put("str_PIC", "../general/resources/images/photo_personne/" + tu.getStrPIC());
             json.put("lg_EMPLACEMENT_ID", tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            json.put("OFFICINE",
-                    tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)
-                            ? userService.getOfficine().getStrNOMABREGE()
-                            : tu.getLgEMPLACEMENTID().getStrDESCRIPTION());
+            json.put("OFFICINE", tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID().equals(Constant.PROCESS_SUCCESS)
+                    ? userService.getOfficine().getStrNOMABREGE() : tu.getLgEMPLACEMENTID().getStrDESCRIPTION());
             List<TPrivilege> lstTPrivilege = userService.getAllPrivilege(tu);
-            hs.setAttribute(commonparameter.USER_LIST_PRIVILEGE, lstTPrivilege);
-            boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_BT_UPDATE_PRICE_EDIT);
-            hs.setAttribute(commonparameter.UPDATE_PRICE, asAuthority);
+            hs.setAttribute(Constant.USER_LIST_PRIVILEGE, lstTPrivilege);
+            boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, Constant.P_BT_UPDATE_PRICE_EDIT);
+            hs.setAttribute(Constant.UPDATE_PRICE, asAuthority);
             json.put("success", true);
             return Response.ok().entity(json.toString()).build();
         }

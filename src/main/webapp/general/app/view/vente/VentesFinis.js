@@ -22,7 +22,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
             data: [['VNO'], ['VO']],
             fields: [{name: 'typeVente', type: 'string'}]
         });
-         const natureventeStore = new Ext.data.Store({
+        const natureventeStore = new Ext.data.Store({
             model: 'testextjs.model.caisse.Nature',
             pageSize: null,
             autoLoad: false,
@@ -106,7 +106,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             increment: 30,
                             value: '23:59',
                             format: 'H:i'
-                        }, '-', 
+                        }, '-',
                         {
                             xtype: 'combobox',
                             fieldLabel: 'Type.vente',
@@ -122,24 +122,24 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             emptyText: 'Selectionner un type de vente'
 
                         }, '-',
-                         {
-                                    xtype: 'combobox',
-                                    itemId: 'nature',
-                                       fieldLabel: 'Nature.vente',
-                                    store: natureventeStore,
-                                    editable:false,
-                                    flex:1.2,
-                                      labelWidth:70,
-                                    valueField: 'lgNATUREVENTEID',
-                                    displayField: 'strLIBELLE',
-                                    typeAhead: false,
-                                    queryMode: 'remote',
-                                    emptyText: 'Selectionner la nature ...'
+                        {
+                            xtype: 'combobox',
+                            itemId: 'nature',
+                            fieldLabel: 'Nature.vente',
+                            store: natureventeStore,
+                            editable: false,
+                            flex: 1.2,
+                            labelWidth: 70,
+                            valueField: 'lgNATUREVENTEID',
+                            displayField: 'strLIBELLE',
+                            typeAhead: false,
+                            queryMode: 'remote',
+                            emptyText: 'Selectionner la nature ...'
 
-                                },
-                        
+                        },
+
                         '-',
-                        
+
                         {
                             xtype: 'textfield',
                             itemId: 'query',
@@ -424,6 +424,27 @@ Ext.define('testextjs.view.vente.VentesFinis', {
 
                                 }]
                         },
+                        {
+                            xtype: 'actioncolumn',
+                            width: 30,
+                            sortable: false,
+                            menuDisabled: true,
+                            items: [{
+                                    icon: 'resources/images/icons/fam/table_refresh.png',
+                                    tooltip: 'Modifier la date',
+                                    menuDisabled: true,
+                                    handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                        this.fireEvent('onUpdateDate', view, rowIndex, colIndex, item, e, record, row);
+                                    },
+                                    getClass: function (value, metadata, record) {
+                                        if (record.get('intPRICE') > 0 && !record.get('cancel') && record.get('modificationVenteDate') && (record.get('strTYPEVENTE') === "VO")) {
+                                            return 'x-display-hide';
+                                        }
+                                        return 'x-hide-display';
+                                    }
+
+                                }]
+                        },
 
                         {
                             xtype: 'actioncolumn',
@@ -433,7 +454,7 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             items: [{
                                     icon: 'resources/images/download.png',
                                     tooltip: 'Exporter',
-                                   
+
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {
                                         this.fireEvent('toExportToJson', view, rowIndex, colIndex, item, e, record, row);
                                     },
@@ -446,15 +467,14 @@ Ext.define('testextjs.view.vente.VentesFinis', {
 
                                 }]
                         },
-                        
-                        
-                            {
+
+                        {
                             xtype: 'actioncolumn',
                             width: 30,
                             sortable: false,
                             menuDisabled: true,
                             items: [
-                                 {
+                                {
                                     icon: 'resources/images/icons/fam/application_view_list.png',
                                     tooltip: 'Voir détail',
                                     handler: function (view, rowIndex, colIndex, item, e, record, row) {

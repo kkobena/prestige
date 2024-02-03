@@ -59,6 +59,16 @@ public class VenteDTO implements Serializable {
     private String medecinId, nom, numOrder, commentaire;
     private boolean modificationClientTp;
     private List<VenteReglementReportDTO> reglements = new ArrayList<>();
+    private boolean modificationVenteDate;
+
+    public boolean isModificationVenteDate() {
+        return modificationVenteDate;
+    }
+
+    public VenteDTO setModificationVenteDate(boolean modificationVenteDate) {
+        this.modificationVenteDate = modificationVenteDate;
+        return this;
+    }
 
     public List<VenteReglementReportDTO> getReglements() {
         return reglements;

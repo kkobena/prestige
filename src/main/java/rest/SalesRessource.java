@@ -10,7 +10,9 @@ import commonTasks.dto.MedecinDTO;
 import commonTasks.dto.QueryDTO;
 import commonTasks.dto.SalesParams;
 import dal.TPreenregistrement;
+import dal.TPrivilege;
 import dal.TUser;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -30,7 +32,9 @@ import rest.qualifier.SalesPrimary;
 import rest.service.GenerateTicketService;
 import rest.service.SalesService;
 import rest.service.SmsService;
-import toolkits.parameters.commonparameter;
+import rest.service.dto.UpdateVenteParamDTO;
+import util.CommonUtils;
+
 import util.DateConverter;
 import util.Constant;
 
@@ -58,7 +62,7 @@ public class SalesRessource {
     public Response getTicket(ClotureVenteParams clotureVenteParams) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -72,7 +76,7 @@ public class SalesRessource {
     public Response getTicketById(@PathParam("id") String id) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -86,7 +90,7 @@ public class SalesRessource {
     public Response getTicketCoy(@PathParam("id") String id) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -100,7 +104,7 @@ public class SalesRessource {
     public Response getTicketVo(ClotureVenteParams clotureVenteParams) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -115,7 +119,7 @@ public class SalesRessource {
     public Response getTicketVo(@PathParam("id") String id) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -128,7 +132,7 @@ public class SalesRessource {
     @Path("add/vno")
     public Response addVente(SalesParams params) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -142,7 +146,7 @@ public class SalesRessource {
     @Path("add/assurance")
     public Response addVenteAssurance(SalesParams params) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -158,13 +162,13 @@ public class SalesRessource {
         JSONObject json = new JSONObject();
         try {
             HttpSession hs = servletRequest.getSession();
-            TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+            TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
             if (tu == null) {
                 return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
             }
             params.setUserId(tu);
             params.setDevis(true);
-            params.setStatut(commonparameter.statut_is_Devis);
+            params.setStatut(Constant.STATUT_IS_DEVIS);
             json = salesService.faireDevis(params);
 
         } catch (JSONException ex) {
@@ -177,7 +181,7 @@ public class SalesRessource {
     @Path("remise")
     public Response addRemise(SalesParams params) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -195,7 +199,7 @@ public class SalesRessource {
     @Path("cloturer/vno")
     public Response cloturerVno(ClotureVenteParams clotureVenteParams) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -208,7 +212,7 @@ public class SalesRessource {
     @Path("net/vno")
     public Response netPayer(SalesParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -220,7 +224,7 @@ public class SalesRessource {
     @Path("net/assurance")
     public Response netPayerAssurance(SalesParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -232,7 +236,7 @@ public class SalesRessource {
     @Path("cloturer/assurance")
     public Response cloturerAssurance(ClotureVenteParams clotureVenteParams) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -245,7 +249,7 @@ public class SalesRessource {
     @Path("clotureravoir/{id}")
     public Response clotureravoir(@PathParam("id") String id) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -257,7 +261,7 @@ public class SalesRessource {
     @Path("updatetypevente")
     public Response updatetypevente(SalesParams params) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -269,7 +273,7 @@ public class SalesRessource {
     @Path("removetp/{compteClientId}/{venteId}")
     public Response removetp(@PathParam("compteClientId") String compteClientId, @PathParam("venteId") String venteId) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -281,7 +285,7 @@ public class SalesRessource {
     @Path("addtp/{venteId}")
     public Response addtp(@PathParam("venteId") String venteId, SalesParams params) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -294,7 +298,7 @@ public class SalesRessource {
     public Response deleteVente(@PathParam("id") String id) {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -307,7 +311,7 @@ public class SalesRessource {
     @Path("search/{id}")
     public Response searchProductById(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -321,7 +325,7 @@ public class SalesRessource {
             @QueryParam(value = "query") String query) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -341,7 +345,7 @@ public class SalesRessource {
             @QueryParam(value = "statut") String statut) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -361,7 +365,7 @@ public class SalesRessource {
     public Response addItemVente(SalesParams params) {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -374,7 +378,7 @@ public class SalesRessource {
     @Path("remove/vno/item/{id}")
     public Response removeItemVente(@PathParam("id") String itemId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -387,7 +391,7 @@ public class SalesRessource {
     @Path("remove/depot/item/{id}")
     public Response removeItemVentedepot(@PathParam("id") String itemId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -401,7 +405,7 @@ public class SalesRessource {
     public Response updateItemVente(SalesParams params) {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -415,7 +419,7 @@ public class SalesRessource {
     public Response nobreproduits(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -429,14 +433,14 @@ public class SalesRessource {
     @Path("add/depot")
     public Response addVenteDepot(SalesParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUserId(tu);
         params.setDepot(true);
         params.setTypeVenteId((params.getTypeDepoId().equals("1") ? "4" : "5"));
-        params.setStatut(commonparameter.statut_is_Process);
+        params.setStatut(Constant.STATUT_IS_PROGRESS);
         JSONObject json = salesService.createPreVenteVo(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -445,7 +449,7 @@ public class SalesRessource {
     @Path("remise-depot")
     public Response addRemiseDepot(SalesParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -458,7 +462,7 @@ public class SalesRessource {
     @Path("clotureVenteDepot")
     public Response clotureVenteDepot(ClotureVenteParams clotureVenteParams) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
@@ -472,7 +476,7 @@ public class SalesRessource {
     @Path("clotureVenteDepotAgree")
     public Response clotureVenteDepotAgree(ClotureVenteParams clotureVenteParams) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -485,7 +489,7 @@ public class SalesRessource {
     @Path("cheick-caisse")
     public Response checkCaisse() throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -499,7 +503,7 @@ public class SalesRessource {
     @Path("shownetpaydepotAgree")
     public Response shownetpaydepotAgree(SalesParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -511,7 +515,7 @@ public class SalesRessource {
     @Path("update/client")
     public Response updateVenteClient(SalesParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -523,7 +527,7 @@ public class SalesRessource {
     @Path("findone/{id}")
     public Response findByQuery(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -535,7 +539,7 @@ public class SalesRessource {
     @Path("retmoveClient/{id}")
     public Response retmoveClient(@PathParam("id") String venteId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -547,7 +551,7 @@ public class SalesRessource {
     @Path("modifiertypevente/{id}")
     public Response modifiertypevente(@PathParam("id") String venteId, ClotureVenteParams params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -560,7 +564,7 @@ public class SalesRessource {
     public Response updateCurrentVenteClientData(@PathParam("id") String venteId, SalesParams params)
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -572,7 +576,7 @@ public class SalesRessource {
     @Path("modifier-vente-terme/{id}")
     public Response modifierventeterme(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -585,7 +589,7 @@ public class SalesRessource {
     public Response modifiertierspayantprincipal(@PathParam("id") String id, ClotureVenteParams params)
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -598,7 +602,7 @@ public class SalesRessource {
     public Response getTicketDepot(@PathParam("id") String id) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -611,7 +615,7 @@ public class SalesRessource {
     public Response getTicketDepot(ClotureVenteParams clotureVenteParams) throws JSONException {
 
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -632,7 +636,7 @@ public class SalesRessource {
     public Response updateMedecin(SalesParams params) {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -645,7 +649,7 @@ public class SalesRessource {
     @Path("add/medecin/{id}")
     public Response addMedecin(@PathParam("id") String id, MedecinDTO params) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -657,7 +661,7 @@ public class SalesRessource {
     @Path("update/infosclienttp/{id}")
     public Response updateClientOrTierpayant(@PathParam("id") String id, SalesParams salesParams) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -670,7 +674,7 @@ public class SalesRessource {
     @Path("find/infosclienttpforupdating")
     public Response findVenteForUpdationg(@QueryParam("id") String id) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -682,7 +686,7 @@ public class SalesRessource {
     @Path("updateclientortierpayant")
     public Response updateClientOrTierpayant(SalesParams salesParams) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -695,7 +699,7 @@ public class SalesRessource {
     @Path("gettoken")
     public Response testtoken() throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -708,7 +712,7 @@ public class SalesRessource {
     public Response terminerprevente(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -720,17 +724,29 @@ public class SalesRessource {
     public Response clonerDevis(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         return Response.ok().entity(salesService.clonerDevis(tu, id).toString()).build();
     }
 
-    @GET
-    @Path("test")
-    public Response test() throws JSONException {
-        salesService.updateVente();
+    @POST
+    @Path("update-created-date")
+    public Response test(UpdateVenteParamDTO param) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        boolean hasPrivilege = CommonUtils.hasAuthorityByName(
+                (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE),
+                Constant.P_BTN_UPDATE_VENTE_CLIENT_DATE);
+        if (!hasPrivilege) {
+            return Response.status(Response.Status.UNAUTHORIZED.ordinal(), "Vous avez pas l' autorisation").build();
+        }
+        salesService.updateVenteDate(tu, param);
         return Response.ok().build();
     }
 
