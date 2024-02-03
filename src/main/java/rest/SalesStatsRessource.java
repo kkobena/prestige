@@ -5,7 +5,6 @@
  */
 package rest;
 
-import bll.common.Parameter;
 import commonTasks.dto.ArticleHeader;
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.Params;
@@ -46,8 +45,8 @@ import org.json.JSONObject;
 import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
 import rest.service.TvaService;
-import toolkits.parameters.commonparameter;
-import util.DateConverter;
+import util.CommonUtils;
+import util.CommonUtils;
 import util.Constant;
 import util.FunctionUtils;
 
@@ -78,13 +77,13 @@ public class SalesStatsRessource {
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(hsAttribute, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(hsAttribute, Parameter.P_SHOW_ALL_ACTIVITY);
+        List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean asAuthority = CommonUtils.hasAuthorityByName(hsAttribute, Constant.SHOW_VENTE);
+        boolean allActivitis = CommonUtils.hasAuthorityByName(hsAttribute, Constant.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);
@@ -114,8 +113,8 @@ public class SalesStatsRessource {
         }
 
         List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(hsAttribute, Constant.SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(hsAttribute, Constant.P_SHOW_ALL_ACTIVITY);
+        boolean asAuthority = CommonUtils.hasAuthorityByName(hsAttribute, Constant.SHOW_VENTE);
+        boolean allActivitis = CommonUtils.hasAuthorityByName(hsAttribute, Constant.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);
@@ -139,7 +138,7 @@ public class SalesStatsRessource {
     @Path("remove/{id}")
     public Response delete(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -152,7 +151,7 @@ public class SalesStatsRessource {
     public Response update(@PathParam("venteId") String venteId, String statut) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -168,13 +167,13 @@ public class SalesStatsRessource {
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
+        boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);
@@ -206,9 +205,9 @@ public class SalesStatsRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
+        boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);
@@ -263,14 +262,15 @@ public class SalesStatsRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
-        boolean canCancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
-        boolean modification = DateConverter.hasAuthorityByName(LstTPrivilege,
-                DateConverter.P_BT_MODIFICATION_DE_VENTE);
-        boolean modificationClientTp = DateConverter.hasAuthorityByName(LstTPrivilege,
-                DateConverter.P_BTN_UPDATE_VENTE_CLIENT_TP);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
+        boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
+        boolean canCancel = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_BT_ANNULER_VENTE);
+        boolean modification = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_BT_MODIFICATION_DE_VENTE);
+        boolean modificationClientTp = CommonUtils.hasAuthorityByName(lstTPrivilege,
+                Constant.P_BTN_UPDATE_VENTE_CLIENT_TP);
+        boolean modificationVenteDate = CommonUtils.hasAuthorityByName(lstTPrivilege,
+                Constant.P_BTN_UPDATE_VENTE_CLIENT_DATE);
         SalesStatsParams body = new SalesStatsParams();
         body.setCanCancel(canCancel);
         body.setLimit(limit);
@@ -287,6 +287,7 @@ public class SalesStatsRessource {
         body.setUserId(tu);
         body.setModification(modification);
         body.setModificationClientTp(modificationClientTp);
+        body.setModificationVenteDate(modificationVenteDate);
         try {
             body.sethEnd(LocalTime.parse(hEnd));
         } catch (Exception e) {
@@ -331,10 +332,10 @@ public class SalesStatsRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        List<TPrivilege> LstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
-        boolean canCancel = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_BT_ANNULER_VENTE);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
+        boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
+        boolean canCancel = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_BT_ANNULER_VENTE);
 
         SalesStatsParams body = new SalesStatsParams();
         body.setCanCancel(canCancel);
@@ -374,7 +375,7 @@ public class SalesStatsRessource {
     public Response tvastat(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "typeVente") String typeVente) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -552,7 +553,7 @@ public class SalesStatsRessource {
             @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
             @QueryParam(value = "qteVendu") Integer qteVendu) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }

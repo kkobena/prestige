@@ -4,7 +4,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
     extend: 'Ext.app.Controller',
     requires: [
         'testextjs.model.caisse.Vente',
-        'testextjs.view.vente.user.UpdateVenteClientTpForm', 'testextjs.view.vente.DetailVente'
+        'testextjs.view.vente.user.UpdateVenteClientTpForm', 'testextjs.view.vente.DetailVente','testextjs.view.vente.form.VenteDateForm'
     ],
     views: ['testextjs.view.vente.VentesFinis'],
     refs: [{
@@ -87,7 +87,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 ticketModifie: this.printTicketR,
                 toClientOrTp: this.onUpdateClientOrTp,
                 toExportToJson: this.toExportToJson,
-                goto: this.goto
+                goto: this.goto,
+                onUpdateDate: this.onUpdateVenteDate
             },
             'ventemanager #query': {
                 specialkey: this.onSpecialKey
@@ -109,6 +110,13 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         }
 
     },
+    onUpdateVenteDate: function (view, rowIndex, colIndex, item, e, rec, row) {
+        if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modificationVenteDate') && rec.get('strTYPEVENTE') === "VO") {
+            Ext.create('testextjs.view.vente.form.VenteDateForm', {vente: rec}).show();
+
+        }
+
+    },
     /*
      * methode qui permet de rediriger l'impression du tiket selon que ça soit une ancienne version
      */
@@ -118,7 +126,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             method: 'GET',
             url: '../api/v1/common/datemisajour',
             success: function (response, options) {
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.datemisajour = new Date(result.datemisajour);
                 }
@@ -364,7 +372,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                 success: function (response)
                                 {
                                     const object = Ext.JSON.decode(response.responseText, false);
-                                   
+
                                     if (object.success == "0") {
                                         Ext.MessageBox.alert('Error Message', object.errors);
                                     } else {
@@ -378,7 +386,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                     Ext.MessageBox.alert('Error Message', response.responseText);
                                 }
                             });
-                       
+
                         }
                     });
         }

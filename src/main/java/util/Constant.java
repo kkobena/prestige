@@ -7,6 +7,8 @@ import java.util.List;
  * @author koben
  */
 public final class Constant {
+
+    public static final String UPDATE_PRICE = "UPDATE_PRICE";
     public static final String P_BT_ANNULER_VENTE = "P_BT_ANNULER_VENTE";
     public static final String DECONDTIONNEMENT_POSITIF = "05";
     public static final String DECONDTIONNEMENT_NEGATIF = "06";
@@ -71,6 +73,13 @@ public final class Constant {
     public static final String TOUT = "TOUT";
     public static final String ALL = "ALL";
     public static final String P_BT_MODIFICATION_DE_VENTE = "P_BT_MODIFICATION_DE_VENTE";
+    public static final String P_BTN_UPDATE_VENTE_CLIENT_TP = "P_BTN_UPDATE_VENTE_CLIENT_TP";
+    public static final String P_BTN_UPDATE_VENTE_CLIENT_DATE = "P_BTN_UPDATE_VENTE_CLIENT_DATE";
+    public static final String STATUT_IS_DEVIS = "devis";
+    public static final String PARAMETER_SYSTEM = "SYSTEME";
+    public static final String P_BT_UPDATE_PRICE_EDIT = "P_BT_UPDATE_PRICE_EDIT";
+    public static final String PARAMETER_INDICE_SECURITY = "KEY_INDICE_SECURITY";
+    public static final String PROCESS_SUCCESS = "1";
 
     private Constant() {
     }
