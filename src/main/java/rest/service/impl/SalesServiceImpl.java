@@ -114,6 +114,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.qualifier.SalesPrimary;
 import rest.service.*;
+import rest.service.dto.UpdateVenteParamDTO;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import util.Afficheur;
@@ -4482,25 +4483,6 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    private Integer calculeTva(int codeTva, Integer amount) {
-        Double HT = amount / (1 + (Double.valueOf(codeTva) / 100));
-        return amount - HT.intValue();
-    }
-
-    private List<TPreenregistrement> findAllWithItem() {
-        TypedQuery<TPreenregistrement> tq = getEm().createQuery(
-                "SELECT o FROM TPreenregistrement o WHERE FUNCTION('DATE',o.dtCREATED)=?1", TPreenregistrement.class);
-        tq.setParameter(1, java.sql.Date.valueOf("2019-12-07"), TemporalType.DATE);
-        return tq.getResultList();
-    }
-
-    private List<TPreenregistrementDetail> findAllItem() {
-        TypedQuery<TPreenregistrementDetail> tq = getEm().createQuery(
-                "SELECT o FROM TPreenregistrementDetail o   WHERE o.montantTva=0 AND o.strSTATUT='is_Closed'",
-                TPreenregistrementDetail.class);
-        return tq.getResultList();
-    }
-
     private MvtTransaction findByPkey(String pkey) {
         try {
             TypedQuery<MvtTransaction> tq = getEm().createQuery("SELECT o FROM MvtTransaction o WHERE o.pkey=?1",
@@ -4552,52 +4534,84 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public void updateVente() {
-        List<TPreenregistrement> list = findAllWithItem();
-
-        for (TPreenregistrement p : list) {
-            LocalDateTime venteDate = DateConverter.convertDateToLocalDateTime(p.getDtUPDATED());
-            LocalDate toDay = LocalDate.now();
-            LocalDateTime venteDateNew = LocalDateTime.of(toDay, LocalTime.of(venteDate.getHour(),
-                    venteDate.getMinute(), venteDate.getSecond(), venteDate.getNano()));
-
-            p.setDtCREATED(DateConverter.convertLocalDateTimeToDate(venteDateNew));
-            p.setDtUPDATED(p.getDtCREATED());
-            p.setCompletionDate(new Date());
-            getEm().merge(p);
-            MvtTransaction mt = findByPkey(p.getLgPREENREGISTREMENTID());
-            if (mt != null) {
-                mt.setMvtDate(toDay);
-                mt.setCreatedAt(venteDateNew);
-                getEm().merge(mt);
-            }
-            List<TPreenregistrementDetail> details = items(p);
-            details.stream().map(detail -> {
-                detail.setDtCREATED(p.getDtCREATED());
-                return detail;
-            }).map(detail -> {
-                detail.setDtUPDATED(p.getDtCREATED());
-                return detail;
-            }).map(detail -> {
-                getEm().merge(detail);
-                return detail;
-            }).map(detail -> findHMvtProduitByPkey(detail.getLgPREENREGISTREMENTDETAILID()))
-                    .filter(hMvtProduit -> (hMvtProduit != null)).map(hMvtProduit -> {
-                        hMvtProduit.setMvtDate(toDay);
-                        return hMvtProduit;
-                    }).map(hMvtProduit -> {
-                        hMvtProduit.setCreatedAt(venteDateNew);
-                        return hMvtProduit;
-                    }).forEachOrdered(hMvtProduit -> {
-                        getEm().merge(hMvtProduit);
-                    });
+    public void updateVenteDate(TUser ooTUser, UpdateVenteParamDTO param) {
+        TPreenregistrement p = this.getEm().find(TPreenregistrement.class, param.getVenteId());
+        if (!VENTE_ASSURANCE_ID.equals(p.getLgTYPEVENTEID().getLgTYPEVENTEID())) {
+            return;
         }
+        Date initiale = p.getDtUPDATED();
+        LocalDate toDay = LocalDate.parse(param.getDate());
+        LocalDateTime venteDateNew = LocalDateTime.of(toDay, LocalTime.parse(param.getHeure()));
+        Date venteDate = DateCommonUtils.convertLocalDateTimeToDate(venteDateNew);
+        p.setDtCREATED(venteDate);
+        p.setDtUPDATED(venteDate);
+        p.setLgUSERID(ooTUser);
+        getEm().merge(p);
+        MvtTransaction mt = findMvtTransactionByVenteId(p.getLgPREENREGISTREMENTID());
+        if (mt != null) {
+            mt.setMvtDate(toDay);
+            mt.setCreatedAt(venteDateNew);
+            mt.setUser(ooTUser);
+            getEm().merge(mt);
+
+        }
+        Collection<TPreenregistrementDetail> details = p.getTPreenregistrementDetailCollection();
+        details.forEach(detail -> {
+            updatePreenregistrementDetailDate(detail, venteDate);
+            updateHMvtProduitDate(findHMvtProduitByPkey(detail.getLgPREENREGISTREMENTDETAILID()), venteDateNew,
+                    ooTUser);
+
+        });
+        Collection<TPreenregistrementCompteClientTiersPayent> preenregistrementCompteClientTiersPayents = p
+                .getTPreenregistrementCompteClientTiersPayentCollection();
+        if (CollectionUtils.isNotEmpty(preenregistrementCompteClientTiersPayents)) {
+            preenregistrementCompteClientTiersPayents.forEach(t -> {
+                t.setDtCREATED(venteDate);
+                t.setDtUPDATED(venteDate);
+                t.setLgUSERID(ooTUser);
+                this.getEm().merge(t);
+            });
+        }
+        Collection<TPreenregistrementCompteClient> preenregistrementCompteClientCollection = p
+                .getTPreenregistrementCompteClientCollection();
+        if (CollectionUtils.isNotEmpty(preenregistrementCompteClientCollection)) {
+            preenregistrementCompteClientCollection.forEach(t -> {
+                t.setDtCREATED(venteDate);
+                t.setDtUPDATED(venteDate);
+                t.setLgUSERID(ooTUser);
+                this.getEm().merge(t);
+            });
+        }
+        p.getVenteReglements().forEach(t -> {
+            t.setMvtDate(venteDateNew);
+            this.getEm().merge(t);
+        });
+        String desc = "Modification de la vente " + p.getStrREF() + " date initiale : "
+                + DateCommonUtils.formatDate(initiale) + " nouvelle date :" + DateCommonUtils.formatDate(venteDate)
+                + " par " + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
+        this.logService.updateItem(ooTUser, p.getLgPREENREGISTREMENTID(), desc, TypeLog.MODIFICATION_DATE_VENTE_CREDIT,
+                p);
+    }
+
+    private void updatePreenregistrementDetailDate(TPreenregistrementDetail item, Date venteDate) {
+        item.setDtCREATED(venteDate);
+        item.setDtUPDATED(venteDate);
+        this.getEm().merge(item);
+
+    }
+
+    private void updateHMvtProduitDate(HMvtProduit hMvtProduit, LocalDateTime venteDate, TUser tUser) {
+        hMvtProduit.setMvtDate(venteDate.toLocalDate());
+        hMvtProduit.setCreatedAt(venteDate);
+        hMvtProduit.setLgUSERID(tUser);
+        this.getEm().merge(hMvtProduit);
 
     }
 
     private HMvtProduit findHMvtProduitByPkey(String pkey) {
         try {
-            TypedQuery<HMvtProduit> q = getEm().createQuery("SELECT o FROM HMvtProduit o WHERE o.pkey=?1",
+            TypedQuery<HMvtProduit> q = getEm().createQuery(
+                    "SELECT o FROM HMvtProduit o WHERE (o.preenregistrementDetail.lgPREENREGISTREMENTDETAILID =?1 OR o.pkey=?1) ",
                     HMvtProduit.class);
             q.setParameter(1, pkey);
             return q.getSingleResult();
@@ -4738,7 +4752,7 @@ public class SalesServiceImpl implements SalesService {
             }
             int montantvente = montantAPaye.getMontant();
 
-            if (pr.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_AVEC_CARNET)) {
+            if (pr.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(VENTE_AVEC_CARNET)) {
 
                 Integer tpnet = montantvente - remiseCarnet;
                 totalTp = tpnet;
@@ -4752,19 +4766,19 @@ public class SalesServiceImpl implements SalesService {
 
                 montantVariable = montantvente;
                 Double montantTp = montantvente * (Double.valueOf(taux) / 100);
-                Integer tpnet = (int) Math.ceil(montantTp);
-                int _taux = 0;
+                int tpnet = (int) Math.ceil(montantTp);
+                int taux3;
 
                 if (montantVariable > tpnet) {
                     montantVariable -= tpnet;
-                    _taux = taux;
+                    taux3 = taux;
                 } else {
                     tpnet = montantVariable;
-                    _taux = (int) Math.ceil((montantTp * 100) / montantvente);
+                    taux3 = (int) Math.ceil((montantTp * 100) / montantvente);
                 }
 
                 tp.put("montanttp", tpnet);
-                tp.put("taux", _taux);
+                tp.put("taux", taux3);
                 tp.put("reste", montantVariable);
 
             }
@@ -4773,6 +4787,20 @@ public class SalesServiceImpl implements SalesService {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new JSONObject();
+        }
+    }
+
+    private MvtTransaction findMvtTransactionByVenteId(String venteId) {
+        try {
+            TypedQuery<MvtTransaction> tq = getEm().createQuery(
+                    "SELECT o FROM MvtTransaction o WHERE (o.preenregistrement.lgPREENREGISTREMENTID =?1 OR o.pkey=?1) ",
+                    MvtTransaction.class);
+            tq.setParameter(1, venteId);
+            tq.setMaxResults(1);
+            return tq.getSingleResult();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return null;
         }
     }
 }

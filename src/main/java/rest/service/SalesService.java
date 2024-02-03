@@ -14,6 +14,7 @@ import dal.TUser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.UpdateVenteParamDTO;
 
 /**
  * @author Kobena
@@ -109,7 +110,7 @@ public interface SalesService {
 
     JSONObject clonerDevis(TUser ooTUser, String devisId) throws JSONException;
 
-    void updateVente();
+    void updateVenteDate(TUser ooTUser, UpdateVenteParamDTO param);
 
     JSONObject computeVONet(SalesParams params);
 }

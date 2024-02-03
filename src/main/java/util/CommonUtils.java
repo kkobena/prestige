@@ -1,9 +1,13 @@
 
 package util;
 
+import com.ibm.icu.text.RuleBasedNumberFormat;
+import dal.TPrivilege;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Year;
+import java.util.List;
+import java.util.Locale;
 
 import java.util.stream.IntStream;
 
@@ -32,7 +36,7 @@ public final class CommonUtils {
             throw new Error("no MD5 support in this VM");
         }
 
-        StringBuffer hashString = new StringBuffer();
+        StringBuilder hashString = new StringBuilder();
 
         for (int i = 0; i < hash.length; ++i) {
             String hex = Integer.toHexString(hash[i]);
@@ -45,5 +49,21 @@ public final class CommonUtils {
         }
 
         return hashString.toString();
+    }
+
+    public static boolean hasAuthorityByName(List<TPrivilege> lstTPrivilege, String authorityName) {
+        java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(authorityName);
+        return lstTPrivilege.stream().anyMatch(p);
+    }
+
+    public static boolean hasAuthorityById(List<TPrivilege> lstTPrivilege, String id) {
+        java.util.function.Predicate<TPrivilege> p = e -> e.getLgPRIVELEGEID().equals(id);
+        return lstTPrivilege.stream().anyMatch(p);
+    }
+
+    public static String convertionChiffeLettres(Integer num) {
+        RuleBasedNumberFormat formatter = new RuleBasedNumberFormat(Locale.FRANCE, RuleBasedNumberFormat.SPELLOUT);
+        return formatter.format(num);
+
     }
 }

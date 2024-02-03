@@ -16,12 +16,16 @@ import java.time.LocalTime;
  */
 public class SalesStatsParams implements Serializable {
 
-    private int start = 0, limit = 20;
+    private int start = 0;
+    private int limit = 20;
     private String typeVenteId;
     private TUser userId;
-    private String query, statut;
-    private LocalDate dtStart = LocalDate.now(), dtEnd = dtStart;
-    private LocalTime hStart = LocalTime.parse("00:00"), hEnd = LocalTime.parse("23:59");
+    private String query;
+    private String statut;
+    private LocalDate dtStart = LocalDate.now();
+    private LocalDate dtEnd = dtStart;
+    private LocalTime hStart = LocalTime.parse("00:00");
+    private LocalTime hEnd = LocalTime.parse("23:59");
     private boolean showAll;
     private boolean showAllActivities;
     private boolean all;
@@ -34,13 +38,16 @@ public class SalesStatsParams implements Serializable {
     private int nbre;
     private String produitId;
     private String prixachatFiltre;
-    private String stockFiltre, typeFiltre;
+    private String stockFiltre;
+    private String typeFiltre;
     private String rayonId;
     private String user;
-    private Integer qteVendu, stock;
+    private Integer qteVendu;
+    private Integer stock;
     private boolean discountStat;
     private String tiersPayantId;
     private String nature;
+    private boolean modificationVenteDate;
 
     public String getNature() {
         return nature;
@@ -154,6 +161,14 @@ public class SalesStatsParams implements Serializable {
 
     public void setTiersPayantId(String tiersPayantId) {
         this.tiersPayantId = tiersPayantId;
+    }
+
+    public boolean isModificationVenteDate() {
+        return modificationVenteDate;
+    }
+
+    public void setModificationVenteDate(boolean modificationVenteDate) {
+        this.modificationVenteDate = modificationVenteDate;
     }
 
     public SalesStatsParams(boolean showAll, String typeVenteId, TUser userId, String query, String statut,
