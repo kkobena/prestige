@@ -36,7 +36,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.LogService;
-import toolkits.parameters.commonparameter;
 import util.Constant;
 
 /**
@@ -63,7 +62,7 @@ public class LogServiceImpl implements LogService {
             eventLog.setDtCREATED(new Date());
             eventLog.setDtUPDATED(eventLog.getDtCREATED());
             eventLog.setStrCREATEDBY(user.getStrLOGIN());
-            eventLog.setStrSTATUT(commonparameter.statut_enable);
+            eventLog.setStrSTATUT(Constant.STATUT_ENABLE);
             eventLog.setStrTABLECONCERN(T.getClass().getName());
             eventLog.setTypeLog(typeLog);
             eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
@@ -98,11 +97,11 @@ public class LogServiceImpl implements LogService {
         List<LogDTO> l = Stream.of(TypeLog.values()).map(x -> new LogDTO(x.ordinal(), x.getValue()))
                 .collect(Collectors.toList());
         if (query != null && !"".equals(query)) {
-            List<LogDTO> _new = l.stream().filter(x -> x.getStrDESCRIPTION().startsWith(query))
+            List<LogDTO> newItem = l.stream().filter(x -> x.getStrDESCRIPTION().startsWith(query))
                     .sorted(comparatorOrder.reversed()).collect(Collectors.toList());
-            _new.add(new LogDTO(-1, "TOUS"));
+            newItem.add(new LogDTO(-1, "TOUS"));
 
-            return new JSONObject().put("total", _new.size()).put("data", new JSONArray(_new));
+            return new JSONObject().put("total", newItem.size()).put("data", new JSONArray(newItem));
         }
         l.add(new LogDTO(-1, "TOUS"));
         l.sort(comparatorOrder.reversed());
@@ -117,7 +116,7 @@ public class LogServiceImpl implements LogService {
             Root<TEventLog> root = cq.from(TEventLog.class);
             cq.select(cb.count(root));
             List<Predicate> predicates = logs(cb, root, search, dtStart, dtEnd, userId, criteria);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (long) q.getSingleResult();
         } catch (Exception e) {
@@ -155,7 +154,7 @@ public class LogServiceImpl implements LogService {
             Root<TEventLog> root = cq.from(TEventLog.class);
             cq.select(root).orderBy(cb.desc(root.get(TEventLog_.dtCREATED)));
             List<Predicate> predicates = logs(cb, root, search, dtStart, dtEnd, userId, criteria);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TEventLog> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -188,7 +187,7 @@ public class LogServiceImpl implements LogService {
         eventLog.setDtCREATED(date);
         eventLog.setDtUPDATED(date);
         eventLog.setStrCREATEDBY(user.getStrLOGIN());
-        eventLog.setStrSTATUT(commonparameter.statut_enable);
+        eventLog.setStrSTATUT(Constant.STATUT_ENABLE);
         eventLog.setStrTABLECONCERN(T.getClass().getName());
         eventLog.setTypeLog(typeLog);
         eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");
@@ -205,7 +204,7 @@ public class LogServiceImpl implements LogService {
             eventLog.setDtCREATED(new Date());
             eventLog.setDtUPDATED(eventLog.getDtCREATED());
             eventLog.setStrCREATEDBY(user.getStrLOGIN());
-            eventLog.setStrSTATUT(commonparameter.statut_enable);
+            eventLog.setStrSTATUT(Constant.STATUT_ENABLE);
             eventLog.setStrTABLECONCERN(T.getClass().getName());
             eventLog.setTypeLog(typeLog);
             eventLog.setStrDESCRIPTION(desc + " référence [" + ref + " ]");

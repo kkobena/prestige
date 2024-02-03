@@ -215,6 +215,10 @@ Ext.define('testextjs.model.caisse.Vente', {
          {
             name: 'canexport',
             type: 'boolean'
+        },{
+            name: 'modificationVenteDate',
+            type: 'boolean'
         }
+        
     ]
 });

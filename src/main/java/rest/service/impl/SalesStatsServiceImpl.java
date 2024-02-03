@@ -640,7 +640,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             return list.stream()
                     .map(v -> new VenteDTO(findById(v.getLgPREENREGISTREMENTID()),
                             findByParent(v.getLgPREENREGISTREMENTID()), params.isCanCancel(), params,
-                            findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID())).canexport(canexport))
+                            findPreenregistrementCompteClient(v.getLgPREENREGISTREMENTID())).canexport(canexport)
+                                    .setModificationVenteDate(params.isModificationVenteDate()))
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
