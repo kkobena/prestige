@@ -4636,7 +4636,7 @@ public class SalesServiceImpl implements SalesService {
         return computeVenteAmount(details) != venteAmount;
     }
 
-    public void updateCompteClientTiersPayantEncourAndPlafond(TPreenregistrementCompteClientTiersPayent x) {
+    private void updateCompteClientTiersPayantEncourAndPlafond(TPreenregistrementCompteClientTiersPayent x) {
         try {
 
             TCompteClientTiersPayant tc = x.getLgCOMPTECLIENTTIERSPAYANTID();
@@ -4660,7 +4660,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private void updateClientAccount(TPreenregistrementCompteClientTiersPayent payent) {
-        managedExecutorService.submit(() -> updateCompteClientTiersPayantEncourAndPlafond(payent));
+        updateCompteClientTiersPayantEncourAndPlafond(payent);
     }
 
     private boolean checkPlafondVente() {
