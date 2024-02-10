@@ -5,14 +5,15 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
     extend: 'Ext.window.Window',
     xtype: 'ventedate',
     autoShow: false,
-    height: 320,
+    height: 350,
     width: '40%',
     modal: true,
     title: 'MODIFICATION DE LA DATE DE VENTE',
     closeAction: 'hide',
     closable: false,
     config: {
-        vente: null
+        vente: null,
+        grid: null
 
     },
     layout: {
@@ -65,10 +66,11 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
                             xtype: 'fieldset',
                             collapsible: false,
                             bodyPadding: 5,
-                            flex: 1,
+                            flex: 1.2,
                             title: '<span style="color:blue;">Information vente </span>',
                             layout: {
-                                type: 'hbox'
+                                type: 'hbox',
+                                 align: 'stretch'
 
                             },
                             items: [
@@ -110,7 +112,6 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
                                             margin: '0 10 0 0'
                                         }
 
-
                                     ]
                                 }
                                 ,
@@ -122,12 +123,14 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
 
                                         {
                                             xtype: 'displayfield',
+                                            labelWidth: 50,
                                             fieldLabel: 'Date:',
                                             value: vente.dtUPDATED,
                                             fieldStyle: "color:blue;font-weight: bold;"
 
                                         }, {
                                             xtype: 'displayfield',
+                                            labelWidth: 50,
                                             fieldLabel: 'Heure:',
                                             value: vente.HEUREVENTE,
                                             fieldStyle: "color:blue;font-weight: bold;"
@@ -135,6 +138,7 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
                                         },
                                         {
                                             xtype: 'displayfield',
+                                            labelWidth: 50,
                                             fieldLabel: 'Client:',
                                             value: vente.clientFullName,
                                             fieldStyle: "color:blue;font-weight: bold;"
@@ -149,7 +153,7 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
                             xtype: 'fieldset',
                             title: '<span style="color:blue;">Formulaire </span>',
                             layout: 'anchor',
-                            flex: 1,
+                            flex: 0.8,
                             defaults: {
                                 anchor: '100%',
                                 msgTarget: 'side',
@@ -181,8 +185,6 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
 
                                 }
 
-
-
                             ]
                         }
 
@@ -194,10 +196,11 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
         me.callParent(arguments);
     },
     onSave: function (btn) {
-        let wind = btn.up('window');
+
+        const wind = btn.up('window');
         const   form = wind.down('form');
         let datas = form.getValues();
-      
+
         if (form.isValid()) {
             const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
@@ -208,6 +211,7 @@ Ext.define('testextjs.view.vente.form.VenteDateForm', {
                 success: function (response, options) {
                     progress.hide();
                     wind.destroy();
+                    wind.getGrid().getStore().reload();
 
                 },
                 failure: function (response, options) {
