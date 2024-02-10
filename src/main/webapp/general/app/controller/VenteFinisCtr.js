@@ -99,7 +99,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         });
     },
     onCloseSalesItem: function () {
-        var me = this;
+        const me = this;
         me.getSalesItem().destroy();
 
     },
@@ -112,7 +112,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
     },
     onUpdateVenteDate: function (view, rowIndex, colIndex, item, e, rec, row) {
         if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modificationVenteDate') && rec.get('strTYPEVENTE') === "VO") {
-            Ext.create('testextjs.view.vente.form.VenteDateForm', {vente: rec}).show();
+            Ext.create('testextjs.view.vente.form.VenteDateForm', {vente: rec,grid:view}).show();
 
         }
 
@@ -153,7 +153,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
 
     updateInfosvente: function (win, formulaire, rec, linkUrl) {
         if (formulaire.isValid()) {
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
@@ -161,7 +161,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 params: Ext.JSON.encode(formulaire.getValues()),
                 success: function (response, options) {
                     progress.hide();
-                    var result = Ext.JSON.decode(response.responseText, true);
+                    const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         win.destroy();
                         window.open(linkUrl);
@@ -188,8 +188,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
 
     },
     buildForm: function (rec, linkUrl) {
-        var me = this;
-        var form = Ext.create('Ext.window.Window',
+        const me = this;
+        const form = Ext.create('Ext.window.Window',
                 {
                     extend: 'Ext.window.Window',
                     autoShow: true,
@@ -239,7 +239,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                                 },
                                                 specialKey: function (field, e) {
                                                     if (e.getKey() === e.ENTER) {
-                                                        var formulaire = field.up('form');
+                                                        let formulaire = field.up('form');
                                                         me.updateInfosvente(form, formulaire, rec, linkUrl);
                                                     }
                                                 }
@@ -255,7 +255,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                             listeners: {
                                                 specialKey: function (field, e) {
                                                     if (e.getKey() === e.ENTER) {
-                                                        var formulaire = field.up('form');
+                                                        let formulaire = field.up('form');
                                                         me.updateInfosvente(form, formulaire, rec, linkUrl);
                                                     }
                                                 }
