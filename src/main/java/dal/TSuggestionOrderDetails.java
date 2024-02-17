@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -42,7 +43,8 @@ import javax.xml.bind.annotation.XmlRootElement;
         @NamedQuery(name = "TSuggestionOrderDetails.findByDtCREATED", query = "SELECT t FROM TSuggestionOrderDetails t WHERE t.dtCREATED = :dtCREATED"),
         @NamedQuery(name = "TSuggestionOrderDetails.findByDtUPDATED", query = "SELECT t FROM TSuggestionOrderDetails t WHERE t.dtUPDATED = :dtUPDATED"),
         @NamedQuery(name = "TSuggestionOrderDetails.findByStrSTATUT", query = "SELECT t FROM TSuggestionOrderDetails t WHERE t.strSTATUT = :strSTATUT") })
-public class TSuggestionOrderDetails implements Serializable {
+public class TSuggestionOrderDetails implements Serializable, Cloneable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -204,6 +206,17 @@ public class TSuggestionOrderDetails implements Serializable {
 
     public void setBFalg(Boolean bFalg) {
         this.bFalg = bFalg;
+    }
+
+    @Override
+    public TSuggestionOrderDetails clone() {
+
+        try {
+            return (TSuggestionOrderDetails) super.clone();
+        } catch (CloneNotSupportedException ex) {
+            return null;
+        }
+
     }
 
 }
