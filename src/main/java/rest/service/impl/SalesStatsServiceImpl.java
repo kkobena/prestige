@@ -1205,9 +1205,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> jp, Join<TPreenregistrementDetail, TFamille> jf,
             Join<TFamille, TFamilleStock> st, SalesStatsParams param) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String lg_EMPLACEMENT_ID = param.getUserId().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        String lgEmplacementId = param.getUserId().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
         List<Predicate> predicates = new ArrayList<>();
-        predicates.add(cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
+        predicates.add(cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmplacementId));
         predicates.add(cb.equal(jp.get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));
         predicates.add(cb.equal(jp.get(TPreenregistrement_.strSTATUT), "is_Closed"));
         predicates.add(cb.greaterThan(jp.get(TPreenregistrement_.intPRICE), 0));
@@ -1234,7 +1234,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             predicates.add(cb.equal(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.lgZONEGEOID)
                     .get(TZoneGeographique_.lgZONEGEOID), param.getRayonId()));
         }
-        predicates.add(cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
+        predicates.add(cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmplacementId));
         if (!StringUtils.isEmpty(param.getTypeTransaction())) {
             switch (param.getTypeTransaction()) {
             case Parameter.LESS:
@@ -1464,7 +1464,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID))
                     .orderBy(cb.asc(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());

@@ -100,24 +100,6 @@ public class BilletageServiceImpl implements BilletageService {
         return oCaisse;
     }
 
-    private Optional<TResumeCaisse> getUserResumeCaisse(LocalDateTime dtStart, LocalDateTime dtEnd, TUser user,
-            String status) {
-
-        try {
-            TypedQuery<TResumeCaisse> q = this.em.createQuery(
-                    "SELECT o FROM TResumeCaisse o WHERE o.lgUSERID.lgUSERID=?1 AND  o.dtCREATED BETWEEN ?2 AND ?3 AND o.strSTATUT=?4",
-                    TResumeCaisse.class).setParameter(1, user.getLgUSERID())
-                    .setParameter(2, Timestamp.valueOf(dtStart), TemporalType.TIMESTAMP)
-                    .setParameter(3, Timestamp.valueOf(dtEnd), TemporalType.TIMESTAMP).setParameter(4, status);
-
-            return Optional.ofNullable(q.getSingleResult());
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return Optional.empty();
-
-        }
-    }
-
     private Optional<TResumeCaisse> getUserResumeCaisse(TUser user, String status) {
 
         try {
