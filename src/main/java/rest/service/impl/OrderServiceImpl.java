@@ -1362,8 +1362,6 @@ public class OrderServiceImpl implements OrderService {
         orderDetail.setDtCREATED(order.getDtCREATED());
         orderDetail.setDtUPDATED(order.getDtCREATED());
         em.persist(orderDetail);
-
-        em.remove(tod);
         return orderDetail;
     }
 
@@ -1374,6 +1372,7 @@ public class OrderServiceImpl implements OrderService {
         TOrder order = this.em.find(TOrder.class, firstId);
         TGrossiste grossiste = order.getLgGROSSISTEID();
         Collection<TOrderDetail> tOrderDetailCollection = order.getTOrderDetailCollection();
+
         KeyUtilGen keyUtilGen = new KeyUtilGen();
         for (String id : orderIds) {
             if (!firstId.equals(id)) {
@@ -1387,6 +1386,7 @@ public class OrderServiceImpl implements OrderService {
                             this.em.merge(o);
                             this.productStateService.remove(famille, ProductStateEnum.COMMANDE_EN_COURS);
                             isExist = true;
+                            break;
                         }
                     }
                     if (!isExist) {

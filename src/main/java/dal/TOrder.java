@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -67,7 +68,7 @@ public class TOrder implements Serializable {
     @JoinColumn(name = "lg_GROSSISTE_ID", referencedColumnName = "lg_GROSSISTE_ID")
     @ManyToOne
     private TGrossiste lgGROSSISTEID;
-    @OneToMany(mappedBy = "lgORDERID")
+    @OneToMany(mappedBy = "lgORDERID", cascade = CascadeType.REMOVE)
     private Collection<TOrderDetail> tOrderDetailCollection;
     @Column(name = "recu", columnDefinition = "boolean default false")
     private Boolean recu = Boolean.FALSE;
