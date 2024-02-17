@@ -14,6 +14,7 @@ import java.math.BigInteger;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ProductStateService;
 import rest.service.SuggestionService;
+import rest.service.dto.CommandeIdsDTO;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
 
@@ -50,6 +52,7 @@ import static util.Constant.*;
 import util.DateConverter;
 
 import util.FunctionUtils;
+import util.KeyUtilGen;
 
 /**
  * @author Kobena
@@ -1201,5 +1204,86 @@ public class SuggestionImpl implements SuggestionService {
             this.productStateService.remove(details.getLgFAMILLEID(), ProductStateEnum.SUGGESTION);
             em.remove(details);
         }
+    }
+
+    @Override
+    public boolean changeGrossiste(String suggestionId, String grossisteId) {
+        TSuggestionOrder suggestionOrder = this.em.find(TSuggestionOrder.class, suggestionId);
+        TGrossiste grossiste = this.em.find(TGrossiste.class, grossisteId);
+        boolean existAnother = existAnotherSuggesstion(grossiste);
+        suggestionOrder.setLgGROSSISTEID(grossiste);
+        suggestionOrder.setDtUPDATED(new Date());
+        this.em.merge(suggestionOrder);
+        return existAnother;
+    }
+
+    private boolean existAnotherSuggesstion(TGrossiste grossiste) {
+        try {
+            Query count = this.em
+                    .createQuery("SELECT COUNT(o) FROM TSuggestionOrder o WHERE o.lgGROSSISTEID.lgGROSSISTEID=?1")
+                    .setParameter(1, grossiste.getLgGROSSISTEID());
+            return ((Number) count.getSingleResult()).intValue() > 0;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return false;
+        }
+    }
+
+    private List<TSuggestionOrder> getAnotherSuggesstions(TGrossiste grossiste, String suggestionId) {
+        try {
+            TypedQuery<TSuggestionOrder> query = this.em.createQuery(
+                    "SELECT o FROM TSuggestionOrder o WHERE o.lgGROSSISTEID.lgGROSSISTEID=?1 AND o.lgSUGGESTIONORDERID <>?2 ",
+                    TSuggestionOrder.class).setParameter(1, grossiste.getLgGROSSISTEID()).setParameter(2, suggestionId);
+            return query.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public void mergeSuggestion(String suggestionId, String grossisteId) {
+        TSuggestionOrder suggestionOrder = this.em.find(TSuggestionOrder.class, suggestionId);
+        TGrossiste grossiste = this.em.find(TGrossiste.class, grossisteId);
+        Collection<TSuggestionOrderDetails> tOrderDetailCollection = suggestionOrder
+                .getTSuggestionOrderDetailsCollection();
+
+        List<TSuggestionOrder> suggestionOrders = this.getAnotherSuggesstions(grossiste, suggestionId);
+        for (TSuggestionOrder order0 : suggestionOrders) {
+
+            for (TSuggestionOrderDetails tOrderDetail : order0.getTSuggestionOrderDetailsCollection()) {
+                TFamille famille = tOrderDetail.getLgFAMILLEID();
+                boolean isExist = false;
+                for (TSuggestionOrderDetails ite : tOrderDetailCollection) {
+                    if (famille.getLgFAMILLEID().equals(ite.getLgFAMILLEID().getLgFAMILLEID())) {
+                        ite.setIntNUMBER(ite.getIntNUMBER() + tOrderDetail.getIntNUMBER());
+                        this.em.merge(ite);
+                        this.productStateService.remove(famille, ProductStateEnum.SUGGESTION);
+                        isExist = true;
+                        break;
+                    }
+                }
+                if (!isExist) {
+                    TSuggestionOrderDetails orderDetail = createMergeDetails(suggestionOrder, tOrderDetail);
+                    tOrderDetailCollection.add(orderDetail);
+                    this.productStateService.addState(famille, ProductStateEnum.SUGGESTION);
+                }
+            }
+            this.em.remove(order0);
+            suggestionOrder.setDtUPDATED(new Date());
+            this.em.merge(suggestionOrder);
+
+        }
+    }
+
+    private TSuggestionOrderDetails createMergeDetails(TSuggestionOrder suggestionOrder, TSuggestionOrderDetails ite) {
+        TSuggestionOrderDetails cloned = ite.clone();
+        cloned.setLgSUGGESTIONORDERID(suggestionOrder);
+        cloned.setLgSUGGESTIONORDERDETAILSID(UUID.randomUUID().toString());
+        cloned.setDtCREATED(suggestionOrder.getDtUPDATED());
+        cloned.setDtUPDATED(suggestionOrder.getDtUPDATED());
+        cloned.setLgGROSSISTEID(suggestionOrder.getLgGROSSISTEID());
+        this.em.persist(cloned);
+        return cloned;
     }
 }

@@ -5,7 +5,6 @@
  */
 package rest;
 
-import dal.Laboratoire;
 import dal.TFamille;
 import dal.TSuggestionOrderDetails;
 import dal.TUser;
@@ -43,7 +42,6 @@ import org.json.JSONObject;
 import rest.service.SuggestionService;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
-import toolkits.parameters.commonparameter;
 import util.Constant;
 
 /**
@@ -99,7 +97,7 @@ public class SuggestionRessource {
     @Path("qty-detail/{id}")
     public Response tvastatCriterion(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -111,7 +109,7 @@ public class SuggestionRessource {
     @Path("item/{id}")
     public Response delete(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -123,7 +121,7 @@ public class SuggestionRessource {
     @Path("amount/{id}")
     public Response getSuggestionAmount(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -135,7 +133,7 @@ public class SuggestionRessource {
     @Path("item/add")
     public Response addItem(SuggestionOrderDetailDTO suggestionOrderDetail) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -147,7 +145,7 @@ public class SuggestionRessource {
     @Path("item/update-seuil")
     public Response updateItemSeuil(SuggestionOrderDetailDTO suggestionOrderDetail) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -159,7 +157,7 @@ public class SuggestionRessource {
     @Path("item/update-qte-cmde")
     public Response updateItemQteCmde(SuggestionOrderDetailDTO suggestionOrderDetail) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -171,7 +169,7 @@ public class SuggestionRessource {
     @Path("item/update-prixachat")
     public Response updateItemQtePrixPaf(SuggestionOrderDetailDTO suggestionOrderDetail) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -183,7 +181,7 @@ public class SuggestionRessource {
     @Path("item/update-prixvente")
     public Response updateItemQtePrixVente(SuggestionOrderDetailDTO suggestionOrderDetail) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -195,7 +193,7 @@ public class SuggestionRessource {
     @Path("add")
     public Response create(SuggestionDTO suggestion) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -215,7 +213,7 @@ public class SuggestionRessource {
     @Path("set-pending/{id}")
     public Response setToPending(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -228,7 +226,7 @@ public class SuggestionRessource {
     public Response fetchItems(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String search, @QueryParam(value = "orderId") String orderId) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -240,11 +238,37 @@ public class SuggestionRessource {
     @Path("suggestion/{id}")
     public Response deleteSuggestion(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         this.suggestionService.deleteSuggestion(id);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("change-grossiste")
+    public Response changeGrossiste(@QueryParam(value = "suggestionId") String suggestionId,
+            @QueryParam(value = "grossisteId") String grossisteId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        boolean resp = this.suggestionService.changeGrossiste(suggestionId, grossisteId);
+        return Response.ok(new JSONObject().put("response", resp).toString()).build();
+    }
+
+    @GET
+    @Path("merge-suggestion")
+    public Response mergeSuggestion(@QueryParam(value = "suggestionId") String suggestionId,
+            @QueryParam(value = "grossisteId") String grossisteId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.suggestionService.mergeSuggestion(suggestionId, grossisteId);
         return Response.ok().build();
     }
 }
