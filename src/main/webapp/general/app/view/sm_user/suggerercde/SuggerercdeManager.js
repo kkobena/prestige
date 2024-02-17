@@ -1,9 +1,9 @@
 /* global Ext */
 
 var url_services_transaction_suggerercde = '../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=';
-var url_services_data_grossiste_suggerer = '../webservices/configmanagement/grossiste/ws_data.jsp';
+
 var url_services_pdf_liste_suggerercde = '../webservices/sm_user/suggerercde/ws_generate_pdf.jsp';
-var url_services_data_famille_select_suggestion = '../webservices/sm_user/famille/ws_data_initial.jsp';
+
 
 
 var Me_Window;
@@ -76,12 +76,14 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_grossiste_suggerer,
+                url: '../api/v1/grossiste/all',
+
                 reader: {
                     type: 'json',
                     root: 'results',
                     totalProperty: 'total'
-                }
+                },
+                timeout: 240000
             }
 
         });
@@ -189,15 +191,12 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     emptyText: 'Choisir un repartiteur...',
                                     listeners: {
                                         select: function (cmp) {
-                                            let value = cmp.getValue();
+                                           
                                             if (titre === 'Suggerer une commande') {
 
                                                 Me_Window.onchangeGrossiste();
                                             }
 
-                                            if (titre === "Ajouter detail commande") {
-                                                Me_Window.onIsGrossisteExist(value);
-                                            }
                                         }
                                     }
                                 },
@@ -708,7 +707,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 function (btn) {
                     if (btn == 'yes') {
                         Me_Window.onPdfClick(ref);
-                  
+
                     }
                 });
 
@@ -859,91 +858,61 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     onchangeGrossiste: function () {
 
         let lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
-        let url_transaction = "../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=";
+
         myAppController.ShowWaitingProcess();
         Ext.Ajax.request({
-            url: url_transaction + 'changeGrossiste',
+            url: '../api/v1/suggestion/change-grossiste',
+            method: 'GET',
             timeout: 2400000,
             params: {
-                lg_SUGGESTION_ORDER_ID: ref,
-                lg_GROSSISTE_ID: lg_GROSSISTE_ID
+                suggestionId: ref,
+                grossisteId: lg_GROSSISTE_ID
             },
             success: function (response) {
                 myAppController.StopWaitingProcess();
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.errors_code == "0") {
-                    if (object.answer_fusion == "true") {
-                        Ext.MessageBox.confirm('Message', object.errors,
-                                function (btn) {
-                                    if (btn == 'yes') {
-                                        Me_Window.doFusion(ref, lg_GROSSISTE_ID, url_transaction);
-                                    }
-                                });
-                    } else {
-                        myAppController.StopWaitingProcess();
-                        Ext.MessageBox.alert('Error Message', object.errors);
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (result.response) {
 
-                    }
+                    Ext.MessageBox.confirm('Message', 'Une suggestion existe déjà pour ce grossiste. Voulez-vous les fusionner',
+                            function (btn) {
+                                if (btn == 'yes') {
+                                    Me_Window.doFusion(ref, lg_GROSSISTE_ID);
+                                }
+                            });
 
-                }
-
-            },
-            failure: function (response) {
-
-                console.log("Bug " + response.responseText);
-                Ext.MessageBox.alert('Error Message', response.responseText);
-                myAppController.StopWaitingProcess();
-            }
-        });
-    },
-    onIsGrossisteExist: function (valeur) {
-        let url_transaction = "../webservices/sm_user/suggerercde/ws_transaction.jsp?mode=";
-        ref = "0";
-        Ext.Ajax.request({
-            url: url_transaction + 'onIsGrossisteExist',
-            params: {
-                lg_GROSSISTE_ID: valeur
-            },
-            success: function (response) {
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.errors_code == "0") {
-                    ref = object.ref;
-                }
-                var OgridpanelSuggestionID = Ext.getCmp('gridpanelSuggestionID');
-
-                OgridpanelSuggestionID.getStore().reload();
-
-            },
-            failure: function (response) {
-                console.log("Bug " + response.responseText);
-                Ext.MessageBox.alert('Error Message', response.responseText);
-            }
-        });
-    },
-    doFusion: function (lg_SUGGESTION_ORDER_ID, lg_GROSSISTE_ID, url_transaction) {
-        myAppController.ShowWaitingProcess();
-        var internal_url = url_transaction + "doFusion";
-        Ext.Ajax.request({
-            url: internal_url,
-            timeout: 2400000,
-            params: {
-                lg_SUGGESTION_ORDER_ID: lg_SUGGESTION_ORDER_ID,
-                lg_GROSSISTE_ID: lg_GROSSISTE_ID
-            },
-            success: function (response) {
-                myAppController.StopWaitingProcess();
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.success == "0") {
-                    Ext.MessageBox.alert('Error Message', object.errors);
 
                 } else {
-                    Ext.MessageBox.alert('Confirmation', object.errors);
-                    Me_Window.onbtncancel();
+                    Ext.MessageBox.alert(' Message', "Operation effectuée avec succes");
                 }
+
+            },
+            failure: function (response) {
+
+                console.log("Bug " + response.responseText);
+                Ext.MessageBox.alert('Error Message', response.responseText);
+                myAppController.StopWaitingProcess();
+            }
+        });
+    },
+
+    doFusion: function (lg_SUGGESTION_ORDER_ID, lg_GROSSISTE_ID) {
+        myAppController.ShowWaitingProcess();
+
+        Ext.Ajax.request({
+             method: 'GET',
+            url: '../api/v1/suggestion/merge-suggestion',
+            timeout: 2400000,
+            params: {
+                suggestionId: lg_SUGGESTION_ORDER_ID,
+                grossisteId: lg_GROSSISTE_ID
+            },
+            success: function (response) {
+                myAppController.StopWaitingProcess();
+                Me_Window.onbtncancel();
             },
             failure: function (response) {
                 myAppController.StopWaitingProcess();
-                var object = Ext.JSON.decode(response.responseText, false);
+
                 console.log("Bug " + response.responseText);
                 Ext.MessageBox.alert('Error Message', response.responseText);
             }
