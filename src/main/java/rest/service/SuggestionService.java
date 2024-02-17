@@ -72,4 +72,8 @@ public interface SuggestionService {
 
     void deleteSuggestion(String suggestionId);
 
+    boolean changeGrossiste(String suggestionId, String grossisteId);
+
+    void mergeSuggestion(String suggestionId, String grossisteId);
+
 }
