@@ -64,7 +64,7 @@ public class VenteReglementServiceImpl implements VenteReglementService {
         copy.setUgAmount(venteReglement.getUgAmount() * (-1));
         copy.setUgNetAmount(venteReglement.getUgNetAmount() * (-1));
         copy.setAmountNonCa(venteReglement.getAmountNonCa() * (-1));
-        copy.setFlagedAmount(venteReglement.getFlagedAmount()* (-1));
+        copy.setFlagedAmount(venteReglement.getFlagedAmount() * (-1));
         this.createNew(copy);
     }
 
