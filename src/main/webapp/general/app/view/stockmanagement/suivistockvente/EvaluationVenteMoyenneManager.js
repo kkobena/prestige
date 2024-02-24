@@ -248,7 +248,7 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
                     xtype: 'combobox',
                     flex: 1,
                     fieldLabel: 'Familles',
-                    labelWidth: 60,
+                    labelWidth: 50,
                     itemId: 'familleId',
                     id: 'familleId',
                     store: famillearticles,
@@ -271,31 +271,29 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
                     fieldLabel: 'Filtre',
                     name: 'str_TYPE_TRANSACTION',
                     id: 'filtre',
-                    labelWidth: 40,
+                    labelWidth: 35,
                     store: store_type,
                     valueField: 'str_TYPE_TRANSACTION',
                     displayField: 'str_desc',
                     typeAhead: true,
-                    flex: 1,
+                    flex: 0.8,
                     queryMode: 'local',
                     emptyText: 'Filtre ...'
 
                 }, '-',
 
                 {
-                    xtype: 'numberfield',
+                    xtype: 'textfield',
                     fieldLabel: 'Moyenne',
-                    labelWidth: 40,
+                    labelWidth: 55,
                     id: 'filtreValue',
-                    flex: 0.5,
+                    flex: 0.8,
                     emptyText: 'Moyenne'},
 
                 '-', {
                     xtype: 'textfield',
                     id: 'rechecher',
-                    flex: 1,
-                    width: 350,
-                    name: 'facture',
+                    flex: 0.8,
                     emptyText: 'Rech',
                     listeners: {
                         'render': function (cmp) {
@@ -337,7 +335,7 @@ Ext.define('testextjs.view.stockmanagement.suivistockvente.EvaluationVenteMoyenn
                 displayInfo: true, // same store GridPanel is using
                 listeners: {
                     beforechange: function (page, currentPage) {
-                        var myProxy = this.store.getProxy();
+                        const myProxy = this.store.getProxy();
                         myProxy.params = {
                             familleId: null,
                             emplacementId: null,

@@ -86,7 +86,7 @@ public class EvaluationVenteServlet extends HttpServlet {
         evaluationVenteFiltre.setFamilleId(familleId);
         evaluationVenteFiltre.setQuery(query);
         evaluationVenteFiltre.setFiltre(filtre);
-        evaluationVenteFiltre.setFiltreValue(Objects.nonNull(filtreValue) ? Integer.valueOf(filtreValue) : null);
+        evaluationVenteFiltre.setFiltreValue(Objects.nonNull(filtreValue) ? Float.valueOf(filtreValue) : null);
         List<EvaluationVenteDto> datas = this.evaluationVenteService.getEvaluationVentes(evaluationVenteFiltre);
 
         parameters.put("quantiteVendueCurrentMonth", dtSt.format(DateTimeFormatter.ofPattern(pattern)));

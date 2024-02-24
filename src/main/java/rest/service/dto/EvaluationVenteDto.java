@@ -19,7 +19,6 @@ public class EvaluationVenteDto {
     private int quantiteVendueMonthMinusOne;
     private int quantiteVendueMonthMinusTwo;
     private int quantiteVendueMonthMinusThree;
-    private Integer month;
 
     public String getGrossisteId() {
         return grossisteId;
@@ -35,14 +34,6 @@ public class EvaluationVenteDto {
 
     public void setCodeCip(String codeCip) {
         this.codeCip = codeCip;
-    }
-
-    public Integer getMonth() {
-        return month;
-    }
-
-    public void setMonth(Integer month) {
-        this.month = month;
     }
 
     public String getLibelle() {

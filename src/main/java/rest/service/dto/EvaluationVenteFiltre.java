@@ -9,7 +9,7 @@ public class EvaluationVenteFiltre {
     private String familleId;
     private String emplacementId;
     private String filtre;
-    private Integer filtreValue;
+    private Float filtreValue;
     private String query;
     private int start;
     private int limit;
@@ -47,11 +47,11 @@ public class EvaluationVenteFiltre {
         this.filtre = filtre;
     }
 
-    public Integer getFiltreValue() {
+    public Float getFiltreValue() {
         return filtreValue;
     }
 
-    public void setFiltreValue(Integer filtreValue) {
+    public void setFiltreValue(Float filtreValue) {
         this.filtreValue = filtreValue;
     }
 

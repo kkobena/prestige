@@ -4,11 +4,10 @@ import commonTasks.dto.VenteDetailsDTO;
 import dal.TFamilleStock;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,7 +19,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,9 +36,15 @@ import util.Constant;
 public class EvaluationVenteServiceImpl implements EvaluationVenteService {
 
     private static final Logger LOG = Logger.getLogger(EvaluationVenteServiceImpl.class.getName());
-    private static final String QUERY = "SELECT p.lg_GROSSISTE_ID as grossisteId, p.lg_FAMILLE_ID as produitId,  p.int_CIP AS codeCip ,p.str_NAME AS libelle ,p.int_PRICE AS prixVente,p.int_PAF as prixAchat,venteDetail.quantiteVendue,venteDetail.dateVente FROM t_famille p  {left} join (SELECT d.lg_FAMILLE_ID AS produitId,SUM(d.int_QUANTITY) as quantiteVendue, MONTH(v.dt_UPDATED ) as dateVente FROM  t_preenregistrement_detail d JOIN t_preenregistrement v ON d.lg_PREENREGISTREMENT_ID=v.lg_PREENREGISTREMENT_ID WHERE v.b_IS_CANCEL=0 AND v.str_STATUT='is_Closed' AND v.int_PRICE >0 AND  DATE(v.dt_UPDATED) BETWEEN ?1 AND CURDATE()   GROUP BY d.lg_FAMILLE_ID,dateVente)  AS venteDetail on p.lg_FAMILLE_ID=venteDetail.produitId "
-            + " WHERE  p.str_STATUT='enable' {famille_article} {zone_geog} {search} ORDER by p.str_NAME";
-    private static final String QUERY_COUNT = "SELECT COUNT(p.lg_FAMILLE_ID) as total from t_famille p WHERE p.str_STATUT='enable' {famille_article} {zone_geog} {search}";
+
+    private static final String QUERY = "SELECT  p.lg_GROSSISTE_ID as grossisteId, p.lg_FAMILLE_ID as produitId,  p.int_CIP AS codeCip ,p.str_NAME AS libelle ,p.int_PRICE AS prixVente,p.int_PAF as prixAchat,SUM(CASE WHEN venteDetail.dateVente <>  MONTH(CURDATE()) "
+            + " THEN venteDetail.quantiteVendue ELSE 0 END) AS quantiteVendue,ROUND(SUM(CASE WHEN venteDetail.dateVente <> MONTH(CURDATE()) THEN venteDetail.quantiteVendue ELSE 0 END)/3,2) as moyenne,"
+            + "GROUP_CONCAT(venteDetail.quantiteVendue,':',venteDetail.dateVente) as quantite_mois  FROM t_famille p   join (SELECT d.lg_FAMILLE_ID AS produitId,SUM(d.int_QUANTITY) as quantiteVendue, MONTH(v.dt_UPDATED ) as dateVente FROM  t_preenregistrement_detail d JOIN t_preenregistrement v "
+            + " ON d.lg_PREENREGISTREMENT_ID=v.lg_PREENREGISTREMENT_ID WHERE v.b_IS_CANCEL=0 AND v.str_STATUT='is_Closed' AND v.int_PRICE >0 AND  DATE(v.dt_UPDATED) BETWEEN ?1 AND CURDATE() GROUP BY d.lg_FAMILLE_ID,dateVente) AS venteDetail on p.lg_FAMILLE_ID=venteDetail.produitId WHERE  p.str_STATUT='enable' {famille_article} {zone_geog} {search} GROUP BY p.lg_FAMILLE_ID {having_placeholder}  ORDER by p.str_NAME";
+
+    private static final String QUERY_COUNT = "SELECT count(c) AS total from (SELECT count(p.lg_FAMILLE_ID) as c FROM t_famille p   join (SELECT d.lg_FAMILLE_ID AS produitId,SUM(d.int_QUANTITY) as quantiteVendue, MONTH(v.dt_UPDATED ) as dateVente FROM  t_preenregistrement_detail d JOIN t_preenregistrement v "
+            + "  ON d.lg_PREENREGISTREMENT_ID=v.lg_PREENREGISTREMENT_ID WHERE v.b_IS_CANCEL=0 AND v.str_STATUT='is_Closed' AND v.int_PRICE >0 AND  DATE(v.dt_UPDATED) BETWEEN ?1 AND CURDATE()GROUP BY d.lg_FAMILLE_ID,dateVente) AS venteDetail on p.lg_FAMILLE_ID=venteDetail.produitId  WHERE  p.str_STATUT='enable'"
+            + " {famille_article} {zone_geog} {search} GROUP BY p.lg_FAMILLE_ID  {having_placeholder} ) as t  ";
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -52,62 +56,34 @@ public class EvaluationVenteServiceImpl implements EvaluationVenteService {
     }
 
     @Override
-    public List<EvaluationVenteDto> getEvaluationVentes(EvaluationVenteFiltre evaluationVenteFiltre) {
-        if (StringUtils.isNotEmpty(evaluationVenteFiltre.getFiltre())
-                && Objects.nonNull(evaluationVenteFiltre.getFiltreValue())) {
-            String filtre = evaluationVenteFiltre.getFiltreValue() + "";
-            List<EvaluationVenteDto> dtos = new ArrayList<>();
-            switch (evaluationVenteFiltre.getFiltre()) {
-            case Constant.LESS:
-                dtos = buildEvaluationVentes(evaluationVenteFiltre).stream()
-                        .filter(e -> e.getMoyenne() < Float.parseFloat(filtre)).collect(Collectors.toList());
-                break;
-            case Constant.MORE:
-                dtos = buildEvaluationVentes(evaluationVenteFiltre).stream()
-                        .filter(e -> e.getMoyenne() > Float.parseFloat(filtre)).collect(Collectors.toList());
-                break;
-            case Constant.MOREOREQUAL:
-                dtos = buildEvaluationVentes(evaluationVenteFiltre).stream()
-                        .filter(e -> e.getMoyenne() >= Float.parseFloat(filtre)).collect(Collectors.toList());
-                break;
-            case Constant.LESSOREQUAL:
-                dtos = buildEvaluationVentes(evaluationVenteFiltre).stream()
-                        .filter(e -> e.getMoyenne() <= Float.parseFloat(filtre)).collect(Collectors.toList());
-                break;
-            case Constant.EQUAL:
-                dtos = buildEvaluationVentes(evaluationVenteFiltre).stream()
-                        .filter(e -> e.getMoyenne() == Float.parseFloat(filtre)).collect(Collectors.toList());
-                break;
-            case Constant.NOT:
-                dtos = buildEvaluationVentes(evaluationVenteFiltre).stream()
-                        .filter(e -> e.getMoyenne() != Float.parseFloat(filtre)).collect(Collectors.toList());
-                break;
-            default:
-                break;
-            }
-            return dtos;
-        } else {
-            return buildEvaluationVentes(evaluationVenteFiltre);
-        }
+    public JSONObject makeSuggestion(EvaluationVenteFiltre evaluationVenteFiltre) {
+        return suggestionService.makeSuggestion(
+                getEvaluationVentes(evaluationVenteFiltre).stream().filter(r -> r.getQuantiteVendue() > 0).map(e -> {
+                    VenteDetailsDTO detailsDTO = new VenteDetailsDTO();
+                    detailsDTO.setTypeVente(e.getGrossisteId());
+                    detailsDTO.setLgFAMILLEID(e.getId());
+                    detailsDTO.setIntQUANTITY(e.getQuantiteVendue());
+                    return detailsDTO;
+                }).collect(Collectors.toList()));
+    }
 
+    @Override
+    public List<EvaluationVenteDto> getEvaluationVentes(EvaluationVenteFiltre evaluationVenteFiltre) {
+
+        return fetchData(evaluationVenteFiltre).stream().map(this::buildFromTuple).collect(Collectors.toList());
     }
 
     @Override
     public JSONObject fetchEvaluationVentes(EvaluationVenteFiltre evaluationVenteFiltre) {
-
-        if (StringUtils.isNotEmpty(evaluationVenteFiltre.getFiltre())
-                && Objects.nonNull(evaluationVenteFiltre.getFiltreValue())) {
-            evaluationVenteFiltre.setAll(true);
+        JSONObject json = new JSONObject();
+        int count = getCount(evaluationVenteFiltre);
+        json.put("total", count);
+        if (count == 0) {
+            json.put("data", new JSONArray());
+            return json;
         }
-
         List<EvaluationVenteDto> data = getEvaluationVentes(evaluationVenteFiltre);
 
-        int count = data.size();
-        if (!evaluationVenteFiltre.isAll()) {
-            count = getCount(evaluationVenteFiltre);
-        }
-        JSONObject json = new JSONObject();
-        json.put("total", count);
         json.put("data", new JSONArray(data));
         return json;
     }
@@ -119,6 +95,7 @@ public class EvaluationVenteServiceImpl implements EvaluationVenteService {
     private List<Tuple> fetchData(EvaluationVenteFiltre evaluationVenteFiltre) {
 
         String sql = replacePlaceHolder(QUERY, evaluationVenteFiltre);
+        sql = manageFiltre(sql, " HAVING moyenne %s %f", evaluationVenteFiltre);
         LOG.log(Level.INFO, "sql---  evaluationVente {0}", sql);
         try {
             Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1,
@@ -161,20 +138,56 @@ public class EvaluationVenteServiceImpl implements EvaluationVenteService {
         } else {
             sql = sql.replace("{search}", "");
         }
+
+        return sql;
+    }
+
+    private String manageFiltre(String sql, String aving, EvaluationVenteFiltre evaluationVenteFiltre) {
+
         if (StringUtils.isNotEmpty(evaluationVenteFiltre.getFiltre())
                 && Objects.nonNull(evaluationVenteFiltre.getFiltreValue())) {
-            sql = sql.replace("{left}", "");
+            sql = sql.replace("{having_placeholder}", aving);
+            switch (evaluationVenteFiltre.getFiltre()) {
+            case Constant.LESS:
+                sql = String.format(Locale.US, sql, "<", evaluationVenteFiltre.getFiltreValue());
+                break;
+            case Constant.MORE:
+                sql = String.format(Locale.US, sql, ">", evaluationVenteFiltre.getFiltreValue());
+                break;
+            case Constant.MOREOREQUAL:
+                sql = String.format(Locale.US, sql, ">=", evaluationVenteFiltre.getFiltreValue());
+                break;
+            case Constant.LESSOREQUAL:
+                sql = String.format(Locale.US, sql, "<=", evaluationVenteFiltre.getFiltreValue());
+                break;
+            case Constant.EQUAL:
+                sql = String.format(Locale.US, sql, "=", evaluationVenteFiltre.getFiltreValue());
+                break;
+            case Constant.NOT:
+                sql = String.format(Locale.US, sql, "<>", evaluationVenteFiltre.getFiltreValue());
+                break;
+            default:
+                break;
+            }
         } else {
-            sql = sql.replace("{left}", "left");
+            sql = sql.replace("{having_placeholder}", "");
         }
+
         return sql;
+
     }
 
     private int getCount(EvaluationVenteFiltre evaluationVenteFiltre) {
 
         String sql = replacePlaceHolder(QUERY_COUNT, evaluationVenteFiltre);
+        sql = manageFiltre(sql,
+                " HAVING ROUND(SUM(CASE WHEN venteDetail.dateVente <> MONTH(CURDATE()) THEN venteDetail.quantiteVendue ELSE 0 END)/3,2) %s %f",
+                evaluationVenteFiltre);
+        LOG.log(Level.INFO, "sql---  COUNT {0}", sql);
         try {
             Query query = em.createNativeQuery(sql, Tuple.class);
+            query.setParameter(1, java.sql.Date.valueOf(getDateParams()));
+
             Tuple tuple = (Tuple) query.getSingleResult();
             return Objects.nonNull(tuple) ? tuple.get("total", BigInteger.class).intValue() : 0;
 
@@ -184,61 +197,15 @@ public class EvaluationVenteServiceImpl implements EvaluationVenteService {
         }
     }
 
-    private List<EvaluationVenteDto> buildEvaluationVentes(EvaluationVenteFiltre evaluationVenteFiltre) {
-        List<EvaluationVenteDto> evaluationVentes0 = new ArrayList<>();
-        Map<String, List<EvaluationVenteDto>> evaluationVentesMap = fetchData(evaluationVenteFiltre).stream()
-                .map(this::buildFromTuple).collect(Collectors.groupingBy(EvaluationVenteDto::getId));
-        LocalDate now = LocalDate.now();
-        int quantiteVendueCurrentMonth = now.getMonthValue();
-        int quantiteVendueMonthMinusOne = now.minusMonths(1).getMonthValue();
-        int quantiteVendueMonthMinusTwo = now.minusMonths(2).getMonthValue();
-        int quantiteVendueMonthMinusThree = now.minusMonths(3).getMonthValue();
-        evaluationVentesMap.forEach((k, v) -> {
-            EvaluationVenteDto dto = new EvaluationVenteDto();
-            EvaluationVenteDto evaluationVenteDto = v.get(0);
-            dto.setId(k);
-            dto.setGrossisteId(evaluationVenteDto.getGrossisteId());
-            dto.setCodeCip(evaluationVenteDto.getCodeCip());
-            dto.setLibelle(evaluationVenteDto.getLibelle());
-            dto.setStock(getFamilleStockByProduitId(k));
-            int prixVente = evaluationVenteDto.getTotalvente();
-
-            Map<Integer, List<EvaluationVenteDto>> monthMap = v.stream()
-                    .collect(Collectors.groupingBy(EvaluationVenteDto::getMonth));
-            monthMap.forEach((month, items) -> {
-                if (CollectionUtils.isNotEmpty(items)) {
-                    Integer quantiteVendue = items.get(0).getQuantiteVendue();
-                    int qty = Objects.nonNull(quantiteVendue) ? quantiteVendue : 0;
-                    if (month == quantiteVendueCurrentMonth) {
-                        dto.setQuantiteVendueCurrentMonth(qty);
-                    } else if (month == quantiteVendueMonthMinusOne) {
-                        dto.setQuantiteVendueMonthMinusOne(qty);
-                    } else if (month == quantiteVendueMonthMinusTwo) {
-                        dto.setQuantiteVendueMonthMinusTwo(qty);
-                    } else if (month == quantiteVendueMonthMinusThree) {
-                        dto.setQuantiteVendueMonthMinusThree(qty);
-                    }
-                }
-
-            });
-            dto.setQuantiteVendue(dto.getQuantiteVendueMonthMinusOne() + dto.getQuantiteVendueMonthMinusTwo()
-                    + dto.getQuantiteVendueMonthMinusThree());
-            dto.setTotalvente(prixVente * dto.getQuantiteVendue());
-            double m = Double.valueOf(dto.getQuantiteVendue()) / 3;
-            float moyenne = BigDecimal.valueOf(m).setScale(2, RoundingMode.DOWN).floatValue();
-            dto.setMoyenne(moyenne);
-            evaluationVentes0.add(dto);
-        });
-        return evaluationVentes0;
-    }
-
     private EvaluationVenteDto buildFromTuple(Tuple t) {
+        String quantiteMoisJson = t.get("quantite_mois", String.class);
         String produitId = t.get("produitId", String.class);
         String codeCip = t.get("codeCip", String.class);
         String libelle = t.get("libelle", String.class);
         int prixVente = t.get("prixVente", Integer.class);
-        Integer month = t.get("dateVente", Integer.class);
+
         BigDecimal bd = t.get("quantiteVendue", BigDecimal.class);
+
         int quantiteVendue = Objects.nonNull(bd) ? bd.intValue() : 0;
         String grossisteId = t.get("grossisteId", String.class);
         EvaluationVenteDto dto = new EvaluationVenteDto();
@@ -247,9 +214,35 @@ public class EvaluationVenteServiceImpl implements EvaluationVenteService {
         dto.setId(produitId);
         dto.setTotalvente(prixVente);
         dto.setQuantiteVendue(quantiteVendue);
-        dto.setMonth(Objects.isNull(month) ? 0 : month);
+        dto.setMoyenne(t.get("moyenne", BigDecimal.class).floatValue());
         dto.setGrossisteId(grossisteId);
+        dto.setStock(getFamilleStockByProduitId(produitId));
+        buildMonthQuantityValue(quantiteMoisJson, dto);
         return dto;
+
+    }
+
+    private void buildMonthQuantityValue(String quantiteMoisJson, EvaluationVenteDto dto) {
+        LocalDate now = LocalDate.now();
+        int quantiteVendueCurrentMonth = now.getMonthValue();
+        int quantiteVendueMonthMinusOne = now.minusMonths(1).getMonthValue();
+        int quantiteVendueMonthMinusTwo = now.minusMonths(2).getMonthValue();
+        int quantiteVendueMonthMinusThree = now.minusMonths(3).getMonthValue();
+        String[] r = quantiteMoisJson.split(",");
+        for (String r1 : r) {
+            String[] v = r1.split(":");
+            int month = Integer.parseInt(v[1]);
+            int monthQuantity = Integer.parseInt(v[0]);
+            if (month == quantiteVendueMonthMinusOne) {
+                dto.setQuantiteVendueMonthMinusOne(monthQuantity);
+            } else if (month == quantiteVendueMonthMinusTwo) {
+                dto.setQuantiteVendueMonthMinusTwo(monthQuantity);
+            } else if (month == quantiteVendueMonthMinusThree) {
+                dto.setQuantiteVendueMonthMinusThree(monthQuantity);
+            } else if (month == quantiteVendueCurrentMonth) {
+                dto.setQuantiteVendueCurrentMonth(monthQuantity);
+            }
+        }
 
     }
 
@@ -268,15 +261,4 @@ public class EvaluationVenteServiceImpl implements EvaluationVenteService {
         }
     }
 
-    @Override
-    public JSONObject makeSuggestion(EvaluationVenteFiltre evaluationVenteFiltre) {
-        return suggestionService.makeSuggestion(
-                getEvaluationVentes(evaluationVenteFiltre).stream().filter(r -> r.getQuantiteVendue() > 0).map(e -> {
-                    VenteDetailsDTO detailsDTO = new VenteDetailsDTO();
-                    detailsDTO.setTypeVente(e.getGrossisteId());
-                    detailsDTO.setLgFAMILLEID(e.getId());
-                    detailsDTO.setIntQUANTITY(e.getQuantiteVendue());
-                    return detailsDTO;
-                }).collect(Collectors.toList()));
-    }
 }

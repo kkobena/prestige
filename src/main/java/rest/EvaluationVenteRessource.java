@@ -34,7 +34,7 @@ public class EvaluationVenteRessource {
     @Path("/data")
     public Response getData(@QueryParam(value = "familleId") String familleId,
             @QueryParam(value = "emplacementId") String emplacementId, @QueryParam(value = "filtre") String filtre,
-            @QueryParam(value = "filtreValue") Integer filtreValue, @QueryParam(value = "query") String query,
+            @QueryParam(value = "filtreValue") Float filtreValue, @QueryParam(value = "query") String query,
             @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
 
         HttpSession hs = servletRequest.getSession();
@@ -59,7 +59,7 @@ public class EvaluationVenteRessource {
     @Path("/suggerer")
     public Response suggerer(@QueryParam(value = "familleId") String familleId,
             @QueryParam(value = "emplacementId") String emplacementId, @QueryParam(value = "filtre") String filtre,
-            @QueryParam(value = "filtreValue") Integer filtreValue, @QueryParam(value = "query") String query,
+            @QueryParam(value = "filtreValue") Float filtreValue, @QueryParam(value = "query") String query,
             @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
 
         HttpSession hs = servletRequest.getSession();
