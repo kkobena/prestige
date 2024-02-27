@@ -250,7 +250,7 @@ public class BalanceServiceImpl implements BalanceService {
         sql = replacePlaceHolder(sql, balanceParams);
         LOG.log(Level.INFO, "sql--- balance vente {0}", sql);
         try {
-            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, DateConverter.DEPOT_EXTENSION)
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
                     .setParameter(2, balanceParams.getEmplacementId())
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
@@ -302,7 +302,7 @@ public class BalanceServiceImpl implements BalanceService {
                 sql = sql.replace("{byDay}", "").replace("{groupByDay}", "");
             }
             LOG.log(Level.INFO, "sql--- TVAS {0}", sql);
-            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, DateConverter.DEPOT_EXTENSION)
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
                     .setParameter(2, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtEnd()))
                     .setParameter(4, balanceParams.getEmplacementId());
