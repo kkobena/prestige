@@ -12,9 +12,18 @@ public class VenteReglementDTO {
     private int montantnetug;
     private int montantTttcug;
     private int amountNonCa;
+    private int montantAnnulation;
 
     public String getTypeReglement() {
         return typeReglement;
+    }
+
+    public int getMontantAnnulation() {
+        return montantAnnulation;
+    }
+
+    public void setMontantAnnulation(int montantAnnulation) {
+        this.montantAnnulation = montantAnnulation;
     }
 
     public VenteReglementDTO setTypeReglement(String typeReglement) {
