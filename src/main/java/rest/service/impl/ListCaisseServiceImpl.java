@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -55,8 +54,6 @@ import util.DateConverter;
 @Stateless
 public class ListCaisseServiceImpl implements ListCaisseService {
 
-    private final Comparator<VisualisationCaisseDTO> comparatorCaisse = Comparator
-            .comparing(VisualisationCaisseDTO::getDateOperation);
     private static final Logger LOG = Logger.getLogger(ListCaisseServiceImpl.class.getName());
 
     private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -83,9 +80,26 @@ public class ListCaisseServiceImpl implements ListCaisseService {
                 .collect(Collectors.groupingBy(VenteReglementDTO::getTypeReglement)).forEach((k, v) -> {
                     SumCaisseDTO sumCaisse = new SumCaisseDTO();
                     sumCaisse.setModeReglement(k);
-                    sumCaisse.setAmount(v.stream().map(VenteReglementDTO::getMontant).reduce(0, Integer::sum));
+                    long montant = 0;
+                    long montantAnnulation = 0;
+                    for (VenteReglementDTO venteReglementDTO : v) {
+                        montant += venteReglementDTO.getMontant();
+
+                        montantAnnulation += venteReglementDTO.getMontantAnnulation();
+                    }
+                    sumCaisse.setAmount(montant);
+                    sumCaisse.setMontantAnnulation(montantAnnulation);
+
                     summaries.add(sumCaisse);
                 });
+        long annulation = summaries.stream().map(SumCaisseDTO::getMontantAnnulation).reduce(0l, Long::sum);
+        if (annulation != 0) {
+            SumCaisseDTO sumCaisse = new SumCaisseDTO();
+            sumCaisse.setModeReglement("Annulation");
+            sumCaisse.setMontantAnnulation(annulation);
+            sumCaisse.setAmount(annulation);
+            summaries.add(sumCaisse);
+        }
         return summaries;
     }
 
@@ -246,22 +260,22 @@ public class ListCaisseServiceImpl implements ListCaisseService {
             for (VenteReglementDTO reglement : reglements) {
                 int montant = reglement.getMontantAttentu();
                 switch (reglement.getTypeReglementId()) {
-                case DateConverter.MODE_ESP:
+                case Constant.MODE_ESP:
                     o.setEspece(montant);
                     break;
-                case DateConverter.MODE_CHEQUE:
+                case Constant.MODE_CHEQUE:
                     o.setCheque(montant);
                     break;
-                case DateConverter.MODE_CB:
+                case Constant.MODE_CB:
                     o.setCarteBancaire(montant);
                     break;
-                case DateConverter.MODE_VIREMENT:
+                case Constant.MODE_VIREMENT:
                     o.setVirement(montant);
                     break;
-                case DateConverter.MODE_MOOV:
-                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                case DateConverter.MODE_MTN:
-                case DateConverter.MODE_WAVE:
+                case Constant.MODE_MOOV:
+                case Constant.TYPE_REGLEMENT_ORANGE:
+                case Constant.MODE_MTN:
+                case Constant.MODE_WAVE:
                     o.setMobile(o.getMobile() + montant);
                     break;
 
@@ -278,6 +292,11 @@ public class ListCaisseServiceImpl implements ListCaisseService {
         reglement.setMontantAttentu(montantAttendu);
         reglement.setTypeReglement(tTypeReglement.getStrNAME());
         reglement.setTypeReglementId(tTypeReglement.getLgTYPEREGLEMENTID());
+        if (montant < 0) {
+            reglement.setMontantAnnulation(montant);
+
+        }
+
         return reglement;
     }
 
