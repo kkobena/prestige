@@ -46,7 +46,6 @@ import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
 import rest.service.TvaService;
 import util.CommonUtils;
-import util.CommonUtils;
 import util.Constant;
 import util.FunctionUtils;
 
@@ -544,7 +543,7 @@ public class SalesStatsRessource {
 
     @GET
     @Path("suggerer")
-    public Response addVente(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
+    public Response suggerer(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "hStart") String hStart, @QueryParam(value = "hEnd") String hEnd,
             @QueryParam(value = "user") String user, @QueryParam(value = "query") String query,
             @QueryParam(value = "typeTransaction") String typeTransaction, @QueryParam(value = "nbre") int nbre,
