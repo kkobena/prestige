@@ -94,6 +94,7 @@ public final class Constant {
     public static final String MODE_MTN = "9";
     public static final String MODE_WAVE = "10";
 
+
     private Constant() {
     }
 
