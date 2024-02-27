@@ -301,7 +301,7 @@ public class ProduitServiceImpl implements ProduitService {
     private Integer getFamilleStockByProduitId(String idFamille, String empl) {
         try {
             TypedQuery<TFamilleStock> q = getEntityManager().createQuery(
-                    "SELECT o FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2",
+                    "SELECT o FROM TFamilleStock o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.lgEMPLACEMENTID.lgEMPLACEMENTID=?2 AND o.strSTATUT='enable'",
                     TFamilleStock.class);
             q.setParameter(1, idFamille);
             q.setParameter(2, empl);
@@ -346,7 +346,7 @@ public class ProduitServiceImpl implements ProduitService {
                 predicates.add(cb.and(cb.equal(fa.get(TFamille_.lgFABRIQUANTID).get(TFabriquant_.lgFABRIQUANTID),
                         params.getFabricantId())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TFamille> q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());

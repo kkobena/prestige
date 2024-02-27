@@ -80,6 +80,11 @@ public final class Constant {
     public static final String P_BT_UPDATE_PRICE_EDIT = "P_BT_UPDATE_PRICE_EDIT";
     public static final String PARAMETER_INDICE_SECURITY = "KEY_INDICE_SECURITY";
     public static final String PROCESS_SUCCESS = "1";
+    public static final String LESS = "LESS";
+    public static final String MORE = "MORE";
+    public static final String EQUAL = "EQUAL";
+    public static final String LESSOREQUAL = "LESSOREQUAL";
+    public static final String MOREOREQUAL = "MOREOREQUAL";
     public static final String MODE_CHEQUE = "2";
     public static final String MODE_VIREMENT = "6";
     public static final String MODE_CB = "3";
