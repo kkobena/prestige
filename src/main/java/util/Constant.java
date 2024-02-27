@@ -11,7 +11,7 @@ public final class Constant {
     public static final String UPDATE_PRICE = "UPDATE_PRICE";
     public static final String P_BT_ANNULER_VENTE = "P_BT_ANNULER_VENTE";
     public static final String DECONDTIONNEMENT_POSITIF = "05";
-    public static final String DECONDTIONNEMENT_NEGATIF = "06";
+    public static final String DECONDTIONNEMENT_NEGATIF = "06"; 
     public static final String AJUSTEMENT_NEGATIF = "07";
     public static final String AJUSTEMENT_POSITIF = "08";
     public static final String TMVTP_ANNUL_VENTE_DEPOT_EXTENSION = "14";
