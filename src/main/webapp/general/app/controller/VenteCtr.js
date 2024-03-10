@@ -3974,6 +3974,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                             progress.hide();
                             const result = Ext.JSON.decode(response.responseText, true);
                             if (result.success) {
+
+
                                 me.netAmountToPay = result.data;
                                 me.toRecalculate = false;
                                 let montantNet = me.getNetAmountToPay().montantNet;
@@ -3989,6 +3991,22 @@ Ext.define('testextjs.controller.VenteCtr', {
                                     me.handleMontantField(montantNet);
                                     me.getMontantRecu().setReadOnly(false);
                                     me.getMontantRecu().focus(true, 50);
+                                }
+                                const message = result.msg;
+                                const restructuring = result.data.restructuring;
+                                if (restructuring === true) {
+                                    Ext.MessageBox.show({
+                                        title: 'Message d\'erreur',
+                                        width: 500,
+                                        msg: message,
+                                        buttons: Ext.MessageBox.OK,
+                                        icon: Ext.MessageBox.WARNING,
+                                        fn: function (buttonId) {
+                                            if (buttonId === "ok") {
+                                                me.getMontantRecu().focus(true, 50);
+                                            }
+                                        }
+                                    });
                                 }
                             } else {
                                 me.getMontantRecu().focus(true, 50);
