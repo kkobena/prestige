@@ -190,7 +190,7 @@ public class DatabaseToolkit {
         Response response = myResource.request().header("Authorization", "Bearer ".concat(getAccessToken()))
                 .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
         LOG.log(Level.INFO, "sendSMS >>> {0} {1} {2}",
-                new Object[]{response.getStatus(), response.readEntity(String.class), address});
+                new Object[] { response.getStatus(), response.readEntity(String.class), address });
         if (response.getStatus() == 201) {
             notification.setStatut(Statut.SENT);
 
@@ -357,11 +357,8 @@ public class DatabaseToolkit {
         try {
             LocalDate now = LocalDate.now();
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");
-            List<Integer> ids = List.of(
-                    Integer.valueOf(now.format(dtf)),
-                    Integer.valueOf(now.minusDays(1).format(dtf)),
-                    Integer.valueOf(now.minusDays(2).format(dtf)),
-                    Integer.valueOf(now.minusDays(3).format(dtf)));
+            List<Integer> ids = List.of(Integer.valueOf(now.format(dtf)), Integer.valueOf(now.minusDays(1).format(dtf)),
+                    Integer.valueOf(now.minusDays(2).format(dtf)), Integer.valueOf(now.minusDays(3).format(dtf)));
             userTransaction.begin();
             for (Integer id : ids) {
                 if (!checkIsAlreadyUpdated(id)) {

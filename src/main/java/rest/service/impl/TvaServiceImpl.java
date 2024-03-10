@@ -98,7 +98,7 @@ public class TvaServiceImpl implements TvaService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-               LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
 
