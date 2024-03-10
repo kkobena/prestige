@@ -175,11 +175,11 @@ public class CommandeServiceImpl implements CommandeService {
         JSONObject json = new JSONObject();
 
         try {
-            TParameters tp = findParameter(DateConverter.KEY_ACTIVATE_PEREMPTION_DATE);
+            TParameters tp = findParameter(Constant.KEY_ACTIVATE_PEREMPTION_DATE);
             TBonLivraison bonLivraison = this.getEm().find(TBonLivraison.class, id);
             List<TPreenregistrementDetail> avoirs = getAvoirs();
             Set<TPreenregistrementDetail> avoirs0 = new HashSet<>();
-            TOfficine officine = getEm().find(TOfficine.class, DateConverter.OFFICINE);
+            TOfficine officine = getEm().find(TOfficine.class, Constant.OFFICINE);
             userTransaction.begin();
             if (tp == null) {
                 return json.put("success", false).put("msg",
@@ -187,7 +187,7 @@ public class CommandeServiceImpl implements CommandeService {
             }
             TOrder order = bonLivraison.getLgORDERID();
             TGrossiste grossiste = order.getLgGROSSISTEID();
-            if (bonLivraison.getStrSTATUT().equals(DateConverter.STATUT_IS_CLOSED)) {
+            if (bonLivraison.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)) {
                 return json.put("success", false).put("msg",
                         "Impossible de trouver ce bon. Verifier s'il ce bon n'est pas deja cloturé");
             }

@@ -1,5 +1,6 @@
 package rest.service.impl;
 
+import dal.Notification;
 import dal.TBilletage;
 import dal.TBilletageDetails;
 import dal.TCaisse;
@@ -9,12 +10,15 @@ import dal.TEmplacement;
 import dal.TResumeCaisse;
 import dal.TUser;
 import dal.TUser_;
+import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
+import dal.enumeration.TypeNotification;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -42,6 +46,7 @@ import org.json.JSONObject;
 import rest.service.BilletageService;
 import rest.service.CaisseService;
 import rest.service.LogService;
+import rest.service.NotificationService;
 import rest.service.dto.BilletageDTO;
 import rest.service.dto.CoffreCaisseDTO;
 import rest.service.dto.UserCaisseDataDTO;
@@ -49,8 +54,10 @@ import rest.service.exception.CaisseNotFoundExeception;
 import rest.service.exception.CaisseUsingExeception;
 import rest.service.exception.CashFundNotFoundExeception;
 import util.Constant;
+import util.DateCommonUtils;
 import util.DateUtil;
 import util.FunctionUtils;
+import util.NumberUtils;
 
 /**
  *
@@ -70,6 +77,8 @@ public class BilletageServiceImpl implements BilletageService {
     private LogService logService;
     @EJB
     private CaisseService caisseService;
+    @EJB
+    private NotificationService notificationService;
 
     private TCaisse getUserCaisse(TUser user) {
         try {
@@ -218,14 +227,27 @@ public class BilletageServiceImpl implements BilletageService {
         }
 
         oTResumeCaisse.setLgUPDATEDBY(user.getLgUSERID());
-        oTResumeCaisse.setIntSOLDESOIR((int) amount);
+        var montantFinal = (int) amount;
+        oTResumeCaisse.setIntSOLDESOIR(montantFinal);
         oTResumeCaisse.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
         oTResumeCaisse.setDtUPDATED(now);
         doBilletage(oTResumeCaisse, billetage, user);
         String description = "Cloture de la caisse de  " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME()
-                + " avec succès avec un montant de: " + amount + " Billetage " + billetage;
+                + " avec succès avec un montant de: " + NumberUtils.formatLongToString(montantFinal) + " à la date du "
+                + DateCommonUtils.formatCurrentDate() + " Billetage " + billetage;
         logService.updateItem(user, oTResumeCaisse.getLdCAISSEID(), description, TypeLog.CLOTURE_CAISSE,
                 oTResumeCaisse);
+        createNotification(description, TypeNotification.VALIDATION_DE_CAISSE, user);
+    }
+
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user) {
+        try {
+            notificationService.save(
+                    new Notification().canal(Canal.SMS).typeNotification(typeNotification).message(msg).addUser(user));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+
     }
 
     private TBilletage createBilletage(TResumeCaisse caisse, TUser user, double billetageAmount) {
