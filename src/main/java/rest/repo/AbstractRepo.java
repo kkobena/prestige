@@ -13,7 +13,7 @@ import java.util.Optional;
  *
  * @param <T>
  */
-public interface AbstractRepo<T> {
+public interface AbstractRepo<T /* extends Entity */> {
 
     void save(T entity);
 
