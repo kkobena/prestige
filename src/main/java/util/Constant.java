@@ -93,7 +93,24 @@ public final class Constant {
     public static final String TYPE_REGLEMENT_ORANGE = "7";
     public static final String MODE_MTN = "9";
     public static final String MODE_WAVE = "10";
-
+    public static final String LESS = "LESS";
+    public static final String MORE = "MORE";
+    public static final String EQUAL = "EQUAL";
+    public static final String LESSOREQUAL = "LESSOREQUAL";
+    public static final String MOREOREQUAL = "MOREOREQUAL";
+    public static final String ACTION_RETOURFOURNISSEUR = "RETOURFOURNISSEUR";
+    public static final String ACTION_ENTREE_RETOUR_DEPOT = "ENTREESTOCK";
+    public static final String KEY_PARAMS = "KEY_PARAMS";
+    public static final String KEY_TAKE_INTO_ACCOUNT = "KEY_TAKE_INTO_ACCOUNT";
+    public static final String KEY_NOMBRE_TICKETS_VNO = "KEY_NOMBRE_TICKETS_VNO";
+    public static final String SMS_TOKEN_TYPE = "Bearer";
+    public static final String GRANT_TYPE = "client_credentials";
+    public static final String KEY_SMS_CLOTURE_CAISSE = "KEY_SMS_CLOTURE_CAISSE";
+    public static final String KEY_SMS_MODIF_PRIX_VENTE = "KEY_SMS_MODIF_PRIX_VENTE";
+    public static final String KEY_MAIL_CLOTURE_CAISSE = "KEY_MAIL_CLOTURE_CAISSE";
+    public static final String KEY_HEURE_EMAIL = "KEY_HEURE_EMAIL";
+    public static final String KEY_ACTIVATE_PEREMPTION_DATE = "KEY_ACTIVATE_PEREMPTION_DATE";
+    public static final String OFFICINE = "1";
 
     private Constant() {
     }

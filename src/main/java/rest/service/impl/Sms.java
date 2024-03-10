@@ -5,6 +5,8 @@
  */
 package rest.service.impl;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -21,7 +23,9 @@ import util.SmsParameters;
  */
 public class Sms implements Runnable {
 
-    private String message, receiverAddres;
+    private static final Logger LOG = Logger.getLogger(Sms.class.getName());
+    private String message;
+    private String receiverAddres;
 
     public String getMessage() {
         return message;
@@ -58,11 +62,11 @@ public class Sms implements Runnable {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            System.out.println("response ---  " + response.getStatus());
-            System.out.println("jSONObject ---  " + jSONObject);
-            System.out.println("response ---  " + response.readEntity(String.class));
+            LOG.info("response ---  " + response.getStatus());
+            LOG.info("jSONObject ---  " + jSONObject);
+            LOG.info("response ---  " + response.readEntity(String.class));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
         }
     }
 

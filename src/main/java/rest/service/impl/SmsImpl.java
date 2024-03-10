@@ -6,6 +6,8 @@
 package rest.service.impl;
 
 import dal.SmsToken;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -30,6 +32,8 @@ import util.SmsParameters;
  */
 @Stateless
 public class SmsImpl implements SmsService {
+
+    private static final Logger LOG = Logger.getLogger(SmsImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -53,7 +57,7 @@ public class SmsImpl implements SmsService {
 
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
         } catch (JSONException e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
         }
     }
