@@ -9,7 +9,7 @@ import dal.TUser;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import util.DateConverter;
+import util.Constant;
 
 /**
  *
@@ -42,7 +42,7 @@ public class SalesParams implements Serializable {
     private String ayantDroitId;
     private Integer montantTp;
     private Integer totalRecap;
-    private String statut = DateConverter.STATUT_PROCESS;
+    private String statut = Constant.STATUT_IS_PROGRESS;
     private String emplacementId;
     private String medecinId;
     private List<TiersPayantParams> tierspayants = new ArrayList<>();
