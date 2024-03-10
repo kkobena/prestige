@@ -5,7 +5,6 @@
  */
 package rest.repo;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
