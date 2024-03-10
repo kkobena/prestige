@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
 import javax.validation.constraints.NotBlank;
@@ -67,4 +68,18 @@ public final class DateCommonUtils {
     private DateCommonUtils() {
     }
 
+    public static String formatCurrentDate() {
+
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_FORMAT_DD_MM_YYYY_HH_MM_SS));
+    }
+
+    public static String formatLocalDateTime(@NotNull LocalDateTime dateToFormat, DateTimeFormatter dtf) {
+        Objects.requireNonNull(dateToFormat);
+        if (Objects.isNull(dtf)) {
+            return dateToFormat.format(DateTimeFormatter.ofPattern(DATE_FORMAT_DD_MM_YYYY_HH_MM_SS));
+        }
+
+        return dateToFormat.format(dtf);
+
+    }
 }
