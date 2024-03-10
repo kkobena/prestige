@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,7 +73,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.json.JSONException;
 import org.json.JSONObject;
-import util.DateConverter;
+import util.Constant;
 import util.SmsParameters;
 
 /**
@@ -118,7 +119,7 @@ public class DatabaseToolkit {
 
     // @Schedule(second = "*/30", minute = "*", hour = "*", dayOfMonth = "*", year = "*", persistent = true)
     public void manageSms() {
-        if (checkParameterByKey(DateConverter.KEY_SMS_CLOTURE_CAISSE)) {
+        if (checkParameterByKey(Constant.KEY_SMS_CLOTURE_CAISSE)) {
             List<Notification> notifications = findAllByCanal();
             for (Notification notification : notifications) {
                 try {
@@ -189,7 +190,7 @@ public class DatabaseToolkit {
         Response response = myResource.request().header("Authorization", "Bearer ".concat(getAccessToken()))
                 .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
         LOG.log(Level.INFO, "sendSMS >>> {0} {1} {2}",
-                new Object[] { response.getStatus(), response.readEntity(String.class), address });
+                new Object[]{response.getStatus(), response.readEntity(String.class), address});
         if (response.getStatus() == 201) {
             notification.setStatut(Statut.SENT);
 
@@ -208,7 +209,7 @@ public class DatabaseToolkit {
             userTransaction.commit();
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException
                 | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
-            Logger.getLogger(DatabaseToolkit.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
 
     }
@@ -222,7 +223,7 @@ public class DatabaseToolkit {
             q.setParameter("statut", Statut.NOT_SEND);
             return q.getResultList();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "---->>>>  ", e);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -233,7 +234,7 @@ public class DatabaseToolkit {
             q.setParameter("statut", statut);
             return q.getResultList();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "---->>>>  ", e);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -248,7 +249,7 @@ public class DatabaseToolkit {
             q.setParameter("canaux", EnumSet.of(Canal.SMS));
             return q.getResultList();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "---->>>>  ", e);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -264,7 +265,7 @@ public class DatabaseToolkit {
 
     public String findScheduledValues() {
         try {
-            TParameters parameters = em.find(TParameters.class, DateConverter.KEY_HEURE_EMAIL);
+            TParameters parameters = em.find(TParameters.class, Constant.KEY_HEURE_EMAIL);
             return parameters.getStrVALUE();
         } catch (Exception e) {
             return "12,20";
@@ -290,7 +291,7 @@ public class DatabaseToolkit {
             q.setParameter("notificationId", n.getId());
             return q.getResultList();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "---->>>>  ", e);
+            LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
     }
@@ -321,7 +322,6 @@ public class DatabaseToolkit {
             Address[] recipient = new InternetAddress[listadd.size()];
             recipient = listadd.toArray(recipient);
             Address sender = new InternetAddress(sp.email);
-            // Address recipient = new InternetAddress(email);
             msg.setContent(content, "text/html; charset=utf-8");
             msg.setFrom(sender);
             msg.setRecipients(Message.RecipientType.TO, recipient);
@@ -329,7 +329,7 @@ public class DatabaseToolkit {
             Transport.send(msg, sp.email, sp.password);
             return true;
         } catch (MessagingException ex) {
-            LOG.log(Level.SEVERE, "---->>>>  ", ex);
+            LOG.log(Level.SEVERE, null, ex);
             return false;
         }
     }
@@ -355,11 +355,13 @@ public class DatabaseToolkit {
 
     void updateStockDailyValue() {
         try {
+            LocalDate now = LocalDate.now();
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");
             List<Integer> ids = List.of(
-                    Integer.valueOf(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))),
-                    Integer.valueOf(LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"))),
-                    Integer.valueOf(LocalDate.now().minusDays(2).format(DateTimeFormatter.ofPattern("yyyyMMdd"))),
-                    Integer.valueOf(LocalDate.now().minusDays(3).format(DateTimeFormatter.ofPattern("yyyyMMdd"))));
+                    Integer.valueOf(now.format(dtf)),
+                    Integer.valueOf(now.minusDays(1).format(dtf)),
+                    Integer.valueOf(now.minusDays(2).format(dtf)),
+                    Integer.valueOf(now.minusDays(3).format(dtf)));
             userTransaction.begin();
             for (Integer id : ids) {
                 if (!checkIsAlreadyUpdated(id)) {
@@ -378,7 +380,7 @@ public class DatabaseToolkit {
 
         } catch (IllegalStateException | NumberFormatException | SecurityException | HeuristicMixedException
                 | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
-            LOG.log(Level.SEVERE, "===>> updateStockDailyValue", e);
+            LOG.log(Level.SEVERE, null, e);
         }
     }
 
@@ -387,7 +389,7 @@ public class DatabaseToolkit {
             StockDailyValue sdv = em.find(StockDailyValue.class, day);
             return sdv != null;
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "===>> updateStockDailyValue", e);
+            LOG.log(Level.SEVERE, null, e);
             return false;
         }
 
@@ -409,10 +411,10 @@ public class DatabaseToolkit {
             }
             SmsToken smsToken = getOrupdateSmsToken();
             userTransaction.commit();
-            return smsToken.getAccessToken();
+            return Objects.nonNull(smsToken) ? smsToken.getAccessToken() : null;
         } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException
                 | NotSupportedException | RollbackException | SystemException e) {
-            LOG.log(Level.SEVERE, "===>> getAccessToken", e);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
     }
@@ -454,9 +456,7 @@ public class DatabaseToolkit {
             Client client = ClientBuilder.newClient();
             SmsParameters sp = SmsParameters.getInstance();
             MultivaluedMap<String, String> formdata = new MultivaluedHashMap<>();
-            // String auth = "Basic ".concat(new
-            // String(Base64.encodeBase64(sp.clientId.concat(":").concat(sp.clientSecret).getBytes())));
-            formdata.add("grant_type", DateConverter.GRANT_TYPE);
+            formdata.add("grant_type", Constant.GRANT_TYPE);
             WebTarget myResource = client.target(sp.pathsmsapitokenendpoint);
             Response response = myResource.request(MediaType.APPLICATION_JSON)
                     .header("Authorization", StringUtils.isNotEmpty(getBasicHeader()) ? getBasicHeader() : sp.header)
@@ -468,7 +468,7 @@ public class DatabaseToolkit {
 
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
         } catch (JSONException e) {
-            LOG.log(Level.SEVERE, "---->>>>  ", e);
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
         }
     }

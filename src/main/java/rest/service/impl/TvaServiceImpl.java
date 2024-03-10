@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,7 +33,7 @@ import rest.service.TvaService;
 @Stateless
 public class TvaServiceImpl implements TvaService {
 
-    private static final Logger LOG = Logger.getLogger(SalesStatsServiceImpl.class.getName());
+    private static final Logger LOG = Logger.getLogger(TvaServiceImpl.class.getName());
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -54,7 +55,7 @@ public class TvaServiceImpl implements TvaService {
     public boolean isExcludTiersPayantActive() {
         try {
             TParameters q = getEntityManager().find(TParameters.class, "EXCLUSION_TIERS6PAYANT_CARNET");
-            return Integer.valueOf(q.getStrVALUE()) == 1;
+            return Integer.parseInt(q.getStrVALUE()) == 1;
         } catch (Exception e) {
             return false;
         }
@@ -63,7 +64,7 @@ public class TvaServiceImpl implements TvaService {
     @Override
     public List<TvaDTO> tva(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId) {
         List<TvaDTO> data = new ArrayList<>();
-        List<TvaDTO> vno = tvaVnoData(dtStart, dtEnd, emplacementId);
+        List<TvaDTO> vno = tvaVnoData(dtStart, dtEnd);
         List<TvaDTO> voNonExclusDuCa = tvaVoData(dtStart, dtEnd, checked, emplacementId);
         Stream.of(vno, voNonExclusDuCa).flatMap(x -> x.stream()).collect(Collectors.groupingBy(TvaDTO::getTaux))
                 .forEach((k, v) -> {
@@ -97,13 +98,13 @@ public class TvaServiceImpl implements TvaService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+               LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
 
     }
 
-    private List<TvaDTO> tvaVnoData(LocalDate dtStart, LocalDate dtEnd, String emplacementId) {
+    private List<TvaDTO> tvaVnoData(LocalDate dtStart, LocalDate dtEnd) {
         try {
             List<Tuple> list = getEntityManager().createNativeQuery(
                     "SELECT SUM(d.int_PRICE) AS montantTTC,d.valeurTva  FROM  t_preenregistrement_detail d,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID "
