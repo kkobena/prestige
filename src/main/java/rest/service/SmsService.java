@@ -5,6 +5,7 @@
  */
 package rest.service;
 
+import dal.Notification;
 import javax.ejb.Local;
 import org.json.JSONObject;
 
@@ -16,5 +17,7 @@ import org.json.JSONObject;
 public interface SmsService {
 
     JSONObject findAccessToken();
+
+    void sendSMS(Notification notification);
 
 }

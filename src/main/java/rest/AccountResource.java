@@ -5,11 +5,12 @@
  */
 package rest;
 
-import bll.common.Parameter;
 import commonTasks.dto.ManagedUserVM;
 import dal.TPrivilege;
+import dal.TRole;
 import dal.TRoleUser;
 import dal.TUser;
+import java.util.Collection;
 
 import java.util.List;
 import javax.ejb.EJB;
@@ -22,7 +23,6 @@ import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import rest.service.UserService;
 import rest.service.dto.AccountInfoDTO;
-import toolkits.parameters.commonparameter;
 import util.Constant;
 import util.DateConverter;
 
@@ -42,7 +42,7 @@ public class AccountResource {
     @POST
     @Path("auth")
     public Response auth(ManagedUserVM managedUser) {
-
+        var dashboard = "dashboard";
         JSONObject json = new JSONObject();
         TUser tu = userService.connexion(managedUser, request);
         if (tu == null) {
@@ -57,13 +57,23 @@ public class AccountResource {
             json.put("str_LAST_NAME", tu.getStrLASTNAME());
             json.put("str_PHONE", tu.getStrPHONE());
             hs.setAttribute(Constant.AIRTIME_USER, tu);
-            TRoleUser oTRoleUser = userService.getTRoleUser(tu.getLgUSERID());
-            if (oTRoleUser != null && oTRoleUser.getLgROLEID() != null) {
-                xtypeuser = (oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(Constant.ROLE_PHARMACIEN)
-                        || oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(Constant.ROLE_SUPERADMIN)
-                        || oTRoleUser.getLgROLEID().getStrNAME().equalsIgnoreCase(Constant.ROLE_ADMIN) ? "dashboard"
-                                : "mainmenumanager");
+
+            if (tu.getLgUSERID().equals("00")) {
+                xtypeuser = dashboard;
+            } else {
+
+                Collection<TRoleUser> tRoleUserCollection = tu.getTRoleUserCollection();
+                TRoleUser oTRoleUser = tRoleUserCollection.stream()
+                        .filter(e -> e.getLgROLEID().getStrSTATUT().equals(Constant.STATUT_ENABLE)).findFirst()
+                        .orElse(null);
+                TRole role = oTRoleUser.getLgROLEID();
+
+                xtypeuser = (role.getStrNAME().equalsIgnoreCase(Constant.ROLE_PHARMACIEN)
+                        || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_SUPERADMIN)
+                        || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_ADMIN) ? dashboard : "mainmenumanager");
+
             }
+
             json.put("xtypeuser", xtypeuser);
 
             json.put("str_PIC", "../general/resources/images/photo_personne/" + tu.getStrPIC());

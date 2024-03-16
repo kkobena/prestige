@@ -26,8 +26,18 @@ public class ComboDTO implements Serializable {
         this.id = id;
     }
 
+    public ComboDTO id(String id) {
+        this.id = id;
+        return this;
+    }
+
     public String getLibelle() {
         return libelle;
+    }
+
+    public ComboDTO libelle(String libelle) {
+        this.libelle = libelle;
+        return this;
     }
 
     public void setLibelle(String libelle) {

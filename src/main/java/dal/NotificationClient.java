@@ -5,12 +5,16 @@
  */
 package dal;
 
+import dal.enumeration.Statut;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -38,10 +42,30 @@ public class NotificationClient implements Serializable {
     @JoinColumn(name = "client_id", referencedColumnName = "lg_CLIENT_ID")
     @ManyToOne
     private TClient client;
-
     @JoinColumn(name = "notification_id", referencedColumnName = "id")
     @ManyToOne
     private Notification notification;
+    @Column(name = "statut")
+    @Enumerated(EnumType.STRING)
+    private Statut statut = Statut.NOT_SEND;
+    @Column(name = "sent_at")
+    private LocalDateTime sentAt;
+
+    public Statut getStatut() {
+        return statut;
+    }
+
+    public void setStatut(Statut statut) {
+        this.statut = statut;
+    }
+
+    public LocalDateTime getSentAt() {
+        return sentAt;
+    }
+
+    public void setSentAt(LocalDateTime sentAt) {
+        this.sentAt = sentAt;
+    }
 
     public TClient getClient() {
         return client;

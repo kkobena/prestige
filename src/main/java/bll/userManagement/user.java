@@ -11,22 +11,19 @@ import dal.TAlertEvent;
 import dal.TAlertEventUserFone;
 import dal.TEmplacement;
 import dal.TLanguage;
-import dal.TNotification;
 import dal.TRole;
 import dal.TRoleUser;
 import dal.TUser;
 import dal.TUserFone;
 import dal.dataManager;
-import dal.jconnexion;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import javax.persistence.Query;
 import toolkits.parameters.commonparameter;
 import toolkits.security.Md5;
-import toolkits.utils.jdom;
 import toolkits.utils.logger;
+import util.Constant;
 
 /**
  *
@@ -301,7 +298,7 @@ public class user extends bllBase {
                         .setParameter(4, lg_EMPLACEMENT_ID).setParameter(3, commonparameter.statut_enable)
                         .setFirstResult(start).setMaxResults(limit).getResultList();
             } else /* if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_ADMIN)) */ { // a decommenter en cas de
-                                                                                           // besoin
+                // besoin
                 if (etat) {
                     lg_EMPLACEMENT_ID = "%%";
                 }
@@ -337,7 +334,7 @@ public class user extends bllBase {
                         .setParameter(4, lg_EMPLACEMENT_ID).setParameter(3, commonparameter.statut_enable)
                         .getResultList();
             } else /* if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_ADMIN)) */ { // a decommenter en cas de
-                                                                                           // besoin
+                // besoin
                 if (etat) {
                     lg_EMPLACEMENT_ID = "%%";
                 }
@@ -414,17 +411,15 @@ public class user extends bllBase {
     // fin recuperer un role
 
     // recuperer du role d'un user
-    public TRoleUser getTRoleUser(String lg_USER_ID) {
-        TRoleUser OTRoleUser = null;
-        try {
-            OTRoleUser = (TRoleUser) this.getOdataManager().getEm().createQuery(
-                    "SELECT t FROM TRoleUser t WHERE t.lgUSERID.lgUSERID LIKE ?1 AND t.lgUSERID.strSTATUT = ?2 AND t.lgROLEID.strSTATUT = ?2")
-                    .setParameter(1, lg_USER_ID).setParameter(2, commonparameter.statut_enable).getSingleResult();
-            // new logger().OCategory.info("Role du user " + OTRoleUser.getLgROLEID().getStrNAME());
-        } catch (Exception e) {
-            e.printStackTrace();
+    public TRoleUser getTRoleUser(String userId) {
+
+        TUser user = this.getOdataManager().getEm().find(TUser.class, userId);
+        if (user.getLgUSERID().equals("00")) {
+            return user.getTRoleUserCollection().stream().findFirst().orElse(null);
         }
-        return OTRoleUser;
+        return user.getTRoleUserCollection().stream()
+                .filter(e -> e.getLgROLEID().getStrSTATUT().equals(Constant.STATUT_ENABLE)).findFirst().orElse(null);
+
     }
     // fin recuperer du role d'un user
 

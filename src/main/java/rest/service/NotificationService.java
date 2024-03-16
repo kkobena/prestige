@@ -8,9 +8,9 @@ package rest.service;
 import commonTasks.dto.NotificationDTO;
 import dal.Notification;
 import dal.TClient;
+import dal.TUser;
+import dal.enumeration.Canal;
 import dal.enumeration.Statut;
-import java.time.LocalDate;
-import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONObject;
 
@@ -21,12 +21,13 @@ import org.json.JSONObject;
 @Local
 public interface NotificationService {
 
-    JSONObject findAll(int criteria, int canal, Statut statut, LocalDate dtStart, LocalDate dtEnd);
-
-    List<NotificationDTO> findAllDto(int criteria, int canal, Statut statut, LocalDate dtStart, LocalDate dtEnd);
+    JSONObject findAll(String typeNotification, Canal canal, Statut statut, String dtStart, String dtEnd, int start,
+            int limit);
 
     void save(Notification notification);
 
     void save(Notification notification, TClient client);
+
+    Notification buildNotification(NotificationDTO notification, TUser user);
 
 }

@@ -19,7 +19,8 @@ public enum TypeNotification {
     MVT_DE_CAISSE("Mouvement de caisse"), ENTREE_EN_STOCK("Entree en stock de BL"),
     CLOTURE_DE_CAISSE("Cloture de caisse"), ANNULATION_CLOTURE_DE_CAISSE("Annulation de cloture de caisse"),
     AVOIR_PRODUIT("Reception avoir"), QUANTITE_UG("Entrée quantité UG"), RETOUR_FOURNISSEUR("Retour fournisseur"),
-    MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande"),;
+    MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande"),
+    MASSE("Notification informationnelle");
 
     private final String value;
 

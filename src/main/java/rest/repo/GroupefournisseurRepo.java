@@ -39,7 +39,7 @@ public class GroupefournisseurRepo extends AbstractRepoImpl<Groupefournisseur> {
             }
             return this.update(groupefournisseur);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
             return null;
         }
 
