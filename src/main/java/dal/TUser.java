@@ -7,6 +7,7 @@
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -112,7 +113,7 @@ public class TUser implements Serializable {
     @Column(name = "str_PIC", length = 50)
     private String strPIC;
     @OneToMany(mappedBy = "lgUSERID", fetch = FetchType.EAGER)
-    private Collection<TRoleUser> tRoleUserCollection;
+    private Collection<TRoleUser> tRoleUserCollection = new ArrayList<>();
     @JoinColumn(name = "lg_EMPLACEMENT_ID", referencedColumnName = "lg_EMPLACEMENT_ID", nullable = false)
     @ManyToOne(optional = false)
     private TEmplacement lgEMPLACEMENTID;

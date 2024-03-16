@@ -75,4 +75,6 @@ public interface ClientService {
 
     List<VenteTiersPayantsDTO> ventesTiersPayants(String query, String dtStart, String dtEnd, String tiersPayantId,
             String groupeId, String typeTp, int start, int limit, boolean all);
+
+    JSONObject fetchClients(String query, String typeClientId, int start, int limit);
 }
