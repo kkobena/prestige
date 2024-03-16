@@ -7,11 +7,13 @@
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
@@ -67,8 +69,8 @@ public class TPrivilege implements Serializable {
     private String lgUPDATEDBY;
     @Column(name = "str_STATUT", length = 20)
     private String strSTATUT;
-    @OneToMany(mappedBy = "lgPRIVILEGEID")
-    private Collection<TRolePrivelege> tRolePrivelegeCollection;
+    @OneToMany(mappedBy = "lgPRIVILEGEID", fetch = FetchType.EAGER)
+    private Collection<TRolePrivelege> tRolePrivelegeCollection = new ArrayList<>();
 
     public TPrivilege() {
     }

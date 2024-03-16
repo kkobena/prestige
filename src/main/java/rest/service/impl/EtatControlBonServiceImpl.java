@@ -86,7 +86,7 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
                 .collect(Collectors.toList());
     }
 
-    public long count(String search, String dtStart, String dtEnd, String grossisteId) {
+    private long count(String search, String dtStart, String dtEnd, String grossisteId) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         Root<TBonLivraison> root = cq.from(TBonLivraison.class);

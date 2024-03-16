@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,8 +67,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ClientService;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 import util.DateConverter;
+import util.FunctionUtils;
 
 /**
  *
@@ -97,13 +99,13 @@ public class ClientServiceImpl implements ClientService {
             tc.setStrFIRSTNAME(clientLambda.getStrFIRSTNAME());
             tc.setStrLASTNAME(clientLambda.getStrLASTNAME());
             tc.setStrSEXE(clientLambda.getStrSEXE());
-            tc.setStrSTATUT("enable");
+            tc.setStrSTATUT(Constant.STATUT_ENABLE);
             tc.setDtUPDATED(new Date());
-            tc.setDtCREATED(new Date());
+            tc.setDtCREATED(tc.getDtUPDATED());
             tc.setEmail(clientLambda.getEmail());
             tc.setStrCODEINTERNE(DateConverter.getShortId(6));
             getEmg().persist(tc);
-            createCompteClient(tc, getEmg());
+            createCompteClient(tc);
             tp.setClient(tc);
             tp.setStrFIRSTNAMECUSTOMER(tc.getStrFIRSTNAME());
             tp.setStrLASTNAMECUSTOMER(tc.getStrLASTNAME());
@@ -112,7 +114,7 @@ public class ClientServiceImpl implements ClientService {
             return new JSONObject().put("success", true);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-            // emg.getTransaction().rollback();
+
             return new JSONObject().put("success", false).put("msg",
                     "La mise à jour des infos du client n'a pas abouti");
         }
@@ -120,7 +122,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public TClient createClient(ClientLambdaDTO clientLambda) {
-        EntityManager emg = this.getEmg();
+
         try {
             TClient tc = new TClient(UUID.randomUUID().toString());
             tc.setStrADRESSE(clientLambda.getStrADRESSE());
@@ -128,13 +130,13 @@ public class ClientServiceImpl implements ClientService {
             tc.setStrFIRSTNAME(clientLambda.getStrFIRSTNAME());
             tc.setStrLASTNAME(clientLambda.getStrLASTNAME());
             tc.setStrSEXE(clientLambda.getStrSEXE());
-            tc.setStrSTATUT("enable");
+            tc.setStrSTATUT(Constant.STATUT_ENABLE);
             tc.setDtUPDATED(new Date());
-            tc.setDtCREATED(new Date());
+            tc.setDtCREATED(tc.getDtUPDATED());
             tc.setStrCODEINTERNE(DateConverter.getShortId(6));
             tc.setEmail(clientLambda.getEmail());
-            emg.persist(tc);
-            createCompteClient(tc, emg);
+            this.getEmg().persist(tc);
+            createCompteClient(tc);
             return tc;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -142,27 +144,27 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    public TCompteClient createCompteClient(TClient tc, EntityManager emg) {
-        TCompteClient OTCompteClient = new TCompteClient();
+    private TCompteClient createCompteClient(TClient tc) {
+        TCompteClient oTCompteClient = new TCompteClient();
 
-        OTCompteClient.setLgCOMPTECLIENTID(UUID.randomUUID().toString());
-        OTCompteClient.setStrCODECOMPTECLIENT("");
-        // OTCompteClient.setDblQUOTACONSOMENSUELLE(dbl_QUOTA_CONSO_MENSUELLE); // a decommenter en cas de probleme.
+        oTCompteClient.setLgCOMPTECLIENTID(UUID.randomUUID().toString());
+        oTCompteClient.setStrCODECOMPTECLIENT("");
+        // oTCompteClient.setDblQUOTACONSOMENSUELLE(dbl_QUOTA_CONSO_MENSUELLE); // a decommenter en cas de probleme.
         // 17/08/2016
-        OTCompteClient.setDblQUOTACONSOMENSUELLE(0.0); // forcer l'initialisation de la consommation a 0. La
-                                                       // consommation du quota evolue au fur et a mesure de vente
-        OTCompteClient.setDblPLAFOND(-1.0); // code ajouté
-        OTCompteClient.setPKey("");
-        OTCompteClient.setDblCAUTION(-1.0);
-        OTCompteClient.setDecBalanceInDisponible(0);
-        OTCompteClient.setDecbalanceDisponible(0);
-        OTCompteClient.setStrTYPE("");
-        OTCompteClient.setStrSTATUT(commonparameter.statut_enable);
-        OTCompteClient.setDtCREATED(new Date());
-        OTCompteClient.setLgCLIENTID(tc);
-        OTCompteClient.setDtUPDATED(new Date());
-        emg.persist(OTCompteClient);
-        return OTCompteClient;
+        oTCompteClient.setDblQUOTACONSOMENSUELLE(0.0); // forcer l'initialisation de la consommation a 0. La
+        // consommation du quota evolue au fur et a mesure de vente
+        oTCompteClient.setDblPLAFOND(-1.0); // code ajouté
+        oTCompteClient.setPKey("");
+        oTCompteClient.setDblCAUTION(-1.0);
+        oTCompteClient.setDecBalanceInDisponible(0);
+        oTCompteClient.setDecbalanceDisponible(0);
+        oTCompteClient.setStrTYPE("");
+        oTCompteClient.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTCompteClient.setDtCREATED(new Date());
+        oTCompteClient.setLgCLIENTID(tc);
+        oTCompteClient.setDtUPDATED(new Date());
+        em.persist(oTCompteClient);
+        return oTCompteClient;
     }
 
     @Override
@@ -177,18 +179,19 @@ public class ClientServiceImpl implements ClientService {
                     root.get(TClient_.strFIRSTNAME), root.get(TClient_.strLASTNAME), root.get(TClient_.strADRESSE),
                     root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"), root.get(TClient_.strSEXE),
                     root.get(TClient_.email))).orderBy(cb.asc(root.get(TClient_.strFIRSTNAME)));
-            predicates.add(cb.and(cb.equal(root.get(TClient_.strSTATUT), "enable")));
-            predicates.add(cb.and(cb.equal(root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"),
-                    commonparameter.STANDART_CLIENT_ID)));
+            predicates.add(cb.and(cb.equal(root.get(TClient_.strSTATUT), Constant.STATUT_ENABLE)));
+            predicates.add(cb.and(
+                    cb.equal(root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"), Constant.STANDART_CLIENT_ID)));
 
             if (query != null && !query.equals("")) {
-                predicates.add(cb.or(cb.like(root.get(TClient_.strFIRSTNAME), query + "%"),
-                        cb.like(root.get(TClient_.strLASTNAME), query + "%"),
+                query = query + "%";
+                predicates.add(cb.or(cb.like(root.get(TClient_.strFIRSTNAME), query),
+                        cb.like(root.get(TClient_.strLASTNAME), query),
                         cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME), " "),
-                                root.get(TClient_.strLASTNAME)), query + "%")));
+                                root.get(TClient_.strLASTNAME)), query)));
             }
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = emg.createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -206,29 +209,24 @@ public class ClientServiceImpl implements ClientService {
             CriteriaQuery<TClient> cq = cb.createQuery(TClient.class);
             Root<TClient> root = cq.from(TClient.class);
             cq.select(root).orderBy(cb.asc(root.get(TClient_.strFIRSTNAME)));
-            predicates.add(cb.and(cb.equal(root.get(TClient_.strSTATUT), "enable")));
+            predicates.add(cb.and(cb.equal(root.get(TClient_.strSTATUT), Constant.STATUT_ENABLE)));
             if (!StringUtils.isEmpty(typeClientId)) {
                 predicates.add(cb.and(cb.equal(root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"), typeClientId)));
             }
             if (!StringUtils.isEmpty(query)) {
-                predicates.add(cb.or(cb.like(root.get(TClient_.strNUMEROSECURITESOCIAL), query + "%"),
-                        cb.like(root.get(TClient_.strFIRSTNAME), query + "%"),
+                query = query + "%";
+                predicates.add(cb.or(cb.like(root.get(TClient_.strNUMEROSECURITESOCIAL), query),
+                        cb.like(root.get(TClient_.strFIRSTNAME), query),
                         cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME), " "),
-                                root.get(TClient_.strLASTNAME)), query + "%")));// ,
-                                                                                // cb.like(root.get(TClient_.strLASTNAME),
-                                                                                // query + "%"),
-                                                                                // cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME),
-                                                                                // " "),
-                                                                                // root.get(TClient_.strLASTNAME)),
-                                                                                // query + "%")));
+                                root.get(TClient_.strLASTNAME)), query)));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = emg.createQuery(cq);
             q.setMaxResults(100);
             List<TClient> resultat = q.getResultList();
 
-            return resultat.stream().map(cl -> new ClientDTO(cl, findTiersPayantByClientId(cl.getLgCLIENTID(), emg),
-                    findAyantDroitByClientId(cl.getLgCLIENTID(), emg))).collect(Collectors.toList());
+            return resultat.stream().map(cl -> new ClientDTO(cl, findTiersPayantByClientId(cl.getLgCLIENTID()),
+                    findAyantDroitByClientId(cl.getLgCLIENTID()))).collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
@@ -237,28 +235,14 @@ public class ClientServiceImpl implements ClientService {
 
     Comparator<TiersPayantParams> comparator = Comparator.comparingInt(TiersPayantParams::getOrder);
 
-    private List<TiersPayantParams> findTiersPayantByClientId(String clientId, EntityManager emg) {
-        try {
-            TypedQuery<TCompteClientTiersPayant> query = emg.createQuery(
-                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2",
-                    TCompteClientTiersPayant.class);
-            query.setParameter(1, clientId);
-            query.setParameter(2, DateConverter.STATUT_ENABLE);
-            return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return Collections.emptyList();
-        }
-    }
-
     @Override
     public List<TiersPayantParams> findTiersPayantByClientId(String clientId) {
         try {
             TypedQuery<TCompteClientTiersPayant> query = getEmg().createQuery(
-                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1",
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2",
                     TCompteClientTiersPayant.class);
             query.setParameter(1, clientId);
+            query.setParameter(2, Constant.STATUT_ENABLE);
             return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator)
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -271,9 +255,10 @@ public class ClientServiceImpl implements ClientService {
     public List<TiersPayantParams> findTiersPayantByClientIdExcludeRo(String clientId) {
         try {
             TypedQuery<TCompteClientTiersPayant> query = this.getEmg().createQuery(
-                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.intPRIORITY >1",
+                    "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.intPRIORITY >1  AND o.strSTATUT=?2",
                     TCompteClientTiersPayant.class);
             query.setParameter(1, clientId);
+            query.setParameter(2, Constant.STATUT_ENABLE);
             return query.getResultList().stream().map(TiersPayantParams::new).sorted(comparator)
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -282,11 +267,13 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    private List<AyantDroitDTO> findAyantDroitByClientId(String clientId, EntityManager emg) {
+    private List<AyantDroitDTO> findAyantDroitByClientId(String clientId) {
         try {
-            TypedQuery<TAyantDroit> query = emg
-                    .createQuery("SELECT o FROM TAyantDroit o WHERE o.lgCLIENTID.lgCLIENTID=?1", TAyantDroit.class);
+            TypedQuery<TAyantDroit> query = em.createQuery(
+                    "SELECT o FROM TAyantDroit o WHERE o.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2",
+                    TAyantDroit.class);
             query.setParameter(1, clientId);
+            query.setParameter(2, Constant.STATUT_ENABLE);
             return query.getResultList().stream().map(AyantDroitDTO::new).collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -305,18 +292,19 @@ public class ClientServiceImpl implements ClientService {
             cq.select(cb.construct(TiersPayantDTO.class, root.get(TTiersPayant_.lgTIERSPAYANTID),
                     root.get(TTiersPayant_.strNAME), root.get(TTiersPayant_.strFULLNAME)))
                     .orderBy(cb.asc(root.get(TTiersPayant_.strNAME)));
-            predicates.add(cb.and(cb.equal(root.get(TTiersPayant_.strSTATUT), "enable")));
+            predicates.add(cb.and(cb.equal(root.get(TTiersPayant_.strSTATUT), Constant.STATUT_ENABLE)));
             if (type != null && !"".equals(type)) {
                 predicates.add(cb.equal(
                         root.get(TTiersPayant_.lgTYPETIERSPAYANTID).get(TTypeTiersPayant_.lgTYPETIERSPAYANTID), type));
             }
 
             if (query != null && !query.equals("")) {
-                predicates.add(cb.or(cb.like(root.get(TTiersPayant_.strCODEORGANISME), query + "%"),
-                        cb.like(root.get(TTiersPayant_.strNAME), query + "%"),
-                        cb.like(root.get(TTiersPayant_.strFULLNAME), query + "%")));
+                query = query + "%";
+                predicates.add(cb.or(cb.like(root.get(TTiersPayant_.strCODEORGANISME), query),
+                        cb.like(root.get(TTiersPayant_.strNAME), query),
+                        cb.like(root.get(TTiersPayant_.strFULLNAME), query)));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = emg.createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -325,23 +313,23 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    private TClient findById(String id, EntityManager emg) {
+    private TClient findById(String id) {
         try {
-            return emg.find(TClient.class, id);
+            return em.find(TClient.class, id);
 
         } catch (Exception e) {
             return null;
         }
     }
 
-    private TClient updateClientCarnet(ClientDTO client, TClient tc, TCompteClientTiersPayant oltp, EntityManager emg) {
+    private TClient updateClientCarnet(ClientDTO client, TClient tc, TCompteClientTiersPayant oltp) {
         try {
             tc = updateClient(client, tc);
-            updateCompteClient(client, tc, emg);
-            findAndUpdate(oltp, client, emg);
+            updateCompteClient(client, tc);
+            findAndUpdate(oltp, client);
             return tc;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
 
@@ -358,25 +346,25 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    private TClient createClientCarnet(ClientDTO client, TClient tc, TTiersPayant p, EntityManager emg) {
+    private TClient createClientCarnet(ClientDTO client, TClient tc, TTiersPayant p) {
 
         try {
-            tc = createClient(client, emg);
-            TCompteClient compteClient = createCompteClient(client, tc, emg);
-            createComptClientTierspayant(client, compteClient, emg, p);
+            tc = createClient(client);
+            TCompteClient compteClient = createCompteClient(client, tc);
+            createComptClientTierspayant(client, compteClient, p);
             return tc;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
     }
 
-    private boolean doesNumeroSecuriteSocialExist(String str_NUMERO_SECURITE_SOCIAL, TTiersPayant payant) {
+    private boolean doesNumeroSecuriteSocialExist(String secu, TTiersPayant payant) {
         try {
             TypedQuery<TCompteClientTiersPayant> query = this.getEmg().createQuery(
                     "SELECT o FROM TCompteClientTiersPayant o WHERE o.strNUMEROSECURITESOCIAL =?1 AND o.lgTIERSPAYANTID.lgTIERSPAYANTID=?2 ",
                     TCompteClientTiersPayant.class);
-            query.setParameter(1, str_NUMERO_SECURITE_SOCIAL);
+            query.setParameter(1, secu);
             query.setParameter(2, payant.getLgTIERSPAYANTID());
             return !(query.getResultList().isEmpty());
         } catch (Exception e) {
@@ -390,14 +378,14 @@ public class ClientServiceImpl implements ClientService {
             client = getEmg().find(TClient.class, clientDTO.getLgCLIENTID());
         }
         client.setStrSEXE(clientDTO.getStrSEXE());
-        client.setStrSTATUT(commonparameter.statut_enable);
+        client.setStrSTATUT(Constant.STATUT_ENABLE);
         client.setStrNUMEROSECURITESOCIAL(clientDTO.getStrNUMEROSECURITESOCIAL());
         client.setStrLASTNAME(clientDTO.getStrLASTNAME().toUpperCase());
         client.setStrFIRSTNAME(clientDTO.getStrFIRSTNAME().toUpperCase());
         client.setDtUPDATED(new Date());
         client.setStrCODEPOSTAL(clientDTO.getStrCODEPOSTAL());
         client.setStrADRESSE(clientDTO.getStrADRESSE());
-        client.setLgVILLEID(findVilleById(clientDTO.getLgVILLEID(), getEmg()));
+        client.setLgVILLEID(findVilleById(clientDTO.getLgVILLEID()));
         client.setRemise(findRemiseById(clientDTO.getRemiseId()));
         try {
             client.setDtNAISSANCE(dateFormat.parse(clientDTO.getDtNAISSANCE()));
@@ -407,20 +395,20 @@ public class ClientServiceImpl implements ClientService {
         return client;
     }
 
-    private TClient createClient(ClientDTO clientDTO, EntityManager emg) {
+    private TClient createClient(ClientDTO clientDTO) {
 
         TClient client = new TClient(UUID.randomUUID().toString());
         client.setDtCREATED(new Date());
         client.setStrSEXE(clientDTO.getStrSEXE());
-        client.setStrSTATUT(commonparameter.statut_enable);
+        client.setStrSTATUT(Constant.STATUT_ENABLE);
         client.setStrNUMEROSECURITESOCIAL(clientDTO.getStrNUMEROSECURITESOCIAL());
         client.setStrLASTNAME(clientDTO.getStrLASTNAME().toUpperCase());
         client.setStrFIRSTNAME(clientDTO.getStrFIRSTNAME().toUpperCase());
         client.setDtUPDATED(new Date());
         client.setStrCODEPOSTAL(clientDTO.getStrCODEPOSTAL());
         client.setStrADRESSE(clientDTO.getStrADRESSE());
-        client.setLgTYPECLIENTID(findTypeClientById(clientDTO.getLgTYPECLIENTID(), emg));
-        client.setLgVILLEID(findVilleById(clientDTO.getLgVILLEID(), emg));
+        client.setLgTYPECLIENTID(findTypeClientById(clientDTO.getLgTYPECLIENTID()));
+        client.setLgVILLEID(findVilleById(clientDTO.getLgVILLEID()));
         client.setStrCODEINTERNE(DateConverter.getShortId(6));
         client.setRemise(findRemiseById(clientDTO.getRemiseId()));
 
@@ -428,65 +416,65 @@ public class ClientServiceImpl implements ClientService {
             client.setDtNAISSANCE(dateFormat.parse(clientDTO.getDtNAISSANCE()));
         } catch (ParseException e) {
         }
-        emg.persist(client);
+        em.persist(client);
         return client;
     }
 
-    private TVille findVilleById(String id, EntityManager emg) {
+    private TVille findVilleById(String id) {
         try {
-            return emg.find(TVille.class, id);
+            return em.find(TVille.class, id);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private TTypeClient findTypeClientById(String id, EntityManager emg) {
+    private TTypeClient findTypeClientById(String id) {
         try {
-            return emg.find(TTypeClient.class, id);
+            return em.find(TTypeClient.class, id);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private TTiersPayant findTiersPayantById(String id, EntityManager emg) {
+    private TTiersPayant findTiersPayantById(String id) {
         try {
-            return emg.find(TTiersPayant.class, id);
+            return em.find(TTiersPayant.class, id);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private TCategorieAyantdroit findCateAyantById(String id, EntityManager emg) {
+    private TCategorieAyantdroit findCateAyantById(String id) {
         try {
-            return emg.find(TCategorieAyantdroit.class, id);
+            return em.find(TCategorieAyantdroit.class, id);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private TRisque findRisqueById(String id, EntityManager emg) {
+    private TRisque findRisqueById(String id) {
         try {
-            return emg.find(TRisque.class, id);
+            return em.find(TRisque.class, id);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private TAyantDroit findAyantDroitByNum(String num, EntityManager emg) {
+    private TAyantDroit findAyantDroitByNum(String num) {
         try {
-            return emg.createNamedQuery("TAyantDroit.findByStrNUMEROSECURITESOCIAL", TAyantDroit.class).setMaxResults(1)
+            return em.createNamedQuery("TAyantDroit.findByStrNUMEROSECURITESOCIAL", TAyantDroit.class).setMaxResults(1)
                     .setParameter("strNUMEROSECURITESOCIAL", num).getSingleResult();
         } catch (Exception e) {
             return null;
         }
     }
 
-    private void updateAyantDroit(ClientDTO clientDTO, TClient client, String oldNum, EntityManager emg) {
-        TAyantDroit ayantDroit = findAyantDroitByNum(oldNum, emg);
+    private void updateAyantDroit(ClientDTO clientDTO, TClient client, String oldNum) {
+        TAyantDroit ayantDroit = findAyantDroitByNum(oldNum);
         ayantDroit.setDtUPDATED(new Date());
-        ayantDroit.setStrSTATUT(commonparameter.statut_enable);
-        ayantDroit.setLgRISQUEID(findRisqueById(clientDTO.getLgRISQUEID(), emg));
-        ayantDroit.setLgCATEGORIEAYANTDROITID(findCateAyantById(clientDTO.getLgCATEGORIEAYANTDROITID(), emg));
+        ayantDroit.setStrSTATUT(Constant.STATUT_ENABLE);
+        ayantDroit.setLgRISQUEID(findRisqueById(clientDTO.getLgRISQUEID()));
+        ayantDroit.setLgCATEGORIEAYANTDROITID(findCateAyantById(clientDTO.getLgCATEGORIEAYANTDROITID()));
         ayantDroit.setStrSEXE(clientDTO.getStrSEXE());
         ayantDroit.setStrFIRSTNAME(clientDTO.getStrFIRSTNAME().toUpperCase());
         ayantDroit.setStrLASTNAME(clientDTO.getStrLASTNAME().toUpperCase());
@@ -495,45 +483,45 @@ public class ClientServiceImpl implements ClientService {
             ayantDroit.setDtNAISSANCE(dateFormat.parse(clientDTO.getDtNAISSANCE()));
         } catch (Exception e) {
         }
-        emg.persist(ayantDroit);
+        em.persist(ayantDroit);
     }
 
-    private TCompteClient createCompteClient(ClientDTO clientDTO, TClient tc, EntityManager emg) {
-        TCompteClient OTCompteClient = new TCompteClient();
-        OTCompteClient.setLgCOMPTECLIENTID(UUID.randomUUID().toString());
-        OTCompteClient.setStrCODECOMPTECLIENT("");
+    private TCompteClient createCompteClient(ClientDTO clientDTO, TClient tc) {
+        TCompteClient oTCompteClient = new TCompteClient();
+        oTCompteClient.setLgCOMPTECLIENTID(UUID.randomUUID().toString());
+        oTCompteClient.setStrCODECOMPTECLIENT("");
 
-        OTCompteClient.setDblQUOTACONSOMENSUELLE(clientDTO.getDblQUOTACONSOMENSUELLE().doubleValue());
-        OTCompteClient.setDblPLAFOND(-1.0);
+        oTCompteClient.setDblQUOTACONSOMENSUELLE(clientDTO.getDblQUOTACONSOMENSUELLE().doubleValue());
+        oTCompteClient.setDblPLAFOND(-1.0);
         if (clientDTO.getDbPLAFONDENCOURS() > 0) {
-            OTCompteClient.setDblPLAFOND(clientDTO.getDbPLAFONDENCOURS().doubleValue());
+            oTCompteClient.setDblPLAFOND(clientDTO.getDbPLAFONDENCOURS().doubleValue());
         }
-        OTCompteClient.setPKey(tc.getLgCLIENTID());
-        OTCompteClient.setDblCAUTION(-1.0);
-        OTCompteClient.setDecBalanceInDisponible(0);
-        OTCompteClient.setDecbalanceDisponible(0);
-        OTCompteClient.setDecBalance(0.0);
-        OTCompteClient.setStrTYPE("CLIENT");
-        OTCompteClient.setStrSTATUT(commonparameter.statut_enable);
-        OTCompteClient.setDtCREATED(new Date());
-        OTCompteClient.setLgCLIENTID(tc);
-        OTCompteClient.setDtUPDATED(new Date());
-        OTCompteClient.setDtEffective(new Date());
-        emg.persist(OTCompteClient);
-        return OTCompteClient;
+        oTCompteClient.setPKey(tc.getLgCLIENTID());
+        oTCompteClient.setDblCAUTION(-1.0);
+        oTCompteClient.setDecBalanceInDisponible(0);
+        oTCompteClient.setDecbalanceDisponible(0);
+        oTCompteClient.setDecBalance(0.0);
+        oTCompteClient.setStrTYPE("CLIENT");
+        oTCompteClient.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTCompteClient.setDtCREATED(new Date());
+        oTCompteClient.setLgCLIENTID(tc);
+        oTCompteClient.setDtUPDATED(new Date());
+        oTCompteClient.setDtEffective(new Date());
+        em.persist(oTCompteClient);
+        return oTCompteClient;
     }
 
-    private TCompteClient findByClientId(String clientId, EntityManager emg) {
+    private TCompteClient findByClientId(String clientId) {
         try {
-            return (TCompteClient) emg.createQuery("SELECT o FROM TCompteClient o WHERE o.lgCLIENTID.lgCLIENTID=?1 ")
+            return (TCompteClient) em.createQuery("SELECT o FROM TCompteClient o WHERE o.lgCLIENTID.lgCLIENTID=?1 ")
                     .setParameter(1, clientId).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             return null;
         }
     }
 
-    private TCompteClient updateCompteClient(ClientDTO clientDTO, TClient tc, EntityManager emg) {
-        TCompteClient OTCompteClient = findByClientId(tc.getLgCLIENTID(), emg);
+    private TCompteClient updateCompteClient(ClientDTO clientDTO, TClient tc) {
+        TCompteClient OTCompteClient = findByClientId(tc.getLgCLIENTID());
         OTCompteClient.setStrCODECOMPTECLIENT("");
         OTCompteClient.setDblQUOTACONSOMENSUELLE(clientDTO.getDblQUOTACONSOMENSUELLE().doubleValue());
         OTCompteClient.setDblPLAFOND(-1.0);
@@ -546,168 +534,165 @@ public class ClientServiceImpl implements ClientService {
         OTCompteClient.setDecBalanceInDisponible(0);
         OTCompteClient.setDecbalanceDisponible(0);
         OTCompteClient.setStrTYPE("");
-        OTCompteClient.setStrSTATUT(commonparameter.statut_enable);
+        OTCompteClient.setStrSTATUT(Constant.STATUT_ENABLE);
         OTCompteClient.setDtUPDATED(new Date());
 
-        emg.merge(OTCompteClient);
+        em.merge(OTCompteClient);
         return OTCompteClient;
     }
 
-    private void createComptClientTierspayant(ClientDTO cdto, TCompteClient OTCompteClient, EntityManager emg,
-            TTiersPayant p) {
-        TCompteClientTiersPayant OTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
-        OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
-        OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
-        OTCompteClientTiersPayant.setBISRO(Boolean.TRUE);
-        OTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
-        OTCompteClientTiersPayant.setBIsAbsolute(cdto.isbIsAbsolute());
-        OTCompteClientTiersPayant.setDtCREATED(new Date());
-        OTCompteClientTiersPayant.setDtUPDATED(new Date());
-        OTCompteClientTiersPayant.setLgCOMPTECLIENTID(OTCompteClient);
-        OTCompteClientTiersPayant.setLgTIERSPAYANTID(p);
-        OTCompteClientTiersPayant.setIntPOURCENTAGE(cdto.getIntPOURCENTAGE());
-        OTCompteClientTiersPayant.setIntPRIORITY(cdto.getIntPRIORITY());
-        OTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
-        OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
-        OTCompteClientTiersPayant.setDblPLAFOND(0.0);
-        OTCompteClientTiersPayant.setDblQUOTACONSOVENTE(0.0);
-        OTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
+    private void createComptClientTierspayant(ClientDTO cdto, TCompteClient oTCompteClient, TTiersPayant p) {
+        TCompteClientTiersPayant oTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
+        oTCompteClientTiersPayant.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
+        oTCompteClientTiersPayant.setBISRO(Boolean.TRUE);
+        oTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
+        oTCompteClientTiersPayant.setBIsAbsolute(cdto.isbIsAbsolute());
+        oTCompteClientTiersPayant.setDtCREATED(new Date());
+        oTCompteClientTiersPayant.setDtUPDATED(oTCompteClientTiersPayant.getDtCREATED());
+        oTCompteClientTiersPayant.setLgCOMPTECLIENTID(oTCompteClient);
+        oTCompteClientTiersPayant.setLgTIERSPAYANTID(p);
+        oTCompteClientTiersPayant.setIntPOURCENTAGE(cdto.getIntPOURCENTAGE());
+        oTCompteClientTiersPayant.setIntPRIORITY(cdto.getIntPRIORITY());
+        oTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
+        oTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
+        oTCompteClientTiersPayant.setDblPLAFOND(0.0);
+        oTCompteClientTiersPayant.setDblQUOTACONSOVENTE(0.0);
+        oTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
         if (cdto.getDbPLAFONDENCOURS() > 0) {
-            OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-            OTCompteClientTiersPayant.setDbPLAFONDENCOURS(cdto.getDbPLAFONDENCOURS());
+            oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+            oTCompteClientTiersPayant.setDbPLAFONDENCOURS(cdto.getDbPLAFONDENCOURS());
         }
         if (cdto.getDblQUOTACONSOMENSUELLE() > 0) {
-            OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-            OTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(cdto.getDblQUOTACONSOMENSUELLE()));
+            oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+            oTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(cdto.getDblQUOTACONSOMENSUELLE()));
         }
-        emg.persist(OTCompteClientTiersPayant);
+        em.persist(oTCompteClientTiersPayant);
     }
 
-    private void createComptClientTierspayant(List<TiersPayantParams> tiersPayants, TCompteClient OTCompteClient,
-            EntityManager emg) {
+    private void createComptClientTierspayant(List<TiersPayantParams> tiersPayants, TCompteClient oTCompteClient) {
         tiersPayants.forEach(p -> {
-            TCompteClientTiersPayant OTCompteClientTiersPayant = new TCompteClientTiersPayant(
+            TCompteClientTiersPayant oTCompteClientTiersPayant = new TCompteClientTiersPayant(
                     UUID.randomUUID().toString());
-            OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
-            OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(p.getNumSecurity());
-            OTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
-            OTCompteClientTiersPayant.setBIsAbsolute(p.isbIsAbsolute());
-            OTCompteClientTiersPayant.setDtCREATED(new Date());
-            OTCompteClientTiersPayant.setDtUPDATED(new Date());
-            OTCompteClientTiersPayant.setLgCOMPTECLIENTID(OTCompteClient);
-            OTCompteClientTiersPayant.setLgTIERSPAYANTID(findTiersPayantById(p.getLgTIERSPAYANTID(), emg));
-            OTCompteClientTiersPayant.setIntPOURCENTAGE(p.getTaux());
-            OTCompteClientTiersPayant.setIntPRIORITY(p.getOrder());
-            OTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
-            OTCompteClientTiersPayant.setDblPLAFOND(0.0);
-            OTCompteClientTiersPayant.setDblQUOTACONSOVENTE(0.0);
-            OTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
-            OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
+            oTCompteClientTiersPayant.setStrSTATUT(Constant.STATUT_ENABLE);
+            oTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(p.getNumSecurity());
+            oTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
+            oTCompteClientTiersPayant.setBIsAbsolute(p.isbIsAbsolute());
+            oTCompteClientTiersPayant.setDtCREATED(new Date());
+            oTCompteClientTiersPayant.setDtUPDATED(oTCompteClientTiersPayant.getDtCREATED());
+            oTCompteClientTiersPayant.setLgCOMPTECLIENTID(oTCompteClient);
+            oTCompteClientTiersPayant.setLgTIERSPAYANTID(findTiersPayantById(p.getLgTIERSPAYANTID()));
+            oTCompteClientTiersPayant.setIntPOURCENTAGE(p.getTaux());
+            oTCompteClientTiersPayant.setIntPRIORITY(p.getOrder());
+            oTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
+            oTCompteClientTiersPayant.setDblPLAFOND(0.0);
+            oTCompteClientTiersPayant.setDblQUOTACONSOVENTE(0.0);
+            oTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
+            oTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
             if (p.getDbPLAFONDENCOURS() > 0) {
-                OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-                OTCompteClientTiersPayant.setDbPLAFONDENCOURS(p.getDbPLAFONDENCOURS());
+                oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+                oTCompteClientTiersPayant.setDbPLAFONDENCOURS(p.getDbPLAFONDENCOURS());
             }
             if (p.getDblQUOTACONSOMENSUELLE() > 0) {
-                OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-                OTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(p.getDblQUOTACONSOMENSUELLE()));
+                oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+                oTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(p.getDblQUOTACONSOMENSUELLE()));
             }
-            emg.persist(OTCompteClientTiersPayant);
+            em.persist(oTCompteClientTiersPayant);
 
         });
     }
 
-    private void findAndUpdate(TCompteClientTiersPayant OTCompteClientTiersPayant, ClientDTO cdto, EntityManager emg) {
-        OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
-        OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
-        OTCompteClientTiersPayant.setBISRO(Boolean.TRUE);
-        OTCompteClientTiersPayant.setBIsAbsolute(cdto.isbIsAbsolute());
-        OTCompteClientTiersPayant.setDtUPDATED(new Date());
-        OTCompteClientTiersPayant.setLgTIERSPAYANTID(findTiersPayantById(cdto.getLgTIERSPAYANTID(), emg));
-        OTCompteClientTiersPayant.setIntPOURCENTAGE(cdto.getIntPOURCENTAGE());
-        OTCompteClientTiersPayant.setIntPRIORITY(cdto.getIntPRIORITY());
-        OTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
-        OTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
-        OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
+    private void findAndUpdate(TCompteClientTiersPayant oTCompteClientTiersPayant, ClientDTO cdto) {
+        oTCompteClientTiersPayant.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
+        oTCompteClientTiersPayant.setBISRO(Boolean.TRUE);
+        oTCompteClientTiersPayant.setBIsAbsolute(cdto.isbIsAbsolute());
+        oTCompteClientTiersPayant.setDtUPDATED(new Date());
+        oTCompteClientTiersPayant.setLgTIERSPAYANTID(findTiersPayantById(cdto.getLgTIERSPAYANTID()));
+        oTCompteClientTiersPayant.setIntPOURCENTAGE(cdto.getIntPOURCENTAGE());
+        oTCompteClientTiersPayant.setIntPRIORITY(cdto.getIntPRIORITY());
+        oTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
+        oTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
+        oTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
         if (cdto.getDbPLAFONDENCOURS() > 0) {
-            OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-            OTCompteClientTiersPayant.setDbPLAFONDENCOURS(cdto.getDbPLAFONDENCOURS());
+            oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+            oTCompteClientTiersPayant.setDbPLAFONDENCOURS(cdto.getDbPLAFONDENCOURS());
         }
         if (cdto.getDblQUOTACONSOMENSUELLE() > 0) {
-            OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-            OTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(cdto.getDblQUOTACONSOMENSUELLE()));
+            oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+            oTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(cdto.getDblQUOTACONSOMENSUELLE()));
         }
-        emg.merge(OTCompteClientTiersPayant);
+        em.merge(oTCompteClientTiersPayant);
     }
 
     private void updateComptClientTierspayant(ClientDTO cdto, TTiersPayant p) {
-        TCompteClientTiersPayant OTCompteClientTiersPayant = getEmg().find(TCompteClientTiersPayant.class,
+        TCompteClientTiersPayant oTCompteClientTiersPayant = getEmg().find(TCompteClientTiersPayant.class,
                 cdto.getCompteTp());
-        OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
-        OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
-        OTCompteClientTiersPayant.setBISRO(Boolean.TRUE);
-        OTCompteClientTiersPayant.setBIsAbsolute(cdto.isbIsAbsolute());
-        OTCompteClientTiersPayant.setDtUPDATED(new Date());
-        OTCompteClientTiersPayant.setLgTIERSPAYANTID(p);
-        OTCompteClientTiersPayant.setIntPOURCENTAGE(cdto.getIntPOURCENTAGE());
-        OTCompteClientTiersPayant.setIntPRIORITY(cdto.getIntPRIORITY());
-        OTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
-        OTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
-        OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
+        oTCompteClientTiersPayant.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
+        oTCompteClientTiersPayant.setBISRO(Boolean.TRUE);
+        oTCompteClientTiersPayant.setBIsAbsolute(cdto.isbIsAbsolute());
+        oTCompteClientTiersPayant.setDtUPDATED(new Date());
+        oTCompteClientTiersPayant.setLgTIERSPAYANTID(p);
+        oTCompteClientTiersPayant.setIntPOURCENTAGE(cdto.getIntPOURCENTAGE());
+        oTCompteClientTiersPayant.setIntPRIORITY(cdto.getIntPRIORITY());
+        oTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
+        oTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
+        oTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
         if (cdto.getDbPLAFONDENCOURS() > 0) {
-            OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-            OTCompteClientTiersPayant.setDbPLAFONDENCOURS(cdto.getDbPLAFONDENCOURS());
+            oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+            oTCompteClientTiersPayant.setDbPLAFONDENCOURS(cdto.getDbPLAFONDENCOURS());
         }
         if (cdto.getDblQUOTACONSOMENSUELLE() > 0) {
-            OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-            OTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(cdto.getDblQUOTACONSOMENSUELLE()));
+            oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+            oTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(cdto.getDblQUOTACONSOMENSUELLE()));
         }
-        getEmg().merge(OTCompteClientTiersPayant);
+        getEmg().merge(oTCompteClientTiersPayant);
     }
 
-    private TCompteClientTiersPayant findTCompteClientTiersPayantById(String id, EntityManager emg) {
+    private TCompteClientTiersPayant findTCompteClientTiersPayantById(String id) {
         try {
-            return emg.find(TCompteClientTiersPayant.class, id);
+            return em.find(TCompteClientTiersPayant.class, id);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private void updateComptClientTierspayant(List<TiersPayantParams> tiersPayants, TCompteClient OTCompteClient,
-            EntityManager emg) {
+    private void updateComptClientTierspayant(List<TiersPayantParams> tiersPayants, TCompteClient oCompteClient) {
         tiersPayants.forEach(p -> {
-            TCompteClientTiersPayant OTCompteClientTiersPayant = findTCompteClientTiersPayantById(p.getCompteTp(), emg);
-            if (OTCompteClientTiersPayant == null) {
-                OTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
-                OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
-                OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(p.getNumSecurity());
-                OTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
-                OTCompteClientTiersPayant.setBIsAbsolute(p.isbIsAbsolute());
-                OTCompteClientTiersPayant.setDtCREATED(new Date());
-                OTCompteClientTiersPayant.setDtUPDATED(new Date());
-                OTCompteClientTiersPayant.setLgCOMPTECLIENTID(OTCompteClient);
-                OTCompteClientTiersPayant.setLgTIERSPAYANTID(findTiersPayantById(p.getLgTIERSPAYANTID(), emg));
-                OTCompteClientTiersPayant.setIntPOURCENTAGE(p.getTaux());
-                OTCompteClientTiersPayant.setIntPRIORITY(p.getOrder());
-                OTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
-                OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
-                OTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
+            TCompteClientTiersPayant oTCompteClientTiersPayant = findTCompteClientTiersPayantById(p.getCompteTp());
+            if (oTCompteClientTiersPayant == null) {
+                oTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
+                oTCompteClientTiersPayant.setStrSTATUT(Constant.STATUT_ENABLE);
+                oTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(p.getNumSecurity());
+                oTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
+                oTCompteClientTiersPayant.setBIsAbsolute(p.isbIsAbsolute());
+                oTCompteClientTiersPayant.setDtCREATED(new Date());
+                oTCompteClientTiersPayant.setDtUPDATED(oTCompteClientTiersPayant.getDtCREATED());
+                oTCompteClientTiersPayant.setLgCOMPTECLIENTID(oCompteClient);
+                oTCompteClientTiersPayant.setLgTIERSPAYANTID(findTiersPayantById(p.getLgTIERSPAYANTID()));
+                oTCompteClientTiersPayant.setIntPOURCENTAGE(p.getTaux());
+                oTCompteClientTiersPayant.setIntPRIORITY(p.getOrder());
+                oTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
+                oTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
+                oTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
                 if (p.getDbPLAFONDENCOURS() > 0) {
-                    OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-                    OTCompteClientTiersPayant.setDbPLAFONDENCOURS(p.getDbPLAFONDENCOURS());
+                    oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+                    oTCompteClientTiersPayant.setDbPLAFONDENCOURS(p.getDbPLAFONDENCOURS());
                 }
                 if (p.getDblQUOTACONSOMENSUELLE() > 0) {
-                    OTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
-                    OTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(p.getDblQUOTACONSOMENSUELLE()));
+                    oTCompteClientTiersPayant.setIsCapped(Boolean.TRUE);
+                    oTCompteClientTiersPayant.setDblPLAFOND(Double.valueOf(p.getDblQUOTACONSOMENSUELLE()));
                 }
-                emg.persist(OTCompteClientTiersPayant);
+                em.persist(oTCompteClientTiersPayant);
             }
 
         });
     }
 
-    private boolean compteClientTpHasSales(String id, EntityManager emg) {
+    private boolean compteClientTpHasSales(String id) {
         try {
-            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = emg.createQuery(
+            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = em.createQuery(
                     "SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTTIERSPAYANTID=?1 AND o.strSTATUT='enable'",
                     TPreenregistrementCompteClientTiersPayent.class);
             tq.setParameter(1, id);
@@ -717,14 +702,14 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    private void createAyantDroit(ClientDTO clientDTO, TClient client, EntityManager emg) {
+    private void createAyantDroit(ClientDTO clientDTO, TClient client) {
         TAyantDroit ayantDroit = new TAyantDroit(client.getLgCLIENTID());
         ayantDroit.setDtCREATED(new Date());
-        ayantDroit.setDtUPDATED(new Date());
-        ayantDroit.setStrSTATUT(commonparameter.statut_enable);
+        ayantDroit.setDtUPDATED(ayantDroit.getDtCREATED());
+        ayantDroit.setStrSTATUT(Constant.STATUT_ENABLE);
         ayantDroit.setLgCLIENTID(client);
-        ayantDroit.setLgRISQUEID(findRisqueById(clientDTO.getLgRISQUEID(), emg));
-        ayantDroit.setLgCATEGORIEAYANTDROITID(findCateAyantById(clientDTO.getLgCATEGORIEAYANTDROITID(), emg));
+        ayantDroit.setLgRISQUEID(findRisqueById(clientDTO.getLgRISQUEID()));
+        ayantDroit.setLgCATEGORIEAYANTDROITID(findCateAyantById(clientDTO.getLgCATEGORIEAYANTDROITID()));
         ayantDroit.setStrSEXE(clientDTO.getStrSEXE());
         ayantDroit.setStrFIRSTNAME(clientDTO.getStrFIRSTNAME());
         ayantDroit.setStrLASTNAME(clientDTO.getStrLASTNAME());
@@ -734,13 +719,12 @@ public class ClientServiceImpl implements ClientService {
             ayantDroit.setDtNAISSANCE(dateFormat.parse(clientDTO.getDtNAISSANCE()));
         } catch (Exception e) {
         }
-        emg.persist(ayantDroit);
+        em.persist(ayantDroit);
     }
 
-    private TCompteClientTiersPayant findByClientTiersPayantId(String clientId, String tiersPayantId,
-            EntityManager emg) {
+    private TCompteClientTiersPayant findByClientTiersPayantId(String clientId, String tiersPayantId) {
         try {
-            return emg.createQuery(
+            return em.createQuery(
                     "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strNUMEROSECURITESOCIAL =?2 ",
                     TCompteClientTiersPayant.class).setParameter(1, clientId).setParameter(2, tiersPayantId)
                     .setMaxResults(1).getSingleResult();
@@ -776,14 +760,14 @@ public class ClientServiceImpl implements ClientService {
             CriteriaQuery<TAyantDroit> cq = cb.createQuery(TAyantDroit.class);
             Root<TAyantDroit> root = cq.from(TAyantDroit.class);
             cq.select(root).orderBy(cb.asc(root.get(TAyantDroit_.strFIRSTNAME)));
-            predicates.add(cb.and(cb.equal(root.get(TAyantDroit_.strSTATUT), "enable")));
+            predicates.add(cb.and(cb.equal(root.get(TAyantDroit_.strSTATUT), Constant.STATUT_ENABLE)));
             predicates.add(cb.and(cb.equal(root.get(TAyantDroit_.lgCLIENTID).get(TClient_.lgCLIENTID), clientId)));
             if (query != null && !query.equals("")) {
                 predicates.add(cb.or(cb.like(root.get(TAyantDroit_.strFIRSTNAME), query + "%"),
                         cb.like(root.get(TAyantDroit_.strLASTNAME), query + "%"),
                         cb.like(root.get(TAyantDroit_.strNUMEROSECURITESOCIAL), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = emg.createQuery(cq);
             List<TAyantDroit> ayantDroits = q.getResultList();
             return ayantDroits.stream().map(AyantDroitDTO::new).collect(Collectors.toList());
@@ -796,15 +780,15 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public JSONObject addAyantDroitToClient(AyantDroitDTO dto) throws JSONException {
         JSONObject json = new JSONObject();
-        EntityManager emg = this.getEmg();
+
         try {
             TAyantDroit ayantDroit = new TAyantDroit(UUID.randomUUID().toString());
             ayantDroit.setDtCREATED(new Date());
             ayantDroit.setDtUPDATED(new Date());
-            ayantDroit.setStrSTATUT(commonparameter.statut_enable);
-            ayantDroit.setLgCLIENTID(findById(dto.getLgCLIENTID(), emg));
-            ayantDroit.setLgRISQUEID(findRisqueById(dto.getLgRISQUEID(), emg));
-            ayantDroit.setLgCATEGORIEAYANTDROITID(findCateAyantById(dto.getLgCATEGORIEAYANTDROITID(), emg));
+            ayantDroit.setStrSTATUT(Constant.STATUT_ENABLE);
+            ayantDroit.setLgCLIENTID(findById(dto.getLgCLIENTID()));
+            ayantDroit.setLgRISQUEID(findRisqueById(dto.getLgRISQUEID()));
+            ayantDroit.setLgCATEGORIEAYANTDROITID(findCateAyantById(dto.getLgCATEGORIEAYANTDROITID()));
             ayantDroit.setStrSEXE(dto.getStrSEXE());
             ayantDroit.setStrFIRSTNAME(dto.getStrFIRSTNAME());
             ayantDroit.setStrLASTNAME(dto.getStrLASTNAME());
@@ -814,7 +798,7 @@ public class ClientServiceImpl implements ClientService {
                 ayantDroit.setDtNAISSANCE(dateFormat.parse(dto.getDtNAISSANCE()));
             } catch (Exception e) {
             }
-            emg.persist(ayantDroit);
+            em.persist(ayantDroit);
             AyantDroitDTO data = new AyantDroitDTO(ayantDroit);
             LOG.log(Level.INFO, "{0}", data);
             json.put("success", true).put("data", new JSONObject(data));
@@ -829,21 +813,20 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public JSONObject findClientAssuranceById(String clientId, String venteId) throws JSONException {
         try {
-            EntityManager emg = this.getEmg();
-            TClient cl = emg.find(TClient.class, clientId);
+
+            TClient cl = this.getEmg().find(TClient.class, clientId);
             return new JSONObject().put("success", true).put("data",
-                    new JSONObject(new ClientDTO(cl, findTiersPayantByClientId(clientId, emg),
-                            ventesAssuranceByClientId(clientId, venteId, emg),
-                            findAyantDroitByClientId(clientId, emg))));
+                    new JSONObject(new ClientDTO(cl, findTiersPayantByClientId(clientId),
+                            ventesAssuranceByClientId(clientId, venteId), findAyantDroitByClientId(clientId))));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "-- findClientAssuranceById ---- ", e);
             return new JSONObject().put("success", false).put("msg", "Client avec cet idendifient n'existe pas ");
         }
     }
 
-    private List<TiersPayantParams> ventesAssuranceByClientId(String clientId, String venteId, EntityManager emg) {
+    private List<TiersPayantParams> ventesAssuranceByClientId(String clientId, String venteId) {
         try {
-            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = emg.createQuery(
+            TypedQuery<TPreenregistrementCompteClientTiersPayent> tq = em.createQuery(
                     "SELECT o FROM TPreenregistrementCompteClientTiersPayent o WHERE o.lgCOMPTECLIENTTIERSPAYANTID.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?2  ",
                     TPreenregistrementCompteClientTiersPayent.class).setParameter(1, clientId).setParameter(2, venteId);
             return tq.getResultList().stream().map(TiersPayantParams::new).collect(Collectors.toList());
@@ -862,8 +845,8 @@ public class ClientServiceImpl implements ClientService {
             Root<TPreenregistrementCompteClient> root = cq.from(TPreenregistrementCompteClient.class);
             cq.select(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID))
                     .distinct(true);
-            predicates.add(cb.and(
-                    cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
+            predicates.add(
+                    cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), Constant.STATUT_IS_CLOSED)));
             predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgUSERID)
                     .get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID), empl)));
             predicates.add(cb.and(cb.greaterThan(root.get(TPreenregistrementCompteClient_.intPRICERESTE), 0)));
@@ -883,7 +866,7 @@ public class ClientServiceImpl implements ClientService {
                                                 .get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME)),
                                         query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TClient> q = emg.createQuery(cq);
             return q.getResultList().stream().map(ClientDTO::new).collect(Collectors.toList());
         } catch (Exception e) {
@@ -902,8 +885,8 @@ public class ClientServiceImpl implements ClientService {
             Root<TPreenregistrementCompteClient> root = cq.from(TPreenregistrementCompteClient.class);
             cq.select(root.get(TPreenregistrementCompteClient_.lgCOMPTECLIENTID).get(TCompteClient_.lgCLIENTID))
                     .distinct(true);
-            predicates.add(cb.and(
-                    cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
+            predicates.add(
+                    cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), Constant.STATUT_IS_CLOSED)));
             predicates.add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.lgUSERID)
                     .get(TUser_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID), empl)));
 
@@ -923,7 +906,7 @@ public class ClientServiceImpl implements ClientService {
                                                 .get(TCompteClient_.lgCLIENTID).get(TClient_.strLASTNAME)),
                                         query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TClient> q = emg.createQuery(cq);
             return q.getResultList().stream().map(ClientDTO::new).collect(Collectors.toList());
         } catch (Exception e) {
@@ -938,30 +921,30 @@ public class ClientServiceImpl implements ClientService {
     private TClient updateClientCarnet(ClientDTO client, TClient tc, TTiersPayant p, TCompteClientTiersPayant old) {
         try {
             tc = updateClient(client, tc);
-            TCompteClient OTCompteClient = updateCompteClient(client, tc, getEmg());
-            createComptClientTierspayant(client, OTCompteClient, getEmg(), p);
+            TCompteClient oTCompteClient = updateCompteClient(client, tc);
+            createComptClientTierspayant(client, oTCompteClient, p);
             desabledCompteClientTiersPayant(old);
             return tc;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
 
     }
 
-    private void desabledCompteClientTiersPayant(TCompteClientTiersPayant OTCompteClientTiersPayant) {
-        OTCompteClientTiersPayant.setStrSTATUT(DateConverter.STATUT_DELETE);
-        OTCompteClientTiersPayant.setIntPRIORITY(-1);
-        getEmg().merge(OTCompteClientTiersPayant);
+    private void desabledCompteClientTiersPayant(TCompteClientTiersPayant oTCompteClientTiersPayant) {
+        oTCompteClientTiersPayant.setStrSTATUT(Constant.STATUT_DELETE);
+        oTCompteClientTiersPayant.setIntPRIORITY(-1);
+        getEmg().merge(oTCompteClientTiersPayant);
     }
 
     @Override
     public JSONObject updateOrCreateClientAssurance(ClientDTO client) throws JSONException {
         JSONObject json = new JSONObject();
-        EntityManager emg = this.getEmg();
+
         try {
-            TClient tc = findById(client.getLgCLIENTID(), emg);
-            TTiersPayant p = findTiersPayantById(client.getLgTIERSPAYANTID(), emg);
+            TClient tc = findById(client.getLgCLIENTID());
+            TTiersPayant p = findTiersPayantById(client.getLgTIERSPAYANTID());
             if (p == null) {
                 json.put("success", false).put("msg", "Veuillez sélectionner un tiers-payant valide");
                 return json;
@@ -977,11 +960,11 @@ public class ClientServiceImpl implements ClientService {
                     }
                 }
 
-                tc = createClient(client, emg);
-                TCompteClient compteClient = createCompteClient(client, tc, emg);
-                createAyantDroit(client, tc, emg);
-                createComptClientTierspayant(client, compteClient, emg, p);
-                createComptClientTierspayant(client.getTiersPayants(), compteClient, emg);
+                tc = createClient(client);
+                TCompteClient compteClient = createCompteClient(client, tc);
+                createAyantDroit(client, tc);
+                createComptClientTierspayant(client, compteClient, p);
+                createComptClientTierspayant(client.getTiersPayants(), compteClient);
             } else {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
                     if (!client.getStrNUMEROSECURITESOCIAL().trim().equals(tc.getStrNUMEROSECURITESOCIAL().trim())) {
@@ -996,24 +979,23 @@ public class ClientServiceImpl implements ClientService {
                 }
                 String oldNum = tc.getStrNUMEROSECURITESOCIAL();
                 TCompteClientTiersPayant oltp = findByClientTiersPayantId(client.getLgCLIENTID(),
-                        DateConverter.STATUT_ENABLE, DateConverter.TIERS_PAYANT_PRINCIPAL);
+                        Constant.STATUT_ENABLE, Constant.TIERS_PAYANT_PRINCIPAL);
                 TTiersPayant oldltp = oltp.getLgTIERSPAYANTID();
                 tc = updateClient(client, tc);
-                TCompteClient OTCompteClient = updateCompteClient(client, tc, emg);
+                TCompteClient oTCompteClient = updateCompteClient(client, tc);
                 if (!oldltp.equals(p)) {
-                    createComptClientTierspayant(client, OTCompteClient, emg, p);
+                    createComptClientTierspayant(client, oTCompteClient, p);
                     desabledCompteClientTiersPayant(oltp);
                 } else {
                     updateComptClientTierspayant(client, p);
                 }
 
-                updateAyantDroit(client, tc, oldNum, emg);
+                updateAyantDroit(client, tc, oldNum);
 
-                updateComptClientTierspayant(client.getTiersPayants(), OTCompteClient, emg);
+                updateComptClientTierspayant(client.getTiersPayants(), oTCompteClient);
             }
-            ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID(), emg),
-                    findTiersPayantByClientId(tc.getLgCLIENTID(), emg),
-                    findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
+            ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID()), findTiersPayantByClientId(tc.getLgCLIENTID()),
+                    findAyantDroitByClientId(tc.getLgCLIENTID()));
             json.put("success", true).put("data", new JSONObject(data));
             return json;
         } catch (Exception e) {
@@ -1028,11 +1010,11 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public JSONObject updateCreateClientCarnet(ClientDTO client) throws JSONException {
         JSONObject json = new JSONObject();
-        EntityManager emg = this.getEmg();
+
         TClient tc;
         try {
-            tc = findById(client.getLgCLIENTID(), emg);
-            TTiersPayant p = findTiersPayantById(client.getLgTIERSPAYANTID(), emg);
+            tc = findById(client.getLgCLIENTID());
+            TTiersPayant p = findTiersPayantById(client.getLgTIERSPAYANTID());
             if (p == null) {
                 json.put("success", false).put("msg", "Veuillez sélectionner un tiers-payant valide");
                 return json;
@@ -1048,7 +1030,7 @@ public class ClientServiceImpl implements ClientService {
                         return json;
                     }
                 }
-                tc = createClientCarnet(client, tc, p, emg);
+                tc = createClientCarnet(client, tc, p);
 
             } else {
                 if (!StringUtils.isEmpty(client.getStrNUMEROSECURITESOCIAL())) {
@@ -1063,18 +1045,17 @@ public class ClientServiceImpl implements ClientService {
                     }
                 }
                 TCompteClientTiersPayant oldTpcm = findByClientTiersPayantId(client.getLgCLIENTID(),
-                        DateConverter.STATUT_ENABLE, DateConverter.TIERS_PAYANT_PRINCIPAL);
+                        Constant.STATUT_ENABLE, Constant.TIERS_PAYANT_PRINCIPAL);
                 TTiersPayant oltp = oldTpcm.getLgTIERSPAYANTID();
 
                 if (!oltp.equals(p)) {
                     updateClientCarnet(client, tc, p, oldTpcm);
                 } else {
-                    tc = updateClientCarnet(client, tc, oldTpcm, emg);
+                    tc = updateClientCarnet(client, tc, oldTpcm);
                 }
 
             }
-            ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID(), emg),
-                    findTiersPayantByClientId(tc.getLgCLIENTID()));
+            ClientDTO data = new ClientDTO(findById(tc.getLgCLIENTID()), findTiersPayantByClientId(tc.getLgCLIENTID()));
             json.put("success", true).put("data", new JSONObject(data));
             return json;
         } catch (Exception e) {
@@ -1119,54 +1100,54 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
-    private List<TCompteClientTiersPayant> findTCompteClientTiersPayanCompteClient(String OTCompteClient) {
+    private List<TCompteClientTiersPayant> findTCompteClientTiersPayanCompteClient(String id) {
         try {
             TypedQuery<TCompteClientTiersPayant> tq = this.getEmg()
                     .createQuery(
                             "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCOMPTECLIENTID =?1  ",
                             TCompteClientTiersPayant.class)
-                    .setParameter(1, OTCompteClient);
+                    .setParameter(1, id);
             return tq.getResultList();
         } catch (Exception e) {
             return Collections.emptyList();
         }
     }
 
-    private void updateComptClientTierspayantPriority(String OTCompteClient) {
-        findTCompteClientTiersPayanCompteClient(OTCompteClient).forEach(c -> {
+    private void updateComptClientTierspayantPriority(String oTCompteClient) {
+        findTCompteClientTiersPayanCompteClient(oTCompteClient).forEach(c -> {
             c.setIntPRIORITY(c.getIntPRIORITY() + 1);
             c.setDtUPDATED(new Date());
             getEmg().merge(c);
         });
     }
 
-    private TCompteClientTiersPayant createComptClientTierspayant(TClient cdto, TCompteClient OTCompteClient, int taux,
+    private TCompteClientTiersPayant createComptClientTierspayant(TClient cdto, TCompteClient oTCompteClient, int taux,
             TTiersPayant p, boolean isRO, int order) {
-        TCompteClientTiersPayant OTCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
-        OTCompteClientTiersPayant.setStrSTATUT(commonparameter.statut_enable);
-        OTCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
-        OTCompteClientTiersPayant.setBISRO(isRO);
-        OTCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
-        OTCompteClientTiersPayant.setBIsAbsolute(false);
-        OTCompteClientTiersPayant.setDtCREATED(new Date());
-        OTCompteClientTiersPayant.setDtUPDATED(new Date());
-        OTCompteClientTiersPayant.setLgCOMPTECLIENTID(OTCompteClient);
-        OTCompteClientTiersPayant.setLgTIERSPAYANTID(p);
-        OTCompteClientTiersPayant.setIntPOURCENTAGE(taux);
-        OTCompteClientTiersPayant.setIntPRIORITY(order);
-        OTCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
-        OTCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
-        OTCompteClientTiersPayant.setDblPLAFOND(0.0);
-        OTCompteClientTiersPayant.setDblQUOTACONSOVENTE(0.0);
-        OTCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
-        getEmg().persist(OTCompteClientTiersPayant);
-        return OTCompteClientTiersPayant;
+        TCompteClientTiersPayant oCompteClientTiersPayant = new TCompteClientTiersPayant(UUID.randomUUID().toString());
+        oCompteClientTiersPayant.setStrSTATUT(Constant.STATUT_ENABLE);
+        oCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
+        oCompteClientTiersPayant.setBISRO(isRO);
+        oCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
+        oCompteClientTiersPayant.setBIsAbsolute(false);
+        oCompteClientTiersPayant.setDtCREATED(new Date());
+        oCompteClientTiersPayant.setDtUPDATED(oCompteClientTiersPayant.getDtCREATED());
+        oCompteClientTiersPayant.setLgCOMPTECLIENTID(oTCompteClient);
+        oCompteClientTiersPayant.setLgTIERSPAYANTID(p);
+        oCompteClientTiersPayant.setIntPOURCENTAGE(taux);
+        oCompteClientTiersPayant.setIntPRIORITY(order);
+        oCompteClientTiersPayant.setDbPLAFONDENCOURS(0);
+        oCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
+        oCompteClientTiersPayant.setDblPLAFOND(0.0);
+        oCompteClientTiersPayant.setDblQUOTACONSOVENTE(0.0);
+        oCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
+        getEmg().persist(oCompteClientTiersPayant);
+        return oCompteClientTiersPayant;
     }
 
     @Override
     public TCompteClientTiersPayant updateOrCreateClientAssurance(TClient client, TTiersPayant p, int taux)
             throws Exception {
-        TCompteClient compteClient = findByClientId(client.getLgCLIENTID(), this.getEmg());
+        TCompteClient compteClient = findByClientId(client.getLgCLIENTID());
         updateComptClientTierspayantPriority(compteClient.getLgCOMPTECLIENTID());
         return createComptClientTierspayant(client, compteClient, taux, p, true, 1);
 
@@ -1191,7 +1172,7 @@ public class ClientServiceImpl implements ClientService {
             o.setLgTIERSPAYANTID(payant.getLgTIERSPAYANTID());
             return new JSONObject().put("data", new JSONObject(o)).put("success", true);
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false).put("msg", "Error ");
         }
     }
@@ -1237,7 +1218,7 @@ public class ClientServiceImpl implements ClientService {
             payant.setStrPHOTO("");
             payant.setStrCODEOFFICINE("");
             payant.setStrREGISTRECOMMERCE("");
-            payant.setStrSTATUT(commonparameter.statut_enable);
+            payant.setStrSTATUT(Constant.STATUT_ENABLE);
             payant.setDtCREATED(new Date());
             payant.setDtUPDATED(new Date());
             payant.setLgMODELFACTUREID(getEmg().find(TModelFacture.class, "1"));
@@ -1247,12 +1228,12 @@ public class ClientServiceImpl implements ClientService {
                 payant.setLgGROUPEID(
                         getEmg().find(TGroupeTierspayant.class, Integer.valueOf(tiersPayantDTO.getGroupeId())));
             } catch (Exception e) {
-                e.printStackTrace(System.err);
+                LOG.log(Level.SEVERE, null, e);
             }
             getEmg().persist(payant);
             return payant;
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, e);
             return null;
         }
 
@@ -1265,7 +1246,7 @@ public class ClientServiceImpl implements ClientService {
                     "SELECT o FROM TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 AND o.strSTATUT=?2",
                     TCompteClientTiersPayant.class);
             query.setParameter(1, clientId);
-            query.setParameter(2, DateConverter.STATUT_ENABLE);
+            query.setParameter(2, Constant.STATUT_ENABLE);
             return query.getResultList().stream().filter(e -> e.getIntPRIORITY().compareTo(1) == 0).findFirst().get();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -1278,7 +1259,7 @@ public class ClientServiceImpl implements ClientService {
         JSONObject json = new JSONObject();
         try {
             client.setLgCLIENTID(id);
-            TClient tc = findById(id, getEmg());
+            TClient tc = findById(id);
 
             return updateInfosClient(client, tc);
 
@@ -1291,8 +1272,8 @@ public class ClientServiceImpl implements ClientService {
 
     private JSONObject updateInfosClient(ClientDTO client, TClient tc) throws Exception {
         JSONObject json = new JSONObject();
-        EntityManager emg = this.getEmg();
-        ClientDTO data = null;
+
+        ClientDTO data;
         String oldNum = tc.getStrNUMEROSECURITESOCIAL();
         TCompteClientTiersPayant payant = findCompteClientTiersPayantByClientId(client.getLgCLIENTID());
         TTiersPayant p = payant.getLgTIERSPAYANTID();
@@ -1314,21 +1295,19 @@ public class ClientServiceImpl implements ClientService {
         payant.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
         getEmg().merge(payant);
 
-        if (tc.getLgTYPECLIENTID().getLgTYPECLIENTID().equals(DateConverter.CLIENT_ASSURANCE)) {
-            TAyantDroit ayantDroit = findAyantDroitByNum(oldNum, emg);
+        if (tc.getLgTYPECLIENTID().getLgTYPECLIENTID().equals(Constant.CLIENT_ASSURANCE)) {
+            TAyantDroit ayantDroit = findAyantDroitByNum(oldNum);
             ayantDroit.setDtUPDATED(new Date());
             ayantDroit.setStrFIRSTNAME(client.getStrFIRSTNAME().toUpperCase());
             ayantDroit.setStrLASTNAME(client.getStrLASTNAME().toUpperCase());
             ayantDroit.setStrNUMEROSECURITESOCIAL(client.getStrNUMEROSECURITESOCIAL());
             getEmg().merge(ayantDroit);
-            data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(),
-                    findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
+            data = new ClientDTO(findById(tc.getLgCLIENTID()), Collections.emptyList(),
+                    findAyantDroitByClientId(tc.getLgCLIENTID()));
         } else {
-            data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(), Collections.emptyList());
+            data = new ClientDTO(findById(tc.getLgCLIENTID()), Collections.emptyList(), Collections.emptyList());
         }
 
-        data = new ClientDTO(findById(tc.getLgCLIENTID(), emg), Collections.emptyList(),
-                findAyantDroitByClientId(tc.getLgCLIENTID(), emg));
         json.put("success", true).put("data", new JSONObject(data));
         return json;
 
@@ -1387,7 +1366,7 @@ public class ClientServiceImpl implements ClientService {
                             .get(TCompteClientTiersPayant_.lgTIERSPAYANTID));
             List<Predicate> predicates = predicateventesTiersPayants(cb, root, query, dtStart, dtEnd, tiersPayantId,
                     groupeId, typeTp);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<VenteTiersPayantsDTO> q = this.getEmg().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -1396,7 +1375,7 @@ public class ClientServiceImpl implements ClientService {
             return q.getResultList();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "{0}", e);
+            LOG.log(Level.SEVERE, null, e);
 
         }
         return data;
@@ -1413,9 +1392,9 @@ public class ClientServiceImpl implements ClientService {
                 java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
         predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID)
-                .get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_IS_CLOSED));
-        predicates.add(cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT),
-                DateConverter.STATUT_IS_CLOSED));
+                .get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_CLOSED));
+        predicates.add(
+                cb.equal(root.get(TPreenregistrementCompteClientTiersPayent_.strSTATUT), Constant.STATUT_IS_CLOSED));
         predicates.add(cb.isFalse(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID)
                 .get(TPreenregistrement_.bISCANCEL)));
         predicates.add(cb.greaterThan(root.get(TPreenregistrementCompteClientTiersPayent_.lgPREENREGISTREMENTID)
@@ -1458,9 +1437,63 @@ public class ClientServiceImpl implements ClientService {
 
     public TCompteClientTiersPayant updateOrCreateClientCarnet(TClient client, TTiersPayant p, int taux)
             throws Exception {
-        TCompteClient compteClient = findByClientId(client.getLgCLIENTID(), this.getEmg());
+        TCompteClient compteClient = findByClientId(client.getLgCLIENTID());
         updateComptClientTierspayantPriority(compteClient.getLgCOMPTECLIENTID());
         return createComptClientTierspayant(client, compteClient, taux, p, true, 1);
 
+    }
+
+    @Override
+    public JSONObject fetchClients(String query, String typeClientId, int start, int limit) {
+        var count = count(query, typeClientId);
+        var data = getClients(query, typeClientId, start, limit).stream().map(ClientDTO::new)
+                .collect(Collectors.toList());
+        return FunctionUtils.returnData(data, count);
+    }
+
+    private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TClient> root, String query, String typeClientId) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.equal(root.get(TClient_.strSTATUT), Constant.STATUT_ENABLE));
+        if (StringUtils.isNotEmpty(typeClientId)) {
+            predicates.add(cb.equal(root.get(TClient_.lgTYPECLIENTID).get("lgTYPECLIENTID"), typeClientId));
+        }
+        if (StringUtils.isNotEmpty(query)) {
+            query = query + "%";
+            predicates.add(cb.or(cb.like(root.get(TClient_.strFIRSTNAME), query),
+                    cb.like(root.get(TClient_.strLASTNAME), query),
+                    cb.like(cb.concat(cb.concat(root.get(TClient_.strFIRSTNAME), " "), root.get(TClient_.strLASTNAME)),
+                            query),
+                    cb.like(root.get(TClient_.strADRESSE), query), cb.like(root.get(TClient_.strCODEINTERNE), query)));
+        }
+        return predicates;
+    }
+
+    private long count(String query, String typeClientId) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<TClient> root = cq.from(TClient.class);
+        cq.select(cb.count(root));
+        List<Predicate> predicates = listPredicates(cb, root, query, typeClientId);
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+        TypedQuery<Long> q = em.createQuery(cq);
+        return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
+
+    }
+
+    private List<TClient> getClients(String query, String typeClientId, int start, int limit) {
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<TClient> cq = cb.createQuery(TClient.class);
+        Root<TClient> root = cq.from(TClient.class);
+        cq.select(root).orderBy(cb.asc(root.get(TClient_.strFIRSTNAME)), cb.asc(root.get(TClient_.strLASTNAME)));
+        List<Predicate> predicates = listPredicates(cb, root, query, typeClientId);
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+        TypedQuery<TClient> q = em.createQuery(cq);
+
+        q.setFirstResult(start);
+        q.setMaxResults(limit);
+
+        return q.getResultList();
     }
 }

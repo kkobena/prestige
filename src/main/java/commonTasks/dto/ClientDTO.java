@@ -19,17 +19,37 @@ import java.util.Objects;
  * @author Kobena
  */
 public class ClientDTO implements Serializable {
+
     private static final long serialVersionUID = 1L;
-    private String lgCLIENTID, strCODEINTERNE, lgTIERSPAYANTID, email, lgVILLEID, dtNAISSANCE, strCODEPOSTAL,
-            strFIRSTNAME, strLASTNAME, strNUMEROSECURITESOCIAL = "", strSEXE, strADRESSE, fullName, lgTYPECLIENTID;
+    private String lgCLIENTID;
+    private String strCODEINTERNE;
+    private String lgTIERSPAYANTID;
+    private String email;
+    private String lgVILLEID;
+    private String dtNAISSANCE;
+    private String strCODEPOSTAL;
+    private String strFIRSTNAME;
+    private String strLASTNAME;
+    private String strNUMEROSECURITESOCIAL = "";
+    private String strSEXE;
+    private String strADRESSE;
+    private String fullName;
+    private String lgTYPECLIENTID;
     private List<TiersPayantParams> tiersPayants = new ArrayList<>();
     private List<AyantDroitDTO> ayantDroits = new ArrayList<>();
-    private Integer intPOURCENTAGE, intPRIORITY, dbPLAFONDENCOURS = 0, dblQUOTACONSOMENSUELLE = 0, dblPLAFOND = 0;
+    private Integer intPOURCENTAGE;
+    private Integer intPRIORITY;
+    private Integer dbPLAFONDENCOURS = 0;
+    private Integer dblQUOTACONSOMENSUELLE = 0;
+    private Integer dblPLAFOND = 0;
     private boolean bIsAbsolute;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-    private final String lgCATEGORIEAYANTDROITID = "555146116095894790", lgRISQUEID = "55181642844215217016";
-    private String compteTp, remiseId;
+    private final String lgCATEGORIEAYANTDROITID = "555146116095894790";
+    private final String lgRISQUEID = "55181642844215217016";
+    private String compteTp;
+    private String remiseId;
     private List<TiersPayantParams> preenregistrementstp = new ArrayList<>();
+    private String libelleTypeClient;
 
     public String getRemiseId() {
         return remiseId;
@@ -37,6 +57,14 @@ public class ClientDTO implements Serializable {
 
     public void setRemiseId(String remiseId) {
         this.remiseId = remiseId;
+    }
+
+    public String getLibelleTypeClient() {
+        return libelleTypeClient;
+    }
+
+    public void setLibelleTypeClient(String libelleTypeClient) {
+        this.libelleTypeClient = libelleTypeClient;
     }
 
     public String getLgCLIENTID() {
@@ -193,6 +221,7 @@ public class ClientDTO implements Serializable {
         this.strADRESSE = client.getStrADRESSE();
         this.fullName = client.getStrFIRSTNAME() + " " + client.getStrLASTNAME();
         this.email = client.getEmail();
+        this.libelleTypeClient = client.getLgTYPECLIENTID().getStrNAME();
     }
 
     public ClientDTO(TClient client, List<TiersPayantParams> tiersPayants, List<AyantDroitDTO> ayantDroits) {

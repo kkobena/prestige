@@ -6,13 +6,17 @@
 package commonTasks.dto;
 
 import dal.Notification;
+import dal.NotificationClient;
 import dal.TUser;
 import dal.enumeration.Statut;
 import java.io.Serializable;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
 
 /**
  *
@@ -35,6 +39,7 @@ public class NotificationDTO implements Serializable {
     private String user;
 
     private String userTo;
+
     private List<NotificationClientDTO> clients = new ArrayList<>();
 
     public NotificationDTO() {
@@ -154,15 +159,41 @@ public class NotificationDTO implements Serializable {
         this.canal = n.getCanal().name();
         this.typeNotification = n.getTypeNotification().getValue();
         this.modfiedAt = n.getModfiedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-        TUser user = n.getUser();
-        if (user != null) {
-            this.user = user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+        TUser userO = n.getUser();
+        if (userO != null) {
+            this.user = userO.getStrFIRSTNAME() + " " + userO.getStrLASTNAME();
         }
-        TUser userTo = n.getUserTo();
-        if (userTo != null) {
-            this.userTo = userTo.getStrFIRSTNAME() + " " + userTo.getStrLASTNAME();
+        TUser oUserTo = n.getUserTo();
+        if (oUserTo != null) {
+            this.userTo = oUserTo.getStrFIRSTNAME() + " " + oUserTo.getStrLASTNAME();
         }
         this.clients = clients;
     }
 
+    public NotificationDTO(Notification n) {
+        this.id = n.getId();
+        this.message = n.getMessage();
+        if (n.getStatut() == Statut.SENT) {
+            this.statut = "Envoyé";
+        } else {
+            this.statut = "Non envoyé";
+        }
+
+        this.canal = n.getCanal().name();
+        this.typeNotification = n.getTypeNotification().getValue();
+        this.modfiedAt = n.getModfiedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+        TUser userO = n.getUser();
+        if (userO != null) {
+            this.user = userO.getStrFIRSTNAME() + " " + userO.getStrLASTNAME();
+        }
+        TUser oUserTo = n.getUserTo();
+        if (oUserTo != null) {
+            this.userTo = oUserTo.getStrFIRSTNAME() + " " + oUserTo.getStrLASTNAME();
+        }
+        Collection<NotificationClient> notificationClients = n.getNotificationClients();
+        if (CollectionUtils.isNotEmpty(notificationClients)) {
+            this.clients = notificationClients.stream().map(NotificationClientDTO::new).collect(Collectors.toList());
+        }
+
+    }
 }

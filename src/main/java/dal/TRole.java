@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -41,6 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
         @NamedQuery(name = "TRole.findByDtCREATED", query = "SELECT t FROM TRole t WHERE t.dtCREATED = :dtCREATED"),
         @NamedQuery(name = "TRole.findByDtUPDATED", query = "SELECT t FROM TRole t WHERE t.dtUPDATED = :dtUPDATED") })
 public class TRole implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -60,10 +61,10 @@ public class TRole implements Serializable {
     @Column(name = "dt_UPDATED")
     @Temporal(TemporalType.TIMESTAMP)
     private Date dtUPDATED;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "lgROLEID")
-    private Collection<TRoleUser> tRoleUserCollection;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "lgROLEID", fetch = FetchType.EAGER)
+    private Collection<TRoleUser> tRoleUserCollection = new ArrayList<>();
     @OneToMany(mappedBy = "lgROLEID", fetch = FetchType.EAGER)
-    private Collection<TRolePrivelege> tRolePrivelegeCollection;
+    private Collection<TRolePrivelege> tRolePrivelegeCollection = new ArrayList<>();
 
     public TRole() {
     }

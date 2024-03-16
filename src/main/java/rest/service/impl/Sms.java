@@ -62,9 +62,7 @@ public class Sms implements Runnable {
             WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
             Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.accesstoken))
                     .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
-            LOG.info("response ---  " + response.getStatus());
-            LOG.info("jSONObject ---  " + jSONObject);
-            LOG.info("response ---  " + response.readEntity(String.class));
+            LOG.log(Level.INFO, "response ---  {0}", response.readEntity(String.class));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
         }
