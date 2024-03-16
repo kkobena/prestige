@@ -389,7 +389,7 @@ Ext.define('testextjs.view.vente.user.addClientAssurance', {
                                             selModel: {
                                                 selType: 'cellmodel',
                                                 mode: 'SINGLE'
-                                            }, 
+                                            },
                                             dockedItems: [
                                                 {
                                                     xtype: 'toolbar',
@@ -429,43 +429,17 @@ Ext.define('testextjs.view.vente.user.addClientAssurance', {
                                                 {
                                                     text: 'Taux.Couverture',
                                                     flex: 0.5,
-                                                    dataIndex: 'taux'/*,
-                                                     editor: {
-                                                     xtype: 'numberfield',
-                                                     completeOnEnter: true,
-                                                     allowBlank: false,
-                                                     minValue: 1,
-                                                     maskRe: /[0-9.]/,
-                                                     selectOnFocus: true,
-                                                     hideTrigger: true
-                                                     }*/
+                                                    dataIndex: 'taux'
                                                 },
                                                 {
                                                     text: 'Numéro/SS',
                                                     flex: 0.8,
-                                                    dataIndex: 'numSecurity'/*,
-                                                     editor: {
-                                                     completeOnEnter: true,
-                                                     allowBlank: true,
-                                                     selectOnFocus: true
-                                                     
-                                                     }*/
+                                                    dataIndex: 'numSecurity'
                                                 },
                                                 {
                                                     text: 'RC',
                                                     flex: 0.5,
-                                                    dataIndex: 'order'/*,
-                                                     editor: {
-                                                     completeOnEnter: true,
-                                                     xtype: 'numberfield',
-                                                     maskRe: /[2-4.]/,
-                                                     minValue: 2,
-                                                     maxValue: 4,
-                                                     hideTrigger: true,
-                                                     allowBlank: false,
-                                                     selectOnFocus: true
-                                                     
-                                                     }*/
+                                                    dataIndex: 'order'
                                                 }
                                                 , {
                                                     xtype: 'actioncolumn',

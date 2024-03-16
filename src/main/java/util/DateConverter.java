@@ -265,18 +265,18 @@ public final class DateConverter {
     }
 
     public static Integer arrondiModuloOfNumber(Integer nbre, Integer modulo) {
-        int result = 0, temp_modulo;
+        int result = 0, tempModulo;
         float part;
-        String temp_v;
+        String tempV;
         try {
 
-            temp_v = String.valueOf(nbre).substring(String.valueOf(nbre).length() - 1, String.valueOf(nbre).length());
+            tempV = String.valueOf(nbre).substring(String.valueOf(nbre).length() - 1, String.valueOf(nbre).length());
 
-            temp_modulo = Integer.parseInt(temp_v) % modulo;
+            tempModulo = Integer.valueOf(tempV) % modulo;
 
             part = (modulo - 1) / 2;
 
-            result = (int) ((part >= temp_modulo) ? (nbre - temp_modulo) : ((nbre - temp_modulo) + modulo));
+            result = (int) ((part >= tempModulo) ? (nbre - tempModulo) : ((nbre - tempModulo) + modulo));
 
         } catch (NumberFormatException e) {
             LOG.log(Level.SEVERE, null, e);
@@ -284,18 +284,18 @@ public final class DateConverter {
         return result;
     }
 
-    public static String getShortId(int int_size) {
+    public static String getShortId(int intSize) {
         Calendar now = Calendar.getInstance();
         int mm = now.get(Calendar.MINUTE);
         int ss = now.get(Calendar.SECOND);
         int mls = now.get(Calendar.MILLISECOND);
         String catime = (String.valueOf(mm) + "" + String.valueOf(ss) + "" + String.valueOf(mls));
-        int int_lenght = catime.length();
-        while (int_lenght < int_size) {
+        int intlenght = catime.length();
+        while (intlenght < intSize) {
             catime = catime + getNumberRandom();
-            int_lenght = catime.length();
+            intlenght = catime.length();
         }
-        return catime.substring(0, int_size);
+        return catime.substring(0, intSize);
     }
 
     public static LocalDate convertDateToLocalDate(Date dateToConvert) {
@@ -320,17 +320,17 @@ public final class DateConverter {
         return java.util.Date.from(dateToConvert.atZone(ZoneId.systemDefault()).toInstant());
     }
 
-    public static String amountFormat(Integer Amount) {
+    public static String amountFormat(Integer amount) {
         String result = "0";
         try {
-            long lg_Amount = Long.parseLong(Amount.toString());
+            long lgAmount = Long.parseLong(amount.toString());
 
             DecimalFormatSymbols amountSymbols = new DecimalFormatSymbols();
 
             amountSymbols.setGroupingSeparator(' ');
 
             DecimalFormat amountFormat = new DecimalFormat("###,###", amountSymbols);
-            result = amountFormat.format(lg_Amount);
+            result = amountFormat.format(lgAmount);
         } catch (NumberFormatException ex) {
 
         }
@@ -356,14 +356,14 @@ public final class DateConverter {
         return catime;
     }
 
-    public static boolean hasAuthorityByName(List<TPrivilege> LstTPrivilege, String authorityName) {
+    public static boolean hasAuthorityByName(List<TPrivilege> lstTPrivilege, String authorityName) {
         java.util.function.Predicate<TPrivilege> p = e -> e.getStrNAME().equalsIgnoreCase(authorityName);
-        return LstTPrivilege.stream().anyMatch(p);
+        return lstTPrivilege.stream().anyMatch(p);
     }
 
-    public static boolean hasAuthorityById(List<TPrivilege> LstTPrivilege, String id) {
+    public static boolean hasAuthorityById(List<TPrivilege> lstTPrivilege, String id) {
         java.util.function.Predicate<TPrivilege> p = e -> e.getLgPRIVELEGEID().equals(id);
-        return LstTPrivilege.stream().anyMatch(p);
+        return lstTPrivilege.stream().anyMatch(p);
     }
 
     public static String convertionChiffeLettres(Integer num) {
@@ -391,7 +391,7 @@ public final class DateConverter {
             File f = new File(file);
             ImageIO.write(bi, "png", f);
         } catch (IOException ex) {
-            // LOG.log(Level.SEVERE, null, ex);
+
         }
         return file;
 
@@ -438,15 +438,15 @@ public final class DateConverter {
             try {
                 canvas.finish();
             } catch (IOException ex) {
-                ex.printStackTrace(System.err);
+                LOG.log(Level.SEVERE, null, ex);
             }
         } catch (FileNotFoundException ex) {
-            ex.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, null, ex);
         } finally {
             try {
                 out.close();
             } catch (IOException ex) {
-                ex.printStackTrace(System.err);
+                LOG.log(Level.SEVERE, null, ex);
             }
         }
         return str_file_name;

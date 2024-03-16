@@ -107,10 +107,20 @@ public class ClientRessource {
     }
 
     @GET
-    public Response findClients(@QueryParam(value = "query") String query,
+    @Path("all")
+    public Response findAllClients(@QueryParam(value = "query") String query,
             @QueryParam(value = "typeClientId") String typeClientId) {
         List<ClientDTO> data = clientService.findClientAssurance(query, typeClientId);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
+    }
+
+    @GET
+    @Path("list")
+    public Response fetchClients(@QueryParam(value = "query") String query,
+            @QueryParam(value = "typeClientId") String typeClientId, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limi) {
+        JSONObject data = clientService.fetchClients(query, typeClientId, start, limi);
+        return Response.ok().entity(data.toString()).build();
     }
 
     @GET
@@ -179,7 +189,7 @@ public class ClientRessource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        // JSONObject json = clientService.updateClientAssurance(client);
+
         JSONObject json = clientService.updateOrCreateClientAssurance(client);
         return Response.ok().entity(json.toString()).build();
     }

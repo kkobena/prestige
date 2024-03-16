@@ -164,29 +164,7 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
         let montantRecu = parseInt(field.getValue());
         me.monnaiRendue(montantRecu);
     },
-    montantRecuChangeListener___: function (field, value, options) {
-        var me = this;
-        var montantRecu = parseInt(field.getValue());
-        var vnomontantRemise = me.getMontantRemis();
-        var montantPayer = me.getMontantPayer();
-        var nature = me.getNature().getValue();
-        var totalRecap = me.getMontantRestant().getValue();
-        var monnais = 0;
-        if (montantRecu > 0) {
-            var netTopay = nature === 2 ? totalRecap : me.getMontantNet().getValue();
-            monnais = (montantRecu > netTopay) ? montantRecu - netTopay : 0;
-            vnomontantRemise.setValue(monnais);
-            if (monnais > 0) {
-                montantPayer.setValue(0);
-            } else {
-                montantPayer.setValue(netTopay - montantRecu);
-            }
-        } else if (montantRecu <= 0) {
-            vnomontantRemise.setValue(0);
-            montantPayer.setValue(netTopay);
 
-        }
-    },
     natureSelectEvent: function (field) {
         let me = this;
         me.monnaiRendue(parseInt(me.getMontantRecu().getValue()));

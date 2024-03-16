@@ -106,6 +106,10 @@ public final class Constant {
     public static final String KEY_HEURE_EMAIL = "KEY_HEURE_EMAIL";
     public static final String KEY_ACTIVATE_PEREMPTION_DATE = "KEY_ACTIVATE_PEREMPTION_DATE";
     public static final String OFFICINE = "1";
+    public static final String STANDART_CLIENT_ID = "6";
+    public static final int TIERS_PAYANT_PRINCIPAL = 1;
+    public static final String CLIENT_ASSURANCE = "1";
+    public static final String CLIENT_CARNET = "2";
 
     private Constant() {
     }

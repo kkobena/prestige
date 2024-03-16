@@ -810,7 +810,8 @@ Ext.application({
         'EtatControlAnnuelCtr',
         'TableauBoardCarnetCtr',
         'FactureSubrogatoireCtr',
-        'ProuduitsVenteAnnulesCtr'
+        'ProuduitsVenteAnnulesCtr',
+        'NotificationCtr'
         
     ],
     stores: [
