@@ -24,7 +24,7 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
 
     private final Class<T> entityClass;
 
-    public AbstractRepoImpl(Class<T> entityClass) {
+    protected AbstractRepoImpl(Class<T> entityClass) {
         this.entityClass = entityClass;
     }
 
