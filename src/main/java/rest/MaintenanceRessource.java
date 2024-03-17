@@ -13,11 +13,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import rest.service.MainteanceService;
-import rest.service.dto.BalanceParamsDTO;
 import util.Constant;
 
 /**
@@ -79,5 +77,14 @@ public class MaintenanceRessource {
         }
         mainteanceService.remoteFamilleGrossiste(id);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("/version")
+    public Response getVersion() {
+
+        return Response.ok()
+                .entity(new JSONObject().put("version", new JSONObject(rest.service.impl.Utils.version)).toString())
+                .build();
     }
 }
