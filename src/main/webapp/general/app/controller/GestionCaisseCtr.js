@@ -70,7 +70,8 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
             "gestcaissemanager gridpanel actioncolumn": {
                 toprint: this.toprint,
                 valider: this.valider,
-                annuler: this.annuler
+                annuler: this.annuler,
+                showReglment: this.showReglment
 
             },
             'gestcaissemanager #dtStart': {
@@ -79,27 +80,115 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
 
         });
     },
-    toprint: function (view, rowIndex, colIndex, item, e, record, row) {
+    showReglment: function (view, rowIndex, colIndex, item, e, record, row) {
         var me = this;
+
+        const ligneResumeCaisses = record.get('ligneResumeCaisses');
+        console.log(ligneResumeCaisses);
+
+        const form = Ext.create('Ext.window.Window',
+                {
+
+                    autoShow: true,
+                    height: 340,
+                    width: '35%',
+                    modal: true,
+                    title: 'Détails règlement',
+                    closeAction: 'hide',
+                    closable: false,
+                    maximizable: false,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+
+                                {
+                                    xtype: 'button',
+                                    iconCls: 'cancelicon',
+                                    handler: function (btn) {
+                                        form.destroy();
+                                    },
+                                    text: 'Annuler'
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [
+                        {
+                            xtype: 'fieldset',
+                            layout: {
+                                type: 'vbox',
+                                align: 'stretch'
+                            },
+                            defaults: {
+                                xtype: 'displayfield',
+                                fieldStyle: "color:blue;font-weight:bold;font-size:1em",
+                                labelWidth: 100
+                            },
+                            collapsible: false,
+                            title: 'Mode de règlements',
+                            items: me.buildReglements(ligneResumeCaisses)
+                        }
+
+                    ]
+                });
+
+
+
+
+    },
+    buildReglements: function (reglements) {
+        let datas = [];
+
+        Ext.each(reglements, function (item) {
+            console.log(item);
+            datas.push(
+                    {
+                        fieldLabel: item.libelleReglement,
+                        flex: 1,
+                        value: item.montant,
+                        renderer: function (v) {
+                            return Ext.util.Format.number(v, '0,000.');
+                        }
+                    }
+            );
+
+        });
+
+        return datas;
+    },
+    toprint: function (view, rowIndex, colIndex, item, e, record, row) {
+        const me = this;
         me.onPrintBilletage(record.get('ldCAISSEID'));
     },
     annuler: function (view, rowIndex, colIndex, item, e, record, row) {
-        var me = this;
+        const me = this;
         me.onRemoveClick(record);
     },
     valider: function (view, rowIndex, colIndex, item, e, record, row) {
-        var me = this;
+        const me = this;
         me.onValidateClotureClick(record);
     },
     setdate: function (cmp) {
-        var CurrentDate = new Date();
+        const CurrentDate = new Date();
         CurrentDate.setMonth(CurrentDate.getMonth() - 1);
         cmp.setValue(CurrentDate);
 
     },
     handleActionColumn: function (view, rowIndex, colIndex, item, e, r, row) {
-        var me = this;
-        var store = me.getListeCaisseGrid().getStore(),
+        const me = this;
+        const store = me.getListeCaisseGrid().getStore(),
                 rec = store.getAt(colIndex);
 
         if (parseInt(item) === 12) {
@@ -112,7 +201,7 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
 
     },
     onValidateClotureClick: function (rec) {
-        var me = this;
+        const me = this;
         Ext.MessageBox.confirm('Message',
                 'Confirmer la validation de la cloture de la caisse de  ' + rec.get('userFullName'),
                 function (btn) {
@@ -122,7 +211,7 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
                             url: '../api/v1/caisse/validatecloture/' + rec.get('ldCAISSEID'),
                             success: function (response)
                             {
-                                var object = Ext.JSON.decode(response.responseText, false);
+                                const object = Ext.JSON.decode(response.responseText, false);
                                 if (!object.success) {
                                     Ext.MessageBox.alert('Error Message', object.msg);
                                     return;
@@ -136,19 +225,18 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
 
                             }
                         });
-                        return;
                     }
                 });
 
 
     },
     onPrintBilletage: function (id) {
-        var linkUrl = '../webservices/sm_user/gestcaisse/ws_generate_pdf.jsp?lg_CAISSE_ID=' + id;
+        const linkUrl = '../webservices/sm_user/gestcaisse/ws_generate_pdf.jsp?lg_CAISSE_ID=' + id;
         window.open(linkUrl);
 
     },
     onRemoveClick: function (rec) {
-        var me = this;
+        const me = this;
         Ext.MessageBox.confirm('Message',
                 'Voulez-Vous annuler la cloture de la caisse de ' + rec.get('userFullName'),
                 function (btn) {
@@ -183,23 +271,23 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
 
     },
     onPdfClick: function () {
-        var me = this;
-        var userId = '';
-        var user = me.getUserComboField().getValue();
+        const me = this;
+        let userId = '';
+        let user = me.getUserComboField().getValue();
         if (user != null && user != '') {
             userId = user;
 
         }
-        var dtStart = me.getDtStart().getSubmitValue();
-        var dtEnd = me.getDtEnd().getSubmitValue();
+        const dtStart = me.getDtStart().getSubmitValue();
+        const dtEnd = me.getDtEnd().getSubmitValue();
 
-        var linkUrl = '../BalancePdfServlet?mode=GESTION_CAISSE&dtStart=' + dtStart + '&dtEnd=' + dtEnd + "&userId=" + userId;
+        const linkUrl = '../BalancePdfServlet?mode=GESTION_CAISSE&dtStart=' + dtStart + '&dtEnd=' + dtEnd + "&userId=" + userId;
         window.open(linkUrl);
     },
 
     doBeforechange: function (page, currentPage) {
-        var me = this;
-        var myProxy = me.getListeCaisseGrid().getStore().getProxy();
+        const me = this;
+        const myProxy = me.getListeCaisseGrid().getStore().getProxy();
         myProxy.params = {
             userId: null,
             dtStart: null,
@@ -212,19 +300,19 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
 
     },
     doMetachange: function (store, meta) {
-        var me = this;
+        const me = this;
         me.getTotalAmount().setValue(meta.summary);
 
     },
     doInitStore: function () {
-        var me = this;
+        const me = this;
         me.getListeCaisseGrid().getStore().addListener('metachange', this.doMetachange, this);
         me.doSearch();
 
     },
 
     doSearch: function () {
-        var me = this;
+        const me = this;
         me.getListeCaisseGrid().getStore().load({
             params: {
                 userId: me.getUserComboField().getValue(),

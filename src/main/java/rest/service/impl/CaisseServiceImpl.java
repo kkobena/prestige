@@ -411,10 +411,10 @@ public class CaisseServiceImpl implements CaisseService {
             if (caisseParams.getUtilisateurId() != null) {
                 predicates.add(cb.and(cb.equal(root.get("lgUSERID").get("lgUSERID"), caisseParams.getUtilisateurId())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             List<Object[]> data = q.getResultList();
-            data.forEach(objects -> lis.add(new SumCaisseDTO(Long.valueOf(objects[0] + ""), objects[1] + "")));
+            data.forEach(objects -> lis.add(new SumCaisseDTO(Long.parseLong(objects[0] + ""), objects[1] + "")));
             return lis;
 
         } catch (Exception e) {
@@ -425,7 +425,7 @@ public class CaisseServiceImpl implements CaisseService {
     }
 
     @Override
-    public JSONObject resumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, boolean cancel, Boolean allActivite,
+    public JSONObject getResumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, boolean cancel, boolean allActivite,
             int start, int limit, boolean all, String userId) throws JSONException {
         JSONObject json = new JSONObject();
         try {
@@ -435,13 +435,15 @@ public class CaisseServiceImpl implements CaisseService {
                 json.put("data", new JSONArray());
                 return json;
             }
-            List<ResumeCaisseDTO> os = resumeCaisse(dtStart, dtEnd, u, allActivite, start, limit, cancel, userId, all);
+            List<ResumeCaisseDTO> os = getResumeCaisse(dtStart, dtEnd, u, allActivite, start, limit, cancel, userId,
+                    all);
             int summary = caisseSummary(dtStart, dtEnd, u, allActivite, userId);
             json.put("total", total);
             json.put("data", new JSONArray(os));
             json.put("metaData", new JSONObject().put("summary", summary));
             return json;
         } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
             return json;
         }
     }
@@ -481,7 +483,7 @@ public class CaisseServiceImpl implements CaisseService {
     }
 
     @Override
-    public List<ResumeCaisseDTO> resumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, Boolean allActivite,
+    public List<ResumeCaisseDTO> getResumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, boolean allActivite,
             int start, int limit, boolean cancel, String userId, boolean all) {
         List<Predicate> predicates = new ArrayList<>();
         try {
@@ -506,7 +508,7 @@ public class CaisseServiceImpl implements CaisseService {
                 q.setFirstResult(start);
                 q.setMaxResults(limit);
             }
-            if (!isTrue(DateConverter.KEY_PRENDRE_EN_COMPTE_FOND_CAISSE)) {
+            if (!isTrue(Constant.KEY_PRENDRE_EN_COMPTE_FOND_CAISSE)) {
                 return q.getResultList().stream()
                         .map(o -> new ResumeCaisseDTO(o,
                                 getBilletageByCaisse(o.getLdCAISSEID(), o.getLgUSERID().getLgUSERID()),

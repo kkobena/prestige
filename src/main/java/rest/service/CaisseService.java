@@ -60,10 +60,10 @@ public interface CaisseService {
     List<VisualisationCaisseDTO> findAllMvtCaisse(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId);
 
-    JSONObject resumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, boolean cancel, Boolean allActivite, int start,
-            int limit, boolean all, String userId) throws JSONException;
+    JSONObject getResumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, boolean cancel, boolean allActivite,
+            int start, int limit, boolean all, String userId) throws JSONException;
 
-    List<ResumeCaisseDTO> resumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, Boolean allActivite, int start,
+    List<ResumeCaisseDTO> getResumeCaisse(LocalDate dtStart, LocalDate dtEnd, TUser u, boolean allActivite, int start,
             int limit, boolean cancel, String userId, boolean all);
 
     JSONObject rollbackcloseCaisse(TUser o, String idCaisse) throws JSONException;

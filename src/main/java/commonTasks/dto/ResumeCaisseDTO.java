@@ -9,9 +9,13 @@ import dal.TResumeCaisse;
 import dal.TUser;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import rest.service.dto.LigneResumeCaisseDTO;
+import util.CommonUtils;
 import util.Constant;
-import util.DateConverter;
 
 /**
  *
@@ -33,7 +37,24 @@ public class ResumeCaisseDTO implements Serializable {
     private int billetage;
     private int ecart;
     private int montantAnnule;
-    boolean cancel = false;
+    private boolean cancel = false;
+    private List<LigneResumeCaisseDTO> ligneResumeCaisses = new ArrayList<>();
+    private int montantMobile;
+
+    private int computeMobileAmount() {
+        return (int) this.ligneResumeCaisses.stream()
+                .filter(ligne -> CommonUtils.isMobileTypeReglement(ligne.getIdRegelement()))
+                .mapToLong(LigneResumeCaisseDTO::getMontant).reduce(0, Long::sum);
+    }
+
+    public int getMontantMobile() {
+
+        return montantMobile;
+    }
+
+    public void setMontantMobile(int montantMobile) {
+        this.montantMobile = montantMobile;
+    }
 
     public String getLdCAISSEID() {
         return ldCAISSEID;
@@ -139,6 +160,14 @@ public class ResumeCaisseDTO implements Serializable {
         this.cancel = cancel;
     }
 
+    public List<LigneResumeCaisseDTO> getLigneResumeCaisses() {
+        return ligneResumeCaisses;
+    }
+
+    public void setLigneResumeCaisses(List<LigneResumeCaisseDTO> ligneResumeCaisses) {
+        this.ligneResumeCaisses = ligneResumeCaisses;
+    }
+
     @Override
     public int hashCode() {
         int hash = 5;
@@ -175,9 +204,10 @@ public class ResumeCaisseDTO implements Serializable {
         this.billetage = montantBilletage;
         this.montantAnnule = Math.abs(montantAnnule);
         this.intSOLDEMATIN = caisse.getIntSOLDEMATIN();
-
+        this.ligneResumeCaisses = buildLigneResumeCaisse(caisse);
         this.cancel = cancel;
-        this.soldeTotal = caisse.getIntSOLDESOIR();
+        this.montantMobile = this.computeMobileAmount();
+        this.soldeTotal = caisse.getIntSOLDESOIR() + this.montantMobile;
         this.statut = caisse.getStrSTATUT();
         if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_USING)) {
             this.intSOLDESOIR = caisse.getIntSOLDESOIR();
@@ -209,9 +239,10 @@ public class ResumeCaisseDTO implements Serializable {
         this.billetage = montantBilletage;
         this.montantAnnule = Math.abs(montantAnnule);
         this.intSOLDEMATIN = caisse.getIntSOLDEMATIN();
-
+        this.ligneResumeCaisses = buildLigneResumeCaisse(caisse);
         this.cancel = cancel;
-        this.soldeTotal = caisse.getIntSOLDESOIR();
+        this.montantMobile = this.computeMobileAmount();
+        this.soldeTotal = caisse.getIntSOLDESOIR() + this.montantMobile;
         this.statut = caisse.getStrSTATUT();
         if (caisse.getStrSTATUT().equals(Constant.STATUT_IS_USING)) {
             this.intSOLDESOIR = caisse.getIntSOLDESOIR();
@@ -227,4 +258,7 @@ public class ResumeCaisseDTO implements Serializable {
 
     }
 
+    private List<LigneResumeCaisseDTO> buildLigneResumeCaisse(TResumeCaisse caisse) {
+        return caisse.getLigneResumeCaisses().stream().map(LigneResumeCaisseDTO::new).collect(Collectors.toList());
+    }
 }

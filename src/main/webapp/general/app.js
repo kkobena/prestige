@@ -451,7 +451,6 @@ Ext.application({
         'testextjs.view.configmanagement.tauxmarque.TauxmarqueManager',
         'testextjs.model.TauxMarque',
         'testextjs.view.configmanagement.tauxmarque.action.add',
-        'testextjs.view.sm_user.journalvente.JournalventeManager',
         'testextjs.model.Cashtransactiondata',
 
         //Forme Article
@@ -524,8 +523,6 @@ Ext.application({
         //gestion des deconditionnements
         'testextjs.view.configmanagement.famille.action.doDecondition',
         'testextjs.model.ModeReglement',
-        'testextjs.view.sm_user.dovente.action.checkdif',
-        'testextjs.view.sm_user.dovente.action.PayDebt',
         'testextjs.view.sm_user.dovente.action.displayArticle',
         'testextjs.view.sm_user.dovente.action.updateQuantity',
         'testextjs.view.sm_user.dovente.action.displayCustomer',

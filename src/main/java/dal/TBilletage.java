@@ -7,6 +7,7 @@
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -63,7 +64,7 @@ public class TBilletage implements Serializable {
     @Column(name = "lg_CREATED_BY", length = 20)
     private String lgCREATEDBY;
     @OneToMany(mappedBy = "lgBILLETAGEID")
-    private Collection<TBilletageDetails> tBilletageDetailsCollection;
+    private Collection<TBilletageDetails> tBilletageDetailsCollection = new ArrayList<>();
     @JoinColumn(name = "lg_USER_ID", referencedColumnName = "lg_USER_ID")
     @ManyToOne
     private TUser lgUSERID;
