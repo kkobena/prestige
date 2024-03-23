@@ -5,11 +5,14 @@
  */
 package dal;
 
+import dal.enumeration.TypeLigneResume;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -43,6 +46,10 @@ public class LigneResumeCaisse implements Serializable {
     @JoinColumn(name = "resume_caisse_id", referencedColumnName = "ld_CAISSE_ID", nullable = false)
     @ManyToOne
     private TResumeCaisse resumeCaisse;
+    @NotNull
+    @Column(name = "type_ligne")
+    @Enumerated(EnumType.ORDINAL)
+    private TypeLigneResume typeLigne;
 
     public Long getId() {
         return id;
@@ -74,6 +81,14 @@ public class LigneResumeCaisse implements Serializable {
 
     public void setResumeCaisse(TResumeCaisse resumeCaisse) {
         this.resumeCaisse = resumeCaisse;
+    }
+
+    public TypeLigneResume getTypeLigne() {
+        return typeLigne;
+    }
+
+    public void setTypeLigne(TypeLigneResume typeLigne) {
+        this.typeLigne = typeLigne;
     }
 
     @Override

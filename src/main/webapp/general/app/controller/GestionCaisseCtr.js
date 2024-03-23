@@ -81,10 +81,10 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
         });
     },
     showReglment: function (view, rowIndex, colIndex, item, e, record, row) {
-        var me = this;
+        const me = this;
 
         const ligneResumeCaisses = record.get('ligneResumeCaisses');
-        console.log(ligneResumeCaisses);
+       
 
         const form = Ext.create('Ext.window.Window',
                 {
@@ -118,7 +118,7 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
                                     handler: function (btn) {
                                         form.destroy();
                                     },
-                                    text: 'Annuler'
+                                    text: 'Fermer'
 
                                 }
                             ]
@@ -126,19 +126,45 @@ Ext.define('testextjs.controller.GestionCaisseCtr', {
                     ],
                     items: [
                         {
-                            xtype: 'fieldset',
+                            xtype: 'container',
                             layout: {
                                 type: 'vbox',
                                 align: 'stretch'
                             },
-                            defaults: {
-                                xtype: 'displayfield',
-                                fieldStyle: "color:blue;font-weight:bold;font-size:1em",
-                                labelWidth: 100
-                            },
-                            collapsible: false,
-                            title: 'Mode de règlements',
-                            items: me.buildReglements(ligneResumeCaisses)
+                            items: [
+                                {
+                                    xtype: 'fieldset',
+                                    flex: 1,
+                                    layout: {
+                                        type: 'vbox',
+                                        align: 'stretch'
+                                    },
+                                    defaults: {
+                                        xtype: 'displayfield',
+                                        fieldStyle: "color:blue;font-weight:bold;font-size:1em",
+                                        labelWidth: 100
+                                    },
+                                    collapsible: false,
+                                    title: 'Ventes',
+                                    items: me.buildReglements(ligneResumeCaisses)
+                                },
+                                {
+                                    xtype: 'fieldset',
+                                    flex: 1,
+                                    layout: {
+                                        type: 'vbox',
+                                        align: 'stretch'
+                                    },
+                                    defaults: {
+                                        xtype: 'displayfield',
+                                        fieldStyle: "color:blue;font-weight:bold;font-size:1em",
+                                        labelWidth: 100
+                                    },
+                                    collapsible: false,
+                                    title: 'Mouvements de caisse',
+                                    items: me.buildReglements(record.get('ligneReglements'))
+                                }
+                            ]
                         }
 
                     ]

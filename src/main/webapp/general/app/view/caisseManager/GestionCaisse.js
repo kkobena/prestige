@@ -92,6 +92,11 @@ Ext.define('testextjs.view.caisseManager.GestionCaisse', {
                             type: 'auto'
 
                         }
+                        ,
+                        {name: 'ligneReglements',
+                            type: 'auto'
+
+                        }
 
 
                     ],
@@ -314,7 +319,7 @@ Ext.define('testextjs.view.caisseManager.GestionCaisse', {
 
                                     getClass: function (value, metadata, record) {
 
-                                        if (record.get('ligneResumeCaisses').length > 0) {  //read your condition from the record
+                                        if (record.get('ligneResumeCaisses').length > 0 || record.get('ligneReglements').length) {  //read your condition from the record
                                             return 'x-display-hide'; //affiche l'icone
                                         } else {
                                             return 'x-hide-display'; //cache l'icone

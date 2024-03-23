@@ -1,7 +1,7 @@
-
-CREATE TABLE IF NOT EXISTS`ligne_resume_caisse` (
+CREATE TABLE `ligne_resume_caisse` (
 	`id` BIGINT(20) NOT NULL,
 	`montant` BIGINT(20) NOT NULL,
+	`type_ligne` INT(11) NOT NULL,
 	`resume_caisse_id` VARCHAR(40) NOT NULL COLLATE 'utf8_general_ci',
 	`type_reglement_id` VARCHAR(40) NOT NULL COLLATE 'utf8_general_ci',
 	PRIMARY KEY (`id`) USING BTREE,
