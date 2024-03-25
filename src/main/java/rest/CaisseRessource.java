@@ -5,7 +5,6 @@
  */
 package rest;
 
-import bll.common.Parameter;
 import commonTasks.dto.CaisseParamsDTO;
 import commonTasks.dto.MvtCaisseDTO;
 import commonTasks.dto.Params;
@@ -169,9 +168,10 @@ public class CaisseRessource {
         } catch (Exception e) {
         }
         List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
-        boolean cancel = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_BT_ANNULER_CLOTURE_CAISSE);
-        boolean allActivitis = DateConverter.hasAuthorityByName(lstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
-        JSONObject json = caisseService.resumeCaisse(dtSt, dtEn, tu, cancel, allActivitis, start, limit, false, userId);
+        boolean cancel = DateConverter.hasAuthorityByName(lstTPrivilege, Constant.P_BT_ANNULER_CLOTURE_CAISSE);
+        boolean allActivitis = Constant.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
+        JSONObject json = caisseService.getResumeCaisse(dtSt, dtEn, tu, cancel, allActivitis, start, limit, false,
+                userId);
         return Response.ok().entity(json.toString()).build();
     }
 

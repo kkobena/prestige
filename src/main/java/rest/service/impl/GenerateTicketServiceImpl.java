@@ -13,7 +13,6 @@ import commonTasks.dto.Params;
 import commonTasks.dto.TicketDTO;
 import dal.MvtTransaction;
 import dal.TAyantDroit;
-import dal.TCashTransaction;
 import dal.TClient;
 import dal.TDossierReglement;
 import dal.TDossierReglementDetail;
@@ -77,11 +76,11 @@ import rest.service.GenerateTicketService;
 import rest.service.SalesStatsService;
 import rest.service.VenteReglementService;
 import rest.service.dto.TicketZDTO;
-import toolkits.parameters.commonparameter;
 import toolkits.utils.Maths;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import toolkits.utils.jdom;
 import util.Afficheur;
+import util.CommonUtils;
 import util.Constant;
 
 import util.DateConverter;
@@ -201,7 +200,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             String idVente = id;
             MvtTransaction mvtTransaction = findByPkey(idVente);
             boolean isNotAchash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
-                    .equals(DateConverter.TYPE_REGLEMENT_ESPECE);
+                    .equals(Constant.TYPE_REGLEMENT_ESPECE);
 
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
@@ -221,12 +220,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTitle(FunctionUtils.RECEIT_TITLE + title);
-            imp.setTypeTicket(DateConverter.TICKET_VENTE);
+            imp.setTypeTicket(Constant.TICKET_VENTE);
             imp.setShowCodeBar(true);
             imp.setEmplacement(te);
             imp.setOperation(oTPreenregistrement.getDtUPDATED());
             imp.setIntBegin(0);
-            if (oTPreenregistrement.getStrSTATUTVENTE().equalsIgnoreCase(commonparameter.statut_differe)
+            if (oTPreenregistrement.getStrSTATUTVENTE().equalsIgnoreCase(Constant.DIFFERE)
                     || oTPreenregistrement.getBISAVOIR()) {
                 infoClientAvoir = generateDataTiersPayant(oTPreenregistrement);
             }
@@ -313,7 +312,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
-            imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
+            imp.setTypeTicket(Constant.ACTION_VENTE);
             imp.setShowCodeBar(true);
             imp.setEmplacement(te);
             imp.setOperation(oTPreenregistrement.getDtUPDATED());
@@ -326,7 +325,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 imp.buildTicket(datas, infoSellers, infotiersPayants,
                         generateDataSummaryVo(oTPreenregistrement, mvtTransaction),
                         generateCommentaire(oTPreenregistrement, mvtTransaction), fileBarecode);
-                print(imp, mvtTransaction, oTPreenregistrement.getIntPRICE());
+                print(imp, oTPreenregistrement);
             } else {
                 page = datas.size() / counter;
                 while (page != pageCurrent) {
@@ -335,7 +334,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infotiersPayants, Collections.emptyList(),
                             Collections.emptyList(), fileBarecode);
-                    print(imp, mvtTransaction, oTPreenregistrement.getIntPRICE());
+                    print(imp, oTPreenregistrement);
 
                     k = counter;
                     diff = datas.size() - counter;
@@ -356,7 +355,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                             generateDataSummaryVo(oTPreenregistrement, mvtTransaction),
                             generateCommentaire(oTPreenregistrement, mvtTransaction), fileBarecode);
                 }
-                print(imp, mvtTransaction, oTPreenregistrement.getIntPRICE());
+                print(imp, oTPreenregistrement);
 
             }
             json.put("success", true);
@@ -573,7 +572,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             datas.add(" ;0");
         }
 
-        if (p.getStrSTATUTVENTE().equalsIgnoreCase(commonparameter.statut_differe) && p.getIntPRICE() > 0) {
+        if (p.getStrSTATUTVENTE().equalsIgnoreCase(Constant.DIFFERE) && p.getIntPRICE() > 0) {
             datas.add(" ;0");
             datas.add(
                     "MONTANT RESTANT: "
@@ -630,7 +629,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     clotureVenteParams.getVenteId());
             String idPrevente = oTPreenregistrement.getLgPREENREGISTREMENTID();
             MvtTransaction mvtTransaction = findByPkey(idPrevente);
-            copies = nbreDeCopiesOranges(mvtTransaction, copies);
+            copies = nbreDeCopiesOranges(oTPreenregistrement, copies);
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
@@ -714,8 +713,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     private void print(ImpressionServiceImpl imp, TPreenregistrement oTPreenregistrement,
-            List<TPreenregistrementCompteClientTiersPayent> listeVenteTiersPayants, boolean printUniqueTicket,
-            MvtTransaction mvtTransaction) throws PrinterException {
+            List<TPreenregistrementCompteClientTiersPayent> listeVenteTiersPayants, boolean printUniqueTicket)
+            throws PrinterException {
         if (oTPreenregistrement.getIntPRICE() < 0) {
             imp.printTicketVente(1);
         } else {
@@ -724,7 +723,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     imp.printTicketVente(1);
                 }
             }
-            int copies = nbreDeCopiesOranges(mvtTransaction, 1);
+            int copies = nbreDeCopiesOranges(oTPreenregistrement, 1);
             for (int i = 0; i < copies; i++) {
                 imp.printTicketVente(1);
 
@@ -788,7 +787,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             if (datas.size() <= counter) {
                 imp.buildTicket(datas, infoSellers, infotiersPayants, generateDataSummarys, commentaires, fileBarecode);
 
-                print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket, mvtTransaction);
+                print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket);
 
             } else {
                 page = datas.size() / counter;
@@ -798,7 +797,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infotiersPayants, Collections.emptyList(),
                             Collections.emptyList(), fileBarecode);
-                    print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket, mvtTransaction);
+                    print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket);
 
                     k = counter;
                     diff = datas.size() - counter;
@@ -818,7 +817,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     imp.buildTicket(lstDataFinal, infoSellers, infotiersPayants, generateDataSummarys, commentaires,
                             fileBarecode);
                 }
-                print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket, mvtTransaction);
+                print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket);
 
             }
             json.put("success", true);
@@ -1111,7 +1110,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
-            imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
+            imp.setTypeTicket(Constant.ACTION_VENTE);
             imp.setShowCodeBar(true);
             imp.setEmplacement(te);
             imp.setOperation(oTPreenregistrement.getDtUPDATED());
@@ -1263,7 +1262,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
-            imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
+            imp.setTypeTicket(Constant.ACTION_VENTE);
             imp.setShowCodeBar(true);
             imp.setEmplacement(te);
             imp.setOperation(oTPreenregistrement.getDtUPDATED());
@@ -1389,7 +1388,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             imp.setoTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
-            imp.setTypeTicket(commonparameter.str_ACTION_VENTE);
+            imp.setTypeTicket(Constant.ACTION_VENTE);
             imp.setShowCodeBar(true);
             imp.setEmplacement(te);
             imp.setOperation(oTPreenregistrement.getDtUPDATED());
@@ -1400,7 +1399,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             if (datas.size() <= counter) {
                 imp.buildTicket(datas, infoSellers, Collections.emptyList(), generateDataSummarys, commentaires,
                         fileBarecode);
-                print(imp, mvtTransaction, oTPreenregistrement.getIntPRICE());
+                print(imp, oTPreenregistrement);
 
             } else {
                 page = datas.size() / counter;
@@ -1411,7 +1410,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     imp.buildTicket(lstDataFinal, infoSellers, Collections.emptyList(), Collections.emptyList(),
                             Collections.emptyList(), fileBarecode);
 
-                    print(imp, mvtTransaction, oTPreenregistrement.getIntPRICE());
+                    print(imp, oTPreenregistrement);
                     k = counter;
                     diff = datas.size() - counter;
                     if (diff > counterConstante) {
@@ -1430,7 +1429,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     imp.buildTicket(lstDataFinal, infoSellers, Collections.emptyList(), generateDataSummarys,
                             commentaires, fileBarecode);
                 }
-                print(imp, mvtTransaction, oTPreenregistrement.getIntPRICE());
+                print(imp, oTPreenregistrement);
 
             }
             json.put("success", true);
@@ -1443,11 +1442,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     }
 
-    private void print(ImpressionServiceImpl imp, MvtTransaction mvtTransaction, int intPRICE) throws PrinterException {
-        if (intPRICE < 0) {
+    private void print(ImpressionServiceImpl imp, TPreenregistrement p) throws PrinterException {
+        if (p.getIntPRICE() < 0) {
             imp.printTicketVente(1);
         } else {
-            int copies = nbreDeCopiesOranges(mvtTransaction, 1);
+            int copies = nbreDeCopiesOranges(p, 1);
             for (int i = 0; i < copies; i++) {
                 imp.printTicketVente(1);
             }
@@ -1470,7 +1469,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     public boolean voirNumeroTicket() {
         try {
 
-            TParameters tp = getEntityManager().find(TParameters.class, Parameter.KEY_SHOW_NUMERO_TICKET);
+            TParameters tp = getEntityManager().find(TParameters.class, Constant.KEY_SHOW_NUMERO_TICKET);
             return (Integer.parseInt(tp.getStrVALUE()) == 1);
 
         } catch (Exception e) {
@@ -1566,16 +1565,18 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     private Optional<Integer> findOrangeNumberOfTicket() {
         try {
             return Optional.ofNullable(Integer.valueOf(this.getEntityManager()
-                    .find(TParameters.class, DateConverter.KEY_NOMBRE_TICKET_OTHER_ESPECE).getStrVALUE()));
+                    .find(TParameters.class, Constant.KEY_NOMBRE_TICKET_OTHER_ESPECE).getStrVALUE()));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Optional.empty();
         }
     }
 
-    private int nbreDeCopiesOranges(MvtTransaction mvtTransaction, int copies) {
-        TTypeReglement typeReglement = mvtTransaction.getReglement();
-        if (!typeReglement.getLgTYPEREGLEMENTID().equals(DateConverter.TYPE_REGLEMENT_ESPECE)) {
+    private int nbreDeCopiesOranges(TPreenregistrement p, int copies) {
+        boolean hasMobile = p.getVenteReglements().stream()
+                .anyMatch(r -> CommonUtils.isMobileTypeReglement(r.getTypeReglement().getLgTYPEREGLEMENTID()));
+
+        if (hasMobile) {
             Optional<Integer> nbreCopieOtherEspece = findOrangeNumberOfTicket();
             return nbreCopieOtherEspece.orElse(copies);
         }
@@ -1637,7 +1638,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         int breaking = breakingTicketZParam();
         body.addAll(footer);
         if (size <= breaking) {
-            serviceImpression.setTypeTicket(DateConverter.TICKET_ZZ);
+            serviceImpression.setTypeTicket(Constant.TICKET_ZZ);
             serviceImpression.setTicketZdatas(body);
             serviceImpression.printTicketVente(1);
         } else {
@@ -1646,7 +1647,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             int page = size / counter;
             int begin = 0;
             while (k < page) {
-                serviceImpression.setTypeTicket(DateConverter.TICKET_Z);
+                serviceImpression.setTypeTicket(Constant.TICKET_Z);
                 serviceImpression.setDatas(body.subList(begin, counter));
                 serviceImpression.printTicketVente(1);
                 k++;
@@ -1654,7 +1655,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 counter += breaking;
 
             }
-            serviceImpression.setTypeTicket(DateConverter.TICKET_Z);
+            serviceImpression.setTypeTicket(Constant.TICKET_Z);
             serviceImpression.setDatas(body.subList(begin, size - 1));
             serviceImpression.printTicketVente(1);
         }

@@ -5,16 +5,8 @@
  */
 package bll.teller;
 
-import bll.common.Parameter;
-import dal.TClient;
-import dal.TRecettes;
 import dal.TUser;
 import dal.dataManager;
-import java.util.Date;
-import java.util.List;
-import toolkits.parameters.commonparameter;
-import toolkits.utils.conversion;
-import toolkits.utils.logger;
 
 /**
  *
