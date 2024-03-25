@@ -110,6 +110,29 @@ public final class Constant {
     public static final int TIERS_PAYANT_PRINCIPAL = 1;
     public static final String CLIENT_ASSURANCE = "1";
     public static final String CLIENT_CARNET = "2";
+    public static final String P_BT_ANNULER_CLOTURE_CAISSE = "P_BT_ANNULER_CLOTURE_CAISSE";
+    public static final String KEY_PRENDRE_EN_COMPTE_FOND_CAISSE = "KEY_PRENDRE_EN_COMPTE_FOND_CAISSE";
+    public static final String KEY_NOMBRE_TICKET_OTHER_ESPECE = "KEY_NOMBRE_TICKET_OTHER_ESPECE";
+    public static final String TYPE_REGLEMENT_ESPECE = "1";
+    public static final String TICKET_Z = "TICKET_Z";
+    public static final String TICKET_VENTE = "VENTE";
+    public static final String CHARGED = "charged";
+    public static final String TYPE_VENTE_VNO = "1";
+    public static final String KEY_CHECK_UG = "KEY_CHECK_UG";
+    public static final String TICKET_ZZ = "TICKET_ZZ";
+    public static final String KEY_SHOW_NUMERO_TICKET = "KEY_SHOW_NUMERO_TICKET";
+    /*
+     * parametre nombre de mois à considerer
+     */
+    public static final String Q3 = "Q3";
+    /*
+     * QTE DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFINIR
+     */
+    public static final String Q2 = "Q2";
+    /*
+     * SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
+     */
+    public static final String Q1 = "Q1";
 
     private Constant() {
     }

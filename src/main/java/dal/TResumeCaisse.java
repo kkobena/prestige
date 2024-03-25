@@ -3,12 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -16,6 +18,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -39,6 +42,7 @@ import javax.xml.bind.annotation.XmlRootElement;
         @NamedQuery(name = "TResumeCaisse.findByLgUPDATEDBY", query = "SELECT t FROM TResumeCaisse t WHERE t.lgUPDATEDBY = :lgUPDATEDBY"),
         @NamedQuery(name = "TResumeCaisse.findByStrSTATUT", query = "SELECT t FROM TResumeCaisse t WHERE t.strSTATUT = :strSTATUT") })
 public class TResumeCaisse implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -69,6 +73,8 @@ public class TResumeCaisse implements Serializable {
     @JoinColumn(name = "lg_USER_ID", referencedColumnName = "lg_USER_ID")
     @ManyToOne
     private TUser lgUSERID;
+    @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE }, mappedBy = "resumeCaisse")
+    private List<LigneResumeCaisse> ligneResumeCaisses = new ArrayList<>();
 
     public TResumeCaisse() {
     }
@@ -163,6 +169,14 @@ public class TResumeCaisse implements Serializable {
 
     public void setLgUSERID(TUser lgUSERID) {
         this.lgUSERID = lgUSERID;
+    }
+
+    public List<LigneResumeCaisse> getLigneResumeCaisses() {
+        return ligneResumeCaisses;
+    }
+
+    public void setLigneResumeCaisses(List<LigneResumeCaisse> ligneResumeCaisses) {
+        this.ligneResumeCaisses = ligneResumeCaisses;
     }
 
     @Override

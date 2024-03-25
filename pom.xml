@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.dici</groupId>
     <artifactId>prestige</artifactId>
-    <version>1.1.5</version>
+    <version>1.1.6</version>
     <repositories>
         <repository>
             <id>central</id>
@@ -28,6 +28,7 @@
         <xmlworker.version>5.5.10</xmlworker.version>
         <hibernate.version>5.4.3.Final</hibernate.version>
         <laborex.version>${project.version}</laborex.version>
+        <branch>master</branch>
     </properties>
     
     <developers>
@@ -188,7 +189,6 @@
   
     <build>
         <finalName>laborex</finalName>
-       
         <plugins>
             <plugin>
                 <groupId>com.rodiontsev.maven.plugins</groupId>
@@ -197,17 +197,17 @@
                 <configuration>
                     <fileDir>src/main/resources</fileDir>
                     <filename>build.properties</filename>
-                   
                     <systemProperties>
                         <systemProperty>user.name</systemProperty>
                         <systemProperty>java.runtime.version</systemProperty>
                     </systemProperties>
                     <declaredProperties>
                         <declaredProperty>laborex.version</declaredProperty>
+                            <declaredProperty>branch</declaredProperty>
                     </declaredProperties>
-                  
                     <dateTimePattern>dd-MM-yyyy HH:mm:ss</dateTimePattern>
                     <includeVcsInfo>false</includeVcsInfo>
+               
                 </configuration>
                 <executions>
                     <execution>
@@ -252,7 +252,6 @@
                             <version>1.18.26</version>
                         </path>
                     </annotationProcessorPaths>
-                   
                 </configuration>
                
             </plugin>
@@ -264,7 +263,6 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
-                     
                 </configuration>
             </plugin>
 
