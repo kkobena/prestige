@@ -504,7 +504,7 @@ public class Balance {
         parameters.put("P_H_CLT_INFOS", "GESTION DES CAISSES  " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
 
-        List<ResumeCaisseDTO> datas = caisseService.resumeCaisse(dtSt, dtEn, tu, allActivitis, 0, 0, false,
+        List<ResumeCaisseDTO> datas = caisseService.getResumeCaisse(dtSt, dtEn, tu, allActivitis, 0, 0, false,
                 parasm.getRef(), true);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
                 jdom.scr_report_pdf + "gestioncaisses" + report_generate_file, datas);

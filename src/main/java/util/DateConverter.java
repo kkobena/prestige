@@ -118,8 +118,6 @@ public final class DateConverter {
     public static final String CA = "CHIFFRE D'AFFAIRES";
     public static final String ACHATS = "ACHATS";
     public static final String MARGE = "MARGE";
-    public static final String TICKET_Z = "TICKET_Z";
-    public static final String TICKET_VENTE = "VENTE";
     public static final String TICKET_REGLEMENT = "TICKET_REGLEMENT";
     public static final String TICKET_REGLEMENT_CARNET_DEPOT = "TICKET_REGLEMENT_CARNET_DEPOT";
     public static final String TICKET_VENTE_DOUBLE = "TICKET_DOUBLE";
@@ -179,8 +177,6 @@ public final class DateConverter {
     public static final String KEY_COMMON_MANAGMENT = "KEY_COMMON";
     public static final String NOT = "NOT";
     public static final String WITH = "WITH";
-    public static final String KEY_NOMBRE_TICKET_OTHER_ESPECE = "KEY_NOMBRE_TICKET_OTHER_ESPECE";
-    public static final String TYPE_REGLEMENT_ESPECE = "1";
     public static final String CHARGED = "charged";
     public static final String TYPE_VENTE_VNO = "1";
     public static final String KEY_CHECK_UG = "KEY_CHECK_UG";

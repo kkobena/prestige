@@ -31,6 +31,7 @@ import javax.print.attribute.standard.Copies;
 import javax.swing.ImageIcon;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -448,7 +449,7 @@ public class ImpressionServiceImpl implements Printable {
         List<String> curDatas = this.getDatas();
         int dataSize = curDatas.size();
         switch (this.getTypeTicket()) {
-        case DateConverter.TICKET_VENTE: {
+        case Constant.TICKET_VENTE: {
             Font font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
             graphics.drawString("QTE", 0 + columnOne, start);
             graphics.drawString("ARTICLES", 25 + columnTwo, start);
@@ -466,7 +467,7 @@ public class ImpressionServiceImpl implements Printable {
             }
             break;
         }
-        case DateConverter.TICKET_Z: {
+        case Constant.TICKET_Z: {
             Font font;
             for (int i = 0; i < curDatas.size(); i++) {
                 String[] parts = curDatas.get(i).split(";");

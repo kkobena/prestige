@@ -1,5 +1,6 @@
 package rest.service.impl;
 
+import dal.LigneResumeCaisse;
 import dal.Notification;
 import dal.TBilletage;
 import dal.TBilletageDetails;
@@ -8,17 +9,17 @@ import dal.TCoffreCaisse;
 import dal.TCoffreCaisse_;
 import dal.TEmplacement;
 import dal.TResumeCaisse;
+import dal.TTypeReglement;
 import dal.TUser;
 import dal.TUser_;
 import dal.enumeration.Canal;
+import dal.enumeration.TypeLigneResume;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -35,6 +36,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -49,10 +51,12 @@ import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.dto.BilletageDTO;
 import rest.service.dto.CoffreCaisseDTO;
+import rest.service.dto.LigneResumeCaisseDTO;
 import rest.service.dto.UserCaisseDataDTO;
 import rest.service.exception.CaisseNotFoundExeception;
 import rest.service.exception.CaisseUsingExeception;
 import rest.service.exception.CashFundNotFoundExeception;
+import util.CommonUtils;
 import util.Constant;
 import util.DateCommonUtils;
 import util.DateUtil;
@@ -65,10 +69,12 @@ import util.NumberUtils;
  */
 @Stateless
 public class BilletageServiceImpl implements BilletageService {
+    // AND v.type_regelement IN(?5)
+    // AND m.`lg_MODE_REGLEMENT_ID`=?4 AND
 
-    private static final String SOLDE_SQL = "SELECT SUM(m.`montantRegle`) AS montantRegle FROM t_preenregistrement p,mvttransaction m,t_user u WHERE p.`lg_USER_CAISSIER_ID`=u.`lg_USER_ID` AND p.`lg_PREENREGISTREMENT_ID`=m.vente_id"
-            + " AND p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 AND  p.`lg_USER_CAISSIER_ID`= ?2 AND p.`dt_UPDATED` BETWEEN ?3 AND ?4 AND m.`typeReglementId` =?5 ";
-    private static final String SOLDE_SQL_OTHERS = "SELECT SUM(m.int_AMOUNT) AS montant  FROM t_mvt_caisse m,t_user u WHERE m.`lg_USER_ID`=u.`lg_USER_ID` AND u.`lg_USER_ID`=?1 AND m.`dt_CREATED` BETWEEN ?2 AND ?3 AND  m.`lg_MODE_REGLEMENT_ID`=?4 AND m.`lg_TYPE_MVT_CAISSE_ID` <> '1'  ";
+    private static final String SOLDE_SQL = " SELECT SUM(v.montant) AS montantRegle,v.type_regelement AS type_regelement FROM  vente_reglement v JOIN t_preenregistrement p ON p.lg_PREENREGISTREMENT_ID=v.vente_id WHERE p.`str_STATUT`='is_Closed' AND p.`lg_TYPE_VENTE_ID` <> ?1 \n"
+            + " AND  p.`lg_USER_CAISSIER_ID`= ?2 AND p.`dt_UPDATED` BETWEEN ?3 AND ?4  GROUP BY v.type_regelement ";
+    private static final String SOLDE_SQL_OTHERS = "SELECT SUM(m.int_AMOUNT) AS montantRegle,tr.lg_TYPE_REGLEMENT_ID AS type_regelement  FROM t_mvt_caisse m,t_mode_reglement mr,t_type_reglement tr, t_user u WHERE   m.lg_MODE_REGLEMENT_ID=mr.lg_MODE_REGLEMENT_ID AND   mr.lg_TYPE_REGLEMENT_ID=tr.lg_TYPE_REGLEMENT_ID AND m.`lg_USER_ID`=u.`lg_USER_ID` AND u.`lg_USER_ID`=?1 AND m.`dt_CREATED` BETWEEN ?2 AND ?3 AND m.`lg_TYPE_MVT_CAISSE_ID` <> '1'  GROUP BY tr.lg_TYPE_REGLEMENT_ID ";
 
     private static final Logger LOG = Logger.getLogger(BilletageServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
@@ -214,7 +220,11 @@ public class BilletageServiceImpl implements BilletageService {
             throw new CaisseUsingExeception("Impossible de cloturer cette caisse [" + billetage.getResumeCaisseId()
                     + "]. Elle est déjà fermée");
         }
-        double amount = caisseAmount(oTResumeCaisse) + caisseAmountOtherMvts(oTResumeCaisse);
+        // caisseAmountOtherMvts(oTResumeCaisse)
+        setLigneResumeCaissesFromDto(oTResumeCaisse);
+        setLigneResumeCaissesFromReglement(oTResumeCaisse);
+        double amount = getCashAmount(oTResumeCaisse, TypeLigneResume.VENTE)
+                + getCashAmount(oTResumeCaisse, TypeLigneResume.REGLEMENT);
         TCaisse caisse = getUserCaisse(user);
         Date now = new Date();
         if (caisse == null) {
@@ -284,42 +294,41 @@ public class BilletageServiceImpl implements BilletageService {
         this.em.persist(billetageDetails);
     }
 
-    private double caisseAmount(TResumeCaisse caisse) {
+    private List<LigneResumeCaisseDTO> caisseAmount(TResumeCaisse caisse) {
 
         try {
-            Query query = this.em.createNativeQuery(SOLDE_SQL).setParameter(1, Constant.DEPOT_EXTENSION)
+            Query query = this.em.createNativeQuery(SOLDE_SQL, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
                     .setParameter(2, caisse.getLgUSERID().getLgUSERID())
-                    .setParameter(3, caisse.getDtCREATED(), TemporalType.TIMESTAMP)
-                    .setParameter(4, new Date(), TemporalType.TIMESTAMP).setParameter(5, Constant.MODE_ESP);
-            Object result = query.getSingleResult();
-            if (result != null) {
-                return ((BigDecimal) result).doubleValue();
-            }
+                    .setParameter(3, caisse.getDtCREATED(), TemporalType.TIMESTAMP).setParameter(4, new Date(),
+                            TemporalType.TIMESTAMP)/*
+                                                    * .setParameter(5, List.of(Constant.MODE_ESP, Constant.MODE_WAVE,
+                                                    * Constant.TYPE_REGLEMENT_ORANGE, Constant.MODE_MOOV,
+                                                    * Constant.MODE_MTN))
+                                                    */;
+            return ((List<Tuple>) query.getResultList()).stream().map(LigneResumeCaisseDTO::new)
+                    .collect(Collectors.toList());
 
-            return 0;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-            return 0;
+            return new ArrayList<>();
 
         }
 
     }
 
-    private double caisseAmountOtherMvts(TResumeCaisse caisse) {
+    private List<LigneResumeCaisseDTO> caisseAmountOtherMvts(TResumeCaisse caisse) {
         try {
-            Query query = this.em.createNativeQuery(SOLDE_SQL_OTHERS)
+            Query query = this.em.createNativeQuery(SOLDE_SQL_OTHERS, Tuple.class)
                     .setParameter(1, caisse.getLgUSERID().getLgUSERID())
                     .setParameter(2, caisse.getDtCREATED(), TemporalType.TIMESTAMP)
-                    .setParameter(3, new Date(), TemporalType.TIMESTAMP).setParameter(4, Constant.MODE_ESP);
-            Object result = query.getSingleResult();
-            if (result != null) {
-                return (Double) result;
-            }
-            return 0;
+                    .setParameter(3, new Date(), TemporalType.TIMESTAMP)/* .setParameter(4, Constant.MODE_ESP) */;
+
+            return ((List<Tuple>) query.getResultList()).stream().map(this::buildLigneResumeCaisse)
+                    .collect(Collectors.toList());
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-            return 0;
+            return new ArrayList<>();
         }
 
     }
@@ -437,5 +446,47 @@ public class BilletageServiceImpl implements BilletageService {
         long count = countCoffreCaisses(dateStart, dateEnd, search);
         List<CoffreCaisseDTO> data = fetchListCoffreCaisses(dateStart, dateEnd, search, start, limit);
         return FunctionUtils.returnData(data, count);
+    }
+
+    private void setLigneResumeCaissesFromDto(TResumeCaisse caisse) {
+        caisseAmount(caisse).forEach(e -> {
+            TTypeReglement typeReglement = em.find(TTypeReglement.class, e.getIdRegelement());
+            LigneResumeCaisse ligneResumeCaisse = new LigneResumeCaisse();
+            ligneResumeCaisse.setTypeReglement(typeReglement);
+            ligneResumeCaisse.setMontant(e.getMontant());
+            ligneResumeCaisse.setResumeCaisse(caisse);
+            ligneResumeCaisse.setTypeLigne(TypeLigneResume.VENTE);
+            caisse.getLigneResumeCaisses().add(ligneResumeCaisse);
+        });
+    }
+
+    private long getCashAmount(TResumeCaisse caisse, TypeLigneResume typeLigne) {
+        return caisse.getLigneResumeCaisses().stream()
+                .filter(ligne -> CommonUtils.isCashTypeReglement(ligne.getTypeReglement().getLgTYPEREGLEMENTID())
+                        && ligne.getTypeLigne() == typeLigne)
+                .mapToLong(LigneResumeCaisse::getMontant).reduce(0, Long::sum);
+
+    }
+
+    private void setLigneResumeCaissesFromReglement(TResumeCaisse caisse) {
+        caisseAmountOtherMvts(caisse).forEach(e -> {
+            TTypeReglement typeReglement = em.find(TTypeReglement.class, e.getIdRegelement());
+            LigneResumeCaisse ligneResumeCaisse = new LigneResumeCaisse();
+            ligneResumeCaisse.setTypeReglement(typeReglement);
+            ligneResumeCaisse.setMontant(e.getMontant());
+            ligneResumeCaisse.setResumeCaisse(caisse);
+            ligneResumeCaisse.setTypeLigne(TypeLigneResume.REGLEMENT);
+            caisse.getLigneResumeCaisses().add(ligneResumeCaisse);
+        });
+
+    }
+
+    private LigneResumeCaisseDTO buildLigneResumeCaisse(Tuple tuple) {
+
+        var montant = tuple.get("montantRegle", Double.class).longValue();
+        var idRegelement = tuple.get("type_regelement", String.class);
+
+        return new LigneResumeCaisseDTO(montant, null, idRegelement, null);
+
     }
 }

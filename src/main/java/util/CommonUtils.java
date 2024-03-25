@@ -1,4 +1,3 @@
-
 package util;
 
 import com.ibm.icu.text.RuleBasedNumberFormat;
@@ -16,6 +15,7 @@ import java.util.stream.IntStream;
  * @author koben
  */
 public final class CommonUtils {
+
     private static final int BEGIN = 2015;
 
     public static int[] getYears() {
@@ -65,5 +65,15 @@ public final class CommonUtils {
         RuleBasedNumberFormat formatter = new RuleBasedNumberFormat(Locale.FRANCE, RuleBasedNumberFormat.SPELLOUT);
         return formatter.format(num);
 
+    }
+
+    public static boolean isCashTypeReglement(String reglId) {
+        return Constant.MODE_ESP.equals(reglId);
+    }
+
+    public static boolean isMobileTypeReglement(String reglId) {
+
+        return Constant.MODE_WAVE.equals(reglId) || Constant.TYPE_REGLEMENT_ORANGE.equals(reglId)
+                || Constant.MODE_MOOV.equals(reglId) || Constant.MODE_MTN.equals(reglId);
     }
 }
