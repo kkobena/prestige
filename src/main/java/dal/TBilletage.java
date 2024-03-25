@@ -50,7 +50,6 @@ public class TBilletage implements Serializable {
     @Basic(optional = false)
     @Column(name = "ld_CAISSE_ID", nullable = false, length = 40)
     private String ldCAISSEID;
-
     @Column(name = "int_AMOUNT", precision = 12, scale = 2)
     private Double intAMOUNT;
     @Column(name = "dt_CREATED")
@@ -164,7 +163,7 @@ public class TBilletage implements Serializable {
 
     @Override
     public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
+     
         if (!(object instanceof TBilletage)) {
             return false;
         }
