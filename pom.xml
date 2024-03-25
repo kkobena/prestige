@@ -28,7 +28,7 @@
         <xmlworker.version>5.5.10</xmlworker.version>
         <hibernate.version>5.4.3.Final</hibernate.version>
         <laborex.version>${project.version}</laborex.version>
-        <branch>master</branch>
+        <branch>serveur</branch>
     </properties>
     
     <developers>
