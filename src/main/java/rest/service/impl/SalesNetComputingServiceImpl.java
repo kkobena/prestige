@@ -13,6 +13,7 @@ import dal.TTiersPayant;
 import dal.TWorkflowRemiseArticle;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import javax.ejb.Stateless;
@@ -93,10 +94,9 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         double montantTp = amountToCompute * taux;
         int montantTiersPayant = (int) Math.ceil(montantTp);
         if (Objects.nonNull(payant) && reelAmount != amountToCompute) {
-            message = "Le tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'> "
+            message = "Le plafond du tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'> "
                     + payant.getStrFULLNAME()
-                    + "</span> ne peut prendre <span style='font-weight:900;color:red;text-decoration: underline;'>"
-                    + NumberUtils.formatIntToString(montantTiersPayant) + "</span><br>";
+                    + "</span>? car son plafond est atteint <br>";
         }
 
         NetComputingDTO netComputing = new NetComputingDTO();
@@ -105,6 +105,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         netComputing.setMontantTiersPayant(montantTiersPayant);
         netComputing.setPlafondGlobal(plafondGlobal);
         netComputing.setMessage(message);
+
         netComputing.setNumBon(tierspayant.getNumBon());
         return netComputing;
 
@@ -114,44 +115,68 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         MontantAPaye montantAPaye = new MontantAPaye();
         List<TPreenregistrementDetail> items = getItems(params.getVenteId());
         TPreenregistrement op = items.get(0).getLgPREENREGISTREMENTID();
+        boolean isCarnet = Constant.VENTE_AVEC_CARNET.equals(op.getLgTYPEVENTEID().getLgTYPEVENTEID());
         TRemise remise = op.getRemise();
         remise = remise != null ? remise : op.getClient().getRemise();
         MontantAPaye aPaye = computeRemise(op, remise, items);
 
         int montantVente = op.getIntPRICE();
         int cmuAmount = op.getCmuAmount();
-        int montantRestant;
+        int montantRestant = 0;
         int montantTotalTp = 0;
         List<NetComputingDTO> datas = new ArrayList<>();
-        for (TiersPayantParams tiersPayantParams : params.getTierspayants()) {
+        List<TiersPayantParams> tierspayants = params.getTierspayants();
+        tierspayants.sort(Comparator.comparing(TiersPayantParams::getTaux, Comparator.reverseOrder()));
+        int counter = 0;
+        int bonsSize = tierspayants.size();
+
+        int montantTpFinalTierspayant = 0;
+        for (TiersPayantParams tiersPayantParams : tierspayants) {
+            counter++;
             boolean isCmu = tiersPayantParams.isCmu() && (cmuAmount != montantVente);
             int amountToCompute = isCmu ? cmuAmount : montantVente;
 
             NetComputingDTO netComputed = computeTiesrPayantNet(tiersPayantParams, amountToCompute, asPlafondActivated);
+            int realTpAmount = netComputed.getMontantTiersPayant();
             montantTotalTp += netComputed.getMontantTiersPayant();
-            montantRestant = amountToCompute - montantTotalTp;
-            if (montantTotalTp == netComputed.getMontantTiersPayant()) {
+
+            if (bonsSize > 1 && counter == bonsSize && montantTotalTp > amountToCompute) {
+
+                netComputed.setMontantTiersPayant(montantRestant);
+
+            }
+
+            int reelTaux = (int) Math
+                    .ceil((Double.valueOf(netComputed.getMontantTiersPayant()) * 100) / amountToCompute);
+            if (reelTaux >= tiersPayantParams.getTaux()) {
                 netComputed.setPercentage(tiersPayantParams.getTaux());
-
             } else {
-                if (netComputed.getMontantTiersPayant() <= montantRestant) {
-                    netComputed.setPercentage(tiersPayantParams.getTaux());
-
-                } else {
-                    int montantTp = montantRestant;
-                    int reelTaux = (int) Math.ceil((Double.valueOf(montantTp) * 100) / amountToCompute);
-                    netComputed.setPercentage(reelTaux);
-                    netComputed.setMontantTiersPayant(montantTp);
+                if (counter == bonsSize) {
+                    netComputed.setPercentage((int) Math.ceil((Double.valueOf(realTpAmount) * 100) / amountToCompute));
                 }
             }
+            montantTpFinalTierspayant += netComputed.getMontantTiersPayant();
+            montantRestant = amountToCompute - montantTpFinalTierspayant;
             datas.add(netComputed);
 
         }
-        int custPart = (montantVente - montantTotalTp) - op.getIntPRICEREMISE();
+        int custPart;
+        if (isCarnet) {
+            custPart = montantVente - montantTpFinalTierspayant;
+            montantTpFinalTierspayant = montantTpFinalTierspayant - op.getIntPRICEREMISE();
+            datas.get(0).setMontantTiersPayant(montantTpFinalTierspayant);
+
+        } else {
+            custPart = (montantVente - montantTpFinalTierspayant) - op.getIntPRICEREMISE();
+        }
+
         op.setIntCUSTPART(custPart);
         em.merge(op);
+
         montantAPaye.setCmuAmount(cmuAmount);
-        montantAPaye.setRemise(NumberUtils.arrondiModuloOfNumber(op.getIntPRICEREMISE(), 5));
+
+        // montantAPaye.setRemise(NumberUtils.arrondiModuloOfNumber(op.getIntPRICEREMISE(), 5));
+        montantAPaye.setRemise(op.getIntPRICEREMISE());
         montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
         montantAPaye.setMontant(op.getIntPRICE());
         montantAPaye.setMarge(aPaye.getMarge());
@@ -178,7 +203,9 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             montantAPaye.getTierspayants().add(tp);
 
         }
+
         montantAPaye.setRestructuring(asPlafond);
+
         montantAPaye.setMessage(message);
 
         return montantAPaye;
@@ -299,6 +326,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
     private TWorkflowRemiseArticle findByArticleRemise(String strCODEREMISE) {
         if (StringUtils.isEmpty(strCODEREMISE)) {
             return null;
+
         }
         try {
             TypedQuery<TWorkflowRemiseArticle> q = em.createQuery(
