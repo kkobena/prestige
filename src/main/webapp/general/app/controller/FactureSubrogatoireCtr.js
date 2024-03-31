@@ -130,7 +130,7 @@ Ext.define('testextjs.controller.FactureSubrogatoireCtr', {
         const me = this;
         me.getFacturesSubroGrid().getStore().load({
             params: {
-                "search": me.getQueryField().getValue(),
+                "query": me.getQueryField().getValue(),
                 "dtStart": me.getDtStart().getSubmitValue(),
                 "dtEnd": me.getDtEnd().getSubmitValue(),
                 "tiersPayantId": me.getTiersPayantId().getValue(),
