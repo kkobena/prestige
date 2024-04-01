@@ -102,7 +102,7 @@ Ext.define('testextjs.controller.FactureSubrogatoireCtr', {
         const me = this;
         const myProxy = me.getFacturesSubroGrid().getStore().getProxy();
         myProxy.params = {
-            search: null,
+            query: null,
             tiersPayantId: null,
             dtStart: null,
             dtEnd: null,
@@ -111,7 +111,7 @@ Ext.define('testextjs.controller.FactureSubrogatoireCtr', {
 
         };
 
-        myProxy.setExtraParam('search', me.getQueryField().getValue());
+        myProxy.setExtraParam('query', me.getQueryField().getValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('tiersPayantId', me.getTiersPayantId().getValue());
