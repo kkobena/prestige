@@ -163,7 +163,7 @@ public class TBilletage implements Serializable {
 
     @Override
     public boolean equals(Object object) {
-     
+
         if (!(object instanceof TBilletage)) {
             return false;
         }

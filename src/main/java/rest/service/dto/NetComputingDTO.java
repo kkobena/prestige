@@ -106,4 +106,13 @@ public class NetComputingDTO {
         this.plafondGlobalMessage = plafondGlobalMessage;
     }
 
+    @Override
+    public String toString() {
+        return "NetComputingDTO{" + "montantVente=" + montantVente + ", montantRemise=" + montantRemise + ", taux="
+                + taux + ", montantTiersPayant=" + montantTiersPayant + ", plafondVente=" + plafondVente
+                + ", idCompteClientTiersPayant=" + idCompteClientTiersPayant + ", message=" + message
+                + ", plafondGlobalMessage=" + plafondGlobalMessage + ", percentage=" + percentage + ", plafondGlobal="
+                + plafondGlobal + ", numBon=" + numBon + '}';
+    }
+
 }

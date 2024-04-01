@@ -6,7 +6,6 @@
 package rest;
 
 import dal.TUser;
-import java.time.LocalDate;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -19,9 +18,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.service.DashBoardService;
 import rest.service.ListDesBonService;
-import rest.service.dto.BalanceParamsDTO;
 import rest.service.dto.BonsParam;
 import toolkits.parameters.commonparameter;
 import util.Constant;
