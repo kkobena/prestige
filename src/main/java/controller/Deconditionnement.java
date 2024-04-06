@@ -5,7 +5,6 @@
  */
 package controller;
 
-
 import dal.Notification;
 import dal.TDeconditionnement;
 import dal.TEmplacement;
@@ -73,26 +72,18 @@ public class Deconditionnement extends HttpServlet {
 
             }
             try {
-
-                switch (mode) {
-                    case "deconditionarticle":
-                        boolean success = doDeconditionnementStock(lgFAMILLEID, intNUMBER, oTUser);
-                        json.put("success", (success ? 1 : 0));
-                        json.put("errors_code", (success ? 1 : 0));
-                        json.put("ref", lgFAMILLEID);
-                        json.put("errors", (success ? " Opération effectuée avec succès" : " Erreur système !!!! "));
-
-                        break;
-
-                    default:
-
-                        boolean result = doDeconditionnement(lgFAMILLEID, intNUMBER, oTUser);
-                        json.put("success", (result ? 1 : 0));
-                        json.put("errors_code", (result ? 1 : 0));
-                        json.put("ref", lgFAMILLEID);
-                        json.put("errors", (result ? " Opération effectuée avec succès" : " Erreur système !!!! "));
-                        break;
-
+                if ("deconditionarticle".equalsIgnoreCase(mode)) {
+                    boolean success = doDeconditionnementStock(lgFAMILLEID, intNUMBER, oTUser);
+                    json.put("success", (success ? 1 : 0));
+                    json.put("errors_code", (success ? 1 : 0));
+                    json.put("ref", lgFAMILLEID);
+                    json.put("errors", (success ? " Opération effectuée avec succès" : " Erreur système !!!! "));
+                } else {
+                    boolean result = doDeconditionnement(lgFAMILLEID, intNUMBER, oTUser);
+                    json.put("success", (result ? 1 : 0));
+                    json.put("errors_code", (result ? 1 : 0));
+                    json.put("ref", lgFAMILLEID);
+                    json.put("errors", (result ? " Opération effectuée avec succès" : " Erreur système !!!! "));
                 }
 
             } catch (Exception e) {
@@ -171,7 +162,7 @@ public class Deconditionnement extends HttpServlet {
             oFamilleStockChild.setIntNUMBERAVAILABLE(oFamilleStockChild.getIntNUMBERAVAILABLE() + (numberToDecondition * qtyDetail));
             oFamilleStockChild.setIntNUMBER(oFamilleStockChild.getIntNUMBERAVAILABLE());
             oFamilleStockChild.setDtUPDATED(new Date());
-        
+
             em.merge(oamilleStockParent);
             em.merge(oFamilleStockChild);
             createDecondtionne(oTFamilleParent, numberToDecondition, user);
@@ -214,7 +205,7 @@ public class Deconditionnement extends HttpServlet {
             if (oEmplacement.getLgEMPLACEMENTID().equalsIgnoreCase(Constant.PROCESS_SUCCESS)
                     && oTFamilleParent.getBCODEINDICATEUR() == 0) {
                 this.suggestionService.makeSuggestionAuto(oamilleStockParent, oTFamilleParent);
-               
+
             }
 
         } catch (Exception e) {
@@ -255,7 +246,7 @@ public class Deconditionnement extends HttpServlet {
 
     public void createTMouvement(TFamille oFamille, TEmplacement oEmplacement, String strACTION,
             String strACTION1, Integer intNUMBER, TUser user) throws Exception {
-     
+
         TMouvement oTMouvement = new TMouvement();
         oTMouvement.setLgMOUVEMENTID(DateConverter.getComplexId());
         oTMouvement.setDtDAY(new Date());
@@ -298,7 +289,7 @@ public class Deconditionnement extends HttpServlet {
 
     public void createSnapshotMouvementArticle(TFamille oTFamille, int intNUMBER, int stockDebut,
             TEmplacement oEmplacement) throws Exception {
-   
+
         TMouvementSnapshot oMouvementSnapshot = new TMouvementSnapshot();
         oMouvementSnapshot.setLgMOUVEMENTSNAPSHOTID(DateConverter.getComplexId());
         oMouvementSnapshot.setLgFAMILLEID(oTFamille);
@@ -395,16 +386,16 @@ public class Deconditionnement extends HttpServlet {
                         oEmplacement);
                 // LOGGER.log(Level.SEVERE, "---------------------- mouvementSnapshot -------------->>>", e);
             }
-           
+
             if (oEmplacement.getLgEMPLACEMENTID().equalsIgnoreCase(Constant.PROCESS_SUCCESS)
                     && oTFamilleParent.getBCODEINDICATEUR() == 0) {
-               
-                 this.suggestionService.makeSuggestionAuto(oTFamilleStockParent, oTFamilleParent);
+
+                this.suggestionService.makeSuggestionAuto(oTFamilleStockParent, oTFamilleParent);
             }
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, null, e);
-          
+
             return false;
         }
 
