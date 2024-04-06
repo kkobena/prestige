@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -27,7 +27,7 @@ public class SockServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     @EJB
-    Stock stock;
+    Stock stockService;
 
     private enum Action {
         VALORISATION, RUPTURE_PHARMAML, UG, VENTE_TIERS_PAYANT_GROUP, VENTE_TIERS_PAYANT, ARTICLE_VENDUS_DETAIL,
@@ -38,7 +38,7 @@ public class SockServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/pdf");
         HttpSession session = request.getSession();
-        TUser tUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
@@ -58,36 +58,36 @@ public class SockServlet extends HttpServlet {
             String lgZONEGEOID = request.getParameter("lgZONEGEOID");
 
             String lgFAMILLEARTICLEID = request.getParameter("lgFAMILLEARTICLEID");
-            file = stock.valorisation(tUser, mode, LocalDate.parse(dtStart), lgGROSSISTEID, lgFAMILLEARTICLEID,
+            file = stockService.valorisation(tUser, mode, LocalDate.parse(dtStart), lgGROSSISTEID, lgFAMILLEARTICLEID,
                     lgZONEGEOID, end, begin, tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             break;
 
         case RUPTURE_PHARMAML:
             query = request.getParameter("query");
             String grossisteId = request.getParameter("grossisteId");
-            file = stock.rupturePharmaMl(tUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query, grossisteId,
-                    tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+            file = stockService.rupturePharmaMl(tUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), query,
+                    grossisteId, tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
             break;
 
         case UG:
-            file = stock.venteUgDTO(tUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
+            file = stockService.venteUgDTO(tUser, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), null);
             break;
         case VENTE_TIERS_PAYANT_GROUP:
-            file = stock.ventesTiersPayants(tUser, "rp_ventetpGroup", query, dtStart, dtEnd, tiersPayantId, groupeId,
-                    typeTp);
+            file = stockService.ventesTiersPayants(tUser, "rp_ventetpGroup", query, dtStart, dtEnd, tiersPayantId,
+                    groupeId, typeTp);
             break;
         case VENTE_TIERS_PAYANT:
-            file = stock.ventesTiersPayants(tUser, "rp_ventetp", query, dtStart, dtEnd, tiersPayantId, groupeId,
+            file = stockService.ventesTiersPayants(tUser, "rp_ventetp", query, dtStart, dtEnd, tiersPayantId, groupeId,
                     typeTp);
             break;
         case ARTICLE_VENDUS_DETAIL:
         case ARTICLE_VENDUS_RECAP:
             String user = request.getParameter("user");
-            int stock_ = 0;
+            int stock = 0;
             int nbre = 0;
             Integer qteVendu = null;
             try {
-                stock_ = Integer.parseInt(request.getParameter("stock"));
+                stock = Integer.parseInt(request.getParameter("stock"));
             } catch (Exception e) {
             }
             try {
@@ -110,9 +110,9 @@ public class SockServlet extends HttpServlet {
             body.setUserId(tUser);
             body.setUser(user);
             body.setQuery(query);
-            body.setStatut(commonparameter.statut_is_Closed);
+            body.setStatut(Constant.STATUT_IS_CLOSED);
             body.setAll(true);
-            body.setStock(stock_);
+            body.setStock(stock);
             body.setRayonId(rayonId);
             body.setTypeTransaction(typeTransaction);
             body.setStockFiltre(stockFiltre);
@@ -136,7 +136,7 @@ public class SockServlet extends HttpServlet {
 
             } catch (Exception e) {
             }
-            file = stock.articlesVendusRecap(body, action, type);
+            file = stockService.articlesVendusRecap(body, action, type);
             break;
         case SUIVI_MVT_PRODUIT:
             String categorieId = request.getParameter("categorieId");
@@ -149,7 +149,7 @@ public class SockServlet extends HttpServlet {
             articleParams.setFabricantId(fabricantId);
             articleParams.setCategorieId(categorieId);
             articleParams.setMagasinId(tUser.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
-            file = stock.suivitMvtArcticle(articleParams, tUser);
+            file = stockService.suivitMvtArcticle(articleParams, tUser);
             break;
 
         default:

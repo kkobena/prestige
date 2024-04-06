@@ -107,8 +107,6 @@ Ext.define('testextjs.controller.FactureSubrogatoireCtr', {
             dtStart: null,
             dtEnd: null,
             hEnd: null
-
-
         };
 
         myProxy.setExtraParam('query', me.getQueryField().getValue());
@@ -136,7 +134,6 @@ Ext.define('testextjs.controller.FactureSubrogatoireCtr', {
                 "tiersPayantId": me.getTiersPayantId().getValue(),
                 "hStart": me.getHStart().getSubmitValue(),
                 "hEnd": me.getHEnd().getSubmitValue()
-
             }
         });
     },
