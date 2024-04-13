@@ -687,11 +687,11 @@ public class ReglementServiceImpl implements ReglementService {
             String emplacementId, String clientId) {
         try {
             if (clientId != null && !"".equals(clientId)) {
-               
+
                 List<MvtTransaction> query = listeReglement(dtStart, dtEnd, checked, emplacementId,
                         DateConverter.MVT_REGLE_DIFF);
-                return query.stream().map(x -> new DelayedDTO(x, findClientById(x.getOrganisme()))).filter(x -> x.getClientId().equals(clientId))
-                        .collect(Collectors.toList());
+                return query.stream().map(x -> new DelayedDTO(x, findClientById(x.getOrganisme())))
+                        .filter(x -> x.getClientId().equals(clientId)).collect(Collectors.toList());
             }
             List<MvtTransaction> query = listeReglement(dtStart, dtEnd, checked, emplacementId,
                     DateConverter.MVT_REGLE_DIFF);
