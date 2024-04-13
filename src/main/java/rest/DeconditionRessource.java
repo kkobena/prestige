@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.DeconditionService;
+import rest.service.v2.dto.DeconditionnementParamsDTO;
 import toolkits.parameters.commonparameter;
 import util.Constant;
 
@@ -30,6 +31,7 @@ import util.Constant;
 @Produces("application/json")
 @Consumes("application/json")
 public class DeconditionRessource {
+
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
@@ -46,5 +48,17 @@ public class DeconditionRessource {
         params.setUserId(tu);
         JSONObject json = deconditionService.deconditionnementVente(params);
         return Response.ok().entity(json.toString()).build();
+    }
+
+    @POST
+    @Path("deconditionner")
+    public Response deconditionner(DeconditionnementParamsDTO params) throws Exception {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        deconditionService.deconditionner(params, tu);
+        return Response.ok().build();
     }
 }

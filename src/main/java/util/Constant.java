@@ -136,7 +136,6 @@ public final class Constant {
     public static final String ADD = "ADD";
     public static final String REMOVE = "REMOVE";
     public static final String ACTION_DECONDITIONNEMENT = "DECONDITIONNEMENT";
-    
 
     private Constant() {
     }

@@ -1,5 +1,8 @@
 /* global Ext */
-
+/*
+ *   extend  : 'Ext.form.Panel',
+  alias   : 'widget.wizard',
+ */
 Ext.define('testextjs.view.Dashboard.CarnetDepot', {
     extend: 'Ext.tab.Panel',
     xtype: 'reglementdepot',
