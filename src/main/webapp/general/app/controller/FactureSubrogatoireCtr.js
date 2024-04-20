@@ -102,16 +102,14 @@ Ext.define('testextjs.controller.FactureSubrogatoireCtr', {
         const me = this;
         const myProxy = me.getFacturesSubroGrid().getStore().getProxy();
         myProxy.params = {
-            search: null,
+            query: null,
             tiersPayantId: null,
             dtStart: null,
             dtEnd: null,
             hEnd: null
-
-
         };
 
-        myProxy.setExtraParam('search', me.getQueryField().getValue());
+        myProxy.setExtraParam('query', me.getQueryField().getValue());
         myProxy.setExtraParam('dtStart', me.getDtStart().getSubmitValue());
         myProxy.setExtraParam('dtEnd', me.getDtEnd().getSubmitValue());
         myProxy.setExtraParam('tiersPayantId', me.getTiersPayantId().getValue());
@@ -130,13 +128,12 @@ Ext.define('testextjs.controller.FactureSubrogatoireCtr', {
         const me = this;
         me.getFacturesSubroGrid().getStore().load({
             params: {
-                "search": me.getQueryField().getValue(),
+                "query": me.getQueryField().getValue(),
                 "dtStart": me.getDtStart().getSubmitValue(),
                 "dtEnd": me.getDtEnd().getSubmitValue(),
                 "tiersPayantId": me.getTiersPayantId().getValue(),
                 "hStart": me.getHStart().getSubmitValue(),
                 "hEnd": me.getHEnd().getSubmitValue()
-
             }
         });
     },
@@ -169,7 +166,7 @@ Ext.define('testextjs.controller.FactureSubrogatoireCtr', {
         }
         let query = me.getQueryField().getValue();
         let linkUrl = '../ListBonsServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
-                + '&tiersPayantId=' + tiersPayantId + '&search=' + query + '&hStart=' + hStart + '&hEnd=' + hEnd;
+                + '&tiersPayantId=' + tiersPayantId + '&query=' + query + '&hStart=' + hStart + '&hEnd=' + hEnd;
         window.open(linkUrl);
     }
 });

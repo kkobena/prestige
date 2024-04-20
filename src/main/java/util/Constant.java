@@ -133,6 +133,9 @@ public final class Constant {
      * SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
      */
     public static final String Q1 = "Q1";
+    public static final String ADD = "ADD";
+    public static final String REMOVE = "REMOVE";
+    public static final String ACTION_DECONDITIONNEMENT = "DECONDITIONNEMENT";
 
     private Constant() {
     }

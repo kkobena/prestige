@@ -472,7 +472,6 @@ Ext.application({
         // WIZARD ARTICLE
         'testextjs.view.configmanagement.famille.action.infogenerale',
         'testextjs.view.configmanagement.famille.action.comptabilite',
-        'testextjs.view.configmanagement.famille.action.WizardForm',
         'testextjs.view.configmanagement.famille.action.autreinfos',
         // Specialite Medecin        
         'testextjs.model.Specialite',
