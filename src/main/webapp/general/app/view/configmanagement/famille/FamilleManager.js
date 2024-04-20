@@ -753,14 +753,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
     onStoreLoad: function () {
 
     },
-    onWizardClick: function () {
-        new testextjs.view.configmanagement.famille.action.WizardForm({
-            odatasource: "",
-            parentview: this,
-            mode: "create",
-            titre: "Ajouter Article"
-        });
-    },
+ 
     onAddClick: function () {
         new testextjs.view.configmanagement.famille.action.add({
             odatasource: "",
