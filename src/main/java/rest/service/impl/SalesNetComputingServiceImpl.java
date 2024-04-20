@@ -95,8 +95,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         int montantTiersPayant = (int) Math.ceil(montantTp);
         if (Objects.nonNull(payant) && reelAmount != amountToCompute) {
             message = "Le plafond du tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'> "
-                    + payant.getStrFULLNAME()
-                    + "</span>? car son plafond est atteint <br>";
+                    + payant.getStrFULLNAME() + "</span>? car son plafond est atteint <br>";
         }
 
         NetComputingDTO netComputing = new NetComputingDTO();
