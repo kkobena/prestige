@@ -233,7 +233,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.doDecondition', {
             }),
             success: function (response, options) {
                 testextjs.app.getController('App').StopWaitingProcess();
-                win.hide();
+                 win.close();
                 Ext.MessageBox.alert('Message', 'Le produit a été déconditionné');
                 if (type === "famillemanager") {
                     Me_Workflow = Oview;
