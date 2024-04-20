@@ -3302,9 +3302,8 @@ public class SalesServiceImpl implements SalesService {
         newTP.setStrSTATUT(DateConverter.STATUT_PROCESS);
         newTP.setLgPREENGISTREMENTANNULEID(tp.getLgPREENREGISTREMENTID());
         newTP.setStrREF(buildRefTmp(LocalDate.now(), ooTUser.getLgEMPLACEMENTID()).getReferenceTemp());
-        newTP.setStrREF(tp.getStrREF());
-        newTP.setChecked(Boolean.TRUE);
-        newTP.setCopy(Boolean.TRUE);
+        newTP.setChecked(true);
+        newTP.setCopy(true);
         newTP.setMargeug(tp.getMargeug());
         newTP.setMontantnetug(tp.getMontantnetug());
         newTP.setMontantttcug(tp.getMontantttcug());
@@ -3349,13 +3348,9 @@ public class SalesServiceImpl implements SalesService {
                 return json.put("success", true).put("msg", "Opération effectuée avec success").put("data", data);
             }
             TPreenregistrement newTP = createPreventeCopy(u, tp);
-            getItems(tp).forEach(z -> {
-                createItemCopy(z, newTP);
-            });
+            getItems(tp).forEach(z -> createItemCopy(z, newTP));
             copyPreenregistrementTp(newTP, venteId, u);
-            findOptionalCmt(tp, getEm()).ifPresent(cp -> {
-                addDiffere(newTP, cp);
-            });
+            findOptionalCmt(tp, getEm()).ifPresent(cp -> addDiffere(newTP, cp));
 
             data.put("lgPREENREGISTREMENTID", newTP.getLgPREENREGISTREMENTID());
             data.put("strREF", newTP.getStrREF());
@@ -3869,9 +3864,14 @@ public class SalesServiceImpl implements SalesService {
         });
         if (tp.getStrTYPEVENTE().equals(VENTE_ASSURANCE)) {
             clonePreenregistrementTp(clonedPreen, idVente, ooTUser);
+            findByVenteId(idVente).ifPresent(venteExclus -> {
+                venteExclus.setStatus(Statut.DELETE);
+                this.getEm().merge(venteExclus);
+            });
         }
 
         getTransaction(idVente).ifPresent(tr -> cloneMvtTransaction(ooTUser, tr, clonedPreen, tp));
+        copyVenteReglement(this.venteReglementService.getByVenteId(idVente), clonedPreen);
 
         oprectte.ifPresent(re -> copyRecette(clonedPreen, re, ooTUser));
 
@@ -3950,8 +3950,8 @@ public class SalesServiceImpl implements SalesService {
         tp.setBISCANCEL(true);
         tp.setDtANNULER(tp.getDtUPDATED());
         tp.setLgUSERID(ooTUser);
-        newVente.setChecked(Boolean.FALSE);
-        tp.setChecked(Boolean.FALSE);
+        newVente.setChecked(false);
+        tp.setChecked(false);
         getEm().merge(tp);
         getEm().persist(newVente);
         return newVente;
