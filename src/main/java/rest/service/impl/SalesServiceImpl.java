@@ -594,7 +594,7 @@ public class SalesServiceImpl implements SalesService {
             String desc = "Annulation de la [ " + tp.getStrREF() + " montant  " + tp.getIntPRICE() + " ] par "
                     + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
             logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.ANNULATION_DE_VENTE, tp);
-            notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
+            notificationService.save(new Notification().canal(Canal.SMS_EMAIL).entityRef(tp.getLgPREENREGISTREMENTID())
                     .typeNotification(TypeNotification.ANNULATION_DE_VENTE).message(desc).addUser(ooTUser));
             json.put("success", true);
             json.put("msg", "L'opération effectuée avec success");

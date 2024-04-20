@@ -892,7 +892,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                         + params.getOperateur().getStrLASTNAME();
                 logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf);
                 notificationService
-                        .save(new Notification().canal(Canal.SMS).typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
+                        .save(new Notification().canal(Canal.EMAIL).typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
                                 .message(desc).addUser(params.getOperateur()));
             });
             fournisseur.setStrSTATUT(STATUT_ENABLE);

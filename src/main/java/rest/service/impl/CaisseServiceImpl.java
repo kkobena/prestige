@@ -143,10 +143,10 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-    public void createNotification(String msg, TypeNotification typeNotification, TUser user) {
+    public void createNotification(String msg, TypeNotification typeNotification, TUser user, Canal canal) {
         try {
             notificationService.save(
-                    new Notification().canal(Canal.SMS).typeNotification(typeNotification).message(msg).addUser(user));
+                    new Notification().canal(canal).typeNotification(typeNotification).message(msg).addUser(user));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -205,14 +205,34 @@ public class CaisseServiceImpl implements CaisseService {
 
             map.forEach((k, v) -> {
                 switch (k) {
-                case DateConverter.MODE_ESP:
-                    v.forEach(b -> {
-                        montantCaisse.add(b.getMontantCaisse());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_FOND_CAISSE)) {
-                            montantFondCaisse.add(b.getMontant());
-                        } else {
-                            montantEspec.add(b.getMontant());
+                    case DateConverter.MODE_ESP:
+                        v.forEach(b -> {
+                            montantCaisse.add(b.getMontantCaisse());
+                            if (b.getTypeMvt().equals(DateConverter.MVT_FOND_CAISSE)) {
+                                montantFondCaisse.add(b.getMontant());
+                            } else {
+                                montantEspec.add(b.getMontant());
 
+                                if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
+                                        || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
+                                    montantCredit.add(b.getMontantCredit());
+                                    if (b.getMontant() < 0) {
+                                        montantAnnulation.add(b.getMontant());
+                                    }
+                                } else {
+                                    if (b.getMontant() < 0) {
+                                        montantSortie.add(b.getMontant());
+                                    } else {
+                                        montantEntree.add(b.getMontant());
+                                    }
+                                }
+                            }
+
+                        });
+                        break;
+                    case DateConverter.MODE_VIREMENT:
+                        v.forEach(b -> {
+                            montantVir.add(b.getMontant());
                             if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
                                     || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
                                 montantCredit.add(b.getMontantCredit());
@@ -226,90 +246,70 @@ public class CaisseServiceImpl implements CaisseService {
                                     montantEntree.add(b.getMontant());
                                 }
                             }
-                        }
 
-                    });
-                    break;
-                case DateConverter.MODE_VIREMENT:
-                    v.forEach(b -> {
-                        montantVir.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
-                                || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
+                        });
+                        break;
+                    case DateConverter.MODE_CB:
+                        v.forEach(b -> {
+                            montantCb.add(b.getMontant());
+                            if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
+                                    || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
+                                montantCredit.add(b.getMontantCredit());
+                                if (b.getMontant() < 0) {
+                                    montantAnnulation.add(b.getMontant());
+                                }
                             } else {
-                                montantEntree.add(b.getMontant());
+                                if (b.getMontant() < 0) {
+                                    montantSortie.add(b.getMontant());
+                                } else {
+                                    montantEntree.add(b.getMontant());
+                                }
                             }
-                        }
 
-                    });
-                    break;
-                case DateConverter.MODE_CB:
-                    v.forEach(b -> {
-                        montantCb.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
-                                || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
+                        });
+                        break;
+                    case DateConverter.MODE_CHEQUE:
+                        v.forEach(b -> {
+                            montantcheque.add(b.getMontant());
+                            if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
+                                    || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
+                                montantCredit.add(b.getMontantCredit());
+                                if (b.getMontant() < 0) {
+                                    montantAnnulation.add(b.getMontant());
+                                }
                             } else {
-                                montantEntree.add(b.getMontant());
+                                if (b.getMontant() < 0) {
+                                    montantSortie.add(b.getMontant());
+                                } else {
+                                    montantEntree.add(b.getMontant());
+                                }
                             }
-                        }
+                        });
+                        break;
+                    case DateConverter.MODE_MTN:
+                    case DateConverter.MODE_MOOV:
+                    case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    case DateConverter.MODE_WAVE:
+                        v.forEach(b -> {
+                            montantMobileMoney.add(b.getMontant());
+                            if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
+                                    || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
+                                montantCredit.add(b.getMontantCredit());
+                                if (b.getMontant() < 0) {
+                                    montantAnnulation.add(b.getMontant());
+                                }
+                            } else {
+                                if (b.getMontant() < 0) {
+                                    montantSortie.add(b.getMontant());
+                                } else {
+                                    montantEntree.add(b.getMontant());
+                                }
+                            }
 
-                    });
-                    break;
-                case DateConverter.MODE_CHEQUE:
-                    v.forEach(b -> {
-                        montantcheque.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
-                                || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
-                            } else {
-                                montantEntree.add(b.getMontant());
-                            }
-                        }
-                    });
-                    break;
-                case DateConverter.MODE_MTN:
-                case DateConverter.MODE_MOOV:
-                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                case DateConverter.MODE_WAVE:
-                    v.forEach(b -> {
-                        montantMobileMoney.add(b.getMontant());
-                        if (b.getTypeMvt().equals(DateConverter.MVT_REGLE_VO)
-                                || b.getTypeMvt().equals(DateConverter.MVT_REGLE_VNO)) {
-                            montantCredit.add(b.getMontantCredit());
-                            if (b.getMontant() < 0) {
-                                montantAnnulation.add(b.getMontant());
-                            }
-                        } else {
-                            if (b.getMontant() < 0) {
-                                montantSortie.add(b.getMontant());
-                            } else {
-                                montantEntree.add(b.getMontant());
-                            }
-                        }
-
-                    });
-                    break;
-                default:
-                    break;
+                        });
+                        break;
+                    default:
+                        break;
                 }
             });
 
@@ -511,26 +511,26 @@ public class CaisseServiceImpl implements CaisseService {
             if (!isTrue(Constant.KEY_PRENDRE_EN_COMPTE_FOND_CAISSE)) {
                 return q.getResultList().stream()
                         .map(o -> new ResumeCaisseDTO(o,
-                                getBilletageByCaisse(o.getLdCAISSEID(), o.getLgUSERID().getLgUSERID()),
-                                montantAnnuleGestionCaisse(o.getLgUSERID().getLgUSERID(),
-                                        DateConverter.convertDateToLocalDateTime(o.getDtCREATED()),
-                                        DateConverter.convertDateToLocalDateTime(o.getDtUPDATED()), false)
-                                        + montantAnnuleRecette(o.getLgUSERID().getLgUSERID(),
-                                                DateConverter.convertDateToLocalDate(o.getDtCREATED()),
-                                                DateConverter.convertDateToLocalDate(o.getDtCREATED())),
-                                cancel))
+                        getBilletageByCaisse(o.getLdCAISSEID(), o.getLgUSERID().getLgUSERID()),
+                        montantAnnuleGestionCaisse(o.getLgUSERID().getLgUSERID(),
+                                DateConverter.convertDateToLocalDateTime(o.getDtCREATED()),
+                                DateConverter.convertDateToLocalDateTime(o.getDtUPDATED()), false)
+                        + montantAnnuleRecette(o.getLgUSERID().getLgUSERID(),
+                                DateConverter.convertDateToLocalDate(o.getDtCREATED()),
+                                DateConverter.convertDateToLocalDate(o.getDtCREATED())),
+                        cancel))
                         .collect(Collectors.toList());
             } else {
                 return q.getResultList().stream()
                         .map(o -> new ResumeCaisseDTO(o,
-                                getBilletageByCaisse(o.getLdCAISSEID(), o.getLgUSERID().getLgUSERID()),
-                                montantAnnuleGestionCaisse(o.getLgUSERID().getLgUSERID(),
-                                        DateConverter.convertDateToLocalDateTime(o.getDtCREATED()),
-                                        DateConverter.convertDateToLocalDateTime(o.getDtUPDATED()), false)
-                                        + montantAnnuleRecette(o.getLgUSERID().getLgUSERID(),
-                                                DateConverter.convertDateToLocalDate(o.getDtCREATED()),
-                                                DateConverter.convertDateToLocalDate(o.getDtCREATED())),
-                                cancel, true))
+                        getBilletageByCaisse(o.getLdCAISSEID(), o.getLgUSERID().getLgUSERID()),
+                        montantAnnuleGestionCaisse(o.getLgUSERID().getLgUSERID(),
+                                DateConverter.convertDateToLocalDateTime(o.getDtCREATED()),
+                                DateConverter.convertDateToLocalDateTime(o.getDtUPDATED()), false)
+                        + montantAnnuleRecette(o.getLgUSERID().getLgUSERID(),
+                                DateConverter.convertDateToLocalDate(o.getDtCREATED()),
+                                DateConverter.convertDateToLocalDate(o.getDtCREATED())),
+                        cancel, true))
                         .collect(Collectors.toList());
             }
         } catch (Exception e) {
@@ -672,7 +672,7 @@ public class CaisseServiceImpl implements CaisseService {
                     + oTResumeCaisse.getLgUSERID().getStrLASTNAME() + " par " + o.getStrFIRSTNAME() + " "
                     + o.getStrLASTNAME() + " effectuée avec succès";
             logService.updateItem(o, idCaisse, description, TypeLog.ANNULATION_DE_CAISSE, oTResumeCaisse);
-            createNotification(description, TypeNotification.ANNULATION_CLOTURE_DE_CAISSE, o);
+            createNotification(description, TypeNotification.ANNULATION_CLOTURE_DE_CAISSE, o, Canal.EMAIL);
 
             json.put("success", true).put("msg", "Opération effectuée avec succes ");
         } catch (Exception e) {
@@ -707,7 +707,7 @@ public class CaisseServiceImpl implements CaisseService {
             getEntityManager().merge(oTCaisse);
             logService.updateItem(o, idCaisse, description, TypeLog.VALIDATION_DE_CAISSE, oResumeCaisse);
             json.put("success", true).put("msg", " Validation de cloture de caisse effectuée avec succes ");
-            createNotification(description, TypeNotification.VALIDATION_DE_CAISSE, o);
+            createNotification(description, TypeNotification.VALIDATION_DE_CAISSE, o, Canal.EMAIL);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", " Echec de validation de cloture de caisse");
@@ -747,7 +747,7 @@ public class CaisseServiceImpl implements CaisseService {
                     mvtCaisse.getStrREFTICKET());
 
             logService.updateItem(user, mvtCaisse.getStrREFTICKET(), description, TypeLog.MVT_DE_CAISSE, mvtCaisse);
-            createNotification(description, TypeNotification.MVT_DE_CAISSE, user);
+            createNotification(description, TypeNotification.MVT_DE_CAISSE, user, Canal.EMAIL);
             return json.put("success", true).put("msg", "Opération effectuée .").put("mvtId",
                     mvtCaisse.getLgMVTCAISSEID());
         } catch (Exception e) {
@@ -910,7 +910,7 @@ public class CaisseServiceImpl implements CaisseService {
                 + operateur.getStrLASTNAME();
         logService.updateItem(operateur, coffreCaisse.getIdCoffreCaisse(), description,
                 TypeLog.ATTRIBUTION_DE_FOND_DE_CAISSE, coffreCaisse);
-        createNotification(description, TypeNotification.MVT_DE_CAISSE, operateur);
+        createNotification(description, TypeNotification.MVT_DE_CAISSE, operateur, Canal.EMAIL);
     }
 
     private TCaisse findByUser(String userId) {
@@ -1010,54 +1010,54 @@ public class CaisseServiceImpl implements CaisseService {
                 rapportHT.setCategorie(DateConverter.CA);
                 groupe.forEach((k, v) -> {
                     switch (k) {
-                    case VENTE_COMPTANT:
-                    case VENTE_CREDIT:
-                        v.forEach(o -> {
-                            rapportTTC.setMontant(rapportTTC.getMontant() + o.getMontantNet());
-                            marge.add(o.getMarge());
-                            rapportHT.setMontant(rapportHT.getMontant() + (o.getMontantNet() - o.getMontantTva()));
-                        });
-                        montantTTC.add(rapportTTC.getMontant());
-                        break;
-                    case ACHAT:
-                        RapportDTO rapportAcht = new RapportDTO();
-                        Integer montantAchat = v.stream().mapToInt(MvtTransaction::getMontantNet).sum();
-                        rapportAcht.setMontant(montantAchat);
-                        montantACHAT.add(montantAchat);
-                        rapportAcht.setOder(2);
-                        rapportAcht.setDisplay(1);
-                        rapportAcht.setLibelle(DateConverter.ACHATS);
-                        rapportAcht.setCategorie(DateConverter.ACHATS);
-                        rapports.add(rapportAcht);
-                        break;
-                    case ENTREE:
-                        v.forEach(r -> {
-                            RapportDTO rapportEntree = new RapportDTO();
-                            rapportEntree.setMontant(r.getMontant());
-                            montantReglement.add(r.getMontant());
-                            counter.increment();
-                            rapportEntree.setDisplay(5);
-                            rapportEntree.setOder(counter.intValue());
-                            rapportEntree.setLibelle(r.gettTypeMvtCaisse().getStrNAME());
-                            rapportEntree.setCategorie(DateConverter.ENTREE_CAISSE);
-                            rapports.add(rapportEntree);
-                        });
-                        break;
-                    case SORTIE:
-                        v.forEach(r -> {
-                            RapportDTO rapportSorie = new RapportDTO();
-                            rapportSorie.setMontant(r.getMontant());
-                            montantDepense.add(r.getMontant());
-                            rapportSorie.setDisplay(4);
-                            counterSortie.increment();
-                            rapportSorie.setOder(counter.intValue());
-                            rapportSorie.setLibelle(r.gettTypeMvtCaisse().getStrNAME());
-                            rapportSorie.setCategorie(DateConverter.DEPENSES);
-                            rapports.add(rapportSorie);
-                        });
-                        break;
-                    default:
-                        break;
+                        case VENTE_COMPTANT:
+                        case VENTE_CREDIT:
+                            v.forEach(o -> {
+                                rapportTTC.setMontant(rapportTTC.getMontant() + o.getMontantNet());
+                                marge.add(o.getMarge());
+                                rapportHT.setMontant(rapportHT.getMontant() + (o.getMontantNet() - o.getMontantTva()));
+                            });
+                            montantTTC.add(rapportTTC.getMontant());
+                            break;
+                        case ACHAT:
+                            RapportDTO rapportAcht = new RapportDTO();
+                            Integer montantAchat = v.stream().mapToInt(MvtTransaction::getMontantNet).sum();
+                            rapportAcht.setMontant(montantAchat);
+                            montantACHAT.add(montantAchat);
+                            rapportAcht.setOder(2);
+                            rapportAcht.setDisplay(1);
+                            rapportAcht.setLibelle(DateConverter.ACHATS);
+                            rapportAcht.setCategorie(DateConverter.ACHATS);
+                            rapports.add(rapportAcht);
+                            break;
+                        case ENTREE:
+                            v.forEach(r -> {
+                                RapportDTO rapportEntree = new RapportDTO();
+                                rapportEntree.setMontant(r.getMontant());
+                                montantReglement.add(r.getMontant());
+                                counter.increment();
+                                rapportEntree.setDisplay(5);
+                                rapportEntree.setOder(counter.intValue());
+                                rapportEntree.setLibelle(r.gettTypeMvtCaisse().getStrNAME());
+                                rapportEntree.setCategorie(DateConverter.ENTREE_CAISSE);
+                                rapports.add(rapportEntree);
+                            });
+                            break;
+                        case SORTIE:
+                            v.forEach(r -> {
+                                RapportDTO rapportSorie = new RapportDTO();
+                                rapportSorie.setMontant(r.getMontant());
+                                montantDepense.add(r.getMontant());
+                                rapportSorie.setDisplay(4);
+                                counterSortie.increment();
+                                rapportSorie.setOder(counter.intValue());
+                                rapportSorie.setLibelle(r.gettTypeMvtCaisse().getStrNAME());
+                                rapportSorie.setCategorie(DateConverter.DEPENSES);
+                                rapports.add(rapportSorie);
+                            });
+                            break;
+                        default:
+                            break;
                     }
                 });
                 rapports.add(rapportTTC);
@@ -1165,7 +1165,7 @@ public class CaisseServiceImpl implements CaisseService {
 
             return q.getResultList().stream()
                     .map(x -> new VisualisationCaisseDTO(x,
-                            caisseParams.isFindClient() ? findClientByVenteId(x.getOrganisme()) : null))
+                    caisseParams.isFindClient() ? findClientByVenteId(x.getOrganisme()) : null))
                     /* .filter(w->Objects.nonNull(w.getTypeMouvement()) ) */.sorted(comparatorCaisse)
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -1337,9 +1337,9 @@ public class CaisseServiceImpl implements CaisseService {
             Integer total = (Integer) q.getSingleResult();
             return total != null
                     ? total - (montantAnnuleGestionCaisse(null, dtStart.atStartOfDay(), dtEnd.atStartOfDay(), true)
-                            + montantAnnuleRecette(null, dtStart, dtEnd))
+                    + montantAnnuleRecette(null, dtStart, dtEnd))
                     : (-1) * montantAnnuleGestionCaisse(null, dtStart.atStartOfDay(), dtEnd.atStartOfDay(), true)
-                            + montantAnnuleRecette(null, dtStart, dtEnd);
+                    + montantAnnuleRecette(null, dtStart, dtEnd);
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -1412,10 +1412,10 @@ public class CaisseServiceImpl implements CaisseService {
             }
             return q.getResultList().stream()
                     .map(x -> new VisualisationCaisseDTO(x,
-                            isReglementTierspayant(x.gettTypeMvtCaisse().getLgTYPEMVTCAISSEID())
-                                    ? findClientByVenteId(x.getOrganisme()) : null,
-                            isReglementTierspayant(x.gettTypeMvtCaisse().getLgTYPEMVTCAISSEID())
-                                    ? findTiersPayantId(x.getOrganisme()) : null))
+                    isReglementTierspayant(x.gettTypeMvtCaisse().getLgTYPEMVTCAISSEID())
+                    ? findClientByVenteId(x.getOrganisme()) : null,
+                    isReglementTierspayant(x.gettTypeMvtCaisse().getLgTYPEMVTCAISSEID())
+                    ? findTiersPayantId(x.getOrganisme()) : null))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -1664,7 +1664,7 @@ public class CaisseServiceImpl implements CaisseService {
             TypedQuery<TPreenregistrementDetail> q = getEntityManager().createQuery(cq);
             return q.getResultList().stream()
                     .map(e -> new VenteDetailsDTO(e)
-                            .stockUg(stockUg(e.getLgFAMILLEID().getLgFAMILLEID(), DateConverter.OFFICINE)))
+                    .stockUg(stockUg(e.getLgFAMILLEID().getLgFAMILLEID(), DateConverter.OFFICINE)))
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
@@ -1735,25 +1735,25 @@ public class CaisseServiceImpl implements CaisseService {
                 int montantPara = ((mvt.getMontant() - mvt.getMontantAcc() - remise) - mvt.getMontantnetug());
                 switch (mvt.getReglement().getLgTYPEREGLEMENTID()) {
 
-                case DateConverter.MODE_ESP:
+                    case DateConverter.MODE_ESP:
 
-                    montantEsp += montantPara;
-                    break;
-                case DateConverter.MODE_CHEQUE:
-                    montantCheque += montantPara;
-                    break;
-                case DateConverter.MODE_CB:
-                    montantCB += montantPara;
-                    break;
-                case DateConverter.MODE_VIREMENT:
-                    MontantVirement += montantPara;
-                    break;
-                case DateConverter.MODE_MOOV:
-                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                case DateConverter.MODE_MTN:
-                case DateConverter.MODE_WAVE:
-                    montantMobilePayment += montantPara;
-                    break;
+                        montantEsp += montantPara;
+                        break;
+                    case DateConverter.MODE_CHEQUE:
+                        montantCheque += montantPara;
+                        break;
+                    case DateConverter.MODE_CB:
+                        montantCB += montantPara;
+                        break;
+                    case DateConverter.MODE_VIREMENT:
+                        MontantVirement += montantPara;
+                        break;
+                    case DateConverter.MODE_MOOV:
+                    case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    case DateConverter.MODE_MTN:
+                    case DateConverter.MODE_WAVE:
+                        montantMobilePayment += montantPara;
+                        break;
                 }
 
             }
@@ -2010,7 +2010,7 @@ public class CaisseServiceImpl implements CaisseService {
         TMvtCaisse mvtCaisse = validerFondDeCaisse(coffreCaisse, user, description);
         logService.updateItem(user, coffreCaisse.getIdCoffreCaisse(), description, TypeLog.OUVERTURE_CAISSE,
                 coffreCaisse);
-        createNotification(description, TypeNotification.MVT_DE_CAISSE, user);
+        createNotification(description, TypeNotification.MVT_DE_CAISSE, user, Canal.EMAIL);
         return mvtCaisse.getLgMVTCAISSEID();
 
     }

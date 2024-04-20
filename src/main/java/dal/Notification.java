@@ -36,12 +36,13 @@ import javax.validation.constraints.NotNull;
  * @author koben
  */
 @Entity
-@Table(name = "notification", indexes = { @Index(name = "notificationIdex1", columnList = "canal"),
-        @Index(name = "notificationStatut", columnList = "statut") })
+@Table(name = "notification", indexes = {
+    @Index(name = "notificationIdex1", columnList = "canal"),
+    @Index(name = "notificationStatut", columnList = "statut")})
 @NamedQueries({
-        @NamedQuery(name = "Notification.findAllByCreatedAtAndStatus", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND o.statut=:statut "),
-        @NamedQuery(name = "Notification.findAllByStatus", query = "SELECT o FROM Notification o LEFT JOIN FETCH o.notificationClients WHERE  o.statut=:statut "),
-        @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanal", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND  o.statut=:statut AND o.canal IN :canaux")
+    @NamedQuery(name = "Notification.findAllByCreatedAtAndStatus", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND o.statut=:statut "),
+    @NamedQuery(name = "Notification.findAllByStatus", query = "SELECT o FROM Notification o LEFT JOIN FETCH o.notificationClients WHERE  o.statut=:statut "),
+    @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanal", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND  o.statut=:statut AND o.canal IN :canaux")
 
 })
 public class Notification implements Serializable {
@@ -79,10 +80,23 @@ public class Notification implements Serializable {
     @JoinColumn(name = "user_to", referencedColumnName = "lg_USER_ID")
     @ManyToOne
     private TUser userTo;
-    @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE }, mappedBy = "notification")
+    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "notification")
     private Collection<NotificationClient> notificationClients = new ArrayList<>();
     @Column(name = "number_attempt", nullable = false)
     private int numberAttempt = 0;
+    @Column(name = "entity_ref")
+    private String entityRef;
+    @Column(name = "donnees")
+    private String donnees;
+
+    public String getDonnees() {
+        return donnees;
+    }
+
+    public Notification donnees(String donnees) {
+        this.donnees = donnees;
+        return this;
+    }
 
     public String getId() {
         return id;
@@ -113,6 +127,15 @@ public class Notification implements Serializable {
 
     public Notification typeNotification(TypeNotification typeNotification) {
         this.typeNotification = typeNotification;
+        return this;
+    }
+
+    public String getEntityRef() {
+        return entityRef;
+    }
+
+    public Notification entityRef(String entityRef) {
+        this.entityRef = entityRef;
         return this;
     }
 

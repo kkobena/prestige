@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
@@ -29,6 +30,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import rest.service.NotificationService;
@@ -40,14 +42,14 @@ import util.FunctionUtils;
  */
 @Stateless
 public class NotificationImpl implements NotificationService {
-
+    
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-
+    
     public EntityManager getEntityManager() {
         return em;
     }
-
+    
     @Override
     public JSONObject findAll(String typeNotification, Canal canal, Statut statut, String dtStart, String dtEnd,
             int start, int limit) {
@@ -58,21 +60,21 @@ public class NotificationImpl implements NotificationService {
                 .map(NotificationDTO::new).collect(Collectors.toList());
         return FunctionUtils.returnData(data, count);
     }
-
+    
     @Override
-    public void save(Notification notification) {
+    public void save(Notification notification, String donnees) {
         getEntityManager().merge(notification);
     }
-
+    
     @Override
-    public void save(Notification notification, TClient client) {
+    public void save(Notification notification, TClient client, String donnees) {
         notification.addNotificationClients(new NotificationClient(client, notification));
         getEntityManager().persist(notification);
-
+        
     }
-
+    
     @Override
-    public Notification buildNotification(NotificationDTO notificationDto, TUser user) {
+    public Notification buildNotification(NotificationDTO notificationDto, TUser user, String donnees) {
         Notification notification = new Notification();
         notification.setCanal(Canal.SMS_MASSE);
         notification.setMessage(notificationDto.getMessage());
@@ -83,17 +85,17 @@ public class NotificationImpl implements NotificationService {
                 TClient client = getEntityManager().find(TClient.class, u.getClientId());
                 notification.getNotificationClients().add(new NotificationClient(client, notification));
             });
-
+            
         }
         getEntityManager().persist(notification);
         return notification;
-
+        
     }
-
+    
     private List<Predicate> listPredicates(CriteriaBuilder cb, Root<Notification> root, LocalDate dtStart,
             LocalDate dtEnd, Canal canal, String typeNotification) {
         List<Predicate> predicates = new ArrayList<>();
-
+        
         Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(Notification_.CREATED_AT)),
                 java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
@@ -106,7 +108,7 @@ public class NotificationImpl implements NotificationService {
         }
         return predicates;
     }
-
+    
     private long count(LocalDate dtStart, LocalDate dtEnd, Canal canal, String typeNotification) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
@@ -116,12 +118,12 @@ public class NotificationImpl implements NotificationService {
         cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<Long> q = em.createQuery(cq);
         return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
-
+        
     }
-
+    
     private List<Notification> getList(LocalDate dtStart, LocalDate dtEnd, Canal canal, String typeNotification,
             int start, int limit, boolean all) {
-
+        
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Notification> cq = cb.createQuery(Notification.class);
         Root<Notification> root = cq.from(Notification.class);
@@ -132,8 +134,18 @@ public class NotificationImpl implements NotificationService {
         if (!all) {
             q.setFirstResult(start);
             q.setMaxResults(limit);
-
+            
         }
         return q.getResultList();
+    }
+    
+    @Override
+    public String buildDonnees(Map<String, Object> donneesMap) {
+        if (MapUtils.isEmpty(donneesMap)) {
+            return null;
+        }
+        JSONObject json = new JSONObject();
+        donneesMap.forEach(json::put);
+        return json.toString();
     }
 }
