@@ -136,7 +136,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             int amountToCompute = isCmu ? cmuAmount : montantVente;
 
             NetComputingDTO netComputed = computeTiesrPayantNet(tiersPayantParams, amountToCompute, asPlafondActivated);
-            int realTpAmount = netComputed.getMontantTiersPayant();
+
             montantTotalTp += netComputed.getMontantTiersPayant();
 
             if (bonsSize > 1 && counter == bonsSize && montantTotalTp > amountToCompute) {
@@ -151,9 +151,11 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
                 netComputed.setPercentage(tiersPayantParams.getTaux());
             } else {
                 if (counter == bonsSize) {
-                    netComputed.setPercentage((int) Math.ceil((Double.valueOf(realTpAmount) * 100) / amountToCompute));
+                    netComputed.setPercentage((int) Math
+                            .ceil((Double.valueOf(netComputed.getMontantTiersPayant()) * 100) / amountToCompute));
                 }
             }
+
             montantTpFinalTierspayant += netComputed.getMontantTiersPayant();
             montantRestant = amountToCompute - montantTpFinalTierspayant;
             datas.add(netComputed);
