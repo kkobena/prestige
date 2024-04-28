@@ -5,6 +5,7 @@
  */
 package commonTasks.dto;
 
+import dal.CategorieNotification;
 import dal.Notification;
 import dal.NotificationClient;
 import dal.TUser;
@@ -34,6 +35,7 @@ public class NotificationDTO implements Serializable {
     private String canal;
 
     private String typeNotification;
+    private String categorieName;
     private String modfiedAt;
 
     private String user;
@@ -97,6 +99,14 @@ public class NotificationDTO implements Serializable {
         return user;
     }
 
+    public String getCategorieName() {
+        return categorieName;
+    }
+
+    public void setCategorieName(String categorieName) {
+        this.categorieName = categorieName;
+    }
+
     public void setUser(String user) {
         this.user = user;
     }
@@ -155,9 +165,9 @@ public class NotificationDTO implements Serializable {
         } else {
             this.statut = "Non envoyé";
         }
-
-        this.canal = n.getCanal().name();
-        this.typeNotification = n.getTypeNotification().getValue();
+        CategorieNotification categorieNotification=n.getCategorieNotification();
+        this.canal = categorieNotification.getCanal().name();
+        this.typeNotification = categorieNotification.getLibelle();
         this.modfiedAt = n.getModfiedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         TUser userO = n.getUser();
         if (userO != null) {
@@ -179,8 +189,9 @@ public class NotificationDTO implements Serializable {
             this.statut = "Non envoyé";
         }
 
-        this.canal = n.getCanal().name();
-        this.typeNotification = n.getTypeNotification().getValue();
+         CategorieNotification categorieNotification=n.getCategorieNotification();
+        this.canal = categorieNotification.getCanal().name();
+        this.typeNotification = categorieNotification.getLibelle();
         this.modfiedAt = n.getModfiedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         TUser userO = n.getUser();
         if (userO != null) {

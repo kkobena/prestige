@@ -60,14 +60,14 @@ public class Notification implements Serializable {
     @Column(name = "statut")
     @Enumerated(EnumType.STRING)
     private Statut statut = Statut.NOT_SEND;
-    @NotNull
+   /* @NotNull
     @Enumerated(EnumType.ORDINAL)
     @Column(name = "canal", nullable = false)
-    private Canal canal;
+    private Canal canal;*/
     @NotNull
-    @Enumerated(EnumType.ORDINAL)
-    @Column(name = "type_notification", nullable = false)
-    private TypeNotification typeNotification;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "type_notification", referencedColumnName = "id")
+    private CategorieNotification categorieNotification;
     @NotNull
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -120,16 +120,6 @@ public class Notification implements Serializable {
         return this;
     }
 
-    public Notification canal(Canal canal) {
-        this.canal = canal;
-        return this;
-    }
-
-    public Notification typeNotification(TypeNotification typeNotification) {
-        this.typeNotification = typeNotification;
-        return this;
-    }
-
     public String getEntityRef() {
         return entityRef;
     }
@@ -151,22 +141,16 @@ public class Notification implements Serializable {
         this.statut = statut;
     }
 
-    public Canal getCanal() {
-        return canal;
+    public CategorieNotification getCategorieNotification() {
+        return categorieNotification;
     }
 
-    public void setCanal(Canal canal) {
-        this.canal = canal;
+    public Notification setCategorieNotification(CategorieNotification categorieNotification) {
+        this.categorieNotification = categorieNotification;
+         return this;
     }
 
-    public TypeNotification getTypeNotification() {
-        return typeNotification;
-    }
-
-    public void setTypeNotification(TypeNotification typeNotification) {
-        this.typeNotification = typeNotification;
-    }
-
+  
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
