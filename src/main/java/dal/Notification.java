@@ -52,15 +52,14 @@ public class Notification implements Serializable {
     @Basic(optional = false)
     @Column(name = "id", nullable = false)
     private String id = UUID.randomUUID().toString();
-    @NotBlank
-    @NotNull
-    @Column(name = "message", length = 3000, nullable = false)
+
+    @Column(name = "message", length = 3000)
     private String message;
     @NotNull
     @Column(name = "statut")
     @Enumerated(EnumType.STRING)
     private Statut statut = Statut.NOT_SEND;
-   /* @NotNull
+    /* @NotNull
     @Enumerated(EnumType.ORDINAL)
     @Column(name = "canal", nullable = false)
     private Canal canal;*/
@@ -147,10 +146,9 @@ public class Notification implements Serializable {
 
     public Notification setCategorieNotification(CategorieNotification categorieNotification) {
         this.categorieNotification = categorieNotification;
-         return this;
+        return this;
     }
 
-  
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }

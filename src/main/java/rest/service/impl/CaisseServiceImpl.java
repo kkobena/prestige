@@ -5,6 +5,7 @@
  */
 package rest.service.impl;
 
+import com.google.common.collect.HashBiMap;
 import commonTasks.dto.BalanceDTO;
 import commonTasks.dto.CaisseParamsDTO;
 import commonTasks.dto.GenericDTO;
@@ -106,8 +107,11 @@ import rest.service.dto.MvtCaisseSummaryDTO;
 import rest.service.exception.CaisseUsingExeception;
 import toolkits.parameters.commonparameter;
 import util.Constant;
+import util.DateCommonUtils;
 import util.DateConverter;
 import util.FunctionUtils;
+import util.NotificationUtils;
+import util.NumberUtils;
 
 /**
  *
@@ -143,10 +147,10 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-    public void createNotification(String msg, TypeNotification typeNotification, TUser user, Canal canal) {
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
         try {
             notificationService.save(
-                    new Notification().canal(canal).typeNotification(typeNotification).message(msg).addUser(user));
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -661,8 +665,10 @@ public class CaisseServiceImpl implements CaisseService {
             oTResumeCaisse.setIntSOLDESOIR(0);
             oTResumeCaisse.setStrSTATUT(Constant.STATUT_IS_USING);
             oTResumeCaisse.setDtUPDATED(new Date());
+            Double billetage = 0.0;
             if (oBilletageDetails != null) {
                 TBilletage tb = oBilletageDetails.getLgBILLETAGEID();
+                billetage = tb.getIntAMOUNT();
                 getEntityManager().remove(oBilletageDetails);
                 getEntityManager().remove(tb);
             }
@@ -672,7 +678,12 @@ public class CaisseServiceImpl implements CaisseService {
                     + oTResumeCaisse.getLgUSERID().getStrLASTNAME() + " par " + o.getStrFIRSTNAME() + " "
                     + o.getStrLASTNAME() + " effectuée avec succès";
             logService.updateItem(o, idCaisse, description, TypeLog.ANNULATION_DE_CAISSE, oTResumeCaisse);
-            createNotification(description, TypeNotification.ANNULATION_CLOTURE_DE_CAISSE, o, Canal.EMAIL);
+            Map<String, Object> donneesMap = new HashMap<>();
+            donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.ANNULATION_DE_CAISSE.getValue());
+            donneesMap.put(NotificationUtils.USER.getId(), o.getStrFIRSTNAME() + " " + o.getStrLASTNAME());
+            donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(billetage));
+            createNotification(description, TypeNotification.ANNULATION_CLOTURE_DE_CAISSE, o, donneesMap, oTResumeCaisse.getLdCAISSEID());
 
             json.put("success", true).put("msg", "Opération effectuée avec succes ");
         } catch (Exception e) {
@@ -707,7 +718,12 @@ public class CaisseServiceImpl implements CaisseService {
             getEntityManager().merge(oTCaisse);
             logService.updateItem(o, idCaisse, description, TypeLog.VALIDATION_DE_CAISSE, oResumeCaisse);
             json.put("success", true).put("msg", " Validation de cloture de caisse effectuée avec succes ");
-            createNotification(description, TypeNotification.VALIDATION_DE_CAISSE, o, Canal.EMAIL);
+            Map<String, Object> donneesMap = new HashMap<>();
+            donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.VALIDATION_DE_CAISSE.getValue());
+            donneesMap.put(NotificationUtils.USER.getId(), o.getStrFIRSTNAME() + " " + o.getStrLASTNAME());
+            donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(billetage));
+            createNotification(description, TypeNotification.VALIDATION_DE_CAISSE, o, donneesMap, oResumeCaisse.getLdCAISSEID());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", " Echec de validation de cloture de caisse");
@@ -747,7 +763,12 @@ public class CaisseServiceImpl implements CaisseService {
                     mvtCaisse.getStrREFTICKET());
 
             logService.updateItem(user, mvtCaisse.getStrREFTICKET(), description, TypeLog.MVT_DE_CAISSE, mvtCaisse);
-            createNotification(description, TypeNotification.MVT_DE_CAISSE, user, Canal.EMAIL);
+            Map<String, Object> donneesMap = new HashMap<>();
+            donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MVT_DE_CAISSE.getValue());
+            donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+            donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(mvtCaisse.getIntAMOUNT()));
+            createNotification(description, TypeNotification.MVT_DE_CAISSE, user, donneesMap, mvtCaisse.getLgMVTCAISSEID());
             return json.put("success", true).put("msg", "Opération effectuée .").put("mvtId",
                     mvtCaisse.getLgMVTCAISSEID());
         } catch (Exception e) {
@@ -910,7 +931,12 @@ public class CaisseServiceImpl implements CaisseService {
                 + operateur.getStrLASTNAME();
         logService.updateItem(operateur, coffreCaisse.getIdCoffreCaisse(), description,
                 TypeLog.ATTRIBUTION_DE_FOND_DE_CAISSE, coffreCaisse);
-        createNotification(description, TypeNotification.MVT_DE_CAISSE, operateur, Canal.EMAIL);
+        Map<String, Object> donneesMap = new HashMap<>();
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.ATTRIBUTION_DE_FOND_DE_CAISSE.getValue());
+        donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(coffreCaisse.getIntAMOUNT()));
+        createNotification(description, TypeNotification.MVT_DE_CAISSE, operateur, donneesMap, coffreCaisse.getIdCoffreCaisse());
     }
 
     private TCaisse findByUser(String userId) {
@@ -2010,7 +2036,12 @@ public class CaisseServiceImpl implements CaisseService {
         TMvtCaisse mvtCaisse = validerFondDeCaisse(coffreCaisse, user, description);
         logService.updateItem(user, coffreCaisse.getIdCoffreCaisse(), description, TypeLog.OUVERTURE_CAISSE,
                 coffreCaisse);
-        createNotification(description, TypeNotification.MVT_DE_CAISSE, user, Canal.EMAIL);
+        Map<String, Object> donneesMap = new HashMap<>();
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.OUVERTURE_CAISSE.getValue());
+        donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(coffreCaisseDto.getAmount()));
+        createNotification(description, TypeNotification.MVT_DE_CAISSE, user, donneesMap, coffreCaisse.getIdCoffreCaisse());
         return mvtCaisse.getLgMVTCAISSEID();
 
     }

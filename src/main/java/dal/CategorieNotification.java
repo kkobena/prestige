@@ -24,6 +24,7 @@ import org.hibernate.validator.constraints.Length;
     @UniqueConstraint(columnNames = {"name"})})
 @NamedQueries({
     @NamedQuery(name = "CategorieNotification.findOneStatus", query = "SELECT o FROM CategorieNotification o WHERE  o.canal=:canal "),
+    @NamedQuery(name = "CategorieNotification.findOneByName", query = "SELECT o FROM CategorieNotification o WHERE  o.name=:name "),
     @NamedQuery(name = "CategorieNotification.all", query = "SELECT o FROM CategorieNotification o  ")})
 public class CategorieNotification implements Serializable {
 

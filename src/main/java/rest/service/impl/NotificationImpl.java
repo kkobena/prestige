@@ -6,6 +6,7 @@
 package rest.service.impl;
 
 import commonTasks.dto.NotificationDTO;
+import dal.CategorieNotification;
 import dal.Notification;
 import dal.NotificationClient;
 import dal.Notification_;
@@ -20,6 +21,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -42,14 +45,14 @@ import util.FunctionUtils;
  */
 @Stateless
 public class NotificationImpl implements NotificationService {
-    
+
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    
+
     public EntityManager getEntityManager() {
         return em;
     }
-    
+
     @Override
     public JSONObject findAll(String typeNotification, Canal canal, Statut statut, String dtStart, String dtEnd,
             int start, int limit) {
@@ -60,55 +63,57 @@ public class NotificationImpl implements NotificationService {
                 .map(NotificationDTO::new).collect(Collectors.toList());
         return FunctionUtils.returnData(data, count);
     }
-    
+
     @Override
-    public void save(Notification notification, String donnees) {
+    public void save(Notification notification,Object  entity) {
         getEntityManager().merge(notification);
     }
-    
+
     @Override
-    public void save(Notification notification, TClient client, String donnees) {
+    public void save(Notification notification, TClient client,Object  entity) {
         notification.addNotificationClients(new NotificationClient(client, notification));
         getEntityManager().persist(notification);
-        
+
     }
-    
+
     @Override
-    public Notification buildNotification(NotificationDTO notificationDto, TUser user, String donnees) {
+    public Notification buildNotification(NotificationDTO notificationDto, TUser user,Object  entity) {
         Notification notification = new Notification();
-        notification.setCanal(Canal.SMS_MASSE);
+        CategorieNotification categorieNotification = this.getOneByName(notificationDto.getType());
+        notification.setCategorieNotification(categorieNotification);
+        //  notification.setCanal(Canal.SMS_MASSE);
         notification.setMessage(notificationDto.getMessage());
-        notification.setTypeNotification(TypeNotification.MASSE);
+        //  notification.setTypeNotification(TypeNotification.MASSE);
         notification.setUser(user);
         if (CollectionUtils.isNotEmpty(notificationDto.getClients())) {
             notificationDto.getClients().stream().forEach(u -> {
                 TClient client = getEntityManager().find(TClient.class, u.getClientId());
                 notification.getNotificationClients().add(new NotificationClient(client, notification));
             });
-            
+
         }
         getEntityManager().persist(notification);
         return notification;
-        
+
     }
-    
+
     private List<Predicate> listPredicates(CriteriaBuilder cb, Root<Notification> root, LocalDate dtStart,
             LocalDate dtEnd, Canal canal, String typeNotification) {
         List<Predicate> predicates = new ArrayList<>();
-        
+        //CategorieNotification_.typeNotification
         Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(Notification_.CREATED_AT)),
                 java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
         if (StringUtils.isNotEmpty(typeNotification)) {
             predicates.add(
-                    cb.equal(root.get(Notification_.typeNotification), TypeNotification.valueOf(typeNotification)));
+                    cb.equal(root.get(Notification_.categorieNotification).get("name"), TypeNotification.valueOf(typeNotification).name()));
         }
         if (Objects.nonNull(canal)) {
-            predicates.add(cb.equal(root.get(Notification_.canal), canal));
+            predicates.add(cb.equal(root.get(Notification_.categorieNotification).get("canal"), canal));
         }
         return predicates;
     }
-    
+
     private long count(LocalDate dtStart, LocalDate dtEnd, Canal canal, String typeNotification) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
@@ -118,12 +123,12 @@ public class NotificationImpl implements NotificationService {
         cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<Long> q = em.createQuery(cq);
         return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
-        
+
     }
-    
+
     private List<Notification> getList(LocalDate dtStart, LocalDate dtEnd, Canal canal, String typeNotification,
             int start, int limit, boolean all) {
-        
+
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Notification> cq = cb.createQuery(Notification.class);
         Root<Notification> root = cq.from(Notification.class);
@@ -134,11 +139,11 @@ public class NotificationImpl implements NotificationService {
         if (!all) {
             q.setFirstResult(start);
             q.setMaxResults(limit);
-            
+
         }
         return q.getResultList();
     }
-    
+
     @Override
     public String buildDonnees(Map<String, Object> donneesMap) {
         if (MapUtils.isEmpty(donneesMap)) {
@@ -148,4 +153,36 @@ public class NotificationImpl implements NotificationService {
         donneesMap.forEach(json::put);
         return json.toString();
     }
+
+    @Override
+    public CategorieNotification getOneByName(TypeNotification typeNotification) {
+        TypedQuery<CategorieNotification> typedQuery = this.em.createNamedQuery("CategorieNotification.findOneByName", CategorieNotification.class);
+        typedQuery.setParameter("name", typeNotification.name());
+        return typedQuery.getSingleResult();
+    }
+
+    private <T> Optional<T> findById(Object entityId, Class<T> entitClass) {
+        try {
+            T obj = getEntityManager().find(entitClass, entityId);
+            if (obj != null) {
+                return Optional.of(obj);
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+
+            return Optional.empty();
+        }
+    }
+//TypeNotification.ANNULATION_CLOTURE_DE_CAISSE
+    private void buildData(Notification notification,Object  entity) {
+        TypeNotification typeNotification = TypeNotification.fromName(notification.getCategorieNotification().getName());
+        switch (typeNotification) {
+            case MVT_DE_CAISSE:
+                
+                break;
+            default:
+                throw new AssertionError();
+        }
+    }
+
 }

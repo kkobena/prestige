@@ -10,6 +10,7 @@ import dal.Notification;
 import dal.NotificationClient;
 import dal.TUser;
 import dal.enumeration.Statut;
+import dal.enumeration.TypeNotification;
 import java.io.Serializable;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -37,6 +38,8 @@ public class NotificationDTO implements Serializable {
     private String typeNotification;
     private String categorieName;
     private String modfiedAt;
+    
+    private TypeNotification type;
 
     private String user;
 
@@ -69,6 +72,14 @@ public class NotificationDTO implements Serializable {
 
     public void setStatut(String statut) {
         this.statut = statut;
+    }
+
+    public TypeNotification getType() {
+        return type;
+    }
+
+    public void setType(TypeNotification type) {
+        this.type = type;
     }
 
     public String getCanal() {

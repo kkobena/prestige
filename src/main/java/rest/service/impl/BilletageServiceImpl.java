@@ -23,7 +23,9 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,6 +46,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import rest.service.BilletageService;
 import rest.service.CaisseService;
@@ -61,6 +64,7 @@ import util.Constant;
 import util.DateCommonUtils;
 import util.DateUtil;
 import util.FunctionUtils;
+import util.NotificationUtils;
 import util.NumberUtils;
 
 /**
@@ -247,13 +251,33 @@ public class BilletageServiceImpl implements BilletageService {
                 + DateCommonUtils.formatCurrentDate() + " Billetage " + billetage;
         logService.updateItem(user, oTResumeCaisse.getLdCAISSEID(), description, TypeLog.CLOTURE_CAISSE,
                 oTResumeCaisse);
-        createNotification(description, TypeNotification.VALIDATION_DE_CAISSE, user);
+
+        JSONArray data = new JSONArray();
+        List<LigneResumeCaisse> ligneResumeCaisses = oTResumeCaisse.getLigneResumeCaisses();
+        for (LigneResumeCaisse ligneResumeCaisse : ligneResumeCaisses) {
+            JSONObject jsonItemUg = new JSONObject();
+            jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), ligneResumeCaisse.getTypeLigne().name());
+            jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), ligneResumeCaisse.getTypeReglement().getStrNAME());
+            jsonItemUg.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatLongToString(ligneResumeCaisse.getMontant()));
+            data.put(jsonItemUg);
+        }
+        Map<String, Object> donneesMap = new HashMap<>();
+        if (!data.isEmpty()) {
+            donneesMap.put(NotificationUtils.ITEMS.getId(), data);
+        }
+        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatLongToString(montantFinal));
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.CLOTURE_CAISSE.getValue());
+        donneesMap.put(NotificationUtils.MESSAGE.getId(), description);
+        donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user, donneesMap, oTResumeCaisse.getLdCAISSEID());
+        //  createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user);
     }
 
-    private void createNotification(String msg, TypeNotification typeNotification, TUser user) {
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
         try {
             notificationService.save(
-                    new Notification().canal(Canal.SMS).typeNotification(typeNotification).message(msg).addUser(user));
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -300,11 +324,11 @@ public class BilletageServiceImpl implements BilletageService {
             Query query = this.em.createNativeQuery(SOLDE_SQL, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
                     .setParameter(2, caisse.getLgUSERID().getLgUSERID())
                     .setParameter(3, caisse.getDtCREATED(), TemporalType.TIMESTAMP).setParameter(4, new Date(),
-                            TemporalType.TIMESTAMP)/*
+                    TemporalType.TIMESTAMP)/*
                                                     * .setParameter(5, List.of(Constant.MODE_ESP, Constant.MODE_WAVE,
                                                     * Constant.TYPE_REGLEMENT_ORANGE, Constant.MODE_MOOV,
                                                     * Constant.MODE_MTN))
-                                                    */;
+                     */;
             return ((List<Tuple>) query.getResultList()).stream().map(LigneResumeCaisseDTO::new)
                     .collect(Collectors.toList());
 
@@ -463,7 +487,7 @@ public class BilletageServiceImpl implements BilletageService {
     private long getCashAmount(TResumeCaisse caisse, TypeLigneResume typeLigne) {
         return caisse.getLigneResumeCaisses().stream()
                 .filter(ligne -> CommonUtils.isCashTypeReglement(ligne.getTypeReglement().getLgTYPEREGLEMENTID())
-                        && ligne.getTypeLigne() == typeLigne)
+                && ligne.getTypeLigne() == typeLigne)
                 .mapToLong(LigneResumeCaisse::getMontant).reduce(0, Long::sum);
 
     }

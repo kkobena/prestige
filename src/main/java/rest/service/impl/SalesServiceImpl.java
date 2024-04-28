@@ -77,7 +77,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -118,6 +120,8 @@ import util.DateConverter;
 
 import static util.Constant.*;
 import util.DateCommonUtils;
+import util.NotificationUtils;
+import util.NumberUtils;
 
 /**
  * @author Kobena
@@ -594,8 +598,17 @@ public class SalesServiceImpl implements SalesService {
             String desc = "Annulation de la [ " + tp.getStrREF() + " montant  " + tp.getIntPRICE() + " ] par "
                     + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
             logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.ANNULATION_DE_VENTE, tp);
-            notificationService.save(new Notification().canal(Canal.SMS_EMAIL).entityRef(tp.getLgPREENREGISTREMENTID())
-                    .typeNotification(TypeNotification.ANNULATION_DE_VENTE).message(desc).addUser(ooTUser));
+            /* notificationService.save(new Notification().canal(Canal.SMS_EMAIL).entityRef(tp.getLgPREENREGISTREMENTID())
+                    .typeNotification(TypeNotification.ANNULATION_DE_VENTE).message(desc).addUser(ooTUser));*/
+            Map<String, Object> donneesMap = new HashMap<>();
+            donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
+            donneesMap.put(NotificationUtils.DATE.getId(), DateCommonUtils.formatDate(tp.getDtCREATED()));
+            donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.ANNULATION_DE_VENTE.getValue());
+            donneesMap.put(NotificationUtils.USER.getId(), ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME());
+            donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(tp.getIntPRICE()));
+            createNotification(desc, TypeNotification.MOTIFICATION_VENETE, ooTUser, donneesMap, tp.getLgPREENREGISTREMENTID());
+
             json.put("success", true);
             json.put("msg", "L'opération effectuée avec success");
             json.put("ref", newItem.getLgPREENREGISTREMENTID());
@@ -752,7 +765,7 @@ public class SalesServiceImpl implements SalesService {
             if (oTCompteClient != null && cltP.getDblPLAFOND() != null && cltP.getDblPLAFOND() != 0) {
                 cltP.setDblQUOTACONSOMENSUELLE(
                         (cltP.getDblQUOTACONSOMENSUELLE() != null ? cltP.getDblQUOTACONSOMENSUELLE() : 0)
-                                + newCtp.getIntPRICE());
+                        + newCtp.getIntPRICE());
                 cltP.setDtUPDATED(new Date());
                 emg.merge(cltP);
             }
@@ -827,7 +840,7 @@ public class SalesServiceImpl implements SalesService {
 
     private void copyRecette(TPreenregistrement newPreen, TRecettes old, TUser o) {
         TRecettes tr = old;
-        LOG.log(Level.INFO, "tr {0} ", new Object[] { tr });
+        LOG.log(Level.INFO, "tr {0} ", new Object[]{tr});
         tr.setLgUSERID(o);
         tr.setDtCREATED(newPreen.getDtUPDATED());
         tr.setDtUPDATED(newPreen.getDtUPDATED());
@@ -1624,37 +1637,37 @@ public class SalesServiceImpl implements SalesService {
     private TModeReglement findModeReglement(String idTypeRegl) {
         TModeReglement modeReglement;
         switch (idTypeRegl) {
-        case "1":
-        case "4":
-            modeReglement = findByIdMod("1");
-            break;
-        case "2":
-            modeReglement = findByIdMod("2");
-            break;
-        case "3":
-            modeReglement = findByIdMod("5");
-            break;
-        case "6":
-            modeReglement = findByIdMod("7");
-            break;
-        case "5":
-            modeReglement = findByIdMod("6");
-            break;
-        case "7":
-            modeReglement = findByIdMod(MODE_ORANGE);
-            break;
-        case "8":
-            modeReglement = findByIdMod("8");
-            break;
-        case "9":
-            modeReglement = findByIdMod("9");
-            break;
-        case "10":
-            modeReglement = findByIdMod("11");
-            break;
-        default:
-            modeReglement = findByIdMod(idTypeRegl);
-            break;
+            case "1":
+            case "4":
+                modeReglement = findByIdMod("1");
+                break;
+            case "2":
+                modeReglement = findByIdMod("2");
+                break;
+            case "3":
+                modeReglement = findByIdMod("5");
+                break;
+            case "6":
+                modeReglement = findByIdMod("7");
+                break;
+            case "5":
+                modeReglement = findByIdMod("6");
+                break;
+            case "7":
+                modeReglement = findByIdMod(MODE_ORANGE);
+                break;
+            case "8":
+                modeReglement = findByIdMod("8");
+                break;
+            case "9":
+                modeReglement = findByIdMod("9");
+                break;
+            case "10":
+                modeReglement = findByIdMod("11");
+                break;
+            default:
+                modeReglement = findByIdMod(idTypeRegl);
+                break;
 
         }
         return modeReglement;
@@ -2153,7 +2166,7 @@ public class SalesServiceImpl implements SalesService {
 
                         json.putOnce("success", false).putOnce("msg",
                                 "Le numéro de  <span style='color:red;font-weight:800;'> " + params.getNumBon()
-                                        + " </span> est déjà utilisé par l'assureur :: " + payant.getStrFULLNAME());
+                                + " </span> est déjà utilisé par l'assureur :: " + payant.getStrFULLNAME());
 
                     } else {
                         TPreenregistrementCompteClientTiersPayent item = getTPreenregistrementCompteClientTiersPayent(
@@ -2663,7 +2676,7 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                        .cmuAmount(montantCMU.intValue());
+                .cmuAmount(montantCMU.intValue());
     }
 
     @Override
@@ -3477,7 +3490,8 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrementCompteClientTiersPayent clientTiersPayent = getTPreenregistrementCompteClientTiersPayent(
                     venteId, olClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID(), getEm());
             /**
-             * s'il y a modification de tu tiers-payant on rentre dans premiere condition
+             * s'il y a modification de tu tiers-payant on rentre dans premiere
+             * condition
              */
             if (!params.getTypeVenteId().equals(params.getAyantDroitId())) {
 
@@ -3736,7 +3750,7 @@ public class SalesServiceImpl implements SalesService {
 
     private TPreenregistrement updateVenteInfosClientOrtierspayant(SalesParams salesParams) throws Exception {
         TPreenregistrement tp = getEm().find(TPreenregistrement.class, salesParams.getVenteId());
-        if (tp.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(DateConverter.VENTE_CARNET_ID)) {
+        if (tp.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(VENTE_AVEC_CARNET)) {
             updateCompteClientVenteCarner(tp, salesParams);
             updateVenteCarnet(salesParams, tp);
         } else {
@@ -3744,6 +3758,13 @@ public class SalesServiceImpl implements SalesService {
             updateVente(salesParams, tp);
         }
 
+        Map<String, Object> donneesMap = new HashMap<>();
+        donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MOTIFICATION_VENETE.getValue());
+        donneesMap.put(NotificationUtils.USER.getId(), salesParams.getUserId().getStrFIRSTNAME() + " " + salesParams.getUserId().getStrLASTNAME());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(tp.getIntPRICE()));
+        createNotification(null, TypeNotification.MOTIFICATION_VENETE, salesParams.getUserId(), donneesMap, tp.getLgPREENREGISTREMENTID());
         return tp;
     }
 
@@ -4074,14 +4095,14 @@ public class SalesServiceImpl implements SalesService {
         if (oCompteClient != null && payant.getDblPLAFOND() != null && payant.getDblPLAFOND() != 0) {
             payant.setDblQUOTACONSOMENSUELLE(
                     (payant.getDblQUOTACONSOMENSUELLE() != null ? payant.getDblQUOTACONSOMENSUELLE() : 0)
-                            + newItem.getIntPRICE());
+                    + newItem.getIntPRICE());
             payant.setDtUPDATED(old.getDtUPDATED());
             getEm().merge(payant);
         }
         if (oCompteClient != null && oCompteClient.getDblPLAFOND() != null && oCompteClient.getDblPLAFOND() != 0) {
             oCompteClient.setDblQUOTACONSOMENSUELLE(
                     (oCompteClient.getDblQUOTACONSOMENSUELLE() != null ? oCompteClient.getDblQUOTACONSOMENSUELLE() : 0)
-                            + newItem.getIntPRICE());
+                    + newItem.getIntPRICE());
             oCompteClient.setDtUPDATED(new Date());
             getEm().merge(oCompteClient);
         }
@@ -4308,8 +4329,8 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                        .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
-                        .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
+                .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
+                .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
     }
 
     private MontantAPaye sumVenteSansRemise(List<TPreenregistrementDetail> list, TPreenregistrement p) {
@@ -4440,13 +4461,13 @@ public class SalesServiceImpl implements SalesService {
                         pt.setLgPREENREGISTREMENTID(newTp);
                         return pt;
                     }).map(pt -> {
-                        pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
-                        pt.setDtCREATED(newTp.getDtUPDATED());
-                        pt.setDtUPDATED(newTp.getDtUPDATED());
-                        return pt;
-                    }).forEachOrdered(pt -> {
-                        getEm().persist(pt);
-                    });
+                pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
+                pt.setDtCREATED(newTp.getDtUPDATED());
+                pt.setDtUPDATED(newTp.getDtUPDATED());
+                return pt;
+            }).forEachOrdered(pt -> {
+                getEm().persist(pt);
+            });
             JSONObject data = new JSONObject();
             data.put("lgPREENREGISTREMENTID", newTp.getLgPREENREGISTREMENTID());
             data.put("strREF", newTp.getStrREF());
@@ -4567,6 +4588,15 @@ public class SalesServiceImpl implements SalesService {
                 + " par " + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
         this.logService.updateItem(ooTUser, p.getLgPREENREGISTREMENTID(), desc, TypeLog.MODIFICATION_DATE_VENTE_CREDIT,
                 p);
+        Map<String, Object> donneesMap = new HashMap<>();
+        donneesMap.put(NotificationUtils.ITEM_KEY.getId(), p.getStrREF());
+        donneesMap.put(NotificationUtils.DATE_INI.getId(), DateCommonUtils.formatDate(initiale));
+        donneesMap.put(NotificationUtils.DATE.getId(), DateCommonUtils.formatDate(venteDate));
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_DATE_VENTE_CREDIT.getValue());
+        donneesMap.put(NotificationUtils.USER.getId(), ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(p.getIntPRICE()));
+        createNotification(desc, TypeNotification.MOTIFICATION_VENETE, ooTUser, donneesMap, p.getLgPREENREGISTREMENTID());
     }
 
     private void updatePreenregistrementDetailDate(TPreenregistrementDetail item, Date venteDate) {
@@ -4851,4 +4881,13 @@ public class SalesServiceImpl implements SalesService {
         return map;
     }
 
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
+        try {
+            notificationService.save(
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+
+    }
 }

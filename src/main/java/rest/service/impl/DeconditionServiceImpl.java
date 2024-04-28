@@ -18,6 +18,8 @@ import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -28,6 +30,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.DeconditionService;
@@ -37,6 +40,9 @@ import rest.service.NotificationService;
 import rest.service.SuggestionService;
 import rest.service.v2.dto.DeconditionnementParamsDTO;
 import util.Constant;
+import util.DateCommonUtils;
+import util.NotificationUtils;
+import util.NumberUtils;
 
 /**
  *
@@ -296,8 +302,33 @@ public class DeconditionServiceImpl implements DeconditionService {
                     + (quantity * qtyDetail) + " opérateur " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
             logService.updateItem(user, oTFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, oTFamilleParent,
                     new Date());
-            notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
-                    .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(user));
+            JSONArray items = new JSONArray();
+            JSONObject jsonItemUg = new JSONObject();
+            jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), oTFamilleParent.getIntCIP());
+            jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), oTFamilleParent.getStrNAME());
+            jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), quantity);
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInit);
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInit - quantity);
+
+            JSONObject detail = new JSONObject();
+            detail.put(NotificationUtils.ITEM_KEY.getId(), oTFamilleChild.getIntCIP());
+            detail.put(NotificationUtils.ITEM_DESC.getId(), oTFamilleChild.getStrNAME());
+            detail.put(NotificationUtils.ITEM_QTY.getId(), (quantity * qtyDetail));
+            detail.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInitDetail);
+            detail.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInitDetail + (quantity * qtyDetail));
+            jsonItemUg.put(NotificationUtils.ITEMS.getId(), new JSONArray(detail));
+            items.put(jsonItemUg);
+
+            /*  notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
+                    .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(user));*/
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.DECONDITIONNEMENT.getValue());
+            donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+
+            createNotification(desc, TypeNotification.DECONDITIONNEMENT, user, donnee, oTFamilleParent.getLgFAMILLEID());
+
             try {
                 TMouvement mouvement = findByDay(oTFamilleChild, oEmplacement.getLgEMPLACEMENTID()).get();
                 updateTMouvement(mouvement, (quantity * qtyDetail));
@@ -338,6 +369,16 @@ public class DeconditionServiceImpl implements DeconditionService {
             LOG.log(Level.SEVERE, null, e);
             throw e;
 
+        }
+
+    }
+
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
+        try {
+            notificationService.save(
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
 
     }
