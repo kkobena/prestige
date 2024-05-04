@@ -1513,7 +1513,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             detail.put(NotificationUtils.ITEM_QTY.getId(), (numberToDecondition * qtyDetail));
             detail.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInitDetail);
             detail.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInitDetail + (numberToDecondition * qtyDetail));
-            jsonItemUg.put(NotificationUtils.ITEMS.getId(), new JSONArray(detail));
+            jsonItemUg.put(NotificationUtils.ITEMS.getId(), new JSONArray().put(detail));
             items.put(jsonItemUg);
 
             Map<String, Object> donnee = new HashMap<>();

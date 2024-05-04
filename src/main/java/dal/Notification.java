@@ -83,7 +83,7 @@ public class Notification implements Serializable {
     private int numberAttempt = 0;
     @Column(name = "entity_ref")
     private String entityRef;
-    @Column(name = "donnees")
+    @Column(name = "donnees", length = 3000)
     private String donnees;
 
     public String getDonnees() {
