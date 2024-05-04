@@ -71,7 +71,8 @@ public class Notification implements Serializable {
     @NotNull
     @Column(name = "modfied_at", nullable = false)
     private LocalDateTime modfiedAt = LocalDateTime.now();
-    @JoinColumn(name = "user_id", referencedColumnName = "lg_USER_ID")
+    @NotNull
+    @JoinColumn(name = "user_id", referencedColumnName = "lg_USER_ID", nullable = false)
     @ManyToOne
     private TUser user;
     @JoinColumn(name = "user_to", referencedColumnName = "lg_USER_ID")

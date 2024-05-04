@@ -77,7 +77,7 @@ public class NotificationImpl implements NotificationService {
     @Override
     public Notification buildNotification(NotificationDTO notificationDto, TUser user) {
         Notification notification = new Notification();
-        CategorieNotification categorieNotification = this.getOneByName(notificationDto.getType());
+        CategorieNotification categorieNotification = this.getOneByName(TypeNotification.MASSE);
         notification.setCategorieNotification(categorieNotification);
         // notification.setCanal(Canal.SMS_MASSE);
         notification.setMessage(notificationDto.getMessage());
@@ -88,7 +88,6 @@ public class NotificationImpl implements NotificationService {
                 TClient client = getEntityManager().find(TClient.class, u.getClientId());
                 notification.getNotificationClients().add(new NotificationClient(client, notification));
             });
-
         }
         getEntityManager().persist(notification);
         return notification;
@@ -126,7 +125,6 @@ public class NotificationImpl implements NotificationService {
 
     private List<Notification> getList(LocalDate dtStart, LocalDate dtEnd, Canal canal, String typeNotification,
             int start, int limit, boolean all) {
-
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Notification> cq = cb.createQuery(Notification.class);
         Root<Notification> root = cq.from(Notification.class);
