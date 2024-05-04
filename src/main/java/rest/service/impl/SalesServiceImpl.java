@@ -612,7 +612,7 @@ public class SalesServiceImpl implements SalesService {
             donneesMap.put(NotificationUtils.USER.getId(), ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME());
             donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
             donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(tp.getIntPRICE()));
-            createNotification(desc, TypeNotification.MOTIFICATION_VENETE, ooTUser, donneesMap,
+            createNotification(desc, TypeNotification.MODIFICATION_VENTE, ooTUser, donneesMap,
                     tp.getLgPREENREGISTREMENTID());
 
             json.put("success", true);
@@ -3773,12 +3773,12 @@ public class SalesServiceImpl implements SalesService {
         }
 
         donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
-        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MOTIFICATION_VENETE.getValue());
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_VENTE.getValue());
         donneesMap.put(NotificationUtils.USER.getId(),
                 salesParams.getUserId().getStrFIRSTNAME() + " " + salesParams.getUserId().getStrLASTNAME());
         donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
         donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(tp.getIntPRICE()));
-        createNotification("", TypeNotification.MOTIFICATION_VENETE, salesParams.getUserId(), donneesMap,
+        createNotification("", TypeNotification.MODIFICATION_VENTE, salesParams.getUserId(), donneesMap,
                 tp.getLgPREENREGISTREMENTID());
         return tp;
     }
@@ -4656,7 +4656,7 @@ public class SalesServiceImpl implements SalesService {
         donneesMap.put(NotificationUtils.USER.getId(), ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME());
         donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
         donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(p.getIntPRICE()));
-        createNotification(desc, TypeNotification.MOTIFICATION_VENETE, ooTUser, donneesMap,
+        createNotification(desc, TypeNotification.MODIFICATION_VENTE, ooTUser, donneesMap,
                 p.getLgPREENREGISTREMENTID());
     }
 

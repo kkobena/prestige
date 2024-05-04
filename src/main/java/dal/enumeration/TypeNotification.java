@@ -22,7 +22,7 @@ public enum TypeNotification {
     CLOTURE_DE_CAISSE("Cloture de caisse"), ANNULATION_CLOTURE_DE_CAISSE("Annulation de cloture de caisse"),
     AVOIR_PRODUIT("Reception avoir"), QUANTITE_UG("Entrée quantité UG"), RETOUR_FOURNISSEUR("Retour fournisseur"),
     MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande"),
-    MASSE("Notification informationnelle"), MOTIFICATION_VENETE("Modification de vente"),
+    MASSE("Notification informationnelle"), MODIFICATION_VENTE("Modification de vente"),
     SAISIS_PERIMES("Saisis de périmés"), AJOUT_DE_NOUVEAU_PRODUIT("Ajout de nouveau produit");
 
     private final String value;

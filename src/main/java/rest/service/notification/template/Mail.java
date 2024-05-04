@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Properties;
 import org.apache.commons.collections4.CollectionUtils;
 import rest.service.v2.dto.NotificationUtilsDTO;
+import util.DateUtil;
 import util.SmsParameters;
 
 /**
@@ -37,6 +38,35 @@ public class Mail {
 
         sb.append("</body></html>");
 
+    }
+
+    public static String buildClotureCaisse(List<Notification> mvtCaisses) {
+        if (CollectionUtils.isEmpty(mvtCaisses)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        mvtCaisses.forEach(n -> {
+            NotificationDTO notification = new NotificationDTO(n);
+            TUser tu = n.getUser();
+            NotificationUtilsDTO item = notification.getNotificationDetail();
+            sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
+                    .append("<caption  style='font-weight: bold;text-align: center;'>")
+                    .append("Clôture de la caisse de").append(tu.getStrFIRSTNAME()).append(" ")
+                    .append(tu.getStrLASTNAME()).append(" du ").append(DateUtil.convertDate(n.getCreatedAt()))
+                    .append("</caption>").append("<tr><th>Type</th><th>Mode règlement</th><th>Montant</th></tr>");
+
+            item.getDetail().forEach(t -> {
+
+                sb.append("<tr><td>").append(t.getCode()).append("</td><td>").append(t.getDescription())
+                        .append("</td><td  style='text-align: right;'>").append(item.getMontant()).append("</td></tr>");
+
+            });
+            sb.append("<tr><td colspan='2'   style='text-align: right;font-weight: bold;'>").append(item.getMontant())
+                    .append("</td></tr>");
+            sb.append("</table>");
+        });
+
+        return sb.toString();
     }
 
     public static String buildMvtCaisse(List<Notification> mvtCaisses) {
@@ -147,6 +177,29 @@ public class Mail {
 
             sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(t.getCode()).append("</td><td>")
                     .append(t.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td></tr>");
+        });
+
+        sb.append("</table>");
+        return sb.toString();
+    }
+
+    public static String buildVente(List<Notification> mvtCaisses) {
+        if (CollectionUtils.isEmpty(mvtCaisses)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
+                .append("<caption  style='font-weight: bold;text-align: center;'>").append("Liste des ventes modifiées")
+                .append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Type modification</th><th>Référence</th><th>Date</th></tr>");
+
+        mvtCaisses.forEach(t -> {
+            TUser tu = t.getUser();
+            NotificationDTO notification = new NotificationDTO(t);
+            NotificationUtilsDTO item = notification.getNotificationDetail();
+            sb.append("<tr><td>").append(tu.getStrFIRSTNAME()).append(" ").append(tu.getStrLASTNAME())
+                    .append("</td><td>").append(item.getType()).append("</td><td>").append(item.getCode())
+                    .append("</td><td>").append(item.getDateMvt()).append("</td></tr>");
         });
 
         sb.append("</table>");
