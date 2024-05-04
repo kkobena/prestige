@@ -48,7 +48,7 @@ import util.NotificationUtils;
  */
 @Stateless
 public class DeconditionServiceImpl implements DeconditionService {
-
+    
     private static final Logger LOG = Logger.getLogger(DeconditionServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -60,11 +60,11 @@ public class DeconditionServiceImpl implements DeconditionService {
     private LogService logService;
     @EJB
     private NotificationService notificationService;
-
+    
     public EntityManager getEntityManager() {
         return em;
     }
-
+    
     private Optional<TMouvement> findByDay(TFamille tFamille, String lgEmpl) {
         try {
             TypedQuery<TMouvement> query = getEntityManager().createQuery(
@@ -79,29 +79,29 @@ public class DeconditionServiceImpl implements DeconditionService {
         } catch (Exception e) {
             return Optional.empty();
         }
-
+        
     }
-
+    
     private TFamilleStock getTProductItemStock(String produitId, String empl) {
-
+        
         TypedQuery<TFamilleStock> q = getEntityManager().createQuery(
                 "SELECT t FROM TFamilleStock t WHERE t.lgFAMILLEID.lgFAMILLEID = ?1 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID = ?2 AND t.strSTATUT='enable'",
                 TFamilleStock.class);
         return q.setParameter(1, produitId).setParameter(2, empl).setFirstResult(0).setMaxResults(1).getSingleResult();
     }
-
+    
     public void updateTMouvement(TMouvement mouvement, Integer quantity) {
         mouvement.setStrSTATUT(Constant.STATUT_ENABLE);
         mouvement.setDtUPDATED(new Date());
         mouvement.setIntNUMBERTRANSACTION(mouvement.getIntNUMBERTRANSACTION() + 1);
         mouvement.setIntNUMBER(mouvement.getIntNUMBER() + quantity);
         getEntityManager().merge(mouvement);
-
+        
     }
-
+    
     public void createTMouvement(TFamille fam, TEmplacement empl, String typeAction, String action, Integer quantity,
             TUser user) throws Exception {
-
+        
         TMouvement mouvement = new TMouvement();
         mouvement.setLgMOUVEMENTID(UUID.randomUUID().toString());
         mouvement.setDtDAY(new Date());
@@ -117,9 +117,9 @@ public class DeconditionServiceImpl implements DeconditionService {
         mouvement.setIntNUMBERTRANSACTION(1);
         mouvement.setIntNUMBER(quantity);
         getEntityManager().persist(mouvement);
-
+        
     }
-
+    
     private Optional<TMouvementSnapshot> findMouvementSnapshotByDay(TFamille oFamille, String lgEmpl) {
         try {
             TypedQuery<TMouvementSnapshot> query = getEntityManager().createQuery(
@@ -133,16 +133,16 @@ public class DeconditionServiceImpl implements DeconditionService {
         } catch (Exception e) {
             return Optional.empty();
         }
-
+        
     }
-
+    
     public void updateSnapshotMouvementArticle(TMouvementSnapshot oMouvementSnapshot, int quantity) {
         oMouvementSnapshot.setDtUPDATED(new Date());
         oMouvementSnapshot.setIntNUMBERTRANSACTION(oMouvementSnapshot.getIntNUMBERTRANSACTION() + 1);
         oMouvementSnapshot.setIntSTOCKJOUR(oMouvementSnapshot.getIntSTOCKJOUR() + quantity);
         getEntityManager().merge(oMouvementSnapshot);
     }
-
+    
     @Override
     public JSONObject deconditionnementVente(SalesParams params) throws JSONException {
         int numberToDecondition = 1;
@@ -222,10 +222,10 @@ public class DeconditionServiceImpl implements DeconditionService {
             return json;
         }
     }
-
+    
     public void createSnapshotMouvementArticle(TFamille famille, int quantity, int stockDebut,
             TEmplacement emplacement) {
-
+        
         TMouvementSnapshot mouvementSnapshot = new TMouvementSnapshot();
         mouvementSnapshot.setLgMOUVEMENTSNAPSHOTID(UUID.randomUUID().toString());
         mouvementSnapshot.setLgFAMILLEID(famille);
@@ -239,9 +239,9 @@ public class DeconditionServiceImpl implements DeconditionService {
         mouvementSnapshot.setLgEMPLACEMENTID(emplacement);
         getEntityManager().persist(mouvementSnapshot);
     }
-
+    
     private TDeconditionnement createDecondtionne(TFamille famille, int quantity, TUser tUser) {
-
+        
         TDeconditionnement deconditionnement = new TDeconditionnement();
         deconditionnement.setLgDECONDITIONNEMENTID(UUID.randomUUID().toString());
         deconditionnement.setLgFAMILLEID(famille);
@@ -252,18 +252,18 @@ public class DeconditionServiceImpl implements DeconditionService {
         getEntityManager().persist(deconditionnement);
         return deconditionnement;
     }
-
+    
     @Override
     public void deconditionner(DeconditionnementParamsDTO paramsDTO, TUser user) throws Exception {
         doDeconditionnementStock(paramsDTO, user);
     }
-
+    
     private void doDeconditionnementStock(DeconditionnementParamsDTO params, TUser user) throws Exception {
         String produitId = params.getProduitId();
         int quantity = params.getQuantity();
         TEmplacement oEmplacement = user.getLgEMPLACEMENTID();
         try {
-
+            
             TFamille oTFamilleChild = em.find(TFamille.class, produitId);
             TFamille oTFamilleParent = em.find(TFamille.class, oTFamilleChild.getLgFAMILLEPARENTID());
             Integer qtyDetail = oTFamilleParent.getIntNUMBERDETAIL();
@@ -272,16 +272,16 @@ public class DeconditionServiceImpl implements DeconditionService {
             if (oTFamilleStockParent.getIntNUMBERAVAILABLE() < quantity) {
                 return;
             }
-
+            
             TFamilleStock oTFamilleStockChild = getTProductItemStock(oTFamilleChild.getLgFAMILLEID(),
                     oEmplacement.getLgEMPLACEMENTID());
             Integer stockInitDetail = oTFamilleStockChild.getIntNUMBERAVAILABLE();
             Integer stockInit = oTFamilleStockParent.getIntNUMBERAVAILABLE();
-
+            
             oTFamilleStockParent.setIntNUMBERAVAILABLE(oTFamilleStockParent.getIntNUMBERAVAILABLE() - quantity);
             oTFamilleStockParent.setIntNUMBER(oTFamilleStockParent.getIntNUMBERAVAILABLE());
             oTFamilleStockParent.setDtUPDATED(new Date());
-
+            
             oTFamilleStockChild
                     .setIntNUMBERAVAILABLE(oTFamilleStockChild.getIntNUMBERAVAILABLE() + (quantity * qtyDetail));
             oTFamilleStockChild.setIntNUMBER(oTFamilleStockChild.getIntNUMBERAVAILABLE());
@@ -307,14 +307,14 @@ public class DeconditionServiceImpl implements DeconditionService {
             jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), quantity);
             jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInit);
             jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInit - quantity);
-
+            
             JSONObject detail = new JSONObject();
             detail.put(NotificationUtils.ITEM_KEY.getId(), oTFamilleChild.getIntCIP());
             detail.put(NotificationUtils.ITEM_DESC.getId(), oTFamilleChild.getStrNAME());
             detail.put(NotificationUtils.ITEM_QTY.getId(), (quantity * qtyDetail));
             detail.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInitDetail);
             detail.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInitDetail + (quantity * qtyDetail));
-            jsonItemUg.put(NotificationUtils.ITEMS.getId(), new JSONArray(detail));
+            jsonItemUg.put(NotificationUtils.ITEMS.getId(), new JSONArray().put(detail));
             items.put(jsonItemUg);
 
             /*
@@ -326,10 +326,10 @@ public class DeconditionServiceImpl implements DeconditionService {
             donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.DECONDITIONNEMENT.getValue());
             donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
             donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-
+            
             createNotification(desc, TypeNotification.DECONDITIONNEMENT, user, donnee,
                     oTFamilleParent.getLgFAMILLEID());
-
+            
             try {
                 TMouvement mouvement = findByDay(oTFamilleChild, oEmplacement.getLgEMPLACEMENTID()).get();
                 updateTMouvement(mouvement, (quantity * qtyDetail));
@@ -360,20 +360,20 @@ public class DeconditionServiceImpl implements DeconditionService {
                         oEmplacement);
                 LOG.log(Level.INFO, "---------------------- mouvementSnapshot -------------->>>", e);
             }
-
+            
             if (oEmplacement.getLgEMPLACEMENTID().equalsIgnoreCase(Constant.PROCESS_SUCCESS)) {
-
+                
                 this.suggestionService.makeSuggestionAuto(oTFamilleStockParent, oTFamilleParent);
             }
-
+            
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             throw e;
-
+            
         }
-
+        
     }
-
+    
     private void createNotification(String msg, TypeNotification typeNotification, TUser user,
             Map<String, Object> donneesMap, String entityRef) {
         try {
@@ -384,6 +384,6 @@ public class DeconditionServiceImpl implements DeconditionService {
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-
+        
     }
 }
