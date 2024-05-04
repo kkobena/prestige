@@ -5,9 +5,7 @@
  */
 package dal;
 
-import dal.enumeration.Canal;
 import dal.enumeration.Statut;
-import dal.enumeration.TypeNotification;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,7 +26,6 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -36,13 +33,11 @@ import javax.validation.constraints.NotNull;
  * @author koben
  */
 @Entity
-@Table(name = "notification", indexes = {
-    @Index(name = "notificationIdex1", columnList = "canal"),
-    @Index(name = "notificationStatut", columnList = "statut")})
+@Table(name = "notification", indexes = { @Index(name = "notificationStatut", columnList = "statut") })
 @NamedQueries({
-    @NamedQuery(name = "Notification.findAllByCreatedAtAndStatus", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND o.statut=:statut "),
-    @NamedQuery(name = "Notification.findAllByStatus", query = "SELECT o FROM Notification o LEFT JOIN FETCH o.notificationClients WHERE  o.statut=:statut "),
-    @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanal", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND  o.statut=:statut AND o.canal IN :canaux")
+        @NamedQuery(name = "Notification.findAllByCreatedAtAndStatus", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND o.statut=:statut "),
+        @NamedQuery(name = "Notification.findAllByStatus", query = "SELECT o FROM Notification o LEFT JOIN FETCH o.notificationClients WHERE  o.statut=:statut "),
+        @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanal", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND  o.statut=:statut AND o.categorieNotification.canal IN :canaux")
 
 })
 public class Notification implements Serializable {
@@ -59,10 +54,13 @@ public class Notification implements Serializable {
     @Column(name = "statut")
     @Enumerated(EnumType.STRING)
     private Statut statut = Statut.NOT_SEND;
-    /* @NotNull
-    @Enumerated(EnumType.ORDINAL)
-    @Column(name = "canal", nullable = false)
-    private Canal canal;*/
+    /*
+     * @NotNull
+     *
+     * @Enumerated(EnumType.ORDINAL)
+     *
+     * @Column(name = "canal", nullable = false) private Canal canal;
+     */
     @NotNull
     @ManyToOne(optional = false)
     @JoinColumn(name = "type_notification", referencedColumnName = "id")
@@ -79,7 +77,7 @@ public class Notification implements Serializable {
     @JoinColumn(name = "user_to", referencedColumnName = "lg_USER_ID")
     @ManyToOne
     private TUser userTo;
-    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "notification")
+    @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE }, mappedBy = "notification")
     private Collection<NotificationClient> notificationClients = new ArrayList<>();
     @Column(name = "number_attempt", nullable = false)
     private int numberAttempt = 0;

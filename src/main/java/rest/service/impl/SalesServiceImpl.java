@@ -105,6 +105,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.jpa.QueryHints;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -112,6 +113,7 @@ import org.json.JSONObject;
 import rest.qualifier.SalesPrimary;
 import rest.service.*;
 import rest.service.dto.UpdateVenteParamDTO;
+import rest.service.v2.dto.VenteModification;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.StringComplexUtils.DataStringManager;
 import util.Afficheur;
@@ -598,8 +600,11 @@ public class SalesServiceImpl implements SalesService {
             String desc = "Annulation de la [ " + tp.getStrREF() + " montant  " + tp.getIntPRICE() + " ] par "
                     + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
             logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.ANNULATION_DE_VENTE, tp);
-            /* notificationService.save(new Notification().canal(Canal.SMS_EMAIL).entityRef(tp.getLgPREENREGISTREMENTID())
-                    .typeNotification(TypeNotification.ANNULATION_DE_VENTE).message(desc).addUser(ooTUser));*/
+            /*
+             * notificationService.save(new
+             * Notification().canal(Canal.SMS_EMAIL).entityRef(tp.getLgPREENREGISTREMENTID())
+             * .typeNotification(TypeNotification.ANNULATION_DE_VENTE).message(desc).addUser(ooTUser));
+             */
             Map<String, Object> donneesMap = new HashMap<>();
             donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
             donneesMap.put(NotificationUtils.DATE.getId(), DateCommonUtils.formatDate(tp.getDtCREATED()));
@@ -607,7 +612,8 @@ public class SalesServiceImpl implements SalesService {
             donneesMap.put(NotificationUtils.USER.getId(), ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME());
             donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
             donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(tp.getIntPRICE()));
-            createNotification(desc, TypeNotification.MOTIFICATION_VENETE, ooTUser, donneesMap, tp.getLgPREENREGISTREMENTID());
+            createNotification(desc, TypeNotification.MOTIFICATION_VENETE, ooTUser, donneesMap,
+                    tp.getLgPREENREGISTREMENTID());
 
             json.put("success", true);
             json.put("msg", "L'opération effectuée avec success");
@@ -765,7 +771,7 @@ public class SalesServiceImpl implements SalesService {
             if (oTCompteClient != null && cltP.getDblPLAFOND() != null && cltP.getDblPLAFOND() != 0) {
                 cltP.setDblQUOTACONSOMENSUELLE(
                         (cltP.getDblQUOTACONSOMENSUELLE() != null ? cltP.getDblQUOTACONSOMENSUELLE() : 0)
-                        + newCtp.getIntPRICE());
+                                + newCtp.getIntPRICE());
                 cltP.setDtUPDATED(new Date());
                 emg.merge(cltP);
             }
@@ -840,7 +846,7 @@ public class SalesServiceImpl implements SalesService {
 
     private void copyRecette(TPreenregistrement newPreen, TRecettes old, TUser o) {
         TRecettes tr = old;
-        LOG.log(Level.INFO, "tr {0} ", new Object[]{tr});
+        LOG.log(Level.INFO, "tr {0} ", new Object[] { tr });
         tr.setLgUSERID(o);
         tr.setDtCREATED(newPreen.getDtUPDATED());
         tr.setDtUPDATED(newPreen.getDtUPDATED());
@@ -1637,37 +1643,37 @@ public class SalesServiceImpl implements SalesService {
     private TModeReglement findModeReglement(String idTypeRegl) {
         TModeReglement modeReglement;
         switch (idTypeRegl) {
-            case "1":
-            case "4":
-                modeReglement = findByIdMod("1");
-                break;
-            case "2":
-                modeReglement = findByIdMod("2");
-                break;
-            case "3":
-                modeReglement = findByIdMod("5");
-                break;
-            case "6":
-                modeReglement = findByIdMod("7");
-                break;
-            case "5":
-                modeReglement = findByIdMod("6");
-                break;
-            case "7":
-                modeReglement = findByIdMod(MODE_ORANGE);
-                break;
-            case "8":
-                modeReglement = findByIdMod("8");
-                break;
-            case "9":
-                modeReglement = findByIdMod("9");
-                break;
-            case "10":
-                modeReglement = findByIdMod("11");
-                break;
-            default:
-                modeReglement = findByIdMod(idTypeRegl);
-                break;
+        case "1":
+        case "4":
+            modeReglement = findByIdMod("1");
+            break;
+        case "2":
+            modeReglement = findByIdMod("2");
+            break;
+        case "3":
+            modeReglement = findByIdMod("5");
+            break;
+        case "6":
+            modeReglement = findByIdMod("7");
+            break;
+        case "5":
+            modeReglement = findByIdMod("6");
+            break;
+        case "7":
+            modeReglement = findByIdMod(MODE_ORANGE);
+            break;
+        case "8":
+            modeReglement = findByIdMod("8");
+            break;
+        case "9":
+            modeReglement = findByIdMod("9");
+            break;
+        case "10":
+            modeReglement = findByIdMod("11");
+            break;
+        default:
+            modeReglement = findByIdMod(idTypeRegl);
+            break;
 
         }
         return modeReglement;
@@ -2166,7 +2172,7 @@ public class SalesServiceImpl implements SalesService {
 
                         json.putOnce("success", false).putOnce("msg",
                                 "Le numéro de  <span style='color:red;font-weight:800;'> " + params.getNumBon()
-                                + " </span> est déjà utilisé par l'assureur :: " + payant.getStrFULLNAME());
+                                        + " </span> est déjà utilisé par l'assureur :: " + payant.getStrFULLNAME());
 
                     } else {
                         TPreenregistrementCompteClientTiersPayent item = getTPreenregistrementCompteClientTiersPayent(
@@ -2676,7 +2682,7 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                .cmuAmount(montantCMU.intValue());
+                        .cmuAmount(montantCMU.intValue());
     }
 
     @Override
@@ -3490,8 +3496,7 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrementCompteClientTiersPayent clientTiersPayent = getTPreenregistrementCompteClientTiersPayent(
                     venteId, olClientTiersPayant.getLgCOMPTECLIENTTIERSPAYANTID(), getEm());
             /**
-             * s'il y a modification de tu tiers-payant on rentre dans premiere
-             * condition
+             * s'il y a modification de tu tiers-payant on rentre dans premiere condition
              */
             if (!params.getTypeVenteId().equals(params.getAyantDroitId())) {
 
@@ -3750,84 +3755,32 @@ public class SalesServiceImpl implements SalesService {
 
     private TPreenregistrement updateVenteInfosClientOrtierspayant(SalesParams salesParams) throws Exception {
         TPreenregistrement tp = getEm().find(TPreenregistrement.class, salesParams.getVenteId());
+
+        VenteModification venteModification;
         if (tp.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(VENTE_AVEC_CARNET)) {
-            updateCompteClientVenteCarner(tp, salesParams);
+            venteModification = updateCompteClientVenteCarner(tp, salesParams);
             updateVenteCarnet(salesParams, tp);
+
         } else {
-            clonePreenregistrementTp(tp, salesParams, STATUT_IS_CLOSED);
-            updateVente(salesParams, tp);
+            venteModification = clonePreenregistrementTp(tp, salesParams, STATUT_IS_CLOSED);
+            updateVente(venteModification, salesParams, tp);
+            venteModification.setFinalClient(NumberUtils.formatIntToString(tp.getIntCUSTPART()));
         }
 
         Map<String, Object> donneesMap = new HashMap<>();
+        if (!venteModification.isEmpty()) {
+            donneesMap.put(NotificationUtils.ITEMS.getId(), new JSONObject(venteModification));
+        }
+
         donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
         donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MOTIFICATION_VENETE.getValue());
-        donneesMap.put(NotificationUtils.USER.getId(), salesParams.getUserId().getStrFIRSTNAME() + " " + salesParams.getUserId().getStrLASTNAME());
+        donneesMap.put(NotificationUtils.USER.getId(),
+                salesParams.getUserId().getStrFIRSTNAME() + " " + salesParams.getUserId().getStrLASTNAME());
         donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
         donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(tp.getIntPRICE()));
-        createNotification(null, TypeNotification.MOTIFICATION_VENETE, salesParams.getUserId(), donneesMap, tp.getLgPREENREGISTREMENTID());
+        createNotification("", TypeNotification.MOTIFICATION_VENETE, salesParams.getUserId(), donneesMap,
+                tp.getLgPREENREGISTREMENTID());
         return tp;
-    }
-
-    private void clonePreenregistrementTp(TPreenregistrement old, SalesParams salesParams, String statut)
-            throws Exception {
-        List<TPreenregistrementCompteClientTiersPayent> newList = getTPreenregistrementCompteClientTiersPayent(
-                old.getLgPREENREGISTREMENTID());
-        List<TPreenregistrementCompteClientTiersPayent> array = new ArrayList<>();
-        TClient client = old.getClient();
-        List<TPreenregistrementDetail> list = getItems(old);
-        int montant = old.getIntPRICE();
-        int montantVariable = montant;
-        List<TiersPayantParams> payantParamses = salesParams.getTierspayants();
-        for (TiersPayantParams b : payantParamses) {
-            TCompteClientTiersPayant payant;
-            Optional<TCompteClientTiersPayant> op = findOneCompteClientTiersPayantById(b.getCompteTp());
-            if (!op.isPresent()) {
-                op = findCompteClientTiersPayantByClientIdAndTiersPayantId(client.getLgCLIENTID(), b.getCompteTp());
-            }
-            if (op.isPresent()) {
-                payant = op.get();
-                if (payant.getBISRO() || (payant.getIntPRIORITY() == 1)) {
-                    old.setStrREFBON(b.getNumBon());
-                }
-                TPreenregistrementCompteClientTiersPayent opc;
-                Optional<TPreenregistrementCompteClientTiersPayent> optc = getTPreenregistrementCompteClientTiersPayent(
-                        old.getLgPREENREGISTREMENTID(), b.getCompteTp());
-                if (optc.isPresent()) {
-                    opc = optc.get();
-                    opc.setStrREFBON(b.getNumBon());
-                    getEm().merge(opc);
-                } else {
-                    JSONObject json = calculVoNetAvecPlafondVente(old, montantVariable, b.getTaux(), list);
-                    montantVariable = json.getInt("reste");
-                    opc = createNewPreenregistrementCompteClientTiersPayant(payant, json, old, salesParams.getUserId(),
-                            statut, b.getNumBon());
-                }
-
-                array.add(opc);
-            } else {
-
-                TTiersPayant p = getEm().find(TTiersPayant.class, b.getCompteTp());
-                if (payantParamses.size() > 1) {
-                    TPreenregistrementCompteClientTiersPayent opc = getEm()
-                            .find(TPreenregistrementCompteClientTiersPayent.class, b.getItemId());
-                    payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux(),
-                            opc.getLgCOMPTECLIENTTIERSPAYANTID());
-                } else {
-                    payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux());
-                }
-
-                if (payant.getBISRO() || (payant.getIntPRIORITY() == 1)) {
-                    old.setStrREFBON(b.getNumBon());
-                }
-                JSONObject json = calculVoNetAvecPlafondVente(old, montantVariable, b.getTaux(), list);
-                montantVariable = json.getInt("reste");
-                createNewPreenregistrementCompteClientTiersPayant(payant, json, old, salesParams.getUserId(), statut,
-                        b.getNumBon());
-            }
-
-        }
-        ListUtils.removeAll(newList, array).forEach(a -> getEm().remove(a));
-
     }
 
     public Optional<TPreenregistrementCompteClientTiersPayent> findOptionalCmtByNumBonAndVenteId(String numBon,
@@ -3845,9 +3798,12 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    private TPreenregistrement updateVente(SalesParams salesParams, TPreenregistrement preen) {
+    private TPreenregistrement updateVente(VenteModification venteModification, SalesParams salesParams,
+            TPreenregistrement preen) {
         preen.setLgUSERID(salesParams.getUserId());
         TClient client = findClient(salesParams.getClientId(), getEm());
+        TAyantDroit oldAyantDroit = preen.getAyantDroit();
+        venteModification.setOldAyantDroit(buildAyantDroit(oldAyantDroit));
         preen.setClient(client);
         preen.setStrFIRSTNAMECUSTOMER(client.getStrFIRSTNAME());
         preen.setStrLASTNAMECUSTOMER(client.getStrLASTNAME());
@@ -3859,11 +3815,17 @@ public class SalesServiceImpl implements SalesService {
             preen.setStrFIRSTNAMECUSTOMER(a.getStrFIRSTNAME());
             preen.setStrLASTNAMECUSTOMER(a.getStrLASTNAME());
             preen.setStrNUMEROSECURITESOCIAL(a.getStrNUMEROSECURITESOCIAL());
+            venteModification.setFinalAyantDroit(buildAyantDroit(a));
         });
 
         preen.setCompletionDate(new Date());
         getEm().merge(preen);
         return preen;
+    }
+
+    private String buildAyantDroit(TAyantDroit oldAyantDroit) {
+        return oldAyantDroit.getLgAYANTSDROITSID() + ";" + oldAyantDroit.getStrFIRSTNAME() + " "
+                + oldAyantDroit.getStrLASTNAME() + ";" + oldAyantDroit.getStrNUMEROSECURITESOCIAL();
     }
 
     @Override
@@ -4074,8 +4036,8 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private TPreenregistrementCompteClientTiersPayent createNewPreenregistrementCompteClientTiersPayant(
-            TCompteClientTiersPayant payant, JSONObject json, TPreenregistrement old, TUser user, String statut,
-            String numBon) throws Exception {
+            VenteModification venteModification, TCompteClientTiersPayant payant, JSONObject json,
+            TPreenregistrement old, TUser user, String statut, String numBon) throws Exception {
         TPreenregistrementCompteClientTiersPayent newItem = new TPreenregistrementCompteClientTiersPayent();
         newItem.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
         newItem.setLgPREENREGISTREMENTID(old);
@@ -4095,17 +4057,18 @@ public class SalesServiceImpl implements SalesService {
         if (oCompteClient != null && payant.getDblPLAFOND() != null && payant.getDblPLAFOND() != 0) {
             payant.setDblQUOTACONSOMENSUELLE(
                     (payant.getDblQUOTACONSOMENSUELLE() != null ? payant.getDblQUOTACONSOMENSUELLE() : 0)
-                    + newItem.getIntPRICE());
+                            + newItem.getIntPRICE());
             payant.setDtUPDATED(old.getDtUPDATED());
             getEm().merge(payant);
         }
         if (oCompteClient != null && oCompteClient.getDblPLAFOND() != null && oCompteClient.getDblPLAFOND() != 0) {
             oCompteClient.setDblQUOTACONSOMENSUELLE(
                     (oCompteClient.getDblQUOTACONSOMENSUELLE() != null ? oCompteClient.getDblQUOTACONSOMENSUELLE() : 0)
-                    + newItem.getIntPRICE());
+                            + newItem.getIntPRICE());
             oCompteClient.setDtUPDATED(new Date());
             getEm().merge(oCompteClient);
         }
+        venteModification.getFinalTiersPayant().add(buildTpData(newItem));
         return newItem;
     }
 
@@ -4329,8 +4292,8 @@ public class SalesServiceImpl implements SalesService {
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
                 DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
-                .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
+                        .margeUg(margeUg.intValue()).montantTtcUg(montantTtcUg.intValue())
+                        .montantTvaUg(tvaUg.intValue()).montantNetUg(montantTtcUg.intValue());
     }
 
     private MontantAPaye sumVenteSansRemise(List<TPreenregistrementDetail> list, TPreenregistrement p) {
@@ -4461,13 +4424,13 @@ public class SalesServiceImpl implements SalesService {
                         pt.setLgPREENREGISTREMENTID(newTp);
                         return pt;
                     }).map(pt -> {
-                pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
-                pt.setDtCREATED(newTp.getDtUPDATED());
-                pt.setDtUPDATED(newTp.getDtUPDATED());
-                return pt;
-            }).forEachOrdered(pt -> {
-                getEm().persist(pt);
-            });
+                        pt.setLgPREENREGISTREMENTCOMPTECLIENTPAYENTID(UUID.randomUUID().toString());
+                        pt.setDtCREATED(newTp.getDtUPDATED());
+                        pt.setDtUPDATED(newTp.getDtUPDATED());
+                        return pt;
+                    }).forEachOrdered(pt -> {
+                        getEm().persist(pt);
+                    });
             JSONObject data = new JSONObject();
             data.put("lgPREENREGISTREMENTID", newTp.getLgPREENREGISTREMENTID());
             data.put("strREF", newTp.getStrREF());
@@ -4480,22 +4443,14 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    private MvtTransaction findByPkey(String pkey) {
-        try {
-            TypedQuery<MvtTransaction> tq = getEm().createQuery("SELECT o FROM MvtTransaction o WHERE o.pkey=?1",
-                    MvtTransaction.class);
-            tq.setParameter(1, pkey);
-            tq.setMaxResults(1);
-            return tq.getSingleResult();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return null;
-        }
-    }
-
-    private void updateCompteClientVenteCarner(TPreenregistrement old, SalesParams salesParams) throws Exception {
+    private VenteModification updateCompteClientVenteCarner(TPreenregistrement old, SalesParams salesParams)
+            throws Exception {
         TPreenregistrementCompteClientTiersPayent opc = getTPreenregistrementCompteClientTiersPayent(
                 old.getLgPREENREGISTREMENTID()).get(0);
+        VenteModification venteModification = new VenteModification();
+        TCompteClientTiersPayant oldTp = opc.getLgCOMPTECLIENTTIERSPAYANTID();
+
+        String oldBon = opc.getStrREFBON();
         TClient client = old.getClient();
         TiersPayantParams b = salesParams.getTierspayants().get(0);
         TCompteClientTiersPayant payant;
@@ -4513,7 +4468,112 @@ public class SalesServiceImpl implements SalesService {
         opc.setStrREFBON(b.getNumBon());
         opc.setLgCOMPTECLIENTTIERSPAYANTID(payant);
         getEm().merge(opc);
+        TClient finalClient = payant.getLgCOMPTECLIENTID().getLgCLIENTID();
+        if (!client.equals(finalClient)) {
+            venteModification.setEmpty(false);
+            venteModification.setOldClient(client.getLgCLIENTID() + ";" + client.getStrFIRSTNAME() + " "
+                    + client.getStrLASTNAME() + ";" + client.getStrNUMEROSECURITESOCIAL());
+            venteModification.setFinalClient(finalClient.getLgCLIENTID() + ";" + finalClient.getStrFIRSTNAME() + " "
+                    + finalClient.getStrLASTNAME() + ";" + finalClient.getStrNUMEROSECURITESOCIAL());
+        }
+        if (!oldTp.equals(payant)) {
+            venteModification.setEmpty(false);
+            TTiersPayant oldP = oldTp.getLgTIERSPAYANTID();
+            TTiersPayant fP = payant.getLgTIERSPAYANTID();
+            venteModification.setOldTiersPayant(List.of(oldP.getLgTIERSPAYANTID() + ";" + oldP.getStrFULLNAME() + "/"
+                    + oldTp.getStrNUMEROSECURITESOCIAL()));
+            venteModification.setFinalTiersPayant(List.of(
+                    fP.getLgTIERSPAYANTID() + ";" + fP.getStrFULLNAME() + "/" + payant.getStrNUMEROSECURITESOCIAL()));
+        }
+        if (!oldBon.equalsIgnoreCase(b.getNumBon())) {
+            venteModification.setEmpty(false);
+            venteModification.setOldBon(oldBon);
+            venteModification.setFinalBon(b.getNumBon());
+        }
+        return venteModification;
 
+    }
+
+    private String buildTpData(TPreenregistrementCompteClientTiersPayent t) {
+        TCompteClientTiersPayant oldTp = t.getLgCOMPTECLIENTTIERSPAYANTID();
+        TTiersPayant oldP = oldTp.getLgTIERSPAYANTID();
+        var bonMontant = t.getStrREFBON() + ";" + t.getIntPERCENT() + ";"
+                + NumberUtils.formatIntToString(t.getIntPRICE());
+        return oldP.getLgTIERSPAYANTID() + ";" + oldP.getStrFULLNAME() + "/" + oldTp.getStrNUMEROSECURITESOCIAL() + "/"
+                + bonMontant;
+    }
+
+    private VenteModification clonePreenregistrementTp(TPreenregistrement old, SalesParams salesParams, String statut)
+            throws Exception {
+        VenteModification venteModification = new VenteModification();
+        venteModification.setEmpty(false);
+        List<TPreenregistrementCompteClientTiersPayent> oldDataList = getTPreenregistrementCompteClientTiersPayent(
+                old.getLgPREENREGISTREMENTID());
+        List<String> oldTiersPayant = new ArrayList<>();
+        for (TPreenregistrementCompteClientTiersPayent t : oldDataList) {
+
+            oldTiersPayant.add(buildTpData(t));
+        }
+        venteModification.setOldMontantClient(NumberUtils.formatIntToString(old.getIntCUSTPART()));
+        venteModification.setOldTiersPayant(oldTiersPayant);
+        List<TPreenregistrementCompteClientTiersPayent> clonedDatas = new ArrayList<>();
+        TClient client = old.getClient();
+        venteModification.setOldClient(client.getLgCLIENTID() + ";" + client.getStrFIRSTNAME() + ";"
+                + client.getStrLASTNAME() + ";" + client.getStrNUMEROSECURITESOCIAL());
+        List<TPreenregistrementDetail> list = getItems(old);
+        int montant = old.getIntPRICE();
+        int montantVariable = montant;
+        List<TiersPayantParams> payantParamses = salesParams.getTierspayants();
+        for (TiersPayantParams b : payantParamses) {
+            TCompteClientTiersPayant payant;
+            Optional<TCompteClientTiersPayant> op = findOneCompteClientTiersPayantById(b.getCompteTp());
+            if (!op.isPresent()) {
+                op = findCompteClientTiersPayantByClientIdAndTiersPayantId(client.getLgCLIENTID(), b.getCompteTp());
+            }
+            if (op.isPresent()) {
+                payant = op.get();
+                if (payant.getBISRO() || (payant.getIntPRIORITY() == 1)) {
+                    old.setStrREFBON(b.getNumBon());
+                }
+                TPreenregistrementCompteClientTiersPayent opc;
+                Optional<TPreenregistrementCompteClientTiersPayent> optc = getTPreenregistrementCompteClientTiersPayent(
+                        old.getLgPREENREGISTREMENTID(), b.getCompteTp());
+                if (optc.isPresent()) {
+                    opc = optc.get();
+                    opc.setStrREFBON(b.getNumBon());
+                    getEm().merge(opc);
+                } else {
+                    JSONObject json = calculVoNetAvecPlafondVente(old, montantVariable, b.getTaux(), list);
+                    montantVariable = json.getInt("reste");
+                    opc = createNewPreenregistrementCompteClientTiersPayant(venteModification, payant, json, old,
+                            salesParams.getUserId(), statut, b.getNumBon());
+                }
+
+                clonedDatas.add(opc);
+            } else {
+
+                TTiersPayant p = getEm().find(TTiersPayant.class, b.getCompteTp());
+                if (payantParamses.size() > 1) {
+                    TPreenregistrementCompteClientTiersPayent opc = getEm()
+                            .find(TPreenregistrementCompteClientTiersPayent.class, b.getItemId());
+                    payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux(),
+                            opc.getLgCOMPTECLIENTTIERSPAYANTID());
+                } else {
+                    payant = clientService.updateOrCreateClientAssurance(client, p, b.getTaux());
+                }
+
+                if (payant.getBISRO() || (payant.getIntPRIORITY() == 1)) {
+                    old.setStrREFBON(b.getNumBon());
+                }
+                JSONObject json = calculVoNetAvecPlafondVente(old, montantVariable, b.getTaux(), list);
+                montantVariable = json.getInt("reste");
+                createNewPreenregistrementCompteClientTiersPayant(venteModification, payant, json, old,
+                        salesParams.getUserId(), statut, b.getNumBon());
+            }
+
+        }
+        ListUtils.removeAll(oldDataList, clonedDatas).forEach(a -> getEm().remove(a));
+        return venteModification;
     }
 
     private TPreenregistrement updateVenteCarnet(SalesParams salesParams, TPreenregistrement prenn) throws Exception {
@@ -4596,7 +4656,8 @@ public class SalesServiceImpl implements SalesService {
         donneesMap.put(NotificationUtils.USER.getId(), ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME());
         donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
         donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(p.getIntPRICE()));
-        createNotification(desc, TypeNotification.MOTIFICATION_VENETE, ooTUser, donneesMap, p.getLgPREENREGISTREMENTID());
+        createNotification(desc, TypeNotification.MOTIFICATION_VENETE, ooTUser, donneesMap,
+                p.getLgPREENREGISTREMENTID());
     }
 
     private void updatePreenregistrementDetailDate(TPreenregistrementDetail item, Date venteDate) {
@@ -4881,10 +4942,13 @@ public class SalesServiceImpl implements SalesService {
         return map;
     }
 
-    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
         try {
             notificationService.save(
-                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }

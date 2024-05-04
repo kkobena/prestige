@@ -339,11 +339,11 @@ public class DatabaseToolkit {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        Map<TypeNotification, List<Notification>> map = notifications.stream()
-                .collect(Collectors.groupingBy(Notification::getTypeNotification));
+        Map<String, List<Notification>> map = notifications.stream()
+                .collect(Collectors.groupingBy(e -> e.getCategorieNotification().getName()));
         sb.append("<html><body>");
         map.forEach((key, values) -> {
-            sb.append("<h2 style='margin: 10px;padding: 5px;'>").append(key.getValue()).append("</h2><ol>");
+            sb.append("<h2 style='margin: 10px;padding: 5px;'>").append(key).append("</h2><ol>");
             values.forEach(e -> {
                 sb.append("<li>").append(e.getMessage()).append("</li>");
             });

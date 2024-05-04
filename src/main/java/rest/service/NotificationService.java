@@ -27,16 +27,15 @@ public interface NotificationService {
     JSONObject findAll(String typeNotification, Canal canal, Statut statut, String dtStart, String dtEnd, int start,
             int limit);
 
-    void save(Notification notification, Object entity);
+    void save(Notification notification);
 
-    void save(Notification notification, TClient client, Object entity);
+    void save(Notification notification, TClient client);
 
-    Notification buildNotification(NotificationDTO notification, TUser user, Object entity);
+    Notification buildNotification(NotificationDTO notification, TUser user);
 
     String buildDonnees(Map<String, Object> donneesMap);
 
     CategorieNotification getOneByName(TypeNotification typeNotification);
-   
+    // List<Notification> fetch()
 
-     
 }

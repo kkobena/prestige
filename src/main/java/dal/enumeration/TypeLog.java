@@ -20,16 +20,19 @@ public enum TypeLog {
     ATTRIBUTION_DE_FOND_DE_CAISSE("Attribution de fond de caisse", true),
     MODIFICATION_DATE_SYSTEME("Modification de la date système", true), IVENTAIRE("Inventaire du stock", true),
     GENERATION_DE_FACTURE("Génération de facture", true),
-    MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande", true), QUANTITE_UG("Entrée quantité UG", true),
-    MODIFICATION_INFO_VENTE("Modification de vente", true), RETOUR_FOURNISSEUR("Retour fournisseur", true),
-    SAISIS_PERIMES("Saisis de périmés", true), VALIDATION_DE_FOND_DE_CAISSE("Validation de fond de caisse ", true),
-    AUTHENTIFICATION("Authentification", true), DECONNECTION("Deconnection", true), CLOTURE_CAISSE("Cloture de caisse", true),
+    MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande", true),
+    QUANTITE_UG("Entrée quantité UG", true), MODIFICATION_INFO_VENTE("Modification de vente", true),
+    RETOUR_FOURNISSEUR("Retour fournisseur", true), SAISIS_PERIMES("Saisis de périmés", true),
+    VALIDATION_DE_FOND_DE_CAISSE("Validation de fond de caisse ", true), AUTHENTIFICATION("Authentification", true),
+    DECONNECTION("Deconnection", true), CLOTURE_CAISSE("Cloture de caisse", true),
     OUVERTURE_CAISSE_AUTO("Ouverture de de caisse automatique", false), OUVERTURE_CAISSE("Ouverture  de caisse", true),
-    MODIFICATION_DATE_VENTE_CREDIT("Modification de date de vente a crédit", true), AVOIR_PRODUIT("Reception avoir", true),
+    MODIFICATION_DATE_VENTE_CREDIT("Modification de date de vente a crédit", true),
+    AVOIR_PRODUIT("Reception avoir", true),
     MODIFICATION_PA_PRODUIT_COMMANDE("Modification prix d'achat produit à la commande", false),
     MODIFICATION_PU_PRODUIT_COMMANDE("Modification prix de vente produit à la commande", false),
     MVT_DE_CAISSE_REGLEMENT_DIFFERE("Règlement différé", false),
-    MVT_DE_CAISSE_REGLEMENT_DEPOT("Règlement dépôt", false), MOTIFICATION_VENETE("Modification de vente", true);
+    MVT_DE_CAISSE_REGLEMENT_DEPOT("Règlement dépôt", false), MOTIFICATION_VENETE("Modification de vente", true),
+    AJOUT_DE_NOUVEAU_PRODUIT("Ajout de nouveau produit", true);
 
     private final String value;
     private final boolean checked;

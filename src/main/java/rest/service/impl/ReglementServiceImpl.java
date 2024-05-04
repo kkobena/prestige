@@ -5,7 +5,6 @@
  */
 package rest.service.impl;
 
-import bll.common.Parameter;
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.DelayedDTO;
 import commonTasks.dto.Params;
@@ -34,7 +33,6 @@ import dal.TTypeMvtCaisse;
 import dal.TTypeReglement;
 import dal.TUser;
 import dal.TUser_;
-import dal.enumeration.Canal;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
@@ -119,10 +117,13 @@ public class ReglementServiceImpl implements ReglementService {
         }
     }
 
-    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
         try {
             notificationService.save(
-                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -236,24 +237,24 @@ public class ReglementServiceImpl implements ReglementService {
     private TModeReglement findModeReglement(String idTypeRegl) {
         TModeReglement modeReglement;
         switch (idTypeRegl) {
-            case "1":
-                modeReglement = findByIdMod("1");
-                break;
-            case "2":
-                modeReglement = findByIdMod("2");
-                break;
-            case "3":
-                modeReglement = findByIdMod("5");
-                break;
-            case "6":
-                modeReglement = findByIdMod("7");
-                break;
-            case "5":
-                modeReglement = findByIdMod("6");
-                break;
-            default:
-                modeReglement = findByIdMod("1");
-                break;
+        case "1":
+            modeReglement = findByIdMod("1");
+            break;
+        case "2":
+            modeReglement = findByIdMod("2");
+            break;
+        case "3":
+            modeReglement = findByIdMod("5");
+            break;
+        case "6":
+            modeReglement = findByIdMod("7");
+            break;
+        case "5":
+            modeReglement = findByIdMod("6");
+            break;
+        default:
+            modeReglement = findByIdMod("1");
+            break;
         }
         return modeReglement;
     }
@@ -264,7 +265,7 @@ public class ReglementServiceImpl implements ReglementService {
 
     public void addtransactionComptant(TTypeMvtCaisse optionalCaisse, TMvtCaisse caisse, Integer intAMOUNT,
             TCompteClient compteClient, Integer intAMOUNTREMIS, Integer intAMOUNTRECU, TReglement oTReglement,
-            String lgTYPEREGLEMENT_ID, TUser user) {
+            String lgTYPEREGLEMENTID, TUser user) {
         TCashTransaction cashTransaction = new TCashTransaction(UUID.randomUUID().toString());
         cashTransaction.setBoolCHECKED(Boolean.TRUE);
         cashTransaction.setDtCREATED(oTReglement.getDtCREATED());
@@ -273,7 +274,7 @@ public class ReglementServiceImpl implements ReglementService {
         cashTransaction.setIntAMOUNT(intAMOUNT);
         cashTransaction.setStrTYPE(Boolean.TRUE);
         cashTransaction.setStrDESCRIPTION("");
-        cashTransaction.setLgTYPEREGLEMENTID(lgTYPEREGLEMENT_ID);
+        cashTransaction.setLgTYPEREGLEMENTID(lgTYPEREGLEMENTID);
         cashTransaction.setLgUSERID(user);
         cashTransaction.setIntAMOUNT2(intAMOUNT);
         cashTransaction.setStrTRANSACTIONREF(DateConverter.TRANSACTION_CREDIT);
@@ -295,8 +296,8 @@ public class ReglementServiceImpl implements ReglementService {
     }
 
     public TMvtCaisse mvtCaisse(TTypeMvtCaisse oTTypeMvtCaisse, TUser u, TModeReglement modeReglement,
-            String strNUMCOMPTE, String strNUMPIECECOMPTABLE, TReglement reglement, int intAMOUNT,
-            Date dtDATEMVT, String pKEY) {
+            String strNUMCOMPTE, String strNUMPIECECOMPTABLE, TReglement reglement, int intAMOUNT, Date dtDATEMVT,
+            String pKEY) {
         TMvtCaisse oTMvtCaisse = new TMvtCaisse();
         oTMvtCaisse.setLgMVTCAISSEID(UUID.randomUUID().toString());
         oTMvtCaisse.setLgTYPEMVTCAISSEID(oTTypeMvtCaisse);
@@ -387,16 +388,21 @@ public class ReglementServiceImpl implements ReglementService {
                 });
                 logService.updateItem(clotureVenteParams.getUserId(), caisse.getLgMVTCAISSEID(), description,
                         TypeLog.MVT_DE_CAISSE, caisse);
-                /*   notificationService
-                        .save(new Notification().canal(Canal.SMS_EMAIL).typeNotification(TypeNotification.MVT_DE_CAISSE)
-                                .message(description).addUser(clotureVenteParams.getUserId()));*/
+                /*
+                 * notificationService .save(new
+                 * Notification().canal(Canal.SMS_EMAIL).typeNotification(TypeNotification.MVT_DE_CAISSE)
+                 * .message(description).addUser(clotureVenteParams.getUserId()));
+                 */
 
                 Map<String, Object> donneesMap = new HashMap<>();
                 donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MVT_DE_CAISSE_REGLEMENT_DIFFERE.getValue());
-                donneesMap.put(NotificationUtils.USER.getId(), clotureVenteParams.getUserId().getStrFIRSTNAME() + " " + clotureVenteParams.getUserId().getStrLASTNAME());
+                donneesMap.put(NotificationUtils.USER.getId(), clotureVenteParams.getUserId().getStrFIRSTNAME() + " "
+                        + clotureVenteParams.getUserId().getStrLASTNAME());
                 donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-                donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(dossierReglement.getDblAMOUNT()));
-                createNotification(description, TypeNotification.MVT_DE_CAISSE, clotureVenteParams.getUserId(), donneesMap, caisse.getLgMVTCAISSEID());
+                donneesMap.put(NotificationUtils.MONTANT.getId(),
+                        NumberUtils.formatIntToString(dossierReglement.getDblAMOUNT()));
+                createNotification(description, TypeNotification.MVT_DE_CAISSE, clotureVenteParams.getUserId(),
+                        donneesMap, caisse.getLgMVTCAISSEID());
 
                 return json.put("success", true).put("msg", "Opération effectuée").put("ref",
                         dossierReglement.getLgDOSSIERREGLEMENTID());
@@ -479,8 +485,10 @@ public class ReglementServiceImpl implements ReglementService {
         addTransaction(user, carnet, caisse, dossierReglement.getLgDOSSIERREGLEMENTID(), typeReglement,
                 payant.getLgTIERSPAYANTID());
         logService.updateItem(user, caisse.getLgMVTCAISSEID(), description, TypeLog.MVT_DE_CAISSE, caisse, evtDate);
-        /*   notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
-                .typeNotification(TypeNotification.MVT_DE_CAISSE).message(description).addUser(user));*/
+        /*
+         * notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
+         * .typeNotification(TypeNotification.MVT_DE_CAISSE).message(description).addUser(user));
+         */
 
         getEmg().persist(carnet);
         getEmg().merge(payant);
@@ -489,7 +497,8 @@ public class ReglementServiceImpl implements ReglementService {
         donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MVT_DE_CAISSE_REGLEMENT_DEPOT.getValue());
         donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
         donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(dossierReglement.getDblAMOUNT()));
+        donneesMap.put(NotificationUtils.MONTANT.getId(),
+                NumberUtils.formatIntToString(dossierReglement.getDblAMOUNT()));
         createNotification(description, TypeNotification.MVT_DE_CAISSE, user, donneesMap, caisse.getLgMVTCAISSEID());
 
         return json.put("success", true).put("msg", "Opération effectuée").put("ref",
@@ -607,16 +616,21 @@ public class ReglementServiceImpl implements ReglementService {
                 });
                 logService.updateItem(clotureVenteParams.getUserId(), caisse.getLgMVTCAISSEID(), description,
                         TypeLog.MVT_DE_CAISSE, caisse);
-                /*    notificationService
-                        .save(new Notification().canal(Canal.SMS_EMAIL).typeNotification(TypeNotification.MVT_DE_CAISSE)
-                                .message(description).addUser(clotureVenteParams.getUserId()));*/
+                /*
+                 * notificationService .save(new
+                 * Notification().canal(Canal.SMS_EMAIL).typeNotification(TypeNotification.MVT_DE_CAISSE)
+                 * .message(description).addUser(clotureVenteParams.getUserId()));
+                 */
                 Map<String, Object> donneesMap = new HashMap<>();
                 donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MVT_DE_CAISSE_REGLEMENT_DIFFERE.getValue());
-                donneesMap.put(NotificationUtils.USER.getId(), clotureVenteParams.getUserId().getStrFIRSTNAME() + " " + clotureVenteParams.getUserId().getStrLASTNAME());
+                donneesMap.put(NotificationUtils.USER.getId(), clotureVenteParams.getUserId().getStrFIRSTNAME() + " "
+                        + clotureVenteParams.getUserId().getStrLASTNAME());
                 donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-                donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(dossierReglement.getDblAMOUNT()));
-                createNotification(description, TypeNotification.MVT_DE_CAISSE, clotureVenteParams.getUserId(), donneesMap, caisse.getLgMVTCAISSEID());
-              
+                donneesMap.put(NotificationUtils.MONTANT.getId(),
+                        NumberUtils.formatIntToString(dossierReglement.getDblAMOUNT()));
+                createNotification(description, TypeNotification.MVT_DE_CAISSE, clotureVenteParams.getUserId(),
+                        donneesMap, caisse.getLgMVTCAISSEID());
+
                 return json.put("success", true).put("msg", "Opération effectuée").put("ref",
                         dossierReglement.getLgDOSSIERREGLEMENTID());
             }
@@ -628,47 +642,47 @@ public class ReglementServiceImpl implements ReglementService {
         return json;
     }
 
-    public TReglement createTReglement(String str_REF_COMPTE_CLIENT, TUser u, String str_REF_RESSOURCE,
-            String str_BANQUE, String str_LIEU, String str_COMMENTAIRE, TModeReglement OTModeReglement, int int_AMOUNT,
-            String nom, Date dt_reglement, Date evt) {
-        TReglement OTReglement = new TReglement();
-        OTReglement.setLgREGLEMENTID(UUID.randomUUID().toString());
-        OTReglement.setStrBANQUE(str_BANQUE);
-        OTReglement.setStrCODEMONNAIE("FR");
-        OTReglement.setStrCOMMENTAIRE(str_COMMENTAIRE);
-        OTReglement.setStrLIEU(str_LIEU);
-        OTReglement.setStrFIRSTLASTNAME(nom);
-        OTReglement.setStrREFRESSOURCE(str_REF_RESSOURCE);
-        OTReglement.setIntTAUX(0);
-        OTReglement.setDtCREATED(evt);
-        OTReglement.setDtUPDATED(evt);
-        OTReglement.setLgMODEREGLEMENTID(OTModeReglement);
-        OTReglement.setDtREGLEMENT(dt_reglement);
-        OTReglement.setLgUSERID(u);
-        OTReglement.setBoolCHECKED(true);
-        OTReglement.setBISFACTURE(Boolean.FALSE);
-        OTReglement.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
-        getEmg().persist(OTReglement);
-        return OTReglement;
+    public TReglement createTReglement(String strREFCOMPTECLIENT, TUser u, String strREFRESSOURCE, String strBANQUE,
+            String strLIEU, String strCOMMENTAIRE, TModeReglement oTModeReglement, int intAMOUNT, String nom,
+            Date dtReglement, Date evt) {
+        TReglement oTReglement = new TReglement();
+        oTReglement.setLgREGLEMENTID(UUID.randomUUID().toString());
+        oTReglement.setStrBANQUE(strBANQUE);
+        oTReglement.setStrCODEMONNAIE("FR");
+        oTReglement.setStrCOMMENTAIRE(strCOMMENTAIRE);
+        oTReglement.setStrLIEU(strLIEU);
+        oTReglement.setStrFIRSTLASTNAME(nom);
+        oTReglement.setStrREFRESSOURCE(strREFRESSOURCE);
+        oTReglement.setIntTAUX(0);
+        oTReglement.setDtCREATED(evt);
+        oTReglement.setDtUPDATED(evt);
+        oTReglement.setLgMODEREGLEMENTID(oTModeReglement);
+        oTReglement.setDtREGLEMENT(dtReglement);
+        oTReglement.setLgUSERID(u);
+        oTReglement.setBoolCHECKED(true);
+        oTReglement.setBISFACTURE(Boolean.FALSE);
+        oTReglement.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
+        getEmg().persist(oTReglement);
+        return oTReglement;
     }
 
-    private TDossierReglement createDossierReglements(String lg_CLIENT_ID, TUser u, Integer amount,
-            String nature_dossier, Date dt_reglement, Integer montantattendu, Date evt) {
+    private TDossierReglement createDossierReglements(String lgCLIENTID, TUser u, Integer amount, String natureDossier,
+            Date dtreglement, Integer montantattendu, Date evt) {
 
-        TDossierReglement OTDossierReglement = new TDossierReglement();
-        OTDossierReglement.setLgDOSSIERREGLEMENTID(UUID.randomUUID().toString());
-        OTDossierReglement.setDblAMOUNT(Double.valueOf(amount));
-        OTDossierReglement.setLgUSERID(u);
-        OTDossierReglement.setStrNATUREDOSSIER(nature_dossier);
-        OTDossierReglement.setStrORGANISMEID(lg_CLIENT_ID);
-        OTDossierReglement.setDtREGLEMENT(dt_reglement);
-        OTDossierReglement.setDtCREATED(evt);
-        OTDossierReglement.setDtUPDATED(evt);
-        OTDossierReglement.setDblMONTANTATTENDU(Double.valueOf(montantattendu));
-        OTDossierReglement.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
-        getEmg().persist(OTDossierReglement);
+        TDossierReglement oTDossierReglement = new TDossierReglement();
+        oTDossierReglement.setLgDOSSIERREGLEMENTID(UUID.randomUUID().toString());
+        oTDossierReglement.setDblAMOUNT(Double.valueOf(amount));
+        oTDossierReglement.setLgUSERID(u);
+        oTDossierReglement.setStrNATUREDOSSIER(natureDossier);
+        oTDossierReglement.setStrORGANISMEID(lgCLIENTID);
+        oTDossierReglement.setDtREGLEMENT(dtreglement);
+        oTDossierReglement.setDtCREATED(evt);
+        oTDossierReglement.setDtUPDATED(evt);
+        oTDossierReglement.setDblMONTANTATTENDU(Double.valueOf(montantattendu));
+        oTDossierReglement.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
+        getEmg().persist(oTDossierReglement);
 
-        return OTDossierReglement;
+        return oTDossierReglement;
 
     }
 
@@ -690,7 +704,7 @@ public class ReglementServiceImpl implements ReglementService {
         predicates.add(
                 cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
         predicates.add(cb.and(cb.greaterThan(root.get(TPreenregistrementCompteClient_.intPRICERESTE), 0)));
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<TPreenregistrementCompteClient> q = emg.createQuery(cq);
         return q.getResultList();
 

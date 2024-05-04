@@ -12,7 +12,6 @@ import dal.TResumeCaisse;
 import dal.TTypeReglement;
 import dal.TUser;
 import dal.TUser_;
-import dal.enumeration.Canal;
 import dal.enumeration.TypeLigneResume;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
@@ -258,7 +257,8 @@ public class BilletageServiceImpl implements BilletageService {
             JSONObject jsonItemUg = new JSONObject();
             jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), ligneResumeCaisse.getTypeLigne().name());
             jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), ligneResumeCaisse.getTypeReglement().getStrNAME());
-            jsonItemUg.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatLongToString(ligneResumeCaisse.getMontant()));
+            jsonItemUg.put(NotificationUtils.MONTANT.getId(),
+                    NumberUtils.formatLongToString(ligneResumeCaisse.getMontant()));
             data.put(jsonItemUg);
         }
         Map<String, Object> donneesMap = new HashMap<>();
@@ -270,14 +270,18 @@ public class BilletageServiceImpl implements BilletageService {
         donneesMap.put(NotificationUtils.MESSAGE.getId(), description);
         donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
         donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-        createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user, donneesMap, oTResumeCaisse.getLdCAISSEID());
-        //  createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user);
+        createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user, donneesMap,
+                oTResumeCaisse.getLdCAISSEID());
+        // createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user);
     }
 
-    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
         try {
             notificationService.save(
-                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -324,11 +328,11 @@ public class BilletageServiceImpl implements BilletageService {
             Query query = this.em.createNativeQuery(SOLDE_SQL, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
                     .setParameter(2, caisse.getLgUSERID().getLgUSERID())
                     .setParameter(3, caisse.getDtCREATED(), TemporalType.TIMESTAMP).setParameter(4, new Date(),
-                    TemporalType.TIMESTAMP)/*
+                            TemporalType.TIMESTAMP)/*
                                                     * .setParameter(5, List.of(Constant.MODE_ESP, Constant.MODE_WAVE,
                                                     * Constant.TYPE_REGLEMENT_ORANGE, Constant.MODE_MOOV,
                                                     * Constant.MODE_MTN))
-                     */;
+                                                    */;
             return ((List<Tuple>) query.getResultList()).stream().map(LigneResumeCaisseDTO::new)
                     .collect(Collectors.toList());
 
@@ -487,7 +491,7 @@ public class BilletageServiceImpl implements BilletageService {
     private long getCashAmount(TResumeCaisse caisse, TypeLigneResume typeLigne) {
         return caisse.getLigneResumeCaisses().stream()
                 .filter(ligne -> CommonUtils.isCashTypeReglement(ligne.getTypeReglement().getLgTYPEREGLEMENTID())
-                && ligne.getTypeLigne() == typeLigne)
+                        && ligne.getTypeLigne() == typeLigne)
                 .mapToLong(LigneResumeCaisse::getMontant).reduce(0, Long::sum);
 
     }

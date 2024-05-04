@@ -223,7 +223,7 @@ public class CommandeServiceImpl implements CommandeService {
                         Integer cmde = Integer.valueOf(item[0] + ""), qu = Integer.valueOf(item[1] + "");
                         if (cmde < bn.getIntQTECMDE()) {
                             LOG.log(Level.INFO, "La reception de certains produits n'a pas ete faite {0} {1} {2}",
-                                    new Object[]{oFamille.getIntCIP(), cmde, bn.getIntQTECMDE()});
+                                    new Object[] { oFamille.getIntCIP(), cmde, bn.getIntQTECMDE() });
                             if (userTransaction.getStatus() == Status.STATUS_ACTIVE) {
                                 userTransaction.rollback();
                             }
@@ -238,13 +238,14 @@ public class CommandeServiceImpl implements CommandeService {
                         if (qu > 0) {
 
                             String comm = "ENTREE UG Num BL :  " + bonLivraison.getStrREFLIVRAISON() + " PRODUIT : "
-                                    + oFamille.getIntCIP() + " " + oFamille.getStrNAME()
-                                    + " QUANTITE " + qu + "  PAR " + user.getStrFIRSTNAME() + " "
-                                    + user.getStrLASTNAME();
+                                    + oFamille.getIntCIP() + " " + oFamille.getStrNAME() + " QUANTITE " + qu + "  PAR "
+                                    + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
                             logService.updateItem(user, bonLivraison.getStrREFLIVRAISON(), comm, TypeLog.QUANTITE_UG,
                                     bn);
-                            /* notificationService.save(new Notification().canal(Canal.EMAIL)
-                                    .typeNotification(TypeNotification.QUANTITE_UG).message(comm).addUser(user));*/
+                            /*
+                             * notificationService.save(new Notification().canal(Canal.EMAIL)
+                             * .typeNotification(TypeNotification.QUANTITE_UG).message(comm).addUser(user));
+                             */
                             JSONObject jsonItemUg = new JSONObject();
                             jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), oFamille.getIntCIP());
                             jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), oFamille.getStrNAME());
@@ -262,10 +263,14 @@ public class CommandeServiceImpl implements CommandeService {
                     donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.QUANTITE_UG.getValue());
                     donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
                     donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-                    donnee.put(NotificationUtils.MONTANT_TVA.getId(), NumberUtils.formatIntToString(bonLivraison.getIntTVA()));
-                    donnee.put(NotificationUtils.MONTANT_TTC.getId(), NumberUtils.formatIntToString(bonLivraison.getIntHTTC()));
-                    donnee.put(NotificationUtils.DATE_BON.getId(), DateCommonUtils.formatDate(bonLivraison.getDtDATELIVRAISON()));
-                    createNotification(null, TypeNotification.QUANTITE_UG, user, donnee, bonLivraison.getLgBONLIVRAISONID());
+                    donnee.put(NotificationUtils.MONTANT_TVA.getId(),
+                            NumberUtils.formatIntToString(bonLivraison.getIntTVA()));
+                    donnee.put(NotificationUtils.MONTANT_TTC.getId(),
+                            NumberUtils.formatIntToString(bonLivraison.getIntHTTC()));
+                    donnee.put(NotificationUtils.DATE_BON.getId(),
+                            DateCommonUtils.formatDate(bonLivraison.getDtDATELIVRAISON()));
+                    createNotification("", TypeNotification.QUANTITE_UG, user, donnee,
+                            bonLivraison.getLgBONLIVRAISONID());
 
                 }
 
@@ -308,8 +313,10 @@ public class CommandeServiceImpl implements CommandeService {
             String comm = "ENTREE EN STOCK DU BL " + bonLivraison.getStrREFLIVRAISON() + " PAR "
                     + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
             logService.updateItem(user, bonLivraison.getStrREFLIVRAISON(), comm, TypeLog.ENTREE_EN_STOCK, bonLivraison);
-            /*  notificationService.save(new Notification().canal(Canal.EMAIL)
-                    .typeNotification(TypeNotification.ENTREE_EN_STOCK).message(comm).addUser(user));*/
+            /*
+             * notificationService.save(new Notification().canal(Canal.EMAIL)
+             * .typeNotification(TypeNotification.ENTREE_EN_STOCK).message(comm).addUser(user));
+             */
 
             Map<String, Object> donnee = new HashMap<>();
             donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.ENTREE_EN_STOCK.getValue());
@@ -317,8 +324,10 @@ public class CommandeServiceImpl implements CommandeService {
             donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
             donnee.put(NotificationUtils.MONTANT_TVA.getId(), NumberUtils.formatIntToString(bonLivraison.getIntTVA()));
             donnee.put(NotificationUtils.MONTANT_TTC.getId(), NumberUtils.formatIntToString(bonLivraison.getIntHTTC()));
-            donnee.put(NotificationUtils.DATE_BON.getId(), DateCommonUtils.formatDate(bonLivraison.getDtDATELIVRAISON()));
-            createNotification(comm, TypeNotification.ENTREE_EN_STOCK, user, donnee, bonLivraison.getLgBONLIVRAISONID());
+            donnee.put(NotificationUtils.DATE_BON.getId(),
+                    DateCommonUtils.formatDate(bonLivraison.getDtDATELIVRAISON()));
+            createNotification(comm, TypeNotification.ENTREE_EN_STOCK, user, donnee,
+                    bonLivraison.getLgBONLIVRAISONID());
 
             Map<TClient, List<TPreenregistrementDetail>> map = avoirs0.stream()
                     .filter(e -> Objects.nonNull(e.getLgPREENREGISTREMENTID().getClient()))
@@ -339,15 +348,19 @@ public class CommandeServiceImpl implements CommandeService {
                     });
                     sb.append("Merci de nous faire toujours confiance.");
 
-                    /*  notificationService.save(new Notification().canal(Canal.SMS)
-                            .typeNotification(TypeNotification.AVOIR_PRODUIT).message(sb.toString()).addUser(user), k);*/
+                    /*
+                     * notificationService.save(new Notification().canal(Canal.SMS)
+                     * .typeNotification(TypeNotification.AVOIR_PRODUIT).message(sb.toString()).addUser(user), k);
+                     */
                     Map<String, Object> donneesMap = new HashMap<>();
                     donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.AVOIR_PRODUIT.getValue());
                     donneesMap.put(NotificationUtils.MESSAGE.getId(), sb.toString());
-                    donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+                    donneesMap.put(NotificationUtils.USER.getId(),
+                            user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
                     donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
 
-                    createNotification(sb.toString(), TypeNotification.AVOIR_PRODUIT, user, donneesMap, bonLivraison.getLgBONLIVRAISONID());
+                    createNotification(sb.toString(), TypeNotification.AVOIR_PRODUIT, user, donneesMap,
+                            bonLivraison.getLgBONLIVRAISONID());
                 }
 
             });
@@ -930,7 +943,7 @@ public class CommandeServiceImpl implements CommandeService {
 
             return new JSONObject().put("success", true).put("nbrePrisEnCompte",
                     "Nombre de produits pris en compte :: " + nbrePrisEnCompte + "<br>"
-                    + (nbreNonPrisEnCompte > 0 ? nbreNonPrisEnCompte + " produit(s) en rupture" : ""));
+                            + (nbreNonPrisEnCompte > 0 ? nbreNonPrisEnCompte + " produit(s) en rupture" : ""));
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException
                 | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             try {
@@ -1035,7 +1048,7 @@ public class CommandeServiceImpl implements CommandeService {
             userTransaction.commit();
             return new JSONObject().put("success", true).put("nbrePrisEnCompte",
                     "Nombre de produits pris en compte :: " + nbrePrisEnCompte + "<br>"
-                    + (nbreNonPrisEnCompte > 0 ? nbreNonPrisEnCompte + " produit(s) en rupture" : ""));
+                            + (nbreNonPrisEnCompte > 0 ? nbreNonPrisEnCompte + " produit(s) en rupture" : ""));
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException
                 | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             try {
@@ -1049,10 +1062,13 @@ public class CommandeServiceImpl implements CommandeService {
         }
     }
 
-    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
         try {
             notificationService.save(
-                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }

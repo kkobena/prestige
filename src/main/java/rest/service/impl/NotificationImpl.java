@@ -21,8 +21,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -65,25 +63,25 @@ public class NotificationImpl implements NotificationService {
     }
 
     @Override
-    public void save(Notification notification,Object  entity) {
+    public void save(Notification notification) {
         getEntityManager().merge(notification);
     }
 
     @Override
-    public void save(Notification notification, TClient client,Object  entity) {
+    public void save(Notification notification, TClient client) {
         notification.addNotificationClients(new NotificationClient(client, notification));
         getEntityManager().persist(notification);
 
     }
 
     @Override
-    public Notification buildNotification(NotificationDTO notificationDto, TUser user,Object  entity) {
+    public Notification buildNotification(NotificationDTO notificationDto, TUser user) {
         Notification notification = new Notification();
         CategorieNotification categorieNotification = this.getOneByName(notificationDto.getType());
         notification.setCategorieNotification(categorieNotification);
-        //  notification.setCanal(Canal.SMS_MASSE);
+        // notification.setCanal(Canal.SMS_MASSE);
         notification.setMessage(notificationDto.getMessage());
-        //  notification.setTypeNotification(TypeNotification.MASSE);
+        // notification.setTypeNotification(TypeNotification.MASSE);
         notification.setUser(user);
         if (CollectionUtils.isNotEmpty(notificationDto.getClients())) {
             notificationDto.getClients().stream().forEach(u -> {
@@ -100,13 +98,13 @@ public class NotificationImpl implements NotificationService {
     private List<Predicate> listPredicates(CriteriaBuilder cb, Root<Notification> root, LocalDate dtStart,
             LocalDate dtEnd, Canal canal, String typeNotification) {
         List<Predicate> predicates = new ArrayList<>();
-        //CategorieNotification_.typeNotification
+        // CategorieNotification_.typeNotification
         Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(Notification_.CREATED_AT)),
                 java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
         predicates.add(btw);
         if (StringUtils.isNotEmpty(typeNotification)) {
-            predicates.add(
-                    cb.equal(root.get(Notification_.categorieNotification).get("name"), TypeNotification.valueOf(typeNotification).name()));
+            predicates.add(cb.equal(root.get(Notification_.categorieNotification).get("name"),
+                    TypeNotification.valueOf(typeNotification).name()));
         }
         if (Objects.nonNull(canal)) {
             predicates.add(cb.equal(root.get(Notification_.categorieNotification).get("canal"), canal));
@@ -156,33 +154,10 @@ public class NotificationImpl implements NotificationService {
 
     @Override
     public CategorieNotification getOneByName(TypeNotification typeNotification) {
-        TypedQuery<CategorieNotification> typedQuery = this.em.createNamedQuery("CategorieNotification.findOneByName", CategorieNotification.class);
+        TypedQuery<CategorieNotification> typedQuery = this.em.createNamedQuery("CategorieNotification.findOneByName",
+                CategorieNotification.class);
         typedQuery.setParameter("name", typeNotification.name());
         return typedQuery.getSingleResult();
-    }
-
-    private <T> Optional<T> findById(Object entityId, Class<T> entitClass) {
-        try {
-            T obj = getEntityManager().find(entitClass, entityId);
-            if (obj != null) {
-                return Optional.of(obj);
-            }
-            return Optional.empty();
-        } catch (Exception e) {
-
-            return Optional.empty();
-        }
-    }
-//TypeNotification.ANNULATION_CLOTURE_DE_CAISSE
-    private void buildData(Notification notification,Object  entity) {
-        TypeNotification typeNotification = TypeNotification.fromName(notification.getCategorieNotification().getName());
-        switch (typeNotification) {
-            case MVT_DE_CAISSE:
-                
-                break;
-            default:
-                throw new AssertionError();
-        }
     }
 
 }

@@ -14,7 +14,6 @@ import dal.TFamilleStock;
 import dal.TMouvement;
 import dal.TMouvementSnapshot;
 import dal.TUser;
-import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 import java.util.Date;
@@ -42,7 +41,6 @@ import rest.service.v2.dto.DeconditionnementParamsDTO;
 import util.Constant;
 import util.DateCommonUtils;
 import util.NotificationUtils;
-import util.NumberUtils;
 
 /**
  *
@@ -319,15 +317,18 @@ public class DeconditionServiceImpl implements DeconditionService {
             jsonItemUg.put(NotificationUtils.ITEMS.getId(), new JSONArray(detail));
             items.put(jsonItemUg);
 
-            /*  notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
-                    .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(user));*/
+            /*
+             * notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
+             * .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(user));
+             */
             Map<String, Object> donnee = new HashMap<>();
             donnee.put(NotificationUtils.ITEMS.getId(), items);
             donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.DECONDITIONNEMENT.getValue());
             donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
             donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
 
-            createNotification(desc, TypeNotification.DECONDITIONNEMENT, user, donnee, oTFamilleParent.getLgFAMILLEID());
+            createNotification(desc, TypeNotification.DECONDITIONNEMENT, user, donnee,
+                    oTFamilleParent.getLgFAMILLEID());
 
             try {
                 TMouvement mouvement = findByDay(oTFamilleChild, oEmplacement.getLgEMPLACEMENTID()).get();
@@ -373,10 +374,13 @@ public class DeconditionServiceImpl implements DeconditionService {
 
     }
 
-    private void createNotification(String msg, TypeNotification typeNotification, TUser user, Map<String, Object> donneesMap, String entityRef) {
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
         try {
             notificationService.save(
-                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap)).setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg).addUser(user));
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }

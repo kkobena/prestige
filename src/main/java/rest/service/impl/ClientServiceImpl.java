@@ -1127,7 +1127,7 @@ public class ClientServiceImpl implements ClientService {
         oCompteClientTiersPayant.setStrSTATUT(Constant.STATUT_ENABLE);
         oCompteClientTiersPayant.setStrNUMEROSECURITESOCIAL(cdto.getStrNUMEROSECURITESOCIAL());
         oCompteClientTiersPayant.setBISRO(isRO);
-        oCompteClientTiersPayant.setBCANBEUSE(Boolean.TRUE);
+        oCompteClientTiersPayant.setBCANBEUSE(true);
         oCompteClientTiersPayant.setBIsAbsolute(false);
         oCompteClientTiersPayant.setDtCREATED(new Date());
         oCompteClientTiersPayant.setDtUPDATED(oCompteClientTiersPayant.getDtCREATED());
@@ -1139,7 +1139,7 @@ public class ClientServiceImpl implements ClientService {
         oCompteClientTiersPayant.setDblQUOTACONSOMENSUELLE(0);
         oCompteClientTiersPayant.setDblPLAFOND(0.0);
         oCompteClientTiersPayant.setDblQUOTACONSOVENTE(0.0);
-        oCompteClientTiersPayant.setIsCapped(Boolean.FALSE);
+        oCompteClientTiersPayant.setIsCapped(false);
         getEmg().persist(oCompteClientTiersPayant);
         return oCompteClientTiersPayant;
     }

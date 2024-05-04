@@ -123,6 +123,8 @@ public final class Constant {
     public static final String KEY_SHOW_NUMERO_TICKET = "KEY_SHOW_NUMERO_TICKET";
     public static final String ACTION_COMMANDE = "COMMANDE";
     public static final String KEY_PARAM_MVT_REGLEMENT_DIFFERES = "2";
+    public static final String PERIME = "11";
+
     /*
      * parametre nombre de mois à considerer
      */

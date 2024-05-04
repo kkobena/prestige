@@ -20,12 +20,11 @@ import org.hibernate.validator.constraints.Length;
  * @author koben
  */
 @Entity
-@Table(name = "categorie_notification", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"name"})})
+@Table(name = "categorie_notification", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
 @NamedQueries({
-    @NamedQuery(name = "CategorieNotification.findOneStatus", query = "SELECT o FROM CategorieNotification o WHERE  o.canal=:canal "),
-    @NamedQuery(name = "CategorieNotification.findOneByName", query = "SELECT o FROM CategorieNotification o WHERE  o.name=:name "),
-    @NamedQuery(name = "CategorieNotification.all", query = "SELECT o FROM CategorieNotification o  ")})
+        @NamedQuery(name = "CategorieNotification.findOneStatus", query = "SELECT o FROM CategorieNotification o WHERE  o.canal=:canal "),
+        @NamedQuery(name = "CategorieNotification.findOneByName", query = "SELECT o FROM CategorieNotification o WHERE  o.name=:name "),
+        @NamedQuery(name = "CategorieNotification.all", query = "SELECT o FROM CategorieNotification o  ") })
 public class CategorieNotification implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -40,7 +39,7 @@ public class CategorieNotification implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "canal", nullable = false, length = 18)
     @Length(max = 18)
-    private Canal canal;
+    private Canal canal = Canal.EMAIL;
     @NotNull
     @Column(name = "name", nullable = false, unique = true)
 

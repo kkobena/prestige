@@ -38,7 +38,7 @@ public class NotificationDTO implements Serializable {
     private String typeNotification;
     private String categorieName;
     private String modfiedAt;
-    
+
     private TypeNotification type;
 
     private String user;
@@ -176,7 +176,7 @@ public class NotificationDTO implements Serializable {
         } else {
             this.statut = "Non envoyé";
         }
-        CategorieNotification categorieNotification=n.getCategorieNotification();
+        CategorieNotification categorieNotification = n.getCategorieNotification();
         this.canal = categorieNotification.getCanal().name();
         this.typeNotification = categorieNotification.getLibelle();
         this.modfiedAt = n.getModfiedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
@@ -200,7 +200,7 @@ public class NotificationDTO implements Serializable {
             this.statut = "Non envoyé";
         }
 
-         CategorieNotification categorieNotification=n.getCategorieNotification();
+        CategorieNotification categorieNotification = n.getCategorieNotification();
         this.canal = categorieNotification.getCanal().name();
         this.typeNotification = categorieNotification.getLibelle();
         this.modfiedAt = n.getModfiedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
