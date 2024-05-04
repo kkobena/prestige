@@ -1898,7 +1898,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             + " Grossiste " + OTFamilleStock.getLgFAMILLEID().getLgGROSSISTEID().getStrDESCRIPTION());
                     qteReappro = Math.ceil(qteReappro
                             + ((OTFamilleStock.getLgFAMILLEID().getLgGROSSISTEID().getIntCOEFSECURITY() * qteReappro)
-                            / 100));
+                                    / 100));
                 }
 
             } else {
@@ -1908,7 +1908,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 if (OTFamilleStock.getLgFAMILLEID().getIntSEUILMIN() > OTFamilleStock.getIntNUMBERAVAILABLE()) {
                     qteReappro = Math.ceil(
                             (OTFamilleStock.getLgFAMILLEID().getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE())
-                            + int_SEUIL_MIN_CALCULE);
+                                    + int_SEUIL_MIN_CALCULE);
                 }
 
             }
@@ -2216,7 +2216,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                     result = true;
                     this.buildErrorTraceMessage(
                             "Impossible d'utiliser ce code. Code CIP du grossiste principal de l'article "
-                            + OTFamilleGrossiste.getLgFAMILLEID().getStrDESCRIPTION());
+                                    + OTFamilleGrossiste.getLgFAMILLEID().getStrDESCRIPTION());
                 }
             }
         } catch (Exception e) {
@@ -2555,7 +2555,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                         Integer.parseInt(tabString[2].trim()), 0, Integer.parseInt(tabString[3].trim()),
                         Integer.parseInt(tabString[3].trim()), 0, tabString[7].trim(),
                         (tabString[0].trim().length() == 13 ? tabString[0].trim().substring(6, 12)
-                        : tabString[0].trim()),
+                                : tabString[0].trim()),
                         (tabString[0].trim().length() == 13 ? tabString[0].trim() : ""), Parameter.DEFAUL_GROSSISTE,
                         Parameter.DEFAUL_FAMILLEARTICE, "", "", "", "", Parameter.DEFAUL_EMPLACEMENT,
                         Integer.parseInt(tabString[5].trim()), 0, "", "", Short.parseShort("0"),
@@ -2646,7 +2646,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             OTFamille.getIntS(), tabString[16].trim(), tabString[1].trim(), tabString[12].trim(),
                             tabString[13].trim(), tabString[14].trim(), tabString[8].trim(),
                             (OTFamille.getLgCODEGESTIONID() != null
-                            ? OTFamille.getLgCODEGESTIONID().getLgCODEGESTIONID() : ""),
+                                    ? OTFamille.getLgCODEGESTIONID().getLgCODEGESTIONID() : ""),
                             tabString[10].trim(), OTFamille.getStrCODETAUXREMBOURSEMENT(), tabString[15].trim(),
                             OTFamille.getIntNUMBERDETAIL(), 0, tabString[9].trim(), "", tabString[17].trim(),
                             OTFamille.getBoolRESERVE(), OTFamille.getIntSEUILRESERVE(),
@@ -2748,11 +2748,11 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             OTFamille.getIntS(), OTFamille.getIntT(), tabString[0].trim(), tabString[12].trim(),
                             tabString[7].trim(), tabString[8].trim(), "",
                             (OTFamille.getLgCODEGESTIONID() != null
-                            ? OTFamille.getLgCODEGESTIONID().getLgCODEGESTIONID() : ""),
+                                    ? OTFamille.getLgCODEGESTIONID().getLgCODEGESTIONID() : ""),
                             tabString[6].trim(), OTFamille.getStrCODETAUXREMBOURSEMENT(), tabString[9].trim(), 0, 0,
                             (OTFamille.getLgTYPEETIQUETTEID() != null
-                            ? OTFamille.getLgTYPEETIQUETTEID().getLgTYPEETIQUETTEID()
-                            : Parameter.DEFAUL_TYPEETIQUETTE),
+                                    ? OTFamille.getLgTYPEETIQUETTEID().getLgTYPEETIQUETTEID()
+                                    : Parameter.DEFAUL_TYPEETIQUETTE),
                             "", (OTFamille.getLgCODETVAID() != null ? OTFamille.getLgCODETVAID().getLgCODETVAID() : ""),
                             OTFamille.getBoolRESERVE(), OTFamille.getIntSEUILRESERVE(),
                             OTFamille.getIntSTOCKREAPROVISONEMENT(), OTFamille.getIntQTEREAPPROVISIONNEMENT(), "", "",
@@ -2811,7 +2811,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 if (OTFamille != null) {
                     if (this.updateSomeInfoFamille(OTFamille,
                             (tabString[0].trim().length() == 13 ? tabString[0].trim().substring(6, 12)
-                            : tabString[0].trim()),
+                                    : tabString[0].trim()),
                             tabString[1].trim(), Integer.parseInt(tabString[6].trim()),
                             Integer.parseInt(tabString[6].trim()), Integer.parseInt(tabString[7].trim()),
                             Integer.parseInt(tabString[7].trim()),
@@ -2945,7 +2945,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         try {
             lg_TYPE_STOCK_ID = ((this.getOTUser() != null && this.getOTUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID()
                     .equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) ? commonparameter.TYPE_STOCK_RAYON
-                    : commonparameter.TYPE_STOCK_DEPOT);
+                            : commonparameter.TYPE_STOCK_DEPOT);
             // code ajouté
             String[] tabString = liste_param.split(";"); // on case la ligne courante pour recuperer les differentes
             // colonnes
@@ -2983,7 +2983,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 row += OTTypeStockFamille.getLgFAMILLEID().getStrDESCRIPTION() + ";"
                         + OTTypeStockFamille.getLgFAMILLEID().getIntPRICE() + ";"
                         + (OTTypeStockFamille.getLgFAMILLEID().getIntPRICETIPS() != null
-                        ? OTTypeStockFamille.getLgFAMILLEID().getIntPRICETIPS() : 0)
+                                ? OTTypeStockFamille.getLgFAMILLEID().getIntPRICETIPS() : 0)
                         + ";" + OTTypeStockFamille.getLgFAMILLEID().getIntPAF() + ";"
                         + OTTypeStockFamille.getLgFAMILLEID().getIntPAT() + ";";
                 if (OTTypeStockFamille.getLgFAMILLEID().getBoolDECONDITIONNE() == 1 && (OTFamilleCH = this
@@ -3327,7 +3327,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                     && /*
                         * && createTypeStockFamille(OTFamille, lg_TYPE_STOCK_ID, int_QUANTITY_STOCK, OTEmplacement) !=
                         * null &&
-                     */ this.createFamilleZoneGeog(OTFamille, OTZoneGeographique, OTEmplacement)) { // creation dans
+                        */ this.createFamilleZoneGeog(OTFamille, OTZoneGeographique, OTEmplacement)) { // creation dans
                 // type stock
                 // famille
 
@@ -4845,7 +4845,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             + " Grossiste " + OTFamilleStock.getLgFAMILLEID().getLgGROSSISTEID().getStrDESCRIPTION());
                     qteReappro = Math.ceil(qteReappro
                             + ((OTFamilleStock.getLgFAMILLEID().getLgGROSSISTEID().getIntCOEFSECURITY() * qteReappro)
-                            / 100));
+                                    / 100));
                 }
 
             } else {
@@ -4853,7 +4853,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 if (OTFamilleStock.getLgFAMILLEID().getIntSEUILMIN() > OTFamilleStock.getIntNUMBERAVAILABLE()) {
                     qteReappro = Math.ceil(
                             (OTFamilleStock.getLgFAMILLEID().getIntSEUILMIN() - OTFamilleStock.getIntNUMBERAVAILABLE())
-                            + int_SEUIL_MIN_CALCULE);
+                                    + int_SEUIL_MIN_CALCULE);
                 }
 
             }
@@ -4985,172 +4985,172 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 }
                 if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.LESS)) {
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND t.lgFAMILLEID.intSEUILMIN < ?8     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND t.lgFAMILLEID.intSEUILMIN < ?8     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.EQUAL)) {
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND t.lgFAMILLEID.intSEUILMIN=?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND t.lgFAMILLEID.intSEUILMIN=?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.MORE)) {
 
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE > ?6 AND t.lgFAMILLEID.intSEUILMIN >?8  AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE > ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN >?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE > ?6 AND t.lgFAMILLEID.intSEUILMIN >?8  AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE > ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN >?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.LESSOREQUAL)) {
 
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND (t.lgFAMILLEID.intSEUILMIN = ?8 OR t.lgFAMILLEID.intSEUILMIN < ?8) GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.lgFAMILLEID.intSEUILMIN = ?6 OR t.lgFAMILLEID.intSEUILMIN < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND (t.lgFAMILLEID.intSEUILMIN = ?8 OR t.lgFAMILLEID.intSEUILMIN < ?8) GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.lgFAMILLEID.intSEUILMIN = ?6 OR t.lgFAMILLEID.intSEUILMIN < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.MOREOREQUAL)) {
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND (t.lgFAMILLEID.intSEUILMIN = ?8 OR t.lgFAMILLEID.intSEUILMIN > ?8) GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.lgFAMILLEID.intSEUILMIN = ?6 OR t.lgFAMILLEID.intSEUILMIN > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
-                                    .getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND (t.lgFAMILLEID.intSEUILMIN = ?8 OR t.lgFAMILLEID.intSEUILMIN > ?8) GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.lgFAMILLEID.intSEUILMIN = ?6 OR t.lgFAMILLEID.intSEUILMIN > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setFirstResult(start).setMaxResults(limit)
+                                .getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
@@ -5177,171 +5177,171 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 }
                 if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.LESS)) {
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE < ?7 AND t.lgFAMILLEID.intSEUILMIN <?9 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .setFirstResult(start).setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE < ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN < ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE < ?7 AND t.lgFAMILLEID.intSEUILMIN <?9 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .setFirstResult(start).setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE < ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN < ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.EQUAL)) {
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 AND t.lgFAMILLEID.intSEUILMIN=?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .setFirstResult(start).setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 AND t.lgFAMILLEID.intSEUILMIN=?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .setFirstResult(start).setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.MORE)) {
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 AND t.lgFAMILLEID.intSEUILMIN >?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .setFirstResult(start).setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 AND t.lgFAMILLEID.intSEUILMIN >?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .setFirstResult(start).setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.LESSOREQUAL)) {
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE < ?7) AND (t.lgFAMILLEID.intSEUILMIN  = ?9 OR t.lgFAMILLEID.intSEUILMIN  < ?9) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .setFirstResult(start).setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE < ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.lgFAMILLEID.intSEUILMIN = ?7 OR t.lgFAMILLEID.intSEUILMIN < ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE < ?7) AND (t.lgFAMILLEID.intSEUILMIN  = ?9 OR t.lgFAMILLEID.intSEUILMIN  < ?9) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .setFirstResult(start).setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE < ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.lgFAMILLEID.intSEUILMIN = ?7 OR t.lgFAMILLEID.intSEUILMIN < ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.MOREOREQUAL)) {
 
                     switch (testCase) {
-                        case 1:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE > ?7) AND (t.lgFAMILLEID.intSEUILMIN = ?9 OR t.lgFAMILLEID.intSEUILMIN > ?9) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .setFirstResult(start).setMaxResults(limit).getResultList();
-                            break;
-                        case 2:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE > ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        case 3:
-                            lstTFamilleStock = this.getOdataManager().getEm().createQuery(
-                                    "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.lgFAMILLEID.intSEUILMIN = ?7 OR t.lgFAMILLEID.intSEUILMIN > ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
-                                    .setMaxResults(limit).getResultList();
-                            break;
-                        default:
+                    case 1:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE > ?7) AND (t.lgFAMILLEID.intSEUILMIN = ?9 OR t.lgFAMILLEID.intSEUILMIN > ?9) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .setFirstResult(start).setMaxResults(limit).getResultList();
+                        break;
+                    case 2:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE > ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    case 3:
+                        lstTFamilleStock = this.getOdataManager().getEm().createQuery(
+                                "SELECT t FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.lgFAMILLEID.intSEUILMIN = ?7 OR t.lgFAMILLEID.intSEUILMIN > ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).setFirstResult(start)
+                                .setMaxResults(limit).getResultList();
+                        break;
+                    default:
 
-                            break;
+                        break;
 
                     }
 
@@ -5404,157 +5404,157 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 }
                 if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.LESS)) {
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND t.lgFAMILLEID.intSEUILMIN < ?8     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND t.lgFAMILLEID.intSEUILMIN < ?8     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN < ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7     GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.EQUAL)) {
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND t.lgFAMILLEID.intSEUILMIN=?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND t.lgFAMILLEID.intSEUILMIN=?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN = ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.MORE)) {
 
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE > ?6 AND t.lgFAMILLEID.intSEUILMIN >?8  AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE > ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN >?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE > ?6 AND t.lgFAMILLEID.intSEUILMIN >?8  AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.intNUMBERAVAILABLE > ?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND t.lgFAMILLEID.intSEUILMIN >?6 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.LESSOREQUAL)) {
 
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND (t.lgFAMILLEID.intSEUILMIN = ?8 OR t.lgFAMILLEID.intSEUILMIN < ?8) GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.lgFAMILLEID.intSEUILMIN = ?6 OR t.lgFAMILLEID.intSEUILMIN < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND (t.lgFAMILLEID.intSEUILMIN = ?8 OR t.lgFAMILLEID.intSEUILMIN < ?8) GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.lgFAMILLEID.intSEUILMIN = ?6 OR t.lgFAMILLEID.intSEUILMIN < ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.MOREOREQUAL)) {
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND (t.lgFAMILLEID.intSEUILMIN = ?8 OR t.lgFAMILLEID.intSEUILMIN > ?8) GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.lgFAMILLEID.intSEUILMIN = ?6 OR t.lgFAMILLEID.intSEUILMIN > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
-                                    .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 AND (t.lgFAMILLEID.intSEUILMIN = ?8 OR t.lgFAMILLEID.intSEUILMIN > ?8) GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).setParameter(8, number2).getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.intNUMBERAVAILABLE = ?6 OR t.intNUMBERAVAILABLE > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, int_NUMBER)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg WHERE fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND (t.lgFAMILLEID.intSEUILMIN = ?6 OR t.lgFAMILLEID.intSEUILMIN > ?6) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?7 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, number2)
+                                .setParameter(7, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
@@ -5579,160 +5579,160 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 }
                 if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.LESS)) {
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE < ?7 AND t.lgFAMILLEID.intSEUILMIN <?9 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE < ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN < ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE < ?7 AND t.lgFAMILLEID.intSEUILMIN <?9 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE < ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN < ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.EQUAL)) {
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 AND t.lgFAMILLEID.intSEUILMIN=?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 AND t.lgFAMILLEID.intSEUILMIN=?9 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN = ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.MORE)) {
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 AND t.lgFAMILLEID.intSEUILMIN >?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 AND t.lgFAMILLEID.intSEUILMIN >?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.intNUMBERAVAILABLE > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND t.lgFAMILLEID.intSEUILMIN > ?7 AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.LESSOREQUAL)) {
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE < ?7) AND (t.lgFAMILLEID.intSEUILMIN  = ?9 OR t.lgFAMILLEID.intSEUILMIN  < ?9) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE < ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.lgFAMILLEID.intSEUILMIN = ?7 OR t.lgFAMILLEID.intSEUILMIN < ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE < ?7) AND (t.lgFAMILLEID.intSEUILMIN  = ?9 OR t.lgFAMILLEID.intSEUILMIN  < ?9) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE < ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.lgFAMILLEID.intSEUILMIN = ?7 OR t.lgFAMILLEID.intSEUILMIN < ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
                 } else if (str_TYPE_TRANSACTION.equalsIgnoreCase(Parameter.MOREOREQUAL)) {
 
                     switch (testCase) {
-                        case 1:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE > ?7) AND (t.lgFAMILLEID.intSEUILMIN = ?9 OR t.lgFAMILLEID.intSEUILMIN > ?9) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
-                                    .getResultList();
-                            break;
-                        case 2:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE > ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        case 3:
-                            _counts = this.getOdataManager().getEm().createQuery(
-                                    "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.lgFAMILLEID.intSEUILMIN = ?7 OR t.lgFAMILLEID.intSEUILMIN > ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
-                                    .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
-                                    .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
-                                    .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
-                                    .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
-                            break;
-                        default:
-                            break;
+                    case 1:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE > ?7) AND (t.lgFAMILLEID.intSEUILMIN = ?9 OR t.lgFAMILLEID.intSEUILMIN > ?9) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).setParameter(9, number2)
+                                .getResultList();
+                        break;
+                    case 2:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.intNUMBERAVAILABLE = ?7 OR t.intNUMBERAVAILABLE > ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, int_NUMBER).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    case 3:
+                        _counts = this.getOdataManager().getEm().createQuery(
+                                "SELECT COUNT(t) FROM TFamilleStock t, TFamilleGrossiste fg, TFamilleDci fd WHERE t.lgFAMILLEID.lgFAMILLEID = fd.lgFAMILLEID.lgFAMILLEID AND fg.lgFAMILLEID.lgFAMILLEID = t.lgFAMILLEID.lgFAMILLEID AND t.lgFAMILLEID.lgFAMILLEID LIKE ?1 AND (t.lgFAMILLEID.strNAME LIKE ?2 OR t.lgFAMILLEID.strDESCRIPTION LIKE ?3 OR t.lgFAMILLEID.intCIP LIKE ?4 OR t.lgFAMILLEID.intEAN13 LIKE ?2 OR fg.strCODEARTICLE LIKE ?2) AND t.lgFAMILLEID.strSTATUT = ?5 AND fd.lgDCIID.lgDCIID LIKE ?6 AND (t.lgFAMILLEID.intSEUILMIN = ?7 OR t.lgFAMILLEID.intSEUILMIN > ?7) AND t.lgEMPLACEMENTID.lgEMPLACEMENTID LIKE ?8 GROUP BY t.lgFAMILLEID.lgFAMILLEID ORDER BY t.lgFAMILLEID.strDESCRIPTION ASC")
+                                .setParameter(1, lg_FAMILLE_ID).setParameter(2, search_value + "%")
+                                .setParameter(3, search_value + "%").setParameter(4, search_value + "%")
+                                .setParameter(5, commonparameter.statut_enable).setParameter(6, lg_DCI_ID)
+                                .setParameter(7, number2).setParameter(8, lg_EMPLACEMENT_ID).getResultList();
+                        break;
+                    default:
+                        break;
 
                     }
 
@@ -5791,19 +5791,19 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             p = cb.and(p, cb.equal(fs.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
             if (null != str_TYPE_TRANSACTION) {
                 switch (str_TYPE_TRANSACTION) {
-                    case "DECONDITIONNE":
-                        p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNE), Short.valueOf("1")));
-                        p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNEEXIST), Short.valueOf("1")));
-                        break;
-                    case "DECONDITION":
-                        p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNE), Short.valueOf("0")));
-                        p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNEEXIST), Short.valueOf("1")));
-                        break;
-                    case "SANSEMPLACEMENT":
-                        p = cb.and(p, cb.equal(root.get("lgZONEGEOID").get("lgZONEGEOID"), "1"));
-                        break;
-                    default:
-                        break;
+                case "DECONDITIONNE":
+                    p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNE), Short.valueOf("1")));
+                    p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNEEXIST), Short.valueOf("1")));
+                    break;
+                case "DECONDITION":
+                    p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNE), Short.valueOf("0")));
+                    p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNEEXIST), Short.valueOf("1")));
+                    break;
+                case "SANSEMPLACEMENT":
+                    p = cb.and(p, cb.equal(root.get("lgZONEGEOID").get("lgZONEGEOID"), "1"));
+                    break;
+                default:
+                    break;
                 }
             }
             cq.where(p).orderBy(cb.asc(root.get(TFamille_.strDESCRIPTION)));
@@ -6083,20 +6083,20 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             p = cb.and(p, cb.equal(fs.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lg_EMPLACEMENT_ID));
             if (null != str_TYPE_TRANSACTION) {
                 switch (str_TYPE_TRANSACTION) {
-                    case "DECONDITIONNE":
-                        p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNE), Short.valueOf("1")));
-                        p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNEEXIST), Short.valueOf("1")));
-                        break;
-                    case "DECONDITION":
-                        p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNE), Short.valueOf("0")));
-                        p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNEEXIST), Short.valueOf("1")));
-                        break;
-                    case "SANSEMPLACEMENT":
+                case "DECONDITIONNE":
+                    p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNE), Short.valueOf("1")));
+                    p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNEEXIST), Short.valueOf("1")));
+                    break;
+                case "DECONDITION":
+                    p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNE), Short.valueOf("0")));
+                    p = cb.and(p, cb.equal(root.get(TFamille_.boolDECONDITIONNEEXIST), Short.valueOf("1")));
+                    break;
+                case "SANSEMPLACEMENT":
 
-                        p = cb.and(p, cb.equal(root.get("lgZONEGEOID").get("lgZONEGEOID"), "1"));
-                        break;
-                    default:
-                        break;
+                    p = cb.and(p, cb.equal(root.get("lgZONEGEOID").get("lgZONEGEOID"), "1"));
+                    break;
+                default:
+                    break;
                 }
             }
             cq.where(p);
@@ -6652,7 +6652,8 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             this.createTypeStockFamille(OTFamille.getLgFAMILLEID(), "1", int_QUANTITY_STOCK,
                     this.getOTUser().getLgEMPLACEMENTID(), em);
 
-            CategorieNotification categorieNotification = em.find(CategorieNotification.class, TypeNotification.AJOUT_DE_NOUVEAU_PRODUIT.ordinal());
+            CategorieNotification categorieNotification = em.find(CategorieNotification.class,
+                    TypeNotification.AJOUT_DE_NOUVEAU_PRODUIT.ordinal());
             Notification notification = new Notification();
             notification.setCategorieNotification(categorieNotification);
             notification.setUser(this.getOTUser());
@@ -6675,7 +6676,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             eventLog.setTypeLog(TypeLog.AJOUT_DE_NOUVEAU_PRODUIT);
             eventLog.setStrDESCRIPTION("Création du produit " + " cip [" + OTFamille.getIntCIP() + " "
                     + OTFamille.getStrNAME() + " par " + notification.getUser().getStrFIRSTNAME().concat(" ")
-                    .concat(notification.getUser().getStrLASTNAME())
+                            .concat(notification.getUser().getStrLASTNAME())
                     + " ]");
 
             em.persist(eventLog);

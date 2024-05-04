@@ -22,7 +22,7 @@ import org.hibernate.validator.constraints.Length;
 @Entity
 @Table(name = "categorie_notification", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
 @NamedQueries({
-        @NamedQuery(name = "CategorieNotification.findOneStatus", query = "SELECT o FROM CategorieNotification o WHERE  o.canal=:canal "),
+        @NamedQuery(name = "CategorieNotification.findByCanal", query = "SELECT o FROM CategorieNotification o WHERE  o.canal=:canal "),
         @NamedQuery(name = "CategorieNotification.findOneByName", query = "SELECT o FROM CategorieNotification o WHERE  o.name=:name "),
         @NamedQuery(name = "CategorieNotification.all", query = "SELECT o FROM CategorieNotification o  ") })
 public class CategorieNotification implements Serializable {
@@ -38,11 +38,9 @@ public class CategorieNotification implements Serializable {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "canal", nullable = false, length = 18)
-    @Length(max = 18)
     private Canal canal = Canal.EMAIL;
     @NotNull
     @Column(name = "name", nullable = false, unique = true)
-
     private String name;
 
     public Integer getId() {

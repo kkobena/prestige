@@ -5,10 +5,12 @@
  */
 package rest.repo;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -123,5 +125,16 @@ public abstract class AbstractRepoImpl<T> implements AbstractRepo<T> {
     // }
     // return Optional.ofNullable(entityManager.find(clazz, id));
     // }
+    @Override
+    public List<T> findAll() {
+        try {
+            TypedQuery<T> q = getEntityManager().createNamedQuery(entityClass.getSimpleName().concat(".all"),
+                    entityClass);
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return List.of();
+        }
+    }
 
 }
