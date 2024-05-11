@@ -246,8 +246,10 @@ public class NotificationImpl implements NotificationService {
     @Asynchronous
     @Override
     public void sendMail(Notification notification) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from
-        // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String html = rest.service.notification.template.Mail.beginTag();
+        html += rest.service.notification.template.Mail.buildClotureCaisse(List.of(notification));
+        html += rest.service.notification.template.Mail.endTag();
+        sendMail(html);
     }
     // Statut.NOT_SEND
 

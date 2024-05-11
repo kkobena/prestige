@@ -270,22 +270,24 @@ public class BilletageServiceImpl implements BilletageService {
         donneesMap.put(NotificationUtils.MESSAGE.getId(), description);
         donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
         donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-        createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user, donneesMap,
-                oTResumeCaisse.getLdCAISSEID());
+        Notification notification = createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user,
+                donneesMap, oTResumeCaisse.getLdCAISSEID());
+        notificationService.sendMail(notification);
         // createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user);
     }
 
-    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+    private Notification createNotification(String msg, TypeNotification typeNotification, TUser user,
             Map<String, Object> donneesMap, String entityRef) {
+        Notification notification = new Notification().entityRef(entityRef)
+                .donnees(this.notificationService.buildDonnees(donneesMap))
+                .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                .addUser(user);
         try {
-            notificationService.save(
-                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
-                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
-                            .addUser(user));
+            notificationService.save(notification);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-
+        return notification;
     }
 
     private TBilletage createBilletage(TResumeCaisse caisse, TUser user, double billetageAmount) {

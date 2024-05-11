@@ -116,7 +116,7 @@ public class DatabaseToolkit {
         }
 
         createTimer();
-        // mes.submit(this::updateStockDailyValue);
+        mes.submit(this::updateStockDailyValue);
 
     }
 
@@ -143,12 +143,9 @@ public class DatabaseToolkit {
         timerService.createCalendarTimer(new ScheduleExpression().minute("*/5").hour("*")
                 /* .hour(findScheduledValues()) */.dayOfMonth("*").year("*"), email);
 
-        /*
-         * final TimerConfig sms = new TimerConfig("sms", false); timerService.createCalendarTimer(new
-         * ScheduleExpression()
-         */
-
-        // .minute("*/2").hour("*").dayOfMonth("*").year("*"), sms);
+        final TimerConfig sms = new TimerConfig("sms", false);
+        timerService.createCalendarTimer(new ScheduleExpression().minute("*/2").hour("*").dayOfMonth("*").year("*"),
+                sms);
     }
 
     public void manageEmail() {
