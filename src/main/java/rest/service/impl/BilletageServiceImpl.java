@@ -273,6 +273,7 @@ public class BilletageServiceImpl implements BilletageService {
         Notification notification = createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user,
                 donneesMap, oTResumeCaisse.getLdCAISSEID());
         notificationService.sendMail(notification);
+        notificationService.sendSms(notification);
         // createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user);
     }
 

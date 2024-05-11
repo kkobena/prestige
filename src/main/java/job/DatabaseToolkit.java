@@ -140,8 +140,8 @@ public class DatabaseToolkit {
     public void createTimer() {
 
         final TimerConfig email = new TimerConfig("email", false);
-        timerService.createCalendarTimer(new ScheduleExpression().minute("*/5").hour("*")
-                /* .hour(findScheduledValues()) */.dayOfMonth("*").year("*"), email);
+        timerService.createCalendarTimer(new ScheduleExpression()// *.minute("*/5").hour("*")
+                .hour(findScheduledValues()).dayOfMonth("*").year("*"), email);
 
         final TimerConfig sms = new TimerConfig("sms", false);
         timerService.createCalendarTimer(new ScheduleExpression().minute("*/2").hour("*").dayOfMonth("*").year("*"),
@@ -275,13 +275,13 @@ public class DatabaseToolkit {
 
     @Timeout
     public void timeout(Timer timer) {
-        System.err.println(" timder " + timer.getInfo());
+
         if ("sms".equals(timer.getInfo())) {
 
             manageSms();
 
         } else if ("email".equals(timer.getInfo())) {
-            System.err.println("*************************************************************");
+
             notificationService.sendMail();
             // manageEmail();
 

@@ -193,4 +193,32 @@ public class SmsImpl implements SmsService {
         }
 
     }
+
+    @Override
+    public void sendSMS(String message) {
+        SmsToken smsToken = getOrupdateSmsToken();
+        if (smsToken != null) {
+
+            try {
+                Client client = ClientBuilder.newClient();
+
+                JSONObject jSONObject = new JSONObject();
+                JSONObject outboundSMSMessageRequest = new JSONObject();
+
+                outboundSMSMessageRequest.put("senderAddress", sp.senderAddress);
+                JSONObject outboundSMSTextMessage = new JSONObject();
+                outboundSMSTextMessage.put("message", message);
+                outboundSMSMessageRequest.put("outboundSMSTextMessage", outboundSMSTextMessage);
+                jSONObject.put("outboundSMSMessageRequest", outboundSMSMessageRequest);
+                WebTarget myResource = client.target(sp.pathsmsapisendmessageurl);
+                var bearer = "Bearer ".concat(smsToken.getAccessToken());
+                outboundSMSMessageRequest.put("address", "tel:+225" + sp.mobile);
+                myResource.request().header("Authorization", bearer)
+                        .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
+            } catch (Exception ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
+        }
+
+    }
 }

@@ -41,4 +41,6 @@ public interface NotificationService {
 
     void sendMail(Notification notification);
 
+    void sendSms(Notification notification);
+
 }

@@ -40,7 +40,7 @@ public final class Mail {
 
     public static String beginTag() {
 
-        return "<html><body>";
+        return "<html> <head>  <style> table{border: 1px solid black; border-collapse: collapse;margin: 15px; }  table tr th{border-bottom: 1px solid black; } table tr td,table tr th{ margin-left: 5px;padding: 10px; border-right: 1px solid black;} table caption{text-align: left ;font-weight: 700;} </style> </head>  <body>";
 
     }
 
@@ -60,8 +60,7 @@ public final class Mail {
             TUser tu = n.getUser();
             NotificationUtilsDTO item = notification.getNotificationDetail();
             sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                    .append("<caption  style='font-weight: bold;text-align: center;'>")
-                    .append("Clôture de la caisse de").append(tu.getStrFIRSTNAME()).append(" ")
+                    .append("<caption>").append("Clôture de la caisse de").append(tu.getStrFIRSTNAME()).append(" ")
                     .append(tu.getStrLASTNAME()).append(" du ").append(DateUtil.convertDate(n.getCreatedAt()))
                     .append("</caption>").append("<tr><th>Type</th><th>Mode règlement</th><th>Montant</th></tr>");
 
@@ -84,9 +83,9 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>").append("Mouvements de caisse")
-                .append("</caption>").append("<tr><th>Opérateur</th><th>Date</th><th>Montant</th></tr>");
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
+                .append("Mouvements de caisse").append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Date</th><th>Montant</th></tr>");
 
         mvtCaisses.forEach(t -> {
             TUser tu = t.getUser();
@@ -106,9 +105,8 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>").append("Bons de livraisons")
-                .append("</caption>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
+                .append("Bons de livraisons").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Numéro Bon</th><th>Date Bon</th><th>Date de saisie</th><th>Montant Tva</th><th>Montant Ttc</th></tr>");
 
         mvtCaisses.forEach(t -> {
@@ -131,9 +129,8 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>").append("Retour fournisseurs")
-                .append("</caption>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
+                .append("Retour fournisseurs").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Numéro Bon</th><th>Date Bon</th><th>Date de saisie</th><th>Montant Tva</th><th>Montant Ttc</th></tr>");
 
         notifications.forEach(t -> {
@@ -156,8 +153,7 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
                 .append("Liste de saisie de produits périmés").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th></tr>");
 
@@ -165,9 +161,12 @@ public final class Mail {
             TUser tu = t.getUser();
             NotificationDTO notification = new NotificationDTO(t);
             NotificationUtilsDTO item = notification.getNotificationDetail();
-            sb.append("<tr><td>").append(tu.getStrFIRSTNAME()).append(" ").append(tu.getStrLASTNAME())
-                    .append("</td><td>").append(item.getCode()).append("</td><td>").append(item.getDescription())
-                    .append("</td><td>").append(item.getDateMvt()).append("</td></tr>");
+            item.getDetail().forEach(e -> {
+                sb.append("<tr><td>").append(tu.getStrFIRSTNAME()).append(" ").append(tu.getStrLASTNAME())
+                        .append("</td><td>").append(e.getCode()).append("</td><td>").append(e.getDescription())
+                        .append("</td><td>").append(item.getDateMvt()).append("</td></tr>");
+            });
+
         });
 
         sb.append("</table>");
@@ -179,9 +178,9 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>").append("Création de produits")
-                .append("</caption>").append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th></tr>");
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
+                .append("Création de produits").append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th></tr>");
         notifications.stream().map(NotificationDTO::new).forEach(t -> {
             NotificationUtilsDTO item = t.getNotificationDetail();
             sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(item.getCode()).append("</td><td>")
@@ -197,9 +196,8 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>").append("Liste des ventes modifiées")
-                .append("</caption>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
+                .append("Liste des ventes modifiées").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Type modification</th><th>Référence</th><th>Date</th></tr>");
 
         mvtCaisses.forEach(t -> {
@@ -220,8 +218,7 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
                 .append("Liste des entrée unités gratuites").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>Quantité</th></tr>");
         notifications.stream().map(NotificationDTO::new).forEach(t -> {
@@ -230,8 +227,8 @@ public final class Mail {
 
                 sb.append("<tr><td>").append(notificationDTO.getUser()).append("</td><td>").append(e.getCode())
                         .append("</td><td>").append(e.getDescription()).append("</td><td>")
-                        .append(notificationDTO.getDateMvt()).append("</td><td>").append(e.getQuantite())
-                        .append("</td></tr>");
+                        .append(notificationDTO.getDateMvt()).append("</td><td style='text-align: right;'>")
+                        .append(e.getQuantite()).append("</td></tr>");
 
             });
 
@@ -246,9 +243,8 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>").append("Liste des produits ajustés")
-                .append("</caption>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
+                .append("Liste des produits ajustés").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>Quantité initiale</th><th>Quantité ajusté</th><th>Stock final</th></tr>");
         notifications.stream().map(NotificationDTO::new).forEach(t -> {
             NotificationUtilsDTO notificationUtilsDTO = t.getNotificationDetail();
@@ -256,9 +252,11 @@ public final class Mail {
             notificationUtilsDTO.getDetail().forEach(e -> {
 
                 sb.append("<tr><td>").append(notificationUtilsDTO.getUser()).append("</td><td>").append(e.getCode())
-                        .append("</td><td>").append(e.getDescription()).append("</td><td>").append(e.getDateMvt())
-                        .append("</td><td>").append(e.getQuantiteInit()).append("</td><td>").append(e.getQuantite())
-                        .append("</td><td>").append(e.getQuantiteFinale()).append("</td></tr>");
+                        .append("</td><td>").append(e.getDescription()).append("</td><td>")
+                        .append(notificationUtilsDTO.getDateMvt()).append("</td><td style='text-align: right;'>")
+                        .append(e.getQuantiteInit()).append("</td><td style='text-align: right;'>")
+                        .append(e.getQuantite()).append("</td><td style='text-align: right;'>")
+                        .append(e.getQuantiteFinale()).append("</td></tr>");
             });
 
         });
@@ -272,8 +270,7 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
                 .append("Liste des produits déconditionnés").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>Quantité initiale</th><th>Quantité </th><th>Stock final</th></tr>");
         notifications.stream().map(NotificationDTO::new).forEach(t -> {
@@ -282,17 +279,20 @@ public final class Mail {
             notificationUtilsDTO.getDetail().forEach(e -> {
                 List<NotificationUtilsDTO> produitDetails = e.getDetail();
                 sb.append("<tr><td>").append(notificationUtilsDTO.getUser()).append("</td><td>").append(e.getCode())
-                        .append("</td><td>").append(e.getDescription()).append("</td><td>").append(e.getDateMvt())
-                        .append("</td><td>").append(e.getQuantiteInit()).append("</td><td>").append(e.getQuantite())
-                        .append("</td><td>").append(e.getQuantiteFinale()).append("</td></tr>");
+                        .append("</td><td>").append(e.getDescription()).append("</td><td>")
+                        .append(notificationUtilsDTO.getDateMvt()).append("</td><td style='text-align: right;'>")
+                        .append(e.getQuantiteInit()).append("</td><td style='text-align: right;'>")
+                        .append(e.getQuantite()).append("</td><td style='text-align: right;'>")
+                        .append(e.getQuantiteFinale()).append("</td></tr>");
 
                 if (!CollectionUtils.isEmpty(produitDetails)) {
                     NotificationUtilsDTO de = produitDetails.get(0);
                     sb.append("<tr><td>").append(notificationUtilsDTO.getUser()).append("</td><td>")
                             .append(de.getCode()).append("</td><td>").append(de.getDescription()).append("</td><td>")
-                            .append(e.getDateMvt()).append("</td><td>").append(de.getQuantiteInit()).append("</td><td>")
-                            .append(de.getQuantite()).append("</td><td>").append(de.getQuantiteFinale())
-                            .append("</td></tr>");
+                            .append(notificationUtilsDTO.getDateMvt()).append("</td><td style='text-align: right;'>")
+                            .append(de.getQuantiteInit()).append("</td><td style='text-align: right;'>")
+                            .append(de.getQuantite()).append("</td><td style='text-align: right;'>")
+                            .append(de.getQuantiteFinale()).append("</td></tr>");
 
                 }
             });
@@ -308,8 +308,7 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
                 .append("Liste des produits modifiés à la commande").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>P.Achat.Init</th><th>Nouveau prix.Achat</th><th>Prix.U.Init</th><th>Nouveau.Prix.U</th></tr>");
         notifications.stream().map(NotificationDTO::new).forEach(t -> {
@@ -318,9 +317,10 @@ public final class Mail {
 
                 sb.append("<tr><td>").append(notificationUtilsDTO.getUser()).append("</td><td>").append(e.getCode())
                         .append("</td><td>").append(e.getDescription()).append("</td><td>").append(e.getDateMvt())
-                        .append("</td><td>").append(e.getPrixAchatUni()).append("</td><td>")
-                        .append(e.getPrixAchatFinal()).append("</td><td>").append(e.getPrixUni()).append("</td><td>")
-                        .append(e.getPrixFinal()).append("</td></tr>");
+                        .append("</td><td style='text-align: right;'>").append(e.getPrixAchatUni())
+                        .append("</td><td style='text-align: right;'>").append(e.getPrixAchatFinal())
+                        .append("</td><td style='text-align: right;'>").append(e.getPrixUni())
+                        .append("</td><td style='text-align: right;'>").append(e.getPrixFinal()).append("</td></tr>");
             });
 
         });
@@ -334,8 +334,7 @@ public final class Mail {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                .append("<caption  style='font-weight: bold;text-align: center;'>")
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
                 .append("Liste des produits dont le prix de vente à été modifié à la vente").append("</caption>")
                 .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>Prix.U.Init</th><th>Nouveau.Prix.U</th></tr>");
         notifications.stream().map(NotificationDTO::new).forEach(t -> {
@@ -343,8 +342,9 @@ public final class Mail {
             notificationUtilsDTO.getDetail().forEach(e -> {
 
                 sb.append("<tr><td>").append(notificationUtilsDTO.getUser()).append("</td><td>").append(e.getCode())
-                        .append("</td><td>").append(e.getDescription()).append("</td><td>").append(e.getDateMvt())
-                        .append("</td><td>").append(e.getPrixUni()).append("</td><td>").append(e.getPrixFinal())
+                        .append("</td><td>").append(e.getDescription()).append("</td><td>")
+                        .append(notificationUtilsDTO.getDateMvt()).append("</td><td style='text-align: right;'>")
+                        .append(e.getPrixUni()).append("</td><td style='text-align: right;'>").append(e.getPrixFinal())
                         .append("</td></tr>");
             });
 

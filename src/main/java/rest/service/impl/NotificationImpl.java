@@ -18,7 +18,6 @@ import dal.enumeration.TypeNotification;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -30,6 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.mail.Address;
 import javax.mail.Message;
@@ -49,6 +49,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import rest.service.NotificationService;
+import rest.service.SmsService;
 import util.FunctionUtils;
 import util.SmsParameters;
 
@@ -62,6 +63,8 @@ public class NotificationImpl implements NotificationService {
     private static final Logger LOG = Logger.getLogger(NotificationImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private SmsService smsService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -174,11 +177,10 @@ public class NotificationImpl implements NotificationService {
         return typedQuery.getSingleResult();
     }
 
-    // @Asynchronous
     @Override
     public void sendMail() {
-        List<Notification> notifications = findByStatutAndCanal(Set.of(Statut.NOT_SEND, Statut.SENT),
-                Set.of(Canal.EMAIL));
+        List<Notification> notifications = findByStatutAndCanal(Set.of(Statut.NOT_SEND),
+                Set.of(Canal.EMAIL, Canal.SMS_EMAIL));
 
         if (!notifications.isEmpty()) {
             StringBuilder html = new StringBuilder();
@@ -238,7 +240,13 @@ public class NotificationImpl implements NotificationService {
                     });
 
             html.append(rest.service.notification.template.Mail.endTag());
+
             sendMail(html.toString());
+            notifications.stream().forEach(e -> {
+                e.setStatut(Statut.SENT);
+                e.setModfiedAt(LocalDateTime.now());
+                em.merge(e);
+            });
         }
 
     }
@@ -259,7 +267,7 @@ public class NotificationImpl implements NotificationService {
                     Notification.class);
             q.setParameter("statut", statut);
             q.setParameter("canaux", canaux);
-            q.setParameter("createdAt", LocalDateTime.of(LocalDate.of(2024, Month.MAY, 3), LocalTime.of(6, 10)));
+            q.setParameter("createdAt", LocalDateTime.of(LocalDate.now().minusDays(1), LocalTime.MIN));
             return q.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -296,4 +304,11 @@ public class NotificationImpl implements NotificationService {
         }
         return false;
     }
+
+    @Asynchronous
+    @Override
+    public void sendSms(Notification notification) {
+        this.smsService.sendSMS(rest.service.notification.template.Sms.buildClotureCaisse(notification));
+    }
+
 }
