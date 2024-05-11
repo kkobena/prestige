@@ -12,7 +12,6 @@ import dal.StockDailyValue;
 import dal.TParameters;
 import dal.enumeration.Canal;
 import dal.enumeration.Statut;
-import dal.enumeration.TypeNotification;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +29,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
@@ -73,6 +73,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.NotificationService;
 import util.Constant;
 import util.SmsParameters;
 
@@ -96,6 +97,8 @@ public class DatabaseToolkit {
     private TimerService timerService;
     @Inject
     private UserTransaction userTransaction;
+    @EJB
+    private NotificationService notificationService;
 
     @PostConstruct
     public void init() {
@@ -113,7 +116,7 @@ public class DatabaseToolkit {
         }
 
         createTimer();
-        mes.submit(this::updateStockDailyValue);
+        // mes.submit(this::updateStockDailyValue);
 
     }
 
@@ -135,16 +138,17 @@ public class DatabaseToolkit {
     }
 
     public void createTimer() {
-        final TimerConfig email = new TimerConfig("email", false);
-        timerService.createCalendarTimer(new ScheduleExpression()
-                // .minute("*/2")
-                // .hour("*")
-                .hour(findScheduledValues()).dayOfMonth("*").year("*"), email);
 
-        final TimerConfig sms = new TimerConfig("sms", false);
-        timerService.createCalendarTimer(new ScheduleExpression()
-                // .second("*/30")
-                .minute("*/2").hour("*").dayOfMonth("*").year("*"), sms);
+        final TimerConfig email = new TimerConfig("email", false);
+        timerService.createCalendarTimer(new ScheduleExpression().minute("*/5").hour("*")
+                /* .hour(findScheduledValues()) */.dayOfMonth("*").year("*"), email);
+
+        /*
+         * final TimerConfig sms = new TimerConfig("sms", false); timerService.createCalendarTimer(new
+         * ScheduleExpression()
+         */
+
+        // .minute("*/2").hour("*").dayOfMonth("*").year("*"), sms);
     }
 
     public void manageEmail() {
@@ -274,12 +278,15 @@ public class DatabaseToolkit {
 
     @Timeout
     public void timeout(Timer timer) {
+        System.err.println(" timder " + timer.getInfo());
         if ("sms".equals(timer.getInfo())) {
 
             manageSms();
 
         } else if ("email".equals(timer.getInfo())) {
-            manageEmail();
+            System.err.println("*************************************************************");
+            notificationService.sendMail();
+            // manageEmail();
 
         }
     }

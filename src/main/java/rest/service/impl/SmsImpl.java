@@ -71,7 +71,7 @@ public class SmsImpl implements SmsService {
     }
 
     public String getAccessTokend() {
-        SmsParameters sp = SmsParameters.getInstance();
+
         return sp.accesstoken;
     }
 

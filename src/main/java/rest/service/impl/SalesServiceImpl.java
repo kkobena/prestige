@@ -61,7 +61,6 @@ import dal.TWorkflowRemiseArticle;
 import dal.Typemvtproduit;
 import dal.VenteExclus;
 import dal.VenteReglement;
-import dal.enumeration.Canal;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.Statut;
 import dal.enumeration.TypeLog;
@@ -3769,7 +3768,7 @@ public class SalesServiceImpl implements SalesService {
 
         Map<String, Object> donneesMap = new HashMap<>();
         if (!venteModification.isEmpty()) {
-            donneesMap.put(NotificationUtils.ITEMS.getId(), new JSONObject(venteModification));
+            donneesMap.put(NotificationUtils.ITEMS.getId(), new JSONArray().put(venteModification));
         }
 
         donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());

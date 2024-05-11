@@ -4,6 +4,7 @@ import commonTasks.dto.NotificationDTO;
 import dal.Notification;
 import dal.TUser;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import org.apache.commons.collections4.CollectionUtils;
 import rest.service.v2.dto.NotificationUtilsDTO;
@@ -14,10 +15,19 @@ import util.SmsParameters;
  *
  * @author koben
  */
-public class Mail {
+public final class Mail {
 
-    public static Properties getEmail() {
-        SmsParameters sp = SmsParameters.getInstance();
+    public static SmsParameters sp = SmsParameters.getInstance();
+
+    private Mail() {
+    }
+
+    public static Properties getEmailProperties() {
+        if (Objects.isNull(sp)) {
+            sp = SmsParameters.getInstance();
+
+        }
+
         Properties props = new Properties();
         props.put("mail.smtp.host", sp.smtpHost);
         props.put("mail.transport.protocol", sp.protocol);
@@ -28,15 +38,15 @@ public class Mail {
         return props;
     }
 
-    public static StringBuilder beginTag() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<html><body>");
-        return sb;
+    public static String beginTag() {
+
+        return "<html><body>";
+
     }
 
-    public static void endTag(StringBuilder sb) {
+    public static String endTag() {
 
-        sb.append("</body></html>");
+        return "</body></html>";
 
     }
 
@@ -200,6 +210,25 @@ public class Mail {
             sb.append("<tr><td>").append(tu.getStrFIRSTNAME()).append(" ").append(tu.getStrLASTNAME())
                     .append("</td><td>").append(item.getType()).append("</td><td>").append(item.getCode())
                     .append("</td><td>").append(item.getDateMvt()).append("</td></tr>");
+        });
+
+        sb.append("</table>");
+        return sb.toString();
+    }
+
+    public static String buildEntreeUg(List<Notification> mvtCaisses) {
+        if (CollectionUtils.isEmpty(mvtCaisses)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
+                .append("<caption  style='font-weight: bold;text-align: center;'>")
+                .append("Liste de saisie de produits périmés").append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th></tr>");
+        mvtCaisses.stream().map(NotificationDTO::new).map(NotificationDTO::getNotificationDetail).forEach(t -> {
+
+            sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(t.getCode()).append("</td><td>")
+                    .append(t.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td></tr>");
         });
 
         sb.append("</table>");

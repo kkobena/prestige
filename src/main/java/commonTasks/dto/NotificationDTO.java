@@ -307,7 +307,10 @@ public class NotificationDTO implements Serializable {
                 o.setDateMvt(js.getString("dateMvt"));
             }
             if (js.has("detail")) {
-                js.getJSONArray("detail").forEach(e -> o.getDetail().add(buildFromString(e.toString())));
+                try {
+                    js.getJSONArray("detail").forEach(e -> o.getDetail().add(buildFromString(e.toString())));
+                } catch (Exception e) {
+                }
 
             }
             return o;

@@ -36,6 +36,9 @@ public interface NotificationService {
     String buildDonnees(Map<String, Object> donneesMap);
 
     CategorieNotification getOneByName(TypeNotification typeNotification);
-    // List<Notification> fetch()
+
+    void sendMail();
+
+    void sendMail(Notification notification);
 
 }

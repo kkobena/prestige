@@ -37,7 +37,9 @@ import javax.validation.constraints.NotNull;
 @NamedQueries({
         @NamedQuery(name = "Notification.findAllByCreatedAtAndStatus", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND o.statut=:statut "),
         @NamedQuery(name = "Notification.findAllByStatus", query = "SELECT o FROM Notification o LEFT JOIN FETCH o.notificationClients WHERE  o.statut=:statut "),
-        @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanal", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND  o.statut=:statut AND o.categorieNotification.canal IN :canaux")
+        @NamedQuery(name = "Notification.findAllByStatusAndCanal", query = "SELECT o FROM Notification o LEFT JOIN FETCH o.notificationClients WHERE  o.statut=:statut AND o.categorieNotification.canal IN :canaux"),
+        @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanal", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND  o.statut=:statut AND o.categorieNotification.canal IN :canaux"),
+        @NamedQuery(name = "Notification.findAllByCreatedAtAndStatusAndCanaux", query = "SELECT o FROM Notification o WHERE o.createdAt >= :createdAt AND  o.statut IN :statut AND o.categorieNotification.canal IN :canaux")
 
 })
 public class Notification implements Serializable {
