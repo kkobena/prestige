@@ -1444,6 +1444,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.RETOUR_FOURNISSEUR.getValue());
         donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
         donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donnee.put(NotificationUtils.MONTANT_TVA.getId(), NumberUtils.formatIntToString(bonLivraison.getIntTVA()));
         donnee.put(NotificationUtils.NUM_BL.getId(), bonLivraison.getStrREFLIVRAISON());
         donnee.put(NotificationUtils.MONTANT_TTC.getId(), NumberUtils.formatIntToString(montantTTC));
         donnee.put(NotificationUtils.DATE_BON.getId(), DateCommonUtils.formatDate(bonLivraison.getDtDATELIVRAISON()));

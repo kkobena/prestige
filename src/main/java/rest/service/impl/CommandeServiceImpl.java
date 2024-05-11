@@ -319,6 +319,7 @@ public class CommandeServiceImpl implements CommandeService {
              */
 
             Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.NUM_BL.getId(), bonLivraison.getStrREFLIVRAISON());
             donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.ENTREE_EN_STOCK.getValue());
             donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
             donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
