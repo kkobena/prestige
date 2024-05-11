@@ -667,6 +667,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             TUser tUser = ajustement.getLgUSERID();
             TEmplacement emplacement = tUser.getLgEMPLACEMENTID();
             List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(ajustement.getLgAJUSTEMENTID());
+            JSONArray items = new JSONArray();
             ajustementDetails.forEach(it -> {
                 TFamille famille = it.getLgFAMILLEID();
                 TFamilleStock familleStock = findStockByProduitId(famille.getLgFAMILLEID(),
@@ -690,8 +691,23 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille);
 
                 emg.merge(it);
+                JSONObject jsonItemUg = new JSONObject();
+                jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), famille.getIntCIP());
+                jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), famille.getStrNAME());
+                jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), it.getIntNUMBER());
+                jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), initStock);
+                jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), familleStock.getIntNUMBERAVAILABLE());
+                items.put(jsonItemUg);
 
             });
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.AJUSTEMENT_DE_PRODUIT.getValue());
+            donnee.put(NotificationUtils.USER.getId(), tUser.getStrFIRSTNAME() + " " + tUser.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+
+            createNotification("", TypeNotification.AJUSTEMENT_DE_PRODUIT, tUser, donnee,
+                    ajustement.getLgAJUSTEMENTID());
             ajustement.setStrCOMMENTAIRE(params.getDescription());
             ajustement.setStrSTATUT(STATUT_ENABLE);
             emg.merge(ajustement);

@@ -185,7 +185,7 @@ public class NotificationImpl implements NotificationService {
             html.append(rest.service.notification.template.Mail.beginTag());
             notifications.stream().collect(Collectors.groupingBy(Notification::getCategorieNotification))
                     .forEach((categorie, categorieNotifications) -> {
-                        System.err.println("categorie.getName() " + categorie.getName());
+
                         TypeNotification typeNotification = TypeNotification.fromName(categorie.getName());
                         switch (typeNotification) {
                         case CLOTURE_DE_CAISSE:
@@ -207,7 +207,23 @@ public class NotificationImpl implements NotificationService {
                             html.append(rest.service.notification.template.Mail.buildPerimes(categorieNotifications));
                             break;
                         case QUANTITE_UG:
-                            // html.append(rest.service.notification.template.Mail.buildCreationProduit(categorieNotifications));
+                            html.append(rest.service.notification.template.Mail.buildEntreeUg(categorieNotifications));
+                            break;
+                        case AJUSTEMENT_DE_PRODUIT:
+                            html.append(
+                                    rest.service.notification.template.Mail.buildAjustement(categorieNotifications));
+                            break;
+                        case DECONDITIONNEMENT:
+                            html.append(rest.service.notification.template.Mail
+                                    .buildDeconditionnement(categorieNotifications));
+                            break;
+                        case MODIFICATION_INFO_PRODUIT_COMMANDE:
+                            html.append(rest.service.notification.template.Mail
+                                    .buildModificationProduitCommande(categorieNotifications));
+                            break;
+                        case MODIFICATION_PRIX_VENTE_PRODUIT:
+                            html.append(rest.service.notification.template.Mail
+                                    .buildModificationProduitPu(categorieNotifications));
                             break;
                         case AJOUT_DE_NOUVEAU_PRODUIT:
                             html.append(rest.service.notification.template.Mail
@@ -231,7 +247,7 @@ public class NotificationImpl implements NotificationService {
     @Override
     public void sendMail(Notification notification) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from
-                                                                       // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        // nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
     // Statut.NOT_SEND
 

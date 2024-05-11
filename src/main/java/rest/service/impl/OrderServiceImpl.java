@@ -633,7 +633,7 @@ public class OrderServiceImpl implements OrderService {
             Map<String, Object> donnee = new HashMap<>();
             donnee.put(NotificationUtils.PRIX_ACHAT_INIT.getId(),
                     NumberUtils.formatIntToString(produitGrossiste.getIntPAF()));
-            donnee.put(NotificationUtils.PRIX_ACHAT_INIT.getId(), NumberUtils.formatIntToString(dto.getPrixAchat()));
+            donnee.put(NotificationUtils.PRIX_ACHAT_FINAL.getId(), NumberUtils.formatIntToString(dto.getPrixAchat()));
             donnee.put(NotificationUtils.ITEM_KEY.getId(), f.getLgFAMILLEID());
             donnee.put(NotificationUtils.ITEM_DESC.getId(), f.getStrNAME());
             donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_PA_PRODUIT_COMMANDE.getValue());

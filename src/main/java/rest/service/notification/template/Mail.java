@@ -159,7 +159,7 @@ public final class Mail {
         sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
                 .append("<caption  style='font-weight: bold;text-align: center;'>")
                 .append("Liste de saisie de produits périmés").append("</caption>")
-                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th></tr>");
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th></tr>");
 
         mvtCaisses.forEach(t -> {
             TUser tu = t.getUser();
@@ -182,7 +182,7 @@ public final class Mail {
         sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
                 .append("<caption  style='font-weight: bold;text-align: center;'>")
                 .append("Liste de saisie de produits périmés").append("</caption>")
-                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th></tr>");
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th></tr>");
         mvtCaisses.stream().map(NotificationDTO::new).map(NotificationDTO::getNotificationDetail).forEach(t -> {
 
             sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(t.getCode()).append("</td><td>")
@@ -216,19 +216,114 @@ public final class Mail {
         return sb.toString();
     }
 
-    public static String buildEntreeUg(List<Notification> mvtCaisses) {
-        if (CollectionUtils.isEmpty(mvtCaisses)) {
+    public static String buildEntreeUg(List<Notification> notifications) {
+        if (CollectionUtils.isEmpty(notifications)) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
         sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
                 .append("<caption  style='font-weight: bold;text-align: center;'>")
-                .append("Liste de saisie de produits périmés").append("</caption>")
-                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th></tr>");
-        mvtCaisses.stream().map(NotificationDTO::new).map(NotificationDTO::getNotificationDetail).forEach(t -> {
+                .append("Liste des entrée unités gratuites").append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>Quantité</th></tr>");
+        notifications.stream().map(NotificationDTO::new).map(NotificationDTO::getNotificationDetail).forEach(t -> {
 
             sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(t.getCode()).append("</td><td>")
-                    .append(t.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td></tr>");
+                    .append(t.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td><td>")
+                    .append(t.getQuantite()).append("</td></tr>");
+        });
+
+        sb.append("</table>");
+        return sb.toString();
+    }
+
+    public static String buildAjustement(List<Notification> notifications) {
+        if (CollectionUtils.isEmpty(notifications)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
+                .append("<caption  style='font-weight: bold;text-align: center;'>").append("Liste des produits ajustés")
+                .append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>Quantité initiale</th><th>Quantité ajusté</th><th>Stock final</th></tr>");
+        notifications.stream().map(NotificationDTO::new).map(NotificationDTO::getNotificationDetail).forEach(t -> {
+
+            sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(t.getCode()).append("</td><td>")
+                    .append(t.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td><td>")
+                    .append(t.getQuantiteInit()).append("</td><td>").append(t.getQuantite()).append("</td><td>")
+                    .append(t.getQuantiteFinale()).append("</td></tr>");
+        });
+
+        sb.append("</table>");
+        return sb.toString();
+    }
+
+    public static String buildDeconditionnement(List<Notification> notifications) {
+        if (CollectionUtils.isEmpty(notifications)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
+                .append("<caption  style='font-weight: bold;text-align: center;'>")
+                .append("Liste des produits déconditionnés").append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>Quantité initiale</th><th>Quantité </th><th>Stock final</th></tr>");
+        notifications.stream().map(NotificationDTO::new).map(NotificationDTO::getNotificationDetail).forEach(t -> {
+            List<NotificationUtilsDTO> produitDetails = t.getDetail();
+
+            sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(t.getCode()).append("</td><td>")
+                    .append(t.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td><td>")
+                    .append(t.getQuantiteInit()).append("</td><td>").append(t.getQuantite()).append("</td><td>")
+                    .append(t.getQuantiteFinale()).append("</td></tr>");
+
+            if (!CollectionUtils.isEmpty(produitDetails)) {
+                NotificationUtilsDTO de = produitDetails.get(0);
+                sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(de.getCode()).append("</td><td>")
+                        .append(de.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td><td>")
+                        .append(de.getQuantiteInit()).append("</td><td>").append(de.getQuantite()).append("</td><td>")
+                        .append(de.getQuantiteFinale()).append("</td></tr>");
+
+            }
+
+        });
+
+        sb.append("</table>");
+        return sb.toString();
+    }
+
+    public static String buildModificationProduitCommande(List<Notification> notifications) {
+        if (CollectionUtils.isEmpty(notifications)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
+                .append("<caption  style='font-weight: bold;text-align: center;'>")
+                .append("Liste des produits modifiés à la commande").append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>P.Achat.Init</th><th>Nouveau prix.Achat</th><th>Prix.U.Init</th><th>Nouveau.Prix.U</th></tr>");
+        notifications.stream().map(NotificationDTO::new).map(NotificationDTO::getNotificationDetail).forEach(t -> {
+
+            sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(t.getCode()).append("</td><td>")
+                    .append(t.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td><td>")
+                    .append(t.getPrixAchatUni()).append("</td><td>").append(t.getPrixAchatFinal()).append("</td><td>")
+                    .append(t.getPrixUni()).append("</td><td>").append(t.getPrixFinal()).append("</td></tr>");
+        });
+
+        sb.append("</table>");
+        return sb.toString();
+    }
+
+    public static String buildModificationProduitPu(List<Notification> notifications) {
+        if (CollectionUtils.isEmpty(notifications)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
+                .append("<caption  style='font-weight: bold;text-align: center;'>")
+                .append("Liste des produits dont le prix de vente à été modifié à la vente").append("</caption>")
+                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>Prix.U.Init</th><th>Nouveau.Prix.U</th></tr>");
+        notifications.stream().map(NotificationDTO::new).map(NotificationDTO::getNotificationDetail).forEach(t -> {
+
+            sb.append("<tr><td>").append(t.getUser()).append("</td><td>").append(t.getCode()).append("</td><td>")
+                    .append(t.getDescription()).append("</td><td>").append(t.getDateMvt()).append("</td><td>")
+                    .append(t.getPrixUni()).append("</td><td>").append(t.getPrixFinal()).append("</td></tr>");
         });
 
         sb.append("</table>");

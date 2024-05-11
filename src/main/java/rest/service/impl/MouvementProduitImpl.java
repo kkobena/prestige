@@ -389,7 +389,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
                         + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER()
                         + " ] :Quantité finale [ " + qteFinale + " ]";
                 logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille);
-                it.setStrSTATUT(commonparameter.statut_enable);
+                it.setStrSTATUT(Constant.STATUT_ENABLE);
                 it.setDtUPDATED(new Date());
                 emg.merge(it);
                 JSONObject jsonItemUg = new JSONObject();

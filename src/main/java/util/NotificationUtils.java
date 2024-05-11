@@ -12,7 +12,7 @@ public enum NotificationUtils {
     ITEMS("Détail", "detail"), ITEM_DESC("Description", "description"), ITEM_QTY("Quantité", "quantite"),
     ITEM_QTY_INIT("Qté initiale", "quantiteInit"), ITEM_QTY_FINALE("Qté finale", "quantiteFinale"),
     PRIX_INIT("Prix initial", "prixUni"), PRIX_FINAL("Prix final", "prixFinal"),
-    PRIX_ACHAT_INIT("Prix achat initial", "prixAchatUni"), PRIX_ACHA_FINAL("Prix achat final", "prixAchatFinal"),
+    PRIX_ACHAT_INIT("Prix achat initial", "prixAchatUni"), PRIX_ACHAT_FINAL("Prix achat final", "prixAchatFinal"),
     DATE("Date", "dateMvt"), DATE_INI("Date initiale", "dateMvtIni"), ITEM_KEY("Code", "code");
 
     private final String value;

@@ -244,13 +244,14 @@ public class NotificationDTO implements Serializable {
 
     }
 
-    private NotificationUtilsDTO buildFromString(String donnes) {
+    private NotificationUtilsDTO buildFromString(String donnes, TUser tu) {
         if (Objects.nonNull(donnes) && !donnes.isEmpty()) {
             NotificationUtilsDTO o = new NotificationUtilsDTO();
             JSONObject js = new JSONObject(donnes);
-            if (js.has(NotificationUtils.USER.getId())) {
-                o.setUser(js.getString(NotificationUtils.USER.getId()));
-            }
+            o.setUser(tu.getStrFIRSTNAME().concat(" " + tu.getStrLASTNAME()));
+            /*
+             * if (js.has(NotificationUtils.USER.getId())) { o.setUser(js.getString(NotificationUtils.USER.getId())); }
+             */
             if (js.has("code")) {
                 o.setCode(js.getString("code"));
             }
@@ -308,7 +309,7 @@ public class NotificationDTO implements Serializable {
             }
             if (js.has("detail")) {
                 try {
-                    js.getJSONArray("detail").forEach(e -> o.getDetail().add(buildFromString(e.toString())));
+                    js.getJSONArray("detail").forEach(e -> o.getDetail().add(buildFromString(e.toString(), tu)));
                 } catch (Exception e) {
                 }
 
@@ -322,7 +323,7 @@ public class NotificationDTO implements Serializable {
         String donnes = n.getDonnees();
         try {
             if (Objects.nonNull(donnes) && !donnes.isEmpty()) {
-                return buildFromString(donnes);
+                return buildFromString(donnes, n.getUser());
             }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
