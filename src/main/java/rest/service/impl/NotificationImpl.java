@@ -308,7 +308,7 @@ public class NotificationImpl implements NotificationService {
     @Asynchronous
     @Override
     public void sendSms(Notification notification) {
-        this.smsService.sendSMS(rest.service.notification.template.Sms.buildClotureCaisse(notification));
+        this.smsService.sendSMS(notification.getMessage());
     }
 
 }
