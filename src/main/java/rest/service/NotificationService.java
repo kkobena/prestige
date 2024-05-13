@@ -6,11 +6,14 @@
 package rest.service;
 
 import commonTasks.dto.NotificationDTO;
+import dal.CategorieNotification;
 import dal.Notification;
 import dal.TClient;
 import dal.TUser;
 import dal.enumeration.Canal;
 import dal.enumeration.Statut;
+import dal.enumeration.TypeNotification;
+import java.util.Map;
 import javax.ejb.Local;
 import org.json.JSONObject;
 
@@ -29,5 +32,15 @@ public interface NotificationService {
     void save(Notification notification, TClient client);
 
     Notification buildNotification(NotificationDTO notification, TUser user);
+
+    String buildDonnees(Map<String, Object> donneesMap);
+
+    CategorieNotification getOneByName(TypeNotification typeNotification);
+
+    void sendMail();
+
+    void sendMail(Notification notification);
+
+    void sendSms(Notification notification);
 
 }

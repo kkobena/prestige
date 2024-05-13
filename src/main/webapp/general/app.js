@@ -807,7 +807,8 @@ Ext.application({
         'TableauBoardCarnetCtr',
         'FactureSubrogatoireCtr',
         'ProuduitsVenteAnnulesCtr',
-        'NotificationCtr'
+        'NotificationCtr',
+        'CategorieNotificationCtr'
         
     ],
     stores: [

@@ -11,7 +11,6 @@ import commonTasks.dto.Params;
 import commonTasks.dto.RuptureDTO;
 import commonTasks.dto.RuptureDetailDTO;
 import dal.*;
-import dal.enumeration.Canal;
 import dal.enumeration.ProductStateEnum;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
@@ -44,7 +43,6 @@ import rest.service.NotificationService;
 import rest.service.OrderService;
 import rest.service.ProductStateService;
 import rest.service.dto.*;
-import toolkits.parameters.commonparameter;
 import util.*;
 
 /**
@@ -626,10 +624,23 @@ public class OrderServiceImpl implements OrderService {
                     + " ancien prix: " + produitGrossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
             logService.updateItem(user, produitGrossiste.getStrCODEARTICLE(), desc,
                     TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f);
-            notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
-                    .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE).message(desc).addUser(user));
+            /*
+             * notificationService.save(new Notification().canal(Canal.SMS_EMAIL).entityRef(f.getLgFAMILLEID())
+             * .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE).message(desc).addUser(user));
+             */
             saveMouvementPrice(f, dto.getPrixAchat(), produitGrossiste.getIntPAF(), f.getIntCIP(), user);
 
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.PRIX_ACHAT_INIT.getId(),
+                    NumberUtils.formatIntToString(produitGrossiste.getIntPAF()));
+            donnee.put(NotificationUtils.PRIX_ACHAT_FINAL.getId(), NumberUtils.formatIntToString(dto.getPrixAchat()));
+            donnee.put(NotificationUtils.ITEM_KEY.getId(), f.getLgFAMILLEID());
+            donnee.put(NotificationUtils.ITEM_DESC.getId(), f.getStrNAME());
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_PA_PRODUIT_COMMANDE.getValue());
+            donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            createNotification(desc, TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE, user, donnee,
+                    f.getLgFAMILLEID());
         }
 
         detail.setIntNUMBER(dto.getStock());
@@ -648,12 +659,25 @@ public class OrderServiceImpl implements OrderService {
         return detail;
     }
 
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
+        try {
+            notificationService.save(
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     private void saveMouvementPrice(TFamille famille, int prix, int oldPrice, String ref, TUser u) {
 
         try {
             TMouvementprice mouvementprice = new TMouvementprice(UUID.randomUUID().toString());
             mouvementprice.setLgUSERID(u);
-            mouvementprice.setStrACTION(commonparameter.code_action_commande);
+            mouvementprice.setStrACTION(Constant.ACTION_COMMANDE);
             mouvementprice.setDtUPDATED(new Date());
             mouvementprice.setDtCREATED(mouvementprice.getDtCREATED());
             mouvementprice.setIntPRICENEW(prix);
@@ -804,8 +828,10 @@ public class OrderServiceImpl implements OrderService {
                 + detail.getIntPRICEDETAIL() + " nouveau prix :" + dto.getPrixVente();
         logService.updateItem(user, produitGrossiste.getStrCODEARTICLE(), desc,
                 TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f);
-        notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
-                .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE).message(desc).addUser(user));
+        /*
+         * notificationService.save(new Notification().canal(Canal.SMS_EMAIL) .entityRef(f.getLgFAMILLEID())
+         * .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE).message(desc).addUser(user));
+         */
         saveMouvementPrice(f, dto.getPrixVente(), detail.getIntPRICEDETAIL(), f.getIntCIP(), user);
         detail.setIntPRICEDETAIL(dto.getPrixVente());
         detail.setStrSTATUT(DateConverter.STATUT_PROCESS);
@@ -815,6 +841,15 @@ public class OrderServiceImpl implements OrderService {
         order.setDtUPDATED(detail.getDtUPDATED());
         order.setLgUSERID(user);
         this.getEmg().merge(order);
+        Map<String, Object> donnee = new HashMap<>();
+        donnee.put(NotificationUtils.PRIX_INIT.getId(), NumberUtils.formatIntToString(detail.getIntPRICEDETAIL()));
+        donnee.put(NotificationUtils.PRIX_FINAL.getId(), NumberUtils.formatIntToString(dto.getPrixVente()));
+        donnee.put(NotificationUtils.ITEM_KEY.getId(), f.getLgFAMILLEID());
+        donnee.put(NotificationUtils.ITEM_DESC.getId(), f.getStrNAME());
+        donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_PU_PRODUIT_COMMANDE.getValue());
+        donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        createNotification(desc, TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE, user, donnee, f.getLgFAMILLEID());
         return order.getLgORDERID();
     }
 
@@ -840,76 +875,6 @@ public class OrderServiceImpl implements OrderService {
     public JSONObject fetch(String search, Set<String> status, int start, int limit) {
         long count = getOrderCount(search, status);
         return FunctionUtils.returnData(getOrders(search, status, start, limit), count);
-
-    }
-
-    private List<CommandeDTO> getCommandes(String search, Set<String> status, int start, int limit) {
-        CriteriaBuilder cb = getEmg().getCriteriaBuilder();
-        CriteriaQuery<TOrder> cq = cb.createQuery(TOrder.class);
-        Root<TOrder> root = cq.from(TOrder.class);
-        Join<TOrder, TOrderDetail> join = root.join(TOrder_.tOrderDetailCollection);
-        cq.select(root).distinct(true).orderBy(cb.desc(root.get(TOrder_.dtUPDATED)));
-        List<Predicate> predicates = listPredicates(cb, root, join, search, status);
-        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-        TypedQuery<TOrder> q = getEmg().createQuery(cq);
-        q.setFirstResult(start);
-        q.setMaxResults(limit);
-        return q.getResultList().stream().map(this::buildCommandeDTO).collect(Collectors.toList());
-    }
-
-    private CommandeDTO buildCommandeDTO(TOrder order) {
-        int montantAchat = 0;
-        int montantVente = 0;
-        int nbreLigne = 0;
-        int totalQty = 0;
-        String items = " ";
-
-        for (TOrderDetail item : order.getTOrderDetailCollection()) {
-            montantAchat += item.getIntPRICE();
-            montantVente += (item.getIntPRICEDETAIL() * item.getIntNUMBER());
-            nbreLigne++;
-            totalQty += item.getIntNUMBER();
-
-            TFamille famille = item.getLgFAMILLEID();
-            TFamilleGrossiste familleGrossiste = findFamilleGrossiste(famille.getLgFAMILLEID(),
-                    order.getLgGROSSISTEID().getLgGROSSISTEID());
-            items += " <b><span style='display:inline-block;width: 7%;'>"
-                    + (familleGrossiste != null ? familleGrossiste.getStrCODEARTICLE() : famille.getIntCIP())
-                    + "</span><span style='display:inline-block;width: 25%;'>" + famille.getStrDESCRIPTION()
-                    + "</span><span style='display:inline-block;width: 10%;'>(" + item.getIntNUMBER()
-                    + ")</span><span style='display:inline-block;width: 15%;'>"
-                    + NumberUtils.formatLongToString(item.getIntPAFDETAIL())
-                    + " F CFA </span><span style='display:inline-block;width: 15%;'>"
-                    + NumberUtils.formatLongToString(item.getIntPRICEDETAIL()) + " F CFA " + "</span></b><br> ";
-
-        }
-        return new CommandeDTO(order, items, montantAchat, montantVente, nbreLigne, totalQty);
-    }
-
-    private List<Predicate> listPredicates(CriteriaBuilder cb, Root<TOrder> root, Join<TOrder, TOrderDetail> join,
-            String search, Set<String> status) {
-        List<Predicate> predicates = new ArrayList<>();
-        predicates.add(root.get(TOrder_.strSTATUT).in(status));
-
-        if (StringUtils.isNotEmpty(search)) {
-            search = search + "%";
-            predicates.add(cb.or(cb.like(root.get(TOrder_.strREFORDER), search),
-                    cb.like(join.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.intCIP), search),
-                    cb.like(join.get(TOrderDetail_.lgFAMILLEID).get(TFamille_.strNAME), search)));
-        }
-        return predicates;
-    }
-
-    private long count(String search, Set<String> status) {
-        CriteriaBuilder cb = getEmg().getCriteriaBuilder();
-        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-        Root<TOrder> root = cq.from(TOrder.class);
-        Join<TOrder, TOrderDetail> join = root.join(TOrder_.tOrderDetailCollection);
-        cq.select(cb.countDistinct(root));
-        List<Predicate> predicates = listPredicates(cb, root, join, search, status);
-        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-        TypedQuery<Long> q = getEmg().createQuery(cq);
-        return Objects.isNull(q.getSingleResult()) ? 0 : q.getSingleResult();
 
     }
 

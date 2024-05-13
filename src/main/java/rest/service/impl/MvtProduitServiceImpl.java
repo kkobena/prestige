@@ -12,7 +12,6 @@ import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.RetourFournisseurDTO;
 import commonTasks.dto.SalesStatsParams;
 import dal.*;
-import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 
@@ -23,8 +22,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -58,7 +59,10 @@ import rest.service.NotificationService;
 import rest.service.SuggestionService;
 
 import static util.Constant.*;
+import util.DateCommonUtils;
 import util.DateConverter;
+import util.NotificationUtils;
+import util.NumberUtils;
 
 /**
  *
@@ -170,7 +174,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         final TEmplacement emplacement = tu.getLgEMPLACEMENTID();
         final String emplacementId = emplacement.getLgEMPLACEMENTID();
         final boolean isDepot = !("1".equals(emplacementId));
-
+        JSONArray items = new JSONArray();
         final Typemvtproduit typemvtproduit = tp.getChecked() ? getTypemvtproduitByID(VENTE)
                 : getTypemvtproduitByID(TMVTP_VENTE_DEPOT_EXTENSION);
         final Typemvtproduit typeMvtProduit = getTypemvtproduitByID(ENTREE_EN_STOCK);
@@ -184,8 +188,18 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                         + tFamille.getIntPRICE() + " à " + it.getIntPRICEUNITAIR() + " à la vente par "
                         + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
                 logService.updateItem(tu, tp.getStrREF(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT, tp);
-                notificationService.save(new Notification().canal(Canal.EMAIL)
-                        .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
+                /*
+                 * notificationService.save(new Notification().canal(Canal.EMAIL)
+                 * .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
+                 */
+                JSONObject jsonItemUg = new JSONObject();
+                jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), tFamille.getIntCIP());
+                jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), tFamille.getStrNAME());
+                jsonItemUg.put(NotificationUtils.PRIX_INIT.getId(),
+                        NumberUtils.formatIntToString(tFamille.getIntPRICE()));
+                jsonItemUg.put(NotificationUtils.PRIX_FINAL.getId(),
+                        NumberUtils.formatIntToString(it.getIntPRICEUNITAIR()));
+                items.put(jsonItemUg);
             }
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
             int initStock = familleStock.getIntNUMBERAVAILABLE();
@@ -207,7 +221,16 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             updateStockDepot(typeMvtProduit, tu, tFamille, it.getIntQUANTITY(), depot);
             suggestionService.makeSuggestionAuto(familleStock, tFamille);
         }
-
+        if (!items.isEmpty()) {
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT.getValue());
+            donnee.put(NotificationUtils.USER.getId(), tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            createNotification("", TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT, tu, donnee,
+                    tp.getLgPREENREGISTREMENTID());
+        }
     }
 
     private Typemvtproduit getTypemvtproduitByID(String id) {
@@ -249,6 +272,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         final boolean isDepot = !("1".equals(emplacementId));
         final Typemvtproduit typemvtproduit = getTypemvtproduitByID(VENTE);
         final String statut = STATUT_IS_CLOSED;
+        JSONArray items = new JSONArray();
         list.stream().forEach(it -> {
 
             it.setStrSTATUT(statut);
@@ -261,8 +285,18 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                         + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
                 logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT,
                         tFamille);
-                notificationService.save(new Notification().canal(Canal.EMAIL)
-                        .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
+                /*
+                 * notificationService.save(new Notification().canal(Canal.EMAIL)
+                 * .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
+                 */
+                JSONObject jsonItemUg = new JSONObject();
+                jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), tFamille.getIntCIP());
+                jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), tFamille.getStrNAME());
+                jsonItemUg.put(NotificationUtils.PRIX_INIT.getId(),
+                        NumberUtils.formatIntToString(tFamille.getIntPRICE()));
+                jsonItemUg.put(NotificationUtils.PRIX_FINAL.getId(),
+                        NumberUtils.formatIntToString(it.getIntPRICEUNITAIR()));
+                items.put(jsonItemUg);
             }
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
             Integer initStock = familleStock.getIntNUMBERAVAILABLE();
@@ -284,6 +318,16 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
         });
         makeSuggestionAutoAsync(list, emplacement);
+        if (!items.isEmpty()) {
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT.getValue());
+            donnee.put(NotificationUtils.USER.getId(), tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            createNotification("", TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT, tu, donnee,
+                    tp.getLgPREENREGISTREMENTID());
+        }
 
     }
 
@@ -444,8 +488,34 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
             logService.updateItem(tu, tFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, tFamilleParent);
 
-            notificationService.save(new Notification().canal(Canal.EMAIL)
-                    .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(tu));
+            /*
+             * notificationService.save(new Notification().canal(Canal.EMAIL)
+             * .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(tu));
+             */
+            JSONArray items = new JSONArray();
+            JSONObject jsonItemUg = new JSONObject();
+            jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), tFamilleParent.getIntCIP());
+            jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), tFamilleParent.getStrNAME());
+            jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), numberToDecondition);
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInit);
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInit - numberToDecondition);
+
+            JSONObject detail = new JSONObject();
+            detail.put(NotificationUtils.ITEM_KEY.getId(), tFamilleChild.getIntCIP());
+            detail.put(NotificationUtils.ITEM_DESC.getId(), tFamilleChild.getStrNAME());
+            detail.put(NotificationUtils.ITEM_QTY.getId(), (numberToDecondition * qtyDetail));
+            detail.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInitDetail);
+            detail.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInitDetail + (numberToDecondition * qtyDetail));
+            jsonItemUg.put(NotificationUtils.ITEMS.getId(), new JSONArray(detail));
+            items.put(jsonItemUg);
+
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.DECONDITIONNEMENT.getValue());
+            donnee.put(NotificationUtils.USER.getId(), tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+
+            createNotification(desc, TypeNotification.DECONDITIONNEMENT, tu, donnee, tFamilleParent.getLgFAMILLEID());
 
         }
     }
@@ -597,6 +667,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             TUser tUser = ajustement.getLgUSERID();
             TEmplacement emplacement = tUser.getLgEMPLACEMENTID();
             List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(ajustement.getLgAJUSTEMENTID());
+            JSONArray items = new JSONArray();
             ajustementDetails.forEach(it -> {
                 TFamille famille = it.getLgFAMILLEID();
                 TFamilleStock familleStock = findStockByProduitId(famille.getLgFAMILLEID(),
@@ -620,8 +691,23 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille);
 
                 emg.merge(it);
+                JSONObject jsonItemUg = new JSONObject();
+                jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), famille.getIntCIP());
+                jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), famille.getStrNAME());
+                jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), it.getIntNUMBER());
+                jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), initStock);
+                jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), familleStock.getIntNUMBERAVAILABLE());
+                items.put(jsonItemUg);
 
             });
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.AJUSTEMENT_DE_PRODUIT.getValue());
+            donnee.put(NotificationUtils.USER.getId(), tUser.getStrFIRSTNAME() + " " + tUser.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+
+            createNotification("", TypeNotification.AJUSTEMENT_DE_PRODUIT, tUser, donnee,
+                    ajustement.getLgAJUSTEMENTID());
             ajustement.setStrCOMMENTAIRE(params.getDescription());
             ajustement.setStrSTATUT(STATUT_ENABLE);
             emg.merge(ajustement);
@@ -868,7 +954,10 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             DoubleAdder amount = new DoubleAdder();
             final TEmplacement empl = params.getOperateur().getLgEMPLACEMENTID();
             final String emplecementId = empl.getLgEMPLACEMENTID();
+            JSONArray items = new JSONArray();
+            TBonLivraison bonLivraison = fournisseur.getLgBONLIVRAISONID();
             details.forEach(d -> {
+
                 TFamille tf = d.getLgFAMILLEID();
                 TFamilleStock stock = findStockByProduitId(tf.getLgFAMILLEID(), emplecementId);
                 int sockInit = stock.getIntNUMBERAVAILABLE();
@@ -886,18 +975,43 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
                 suggestionService.makeSuggestionAuto(stock, tf);
                 String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME()
-                        + "Numéro BL =  " + fournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= "
-                        + sockInit + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty
+                        + "Numéro BL =  " + bonLivraison.getStrREFLIVRAISON() + " stock initial= " + sockInit
+                        + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty
                         + " . Retour effectué par " + params.getOperateur().getStrFIRSTNAME() + " "
                         + params.getOperateur().getStrLASTNAME();
                 logService.updateItem(params.getOperateur(), tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf);
-                notificationService
-                        .save(new Notification().canal(Canal.SMS).typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
-                                .message(desc).addUser(params.getOperateur()));
+
+                JSONObject jsonItemUg = new JSONObject();
+                jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), tf.getIntCIP());
+                jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), tf.getStrNAME());
+                jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), d.getIntNUMBERRETURN());
+                jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), sockInit);
+                jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), finalQty);
+                items.put(jsonItemUg);
+
+                /*
+                 * notificationService .save(new
+                 * Notification().canal(Canal.EMAIL).typeNotification(TypeNotification.RETOUR_FOURNISSEUR)
+                 * .message(desc).addUser(params.getOperateur()));
+                 */
             });
+            int montantTTC = amount.intValue();
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.RETOUR_FOURNISSEUR.getValue());
+            donnee.put(NotificationUtils.USER.getId(),
+                    params.getOperateur().getStrFIRSTNAME() + " " + params.getOperateur().getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            donnee.put(NotificationUtils.NUM_BL.getId(), bonLivraison.getStrREFLIVRAISON());
+            donnee.put(NotificationUtils.MONTANT_TTC.getId(), NumberUtils.formatIntToString(montantTTC));
+            donnee.put(NotificationUtils.DATE_BON.getId(),
+                    DateCommonUtils.formatDate(bonLivraison.getDtDATELIVRAISON()));
+            createNotification("", TypeNotification.RETOUR_FOURNISSEUR, params.getOperateur(), donnee,
+                    fournisseur.getLgRETOURFRSID());
+
             fournisseur.setStrSTATUT(STATUT_ENABLE);
             fournisseur.setDtUPDATED(new Date());
-            fournisseur.setDlAMOUNT(amount.doubleValue());
+            fournisseur.setDlAMOUNT((double) montantTTC);
             fournisseur.setStrCOMMENTAIRE(params.getDescription());
             fournisseur.setLgUSERID(params.getOperateur());
             fournisseur.setStrREPONSEFRS(params.getRefTwo());
@@ -1216,7 +1330,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
     @Override
     public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur) {
-
+        JSONArray items = new JSONArray();
         EntityManager emg = this.getEmg();
         List<TRetourFournisseurDetail> details = new ArrayList<>(
                 retourFournisseur.getTRetourFournisseurDetailCollection());
@@ -1224,6 +1338,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
         TUser user = retourFournisseur.getLgUSERID();
         final TEmplacement empl = user.getLgEMPLACEMENTID();
         final String emplecementId = empl.getLgEMPLACEMENTID();
+        TBonLivraison bonLivraison = retourFournisseur.getLgBONLIVRAISONID();
         details.forEach(d -> {
             TFamille tf = d.getLgFAMILLEID();
             TFamilleStock stock = findStockByProduitId(tf.getLgFAMILLEID(), emplecementId);
@@ -1241,15 +1356,34 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
             suggestionService.makeSuggestionAuto(stock, tf);
             String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  "
-                    + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit
-                    + " qté retournée= " + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty
-                    + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+                    + bonLivraison.getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= "
+                    + d.getIntNUMBERRETURN() + " qté après retour = " + finalQty + " . Retour effectué par "
+                    + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
             logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf);
-            notificationService.save(new Notification().canal(Canal.SMS)
-                    .typeNotification(TypeNotification.RETOUR_FOURNISSEUR).message(desc).addUser(user));
-        });
+            /*
+             * notificationService.save(new Notification().canal(Canal.SMS)
+             * .typeNotification(TypeNotification.RETOUR_FOURNISSEUR).message(desc).addUser(user));
+             */
+            JSONObject jsonItemUg = new JSONObject();
+            jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), tf.getIntCIP());
+            jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), tf.getStrNAME());
+            jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), d.getIntNUMBERRETURN());
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), sockInit);
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), finalQty);
+            items.put(jsonItemUg);
 
-        retourFournisseur.setDlAMOUNT(amount.doubleValue());
+        });
+        int montantTTC = amount.intValue();
+        Map<String, Object> donnee = new HashMap<>();
+        donnee.put(NotificationUtils.ITEMS.getId(), items);
+        donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.RETOUR_FOURNISSEUR.getValue());
+        donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donnee.put(NotificationUtils.NUM_BL.getId(), bonLivraison.getStrREFLIVRAISON());
+        donnee.put(NotificationUtils.MONTANT_TTC.getId(), NumberUtils.formatIntToString(montantTTC));
+        donnee.put(NotificationUtils.DATE_BON.getId(), DateCommonUtils.formatDate(bonLivraison.getDtDATELIVRAISON()));
+        createNotification("", TypeNotification.RETOUR_FOURNISSEUR, user, donnee, retourFournisseur.getLgRETOURFRSID());
+        retourFournisseur.setDlAMOUNT((double) montantTTC);
 
         emg.persist(retourFournisseur);
 
@@ -1258,8 +1392,9 @@ public class MvtProduitServiceImpl implements MvtProduitService {
     @Override
     public void validerFullBlRetourFournisseur(TRetourFournisseur retourFournisseur, TMotifRetour motifRetour,
             List<TBonLivraisonDetail> bonLivraisonDetails) {
-
+        JSONArray items = new JSONArray();
         EntityManager emg = this.getEmg();
+        TBonLivraison bonLivraison = retourFournisseur.getLgBONLIVRAISONID();
         Set<TRetourFournisseurDetail> retourFournisseurDetails = new HashSet<>();
         DoubleAdder amount = new DoubleAdder();
         TUser user = retourFournisseur.getLgUSERID();
@@ -1285,16 +1420,36 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
             suggestionService.makeSuggestionAuto(stock, tf);
             String desc = "Retour fournisseur du  produit " + tf.getIntCIP() + " " + tf.getStrNAME() + "Numéro BL =  "
-                    + retourFournisseur.getLgBONLIVRAISONID().getStrREFLIVRAISON() + " stock initial= " + sockInit
-                    + " qté retournée= " + retourFournisseurDetail.getIntNUMBERRETURN() + " qté après retour = "
-                    + finalQty + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+                    + bonLivraison.getStrREFLIVRAISON() + " stock initial= " + sockInit + " qté retournée= "
+                    + retourFournisseurDetail.getIntNUMBERRETURN() + " qté après retour = " + finalQty
+                    + " . Retour effectué par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
             logService.updateItem(user, tf.getIntCIP(), desc, TypeLog.RETOUR_FOURNISSEUR, tf);
-            notificationService.save(new Notification().canal(Canal.SMS)
-                    .typeNotification(TypeNotification.RETOUR_FOURNISSEUR).message(desc).addUser(user));
+            /*
+             * notificationService.save(new Notification().canal(Canal.SMS)
+             * .typeNotification(TypeNotification.RETOUR_FOURNISSEUR).message(desc).addUser(user));
+             */
             this.getEmg().merge(bonLivraisonDetail);
-        }
 
-        retourFournisseur.setDlAMOUNT(amount.doubleValue());
+            JSONObject jsonItemUg = new JSONObject();
+            jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), tf.getIntCIP());
+            jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), tf.getStrNAME());
+            jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), retourFournisseurDetail.getIntNUMBERRETURN());
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), sockInit);
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), finalQty);
+            items.put(jsonItemUg);
+        }
+        int montantTTC = amount.intValue();
+        Map<String, Object> donnee = new HashMap<>();
+        donnee.put(NotificationUtils.ITEMS.getId(), items);
+        donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.RETOUR_FOURNISSEUR.getValue());
+        donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donnee.put(NotificationUtils.MONTANT_TVA.getId(), NumberUtils.formatIntToString(bonLivraison.getIntTVA()));
+        donnee.put(NotificationUtils.NUM_BL.getId(), bonLivraison.getStrREFLIVRAISON());
+        donnee.put(NotificationUtils.MONTANT_TTC.getId(), NumberUtils.formatIntToString(montantTTC));
+        donnee.put(NotificationUtils.DATE_BON.getId(), DateCommonUtils.formatDate(bonLivraison.getDtDATELIVRAISON()));
+        createNotification("", TypeNotification.RETOUR_FOURNISSEUR, user, donnee, retourFournisseur.getLgRETOURFRSID());
+        retourFournisseur.setDlAMOUNT((double) montantTTC);
 
         emg.persist(retourFournisseur);
         retourFournisseurDetails.forEach(this.getEmg()::persist);
@@ -1361,14 +1516,53 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                     + " " + tu.getStrLASTNAME();
             logService.updateItem(tu, tFamilleParent.getIntCIP(), desc, TypeLog.DECONDITIONNEMENT, tFamilleParent);
 
-            notificationService.save(new Notification().canal(Canal.EMAIL)
-                    .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(tu));
+            JSONArray items = new JSONArray();
+            JSONObject jsonItemUg = new JSONObject();
+            jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), tFamilleParent.getIntCIP());
+            jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), tFamilleParent.getStrNAME());
+            jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), numberToDecondition);
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInit);
+            jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInit - numberToDecondition);
 
+            JSONObject detail = new JSONObject();
+            detail.put(NotificationUtils.ITEM_KEY.getId(), tFamilleChild.getIntCIP());
+            detail.put(NotificationUtils.ITEM_DESC.getId(), tFamilleChild.getStrNAME());
+            detail.put(NotificationUtils.ITEM_QTY.getId(), (numberToDecondition * qtyDetail));
+            detail.put(NotificationUtils.ITEM_QTY_INIT.getId(), stockInitDetail);
+            detail.put(NotificationUtils.ITEM_QTY_FINALE.getId(), stockInitDetail + (numberToDecondition * qtyDetail));
+            jsonItemUg.put(NotificationUtils.ITEMS.getId(), new JSONArray().put(detail));
+            items.put(jsonItemUg);
+
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.DECONDITIONNEMENT.getValue());
+            donnee.put(NotificationUtils.USER.getId(), tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+
+            createNotification(desc, TypeNotification.DECONDITIONNEMENT, tu, donnee, tFamilleParent.getLgFAMILLEID());
+
+            /*
+             * notificationService.save(new Notification().canal(Canal.EMAIL)
+             * .typeNotification(TypeNotification.DECONDITIONNEMENT).message(desc).addUser(tu));
+             */
         }
     }
 
     private void makeSuggestionAutoAsync(List<TPreenregistrementDetail> list, TEmplacement emplacement) {
         managedExecutorService.submit(() -> this.suggestionService.makeSuggestionAuto(list, emplacement));
+
+    }
+
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
+        try {
+            notificationService.save(
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
 
     }
 }

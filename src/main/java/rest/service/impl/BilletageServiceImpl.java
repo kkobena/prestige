@@ -12,7 +12,6 @@ import dal.TResumeCaisse;
 import dal.TTypeReglement;
 import dal.TUser;
 import dal.TUser_;
-import dal.enumeration.Canal;
 import dal.enumeration.TypeLigneResume;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
@@ -23,7 +22,9 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,6 +45,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import rest.service.BilletageService;
 import rest.service.CaisseService;
@@ -61,6 +63,7 @@ import util.Constant;
 import util.DateCommonUtils;
 import util.DateUtil;
 import util.FunctionUtils;
+import util.NotificationUtils;
 import util.NumberUtils;
 
 /**
@@ -247,17 +250,45 @@ public class BilletageServiceImpl implements BilletageService {
                 + DateCommonUtils.formatCurrentDate() + " Billetage " + billetage;
         logService.updateItem(user, oTResumeCaisse.getLdCAISSEID(), description, TypeLog.CLOTURE_CAISSE,
                 oTResumeCaisse);
-        createNotification(description, TypeNotification.VALIDATION_DE_CAISSE, user);
+
+        JSONArray data = new JSONArray();
+        List<LigneResumeCaisse> ligneResumeCaisses = oTResumeCaisse.getLigneResumeCaisses();
+        for (LigneResumeCaisse ligneResumeCaisse : ligneResumeCaisses) {
+            JSONObject jsonItemUg = new JSONObject();
+            jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), ligneResumeCaisse.getTypeLigne().name());
+            jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), ligneResumeCaisse.getTypeReglement().getStrNAME());
+            jsonItemUg.put(NotificationUtils.MONTANT.getId(),
+                    NumberUtils.formatLongToString(ligneResumeCaisse.getMontant()));
+            data.put(jsonItemUg);
+        }
+        Map<String, Object> donneesMap = new HashMap<>();
+        if (!data.isEmpty()) {
+            donneesMap.put(NotificationUtils.ITEMS.getId(), data);
+        }
+        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatLongToString(montantFinal));
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.CLOTURE_CAISSE.getValue());
+        donneesMap.put(NotificationUtils.MESSAGE.getId(), description);
+        donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        Notification notification = createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user,
+                donneesMap, oTResumeCaisse.getLdCAISSEID());
+        notificationService.sendMail(notification);
+        notificationService.sendSms(notification);
+        // createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user);
     }
 
-    private void createNotification(String msg, TypeNotification typeNotification, TUser user) {
+    private Notification createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
+        Notification notification = new Notification().entityRef(entityRef)
+                .donnees(this.notificationService.buildDonnees(donneesMap))
+                .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                .addUser(user);
         try {
-            notificationService.save(
-                    new Notification().canal(Canal.SMS).typeNotification(typeNotification).message(msg).addUser(user));
+            notificationService.save(notification);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-
+        return notification;
     }
 
     private TBilletage createBilletage(TResumeCaisse caisse, TUser user, double billetageAmount) {

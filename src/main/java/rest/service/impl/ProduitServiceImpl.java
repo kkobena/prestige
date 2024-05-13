@@ -44,7 +44,6 @@ import dal.TUser;
 import dal.TWarehouse;
 import dal.TZoneGeographique;
 import dal.TZoneGeographique_;
-import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 import java.time.LocalDate;
@@ -79,7 +78,9 @@ import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.ProduitService;
+import util.DateCommonUtils;
 import util.DateConverter;
+import util.NotificationUtils;
 
 /**
  *
@@ -189,6 +190,19 @@ public class ProduitServiceImpl implements ProduitService {
 
     }
 
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
+        try {
+            notificationService.save(
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     private JSONObject updateProuitDesactive(String id, String statut, TUser u, TypeLog typeLog) throws JSONException {
         JSONObject json = new JSONObject();
         try {
@@ -200,6 +214,7 @@ public class ProduitServiceImpl implements ProduitService {
             json.put("success", true).put("msg", "Opération effectuée avec success");
             String desc = " ";
             TypeNotification notification = TypeNotification.ACTIVATION_DE_PRODUIT;
+
             if (DateConverter.STATUT_ENABLE.equalsIgnoreCase(statut)) {
                 desc = "Activation ";
                 notification = TypeNotification.ACTIVATION_DE_PRODUIT;
@@ -215,8 +230,18 @@ public class ProduitServiceImpl implements ProduitService {
                     + getFamilleStockByProduitId(id, u.getLgEMPLACEMENTID().getLgEMPLACEMENTID()) + ", par "
                     + u.getStrFIRSTNAME() + u.getStrLASTNAME();
             logService.updateItem(u, famille.getIntCIP(), desc, typeLog, famille);
-            notificationService.save(
-                    new Notification().canal(Canal.SMS_EMAIL).typeNotification(notification).message(desc).addUser(u));
+            /*
+             * notificationService.save( new
+             * Notification().canal(Canal.SMS_EMAIL).typeNotification(notification).message(desc).addUser(u));
+             */
+
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEM_KEY.getId(), famille.getLgFAMILLEID());
+            donnee.put(NotificationUtils.ITEM_DESC.getId(), famille.getStrNAME());
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), typeLog.getValue());
+            donnee.put(NotificationUtils.USER.getId(), u.getStrFIRSTNAME() + " " + u.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            createNotification(desc, notification, u, donnee, famille.getLgFAMILLEID());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             json.put("success", false).put("msg", "Erreur ! l'opération n'a pas abouti");
@@ -405,7 +430,7 @@ public class ProduitServiceImpl implements ProduitService {
                 predicates.add(cb.and(cb.equal(fa.get(TFamille_.lgFABRIQUANTID).get(TFabriquant_.lgFABRIQUANTID),
                         params.getFabricantId())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {

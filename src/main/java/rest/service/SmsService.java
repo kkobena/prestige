@@ -20,4 +20,6 @@ public interface SmsService {
 
     void sendSMS(Notification notification);
 
+    void sendSMS(String content);
+
 }

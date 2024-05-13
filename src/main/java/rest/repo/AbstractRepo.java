@@ -5,6 +5,7 @@
  */
 package rest.repo;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,5 +33,7 @@ public interface AbstractRepo<T /* extends Entity */> {
     int deleteById(Integer entityId);
 
     Optional<T> findById(Integer entityId);
+
+    List<T> findAll();
 
 }
