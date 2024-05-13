@@ -24,7 +24,6 @@ import dal.TPreenregistrement_;
 import dal.TPrivilege;
 import dal.TTypeStockFamille;
 import dal.TUser;
-import dal.enumeration.ProductStateEnum;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;

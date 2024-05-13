@@ -19,8 +19,10 @@ import bll.teller.tellerManagement;
 import bll.userManagement.privilege;
 import bll.utils.TparameterManager;
 import bll.warehouse.WarehouseManager;
+import dal.CategorieNotification;
 import dal.GammeProduit;
 import dal.Laboratoire;
+import dal.Notification;
 import dal.TAlertEvent;
 import dal.TAlertEventUserFone;
 import dal.TBonLivraison;
@@ -65,13 +67,19 @@ import dal.TTypeetiquette;
 import dal.TUser;
 import dal.TZoneGeographique;
 import dal.dataManager;
+import dal.enumeration.Canal;
+import dal.enumeration.Statut;
 import dal.enumeration.TypeLog;
+import dal.enumeration.TypeNotification;
 import dal.jconnexion;
 import java.sql.ResultSetMetaData;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -81,13 +89,18 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import org.apache.commons.collections4.MapUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.StringUtils;
 import toolkits.utils.date;
 import toolkits.utils.logger;
+import util.Constant;
+import util.DateCommonUtils;
 import util.DateConverter;
+import util.NotificationUtils;
+import util.NumberUtils;
 
 /**
  *
@@ -666,9 +679,9 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             new logger().OCategory
                     .info("Famille de base " + OTFamilleInit.getStrNAME() + " CIP " + OTFamilleInit.getIntCIP());
             if (this.isDeconditionAuthorize(OTFamilleInit.getLgFAMILLEID())) { // on verifie si le produit peut avoir
-                                                                               // une version deconditionnable
+                // une version deconditionnable
                 if (!this.isDeconditionExist(OTFamilleInit.getLgFAMILLEID())) { // on verifie si le produit a deja une
-                                                                                // version deconditionnée
+                    // version deconditionnée
                     if (OTFamilleInit.getLgCODETVAID() != null) {
                         lg_CODE_TVA_ID = OTFamilleInit.getLgCODETVAID().getLgCODETVAID();
                     }
@@ -1344,7 +1357,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 OTFamille.setIntEAN13(Ojconnexion.get_resultat().getString("int_EAN13"));
                 OTFamille.setIntPRICE(Ojconnexion.get_resultat().getInt("int_PRICE"));
                 OTFamille.setStrCODETABLEAU(Ojconnexion.get_resultat().getString("str_LIBELLEE")); // remplacé par
-                                                                                                   // l'emplaceement
+                // l'emplaceement
                 lstTFamille.add(OTFamille);
             }
             Ojconnexion.CloseConnexion();
@@ -2248,7 +2261,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 OTFamille.setIntPAF(Ojconnexion.get_resultat().getInt("int_PAF"));
                 OTFamille.setStrDESCRIPTION(Ojconnexion.get_resultat().getString("str_DESCRIPTION"));
                 OTFamille.setStrCODETABLEAU(Ojconnexion.get_resultat().getString("str_LIBELLEE")); // remplacé par
-                                                                                                   // l'emplaceement
+                // l'emplaceement
                 lstTFamille.add(OTFamille);
             }
             Ojconnexion.CloseConnexion();
@@ -2323,7 +2336,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 OTFamille.setIntEAN13(Ojconnexion.get_resultat().getString("int_EAN13"));
                 OTFamille.setIntPRICE(Ojconnexion.get_resultat().getInt("int_PRICE"));
                 OTFamille.setStrCODETABLEAU(Ojconnexion.get_resultat().getString("str_LIBELLEE")); // remplacé par
-                                                                                                   // l'emplaceement
+                // l'emplaceement
                 lstTFamille.add(OTFamille);
             }
             Ojconnexion.CloseConnexion();
@@ -2411,7 +2424,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                 OTFamille.setIntPAF(Ojconnexion.get_resultat().getInt("int_PAF"));
                 OTFamille.setStrDESCRIPTION(Ojconnexion.get_resultat().getString("str_DESCRIPTION"));
                 OTFamille.setStrCODETABLEAU(Ojconnexion.get_resultat().getString("str_LIBELLEE")); // remplacé par
-                                                                                                   // l'emplaceement
+                // l'emplaceement
 
                 lstTFamille.add(OTFamille);
             }
@@ -2461,10 +2474,10 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
         TParameters OTParameters = OTparameterManager.getParameter(Parameter.KEY_DAY);
         // a mettre le parametre de desactivation de la cloture automatique de la caisse
         if (OTParameters != null) { // replace true apres par la valeur boolean qui reprensente de la fermeture
-                                    // automatique. False = fermeture automatique desactivée
+            // automatique. False = fermeture automatique desactivée
             // dayy
             String systemeday = date.formatterShort.format(new Date());// compare la date d'aujourd hui à celle dans la
-                                                                       // bd
+            // bd
 
             if (!systemeday.equals(OTParameters.getStrVALUE())) {
                 OStockManager.updateFamilleStockBySocketServer(OTParameters);
@@ -2537,7 +2550,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("i:" + i + " ///ligne--------" + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
                 if (this.create(tabString[1].trim(), tabString[1].trim(), Integer.parseInt(tabString[2].trim()),
                         Integer.parseInt(tabString[2].trim()), 0, Integer.parseInt(tabString[3].trim()),
                         Integer.parseInt(tabString[3].trim()), 0, tabString[7].trim(),
@@ -2580,7 +2593,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("i:" + i + " ///ligne--------" + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
                 if (this.create(tabString[1].trim(), tabString[1].trim(), Integer.parseInt(tabString[2].trim()),
                         Integer.parseInt(tabString[2].trim()), 0, Integer.parseInt(tabString[4].trim()),
                         Integer.parseInt(tabString[5].trim()), 0, "", tabString[0].trim(), tabString[12].trim(),
@@ -2624,7 +2637,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("i:" + i + " ///ligne--------" + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
                 OTFamille = this.getTFamille(tabString[1].trim());
                 if (OTFamille != null) {
                     if (this.update(OTFamille.getLgFAMILLEID(), tabString[2].trim(), "", "", "", tabString[2].trim(),
@@ -2726,7 +2739,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("i:" + i + " ///ligne--------" + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
                 OTFamille = this.getTFamille(tabString[0].trim());
                 if (OTFamille != null) {
                     if (this.update(OTFamille.getLgFAMILLEID(), tabString[1].trim(), "", "", "", tabString[1].trim(),
@@ -2789,7 +2802,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("i:" + i + " ///ligne--------" + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
 
                 if (Integer.parseInt(tabString[0].trim()) > 0) {
                     value = StringUtils.generateString(tabString[0].trim(), "", (6 - tabString[0].trim().length()));
@@ -2935,7 +2948,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                             : commonparameter.TYPE_STOCK_DEPOT);
             // code ajouté
             String[] tabString = liste_param.split(";"); // on case la ligne courante pour recuperer les differentes
-                                                         // colonnes
+            // colonnes
             String[] search_valueTab = tabString[0].split(":"), str_TYPE_TRANSACTION_Tab = tabString[1].split(":"),
                     lg_DCI_IDTab = tabString[2].split(":");
 
@@ -3181,7 +3194,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("lstString.get(i)  " + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
 
                 if (this.createTZoneGeographique(tabString[0].trim(), tabString[1].trim(),
                         this.getOTUser().getLgEMPLACEMENTID())) {
@@ -3315,8 +3328,8 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                         * && createTypeStockFamille(OTFamille, lg_TYPE_STOCK_ID, int_QUANTITY_STOCK, OTEmplacement) !=
                         * null &&
                         */ this.createFamilleZoneGeog(OTFamille, OTZoneGeographique, OTEmplacement)) { // creation dans
-                                                                                                       // type stock
-                                                                                                       // famille
+                // type stock
+                // famille
 
                 // si le produit à un detail
                 if (OTFamille.getBoolDECONDITIONNEEXIST() == 1 && OTFamille.getBoolDECONDITIONNE() == 0) {
@@ -3503,7 +3516,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("i:" + i + " ///ligne--------" + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
                 OTFamille = this.getTFamille(tabString[1].trim());
                 if (OTFamille == null) {
                     new logger().OCategory.info("Ligne inexistante " + i);
@@ -4300,7 +4313,7 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
 
             // code ajouté
             String[] tabString = liste_param.split(";"); // on case la ligne courante pour recuperer les differentes
-                                                         // colonnes
+            // colonnes
             String[] dt_Date_Debut_Tab = tabString[0].split(":"), dt_Date_Fin_Tab = tabString[1].split(":"),
                     h_debut_Tab = tabString[2].split(":"), h_fin_Tab = tabString[3].split(":"),
                     search_value_Tab = tabString[4].split(":"), str_TYPE_TRANSACTION_Tab = tabString[5].split(":"),
@@ -6638,6 +6651,36 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
 
             this.createTypeStockFamille(OTFamille.getLgFAMILLEID(), "1", int_QUANTITY_STOCK,
                     this.getOTUser().getLgEMPLACEMENTID(), em);
+
+            CategorieNotification categorieNotification = em.find(CategorieNotification.class,
+                    TypeNotification.AJOUT_DE_NOUVEAU_PRODUIT.ordinal());
+            Notification notification = new Notification();
+            notification.setCategorieNotification(categorieNotification);
+            notification.setUser(this.getOTUser());
+            Map<String, Object> donneesMap = new HashMap<>();
+            donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.AJOUT_DE_NOUVEAU_PRODUIT.getValue());
+            donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            donneesMap.put(NotificationUtils.ITEM_KEY.getId(), OTFamille.getIntCIP());
+            donneesMap.put(NotificationUtils.ITEM_DESC.getId(), OTFamille.getStrNAME());
+            notification.donnees(buildDonnees(donneesMap));
+            notification.setMessage("");
+            notification.entityRef(OTFamille.getLgFAMILLEID());
+            em.persist(notification);
+
+            TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
+            eventLog.setLgUSERID(notification.getUser());
+            eventLog.setDtCREATED(new Date());
+            eventLog.setDtUPDATED(eventLog.getDtCREATED());
+            eventLog.setStrSTATUT(Constant.STATUT_ENABLE);
+            eventLog.setStrTABLECONCERN(OTFamille.getClass().getName());
+            eventLog.setTypeLog(TypeLog.AJOUT_DE_NOUVEAU_PRODUIT);
+            eventLog.setStrDESCRIPTION("Création du produit " + " cip [" + OTFamille.getIntCIP() + " "
+                    + OTFamille.getStrNAME() + " par " + notification.getUser().getStrFIRSTNAME().concat(" ")
+                            .concat(notification.getUser().getStrLASTNAME())
+                    + " ]");
+
+            em.persist(eventLog);
+
             if (bool_RESERVE) {
                 //
                 TTypeStockFamille OTTypeStockFamille = this.createTypeStockFamille(OTFamille.getLgFAMILLEID(),
@@ -6665,6 +6708,15 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             this.delete(OTFamille);
         }
         return OTFamille;
+    }
+
+    String buildDonnees(Map<String, Object> donneesMap) {
+        if (MapUtils.isEmpty(donneesMap)) {
+            return null;
+        }
+        JSONObject json = new JSONObject();
+        donneesMap.forEach(json::put);
+        return json.toString();
     }
 
     public TTypeStockFamille createTypeStockFamille(String lg_FAMILLE_ID, String lg_TYPE_STOCK_ID, int int_NUMBER,

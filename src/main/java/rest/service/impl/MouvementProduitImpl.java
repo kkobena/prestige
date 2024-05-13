@@ -26,7 +26,6 @@ import dal.TPreenregistrementDetail;
 import dal.TUser;
 import dal.TUser_;
 import dal.Typemvtproduit;
-import dal.enumeration.Canal;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 import java.time.LocalDate;
@@ -35,7 +34,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,7 +61,10 @@ import rest.service.MouvementProduitService;
 import rest.service.NotificationService;
 import rest.service.SuggestionService;
 import toolkits.parameters.commonparameter;
+import util.Constant;
+import util.DateCommonUtils;
 import util.DateConverter;
+import util.NotificationUtils;
 
 /**
  *
@@ -241,22 +245,22 @@ public class MouvementProduitImpl implements MouvementProduitService {
     }
 
     private void ajusterProduitAjustement(Params params, TAjustement ajustement) {
-        TAjustementDetail OTAjustementDetail = updateAjustementDetail(params);
-        if (OTAjustementDetail == null) {
+        TAjustementDetail aTAjustementDetail = updateAjustementDetail(params);
+        if (aTAjustementDetail == null) {
             TEmplacement emplacement = ajustement.getLgUSERID().getLgEMPLACEMENTID();
             TFamilleStock familleStock = findByProduitId(params.getRefTwo(), emplacement.getLgEMPLACEMENTID());
             Integer currentStock = familleStock.getIntNUMBERAVAILABLE();
-            OTAjustementDetail = new TAjustementDetail();
-            OTAjustementDetail.setLgAJUSTEMENTDETAILID(UUID.randomUUID().toString());
-            OTAjustementDetail.setLgAJUSTEMENTID(ajustement);
-            OTAjustementDetail.setLgFAMILLEID(familleStock.getLgFAMILLEID());
-            OTAjustementDetail.setIntNUMBER(params.getValue());
-            OTAjustementDetail.setIntNUMBERCURRENTSTOCK(currentStock);
-            OTAjustementDetail.setIntNUMBERAFTERSTOCK(params.getValue() + currentStock);
-            OTAjustementDetail.setDtCREATED(new Date());
-            OTAjustementDetail.setDtUPDATED(new Date());
-            OTAjustementDetail.setStrSTATUT(commonparameter.statut_is_Process);
-            em.persist(OTAjustementDetail);
+            aTAjustementDetail = new TAjustementDetail();
+            aTAjustementDetail.setLgAJUSTEMENTDETAILID(UUID.randomUUID().toString());
+            aTAjustementDetail.setLgAJUSTEMENTID(ajustement);
+            aTAjustementDetail.setLgFAMILLEID(familleStock.getLgFAMILLEID());
+            aTAjustementDetail.setIntNUMBER(params.getValue());
+            aTAjustementDetail.setIntNUMBERCURRENTSTOCK(currentStock);
+            aTAjustementDetail.setIntNUMBERAFTERSTOCK(params.getValue() + currentStock);
+            aTAjustementDetail.setDtCREATED(new Date());
+            aTAjustementDetail.setDtUPDATED(new Date());
+            aTAjustementDetail.setStrSTATUT(commonparameter.statut_is_Process);
+            em.persist(aTAjustementDetail);
         }
     }
 
@@ -335,6 +339,19 @@ public class MouvementProduitImpl implements MouvementProduitService {
         }
     }
 
+    private void createNotification(String msg, TypeNotification typeNotification, TUser user,
+            Map<String, Object> donneesMap, String entityRef) {
+        try {
+            notificationService.save(
+                    new Notification().entityRef(entityRef).donnees(this.notificationService.buildDonnees(donneesMap))
+                            .setCategorieNotification(notificationService.getOneByName(typeNotification)).message(msg)
+                            .addUser(user));
+        } catch (Exception ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     @Override
     public JSONObject cloreAjustement(Params params) throws JSONException {
         JSONObject json = new JSONObject();
@@ -352,6 +369,7 @@ public class MouvementProduitImpl implements MouvementProduitService {
 
             List<TAjustementDetail> ajustementDetails = findAjustementDetailsByParenId(ajustement.getLgAJUSTEMENTID(),
                     emg);
+            JSONArray items = new JSONArray();
             ajustementDetails.forEach(it -> {
                 TFamille famille = it.getLgFAMILLEID();
                 TFamilleStock familleStock = findByProduitId(famille.getLgFAMILLEID(),
@@ -363,23 +381,41 @@ public class MouvementProduitImpl implements MouvementProduitService {
                 emg.merge(familleStock);
                 int compare = initStock.compareTo(it.getIntNUMBERAFTERSTOCK());
                 String action = (compare < 0) ? DateConverter.AJUSTEMENT_POSITIF : DateConverter.AJUSTEMENT_NEGATIF;
+                int qteFinale = (initStock + it.getIntNUMBER());
                 saveMvtProduit(it.getLgAJUSTEMENTDETAILID(), getTypemvtproduitByID(action), familleStock, tUser,
                         emplacement, it.getIntNUMBER(), initStock, emg, 0);
                 suggestionService.makeSuggestionAuto(familleStock, famille);
                 String desc = "Ajustement du produit :[  " + famille.getIntCIP() + "  " + famille.getStrNAME()
                         + " ] : Quantité initiale : [ " + initStock + " ] : Quantité ajustée [ " + it.getIntNUMBER()
-                        + " ] :Quantité finale [ " + (initStock + it.getIntNUMBER()) + " ]";
+                        + " ] :Quantité finale [ " + qteFinale + " ]";
                 logService.updateItem(tUser, famille.getIntCIP(), desc, TypeLog.AJUSTEMENT_DE_PRODUIT, famille);
-                it.setStrSTATUT(commonparameter.statut_enable);
+                it.setStrSTATUT(Constant.STATUT_ENABLE);
                 it.setDtUPDATED(new Date());
                 emg.merge(it);
-                notificationService.save(new Notification().canal(Canal.EMAIL)
-                        .typeNotification(TypeNotification.AJUSTEMENT_DE_PRODUIT).message(desc).addUser(tUser));
+                JSONObject jsonItemUg = new JSONObject();
+                jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), famille.getIntCIP());
+                jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), famille.getStrNAME());
+                jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), it.getIntNUMBER());
+                jsonItemUg.put(NotificationUtils.ITEM_QTY_INIT.getId(), initStock);
+                jsonItemUg.put(NotificationUtils.ITEM_QTY_FINALE.getId(), qteFinale);
+                items.put(jsonItemUg);
+                /*
+                 * notificationService.save(new Notification().canal(Canal.EMAIL)
+                 * .typeNotification(TypeNotification.AJUSTEMENT_DE_PRODUIT).message(desc).addUser(tUser));
+                 */
 
             });
+            Map<String, Object> donnee = new HashMap<>();
+            donnee.put(NotificationUtils.ITEMS.getId(), items);
+            donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.AJUSTEMENT_DE_PRODUIT.getValue());
+            donnee.put(NotificationUtils.USER.getId(), tUser.getStrFIRSTNAME() + " " + tUser.getStrLASTNAME());
+            donnee.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+
+            createNotification("", TypeNotification.AJUSTEMENT_DE_PRODUIT, tUser, donnee,
+                    ajustement.getLgAJUSTEMENTID());
             ajustement.setStrCOMMENTAIRE(params.getDescription());
             ajustement.setDtUPDATED(new Date());
-            ajustement.setStrSTATUT(commonparameter.statut_enable);
+            ajustement.setStrSTATUT(Constant.STATUT_ENABLE);
             emg.merge(ajustement);
             // emg.getTransaction().commit();
             json.put("success", true).put("msg", "L'opération effectuée avec success");
