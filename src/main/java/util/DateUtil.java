@@ -3,6 +3,7 @@ package util;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
@@ -87,6 +88,15 @@ public final class DateUtil {
             return LocalDate.parse(date, dateTimeFormatter);
         }
         return LocalDate.now();
+    }
+
+    public static String convertDate(LocalDateTime date) {
+
+        if (date != null) {
+            return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        } else {
+            return "";
+        }
     }
 
     private DateUtil() {

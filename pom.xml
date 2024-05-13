@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.dici</groupId>
     <artifactId>prestige</artifactId>
-    <version>1.1.7</version>
+    <version>1.1.9</version>
     <repositories>
         <repository>
             <id>central</id>

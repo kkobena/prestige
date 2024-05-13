@@ -12,7 +12,6 @@ import dal.StockDailyValue;
 import dal.TParameters;
 import dal.enumeration.Canal;
 import dal.enumeration.Statut;
-import dal.enumeration.TypeNotification;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,6 +29,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.ScheduleExpression;
 import javax.ejb.Singleton;
@@ -73,6 +73,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.NotificationService;
 import util.Constant;
 import util.SmsParameters;
 
@@ -96,6 +97,8 @@ public class DatabaseToolkit {
     private TimerService timerService;
     @Inject
     private UserTransaction userTransaction;
+    @EJB
+    private NotificationService notificationService;
 
     @PostConstruct
     public void init() {
@@ -135,16 +138,14 @@ public class DatabaseToolkit {
     }
 
     public void createTimer() {
+
         final TimerConfig email = new TimerConfig("email", false);
-        timerService.createCalendarTimer(new ScheduleExpression()
-                // .minute("*/2")
-                // .hour("*")
+        timerService.createCalendarTimer(new ScheduleExpression()// *.minute("*/5").hour("*")
                 .hour(findScheduledValues()).dayOfMonth("*").year("*"), email);
 
         final TimerConfig sms = new TimerConfig("sms", false);
-        timerService.createCalendarTimer(new ScheduleExpression()
-                // .second("*/30")
-                .minute("*/2").hour("*").dayOfMonth("*").year("*"), sms);
+        timerService.createCalendarTimer(new ScheduleExpression().minute("*/2").hour("*").dayOfMonth("*").year("*"),
+                sms);
     }
 
     public void manageEmail() {
@@ -274,12 +275,15 @@ public class DatabaseToolkit {
 
     @Timeout
     public void timeout(Timer timer) {
+
         if ("sms".equals(timer.getInfo())) {
 
             manageSms();
 
         } else if ("email".equals(timer.getInfo())) {
-            manageEmail();
+
+            notificationService.sendMail();
+            // manageEmail();
 
         }
     }
@@ -339,11 +343,11 @@ public class DatabaseToolkit {
             return null;
         }
         StringBuilder sb = new StringBuilder();
-        Map<TypeNotification, List<Notification>> map = notifications.stream()
-                .collect(Collectors.groupingBy(Notification::getTypeNotification));
+        Map<String, List<Notification>> map = notifications.stream()
+                .collect(Collectors.groupingBy(e -> e.getCategorieNotification().getName()));
         sb.append("<html><body>");
         map.forEach((key, values) -> {
-            sb.append("<h2 style='margin: 10px;padding: 5px;'>").append(key.getValue()).append("</h2><ol>");
+            sb.append("<h2 style='margin: 10px;padding: 5px;'>").append(key).append("</h2><ol>");
             values.forEach(e -> {
                 sb.append("<li>").append(e.getMessage()).append("</li>");
             });

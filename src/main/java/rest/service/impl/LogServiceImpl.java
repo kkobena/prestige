@@ -94,8 +94,8 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public JSONObject filtres(String query) throws JSONException {
-        List<LogDTO> l = Stream.of(TypeLog.values()).map(x -> new LogDTO(x.ordinal(), x.getValue()))
-                .collect(Collectors.toList());
+        List<LogDTO> l = Stream.of(TypeLog.values()).filter(TypeLog::isChecked)
+                .map(x -> new LogDTO(x.ordinal(), x.getValue())).collect(Collectors.toList());
         if (query != null && !"".equals(query)) {
             List<LogDTO> newItem = l.stream().filter(x -> x.getStrDESCRIPTION().startsWith(query))
                     .sorted(comparatorOrder.reversed()).collect(Collectors.toList());

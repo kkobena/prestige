@@ -18,7 +18,6 @@ import dal.TRetourFournisseur;
 import dal.TRetourFournisseurDetail;
 import dal.TUser;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;

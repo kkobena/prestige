@@ -5,6 +5,8 @@
  */
 package dal.enumeration;
 
+import java.util.Arrays;
+
 /**
  *
  * @author koben
@@ -20,7 +22,8 @@ public enum TypeNotification {
     CLOTURE_DE_CAISSE("Cloture de caisse"), ANNULATION_CLOTURE_DE_CAISSE("Annulation de cloture de caisse"),
     AVOIR_PRODUIT("Reception avoir"), QUANTITE_UG("Entrée quantité UG"), RETOUR_FOURNISSEUR("Retour fournisseur"),
     MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande"),
-    MASSE("Notification informationnelle");
+    MASSE("Notification informationnelle"), MODIFICATION_VENTE("Modification de vente"),
+    SAISIS_PERIMES("Saisis de périmés"), AJOUT_DE_NOUVEAU_PRODUIT("Ajout de nouveau produit");
 
     private final String value;
 
@@ -30,5 +33,10 @@ public enum TypeNotification {
 
     private TypeNotification(String value) {
         this.value = value;
+    }
+
+    public static TypeNotification fromName(String name) {
+        return Arrays.stream(TypeNotification.values()).filter(e -> e.name().equals(name)).findFirst().orElseThrow();
+
     }
 }
