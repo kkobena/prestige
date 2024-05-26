@@ -238,15 +238,14 @@ public class NotificationImpl implements NotificationService {
                             break;
                         }
                     });
-
             html.append(rest.service.notification.template.Mail.endTag());
-
             sendMail(html.toString());
             notifications.stream().forEach(e -> {
                 e.setStatut(Statut.SENT);
                 e.setModfiedAt(LocalDateTime.now());
                 em.merge(e);
             });
+
         }
 
     }

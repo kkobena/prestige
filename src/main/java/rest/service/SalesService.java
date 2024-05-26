@@ -58,9 +58,9 @@ public interface SalesService {
 
     JSONObject faireDevis(SalesParams params) throws JSONException;
 
-    JSONObject produits(QueryDTO params, Boolean all) throws JSONException;
+    JSONObject produits(QueryDTO params, boolean all) throws JSONException;
 
-    JSONObject detailsVente(QueryDTO params, Boolean all) throws JSONException;
+    JSONObject detailsVente(QueryDTO params, boolean all) throws JSONException;
 
     JSONObject addtierspayant(String venteId, SalesParams params);
 

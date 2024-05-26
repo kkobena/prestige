@@ -7,25 +7,21 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import rest.service.v2.dto.VersionDTO;
 
 /**
  *
  * @author koben
  */
-@Singleton
-@Startup
+// @Singleton
+// @Startup
 public class VersionService {
 
-    @PersistenceContext(unitName = "JTA_UNIT")
+    // @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
-    @PostConstruct
+    // @PostConstruct
     public void init() {
 
         Properties props = new Properties();

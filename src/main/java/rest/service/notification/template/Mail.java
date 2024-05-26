@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import rest.service.v2.dto.NotificationUtilsDTO;
 import util.DateUtil;
 import util.SmsParameters;
@@ -40,7 +41,7 @@ public final class Mail {
 
     public static String beginTag() {
 
-        return "<html> <head>  <style> table{border: 1px solid black; border-collapse: collapse;margin: 15px; }  table tr th{border-bottom: 1px solid black; } table tr td,table tr th{ margin-left: 5px;padding: 10px; border-right: 1px solid black;} table caption{text-align: left ;font-weight: 700;} </style> </head>  <body>";
+        return "<html> <head>  <style> .caisse-total{border-top: 1px solid black; } table{border: 1px solid black; border-collapse: collapse;margin: 15px; }  table tr th{border-bottom: 1px solid black; } table tr td,table tr th{ margin-left: 5px;padding: 10px; border-right: 1px solid black;} table caption{text-align: left ;font-weight: 700;} </style> </head>  <body>";
 
     }
 
@@ -60,18 +61,18 @@ public final class Mail {
             TUser tu = n.getUser();
             NotificationUtilsDTO item = notification.getNotificationDetail();
             sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">")
-                    .append("<caption>").append("Clôture de la caisse de").append(tu.getStrFIRSTNAME()).append(" ")
+                    .append("<caption>").append("Clôture de la caisse de ").append(tu.getStrFIRSTNAME()).append(" ")
                     .append(tu.getStrLASTNAME()).append(" du ").append(DateUtil.convertDate(n.getCreatedAt()))
                     .append("</caption>").append("<tr><th>Type</th><th>Mode règlement</th><th>Montant</th></tr>");
 
             item.getDetail().forEach(t -> {
 
                 sb.append("<tr><td>").append(t.getCode()).append("</td><td>").append(t.getDescription())
-                        .append("</td><td  style='text-align: right;'>").append(item.getMontant()).append("</td></tr>");
+                        .append("</td><td  style='text-align: right;'>").append(t.getMontant()).append("</td></tr>");
 
             });
-            sb.append("<tr><td colspan='2'   style='text-align: right;font-weight: bold;'>").append(item.getMontant())
-                    .append("</td></tr>");
+            sb.append("<tr class='caisse-total'><td colspan='3'   style='text-align: right;font-weight: bold;'>")
+                    .append(item.getMontant()).append("</td></tr>");
             sb.append("</table>");
         });
 
@@ -310,18 +311,19 @@ public final class Mail {
         StringBuilder sb = new StringBuilder();
         sb.append("<table style='border: 1px solid black;border-collapse: collapse;'").append(">").append("<caption>")
                 .append("Liste des produits modifiés à la commande").append("</caption>")
-                .append("<tr><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>P.Achat.Init</th><th>Nouveau prix.Achat</th><th>Prix.U.Init</th><th>Nouveau.Prix.U</th></tr>");
+                .append("<tr><th>Type modification</th><th>Opérateur</th><th>Code</th><th>Libellé</th><th>Date</th><th>P.Achat.Init</th><th>Nouveau prix.Achat</th><th>Prix.U.Init</th><th>Nouveau.Prix.U</th></tr>");
         notifications.stream().map(NotificationDTO::new).forEach(t -> {
-            NotificationUtilsDTO notificationUtilsDTO = t.getNotificationDetail();
-            notificationUtilsDTO.getDetail().forEach(e -> {
-
-                sb.append("<tr><td>").append(notificationUtilsDTO.getUser()).append("</td><td>").append(e.getCode())
-                        .append("</td><td>").append(e.getDescription()).append("</td><td>").append(e.getDateMvt())
-                        .append("</td><td style='text-align: right;'>").append(e.getPrixAchatUni())
-                        .append("</td><td style='text-align: right;'>").append(e.getPrixAchatFinal())
-                        .append("</td><td style='text-align: right;'>").append(e.getPrixUni())
-                        .append("</td><td style='text-align: right;'>").append(e.getPrixFinal()).append("</td></tr>");
-            });
+            NotificationUtilsDTO e = t.getNotificationDetail();
+            sb.append("<tr><td>").append(e.getType()).append("</td><td>").append(t.getUser()).append("</td><td>")
+                    .append(e.getCode()).append("</td><td>").append(e.getDescription()).append("</td><td>")
+                    .append(e.getDateMvt()).append("</td><td style='text-align: right;'>")
+                    .append(StringUtils.isEmpty(e.getPrixAchatUni()) ? "-" : e.getPrixAchatUni())
+                    .append("</td><td style='text-align: right;'>")
+                    .append(StringUtils.isEmpty(e.getPrixAchatFinal()) ? "-" : e.getPrixAchatFinal())
+                    .append("</td><td style='text-align: right;'>")
+                    .append(StringUtils.isEmpty(e.getPrixUni()) ? "-" : e.getPrixUni())
+                    .append("</td><td style='text-align: right;'>")
+                    .append(StringUtils.isEmpty(e.getPrixFinal()) ? "-" : e.getPrixFinal()).append("</td></tr>");
 
         });
 
