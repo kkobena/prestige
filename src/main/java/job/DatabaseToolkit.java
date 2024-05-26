@@ -140,8 +140,11 @@ public class DatabaseToolkit {
     public void createTimer() {
 
         final TimerConfig email = new TimerConfig("email", false);
-        timerService.createCalendarTimer(new ScheduleExpression()// *.minute("*/5").hour("*")
-                .hour(findScheduledValues()).dayOfMonth("*").year("*"), email);
+        // timerService.createCalendarTimer(new ScheduleExpression().minute("*/5").hour("*").dayOfMonth("*").year("*"),
+        // email);
+
+        timerService.createCalendarTimer(new ScheduleExpression().hour(findScheduledValues()).dayOfMonth("*").year("*"),
+                email);
 
         final TimerConfig sms = new TimerConfig("sms", false);
         timerService.createCalendarTimer(new ScheduleExpression().minute("*/2").hour("*").dayOfMonth("*").year("*"),
@@ -203,7 +206,7 @@ public class DatabaseToolkit {
             }
         }
 
-        LOG.log(Level.INFO, "status======{0}", notification.getStatut());
+        LOG.log(Level.INFO, null, notification.getStatut());
         try {
             userTransaction.begin();
             em.merge(notification);

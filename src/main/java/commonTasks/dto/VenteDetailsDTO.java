@@ -21,7 +21,7 @@ import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -368,7 +368,7 @@ public class VenteDetailsDTO implements Serializable {
         this.strSTATUT = f.getStrSTATUT();
         this.intPRICEUNITAIR = d.getIntPRICEUNITAIR();
         this.intQUANTITY = d.getIntQUANTITY();
-        this.intQUANTITYSERVED = (p.getStrSTATUT().equals(commonparameter.statut_is_Closed)
+        this.intQUANTITYSERVED = (p.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)
                 ? d.getIntQUANTITYSERVED() + d.getIntAVOIR() : d.getIntQUANTITYSERVED());
         this.intPRICE = d.getIntPRICE();
         this.intAVOIR = d.getIntAVOIR();
@@ -382,12 +382,12 @@ public class VenteDetailsDTO implements Serializable {
         this.dateHeure = dateFormatHeure.format(p.getDtUPDATED());
         this.valeurTva = d.getValeurTva();
         this.montantTva = d.getMontantTva();
-        Double _valeurTva = 1 + (Double.valueOf(d.getValeurTva()) / 100);
-        int htAmont = (int) Math.ceil(d.getIntPRICE() / _valeurTva);
-        int prixHt_ = (int) Math.ceil(d.getIntPRICEUNITAIR() / _valeurTva);
-        this.prixHt = prixHt_;
+        double valeurTva1 = 1 + (Double.valueOf(d.getValeurTva()) / 100);
+        int htAmont = (int) Math.ceil(d.getIntPRICE() / valeurTva1);
+        int prixHt0 = (int) Math.ceil(d.getIntPRICEUNITAIR() / valeurTva1);
+        this.prixHt = prixHt0;
         this.montantHt = htAmont;
-        htAmont = (int) Math.ceil((d.getIntPRICE() - d.getIntPRICEREMISE()) / _valeurTva);
+        htAmont = (int) Math.ceil((d.getIntPRICE() - d.getIntPRICEREMISE()) / valeurTva1);
         this.montantNetHt = htAmont;
     }
 
@@ -405,7 +405,7 @@ public class VenteDetailsDTO implements Serializable {
         this.strSTATUT = f.getStrSTATUT();
         this.intPRICEUNITAIR = d.getIntPRICEUNITAIR();
         this.intQUANTITY = d.getIntQUANTITY();
-        this.intQUANTITYSERVED = (p.getStrSTATUT().equals(commonparameter.statut_is_Closed)
+        this.intQUANTITYSERVED = (p.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)
                 ? d.getIntQUANTITYSERVED() + d.getIntAVOIR() : d.getIntQUANTITYSERVED());
         this.intPRICE = d.getIntPRICE();
         this.intAVOIR = d.getIntAVOIR();
@@ -583,10 +583,10 @@ public class VenteDetailsDTO implements Serializable {
     }
 
     public VenteDetailsDTO(String cip, String libelle, String rayon, String grossiste, String familleArticle,
-            Date _datePeremption, Integer valeurPrixAchat, Integer valeurPrixVente, Integer qty, String groupById,
+            Date datePeremption0, Integer valeurPrixAchat, Integer valeurPrixVente, Integer qty, String groupById,
             String groupBy, int seuil) {
-        LocalDate dateTime = DateConverter.convertDateToLocalDate(_datePeremption);
-        String date_perem = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        LocalDate dateTime = DateConverter.convertDateToLocalDate(datePeremption0);
+        String datePerem0 = dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         this.intCIP = cip;
         this.strNAME = libelle;
         this.intPRICE = qty * valeurPrixVente;
@@ -594,7 +594,7 @@ public class VenteDetailsDTO implements Serializable {
         this.operateur = rayon;
         this.typeVente = grossiste;
         this.ticketName = familleArticle;
-        this.dtCREATED = date_perem;
+        this.dtCREATED = datePerem0;
         this.intQUANTITY = qty;
         this.seuil = seuil;
         Period p = Period.between(toDate, dateTime);
@@ -730,12 +730,12 @@ public class VenteDetailsDTO implements Serializable {
         this.lgFAMILLEPARENTID = lgFAMILLEPARENTID;
     }
 
-    public VenteDetailsDTO(String produit, long quantiteVendue, String grossiste, Short bool_DECONDITIONNE,
+    public VenteDetailsDTO(String produit, long quantiteVendue, String grossiste, Short isDecond,
             String lgFAMILLEPARENTID) {
         this.intQUANTITY = (int) quantiteVendue;
         this.lgFAMILLEID = produit;
         this.typeVente = grossiste;
-        this.deconditionne = bool_DECONDITIONNE == 1;
+        this.deconditionne = isDecond == 1;
         this.lgFAMILLEPARENTID = lgFAMILLEPARENTID;
         this.lgPREENREGISTREMENTDETAILID = produit;
 

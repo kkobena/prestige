@@ -34,7 +34,6 @@ import org.json.JSONObject;
 import rest.service.GestionPerimesService;
 import rest.service.NotificationService;
 import rest.service.SuggestionService;
-import toolkits.parameters.commonparameter;
 import util.Constant;
 import util.DateCommonUtils;
 import util.NotificationUtils;

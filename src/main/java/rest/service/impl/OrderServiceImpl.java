@@ -624,17 +624,14 @@ public class OrderServiceImpl implements OrderService {
                     + " ancien prix: " + produitGrossiste.getIntPAF() + " nouveau prix :" + dto.getPrixAchat();
             logService.updateItem(user, produitGrossiste.getStrCODEARTICLE(), desc,
                     TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f);
-            /*
-             * notificationService.save(new Notification().canal(Canal.SMS_EMAIL).entityRef(f.getLgFAMILLEID())
-             * .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE).message(desc).addUser(user));
-             */
+
             saveMouvementPrice(f, dto.getPrixAchat(), produitGrossiste.getIntPAF(), f.getIntCIP(), user);
 
             Map<String, Object> donnee = new HashMap<>();
             donnee.put(NotificationUtils.PRIX_ACHAT_INIT.getId(),
                     NumberUtils.formatIntToString(produitGrossiste.getIntPAF()));
             donnee.put(NotificationUtils.PRIX_ACHAT_FINAL.getId(), NumberUtils.formatIntToString(dto.getPrixAchat()));
-            donnee.put(NotificationUtils.ITEM_KEY.getId(), f.getLgFAMILLEID());
+            donnee.put(NotificationUtils.ITEM_KEY.getId(), f.getIntCIP());
             donnee.put(NotificationUtils.ITEM_DESC.getId(), f.getStrNAME());
             donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_PA_PRODUIT_COMMANDE.getValue());
             donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
@@ -826,12 +823,10 @@ public class OrderServiceImpl implements OrderService {
 
         String desc = "Modification du prix de vente du produit :" + f.getStrNAME() + " prix importé: "
                 + detail.getIntPRICEDETAIL() + " nouveau prix :" + dto.getPrixVente();
+        int prixInitial = detail.getIntPRICEDETAIL();
         logService.updateItem(user, produitGrossiste.getStrCODEARTICLE(), desc,
                 TypeLog.MODIFICATION_INFO_PRODUIT_COMMANDE, f);
-        /*
-         * notificationService.save(new Notification().canal(Canal.SMS_EMAIL) .entityRef(f.getLgFAMILLEID())
-         * .typeNotification(TypeNotification.MODIFICATION_INFO_PRODUIT_COMMANDE).message(desc).addUser(user));
-         */
+
         saveMouvementPrice(f, dto.getPrixVente(), detail.getIntPRICEDETAIL(), f.getIntCIP(), user);
         detail.setIntPRICEDETAIL(dto.getPrixVente());
         detail.setStrSTATUT(DateConverter.STATUT_PROCESS);
@@ -842,9 +837,9 @@ public class OrderServiceImpl implements OrderService {
         order.setLgUSERID(user);
         this.getEmg().merge(order);
         Map<String, Object> donnee = new HashMap<>();
-        donnee.put(NotificationUtils.PRIX_INIT.getId(), NumberUtils.formatIntToString(detail.getIntPRICEDETAIL()));
+        donnee.put(NotificationUtils.PRIX_INIT.getId(), NumberUtils.formatIntToString(prixInitial));
         donnee.put(NotificationUtils.PRIX_FINAL.getId(), NumberUtils.formatIntToString(dto.getPrixVente()));
-        donnee.put(NotificationUtils.ITEM_KEY.getId(), f.getLgFAMILLEID());
+        donnee.put(NotificationUtils.ITEM_KEY.getId(), f.getIntCIP());
         donnee.put(NotificationUtils.ITEM_DESC.getId(), f.getStrNAME());
         donnee.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_PU_PRODUIT_COMMANDE.getValue());
         donnee.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());

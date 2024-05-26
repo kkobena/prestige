@@ -92,18 +92,18 @@ public class JobCalendar {
             }
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
 
         }
     }
 
     public void createNewCalendar() {
         LocalDate now = LocalDate.now();
+        var date = new Date();
         TCalendrier calendrier = new TCalendrier(UUID.randomUUID().toString());
-        calendrier.setDtBEGIN(new Date());
-        calendrier.setDtEND(new Date());
-        calendrier.setDtCREATED(new Date());
-        calendrier.setDtUPDATED(new Date());
+        calendrier.setDtBEGIN(date);
+        calendrier.setDtEND(date);
+        calendrier.setDtCREATED(date);
+        calendrier.setDtUPDATED(date);
         calendrier.setStrSTATUT("enable");
         calendrier.setIntANNEE(now.getYear());
         calendrier.setIntNUMBERJOUR(1);
