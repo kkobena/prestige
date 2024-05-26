@@ -194,4 +194,14 @@ public class NotificationUtilsDTO {
         this.code = code;
     }
 
+    @Override
+    public String toString() {
+        return "NotificationUtilsDTO{" + "user=" + user + ", dateMvt=" + dateMvt + ", montant=" + montant + ", type="
+                + type + ", message=" + message + ", numBon=" + numBon + ", montantTva=" + montantTva + ", montantTtc="
+                + montantTtc + ", dateBon=" + dateBon + ", detail=" + detail + ", description=" + description
+                + ", quantite=" + quantite + ", quantiteInit=" + quantiteInit + ", quantiteFinale=" + quantiteFinale
+                + ", prixUni=" + prixUni + ", prixFinal=" + prixFinal + ", prixAchatUni=" + prixAchatUni
+                + ", prixAchatFinal=" + prixAchatFinal + ", dateMvtIni=" + dateMvtIni + ", code=" + code + '}';
+    }
+
 }
