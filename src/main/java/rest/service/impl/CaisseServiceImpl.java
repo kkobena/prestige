@@ -573,7 +573,7 @@ public class CaisseServiceImpl implements CaisseService {
                     .in(Arrays.asList(DateConverter.MVT_FOND_CAISSE, DateConverter.MVT_ENTREE_CAISSE,
                             DateConverter.MVT_SORTIE_CAISSE, DateConverter.MVT_REGLE_TP,
                             DateConverter.MVT_REGLE_DIFF)));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<VisualisationCaisseDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {

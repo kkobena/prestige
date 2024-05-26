@@ -124,6 +124,8 @@ public final class Constant {
     public static final String ACTION_COMMANDE = "COMMANDE";
     public static final String KEY_PARAM_MVT_REGLEMENT_DIFFERES = "2";
     public static final String PERIME = "11";
+    public static final String KEY_VENTE_NON_ORDONNANCEE = "VNO";
+    public static final String NON_DIFFERE = "Non_Differe";
 
     /*
      * parametre nombre de mois à considerer
