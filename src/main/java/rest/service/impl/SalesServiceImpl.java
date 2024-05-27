@@ -120,7 +120,6 @@ import util.DateConverter;
 
 import static util.Constant.*;
 import util.DateCommonUtils;
-import util.NotificationUtils;
 import util.NumberUtils;
 
 /**
@@ -598,11 +597,7 @@ public class SalesServiceImpl implements SalesService {
             String desc = "Annulation de la [ " + tp.getStrREF() + " montant  " + tp.getIntPRICE() + " ] par "
                     + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
             logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.ANNULATION_DE_VENTE, tp);
-            /*
-             * notificationService.save(new
-             * Notification().canal(Canal.SMS_EMAIL).entityRef(tp.getLgPREENREGISTREMENTID())
-             * .typeNotification(TypeNotification.ANNULATION_DE_VENTE).message(desc).addUser(ooTUser));
-             */
+            
             Map<String, Object> donneesMap = new HashMap<>();
             donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
             donneesMap.put(NotificationUtils.DATE.getId(), DateCommonUtils.formatDate(tp.getDtCREATED()));
