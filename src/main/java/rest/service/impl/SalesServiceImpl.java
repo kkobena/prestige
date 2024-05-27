@@ -952,10 +952,10 @@ public class SalesServiceImpl implements SalesService {
                     salesParams.getUserId().getLgEMPLACEMENTID())) {
                 return json.put("success", false).put("msg", "Impossible de forcer le stock « voir le gestionnaire »");
             }
-            TTypeVente typeV = typeVenteFromId(salesParams.getTypeVenteId(), emg);
-            TNatureVente oTNatureVente = natureVenteFromId(salesParams.getNatureVenteId(), emg);
-            TRemise oTRemise = remiseFromId(salesParams.getRemiseId(), emg);
-            TUser vendeur = userFromId(salesParams.getUserVendeurId(), emg);
+            TTypeVente typeV = typeVenteFromId(salesParams.getTypeVenteId());
+            TNatureVente oTNatureVente = natureVenteFromId(salesParams.getNatureVenteId());
+            TRemise oTRemise = remiseFromId(salesParams.getRemiseId());
+            TUser vendeur = userFromId(salesParams.getUserVendeurId());
             TFamille tf = emg.find(TFamille.class, salesParams.getProduitId());
             TPreenregistrement preenregistrement = new TPreenregistrement(UUID.randomUUID().toString());
             preenregistrement.setLgUSERVENDEURID(vendeur != null ? vendeur : salesParams.getUserId());
@@ -1086,10 +1086,10 @@ public class SalesServiceImpl implements SalesService {
                 return json.put("success", false).put("msg", "Impossible de forcer le stock « voir le gestionnaire »");
             }
             TFamille tf = emg.find(TFamille.class, salesParams.getProduitId());
-            TTypeVente oTTypeVente = typeVenteFromId(salesParams.getTypeVenteId(), emg);
-            TNatureVente oTNatureVente = natureVenteFromId(salesParams.getNatureVenteId(), emg);
-            TRemise oTRemise = remiseFromId(salesParams.getRemiseId(), emg);
-            TUser vendeur = userFromId(salesParams.getUserVendeurId(), emg);
+            TTypeVente oTTypeVente = typeVenteFromId(salesParams.getTypeVenteId());
+            TNatureVente oTNatureVente = natureVenteFromId(salesParams.getNatureVenteId());
+            TRemise oTRemise = remiseFromId(salesParams.getRemiseId());
+            TUser vendeur = userFromId(salesParams.getUserVendeurId());
             TPreenregistrement op = new TPreenregistrement(UUID.randomUUID().toString());
             op.setLgUSERVENDEURID(vendeur != null ? vendeur : salesParams.getUserId());
             op.setLgUSERCAISSIERID(salesParams.getUserId());
@@ -1156,32 +1156,32 @@ public class SalesServiceImpl implements SalesService {
         return json;
     }
 
-    private TUser userFromId(String id, EntityManager emg) {
+    private TUser userFromId(String id) {
         if (id == null || "".equals(id)) {
             return null;
         }
-        return emg.find(TUser.class, id);
+        return getEm().find(TUser.class, id);
     }
 
-    private TRemise remiseFromId(String id, EntityManager emg) {
+    private TRemise remiseFromId(String id) {
         if (id == null || "".equals(id)) {
             return null;
         }
-        return emg.find(TRemise.class, id);
+        return getEm().find(TRemise.class, id);
     }
 
-    private TTypeVente typeVenteFromId(String id, EntityManager emg) {
+    private TTypeVente typeVenteFromId(String id) {
         if (id == null || "".equals(id)) {
             return null;
         }
-        return emg.find(TTypeVente.class, id);
+        return getEm().find(TTypeVente.class, id);
     }
 
-    private TNatureVente natureVenteFromId(String id, EntityManager emg) {
+    private TNatureVente natureVenteFromId(String id) {
         if (id == null || "".equals(id)) {
             return null;
         }
-        return emg.find(TNatureVente.class, id);
+        return getEm().find(TNatureVente.class, id);
     }
 
     public TPreenregistrementDetail addPreenregistrementItem(TPreenregistrement tp, TFamille oFamille, int qte,
@@ -1524,7 +1524,7 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         try {
             TPreenregistrement tp = emg.find(TPreenregistrement.class, salesParams.getVenteId());
-            // emg.getTransaction().begin();
+      
             if (salesParams.getTypeVenteId().equals(Parameter.VENTE_COMPTANT)
                     && !tp.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_COMPTANT)) {
                 List<TPreenregistrementCompteClientTiersPayent> list = findClientTiersPayents(
@@ -1533,12 +1533,12 @@ public class SalesServiceImpl implements SalesService {
                     emg.remove(op);
                 });
             }
-            tp.setLgTYPEVENTEID(typeVenteFromId(salesParams.getTypeVenteId(), emg));
+            tp.setLgTYPEVENTEID(typeVenteFromId(salesParams.getTypeVenteId()));
             tp.setStrTYPEVENTE(salesParams.getTypeVenteId().equals(Parameter.VENTE_COMPTANT)
                     ? Parameter.KEY_VENTE_NON_ORDONNANCEE : Parameter.KEY_VENTE_ORDONNANCE);
             tp.setDtUPDATED(new Date());
             emg.merge(tp);
-            // emg.getTransaction().commit();
+          
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
 
@@ -1792,7 +1792,7 @@ public class SalesServiceImpl implements SalesService {
             int amount;
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
-            TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
+            TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId());
             TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
             Optional<TParameters> takeInAcount = findParamettre("KEY_TAKE_INTO_ACCOUNT");
             TClient client = findClientById(clotureVenteParams.getClientId()).orElse(null);
@@ -1841,7 +1841,7 @@ public class SalesServiceImpl implements SalesService {
                 addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
 
             }
-            TTypeVente oTTypeVente = typeVenteFromId(clotureVenteParams.getTypeVenteId(), emg);
+            TTypeVente oTTypeVente = typeVenteFromId(clotureVenteParams.getTypeVenteId());
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement, "",
                     tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getBanque(), clotureVenteParams.getLieux(),
                     clotureVenteParams.getCommentaire(), STATUT_IS_CLOSED, "");
@@ -2037,7 +2037,7 @@ public class SalesServiceImpl implements SalesService {
                 return json;
             }
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
-            TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
+            TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId());
             Integer amount = montant - tp.getIntPRICEREMISE();
             TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
             Optional<TParameters> toInAccount = findParamettre("KEY_TAKE_INTO_ACCOUNT");
@@ -2879,7 +2879,7 @@ public class SalesServiceImpl implements SalesService {
             List<TPreenregistrementDetail> lstTPreenregistrementDetail = getItems(tp);
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
-            TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
+            TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId());
             Optional<TClient> client = findClientById(clotureVenteParams.getClientId());
             TEmplacement emplacement = emg.find(TEmplacement.class, tp.getPkBrand());
             tp.setStrFIRSTNAMECUSTOMER(emplacement.getStrFIRSTNAME());
@@ -2953,7 +2953,7 @@ public class SalesServiceImpl implements SalesService {
             }
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
-            TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId(), emg);
+            TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId());
             Integer amount = montant - tp.getIntPRICEREMISE();
             TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
             TEmplacement emplacement = emg.find(TEmplacement.class, tp.getPkBrand());
