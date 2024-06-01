@@ -63,7 +63,7 @@ public class TRole implements Serializable {
     private Date dtUPDATED;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "lgROLEID")
     private Collection<TRoleUser> tRoleUserCollection = new ArrayList<>();
-    @OneToMany(mappedBy = "lgROLEID", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "lgROLEID", fetch = FetchType.LAZY)
     private Collection<TRolePrivelege> tRolePrivelegeCollection = new ArrayList<>();
 
     public TRole() {
