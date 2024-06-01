@@ -31,16 +31,48 @@ import util.DateConverter;
 public class VenteDetailsDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private String lgPREENREGISTREMENTDETAILID = "", lgPREENREGISTREMENTID = "", strREF, lgFAMILLEID, strNAME, intCIP,
-            intEAN13, strSTATUT, dtCREATED, HEURE, ticketName, ticketNum;
-    private Integer intPRICEUNITAIR = 0, intQUANTITY = 0, intQUANTITYSERVED = 0, intPRICE = 0, intPRICEREMISE = 0,
-            stockInitial, stockFinal;
-    private String operateur, strRefBon, dateHeure, caissier, caissierId;
+    private String lgPREENREGISTREMENTDETAILID = "";
+    private String lgPREENREGISTREMENTID = "";
+    private String strREF;
+    private String lgFAMILLEID;
+    private String strNAME;
+    private String intCIP;
+    private String intEAN13;
+    private String strSTATUT;
+    private String dtCREATED;
+    private String HEURE;
+    private String ticketName;
+    private String ticketNum;
+    private Integer intPRICEUNITAIR = 0;
+    private Integer intQUANTITY = 0;
+    private Integer intQUANTITYSERVED = 0;
+    private Integer intPRICE = 0;
+    private Integer intPRICEREMISE = 0;
+    private Integer stockInitial;
+    private Integer stockFinal;
+    private String operateur;
+    private String strRefBon;
+    private String dateHeure;
+    private String caissier;
+    private String caissierId;
     private Date dateOperation;
-    private String typeVente, numOrder, medecinId, commentaire, nom;
-    private int intAVOIR, currentStock = 0, uniteGratuite, montantUg, seuil, stockUg, montantTva, valeurTva, prixHt;
+    private String typeVente;
+    private String numOrder;
+    private String medecinId;
+    private String commentaire;
+    private String nom;
+    private int intAVOIR;
+    private int currentStock;
+    private int uniteGratuite;
+    private int montantUg;
+    private int seuil;
+    private int stockUg;
+    private int montantTva;
+    private int valeurTva;
+    private int prixHt;
     private int montantHt;
-    private int montantNetHt, prixAchat;
+    private int montantNetHt;
+    private int prixAchat;
     private boolean bISAVOIR;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat dateFormatHeure = new SimpleDateFormat("dd/MM/yyyy HH:mm");
@@ -48,9 +80,12 @@ public class VenteDetailsDTO implements Serializable {
     private LocalDateTime dateOp;
     private boolean avoir;
     private final LocalDate toDate = LocalDate.now();
-    private String rayonId, libelleRayon;
-    private String familleId, libelleFamille;
-    private String grossisteId, libelleGrossiste;
+    private String rayonId;
+    private String libelleRayon;
+    private String familleId;
+    private String libelleFamille;
+    private String grossisteId;
+    private String libelleGrossiste;
     private boolean deconditionne;
 
     public Integer getStockInitial() {

@@ -104,6 +104,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.jpa.QueryHints;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -120,6 +121,7 @@ import util.DateConverter;
 
 import static util.Constant.*;
 import util.DateCommonUtils;
+import util.NotificationUtils;
 import util.NumberUtils;
 
 /**
@@ -156,6 +158,7 @@ public class SalesServiceImpl implements SalesService {
     private VenteReglementService venteReglementService;
     @EJB
     private SalesNetComputingService computingService;
+    private static Boolean KEY_TAKE_INTO_ACCOUNT;
 
     private final java.util.function.Predicate<Optional<TParameters>> test = e -> {
         if (e.isPresent()) {
@@ -597,7 +600,7 @@ public class SalesServiceImpl implements SalesService {
             String desc = "Annulation de la [ " + tp.getStrREF() + " montant  " + tp.getIntPRICE() + " ] par "
                     + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
             logService.updateItem(ooTUser, tp.getStrREF(), desc, TypeLog.ANNULATION_DE_VENTE, tp);
-            
+
             Map<String, Object> donneesMap = new HashMap<>();
             donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
             donneesMap.put(NotificationUtils.DATE.getId(), DateCommonUtils.formatDate(tp.getDtCREATED()));
@@ -816,6 +819,18 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
+    private void findParamettreTakeIntoAccount(String keyParam) {
+        if (KEY_TAKE_INTO_ACCOUNT == null) {
+            try {
+                var param = getEm().find(TParameters.class, keyParam);
+                KEY_TAKE_INTO_ACCOUNT = Integer.parseInt(param.getStrVALUE().trim()) == 1;
+            } catch (Exception e) {
+                KEY_TAKE_INTO_ACCOUNT = false;
+            }
+        }
+
+    }
+
     private void createAnnulleSnapshot(TPreenregistrement preenregistrement, int montantRestant, Integer montantPaye,
             TUser o, TTypeReglement tTypeReglement) {
         AnnulationSnapshot as = new AnnulationSnapshot();
@@ -947,48 +962,15 @@ public class SalesServiceImpl implements SalesService {
                     salesParams.getUserId().getLgEMPLACEMENTID())) {
                 return json.put("success", false).put("msg", "Impossible de forcer le stock « voir le gestionnaire »");
             }
-            TTypeVente typeV = typeVenteFromId(salesParams.getTypeVenteId());
-            TNatureVente oTNatureVente = natureVenteFromId(salesParams.getNatureVenteId());
-            TRemise oTRemise = remiseFromId(salesParams.getRemiseId());
-            TUser vendeur = userFromId(salesParams.getUserVendeurId());
-            TFamille tf = emg.find(TFamille.class, salesParams.getProduitId());
-            TPreenregistrement preenregistrement = new TPreenregistrement(UUID.randomUUID().toString());
-            preenregistrement.setLgUSERVENDEURID(vendeur != null ? vendeur : salesParams.getUserId());
-            preenregistrement.setLgUSERCAISSIERID(salesParams.getUserId());
-            preenregistrement.setLgUSERID(salesParams.getUserId());
-            Medecin medecin = findMedecin(salesParams.getMedecinId());
-            preenregistrement.setMedecin(medecin);
-            preenregistrement.setIntREMISEPARA(0);
-            preenregistrement.setLgREMISEID(oTRemise != null ? oTRemise.getLgREMISEID() : "");
-            preenregistrement.setRemise(oTRemise);
-            preenregistrement.setStrFIRSTNAMECUSTOMER("");
-            preenregistrement.setStrLASTNAMECUSTOMER("");
-            preenregistrement.setStrPHONECUSTOME("");
-            preenregistrement.setStrINFOSCLT("");
+            Pair<TPreenregistrement, TPreenregistrementDetail> pair = initVente(salesParams);
+            TPreenregistrement preenregistrement = pair.getKey();
+            TPreenregistrementDetail dp = pair.getRight();
             findClientById(salesParams.getClientId()).ifPresent(c -> {
                 preenregistrement.setStrFIRSTNAMECUSTOMER(c.getStrFIRSTNAME());
                 preenregistrement.setStrLASTNAMECUSTOMER(c.getStrLASTNAME());
                 preenregistrement.setStrPHONECUSTOME(c.getStrADRESSE());
                 preenregistrement.setClient(c);
             });
-            preenregistrement.setDtCREATED(new Date());
-            preenregistrement.setDtUPDATED(preenregistrement.getDtCREATED());
-            preenregistrement.setLgNATUREVENTEID(oTNatureVente);
-            preenregistrement.setLgTYPEVENTEID(typeV);
-            preenregistrement.setIntPRICE(0);
-            preenregistrement.setIntACCOUNT(0);
-            preenregistrement.setIntPRICEOTHER(0);
-            preenregistrement.setBISCANCEL(false);
-            preenregistrement.setBWITHOUTBON(false);
-            preenregistrement.setIntCUSTPART(0);
-            preenregistrement.setMontantTva(0);
-            preenregistrement.setIntPRICEREMISE(0);
-            preenregistrement.setCopy(Boolean.FALSE);
-            preenregistrement.setIntSENDTOSUGGESTION(0);
-            preenregistrement.setStrSTATUT(salesParams.getStatut());
-            TPreenregistrementDetail dp = addPreenregistrementItem(preenregistrement, tf, salesParams.getQte(),
-                    salesParams.getQteServie(), salesParams.getQteUg(), salesParams.getItemPu());
-            preenregistrement.setCmuAmount(computeCmuAmount(dp));
             if (!salesParams.isDepot()) {
                 preenregistrement.setStrTYPEVENTE(VENTE_ASSURANCE);
                 if (!salesParams.getTypeVenteId().equals(VENTE_AVEC_CARNET)) {
@@ -1080,56 +1062,12 @@ public class SalesServiceImpl implements SalesService {
                     salesParams.getUserId().getLgEMPLACEMENTID())) {
                 return json.put("success", false).put("msg", "Impossible de forcer le stock « voir le gestionnaire »");
             }
-            TFamille tf = emg.find(TFamille.class, salesParams.getProduitId());
-            TTypeVente oTTypeVente = typeVenteFromId(salesParams.getTypeVenteId());
-            TNatureVente oTNatureVente = natureVenteFromId(salesParams.getNatureVenteId());
-            TRemise oTRemise = remiseFromId(salesParams.getRemiseId());
-            TUser vendeur = userFromId(salesParams.getUserVendeurId());
-            TPreenregistrement op = new TPreenregistrement(UUID.randomUUID().toString());
-            op.setLgUSERVENDEURID(vendeur != null ? vendeur : salesParams.getUserId());
-            op.setLgUSERCAISSIERID(salesParams.getUserId());
-            op.setLgUSERID(salesParams.getUserId());
-            op.setIntREMISEPARA(0);
-            op.setPkBrand("");
-            Medecin medecin = findMedecin(salesParams.getMedecinId());
-            op.setMedecin(medecin);
-            if (!salesParams.isDevis()) {
-                op.setStrREF(
-                        buildRefTmp(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID()).getReferenceTemp());
-            } else {
-                findClientById(salesParams.getClientId()).ifPresent(my -> {
-                    op.setClient(my);
-                });
-                op.setStrREF(buildRefDevis(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID())
-                        .getReferenceTemp());
-                op.setStrREFTICKET(DateConverter.getShortId(10));
-            }
-            op.setLgREMISEID(oTRemise != null ? oTRemise.getLgREMISEID() : "");
-            op.setRemise(oTRemise);
-            op.setStrFIRSTNAMECUSTOMER("");
-            op.setStrLASTNAMECUSTOMER("");
-            op.setStrPHONECUSTOME("");
-            op.setStrINFOSCLT("");
-            op.setDtCREATED(new Date());
-            op.setDtUPDATED(op.getDtCREATED());
-            op.setLgNATUREVENTEID(oTNatureVente);
-            op.setLgTYPEVENTEID(oTTypeVente);
-            op.setIntPRICE(0);
-            op.setIntACCOUNT(0);
-            op.setIntPRICEOTHER(0);
-            op.setBISCANCEL(false);
-            op.setBWITHOUTBON(false);
-            op.setIntCUSTPART(0);
-            op.setIntPRICEREMISE(0);
-            op.setIntSENDTOSUGGESTION(0);
-            op.setMontantTva(0);
-            op.setCopy(Boolean.FALSE);
-            op.setStrSTATUTVENTE(Constant.NON_DIFFERE);
-            op.setStrSTATUT(salesParams.getStatut());
+
+            Pair<TPreenregistrement, TPreenregistrementDetail> pair = initVente(salesParams);
+            TPreenregistrement op = pair.getKey();
+            TPreenregistrementDetail dt = pair.getRight();
             op.setStrTYPEVENTE(Constant.KEY_VENTE_NON_ORDONNANCEE);
-            TPreenregistrementDetail dt = addPreenregistrementItem(op, tf, salesParams.getQte(),
-                    salesParams.getQteServie(), salesParams.getQteUg(), salesParams.getItemPu());
-            op.setCmuAmount(computeCmuAmount(dt));
+            findClientById(salesParams.getClientId()).ifPresent(my -> op.setClient(my));
             emg.persist(op);
             emg.persist(dt);
             JSONObject data = new JSONObject();
@@ -1162,7 +1100,8 @@ public class SalesServiceImpl implements SalesService {
         if (id == null || "".equals(id)) {
             return null;
         }
-        return getEm().find(TRemise.class, id);
+        return new TRemise(id);
+        // return getEm().find(TRemise.class, id);
     }
 
     private TTypeVente typeVenteFromId(String id) {
@@ -1172,18 +1111,11 @@ public class SalesServiceImpl implements SalesService {
         return getEm().find(TTypeVente.class, id);
     }
 
-    private TNatureVente natureVenteFromId(String id) {
-        if (id == null || "".equals(id)) {
-            return null;
-        }
-        return getEm().find(TNatureVente.class, id);
-    }
-
     public TPreenregistrementDetail addPreenregistrementItem(TPreenregistrement tp, TFamille oFamille, int qte,
             int qteServie, int qteUg, Integer pu) {
         try {
+            findParamettreTakeIntoAccount("KEY_TAKE_INTO_ACCOUNT");
             TCodeTva tva = oFamille.getLgCODETVAID();
-            Optional<TParameters> param = findParamettre("KEY_TAKE_INTO_ACCOUNT");
             TPreenregistrementDetail tpd = new TPreenregistrementDetail(UUID.randomUUID().toString());
             tpd.setBoolACCOUNT(true);
             tpd.setCmuPrice(oFamille.cmuPrice().get());
@@ -1211,20 +1143,16 @@ public class SalesServiceImpl implements SalesService {
             tp.setMontantTva(tpd.getMontantTva() + tp.getMontantTva());
             tp.setIntPRICEOTHER(tp.getIntPRICEOTHER() + tpd.getIntPRICE());
 
-            if (param.isPresent()) {
-                if (Integer.parseInt(param.get().getStrVALUE().trim()) == 1) {
-                    if (oFamille.getLgZONEGEOID().getBoolACCOUNT() && oFamille.getBoolACCOUNT()) {
-                        tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
-                    } else {
-                        tpd.setBoolACCOUNT(false);
-                    }
-                } else {
+            if (Boolean.TRUE.equals(KEY_TAKE_INTO_ACCOUNT)) {
+                if (oFamille.getLgZONEGEOID().getBoolACCOUNT() && oFamille.getBoolACCOUNT()) {
                     tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
+                } else {
+                    tpd.setBoolACCOUNT(false);
                 }
-
             } else {
                 tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
             }
+
             return tpd;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -1519,7 +1447,7 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         try {
             TPreenregistrement tp = emg.find(TPreenregistrement.class, salesParams.getVenteId());
-      
+
             if (salesParams.getTypeVenteId().equals(Parameter.VENTE_COMPTANT)
                     && !tp.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Parameter.VENTE_COMPTANT)) {
                 List<TPreenregistrementCompteClientTiersPayent> list = findClientTiersPayents(
@@ -1533,7 +1461,7 @@ public class SalesServiceImpl implements SalesService {
                     ? Parameter.KEY_VENTE_NON_ORDONNANCEE : Parameter.KEY_VENTE_ORDONNANCE);
             tp.setDtUPDATED(new Date());
             emg.merge(tp);
-          
+
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
 
@@ -4860,5 +4788,75 @@ public class SalesServiceImpl implements SalesService {
             LOG.log(Level.SEVERE, null, ex);
         }
 
+    }
+
+    private TTypeVente fromId(String id) {
+
+        return new TTypeVente(id);
+    }
+
+    private Pair<TPreenregistrement, TPreenregistrementDetail> initVente(SalesParams salesParams) {
+        TFamille tf = this.em.find(TFamille.class, salesParams.getProduitId());
+        TTypeVente oTTypeVente = fromId(salesParams.getTypeVenteId());
+        TNatureVente oTNatureVente = newNatureVenteFromId(salesParams.getNatureVenteId());
+        TRemise oTRemise = remiseFromId(salesParams.getRemiseId());
+        TUser vendeur = getUserFromId(salesParams.getUserVendeurId());
+        TPreenregistrement op = new TPreenregistrement(UUID.randomUUID().toString());
+        op.setLgUSERVENDEURID(vendeur != null ? vendeur : salesParams.getUserId());
+        op.setLgUSERCAISSIERID(salesParams.getUserId());
+        op.setLgUSERID(salesParams.getUserId());
+        op.setIntREMISEPARA(0);
+        op.setPkBrand("");
+        Medecin medecin = findMedecin(salesParams.getMedecinId());
+        op.setMedecin(medecin);
+        if (!salesParams.isDevis()) {
+            op.setStrREF(buildRefTmp(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID()).getReferenceTemp());
+        } else {
+
+            op.setStrREF(
+                    buildRefDevis(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID()).getReferenceTemp());
+            op.setStrREFTICKET(DateConverter.getShortId(10));
+        }
+        op.setLgREMISEID(oTRemise != null ? oTRemise.getLgREMISEID() : "");
+        op.setRemise(oTRemise);
+        op.setStrFIRSTNAMECUSTOMER("");
+        op.setStrLASTNAMECUSTOMER("");
+        op.setStrPHONECUSTOME("");
+        op.setStrINFOSCLT("");
+        op.setDtCREATED(new Date());
+        op.setDtUPDATED(op.getDtCREATED());
+        op.setLgNATUREVENTEID(oTNatureVente);
+        op.setLgTYPEVENTEID(oTTypeVente);
+        op.setIntPRICE(0);
+        op.setIntACCOUNT(0);
+        op.setIntPRICEOTHER(0);
+        op.setBISCANCEL(false);
+        op.setBWITHOUTBON(false);
+        op.setIntCUSTPART(0);
+        op.setIntPRICEREMISE(0);
+        op.setIntSENDTOSUGGESTION(0);
+        op.setMontantTva(0);
+        op.setCopy(false);
+        op.setStrSTATUTVENTE(Constant.NON_DIFFERE);
+        op.setStrSTATUT(salesParams.getStatut());
+
+        TPreenregistrementDetail dt = addPreenregistrementItem(op, tf, salesParams.getQte(), salesParams.getQteServie(),
+                salesParams.getQteUg(), salesParams.getItemPu());
+        op.setCmuAmount(computeCmuAmount(dt));
+        return Pair.of(op, dt);
+    }
+
+    private TNatureVente newNatureVenteFromId(String id) {
+        if (id == null || "".equals(id)) {
+            return null;
+        }
+        return new TNatureVente(id);
+    }
+
+    private TUser getUserFromId(String id) {
+        if (id == null || "".equals(id)) {
+            return null;
+        }
+        return new TUser(id);
     }
 }
