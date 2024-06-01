@@ -43,7 +43,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ProductStateService;
 import rest.service.SuggestionService;
-import rest.service.dto.CommandeIdsDTO;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
 
@@ -52,7 +51,6 @@ import static util.Constant.*;
 import util.DateConverter;
 
 import util.FunctionUtils;
-import util.KeyUtilGen;
 
 /**
  * @author Kobena

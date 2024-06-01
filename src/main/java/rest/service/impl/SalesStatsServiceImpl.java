@@ -332,7 +332,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
             cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)));
             listePreenregistrement(params, cb, root, st, predicates);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
         } catch (Exception e) {
@@ -360,7 +360,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             cq.select(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)).distinct(true)
                     .orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
             listePreenregistrement(params, cb, root, st, predicates);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
