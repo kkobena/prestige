@@ -1247,6 +1247,7 @@ public class SuggestionImpl implements SuggestionService {
                 .getTSuggestionOrderDetailsCollection();
 
         List<TSuggestionOrder> suggestionOrders = this.getAnotherSuggesstions(grossiste, suggestionId);
+      
         for (TSuggestionOrder order0 : suggestionOrders) {
 
             for (TSuggestionOrderDetails tOrderDetail : order0.getTSuggestionOrderDetailsCollection()) {
@@ -1264,7 +1265,7 @@ public class SuggestionImpl implements SuggestionService {
                 if (!isExist) {
                     TSuggestionOrderDetails orderDetail = createMergeDetails(suggestionOrder, tOrderDetail);
                     tOrderDetailCollection.add(orderDetail);
-                    this.productStateService.addState(famille, ProductStateEnum.SUGGESTION);
+                   // this.productStateService.addState(famille, ProductStateEnum.SUGGESTION);
                 }
             }
             this.em.remove(order0);
