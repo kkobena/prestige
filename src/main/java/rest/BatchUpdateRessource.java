@@ -12,7 +12,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import rest.service.StockReapproService;
+import semois.SemoisService;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -29,7 +29,7 @@ public class BatchUpdateRessource {
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
-    private StockReapproService stockReapproService;
+    private SemoisService semoisService;
 
     @GET
     @Path("/compute-reappro")
@@ -40,7 +40,7 @@ public class BatchUpdateRessource {
             return Response.ok().entity(ResultFactory.getFailResult("Vous êtes déconnecté. Veuillez vous reconnecter"))
                     .build();
         }
-        mes.submit(stockReapproService::computeReappro);
+        mes.submit(semoisService::computeReapproSemois);
         return Response.ok().entity(ResultFactory.getFailResult("Traitement en cours")).build();
     }
 
