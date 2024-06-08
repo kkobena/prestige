@@ -126,7 +126,12 @@ public final class Constant {
     public static final String PERIME = "11";
     public static final String KEY_VENTE_NON_ORDONNANCEE = "VNO";
     public static final String NON_DIFFERE = "Non_Differe";
+    public static final String MVT_ENTREE_CAISSE = "5";
 
+    public static final String MVT_REGLE_TP = "3";
+    public static final String MVT_REGLE_DIFF = "2";
+    public static final String MVT_REGLE_VO = "8";
+    public static final String MVT_REGLE_VNO = "9";
     /*
      * parametre nombre de mois à considerer
      */

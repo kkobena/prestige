@@ -75,6 +75,7 @@ import rest.service.ReglementService;
 import rest.service.TransactionService;
 import rest.service.dto.DossierReglementDTO;
 import util.Constant;
+import static util.Constant.MODE_ORANGE;
 import util.DateCommonUtils;
 import util.DateConverter;
 import util.NotificationUtils;
@@ -238,6 +239,7 @@ public class ReglementServiceImpl implements ReglementService {
         TModeReglement modeReglement;
         switch (idTypeRegl) {
         case "1":
+        case "4":
             modeReglement = findByIdMod("1");
             break;
         case "2":
@@ -252,9 +254,22 @@ public class ReglementServiceImpl implements ReglementService {
         case "5":
             modeReglement = findByIdMod("6");
             break;
-        default:
-            modeReglement = findByIdMod("1");
+        case "7":
+            modeReglement = findByIdMod(MODE_ORANGE);
             break;
+        case "8":
+            modeReglement = findByIdMod("8");
+            break;
+        case "9":
+            modeReglement = findByIdMod("9");
+            break;
+        case "10":
+            modeReglement = findByIdMod("11");
+            break;
+        default:
+            modeReglement = findByIdMod(idTypeRegl);
+            break;
+
         }
         return modeReglement;
     }
@@ -430,7 +445,7 @@ public class ReglementServiceImpl implements ReglementService {
         if (!this.checkCaisse(user)) {
             return json.put("success", false).put("msg", "Votre caisse est fermée");
         }
-        TTypeMvtCaisse oTTypeMvtCaisse = getEmg().find(TTypeMvtCaisse.class, DateConverter.MVT_REGLE_TP);
+        TTypeMvtCaisse oTTypeMvtCaisse = getEmg().find(TTypeMvtCaisse.class, Constant.MVT_REGLE_TP);
         TTypeReglement typeReglement = getEmg().find(TTypeReglement.class, reglementCarnetDTO.getTypeReglement());
         TModeReglement modeReglement = findModeReglement(typeReglement.getLgTYPEREGLEMENTID());
         TTiersPayant payant = getEmg().find(TTiersPayant.class, reglementCarnetDTO.getTiersPayantId());
@@ -485,10 +500,6 @@ public class ReglementServiceImpl implements ReglementService {
         addTransaction(user, carnet, caisse, dossierReglement.getLgDOSSIERREGLEMENTID(), typeReglement,
                 payant.getLgTIERSPAYANTID());
         logService.updateItem(user, caisse.getLgMVTCAISSEID(), description, TypeLog.MVT_DE_CAISSE, caisse, evtDate);
-        /*
-         * notificationService.save(new Notification().canal(Canal.SMS_EMAIL)
-         * .typeNotification(TypeNotification.MVT_DE_CAISSE).message(description).addUser(user));
-         */
 
         getEmg().persist(carnet);
         getEmg().merge(payant);
@@ -616,11 +627,7 @@ public class ReglementServiceImpl implements ReglementService {
                 });
                 logService.updateItem(clotureVenteParams.getUserId(), caisse.getLgMVTCAISSEID(), description,
                         TypeLog.MVT_DE_CAISSE, caisse);
-                /*
-                 * notificationService .save(new
-                 * Notification().canal(Canal.SMS_EMAIL).typeNotification(TypeNotification.MVT_DE_CAISSE)
-                 * .message(description).addUser(clotureVenteParams.getUserId()));
-                 */
+
                 Map<String, Object> donneesMap = new HashMap<>();
                 donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MVT_DE_CAISSE_REGLEMENT_DIFFERE.getValue());
                 donneesMap.put(NotificationUtils.USER.getId(), clotureVenteParams.getUserId().getStrFIRSTNAME() + " "
@@ -660,8 +667,8 @@ public class ReglementServiceImpl implements ReglementService {
         oTReglement.setDtREGLEMENT(dtReglement);
         oTReglement.setLgUSERID(u);
         oTReglement.setBoolCHECKED(true);
-        oTReglement.setBISFACTURE(Boolean.FALSE);
-        oTReglement.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
+        oTReglement.setBISFACTURE(false);
+        oTReglement.setStrSTATUT(Constant.STATUT_IS_CLOSED);
         getEmg().persist(oTReglement);
         return oTReglement;
     }
@@ -679,7 +686,7 @@ public class ReglementServiceImpl implements ReglementService {
         oTDossierReglement.setDtCREATED(evt);
         oTDossierReglement.setDtUPDATED(evt);
         oTDossierReglement.setDblMONTANTATTENDU(Double.valueOf(montantattendu));
-        oTDossierReglement.setStrSTATUT(DateConverter.STATUT_IS_CLOSED);
+        oTDossierReglement.setStrSTATUT(Constant.STATUT_IS_CLOSED);
         getEmg().persist(oTDossierReglement);
 
         return oTDossierReglement;
@@ -701,8 +708,8 @@ public class ReglementServiceImpl implements ReglementService {
         Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrementCompteClient_.dtUPDATED)),
                 java.sql.Date.valueOf(dtDebut), java.sql.Date.valueOf(dtFin));
         predicates.add(cb.and(btw));
-        predicates.add(
-                cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
+        predicates
+                .add(cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), Constant.STATUT_IS_CLOSED)));
         predicates.add(cb.and(cb.greaterThan(root.get(TPreenregistrementCompteClient_.intPRICERESTE), 0)));
         cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<TPreenregistrementCompteClient> q = emg.createQuery(cq);
@@ -742,12 +749,12 @@ public class ReglementServiceImpl implements ReglementService {
             if (clientId != null && !"".equals(clientId)) {
 
                 List<MvtTransaction> query = listeReglement(dtStart, dtEnd, checked, emplacementId,
-                        DateConverter.MVT_REGLE_DIFF);
+                        Constant.MVT_REGLE_DIFF);
                 return query.stream().map(x -> new DelayedDTO(x, findClientById(x.getOrganisme())))
                         .filter(x -> x.getClientId().equals(clientId)).collect(Collectors.toList());
             }
             List<MvtTransaction> query = listeReglement(dtStart, dtEnd, checked, emplacementId,
-                    DateConverter.MVT_REGLE_DIFF);
+                    Constant.MVT_REGLE_DIFF);
             return query.stream().map(x -> new DelayedDTO(x, findClientById(x.getOrganisme())))
                     .collect(Collectors.toList());
         } catch (Exception e) {
