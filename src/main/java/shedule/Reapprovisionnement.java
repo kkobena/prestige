@@ -175,7 +175,7 @@ public class Reapprovisionnement {
             predicates.add(
                     cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"),
                             DateConverter.OFFICINE));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = em.createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();
 
@@ -201,6 +201,8 @@ public class Reapprovisionnement {
             Q3 = Integer.parseInt(q3.getStrVALUE().trim());
         }
         List<LocalDate> nombreMois = nombreMoisPleinsConsommation(Q3).stream().sorted().collect(Collectors.toList());
+        System.err.println("nombreMois " + nombreMois.size());
+        nombreMois.forEach(System.err::println);
 
         if (!nombreMois.isEmpty()) {
             JSONObject json;
@@ -210,7 +212,7 @@ public class Reapprovisionnement {
                 try {
                     userTransaction.begin();
                     for (TFamille tf : list) {
-
+                        System.err.println("tf " + tf.getIntCIP());
                         int conso = consommationProduits(nombreMois.get(0),
                                 LocalDate.of(nombreMois.get(nombreMois.size() - 1).getYear(),
                                         nombreMois.get(nombreMois.size() - 1).getMonth(),
