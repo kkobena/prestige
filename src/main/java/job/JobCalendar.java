@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
+import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.persistence.EntityManager;
@@ -35,9 +36,7 @@ public class JobCalendar {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
-    public JobCalendar() {
-
-    }
+   
 
     public EntityManager getEm() {
         return em;
@@ -51,10 +50,10 @@ public class JobCalendar {
         // updateOrderDetailPrices();
     }
 
-    // @Schedule(hour = "0", dayOfMonth = "*", persistent = false)
-    public void execute() throws InterruptedException {
+    @Schedule(hour = "0", dayOfMonth = "*", persistent = false)
+    public void execute()  {
         exec();
-        removeFacture();
+      
 
     }
 
