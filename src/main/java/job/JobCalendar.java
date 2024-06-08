@@ -36,8 +36,6 @@ public class JobCalendar {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
-   
-
     public EntityManager getEm() {
         return em;
     }
@@ -51,9 +49,8 @@ public class JobCalendar {
     }
 
     @Schedule(hour = "0", dayOfMonth = "*", persistent = false)
-    public void execute()  {
+    public void execute() {
         exec();
-      
 
     }
 
