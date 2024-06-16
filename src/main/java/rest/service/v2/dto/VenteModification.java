@@ -14,8 +14,8 @@ public class VenteModification {
     private String finalClient;
     private String oldBon;
     private String finalBon;
-    private List<String> oldTiersPayant = new ArrayList<>();
-    private List<String> finalTiersPayant = new ArrayList<>();
+    private List<String> oldTiersPayant = new ArrayList<>();//
+    private List<String> finalTiersPayant = new ArrayList<>();//
     private String oldMontantClient;
     private String nouveauMontantClient;
     private String oldAyantDroit;

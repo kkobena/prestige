@@ -3625,7 +3625,7 @@ public class SalesServiceImpl implements SalesService {
 
         Map<String, Object> donneesMap = new HashMap<>();
         if (!venteModification.isEmpty()) {
-            donneesMap.put(NotificationUtils.ITEMS.getId(), new JSONArray().put(venteModification));
+            donneesMap.put(NotificationUtils.ITEMS.getId(), new JSONArray().put(new JSONObject(venteModification)));
         }
 
         donneesMap.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
