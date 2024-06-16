@@ -1,6 +1,6 @@
-
 package rest.service.v2.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,8 +14,8 @@ public class VenteModification {
     private String finalClient;
     private String oldBon;
     private String finalBon;
-    private List<String> oldTiersPayant;
-    private List<String> finalTiersPayant;
+    private List<String> oldTiersPayant = new ArrayList<>();
+    private List<String> finalTiersPayant = new ArrayList<>();
     private String oldMontantClient;
     private String nouveauMontantClient;
     private String oldAyantDroit;

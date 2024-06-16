@@ -3928,11 +3928,11 @@ public class SalesServiceImpl implements SalesService {
         return newItem;
     }
 
-    private Optional<Reference> getReferenceByDateAndEmplacementId(LocalDate ODate, String emplacementId,
+    private Optional<Reference> getReferenceByDateAndEmplacementId(LocalDate dateEvt, String emplacementId,
             boolean isDevis) {
         try {
             TypedQuery<Reference> query = this.getEm().createNamedQuery("Reference.lastReference", Reference.class);
-            query.setParameter("id", ODate.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+            query.setParameter("id", dateEvt.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
             query.setParameter("emplacement", emplacementId);
             query.setParameter("devis", isDevis);
             query.setMaxResults(1);
@@ -3942,21 +3942,22 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    public Reference buildRefTmp(LocalDate ODate, TEmplacement emplacement) {
+    public Reference buildRefTmp(LocalDate dateEvt, TEmplacement emplacement) {
         Reference r = null;
         try {
-            Optional<Reference> o = getReferenceByDateAndEmplacementId(ODate, emplacement.getLgEMPLACEMENTID(), false);
+            Optional<Reference> o = getReferenceByDateAndEmplacementId(dateEvt, emplacement.getLgEMPLACEMENTID(),
+                    false);
             if (o.isPresent()) {
                 r = o.get();
 
             } else {
                 r = new Reference().addEmplacement(emplacement)
-                        .id(ODate.format(DateTimeFormatter.ofPattern("yyyyMMdd"))).lastIntValue(0)
-                        .reference(ODate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
+                        .id(dateEvt.format(DateTimeFormatter.ofPattern("yyyyMMdd"))).lastIntValue(0)
+                        .reference(dateEvt.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
                                 + StringUtils.leftPad(String.valueOf(0), 5, '0'));
             }
             r.setLastIntTmpValue(r.getLastIntTmpValue() + 1);
-            r.setReferenceTemp(ODate.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
+            r.setReferenceTemp(dateEvt.format(DateTimeFormatter.ofPattern("yyMMdd")) + "_"
                     + StringUtils.leftPad(String.valueOf(r.getLastIntTmpValue()), 5, '0'));
             getEm().merge(r);
         } catch (Exception e) {
