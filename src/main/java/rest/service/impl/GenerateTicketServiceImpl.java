@@ -5,12 +5,10 @@
  */
 package rest.service.impl;
 
-import bll.common.Parameter;
 import bll.preenregistrement.Preenregistrement;
 import com.itextpdf.text.pdf.Barcode128;
 import commonTasks.dto.ClotureVenteParams;
 import commonTasks.dto.Params;
-import commonTasks.dto.TicketDTO;
 import dal.MvtTransaction;
 import dal.TAyantDroit;
 import dal.TClient;
@@ -49,7 +47,6 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -101,10 +98,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    @EJB
-    private ReportUtil reportUtil;
-    @EJB
-    private SalesStatsService salesStatsService;
+
     @EJB
     private VenteReglementService venteReglementService;
 
@@ -169,23 +163,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     }
 
-    private List<TPreenregistrement> venteLiees(String originalVenteId) {
-        try {
-            TypedQuery<TPreenregistrement> q = getEntityManager().createQuery(
-                    "SELECT o FROM TPreenregistrement o WHERE o.lgPARENTID=?1 ORDER BY o.dtCREATED ASC ",
-                    TPreenregistrement.class);
-            q.setParameter(1, originalVenteId);
-            return q.getResultList();
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
-    }
-
     @Override
     public JSONObject lunchPrinterForTicket(String id) throws JSONException {
         JSONObject json = new JSONObject();
         int counter = 40;
-
         int k = 0;
         int page;
         int pageCurrent = 0;
@@ -194,12 +175,13 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         String title;
         List<String> lstDataFinal = new ArrayList<>();
         List<String> infoClientAvoir = new ArrayList<>();
+        boolean isReedit = true;
 
         try {
             TPreenregistrement oTPreenregistrement = getEntityManager().find(TPreenregistrement.class, id);
             String idVente = id;
             MvtTransaction mvtTransaction = findByPkey(idVente);
-            boolean isNotAchash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
+            boolean isNotCash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
                     .equals(Constant.TYPE_REGLEMENT_ESPECE);
 
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
@@ -234,7 +216,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                         generateDataSummaryVno(oTPreenregistrement, mvtTransaction),
                         generateCommentaire(oTPreenregistrement, mvtTransaction), fileBarecode);
 
-                printCashierReceipt(imp, isNotAchash);
+                printCashierReceipt(imp, isNotCash, isReedit);
             } else {
                 page = datas.size() / counter;
                 while (page != pageCurrent) {
@@ -243,8 +225,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infoClientAvoir, Collections.emptyList(),
                             Collections.emptyList(), fileBarecode);
-                    printCashierReceipt(imp, isNotAchash);
-                    // imp.printTicketVente(copies);
+                    printCashierReceipt(imp, isNotCash, isReedit);
+
                     k = counter;
                     diff = datas.size() - counter;
                     if (diff > counterConstante) {
@@ -264,8 +246,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                             generateDataSummaryVno(oTPreenregistrement, mvtTransaction),
                             generateCommentaire(oTPreenregistrement, mvtTransaction), fileBarecode);
                 }
-                printCashierReceipt(imp, isNotAchash);
-                // imp.printTicketVente(copies);
+                printCashierReceipt(imp, isNotCash, isReedit);
 
             }
             json.put("success", true);
@@ -397,14 +378,14 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                         + "." + opreenregistrement.getLgUSERID().getStrLASTNAME());
             }
             if (opreenregistrement.getLgNATUREVENTEID().getLgNATUREVENTEID()
-                    .equalsIgnoreCase(Parameter.KEY_NATURE_VENTE_DEPOT)) {
+                    .equalsIgnoreCase(Constant.KEY_NATURE_VENTE_DEPOT)) {
                 TEmplacement oEmplacement = getEntityManager().find(TEmplacement.class,
                         opreenregistrement.getPkBrand());
                 datas.add(oEmplacement != null ? "Dépôt: " + oEmplacement.getStrDESCRIPTION() : " ");
                 datas.add("Client(e):: "
                         + (oEmplacement != null ? oEmplacement.getStrFIRSTNAME() + " " + oEmplacement.getStrLASTNAME()
                                 : opreenregistrement.getStrFIRSTNAMECUSTOMER() + " "
-                                        + opreenregistrement.getStrLASTNAMECUSTOMER()));
+                                + opreenregistrement.getStrLASTNAMECUSTOMER()));
 
             }
         } catch (Exception e) {
@@ -424,10 +405,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         lstTPreenregistrementDetail.forEach(opr -> {
             datas.add(
                     " " + opr.getIntQUANTITY() + "; *;"
-                            + DataStringManager.subStringData(opr.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
-                                    20)
-                            + ";" + DateConverter.amountFormat(opr.getIntPRICEUNITAIR()) + ";"
-                            + DateConverter.amountFormat(opr.getIntPRICE()));
+                    + DataStringManager.subStringData(opr.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
+                            20)
+                    + ";" + DateConverter.amountFormat(opr.getIntPRICEUNITAIR()) + ";"
+                    + DateConverter.amountFormat(opr.getIntPRICE()));
         });
 
         datas.add(";;;;------");
@@ -445,10 +426,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         lstTPreenregistrementDetail.forEach((ot) -> {
             datas.add(
                     " " + (-1 * ot.getIntQUANTITY()) + ";*;"
-                            + DataStringManager.subStringData(ot.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
-                                    16)
-                            + ";" + DateConverter.amountFormat(ot.getIntPRICEUNITAIR()) + ";"
-                            + DateConverter.amountFormat(ot.getIntPRICE() * (-1)));
+                    + DataStringManager.subStringData(ot.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
+                            16)
+                    + ";" + DateConverter.amountFormat(ot.getIntPRICEUNITAIR()) + ";"
+                    + DateConverter.amountFormat(ot.getIntPRICE() * (-1)));
         });
         datas.add(";;;;------");
         datas.add(";;;;"
@@ -576,9 +557,9 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             datas.add(" ;0");
             datas.add(
                     "MONTANT RESTANT: "
-                            + DateConverter.amountFormat(
-                                    Maths.arrondiModuloOfNumber(mvtTransaction.getMontantRestant(), 5), ' ')
-                            + " F CFA;1");
+                    + DateConverter.amountFormat(
+                            Maths.arrondiModuloOfNumber(mvtTransaction.getMontantRestant(), 5), ' ')
+                    + " F CFA;1");
             datas.add(" ;0");
         }
 
@@ -620,16 +601,25 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     @Override
     public JSONObject lunchPrinterForTicket(ClotureVenteParams clotureVenteParams) throws JSONException {
         JSONObject json = new JSONObject();
-        int counter = 40, copies = 1, k = 0, page, pageCurrent = 0, diff, counterconstante = 40;
+        int counter = 40;
+        int k = 0;
+        int page;
+        int pageCurrent = 0;
+        int diff;
+        int counterconstante = 40;
         String title;
         List<String> lstDataFinal = new ArrayList<>();
         List<String> infoClientAvoir = new ArrayList<>();
+        boolean isReedit = false;
         try {
             TPreenregistrement oTPreenregistrement = getEntityManager().find(TPreenregistrement.class,
                     clotureVenteParams.getVenteId());
             String idPrevente = oTPreenregistrement.getLgPREENREGISTREMENTID();
             MvtTransaction mvtTransaction = findByPkey(idPrevente);
-            copies = nbreDeCopiesOranges(oTPreenregistrement, copies);
+            boolean isNotCash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
+                    .equals(Constant.TYPE_REGLEMENT_ESPECE);
+
+            // copies = nbreDeCopiesOranges(oTPreenregistrement, copies);
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
@@ -662,7 +652,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             if (datas.size() <= counter) {
                 imp.buildTicket(datas, infoSellers, infoClientAvoir, generateDataSummaryVno, generateCommentaire,
                         fileBarecode);
-                print(imp, copies);
+                printCashierReceipt(imp, isNotCash, isReedit);
+
             } else {
                 page = datas.size() / counter;
                 while (page != pageCurrent) {
@@ -671,7 +662,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infoClientAvoir, Collections.emptyList(),
                             Collections.emptyList(), fileBarecode);
-                    print(imp, copies);
+                    printCashierReceipt(imp, isNotCash, isReedit);
+
                     k = counter;
                     diff = datas.size() - counter;
                     if (diff > counterconstante) {
@@ -690,7 +682,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     imp.buildTicket(lstDataFinal, infoSellers, infoClientAvoir, generateDataSummaryVno,
                             generateCommentaire, fileBarecode);
                 }
-                print(imp, copies);
+                printCashierReceipt(imp, isNotCash, isReedit);
 
             }
             json.put("success", true);
@@ -712,29 +704,33 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
     }
 
-    private void print(ImpressionServiceImpl imp, TPreenregistrement oTPreenregistrement,
-            List<TPreenregistrementCompteClientTiersPayent> listeVenteTiersPayants, boolean printUniqueTicket)
-            throws PrinterException {
+    private void print(ImpressionServiceImpl impressionService, TPreenregistrement oTPreenregistrement,
+            List<TPreenregistrementCompteClientTiersPayent> listeVenteTiersPayants, boolean printUniqueTicket,
+            MvtTransaction mvtTransaction, boolean isReedit) throws PrinterException {
         if (oTPreenregistrement.getIntPRICE() < 0) {
-            imp.printTicketVente(1);
+            impressionService.printTicketVente(1);
         } else {
             if (!printUniqueTicket) {
                 for (TPreenregistrementCompteClientTiersPayent b : listeVenteTiersPayants) {
-                    imp.printTicketVente(1);
+                    impressionService.printTicketVente(1);
                 }
             }
-            int copies = nbreDeCopiesOranges(oTPreenregistrement, 1);
-            for (int i = 0; i < copies; i++) {
-                imp.printTicketVente(1);
-
+            if (Objects.nonNull(mvtTransaction)) {
+                boolean isNotCash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
+                        .equals(Constant.TYPE_REGLEMENT_ESPECE);
+                printCashierReceipt(impressionService, isNotCash, isReedit);
+            } else {
+                int copies = nbreDeCopiesOranges(oTPreenregistrement, 1);
+                for (int i = 0; i < copies; i++) {
+                    impressionService.printTicketVente(1);
+                }
             }
-
         }
     }
 
-    private void printCashierReceipt(ImpressionServiceImpl impressionService, boolean isNotCash)
+    private void printCashierReceipt(ImpressionServiceImpl impressionService, boolean isNotCash, boolean isReedit)
             throws PrinterException {
-        int copies = nbreDeCopiesOranges(isNotCash, 1);
+        int copies = isReedit ? 1 : nbreDeCopiesOranges(isNotCash, 1);
         for (int i = 0; i < copies; i++) {
             impressionService.printTicketVente(1);
 
@@ -744,11 +740,16 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     @Override
     public JSONObject lunchPrinterForTicketVo(ClotureVenteParams clotureVenteParams) throws JSONException {
         JSONObject json = new JSONObject();
-        int counter = 40, k = 0, page, pageCurrent = 0, diff, counterConstante = 40;
+        int counter = 40;
+        int k = 0;
+        int page;
+        int pageCurrent = 0;
+        int diff;
+        int counterConstante = 40;
         String title;
         List<String> lstDataFinal = new ArrayList<>();
         List<String> infotiersPayants;
-
+        boolean isReedit = false;
         try {
             TPreenregistrement oTPreenregistrement = getEntityManager().find(TPreenregistrement.class,
                     clotureVenteParams.getVenteId());
@@ -786,8 +787,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> commentaires = generateCommentaire(oTPreenregistrement, mvtTransaction);
             if (datas.size() <= counter) {
                 imp.buildTicket(datas, infoSellers, infotiersPayants, generateDataSummarys, commentaires, fileBarecode);
-
-                print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket);
+                print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket, mvtTransaction,isReedit);
 
             } else {
                 page = datas.size() / counter;
@@ -797,8 +797,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infotiersPayants, Collections.emptyList(),
                             Collections.emptyList(), fileBarecode);
-                    print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket);
-
+                    print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket, mvtTransaction,isReedit);
                     k = counter;
                     diff = datas.size() - counter;
                     if (diff > counterConstante) {
@@ -817,7 +816,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     imp.buildTicket(lstDataFinal, infoSellers, infotiersPayants, generateDataSummarys, commentaires,
                             fileBarecode);
                 }
-                print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket);
+                print(imp, oTPreenregistrement, listeVenteTiersPayants, printUniqueTicket, mvtTransaction,isReedit);
 
             }
             json.put("success", true);
@@ -841,7 +840,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             }
             String lgTyvente = oPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID();
 
-            if (lgTyvente.equals(Parameter.VENTE_ASSURANCE) || lgTyvente.equals(Parameter.VENTE_AVEC_CARNET)) {
+            if (lgTyvente.equals(Constant.VENTE_ASSURANCE_ID) || lgTyvente.equals(Constant.VENTE_AVEC_CARNET)) {
                 datas.add("Vente à terme: ;    " + DateConverter.amountFormat(clotureVenteParams.getPartTP())
                         + "; F CFA;1");
             } else {
@@ -878,12 +877,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
                 datas.add(
                         "Montant Versé: ;     "
-                                + DateConverter.amountFormat(
-                                        Maths.arrondiModuloOfNumber(clotureVenteParams.getMontantRecu(), 5))
-                                + "; F CFA;0");
+                        + DateConverter.amountFormat(
+                                Maths.arrondiModuloOfNumber(clotureVenteParams.getMontantRecu(), 5))
+                        + "; F CFA;0");
                 final Integer change = clotureVenteParams.getMontantRecu()
                         - (DateConverter.arrondiModuloOfNumber(oPreenregistrement.getIntCUSTPART(), 5)
-                                - oPreenregistrement.getIntPRICEREMISE());
+                        - oPreenregistrement.getIntPRICEREMISE());
                 datas.add("Monnaie: ;     " + DateConverter.amountFormat((change >= 0 ? change : 0)) + "; F CFA;0");
 
             }
@@ -906,7 +905,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             }
             String lgTyvente = oPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID();
 
-            if (lgTyvente.equals(Parameter.VENTE_ASSURANCE) || lgTyvente.equals(Parameter.VENTE_AVEC_CARNET)) {
+            if (lgTyvente.equals(Constant.VENTE_ASSURANCE_ID) || lgTyvente.equals(Constant.VENTE_AVEC_CARNET)) {
 
                 datas.add("Vente à terme: ;    " + DateConverter.amountFormat(clotureVenteParams.getMontantCredit())
                         + "; F CFA;1");
@@ -988,7 +987,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             imp.setEmplacement(emplacement);
             imp.setOfficine(officine);
             imp.setService(printService);
-            imp.setTypeTicket(DateConverter.TICKET_REGLEMENT);
+            imp.setTypeTicket(Constant.TICKET_REGLEMENT);
             imp.setShowCodeBar(true);
             imp.setOperation(dossierReglement.getDtCREATED());
             imp.setIntBegin(0);
@@ -1160,56 +1159,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
 
-        }
-
-    }
-
-    Comparator<TicketDTO> comparator = Comparator.comparing(TicketDTO::getMontantVente);
-
-    @Override
-    public JSONObject generateticket10(String venteId) {
-        JSONObject json = new JSONObject();
-
-        try {
-            TPreenregistrement oPreenregistrement = getEntityManager().find(TPreenregistrement.class, venteId);
-            TicketDTO o = salesStatsService.getVenteById(oPreenregistrement.getLgPARENTID());
-            List<TicketDTO> dTOs = new ArrayList<>();
-            dTOs.add(o);
-            List<TicketDTO> os = venteLiees(oPreenregistrement.getLgPARENTID()).stream()
-                    .map(x -> salesStatsService.getVenteById(x)).sorted(comparator).collect(Collectors.toList());
-            dTOs.addAll(os);
-            printTicketModificationVenteVo(dTOs);
-            return json.put("success", true);
-        } catch (Exception e) {
-
-            LOG.log(Level.SEVERE, null, e);
-            return json.put("success", false).put("msg", "Impression n'a pas aboutie");
-        }
-
-    }
-
-    @Override
-    public void printReceintWithJasper(String venteId) {
-
-        generateticket10(venteId);
-    }
-
-    private void printTicketModificationVenteVo(List<TicketDTO> os) {
-        try {
-            TicketDTO o = os.get(os.size() - 1);
-            String file = "ticketsubreport.jasper";
-            if (o.getLgTYPEVENTEID().equals(DateConverter.VENTE_CARNET_ID) || o.getMontantClient() == 0) {
-                file = "ticketsubreportcarnet.jasper";
-            }
-            Map<String, Object> parameters = reportUtil.ticketParamsCommons(findOfficine());
-            parameters.put("sub_reportUrl", jdom.scr_report_file + file);
-            parameters.put("matricule", o.getMatricule());
-            parameters.put("clientFullName", o.getClientFullName());
-            parameters = reportUtil.setSignature(parameters, "Logiciel DICI");
-            parameters = reportUtil.barecodeDataParams(parameters, o.getStrREFTICKET());
-            reportUtil.printTicket(parameters, "ticket_copyventevo", jdom.scr_report_file, findPrintService(), os);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
         }
 
     }
@@ -1787,38 +1736,38 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             String typeReglement = b.getTypeReglement().getLgTYPEREGLEMENTID();
             int montant = b.getMontant();
             switch (typeReglement) {
-            case DateConverter.MODE_ESP:
-                ticket.setTotalEsp(ticket.getTotalEsp() + montant);
-                break;
-            case DateConverter.MODE_VIREMENT:
-                ticket.setTotalVirement(montant + ticket.getTotalVirement());
+                case DateConverter.MODE_ESP:
+                    ticket.setTotalEsp(ticket.getTotalEsp() + montant);
+                    break;
+                case DateConverter.MODE_VIREMENT:
+                    ticket.setTotalVirement(montant + ticket.getTotalVirement());
 
-                break;
-            case DateConverter.MODE_CHEQUE:
-                ticket.setTotalCheque(montant + ticket.getTotalCheque());
+                    break;
+                case DateConverter.MODE_CHEQUE:
+                    ticket.setTotalCheque(montant + ticket.getTotalCheque());
 
-                break;
-            case DateConverter.MODE_CB:
-                ticket.setTotalCB(montant + ticket.getTotalCB());
+                    break;
+                case DateConverter.MODE_CB:
+                    ticket.setTotalCB(montant + ticket.getTotalCB());
 
-                break;
-            case DateConverter.MODE_MOOV:
-                ticket.setMontantMoov(montant + ticket.getMontantMoov());
-                break;
-            case DateConverter.MODE_MTN:
-                ticket.setMontantMtn(montant + ticket.getMontantMtn());
-                break;
-            case DateConverter.TYPE_REGLEMENT_ORANGE:
-                ticket.setMontantOrange(montant + ticket.getMontantOrange());
-                break;
-            case DateConverter.MODE_WAVE:
-                ticket.setMontantWave(montant + ticket.getMontantWave());
-                break;
-            case DateConverter.MODE_REGL_DIFFERE:
-                ticket.setDiffere(montant + ticket.getDiffere());
-                break;
-            default:
-                break;
+                    break;
+                case DateConverter.MODE_MOOV:
+                    ticket.setMontantMoov(montant + ticket.getMontantMoov());
+                    break;
+                case DateConverter.MODE_MTN:
+                    ticket.setMontantMtn(montant + ticket.getMontantMtn());
+                    break;
+                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    ticket.setMontantOrange(montant + ticket.getMontantOrange());
+                    break;
+                case DateConverter.MODE_WAVE:
+                    ticket.setMontantWave(montant + ticket.getMontantWave());
+                    break;
+                case DateConverter.MODE_REGL_DIFFERE:
+                    ticket.setDiffere(montant + ticket.getDiffere());
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -1830,54 +1779,54 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 ticket.setTotalCredit(ticket.getTotalCredit() + b.getMontantCredit());
             }
             switch (b.getReglement().getLgTYPEREGLEMENTID()) {
-            case DateConverter.MODE_ESP:
+                case DateConverter.MODE_ESP:
 
-                if (b.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT) {
-                    TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
-                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                    if (b.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT) {
+                        TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
+                        if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
+                            ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
+                        }
+                    }
+                    if (Objects.nonNull(b.getMontantRestant()) && b.getMontantRestant() > 0) {
                         ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
                     }
-                }
-                if (Objects.nonNull(b.getMontantRestant()) && b.getMontantRestant() > 0) {
-                    ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
-                }
-                List<VenteReglement> venteReglements = this.venteReglementService.getByVenteId(b.getPkey());
-                if (CollectionUtils.isNotEmpty(venteReglements) && venteReglements.size() > 1) {
-                    updateTicket(ticket, venteReglements);
-                } else {
-                    ticket.setTotalEsp(ticket.getTotalEsp() + b.getMontantRegle());
-                }
+                    List<VenteReglement> venteReglements = this.venteReglementService.getByVenteId(b.getPkey());
+                    if (CollectionUtils.isNotEmpty(venteReglements) && venteReglements.size() > 1) {
+                        updateTicket(ticket, venteReglements);
+                    } else {
+                        ticket.setTotalEsp(ticket.getTotalEsp() + b.getMontantRegle());
+                    }
 
-                break;
-            case DateConverter.MODE_VIREMENT:
-                ticket.setTotalVirement(b.getMontantRegle() + ticket.getTotalVirement());
+                    break;
+                case DateConverter.MODE_VIREMENT:
+                    ticket.setTotalVirement(b.getMontantRegle() + ticket.getTotalVirement());
 
-                break;
-            case DateConverter.MODE_CHEQUE:
-                ticket.setTotalCheque(b.getMontantRegle() + ticket.getTotalCheque());
+                    break;
+                case DateConverter.MODE_CHEQUE:
+                    ticket.setTotalCheque(b.getMontantRegle() + ticket.getTotalCheque());
 
-                break;
-            case DateConverter.MODE_CB:
-                ticket.setTotalCB(b.getMontantRegle() + ticket.getTotalCB());
+                    break;
+                case DateConverter.MODE_CB:
+                    ticket.setTotalCB(b.getMontantRegle() + ticket.getTotalCB());
 
-                break;
-            case DateConverter.MODE_MOOV:
-                ticket.setMontantMoov(b.getMontantRegle() + ticket.getMontantMoov());
-                break;
-            case DateConverter.MODE_MTN:
-                ticket.setMontantMtn(b.getMontantRegle() + ticket.getMontantMtn());
-                break;
-            case DateConverter.TYPE_REGLEMENT_ORANGE:
-                ticket.setMontantOrange(b.getMontantRegle() + ticket.getMontantOrange());
-                break;
-            case DateConverter.MODE_WAVE:
-                ticket.setMontantWave(b.getMontantRegle() + ticket.getMontantWave());
-                break;
-            case DateConverter.MODE_REGL_DIFFERE:
-                ticket.setDiffere(b.getMontantRestant() + ticket.getDiffere());
-                break;
-            default:
-                break;
+                    break;
+                case DateConverter.MODE_MOOV:
+                    ticket.setMontantMoov(b.getMontantRegle() + ticket.getMontantMoov());
+                    break;
+                case DateConverter.MODE_MTN:
+                    ticket.setMontantMtn(b.getMontantRegle() + ticket.getMontantMtn());
+                    break;
+                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    ticket.setMontantOrange(b.getMontantRegle() + ticket.getMontantOrange());
+                    break;
+                case DateConverter.MODE_WAVE:
+                    ticket.setMontantWave(b.getMontantRegle() + ticket.getMontantWave());
+                    break;
+                case DateConverter.MODE_REGL_DIFFERE:
+                    ticket.setDiffere(b.getMontantRestant() + ticket.getDiffere());
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -1894,75 +1843,75 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
             switch (b.getReglement().getLgTYPEREGLEMENTID()) {
 
-            case DateConverter.MODE_ESP:
+                case DateConverter.MODE_ESP:
 
-                if (mvtIsReglement(mvtCaisse)) {
-                    ticket.setTotalReglementEsp(b.getMontant() + ticket.getTotalReglementEsp());
-                } else {
-                    ticket.setTotalEntreeEsp(b.getMontant() + ticket.getTotalEntreeEsp());
+                    if (mvtIsReglement(mvtCaisse)) {
+                        ticket.setTotalReglementEsp(b.getMontant() + ticket.getTotalReglementEsp());
+                    } else {
+                        ticket.setTotalEntreeEsp(b.getMontant() + ticket.getTotalEntreeEsp());
 
-                }
+                    }
 
-                break;
-            case DateConverter.MODE_VIREMENT:
+                    break;
+                case DateConverter.MODE_VIREMENT:
 
-                if (mvtIsReglement(mvtCaisse)) {
-                    ticket.setTotalReglementVirement(b.getMontant() + ticket.getTotalReglementVirement());
-                } else {
+                    if (mvtIsReglement(mvtCaisse)) {
+                        ticket.setTotalReglementVirement(b.getMontant() + ticket.getTotalReglementVirement());
+                    } else {
 
-                    ticket.setTotalEntreeVirement(b.getMontant() + ticket.getTotalEntreeVirement());
-                }
+                        ticket.setTotalEntreeVirement(b.getMontant() + ticket.getTotalEntreeVirement());
+                    }
 
-                break;
-            case DateConverter.MODE_CHEQUE:
-                if (mvtIsReglement(mvtCaisse)) {
+                    break;
+                case DateConverter.MODE_CHEQUE:
+                    if (mvtIsReglement(mvtCaisse)) {
 
-                    ticket.setTotalReglementCheque(b.getMontant() + ticket.getTotalReglementCheque());
-                } else {
+                        ticket.setTotalReglementCheque(b.getMontant() + ticket.getTotalReglementCheque());
+                    } else {
 
-                    ticket.setTotalEntreeCheque(b.getMontant() + ticket.getTotalEntreeCheque());
-                }
+                        ticket.setTotalEntreeCheque(b.getMontant() + ticket.getTotalEntreeCheque());
+                    }
 
-                break;
-            case DateConverter.MODE_CB:
-                if (mvtIsReglement(mvtCaisse)) {
+                    break;
+                case DateConverter.MODE_CB:
+                    if (mvtIsReglement(mvtCaisse)) {
 
-                    ticket.setTotalReglementCB(b.getMontant() + ticket.getTotalReglementCB());
-                } else {
-                    ticket.setTotalEntreeCB(b.getMontant() + ticket.getTotalEntreeCB());
-                }
+                        ticket.setTotalReglementCB(b.getMontant() + ticket.getTotalReglementCB());
+                    } else {
+                        ticket.setTotalEntreeCB(b.getMontant() + ticket.getTotalEntreeCB());
+                    }
 
-                break;
-            case DateConverter.MODE_MOOV:
-                if (mvtIsReglement(mvtCaisse)) {
-                    ticket.setMontantReglementMoov(b.getMontant() + ticket.getMontantReglementMoov());
-                } else {
-                    ticket.setMontantEntreeMoov(b.getMontant() + ticket.getMontantEntreeMoov());
-                }
-                break;
-            case DateConverter.MODE_MTN:
-                if (mvtIsReglement(mvtCaisse)) {
-                    ticket.setMontantReglementMtn(b.getMontant() + ticket.getMontantReglementMtn());
-                } else {
-                    ticket.setMontantEntreeMtn(b.getMontant() + ticket.getMontantEntreeMtn());
-                }
-                break;
-            case DateConverter.TYPE_REGLEMENT_ORANGE:
-                if (mvtIsReglement(mvtCaisse)) {
-                    ticket.setMontantReglementOrange(b.getMontant() + ticket.getMontantReglementOrange());
-                } else {
-                    ticket.setMontantEntreeOrange(b.getMontant() + ticket.getMontantEntreeOrange());
-                }
-                break;
-            case DateConverter.MODE_WAVE:
-                if (mvtIsReglement(mvtCaisse)) {
-                    ticket.setMontantReglementWave(b.getMontant() + ticket.getMontantReglementWave());
-                } else {
-                    ticket.setMontantEntreeWave(b.getMontant() + ticket.getMontantEntreeWave());
-                }
-                break;
-            default:
-                break;
+                    break;
+                case DateConverter.MODE_MOOV:
+                    if (mvtIsReglement(mvtCaisse)) {
+                        ticket.setMontantReglementMoov(b.getMontant() + ticket.getMontantReglementMoov());
+                    } else {
+                        ticket.setMontantEntreeMoov(b.getMontant() + ticket.getMontantEntreeMoov());
+                    }
+                    break;
+                case DateConverter.MODE_MTN:
+                    if (mvtIsReglement(mvtCaisse)) {
+                        ticket.setMontantReglementMtn(b.getMontant() + ticket.getMontantReglementMtn());
+                    } else {
+                        ticket.setMontantEntreeMtn(b.getMontant() + ticket.getMontantEntreeMtn());
+                    }
+                    break;
+                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    if (mvtIsReglement(mvtCaisse)) {
+                        ticket.setMontantReglementOrange(b.getMontant() + ticket.getMontantReglementOrange());
+                    } else {
+                        ticket.setMontantEntreeOrange(b.getMontant() + ticket.getMontantEntreeOrange());
+                    }
+                    break;
+                case DateConverter.MODE_WAVE:
+                    if (mvtIsReglement(mvtCaisse)) {
+                        ticket.setMontantReglementWave(b.getMontant() + ticket.getMontantReglementWave());
+                    } else {
+                        ticket.setMontantEntreeWave(b.getMontant() + ticket.getMontantEntreeWave());
+                    }
+                    break;
+                default:
+                    break;
 
             }
         }
@@ -1973,37 +1922,37 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
         for (MvtTransaction b : list) {
             switch (b.getReglement().getLgTYPEREGLEMENTID()) {
-            case DateConverter.MODE_ESP:
-                ticket.setTotalSortieEsp(ticket.getTotalSortieEsp() + b.getMontant());
-                break;
-            case DateConverter.MODE_VIREMENT:
-                ticket.setTotalVirement(ticket.getTotalVirement() + b.getMontant());
-                ticket.setTotalSortieVirement(ticket.getTotalSortieVirement() + b.getMontant());
+                case DateConverter.MODE_ESP:
+                    ticket.setTotalSortieEsp(ticket.getTotalSortieEsp() + b.getMontant());
+                    break;
+                case DateConverter.MODE_VIREMENT:
+                    ticket.setTotalVirement(ticket.getTotalVirement() + b.getMontant());
+                    ticket.setTotalSortieVirement(ticket.getTotalSortieVirement() + b.getMontant());
 
-                break;
-            case DateConverter.MODE_CHEQUE:
+                    break;
+                case DateConverter.MODE_CHEQUE:
 
-                ticket.setTotalSortieCheque(ticket.getTotalSortieCheque() + b.getMontant());
+                    ticket.setTotalSortieCheque(ticket.getTotalSortieCheque() + b.getMontant());
 
-                break;
-            case DateConverter.MODE_CB:
+                    break;
+                case DateConverter.MODE_CB:
 
-                ticket.setTotalSortieCB(ticket.getTotalSortieCB() + b.getMontant());
-                break;
-            case DateConverter.MODE_MOOV:
-                ticket.setMontantSortieMoov(b.getMontant() + ticket.getMontantSortieMoov());
-                break;
-            case DateConverter.MODE_MTN:
-                ticket.setMontantSortieMtn(b.getMontant() + ticket.getMontantSortieMtn());
-                break;
-            case DateConverter.TYPE_REGLEMENT_ORANGE:
-                ticket.setMontantSortieOrange(b.getMontant() + ticket.getMontantSortieOrange());
-                break;
-            case DateConverter.MODE_WAVE:
-                ticket.setMontantSortieWave(b.getMontant() + ticket.getMontantSortieWave());
-                break;
-            default:
-                break;
+                    ticket.setTotalSortieCB(ticket.getTotalSortieCB() + b.getMontant());
+                    break;
+                case DateConverter.MODE_MOOV:
+                    ticket.setMontantSortieMoov(b.getMontant() + ticket.getMontantSortieMoov());
+                    break;
+                case DateConverter.MODE_MTN:
+                    ticket.setMontantSortieMtn(b.getMontant() + ticket.getMontantSortieMtn());
+                    break;
+                case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    ticket.setMontantSortieOrange(b.getMontant() + ticket.getMontantSortieOrange());
+                    break;
+                case DateConverter.MODE_WAVE:
+                    ticket.setMontantSortieWave(b.getMontant() + ticket.getMontantSortieWave());
+                    break;
+                default:
+                    break;
             }
         }
 

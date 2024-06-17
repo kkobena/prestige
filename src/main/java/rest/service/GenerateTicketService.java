@@ -56,10 +56,6 @@ public interface GenerateTicketService {
 
     JSONObject ticketZ(Params params) throws JSONException;
 
-    JSONObject generateticket10(String venteId);
-
-    void printReceintWithJasper(String venteId);
-
     JSONObject ticketReglementCarnet(String idDossier) throws JSONException;
 
     void printMvtCaisse(String mvtCaisseId, TUser user);
