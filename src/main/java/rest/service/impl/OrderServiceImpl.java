@@ -1362,4 +1362,32 @@ public class OrderServiceImpl implements OrderService {
             }
         }
     }
+
+    @Override
+    public void changeGrossiste(String idCommande, String grossisteId) {
+        try {
+            TOrder order = em.find(TOrder.class, idCommande);
+            TGrossiste grossiste = em.find(TGrossiste.class, grossisteId);
+            order.setLgGROSSISTEID(grossiste);
+            updateOrderItemGrossiste(grossiste, order);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+
+        }
+
+    }
+
+    // Les details ne devraient pas avoir de relation avec le grossiste, juste pour faire ISO avec l'existant
+    private void updateOrderItemGrossiste(TGrossiste grossiste, TOrder order) {
+        try {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaUpdate<TOrderDetail> cq = cb.createCriteriaUpdate(TOrderDetail.class);
+            Root<TOrderDetail> root = cq.from(TOrderDetail.class);
+            cq.set(root.get(TOrderDetail_.lgGROSSISTEID), grossiste);
+            cq.where(cb.equal(root.get(TOrderDetail_.lgORDERID), order));
+            em.createQuery(cq).executeUpdate();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+    }
 }

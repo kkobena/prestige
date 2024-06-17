@@ -813,27 +813,28 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     },
     onchangeGrossiste: function () {
         testextjs.app.getController('App').ShowWaitingProcess();
+      
         Ext.Ajax.request({
-            url: '../webservices/commandemanagement/order/ws_transaction.jsp?mode=changeGrossiste',
+            url: '../api/v1/commande/change-grossiste',
+            method: 'GET',
+            timeout: 2400000,
             params: {
-                lg_ORDER_ID: Me_Window.getNameintern(),
-                lg_GROSSISTE_ID: Ext.getCmp('lgGROSSISTEID').getValue()
+                orderId: Me_Window.getNameintern(),
+                grossisteId: Ext.getCmp('lgGROSSISTEID').getValue()
             },
             success: function (response) {
                 testextjs.app.getController('App').StopWaitingProcess();
-                let object = Ext.JSON.decode(response.responseText, false);
-                if (object.success === "0") {
-                    Ext.MessageBox.alert('Error Message', object.errors);
-                    return;
-                }
+
                 Ext.getCmp('str_NAME').focus(true, 100, function () {
                     Ext.getCmp('str_NAME').selectText(0, 1);
                 });
+
             },
             failure: function (response) {
-                testextjs.app.getController('App').StopWaitingProcess();
+
                 console.log("Bug " + response.responseText);
                 Ext.MessageBox.alert('Error Message', response.responseText);
+                testextjs.app.getController('App').StopWaitingProcess();
             }
         });
     },
