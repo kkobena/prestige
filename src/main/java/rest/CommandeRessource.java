@@ -320,4 +320,17 @@ public class CommandeRessource {
         this.orderService.mergeOrder(commandeIds);
         return Response.ok().build();
     }
+
+    @GET
+    @Path("change-grossiste")
+    public Response changeGrossiste(@QueryParam(value = "orderId") String orderId,
+            @QueryParam(value = "grossisteId") String grossisteId) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        this.orderService.changeGrossiste(orderId, grossisteId);
+        return Response.ok().build();
+    }
 }

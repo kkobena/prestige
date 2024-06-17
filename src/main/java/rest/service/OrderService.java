@@ -109,4 +109,6 @@ public interface OrderService {
     void removeOrder(String orderId);
 
     void mergeOrder(CommandeIdsDTO commandeIds);
+
+    void changeGrossiste(String idCommande, String grossisteId);
 }
