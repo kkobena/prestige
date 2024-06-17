@@ -36,80 +36,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
-    private int computeEncour(TCompteClientTiersPayant tc, int amountToCompute) {
-        var encoursClient = tc.getDbPLAFONDENCOURS() != null && tc.getDbPLAFONDENCOURS() > 0 ? tc.getDbPLAFONDENCOURS()
-                : 0;
-        if (encoursClient == 0) {
-            return amountToCompute;
-        }
-        var consoMensuelleClient = tc.getDbCONSOMMATIONMENSUELLE() != null && tc.getDbCONSOMMATIONMENSUELLE() > 0
-                ? tc.getDbCONSOMMATIONMENSUELLE() : 0;
-        var conso = consoMensuelleClient + amountToCompute;
-        if (conso <= encoursClient) {
-            return amountToCompute;
-        }
-        return encoursClient - consoMensuelleClient;
-
-    }
-
-    private int computeEncourTiersPayant(TTiersPayant tc, int amountToCompute) {
-
-        var plafondTierPayant = (tc.getDblPLAFONDCREDIT() == null || tc.getDblPLAFONDCREDIT() <= 0 ? 0
-                : tc.getDblPLAFONDCREDIT().intValue());
-        if (plafondTierPayant == 0) {
-            return amountToCompute;
-        }
-        var consoMensuelleTierPayant = tc.getDbCONSOMMATIONMENSUELLE() == null || tc.getDbCONSOMMATIONMENSUELLE() < 0
-                ? 0 : tc.getDbCONSOMMATIONMENSUELLE();
-        var conso = consoMensuelleTierPayant + amountToCompute;
-        if (conso <= plafondTierPayant) {
-            return amountToCompute;
-        }
-        return plafondTierPayant - consoMensuelleTierPayant;
-
-    }
-
-    private NetComputingDTO computeTiesrPayantNet(TiersPayantParams tierspayant, int amountToCompute,
-            boolean asRestrictions) {
-
-        int plafondVente = 0;
-        long plafondGlobal = 0;
-
-        int reelAmount = amountToCompute;
-        String message = null;
-
-        TTiersPayant payant = null;
-        if (asRestrictions) {
-            TCompteClientTiersPayant tc = em.find(TCompteClientTiersPayant.class, tierspayant.getCompteTp());
-            payant = tc.getLgTIERSPAYANTID();
-            plafondVente = (tc.getDblPLAFOND() == null || tc.getDblPLAFOND() <= 0 ? 0 : tc.getDblPLAFOND().intValue());
-            if (plafondVente > 0 && plafondVente < amountToCompute) {
-                amountToCompute = plafondVente;
-
-            }
-            amountToCompute = computeEncour(tc, amountToCompute);
-            amountToCompute = computeEncourTiersPayant(payant, amountToCompute);
-        }
-        float taux = Float.valueOf(tierspayant.getTaux()) / 100;
-        double montantTp = amountToCompute * taux;
-        int montantTiersPayant = (int) Math.ceil(montantTp);
-        if (Objects.nonNull(payant) && reelAmount != amountToCompute) {
-            message = "Le plafond du tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'> "
-                    + payant.getStrFULLNAME() + "</span>? car son plafond est atteint <br>";
-        }
-
-        NetComputingDTO netComputing = new NetComputingDTO();
-        netComputing.setIdCompteClientTiersPayant(tierspayant.getCompteTp());
-        netComputing.setPlafondVente(plafondVente);
-        netComputing.setMontantTiersPayant(montantTiersPayant);
-        netComputing.setPlafondGlobal(plafondGlobal);
-        netComputing.setMessage(message);
-
-        netComputing.setNumBon(tierspayant.getNumBon());
-        return netComputing;
-
-    }
-
     private MontantAPaye calculAssuranceNet(SalesParams params, boolean asPlafondActivated) {
         MontantAPaye montantAPaye = new MontantAPaye();
         List<TPreenregistrementDetail> items = getItems(params.getVenteId());
@@ -135,7 +61,8 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             boolean isCmu = tiersPayantParams.isCmu() && (cmuAmount != montantVente);
             int amountToCompute = isCmu ? cmuAmount : montantVente;
 
-            NetComputingDTO netComputed = computeTiesrPayantNet(tiersPayantParams, amountToCompute, asPlafondActivated);
+            NetComputingDTO netComputed = computeTiesrPayantNetAmount(tiersPayantParams, amountToCompute,
+                    asPlafondActivated);
 
             montantTotalTp += netComputed.getMontantTiersPayant();
 
@@ -175,8 +102,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         em.merge(op);
 
         montantAPaye.setCmuAmount(cmuAmount);
-
-        // montantAPaye.setRemise(NumberUtils.arrondiModuloOfNumber(op.getIntPRICEREMISE(), 5));
         montantAPaye.setRemise(op.getIntPRICEREMISE());
         montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
         montantAPaye.setMontant(op.getIntPRICE());
@@ -347,5 +272,67 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
         return calculAssuranceNet(params, asPlafondActivated);
 
+    }
+
+    private NetComputingDTO computeTiesrPayantNetAmount(TiersPayantParams tierspayant, int amountToCompute,
+            boolean asRestrictions) {
+
+        int plafondTiersPayantParVente = 0;
+        long plafondGlobal = 0;
+        String message = null;
+        TTiersPayant payant = null;
+        float taux = Float.valueOf(tierspayant.getTaux()) / 100;
+        double montantTp = amountToCompute * taux;
+        int montantTiersPayant = (int) Math.ceil(montantTp);
+        int montantTiersPayantCopie = montantTiersPayant;
+        if (asRestrictions) {
+            TCompteClientTiersPayant tc = em.find(TCompteClientTiersPayant.class, tierspayant.getCompteTp());
+            payant = tc.getLgTIERSPAYANTID();
+
+            plafondTiersPayantParVente = getPlafondTiersPayantParVente(tc);
+
+            montantTiersPayant = computeCustomerOutstanding(tc, montantTiersPayant);
+            if (montantTiersPayant > plafondTiersPayantParVente) {
+                montantTiersPayant = plafondTiersPayantParVente;
+
+            }
+
+        }
+
+        if (Objects.nonNull(payant) && montantTiersPayant != montantTiersPayantCopie) {
+            message = "Le plafond du tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'> "
+                    + payant.getStrFULLNAME() + "</span>? car son plafond est atteint <br>";
+        }
+
+        NetComputingDTO netComputing = new NetComputingDTO();
+        netComputing.setIdCompteClientTiersPayant(tierspayant.getCompteTp());
+        netComputing.setPlafondVente(plafondTiersPayantParVente);
+        netComputing.setMontantTiersPayant(montantTiersPayant);
+        netComputing.setPlafondGlobal(plafondGlobal);
+        netComputing.setMessage(message);
+
+        netComputing.setNumBon(tierspayant.getNumBon());
+        return netComputing;
+
+    }
+
+    private int computeCustomerOutstanding(TCompteClientTiersPayant tc, int partTiersPayant) {
+        var encoursClient = tc.getDbPLAFONDENCOURS() != null && tc.getDbPLAFONDENCOURS() > 0 ? tc.getDbPLAFONDENCOURS()
+                : 0;
+        if (encoursClient == 0) {
+            return partTiersPayant;
+        }
+        var consoMensuelleClient = tc.getDbCONSOMMATIONMENSUELLE() != null && tc.getDbCONSOMMATIONMENSUELLE() > 0
+                ? tc.getDbCONSOMMATIONMENSUELLE() : 0;
+        var conso = consoMensuelleClient + partTiersPayant;
+        if (conso <= encoursClient) {
+            return partTiersPayant;
+        }
+        return encoursClient - consoMensuelleClient;
+
+    }
+
+    private int getPlafondTiersPayantParVente(TCompteClientTiersPayant tc) {
+        return (tc.getDblPLAFOND() == null || tc.getDblPLAFOND() <= 0 ? 0 : tc.getDblPLAFOND().intValue());
     }
 }
