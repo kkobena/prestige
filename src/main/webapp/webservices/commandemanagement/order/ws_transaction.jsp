@@ -272,25 +272,6 @@
             ObonLivraisonManagement.MakeOrderToBonLivraison(lg_ORDER_ID, str_REF_LIVRAISON, dt_DATE_LIVRAISON, int_MHT, int_TVA);
             ObllBase.setMessage(ObonLivraisonManagement.getMessage());
             ObllBase.setDetailmessage(ObonLivraisonManagement.getDetailmessage());
-        } else if (request.getParameter("mode").equals("changeGrossiste")) {
-            ID_SUGG_ORDER = lg_ORDER_ID;
-            OorderManagement.ChangeGrossisteOrder(SUGG_ORDER, ID_SUGG_ORDER, lg_GROSSISTE_ID);
-            ObllBase.setMessage(OorderManagement.getMessage());
-            OorderManagement.setDetailmessage(OorderManagement.getDetailmessage());
-            new logger().OCategory.info("Grossiste change ");
-
-        } else if (request.getParameter("mode").equals("mergeOrder")) {
-            JSONArray checkedList = new JSONArray();
-            if (request.getParameter("checkedList") != null && !"".equals(request.getParameter("checkedList"))) {
-                checkedList = new JSONArray(request.getParameter("checkedList"));
-
-            }
-            ID_SUGG_ORDER = lg_ORDER_ID;
-            OorderManagement.mergeOrder(checkedList);
-            ObllBase.setMessage(OorderManagement.getMessage());
-            OorderManagement.setDetailmessage(OorderManagement.getDetailmessage());
-            new logger().OCategory.info("Grossiste change ");
-
         } else if (request.getParameter("mode").equals("rupture")) {
             OTOrderDetail = OdataManager.getEm().find(dal.TOrderDetail.class, lg_ORDERDETAIL_ID);
             OorderManagement.addToruptureProduct(OTOrderDetail);
