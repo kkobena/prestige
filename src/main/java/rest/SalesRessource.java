@@ -86,20 +86,6 @@ public class SalesRessource {
     }
 
     @POST
-    @Path("copy/{id}")
-    public Response getTicketCoy(@PathParam("id") String id) throws JSONException {
-
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-
-        JSONObject json = generateTicketService.generateticket10(id);
-        return Response.ok().entity(json.toString()).build();
-    }
-
-    @POST
     @Path("ticket/vo")
     public Response getTicketVo(ClotureVenteParams clotureVenteParams) throws JSONException {
 
