@@ -147,6 +147,9 @@ public final class Constant {
     public static final String ADD = "ADD";
     public static final String REMOVE = "REMOVE";
     public static final String ACTION_DECONDITIONNEMENT = "DECONDITIONNEMENT";
+    public static final String KEY_NATURE_VENTE_DEPOT = "3";
+    public static final String TICKET_REGLEMENT = "TICKET_REGLEMENT";
+    public static final String TICKET_REGLEMENT_CARNET_DEPOT = "TICKET_REGLEMENT_CARNET_DEPOT";
 
     private Constant() {
     }
