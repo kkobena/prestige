@@ -8,7 +8,7 @@ var url_services_pdf_liste_suggerercde = '../webservices/sm_user/suggerercde/ws_
 
 var Me_Window;
 var Omode;
-var ref;
+var orderIdRef;
 var famille_id_search;
 var in_total_vente;
 var int_total_formated;
@@ -68,7 +68,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         LaborexWorkFlow = Ext.create('testextjs.controller.LaborexWorkFlow', {});
 
         const AppController = testextjs.app.getController('App');
-        ref = this.getNameintern();
+        orderIdRef = this.getNameintern();
         const store = Ext.create('testextjs.store.SearchStore');
         const storerepartiteur = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
@@ -563,11 +563,11 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     beforechange: function (page, currentPage) {
                                         const myProxy = this.store.getProxy();
                                         myProxy.params = {
-                                            query: '', orderId: ref
+                                            query: '', orderId: orderIdRef
                                         };
 
                                         myProxy.setExtraParam('query', Ext.getCmp('rechercherDetail').getValue());
-                                        myProxy.setExtraParam('orderId', ref);
+                                        myProxy.setExtraParam('orderId', orderIdRef);
                                     }
 
                                 }
@@ -622,7 +622,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
             OgridpanelSuggestionID.getStore().load({
                 params: {
-                    orderId: ref,
+                    orderId: orderIdRef,
                     query: null
                 }
             });
@@ -706,7 +706,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 'Confirmation de l\'impression de cette suggestion',
                 function (btn) {
                     if (btn == 'yes') {
-                        Me_Window.onPdfClick(ref);
+                        Me_Window.onPdfClick(orderIdRef);
 
                     }
                 });
@@ -735,11 +735,11 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
     },
     onbtnadd: function () {
-        var internal_url = "";
-        if (ref === "") {
-            ref = null;
-        } else if (ref === undefined) {
-            ref = null;
+        let internal_url = "";
+        if (orderIdRef === "") {
+            orderIdRef = null;
+        } else if (orderIdRef === undefined) {
+            orderIdRef = null;
         }
 
         if (Ext.getCmp('lg_GROSSISTE_ID').getValue() === null) {
@@ -754,7 +754,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 url: url_services_transaction_suggerercde + 'create',
                 params: {
                     lg_FAMILLE_ID: Ext.getCmp('lg_FAMILLE_ID_VENTE').getValue(),
-                    lg_SUGGESTION_ORDER_ID: ref,
+                    lg_SUGGESTION_ORDER_ID: orderIdRef,
                     lg_SUGGESTION_ORDER_DETAILS_ID: null,
                     lg_GROSSISTE_ID: Ext.getCmp('lg_GROSSISTE_ID').getValue(),
                     int_NUMBER: Ext.getCmp('int_QUANTITE').getValue()
@@ -769,7 +769,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                         Ext.MessageBox.alert('Error Message', object.errors);
 
                     } else {
-                        ref = object.ref;
+                        orderIdRef = object.ref;
                         Me_Window.setTitleFrame(object.ref);
                         const OGrid = Ext.getCmp('gridpanelSuggestionID');
                         OGrid.getStore().reload();
@@ -865,7 +865,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             method: 'GET',
             timeout: 2400000,
             params: {
-                suggestionId: ref,
+                suggestionId: orderIdRef,
                 grossisteId: lg_GROSSISTE_ID
             },
             success: function (response) {
@@ -876,7 +876,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     Ext.MessageBox.confirm('Message', 'Une suggestion existe déjà pour ce grossiste. Voulez-vous les fusionner',
                             function (btn) {
                                 if (btn == 'yes') {
-                                    Me_Window.doFusion(ref, lg_GROSSISTE_ID);
+                                    Me_Window.doFusion(orderIdRef, lg_GROSSISTE_ID);
                                 }
                             });
 
@@ -1058,7 +1058,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         Ext.getCmp('gridpanelSuggestionID').getStore().load({
             params: {
 
-                orderId: ref,
+                orderId: orderIdRef,
                 query: val.getValue()
             }
         });
