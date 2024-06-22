@@ -85,7 +85,7 @@ import util.SmsParameters;
 @Startup
 @TransactionManagement(value = TransactionManagementType.BEAN)
 public class DatabaseToolkit {
-    
+
     private static final Logger LOG = Logger.getLogger(DatabaseToolkit.class.getName());
     @Resource(mappedName = "jdbc/__laborex_pool")
     private DataSource dataSource;
@@ -99,7 +99,7 @@ public class DatabaseToolkit {
     private UserTransaction userTransaction;
     @EJB
     private NotificationService notificationService;
-    
+
     @PostConstruct
     public void init() {
         if (dataSource == null) {
@@ -114,12 +114,12 @@ public class DatabaseToolkit {
         } catch (FlywayException e) {
             LOG.log(Level.SEVERE, "ini migration", e);
         }
-        
+
         createTimer();
         mes.submit(this::updateStockDailyValue);
-        
+
     }
-    
+
     public void manageSms() {
         if (checkParameterByKey(Constant.KEY_SMS_CLOTURE_CAISSE)) {
             List<Notification> notifications = findAllByCanal();
@@ -129,27 +129,27 @@ public class DatabaseToolkit {
                 } catch (Exception e) {
                     LOG.log(Level.SEVERE, "", e);
                 }
-                
+
             }
-            
+
         }
-        
+
     }
-    
+
     public void createTimer() {
-        
+
         final TimerConfig email = new TimerConfig("email", false);
         // timerService.createCalendarTimer(new ScheduleExpression().minute("*/5").hour("*").dayOfMonth("*").year("*"),
         // email);
 
         timerService.createCalendarTimer(new ScheduleExpression().hour(findScheduledValues()).dayOfMonth("*").year("*"),
                 email);
-        
+
         final TimerConfig sms = new TimerConfig("sms", false);
         timerService.createCalendarTimer(new ScheduleExpression().minute("*/2").hour("*").dayOfMonth("*").year("*"),
                 sms);
     }
-    
+
     public void manageEmail() {
         List<Notification> data = findByStatut(Statut.NOT_SEND).stream()
                 .filter(e -> e.getNotificationClients().isEmpty()).collect(Collectors.toList());
@@ -169,7 +169,7 @@ public class DatabaseToolkit {
             }
         }
     }
-    
+
     public void sendSMS(Notification notification) {
         Client client = ClientBuilder.newClient();
         SmsParameters sp = SmsParameters.getInstance();
@@ -193,10 +193,10 @@ public class DatabaseToolkit {
         Response response = myResource.request().header("Authorization", "Bearer ".concat(getAccessToken()))
                 .post(Entity.entity(jSONObject.toString(), MediaType.APPLICATION_JSON_TYPE));
         LOG.log(Level.INFO, "sendSMS >>> {0} {1} {2}",
-                new Object[]{response.getStatus(), response.readEntity(String.class), address});
+                new Object[] { response.getStatus(), response.readEntity(String.class), address });
         if (response.getStatus() == 201) {
             notification.setStatut(Statut.SENT);
-            
+
         } else {
             notification.setNumberAttempt(notification.getNumberAttempt() + 1);
             if (notification.getNumberAttempt() >= 3) {
@@ -204,7 +204,7 @@ public class DatabaseToolkit {
                 notification.setStatut(Statut.LOCK);
             }
         }
-        
+
         LOG.log(Level.INFO, null, notification.getStatut());
         try {
             userTransaction.begin();
@@ -214,9 +214,9 @@ public class DatabaseToolkit {
                 | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        
+
     }
-    
+
     public List<Notification> findByCreatedAtAndStatut() {
         try {
             TypedQuery<Notification> q = em.createNamedQuery("Notification.findAllByCreatedAtAndStatus",
@@ -230,7 +230,7 @@ public class DatabaseToolkit {
             return Collections.emptyList();
         }
     }
-    
+
     public List<Notification> findByStatut(Statut statut) {
         try {
             TypedQuery<Notification> q = em.createNamedQuery("Notification.findAllByStatus", Notification.class);
@@ -241,7 +241,7 @@ public class DatabaseToolkit {
             return Collections.emptyList();
         }
     }
-    
+
     public List<Notification> findAllByCanal() {
         try {
             TypedQuery<Notification> q = em.createNamedQuery("Notification.findAllByCreatedAtAndStatusAndCanal",
@@ -256,7 +256,7 @@ public class DatabaseToolkit {
             return Collections.emptyList();
         }
     }
-    
+
     public boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = em.find(TParameters.class, key);
@@ -265,7 +265,7 @@ public class DatabaseToolkit {
             return false;
         }
     }
-    
+
     public String findScheduledValues() {
         try {
             TParameters parameters = em.find(TParameters.class, Constant.KEY_HEURE_EMAIL);
@@ -274,22 +274,22 @@ public class DatabaseToolkit {
             return "12,20";
         }
     }
-    
+
     @Timeout
     public void timeout(Timer timer) {
-        
+
         if ("sms".equals(timer.getInfo())) {
-            
+
             manageSms();
-            
+
         } else if ("email".equals(timer.getInfo())) {
-            
+
             notificationService.sendMail();
             // manageEmail();
 
         }
     }
-    
+
     public List<NotificationClient> findNotificationClients(Notification n) {
         try {
             TypedQuery<NotificationClient> q = em.createNamedQuery("NotificationClient.findByNotificationId",
@@ -301,7 +301,7 @@ public class DatabaseToolkit {
             return Collections.emptyList();
         }
     }
-    
+
     public boolean sendMail(String content, String email, String subject) {
         if (StringUtils.isEmpty(content)) {
             return false;
@@ -339,7 +339,7 @@ public class DatabaseToolkit {
             return false;
         }
     }
-    
+
     public String buildEmailContent(List<Notification> notifications) {
         if (notifications.isEmpty()) {
             return null;
@@ -358,7 +358,7 @@ public class DatabaseToolkit {
         sb.append("</body></html>");
         return sb.toString();
     }
-    
+
     void updateStockDailyValue() {
         try {
             LocalDate now = LocalDate.now();
@@ -380,13 +380,13 @@ public class DatabaseToolkit {
                 }
             }
             userTransaction.commit();
-            
+
         } catch (IllegalStateException | NumberFormatException | SecurityException | HeuristicMixedException
                 | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
             LOG.log(Level.SEVERE, null, e);
         }
     }
-    
+
     boolean checkIsAlreadyUpdated(int day) {
         try {
             StockDailyValue sdv = em.find(StockDailyValue.class, day);
@@ -395,18 +395,18 @@ public class DatabaseToolkit {
             LOG.log(Level.SEVERE, null, e);
             return false;
         }
-        
+
     }
-    
+
     private SmsToken getSmsToken() {
         try {
             return em.find(SmsToken.class, "sms");
-            
+
         } catch (Exception e) {
             return null;
         }
     }
-    
+
     private String getAccessToken() {
         try {
             if (!em.getTransaction().isActive()) {
@@ -421,7 +421,7 @@ public class DatabaseToolkit {
             return null;
         }
     }
-    
+
     private SmsToken getOrupdateSmsToken() {
         SmsToken smsToken = getSmsToken();
         if (smsToken == null) {
@@ -434,10 +434,10 @@ public class DatabaseToolkit {
                 smsToken.setExpiresIn(data.getInt("expires_in"));
                 smsToken.setHeader("Basic ZkphT2xKZ3dVMmdnY1JXbUlsYlU5czdqWTh0YnNSeTg6U01FNTVndFlkdjJoNlkwUQ==");
                 smsToken.setCreateDate(LocalDateTime.now());
-                
+
                 em.persist(smsToken);
             }
-            
+
         } else {
             if (smsToken.getCreateDate()
                     .isBefore(LocalDateTime.now().minus(smsToken.getExpiresIn(), ChronoUnit.SECONDS))) {
@@ -453,7 +453,7 @@ public class DatabaseToolkit {
         }
         return smsToken;
     }
-    
+
     public JSONObject findAccessToken() {
         try {
             Client client = ClientBuilder.newClient();
@@ -468,18 +468,18 @@ public class DatabaseToolkit {
                 return new JSONObject().put("success", true).put("data",
                         new JSONObject(response.readEntity(String.class)));
             }
-            
+
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
         } catch (JSONException e) {
             LOG.log(Level.SEVERE, null, e);
             return new JSONObject().put("success", false).put("msg", "Le token n'a pad pu être géneré ");
         }
     }
-    
+
     private String getBasicHeader() {
         try {
             return em.find(SmsToken.class, "sms").getHeader();
-            
+
         } catch (Exception e) {
             return "";
         }
