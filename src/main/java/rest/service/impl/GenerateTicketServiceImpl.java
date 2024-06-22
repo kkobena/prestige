@@ -1607,15 +1607,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     serviceImpression.setTypeTicket(Constant.TICKET_ZZ);
                     serviceImpression.setTicketZdatas(body);
                 } else {
-
+                    serviceImpression.setTypeTicket(Constant.TICKET_Z);
                     int rest = bodySize - begin;
                     if (rest < bodySize) {
 
-                        serviceImpression.setDatas((LinkedList<String>) body.subList(begin, counter));
+                        serviceImpression.setDatas(body.subList(begin, counter));
                     } else if (rest == bodySize) {
-                        serviceImpression.setDatas((LinkedList<String>) body.subList(begin, rest - 1));
+                        serviceImpression.setDatas(body.subList(begin, rest - 1));
                     } else {
-                        serviceImpression.setDatas((LinkedList<String>) body.subList(begin, bodySize - 1));
+                        serviceImpression.setDatas(body.subList(begin, bodySize - 1));
                     }
 
                 }
