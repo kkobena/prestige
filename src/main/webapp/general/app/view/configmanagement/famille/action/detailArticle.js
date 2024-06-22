@@ -28,7 +28,6 @@ var lgGROSSISTEORDERID = '';
 Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
     extend: 'Ext.window.Window',
     xtype: 'addfamille',
-    id: 'addfamilleID',
     maximizable: true,
     requires: [
         'Ext.form.*',
