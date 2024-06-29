@@ -63,7 +63,10 @@ public class ImpressionServiceImpl implements Printable {
     private String codeBar;
     private TEmplacement emplacement;
     private TOfficine officine;
-    private int columnOne = 0, columnTwo = 0, columnThree = 0, columnFour = 0;
+    private int columnOne = 0;
+    private int columnTwo = 0;
+    private int columnThree = 0;
+    private int columnFour = 0;
     private PrinterJob printerJob;
     private List<String> tierspayantSectionDeux = new ArrayList<>();
     private LinkedList<String> ticketZdatas;
@@ -333,7 +336,7 @@ public class ImpressionServiceImpl implements Printable {
             Paper paper = new Paper();
 
             paper.setImageableArea(9 + intBegin, -70, paper.getWidth(), paper.getHeight()); // definition des marges de
-                                                                                            // la feuille
+            // la feuille
             // paper.setImageableArea(20, -70, paper.getWidth(), paper.getHeight()); //definition des marges de la
             // feuille
             pageFormat.setPaper(paper);
@@ -370,31 +373,31 @@ public class ImpressionServiceImpl implements Printable {
         if (pageIndex == 0) {
             Graphics2D g2d = (Graphics2D) graphics;
             g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
-            int scale_image = 2; // coefficient de proportion des images
-            int scale_texte = 12; // hauteur d'une ligne de texte
+            int scaleImage = 2; // coefficient de proportion des images
+            int scaleTexte = 12; // hauteur d'une ligne de texte
             Font font = new Font("Calibri (Corps)", Font.PLAIN, 9 + fontSize);
             g2d.setFont(font);
             limit = 85;
 
-            this.buildHeader(g2d, scale_image, scale_texte, limit); // definition de l'entete
+            this.buildHeader(g2d, scaleImage, scaleTexte, limit); // definition de l'entete
             if (!this.getInfoTiersPayants().isEmpty()) {
-                buildInfoTiersPayant(g2d, scale_texte, limit, this.getInfoTiersPayants());
+                buildInfoTiersPayant(g2d, scaleTexte, limit, this.getInfoTiersPayants());
             }
             if (!this.getInfoSellers().isEmpty()) {
-                this.buildInfoSeller(g2d, scale_texte, limit, this.getInfoSellers());
+                this.buildInfoSeller(g2d, scaleTexte, limit, this.getInfoSellers());
             }
 
-            this.buildContent(g2d, scale_texte, limit); // definition du corps du ticket
+            this.buildContent(g2d, scaleTexte, limit); // definition du corps du ticket
 
             if (!this.getSubtotal().isEmpty()) {
-                this.buildSubTotal(g2d, scale_texte, limit, this.getSubtotal());
+                this.buildSubTotal(g2d, scaleTexte, limit, this.getSubtotal());
             }
 
             if (!this.getCommentaires().isEmpty()) {
-                this.buildSubCommentaire(g2d, scale_texte, limit);
+                this.buildSubCommentaire(g2d, scaleTexte, limit);
             }
 
-            this.buildFooter(g2d, scale_image, scale_texte, limit); // definition du pied de page
+            this.buildFooter(g2d, scaleImage, scaleTexte, limit); // definition du pied de page
 
             return Printable.PAGE_EXISTS;
         }
@@ -412,9 +415,12 @@ public class ImpressionServiceImpl implements Printable {
         this.commentaires = commentaires;
     }
 
-    public void buildHeader(Graphics2D graphics, int scale_image, int scale_texte, int start) {
-        int logoWidth = 20, logoHeight = 20, i = 1;
-        int Lw = scale_image * logoWidth, Lh = scale_image * logoHeight;
+    public void buildHeader(Graphics2D graphics, int scaleImage, int scaleTexte, int start) {
+        int logoWidth = 20;
+        int logoHeight = 20;
+        int i = 1;
+        int lw = scaleImage * logoWidth;
+        int lh = scaleImage * logoHeight;
         boolean result = this.getEmplacement().getLgEMPLACEMENTID().equals(DateConverter.OFFICINE);
         Image logo = new ImageIcon(jdom.scr_report_file_logo).getImage();
         Font font = new Font("Calibri (Corps)", Font.PLAIN, 15 + fontSize);
@@ -424,28 +430,28 @@ public class ImpressionServiceImpl implements Printable {
         graphics.setFont(font);
         if (!result) {
             graphics.drawString(this.getEmplacement().getLgTYPEDEPOTID().getStrDESCRIPTION() + ": "
-                    + this.getEmplacement().getStrDESCRIPTION(), 0, start + (scale_texte * i));
+                    + this.getEmplacement().getStrDESCRIPTION(), 0, start + (scaleTexte * i));
             i++;
         }
         graphics.drawString(this.getOfficine().getStrFIRSTNAME() + " " + this.getOfficine().getStrLASTNAME(), 0,
-                start + (scale_texte * i));
+                start + (scaleTexte * i));
         graphics.drawString(this.getOfficine().getStrPHONE() + "   |    " + this.getOfficine().getStrADRESSSEPOSTALE(),
-                0, start + (scale_texte * ++i));
+                0, start + (scaleTexte * ++i));
         if (!this.getOfficine().getStrENTETE().equals("") && this.getOfficine().getStrENTETE() != null) {
             if (result) {
                 i++;
             }
-            graphics.drawString(this.getOfficine().getStrENTETE(), 0, start + (scale_texte * ++i));
+            graphics.drawString(this.getOfficine().getStrENTETE(), 0, start + (scaleTexte * ++i));
         }
-        graphics.drawString(this.getTitle(), 0, start + (scale_texte * ++i));
-        limit = start + (scale_texte * ++i);
+        graphics.drawString(this.getTitle(), 0, start + (scaleTexte * ++i));
+        limit = start + (scaleTexte * ++i);
 
         if (intBegin == 0) {
-            graphics.drawImage(logo, 155, 85, Lw, Lh, null); // A decommenter pour les imprimantes thermique
+            graphics.drawImage(logo, 155, 85, lw, lh, null); // A decommenter pour les imprimantes thermique
         }
     }
 
-    public void buildContent(Graphics2D graphics, int scale_texte, int start) {
+    public void buildContent(Graphics2D graphics, int scaleTexte, int start) {
         List<String> curDatas = this.getDatas();
         int dataSize = curDatas.size();
         switch (this.getTypeTicket()) {
@@ -459,11 +465,11 @@ public class ImpressionServiceImpl implements Printable {
 
             for (int i = 0; i < curDatas.size(); i++) {
                 String[] parts = curDatas.get(i).split(";");
-                graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
-                graphics.drawString(parts[1], 10 + columnOne, start + (scale_texte * (i + 1)));
-                graphics.drawString(parts[2], 25 + columnTwo, start + (scale_texte * (i + 1)));
-                graphics.drawString(parts[3], 125 + columnThree, start + (scale_texte * (i + 1)));
-                graphics.drawString(parts[4], 158 + columnFour, start + (scale_texte * (i + 1)));
+                graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
+                graphics.drawString(parts[1], 10 + columnOne, start + (scaleTexte * (i + 1)));
+                graphics.drawString(parts[2], 25 + columnTwo, start + (scaleTexte * (i + 1)));
+                graphics.drawString(parts[3], 125 + columnThree, start + (scaleTexte * (i + 1)));
+                graphics.drawString(parts[4], 158 + columnFour, start + (scaleTexte * (i + 1)));
             }
             break;
         }
@@ -471,27 +477,27 @@ public class ImpressionServiceImpl implements Printable {
             Font font;
             for (int i = 0; i < curDatas.size(); i++) {
                 String[] parts = curDatas.get(i).split(";");
-                if (parts[4].equals(commonparameter.PROCESS_SUCCESS)) {
-                    font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
+                if (parts[4].equals("1")) {
+                    font = new Font("Arial Narrow", Font.BOLD, 8 + fontSize);
                 } else {
-                    font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
+                    font = new Font("Arial Narrow", Font.PLAIN, 8 + fontSize);
                 }
 
                 graphics.setFont(font);
-                if (parts[5].equalsIgnoreCase(commonparameter.PROCESS_FAILED)) {
-                    graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                if (parts[5].equals("0")) {
+                    graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
                 } else {
 
                     if (parts.length > 6) {
-                        graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[1], 85 + columnTwo, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[2], 130 + columnThree, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[3], 140 + columnFour, start + (scale_texte * (i + 1)));
+                        graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[1], 85 + columnTwo, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[2], 130 + columnThree, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[3], 140 + columnFour, start + (scaleTexte * (i + 1)));
                     } else {
-                        graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[1], 65 + columnTwo, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[2], 130 + columnThree, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[3], 140 + columnFour, start + (scale_texte * (i + 1)));
+                        graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[1], 65 + columnTwo, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[2], 130 + columnThree, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[3], 140 + columnFour, start + (scaleTexte * (i + 1)));
                     }
 
                 }
@@ -505,27 +511,27 @@ public class ImpressionServiceImpl implements Printable {
             Font font;
             for (int i = 0; i < ticketDatas.size(); i++) {
                 String[] parts = ticketDatas.get(i).split(";");
-                if (parts[4].equals(commonparameter.PROCESS_SUCCESS)) {
-                    font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
+                if (parts[4].equals("1")) {
+                    font = new Font("Arial Narrow", Font.BOLD, 8 + fontSize);
                 } else {
-                    font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
+                    font = new Font("Arial Narrow", Font.PLAIN, 8 + fontSize);
                 }
 
                 graphics.setFont(font);
-                if (parts[5].equalsIgnoreCase(commonparameter.PROCESS_FAILED)) {
-                    graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+                if (parts[5].equals("0")) {
+                    graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
                 } else {
 
                     if (parts.length > 6) {
-                        graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[1], 85 + columnTwo, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[2], 130 + columnThree, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[3], 140 + columnFour, start + (scale_texte * (i + 1)));
+                        graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[1], 85 + columnTwo, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[2], 130 + columnThree, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[3], 140 + columnFour, start + (scaleTexte * (i + 1)));
                     } else {
-                        graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[1], 65 + columnTwo, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[2], 130 + columnThree, start + (scale_texte * (i + 1)));
-                        graphics.drawString(parts[3], 140 + columnFour, start + (scale_texte * (i + 1)));
+                        graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[1], 65 + columnTwo, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[2], 130 + columnThree, start + (scaleTexte * (i + 1)));
+                        graphics.drawString(parts[3], 140 + columnFour, start + (scaleTexte * (i + 1)));
                     }
 
                 }
@@ -537,89 +543,89 @@ public class ImpressionServiceImpl implements Printable {
         default:
             for (int i = 0; i < curDatas.size(); i++) {
                 String[] parts = curDatas.get(i).split(";");
-                graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
-                graphics.drawString(parts[1], 100 + columnThree, start + (scale_texte * (i + 1)));
-                graphics.drawString(parts[2], 150 + columnFour, start + (scale_texte * (i + 1)));
+                graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
+                graphics.drawString(parts[1], 100 + columnThree, start + (scaleTexte * (i + 1)));
+                graphics.drawString(parts[2], 150 + columnFour, start + (scaleTexte * (i + 1)));
             }
             break;
         }
 
-        limit = start + (scale_texte * dataSize);
+        limit = start + (scaleTexte * dataSize);
     }
 
-    public void buildSubCommentaire(Graphics2D graphics, int scale_texte, int start) {
-        List<String> commentaires = this.getCommentaires();
+    public void buildSubCommentaire(Graphics2D graphics, int scaleTexte, int start) {
+        List<String> commentairess = this.getCommentaires();
 
         Font font;
 
-        for (int i = 0; i < commentaires.size(); i++) {
-            String[] parts = commentaires.get(i).split(";");
-            if (parts[1].equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
+        for (int i = 0; i < commentairess.size(); i++) {
+            String[] parts = commentairess.get(i).split(";");
+            if (parts[1].equals("1")) {
                 font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
             } else {
                 font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
             }
             graphics.setFont(font);
-            graphics.drawString(parts[0], 0, start + (scale_texte * (i + 1)));
+            graphics.drawString(parts[0], 0, start + (scaleTexte * (i + 1)));
 
         }
 
-        limit = start + (scale_texte * (commentaires.size()));
+        limit = start + (scaleTexte * (commentairess.size()));
     }
 
-    public void buildFooter(Graphics2D graphics, int scale_image, int scale_texte, int start) {
+    public void buildFooter(Graphics2D graphics, int scaleImage, int scaleTexte, int start) {
         int codeBarWidth = 50;
         int codeBarHeight = 15;
-        int Cw = scale_image * codeBarWidth;
-        int Ch = scale_image * codeBarHeight;
+        int cw = scaleImage * codeBarWidth;
+        int ch = scaleImage * codeBarHeight;
 
-        graphics.drawString(SIMPLE_DATE_FORMAT.format(this.getOperation()), 125, start + (scale_texte * 1)); // imprimante
-                                                                                                             // matricielle
+        graphics.drawString(SIMPLE_DATE_FORMAT.format(this.getOperation()), 125, start + (scaleTexte * 1)); // imprimante
+        // matricielle
 
         if (this.isShowCodeBar()) {
-            Image _codeBar = new ImageIcon(this.getCodeBar()).getImage();
+            Image imgCodeBar = new ImageIcon(this.getCodeBar()).getImage();
             if (intBegin == 0) {
-                graphics.drawImage(_codeBar, -5, start + 5, (int) Cw, (int) Ch, null);
+                graphics.drawImage(imgCodeBar, -5, start + 5, cw, ch, null);
             }
 
         }
 
     }
 
-    public void buildInfoSeller(Graphics2D graphics, int scale_texte, int start, List<String> datas) {
+    public void buildInfoSeller(Graphics2D graphics, int scaleTexte, int start, List<String> datas) {
         for (int i = 0; i < datas.size(); i++) {
-            graphics.drawString(datas.get(i), 0, start + (scale_texte * i));
+            graphics.drawString(datas.get(i), 0, start + (scaleTexte * i));
         }
 
-        limit = start + (scale_texte * (datas.size() + 1));
+        limit = start + (scaleTexte * (datas.size() + 1));
     }
 
-    public void buildSubTotal(Graphics2D graphics, int scale_texte, int start, List<String> datas) {
+    public void buildSubTotal(Graphics2D graphics, int scaleTexte, int start, List<String> datas) {
         graphics.drawString("", 0, start);
         Font font;
         for (int i = 0; i < datas.size(); i++) {
             String[] parts = datas.get(i).split(";");
-            if (parts[3].equalsIgnoreCase(commonparameter.PROCESS_SUCCESS)) {
+            if (parts[3].equals("1")) {
                 font = new Font("Arial Narrow", Font.BOLD, 9 + fontSize);
             } else {
                 font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
             }
 
             graphics.setFont(font);
-            graphics.drawString(parts[0], 35, start + (scale_texte * (i + 1)));
-            graphics.drawString(parts[1], 110, start + (scale_texte * (i + 1)));
-            // graphics.drawString(parts[2], 160, start + (scale_texte * (i + 1))); //imprimante termique
-            graphics.drawString(parts[2], 150, start + (scale_texte * (i + 1))); // imprimante matricielle
+            graphics.drawString(parts[0], 35, start + (scaleTexte * (i + 1)));
+            graphics.drawString(parts[1], 110, start + (scaleTexte * (i + 1)));
+            // graphics.drawString(parts[2], 160, start + (scaleTexte * (i + 1))); //imprimante termique
+            graphics.drawString(parts[2], 150, start + (scaleTexte * (i + 1))); // imprimante matricielle
         }
-        limit = start + (scale_texte * (datas.size()));
+        limit = start + (scaleTexte * (datas.size()));
     }
 
-    public void buildInfoTiersPayant(Graphics2D graphics, int scale_texte, int start, List<String> datas) {
+    public void buildInfoTiersPayant(Graphics2D graphics, int scaleTexte, int start, List<String> datas) {
         for (int i = 0; i < datas.size(); i++) {
-            graphics.drawString(datas.get(i), 0, start + (scale_texte * i));
+            graphics.drawString(datas.get(i), 0, start + (scaleTexte * i));
         }
 
-        limit = start + (scale_texte * (datas.size() + 1));
+        limit = start + (scaleTexte * (datas.size() + 1));
 
     }
 
