@@ -38,8 +38,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CommonService;
 import rest.service.LogService;
-import toolkits.parameters.commonparameter;
-import util.DateConverter;
+import util.CommonUtils;
+
 import util.Constant;
 
 /**
@@ -82,7 +82,7 @@ public class CommonRessource {
     @Path("autorisation-prix-vente")
     public Response autorisationPrixVente() {
         HttpSession hs = servletRequest.getSession();
-        Boolean hasAutority = (Boolean) hs.getAttribute(DateConverter.UPDATE_PRICE);
+        Boolean hasAutority = (Boolean) hs.getAttribute(Constant.UPDATE_PRICE);
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);
@@ -152,7 +152,7 @@ public class CommonRessource {
     public Response getUsers(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String query) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -325,9 +325,9 @@ public class CommonRessource {
     @Path("autorisations/showstock")
     public Response autorisationAfficherStock() {
         HttpSession hs = servletRequest.getSession();
-        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
-        boolean afficherStockVente = DateConverter.hasAuthorityByName(lstTPrivilege,
-                DateConverter.P_AFFICHER_STOCK_A_LA_VENTE);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean afficherStockVente = CommonUtils.hasAuthorityByName(lstTPrivilege,
+                Constant.P_AFFICHER_STOCK_A_LA_VENTE);
         return Response.ok().entity(ResultFactory.getSuccessResult(afficherStockVente, 1)).build();
     }
 
@@ -389,5 +389,19 @@ public class CommonRessource {
         cc.setMaxAge(86400);
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
+    }
+
+    @GET
+    @Path("is-authorized")
+    public Response checkAction(@QueryParam(value = "action") String action) {
+        HttpSession hs = servletRequest.getSession();
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+        boolean allowed = CommonUtils.hasAuthorityByName(lstTPrivilege, action);
+
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(allowed)).build();
+
     }
 }
