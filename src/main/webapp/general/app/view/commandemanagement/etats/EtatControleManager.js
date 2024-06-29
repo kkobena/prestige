@@ -1,11 +1,9 @@
 /* global Ext */
 
-//var url_services_data_etats_list = '../webservices/commandemanagement/etats/ws_data.jsp';
-var url_services_data_grossiste = '../webservices/configmanagement/grossiste/ws_data.jsp';
-var url_services_transaction_etats = '../webservices/commandemanagement/etats/ws_transaction.jsp?mode=';
+
+
 var url_services_pdf_bonlivraison = '../webservices/commandemanagement/bonlivraison/ws_generate_pdf.jsp';
 
-var url_services_etatcontrole_pdf = '../webservices/commandemanagement/etats/ws_generate_pdf.jsp';
 var Me;
 var val;
 var str_REF_ORDER = "";
@@ -63,20 +61,20 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
         });
         Me = this;
         Ext.Ajax.request({
-            url: '../webservices/commandemanagement/etats/ws_action.jsp',
+             method: 'GET',
+               url: '../api/v1/common/is-authorized',
             params: {
+                action:'P_BTN_UPDATEBL'
             },
             success: function (response)
             {
-                var object = Ext.JSON.decode(response.responseText, false);
-                btnUpdate = object.BTNUPDATE;
+                const object = Ext.JSON.decode(response.responseText, false);
+                btnUpdate = object.data;
 
             },
             failure: function (response)
             {
-
                 console.log("Bug   AIE ");
-
             }
         });
 
@@ -85,7 +83,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
 
         const itemsPerPage = 20;
         const store_etats = new Ext.data.Store({
-            //  model: 'testextjs.model.EtatControle',
+ 
             idProperty: 'id',
             fields: [
                 {
@@ -268,7 +266,6 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                     flex: 1.5
                 },
                 {
-//                    text: 'S&eacute;lectionner',
                     text: '',
                     width: 30,
                     dataIndex: 'bl_SELECTED',
@@ -310,14 +307,9 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                             tooltip: 'Modifier les informations du bon de livraison',
                             scope: this,
                             getClass: function (value, metadata, record) {
-                                console.log(btnUpdate, 'getClass');
                                 if (btnUpdate) {
-
                                     return 'x-display-hide';
-
-
                                 } else {
-
                                     return 'x-hide-display';
                                 }
                             },

@@ -1567,11 +1567,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             serviceImpression.setTitle(getTicketZTitle(params));
             serviceImpression.setInfoSellers(new ArrayList<>());
             serviceImpression.setCommentaires(new ArrayList<>());
-            serviceImpression.setShowCodeBar(true);
+            serviceImpression.setShowCodeBar(false);
             serviceImpression.setoTImprimante(imprimante);
             serviceImpression.setOfficine(officine);
             serviceImpression.setService(printService);
-            serviceImpression.setCodeBar(this.buildLineBarecode(DateConverter.getShortId(10)));
+            // serviceImpression.setCodeBar(this.buildLineBarecode(DateConverter.getShortId(10)));
             printTicketZ(serviceImpression, body, footer);
 
             return json.put("success", true).put("msg", "Opération effectuée ");
@@ -1584,21 +1584,41 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     private void printTicketZ(ImpressionServiceImpl serviceImpression, LinkedList<String> body,
             LinkedList<String> footer) throws PrinterException {
-        int size = body.size() + footer.size();
+
+        int bodySize = body.size();
+        int size = bodySize + footer.size();
         int breaking = breakingTicketZParam();
-        body.addAll(footer);
+
         if (size <= breaking) {
+
+            body.addAll(footer);
             serviceImpression.setTypeTicket(Constant.TICKET_ZZ);
             serviceImpression.setTicketZdatas(body);
             serviceImpression.printTicketVente(1);
         } else {
             int counter = breaking;
+
             int k = 0;
-            int page = size / counter;
+            int page = (int) (Math.ceil(Double.valueOf(bodySize) / counter));
+
             int begin = 0;
             while (k < page) {
-                serviceImpression.setTypeTicket(Constant.TICKET_Z);
-                serviceImpression.setDatas(body.subList(begin, counter));
+                if (bodySize <= counter) {
+                    serviceImpression.setTypeTicket(Constant.TICKET_ZZ);
+                    serviceImpression.setTicketZdatas(body);
+                } else {
+                    serviceImpression.setTypeTicket(Constant.TICKET_Z);
+                    int rest = bodySize - begin;
+                    if (rest < bodySize) {
+
+                        serviceImpression.setDatas(body.subList(begin, counter));
+                    } else if (rest == bodySize) {
+                        serviceImpression.setDatas(body.subList(begin, rest - 1));
+                    } else {
+                        serviceImpression.setDatas(body.subList(begin, bodySize - 1));
+                    }
+
+                }
                 serviceImpression.printTicketVente(1);
                 k++;
                 begin += breaking;
@@ -1606,7 +1626,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
             }
             serviceImpression.setTypeTicket(Constant.TICKET_Z);
-            serviceImpression.setDatas(body.subList(begin, size - 1));
+            serviceImpression.setDatas(footer);
             serviceImpression.printTicketVente(1);
         }
 
