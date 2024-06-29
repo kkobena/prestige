@@ -150,6 +150,7 @@ public final class Constant {
     public static final String KEY_NATURE_VENTE_DEPOT = "3";
     public static final String TICKET_REGLEMENT = "TICKET_REGLEMENT";
     public static final String TICKET_REGLEMENT_CARNET_DEPOT = "TICKET_REGLEMENT_CARNET_DEPOT";
+    public static final String P_AFFICHER_STOCK_A_LA_VENTE = "P_AFFICHER_STOCK_A_LA_VENTE";
 
     private Constant() {
     }

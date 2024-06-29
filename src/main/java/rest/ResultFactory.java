@@ -15,6 +15,10 @@ public class ResultFactory {
         return new Result(true, data, total);
     }
 
+    public static <T> Result<T> getSuccessResult(T data) {
+        return new Result(data);
+    }
+
     public static <T> Result<T> getSuccessResult(T data, String msg, long total) {
         return new Result(true, data, total);
     }
