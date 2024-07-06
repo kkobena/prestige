@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.Cell;
@@ -58,10 +59,19 @@ public class FactureDataExport extends HttpServlet {
         String search_value = "", action = request.getParameter("action"),
                 dt_debut = date.formatterMysqlShort.format(new Date()), dt_fin = date.formatterMysql.format(new Date()),
                 lg_FACTURE_ID = "%%", lg_TYPE_FACTURE_ID = "%%", lg_customer_id = "%%";
+        String impayes = "";
         JSONObject dataToExport;
         management = new factureManagement(OdataManager, null);// 30032016
         statisticSales = new StatisticSales(OdataManager);
         statisticsFamilleArticle = new StatisticsFamilleArticle(OdataManager);
+        if (StringUtils.isNotEmpty(request.getParameter("impayes"))) {
+            impayes = request.getParameter("impayes");
+
+        }
+        String code = null;
+        if (request.getParameter("CODEGROUPE") != null && !"".equals(request.getParameter("CODEGROUPE"))) {
+            code = request.getParameter("CODEGROUPE");
+        }
         if (request.getParameter("dt_fin") != null && !"".equals(request.getParameter("dt_fin"))) {
             dt_fin = request.getParameter("dt_fin") + " 23:59:59";
         }
@@ -94,7 +104,7 @@ public class FactureDataExport extends HttpServlet {
             }
 
             dataToExport = management.getInvoiceExportToExcelData(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID,
-                    java.sql.Date.valueOf(dt_debut), end, lg_customer_id);
+                    java.sql.Date.valueOf(dt_debut), end, lg_customer_id, code, impayes);
 
             extportFactureData2(dataToExport, response, "Facture releve client");
         }

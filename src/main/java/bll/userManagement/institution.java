@@ -7,7 +7,7 @@ package bll.userManagement;
 
 import bll.bllBase;
 
-import dal.jconnexion;
+import dal.JdbConnexion;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ public class institution extends bllBase {
     //
     // List<TInstitutions> LstTInstitutions = new ArrayList<TInstitutions>();
     // try {
-    // jconnexion Ojconnexion = new jconnexion();
+    // JdbConnexion Ojconnexion = new JdbConnexion();
     // Ojconnexion.initConnexion();
     // Ojconnexion.OpenConnexion();
     // String qry = "SELECT lg_INSTITUTION_ID,str_STATUT,str_NAME FROM t_institutions WHERE
@@ -66,7 +66,7 @@ public class institution extends bllBase {
     //
     // List<TInstitutions> LstTInstitutions = new ArrayList<TInstitutions>();
     // try {
-    // jconnexion Ojconnexion = new jconnexion();
+    // JdbConnexion Ojconnexion = new JdbConnexion();
     // Ojconnexion.initConnexion();
     // Ojconnexion.OpenConnexion();
     // String qry = "SELECT lg_INSTITUTION_ID,str_STATUT,str_NAME FROM t_institutions WHERE
