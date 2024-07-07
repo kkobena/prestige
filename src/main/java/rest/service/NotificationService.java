@@ -43,4 +43,6 @@ public interface NotificationService {
 
     void sendSms(Notification notification);
 
+    void sendPointActiviteSms(String date);
+
 }

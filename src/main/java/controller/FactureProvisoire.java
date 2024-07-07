@@ -98,7 +98,7 @@ public class FactureProvisoire extends HttpServlet {
             TModelFacture modelFacture = OdataManager.getEm().find(TModelFacture.class, modeId);
 
             String codeModelFacture = modeId;
-            int codeFACT = new Integer(codeModelFacture);
+            int codeFACT = Integer.parseInt(codeModelFacture);
             for (CodeFactureDTO ob : code) {
                 // String tauxpath = "";
                 TFacture facture = OdataManager.getEm().find(TFacture.class, ob.getFactureId());
@@ -204,7 +204,7 @@ public class FactureProvisoire extends HttpServlet {
                                         ? OTiersPayant.getStrREGISTRECOMMERCE() : "");
 
                 /* fin du recap */
-                if (recapParam != null && Integer.valueOf(recapParam.getStrVALUE()) == 1) {
+                if (recapParam != null && Integer.parseInt(recapParam.getStrVALUE()) == 1) {
                     OreportManager.BuildReport(parameters, Ojconnexion);
                     inputPdfList.add(new FileInputStream(jdom.scr_report_pdf + recap));
                 }

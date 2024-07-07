@@ -740,7 +740,8 @@ Ext.application({
         'testextjs.view.depot.Export',
         'testextjs.view.achat',
          'testextjs.view.chiffreAnnuel',
-         'testextjs.view.sm_user.mvtcaisse.action.Detail'
+         'testextjs.view.sm_user.mvtcaisse.action.Detail',
+         'testextjs.view.notification.RecapSms'
     ],
     controllers: [
         'App',

@@ -6,7 +6,6 @@
 package bll.stockManagement;
 
 import bll.bllBase;
-import bll.common.Parameter;
 import bll.configManagement.familleManagement;
 import bll.entity.EntityData;
 import bll.teller.tellerManagement;

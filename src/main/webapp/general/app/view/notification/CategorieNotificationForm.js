@@ -27,8 +27,7 @@ Ext.define('testextjs.view.notification.CategorieNotificationForm', {
     },
     initComponent: function () {
         const me = this;
-        console.log(me.getData());
-
+   
         const canaux = Ext.create('Ext.data.ArrayStore', {
             data: [['SMS'], ['EMAIL'], ['SMS_EMAIL'], ['SMS_MASSE'], ['EMAIL_MASSE']],
             fields: [{name: 'canal', type: 'string'}]
