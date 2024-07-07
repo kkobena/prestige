@@ -1,3 +1,4 @@
+<%@page import="util.Constant"%>
 <%@page import="org.apache.commons.lang3.StringUtils"%>
 <%@page import="org.json.JSONObject"%>
 <%@page import="bll.configManagement.GroupeTierspayantController"%>
@@ -85,7 +86,7 @@
         lg_customer_id = request.getParameter("lg_customer_id");
         lgTP = lg_customer_id;
     }
-    OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+    OTUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
 
     jdom Ojdom = new jdom();
     Ojdom.InitRessource();

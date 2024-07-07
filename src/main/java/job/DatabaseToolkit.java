@@ -120,7 +120,7 @@ public class DatabaseToolkit {
 
     }
 
-    public void manageSms() {
+    private void manageSms() {
         if (checkParameterByKey(Constant.KEY_SMS_CLOTURE_CAISSE)) {
             List<Notification> notifications = findAllByCanal();
             for (Notification notification : notifications) {
@@ -136,7 +136,7 @@ public class DatabaseToolkit {
 
     }
 
-    public void createTimer() {
+    private void createTimer() {
 
         final TimerConfig email = new TimerConfig("email", false);
         // timerService.createCalendarTimer(new ScheduleExpression().minute("*/5").hour("*").dayOfMonth("*").year("*"),
@@ -150,7 +150,7 @@ public class DatabaseToolkit {
                 sms);
     }
 
-    public void manageEmail() {
+    private void manageEmail() {
         List<Notification> data = findByStatut(Statut.NOT_SEND).stream()
                 .filter(e -> e.getNotificationClients().isEmpty()).collect(Collectors.toList());
         boolean result = sendMail(buildEmailContent(data), null, "Resumé activité prestige 2");
@@ -170,7 +170,7 @@ public class DatabaseToolkit {
         }
     }
 
-    public void sendSMS(Notification notification) {
+    private void sendSMS(Notification notification) {
         Client client = ClientBuilder.newClient();
         SmsParameters sp = SmsParameters.getInstance();
         List<NotificationClient> toClients = findNotificationClients(notification);
@@ -217,7 +217,7 @@ public class DatabaseToolkit {
 
     }
 
-    public List<Notification> findByCreatedAtAndStatut() {
+    private List<Notification> findByCreatedAtAndStatut() {
         try {
             TypedQuery<Notification> q = em.createNamedQuery("Notification.findAllByCreatedAtAndStatus",
                     Notification.class);
@@ -231,7 +231,7 @@ public class DatabaseToolkit {
         }
     }
 
-    public List<Notification> findByStatut(Statut statut) {
+    private List<Notification> findByStatut(Statut statut) {
         try {
             TypedQuery<Notification> q = em.createNamedQuery("Notification.findAllByStatus", Notification.class);
             q.setParameter("statut", statut);
@@ -242,7 +242,7 @@ public class DatabaseToolkit {
         }
     }
 
-    public List<Notification> findAllByCanal() {
+    private List<Notification> findAllByCanal() {
         try {
             TypedQuery<Notification> q = em.createNamedQuery("Notification.findAllByCreatedAtAndStatusAndCanal",
                     Notification.class);
@@ -257,7 +257,7 @@ public class DatabaseToolkit {
         }
     }
 
-    public boolean checkParameterByKey(String key) {
+    private boolean checkParameterByKey(String key) {
         try {
             TParameters parameters = em.find(TParameters.class, key);
             return (Integer.parseInt(parameters.getStrVALUE().trim()) == 1);
@@ -266,7 +266,7 @@ public class DatabaseToolkit {
         }
     }
 
-    public String findScheduledValues() {
+    private String findScheduledValues() {
         try {
             TParameters parameters = em.find(TParameters.class, Constant.KEY_HEURE_EMAIL);
             return parameters.getStrVALUE();
@@ -290,7 +290,7 @@ public class DatabaseToolkit {
         }
     }
 
-    public List<NotificationClient> findNotificationClients(Notification n) {
+    private List<NotificationClient> findNotificationClients(Notification n) {
         try {
             TypedQuery<NotificationClient> q = em.createNamedQuery("NotificationClient.findByNotificationId",
                     NotificationClient.class);
@@ -302,7 +302,7 @@ public class DatabaseToolkit {
         }
     }
 
-    public boolean sendMail(String content, String email, String subject) {
+    private boolean sendMail(String content, String email, String subject) {
         if (StringUtils.isEmpty(content)) {
             return false;
         }

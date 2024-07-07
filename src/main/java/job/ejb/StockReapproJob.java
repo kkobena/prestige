@@ -15,7 +15,6 @@ import rest.service.StockReapproService;
  */
 @Singleton
 @Startup
-
 public class StockReapproJob {
 
     @Resource(name = "concurrent/__defaultManagedScheduledExecutorService")
