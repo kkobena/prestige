@@ -34,7 +34,7 @@ import dal.dataManager;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeTransaction;
-import dal.jconnexion;
+import dal.JdbConnexion;
 import java.sql.ResultSetMetaData;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -939,28 +939,24 @@ public class reglementManager extends bll.bllBase {
     public static TCashTransaction getTCashTransactionByReglement(String lg_DOSSIER_REGLEMENT_ID) {
 
         try {
-            jconnexion Ojconnexion = new jconnexion();
-            Ojconnexion.initConnexion();
-            Ojconnexion.OpenConnexion();
-            String qry = "SELECT c.int_AMOUNT_REMIS AS Monnaie, c.int_AMOUNT_RECU AS Verse, SUM(ABS(c.int_AMOUNT))AS Total, c.int_AMOUNT_CREDIT, c.int_AMOUNT_DEBIT, tr.str_NAME AS Reglement from t_dossier_reglement t, t_mvt_caisse m, t_cash_transaction c, t_type_reglement tr where t.lg_DOSSIER_REGLEMENT_ID = m.str_NUM_PIECE_COMPTABLE and c.str_RESSOURCE_REF = m.lg_MVT_CAISSE_ID AND tr.lg_TYPE_REGLEMENT_ID = c.lg_TYPE_REGLEMENT_ID AND t.lg_DOSSIER_REGLEMENT_ID = '"
-                    + lg_DOSSIER_REGLEMENT_ID + "'";
-
-            new logger().OCategory.info(qry);
-            Ojconnexion.set_Request(qry);
-            ResultSetMetaData rsmddatas = Ojconnexion.get_resultat().getMetaData();
-            while (Ojconnexion.get_resultat().next()) {
-                TCashTransaction OTCashTransaction = new TCashTransaction();
-                OTCashTransaction.setIntAMOUNTREMIS(Ojconnexion.get_resultat().getInt("Monnaie"));
-                OTCashTransaction.setIntAMOUNTRECU(Ojconnexion.get_resultat().getInt("Verse"));
-                OTCashTransaction.setIntAMOUNT(Ojconnexion.get_resultat().getInt("Total"));
-                OTCashTransaction.setIntAMOUNTCREDIT(Ojconnexion.get_resultat().getInt("int_AMOUNT_CREDIT"));
-                OTCashTransaction.setIntAMOUNTDEBIT(Ojconnexion.get_resultat().getInt("int_AMOUNT_DEBIT"));
-                OTCashTransaction.setLgTYPEREGLEMENTID(Ojconnexion.get_resultat().getString("Reglement"));
-
-                Ojconnexion.CloseConnexion();
-                return OTCashTransaction;
-            }
-            Ojconnexion.CloseConnexion();
+            /*
+             * JdbConnexion Ojconnexion = new JdbConnexion(); Ojconnexion.initConnexion(); Ojconnexion.openConnexion();
+             * String qry =
+             * "SELECT c.int_AMOUNT_REMIS AS Monnaie, c.int_AMOUNT_RECU AS Verse, SUM(ABS(c.int_AMOUNT))AS Total, c.int_AMOUNT_CREDIT, c.int_AMOUNT_DEBIT, tr.str_NAME AS Reglement from t_dossier_reglement t, t_mvt_caisse m, t_cash_transaction c, t_type_reglement tr where t.lg_DOSSIER_REGLEMENT_ID = m.str_NUM_PIECE_COMPTABLE and c.str_RESSOURCE_REF = m.lg_MVT_CAISSE_ID AND tr.lg_TYPE_REGLEMENT_ID = c.lg_TYPE_REGLEMENT_ID AND t.lg_DOSSIER_REGLEMENT_ID = '"
+             * + lg_DOSSIER_REGLEMENT_ID + "'";
+             *
+             * new logger().OCategory.info(qry); Ojconnexion.set_Request(qry); ResultSetMetaData rsmddatas =
+             * Ojconnexion.get_resultat().getMetaData(); while (Ojconnexion.get_resultat().next()) { TCashTransaction
+             * OTCashTransaction = new TCashTransaction();
+             * OTCashTransaction.setIntAMOUNTREMIS(Ojconnexion.get_resultat().getInt("Monnaie"));
+             * OTCashTransaction.setIntAMOUNTRECU(Ojconnexion.get_resultat().getInt("Verse"));
+             * OTCashTransaction.setIntAMOUNT(Ojconnexion.get_resultat().getInt("Total"));
+             * OTCashTransaction.setIntAMOUNTCREDIT(Ojconnexion.get_resultat().getInt("int_AMOUNT_CREDIT"));
+             * OTCashTransaction.setIntAMOUNTDEBIT(Ojconnexion.get_resultat().getInt("int_AMOUNT_DEBIT"));
+             * OTCashTransaction.setLgTYPEREGLEMENTID(Ojconnexion.get_resultat().getString("Reglement"));
+             *
+             * Ojconnexion.closeConnexion(); return OTCashTransaction; } Ojconnexion.closeConnexion();
+             */
         } catch (Exception ex) {
             new logger().OCategory.fatal(ex.getMessage());
         }

@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import rest.service.NotificationService;
 import rest.service.SmsService;
+import rest.service.v2.dto.ActiviteParam;
 import util.Constant;
 
 /**
@@ -85,4 +86,12 @@ public class NotificationResource {
         cc.setPrivate(true);
         return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
+
+    @POST
+    @Path("sms-recap")
+    public Response sendSmsRecap(ActiviteParam activiteParam) {
+        notificationService.sendPointActiviteSms(activiteParam.getDateActivite());
+        return Response.ok().build();
+    }
+
 }

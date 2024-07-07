@@ -151,6 +151,7 @@ public final class Constant {
     public static final String TICKET_REGLEMENT = "TICKET_REGLEMENT";
     public static final String TICKET_REGLEMENT_CARNET_DEPOT = "TICKET_REGLEMENT_CARNET_DEPOT";
     public static final String P_AFFICHER_STOCK_A_LA_VENTE = "P_AFFICHER_STOCK_A_LA_VENTE";
+    public static final String KEY_HEURE_ENVOI_SMS_RECAP_ACTIVITE = "KEY_HEURE_ENVOI_SMS_RECAP_ACTIVITE";
 
     private Constant() {
     }
