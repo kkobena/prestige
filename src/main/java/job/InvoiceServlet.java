@@ -16,7 +16,7 @@ import dal.TTiersPayant;
 import dal.TTypeMvtCaisse;
 import dal.TUser;
 import dal.dataManager;
-import dal.jconnexion;
+import dal.JdbConnexion;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -60,6 +60,7 @@ import toolkits.parameters.commonparameter;
 import toolkits.utils.conversion;
 import toolkits.utils.date;
 import toolkits.utils.jdom;
+import util.Constant;
 
 /**
  *
@@ -80,11 +81,11 @@ public class InvoiceServlet extends HttpServlet {
 
         jdom.InitRessource();
         jdom.LoadRessource();
-        jconnexion Ojconnexion = new jconnexion();
-        Ojconnexion.initConnexion();
-        Ojconnexion.OpenConnexion();
+        JdbConnexion Ojconnexion = new JdbConnexion();
+
+        Ojconnexion.openConnexion();
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser OTUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         OdataManager = new dataManager();
         OdataManager.initEntityManager();
         inputPdfList = new ArrayList<>();

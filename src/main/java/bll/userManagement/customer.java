@@ -6,7 +6,7 @@ package bll.userManagement;
 
 import dal.TLanguage;
 import dal.TSkin;
-import dal.jconnexion;
+import dal.JdbConnexion;
 import java.util.Date;
 import toolkits.parameters.commonparameter;
 import toolkits.security.Md5;
@@ -66,7 +66,7 @@ public class customer extends bll.bllBase {
     // this.persiste(OTCustomerAccount);
     //
     //
-    // jconnexion Ojconnexion = new jconnexion();
+    // JdbConnexion Ojconnexion = new JdbConnexion();
     // Ojconnexion.initConnexion();
     // Ojconnexion.OpenConnexion();
     // this.setOTCustomer(OTCustomer);
@@ -102,7 +102,7 @@ public class customer extends bll.bllBase {
     //
     //
     // this.setOTCustomer(OTCustomer);
-    // jconnexion Ojconnexion = new jconnexion();
+    // JdbConnexion Ojconnexion = new JdbConnexion();
     // Ojconnexion.initConnexion();
     // Ojconnexion.OpenConnexion();
     // this.do_event_log(Ojconnexion, commonparameter.statut_is_not_assign, "Update de customer " +

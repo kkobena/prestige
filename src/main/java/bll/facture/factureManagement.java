@@ -597,12 +597,7 @@ public class factureManagement extends bll.bllBase {
             if ("".equals(search_value)) {
                 search_value = "%%";
             }
-            // lstTFacture = this.getOdataManager().getEm().createQuery("SELECT DISTINCT t FROM TFacture t,TTiersPayant
-            // p,TFactureDetail d WHERE t.lgFACTUREID LIKE ?1 AND (t.strCODEFACTURE LIKE ?2 OR p.strFULLNAME LIKE ?2 OR
-            // p.strNAME LIKE ?2 OR d.strFIRSTNAMECUSTOMER LIKE ?2 OR d.strLASTNAMECUSTOMER LIKE ?2 OR
-            // d.strNUMEROSECURITESOCIAL LIKE ?2) AND (t.dtCREATED >= ?6 AND t.dtCREATED <= ?7) AND t.strCUSTOMER LIKE
-            // ?8 AND t.strCUSTOMER=p.lgTIERSPAYANTID AND t.lgFACTUREID=d.lgFACTUREID.lgFACTUREID ORDER BY t.dtCREATED
-            // DESC ").
+
             lstTFacture = this.getOdataManager().getEm().createQuery(
                     "SELECT DISTINCT t FROM TFacture t,TTiersPayant p,TFactureDetail d,TPreenregistrementCompteClientTiersPayent pc,TPreenregistrement pr WHERE t.lgFACTUREID LIKE ?1 AND (t.strCODEFACTURE LIKE ?2  OR p.strFULLNAME LIKE ?2 OR p.strNAME LIKE ?2 OR d.strFIRSTNAMECUSTOMER LIKE ?2 OR d.strLASTNAMECUSTOMER LIKE ?2 OR d.strNUMEROSECURITESOCIAL LIKE ?2 OR pr.strREF LIKE ?2 OR pr.strREFTICKET LIKE ?2) AND (t.dtCREATED >= ?6 AND t.dtCREATED <= ?7) AND t.strCUSTOMER LIKE ?8 AND t.strCUSTOMER=p.lgTIERSPAYANTID  AND t.lgFACTUREID=d.lgFACTUREID.lgFACTUREID  AND pc.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=d.strREF AND pr.lgPREENREGISTREMENTID=pc.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID ORDER BY  t.dtCREATED DESC ")
                     .setParameter(1, lg_FACTURE_ID).setParameter(2, search_value + "%").setParameter(6, dt_debut)
@@ -1256,12 +1251,12 @@ public class factureManagement extends bll.bllBase {
     }
 
     public JSONObject getInvoiceExportToExcelData(String search_value, String lg_FACTURE_ID, String lg_TYPE_FACTURE_ID,
-            Date dt_debut, Date dt_fin, String str_CUSTOMER) {
+            Date dt_debut, Date dt_fin, String str_CUSTOMER, String code, String impayes) {
         JSONObject json = new JSONObject();
 
         try {
             List<TFacture> listfacture = this.getListFacture(search_value, lg_FACTURE_ID, lg_TYPE_FACTURE_ID, dt_debut,
-                    dt_fin, str_CUSTOMER);
+                    dt_fin, str_CUSTOMER, code, impayes, 0, 0);
 
             json = dataJson2(listfacture);
 
@@ -1921,55 +1916,75 @@ public class factureManagement extends bll.bllBase {
     }
 
     // liste des factures
-    public List<TFacture> getListFacture(String search_value, String lg_FACTURE_ID, String lg_TYPE_FACTURE_ID,
-            Date dt_debut, Date dt_fin, String str_CUSTOMER, String Code, int start, int limit) {
-        List<TFacture> lstTFacture = new ArrayList<>();
+    public List<TFacture> getListFacture(String searchValue, String idFacture, String typeFactureId, Date dtDebut,
+            Date dtFin, String strCUSTOMER, String code, String impayes, int start, int limit) {
+
+        String impayerClause = " AND t.dblMONTANTRESTANT >0 ";
+        if (StringUtils.isEmpty(impayes)) {
+            impayerClause = "";
+        } else {
+            if (impayes.equals("payes")) {
+                impayerClause = " AND t.dblMONTANTRESTANT = 0 ";
+            }
+        }
         try {
-            if ("".equals(search_value)) {
-                search_value = "%%";
+            if ("".equals(searchValue)) {
+                searchValue = "%%";
             }
 
-            String query = "SELECT DISTINCT t FROM TFacture t,TTiersPayant p,TFactureDetail d,TPreenregistrementCompteClientTiersPayent pc,TPreenregistrement pr WHERE t.lgFACTUREID LIKE ?1 AND (t.strCODEFACTURE LIKE ?2  OR p.strFULLNAME LIKE ?2 OR p.strNAME LIKE ?2 OR d.strFIRSTNAMECUSTOMER LIKE ?2 OR d.strLASTNAMECUSTOMER LIKE ?2 OR d.strNUMEROSECURITESOCIAL LIKE ?2 OR pr.strREF LIKE ?2 OR pr.strREFTICKET LIKE ?2) AND (t.dtCREATED >= ?6 AND t.dtCREATED <= ?7) AND t.strCUSTOMER LIKE ?8 AND t.strCUSTOMER=p.lgTIERSPAYANTID  AND t.lgFACTUREID=d.lgFACTUREID.lgFACTUREID  AND pc.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=d.strREF AND pr.lgPREENREGISTREMENTID=pc.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID  AND ( t.template <> TRUE OR t.template IS NULL) ORDER BY  t.dtCREATED DESC,t.strCODEFACTURE DESC";
-            if (!"".equals(Code)) {
-                lstTFacture = this.getOdataManager().getEm().createQuery(
-                        "SELECT t FROM TFacture t WHERE t.strCODEFACTURE LIKE ?1 AND ( t.template <> TRUE OR t.template IS NULL)")
-                        .setParameter(1, Code + "%").getResultList();
+            String query = "SELECT DISTINCT t FROM TFacture t,TTiersPayant p,TFactureDetail d,TPreenregistrementCompteClientTiersPayent pc,TPreenregistrement pr WHERE t.lgFACTUREID LIKE ?1 AND (t.strCODEFACTURE LIKE ?2  OR p.strFULLNAME LIKE ?2 OR p.strNAME LIKE ?2 OR d.strFIRSTNAMECUSTOMER LIKE ?2 OR d.strLASTNAMECUSTOMER LIKE ?2 OR d.strNUMEROSECURITESOCIAL LIKE ?2 OR pr.strREF LIKE ?2 OR pr.strREFTICKET LIKE ?2) AND (t.dtCREATED >= ?6 AND t.dtCREATED <= ?7) AND t.strCUSTOMER LIKE ?8 AND t.strCUSTOMER=p.lgTIERSPAYANTID  AND t.lgFACTUREID=d.lgFACTUREID.lgFACTUREID  AND pc.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=d.strREF AND pr.lgPREENREGISTREMENTID=pc.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID  AND ( t.template <> TRUE OR t.template IS NULL) %s ORDER BY  t.dtCREATED DESC,t.strCODEFACTURE DESC";
+
+            if (StringUtils.isNotEmpty(code)) {
+                return this.getOdataManager().getEm().createQuery(String.format(
+                        "SELECT t FROM TFacture t WHERE t.strCODEFACTURE LIKE ?1 AND ( t.template <> TRUE OR t.template IS NULL) %s",
+                        impayerClause)).setParameter(1, code + "%").getResultList();
             } else {
-                lstTFacture = this.getOdataManager().getEm().createQuery(query).setParameter(1, lg_FACTURE_ID)
-                        .setParameter(2, search_value + "%").setParameter(6, dt_debut).setParameter(7, dt_fin)
-                        .setParameter(8, str_CUSTOMER).setFirstResult(start).setMaxResults(limit).getResultList();
+                TypedQuery<TFacture> q = this.getOdataManager().getEm()
+                        .createQuery(String.format(query, impayerClause), TFacture.class).setParameter(1, idFacture)
+                        .setParameter(2, searchValue + "%").setParameter(6, dtDebut).setParameter(7, dtFin)
+                        .setParameter(8, strCUSTOMER);
+                if (limit > 0) {
+                    q.setFirstResult(start).setMaxResults(limit);
+                }
 
+                return q.getResultList();
             }
 
-            for (TFacture OFacture : lstTFacture) {
-                this.refresh(OFacture);
-
-            }
+            /*
+             * for (TFacture OFacture : lstTFacture) { this.refresh(OFacture);
+             *
+             * }
+             */
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return lstTFacture;
+        return Collections.emptyList();
     }
     // fin liste des factures
 
     // liste des factures
-    public int getListFacturesCount(String search_value, String lg_FACTURE_ID, String lg_TYPE_FACTURE_ID, Date dt_debut,
-            Date dt_fin, String str_CUSTOMER, String code) {
+    public int getListFacturesCount(String searchValue, String lg_FACTURE_ID, String lg_TYPE_FACTURE_ID, Date dt_debut,
+            Date dt_fin, String str_CUSTOMER, String code, String impayes) {
+        String impayerClause = " AND t.dblMONTANTRESTANT >0 ";
+        if (StringUtils.isEmpty(impayes)) {
+            impayerClause = "";
+        }
         Long count = 0l;
         try {
-            if ("".equals(search_value)) {
-                search_value = "%%";
+            if ("".equals(searchValue)) {
+                searchValue = "%%";
             }
             if (!"".equals(code)) {
-                count = (Long) this.getOdataManager().getEm().createQuery(
-                        "SELECT COUNT(t) FROM TFacture t WHERE t.strCODEFACTURE LIKE ?1 AND ( t.template <> TRUE OR t.template IS NULL)")
-                        .setParameter(1, code + "%").getSingleResult();
+                count = (Long) this.getOdataManager().getEm().createQuery(String.format(
+                        "SELECT COUNT(t) FROM TFacture t WHERE t.strCODEFACTURE LIKE ?1 AND ( t.template <> TRUE OR t.template IS NULL) %s",
+                        impayerClause)).setParameter(1, code + "%").getSingleResult();
             } else {
-                count = (Long) this.getOdataManager().getEm().createQuery(
-                        "SELECT COUNT(DISTINCT t) FROM TFacture t,TTiersPayant p,TFactureDetail d,TPreenregistrementCompteClientTiersPayent pc,TPreenregistrement pr WHERE t.lgFACTUREID LIKE ?1 AND (t.strCODEFACTURE LIKE ?2  OR p.strFULLNAME LIKE ?2 OR p.strNAME LIKE ?2 OR d.strFIRSTNAMECUSTOMER LIKE ?2 OR d.strLASTNAMECUSTOMER LIKE ?2 OR d.strNUMEROSECURITESOCIAL LIKE ?2 OR pr.strREF LIKE ?2 OR pr.strREFTICKET LIKE ?2) AND (t.dtCREATED >= ?6 AND t.dtCREATED <= ?7) AND t.strCUSTOMER LIKE ?8 AND t.strCUSTOMER=p.lgTIERSPAYANTID  AND t.lgFACTUREID=d.lgFACTUREID.lgFACTUREID  AND pc.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=d.strREF AND pr.lgPREENREGISTREMENTID=pc.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID AND ( t.template <> TRUE OR t.template IS NULL)")
-                        .setParameter(1, lg_FACTURE_ID).setParameter(2, search_value + "%").setParameter(6, dt_debut)
-                        .setParameter(7, dt_fin).setParameter(8, str_CUSTOMER).getSingleResult();
+                count = (Long) this.getOdataManager().getEm().createQuery(String.format(
+                        "SELECT COUNT(DISTINCT t) FROM TFacture t,TTiersPayant p,TFactureDetail d,TPreenregistrementCompteClientTiersPayent pc,TPreenregistrement pr WHERE t.lgFACTUREID LIKE ?1 AND (t.strCODEFACTURE LIKE ?2  OR p.strFULLNAME LIKE ?2 OR p.strNAME LIKE ?2 OR d.strFIRSTNAMECUSTOMER LIKE ?2 OR d.strLASTNAMECUSTOMER LIKE ?2 OR d.strNUMEROSECURITESOCIAL LIKE ?2 OR pr.strREF LIKE ?2 OR pr.strREFTICKET LIKE ?2) AND (t.dtCREATED >= ?6 AND t.dtCREATED <= ?7) AND t.strCUSTOMER LIKE ?8 AND t.strCUSTOMER=p.lgTIERSPAYANTID  AND t.lgFACTUREID=d.lgFACTUREID.lgFACTUREID  AND pc.lgPREENREGISTREMENTCOMPTECLIENTPAYENTID=d.strREF AND pr.lgPREENREGISTREMENTID=pc.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID AND ( t.template <> TRUE OR t.template IS NULL) %s",
+                        impayerClause)).setParameter(1, lg_FACTURE_ID).setParameter(2, searchValue + "%")
+                        .setParameter(6, dt_debut).setParameter(7, dt_fin).setParameter(8, str_CUSTOMER)
+                        .getSingleResult();
             }
 
         } catch (Exception e) {

@@ -1571,7 +1571,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             serviceImpression.setoTImprimante(imprimante);
             serviceImpression.setOfficine(officine);
             serviceImpression.setService(printService);
-            // serviceImpression.setCodeBar(this.buildLineBarecode(DateConverter.getShortId(10)));
             printTicketZ(serviceImpression, body, footer);
 
             return json.put("success", true).put("msg", "Opération effectuée ");
