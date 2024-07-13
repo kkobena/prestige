@@ -131,12 +131,12 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
         List<Predicate> predicates = new ArrayList<>();
 
         if (StringUtils.isNotEmpty(search)) {
-            predicates.add(cb.or(cb.like(root.get(TFamille_.intCIP), search + "%"),
-                    cb.like(fg.get(TFamilleGrossiste_.strCODEARTICLE), search + "%"),
-                    cb.like(root.get(TFamille_.intEAN13), search + "%"),
-                    cb.like(root.get(TFamille_.strNAME), search + "%"),
-                    cb.like(root.get(TFamille_.lgFAMILLEID), search + "%"),
-                    cb.like(root.get(TFamille_.strDESCRIPTION), search + "%")));
+            search = search + "%";
+            predicates.add(cb.or(cb.like(root.get(TFamille_.intCIP), search),
+                    cb.like(fg.get(TFamilleGrossiste_.strCODEARTICLE), search),
+                    cb.like(root.get(TFamille_.intEAN13), search), cb.like(root.get(TFamille_.strNAME), search),
+                    cb.like(root.get(TFamille_.lgFAMILLEID), search),
+                    cb.like(root.get(TFamille_.strDESCRIPTION), search)));
         }
         predicates.add(cb.equal(root.get(TFamille_.strSTATUT), Constant.STATUT_ENABLE));
         predicates.add(

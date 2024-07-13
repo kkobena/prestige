@@ -118,7 +118,7 @@ public class DataReporingServiceImpl implements DataReporingService {
         cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)));
         List<Predicate> predicates = margesPredicats(cb, root, join, LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
                 query, codeFamille, u, codeRayon, codeGrossiste);
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         Query q = getEntityManager().createQuery(cq);
         return (Long) q.getSingleResult();
     }
@@ -150,7 +150,7 @@ public class DataReporingServiceImpl implements DataReporingService {
             List<Predicate> predicates = margesPredicats(cb, root, join, LocalDate.parse(dtStart),
                     LocalDate.parse(dtEnd), query, codeFamille, u, codeRayon, codeGrossiste);
 
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             Long count = 0l;
             if (critere == null || filtre == MargeEnum.ALL) {
@@ -163,31 +163,31 @@ public class DataReporingServiceImpl implements DataReporingService {
                 return Pair.of(count, q.getResultList());
             } else {
                 List<FamilleArticleStatDTO> l = new ArrayList<>();
-                long _critere = Long.valueOf(critere);
+                long critere0 = Long.valueOf(critere);
                 switch (filtre) {
 
                 case EQUAL:
-                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() == _critere)
+                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() == critere0)
                             .collect(Collectors.toList());
                     break;
                 case GREATER:
-                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() > _critere)
+                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() > critere0)
                             .collect(Collectors.toList());
                     break;
                 case GREATER_EQUAL:
-                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() >= _critere)
+                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() >= critere0)
                             .collect(Collectors.toList());
                     break;
                 case LESS:
-                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() < _critere)
+                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() < critere0)
                             .collect(Collectors.toList());
                     break;
                 case LESS_EQUAL:
-                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() <= _critere)
+                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() <= critere0)
                             .collect(Collectors.toList());
                     break;
                 case NOT:
-                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() != _critere)
+                    l = q.getResultList().stream().filter(x -> x.getPourcentageCumulMage() != critere0)
                             .collect(Collectors.toList());
                     break;
 
@@ -196,8 +196,8 @@ public class DataReporingServiceImpl implements DataReporingService {
                 if (!all) {
                     count = (long) l.size();
                     l.sort(Comparator.comparing(FamilleArticleStatDTO::getLibelle));
-                    int _limit = limit + start;
-                    return Pair.of(count, l.subList(start, (_limit <= l.size()) ? _limit : l.size()));
+                    int limit0 = limit + start;
+                    return Pair.of(count, l.subList(start, (limit0 <= l.size()) ? limit0 : l.size()));
                 } else {
                     return Pair.of(0L, l);
                 }
@@ -205,7 +205,7 @@ public class DataReporingServiceImpl implements DataReporingService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
             return Pair.of(0l, Collections.emptyList());
         }
     }
@@ -220,7 +220,7 @@ public class DataReporingServiceImpl implements DataReporingService {
             return new JSONObject().put("total", margeProduit.getLeft()).put("data",
                     new JSONArray(margeProduit.getRight()));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
             return new JSONObject().put("total", 0).put("data", new JSONArray());
         }
     }
@@ -287,7 +287,7 @@ public class DataReporingServiceImpl implements DataReporingService {
 
             List<Predicate> predicates = unitesVenduePredicatsGamme(cb, root, join, LocalDate.parse(dtStart),
                     LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste, gammeId);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             Long count = 0l;
             if (!all) {
@@ -331,9 +331,9 @@ public class DataReporingServiceImpl implements DataReporingService {
                     .orderBy(cb.asc(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.laboratoire)
                             .get(Laboratoire_.libelle)));
 
-            List<Predicate> predicates = unitesVenduePredicatsGamme(cb, root, join, LocalDate.parse(dtStart),
+            List<Predicate> predicates = unitesVenduePredicatsLaboratoires(cb, root, join, LocalDate.parse(dtStart),
                     LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste, laboratoireId);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             Long count = 0l;
             if (!all) {
@@ -440,7 +440,7 @@ public class DataReporingServiceImpl implements DataReporingService {
             q.setParameter(2, idProduit);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
             return 0;
         }
     }
@@ -455,7 +455,7 @@ public class DataReporingServiceImpl implements DataReporingService {
         cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)));
         List<Predicate> predicates = unitesVenduePredicats(cb, root, join, LocalDate.parse(dtStart),
                 LocalDate.parse(dtEnd), query, codeFamille, u, codeRayon, codeGrossiste);
-        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         Query q = getEntityManager().createQuery(cq);
         return (Long) q.getSingleResult();
     }
@@ -470,7 +470,7 @@ public class DataReporingServiceImpl implements DataReporingService {
         cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)));
         List<Predicate> predicates = unitesVenduePredicatsGamme(cb, root, join, LocalDate.parse(dtStart),
                 LocalDate.parse(dtEnd), query, codeFamille, u, codeRayon, codeGrossiste, gammeId);
-        cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         Query q = getEntityManager().createQuery(cq);
         return (Long) q.getSingleResult();
     }
@@ -485,7 +485,7 @@ public class DataReporingServiceImpl implements DataReporingService {
         cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)));
         List<Predicate> predicates = unitesVenduePredicatsLaboratoires(cb, root, join, LocalDate.parse(dtStart),
                 LocalDate.parse(dtEnd), query, codeFamille, u, codeRayon, codeGrossiste, laboratoireId);
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         Query q = getEntityManager().createQuery(cq);
         return (Long) q.getSingleResult();
     }
@@ -527,7 +527,7 @@ public class DataReporingServiceImpl implements DataReporingService {
                             cb.asc(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME)));
             List<Predicate> predicates = unitesVenduePredicats(cb, root, join, LocalDate.parse(dtStart),
                     LocalDate.parse(dtEnd), query, codeFamile, u, codeRayon, codeGrossiste);
-            cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<FamilleArticleStatDTO> q = getEntityManager().createQuery(cq);
             Long count = 0l;
             List<FamilleArticleStatDTO> data = new ArrayList<>();
@@ -560,7 +560,7 @@ public class DataReporingServiceImpl implements DataReporingService {
                     codeRayon, codeGrossiste, start, limit, false);
             return new JSONObject().put("total", p.getLeft()).put("data", new JSONArray(p.getRight()));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
             return new JSONObject().put("total", 0).put("data", new JSONArray());
         }
     }
@@ -574,7 +574,7 @@ public class DataReporingServiceImpl implements DataReporingService {
                     query, u, codeRayon, codeGrossiste, laboratoireId, start, limit, false);
             return new JSONObject().put("total", p.getLeft()).put("data", new JSONArray(p.getRight()));
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+             LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
             return new JSONObject().put("total", 0).put("data", new JSONArray());
         }
     }
