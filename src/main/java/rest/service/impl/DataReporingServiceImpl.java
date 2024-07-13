@@ -205,7 +205,7 @@ public class DataReporingServiceImpl implements DataReporingService {
             }
 
         } catch (Exception e) {
-             LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
+            LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
             return Pair.of(0l, Collections.emptyList());
         }
     }
@@ -220,7 +220,7 @@ public class DataReporingServiceImpl implements DataReporingService {
             return new JSONObject().put("total", margeProduit.getLeft()).put("data",
                     new JSONArray(margeProduit.getRight()));
         } catch (Exception e) {
-             LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
+            LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
             return new JSONObject().put("total", 0).put("data", new JSONArray());
         }
     }
@@ -560,7 +560,7 @@ public class DataReporingServiceImpl implements DataReporingService {
                     codeRayon, codeGrossiste, start, limit, false);
             return new JSONObject().put("total", p.getLeft()).put("data", new JSONArray(p.getRight()));
         } catch (Exception e) {
-             LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
+            LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
             return new JSONObject().put("total", 0).put("data", new JSONArray());
         }
     }
@@ -574,7 +574,7 @@ public class DataReporingServiceImpl implements DataReporingService {
                     query, u, codeRayon, codeGrossiste, laboratoireId, start, limit, false);
             return new JSONObject().put("total", p.getLeft()).put("data", new JSONArray(p.getRight()));
         } catch (Exception e) {
-             LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
+            LOG.log(Level.SEVERE, "statsUnintesVenduesparGamme ---->> ", e);
             return new JSONObject().put("total", 0).put("data", new JSONArray());
         }
     }
