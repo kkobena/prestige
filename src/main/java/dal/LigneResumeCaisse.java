@@ -19,6 +19,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -26,7 +27,8 @@ import javax.validation.constraints.NotNull;
  * @author koben
  */
 @Entity
-@Table(name = "ligne_resume_caisse")
+@Table(name = "ligne_resume_caisse", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "type_reglement_id", "resume_caisse_id", "type_ligne" }) })
 public class LigneResumeCaisse implements Serializable {
 
     private static final long serialVersionUID = 1L;

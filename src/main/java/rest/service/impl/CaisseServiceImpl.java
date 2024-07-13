@@ -18,6 +18,8 @@ import commonTasks.dto.VenteDetailsDTO;
 import commonTasks.dto.VisualisationCaisseDTO;
 import dal.AnnulationRecette;
 import dal.AnnulationRecette_;
+import dal.LigneResumeCaisse;
+import dal.LigneResumeCaisse_;
 import dal.MvtTransaction;
 import dal.MvtTransaction_;
 import dal.Notification;
@@ -86,6 +88,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
@@ -642,16 +645,10 @@ public class CaisseServiceImpl implements CaisseService {
         JSONObject json = new JSONObject();
         try {
             TResumeCaisse oTResumeCaisse = getEntityManager().find(TResumeCaisse.class, idCaisse);
-            getEntityManager().refresh(oTResumeCaisse);
-            if (oTResumeCaisse == null) {
-                json.put("success", false).put("msg",
-                        " Impossible de cloturer la caisse. Ref Inconnu de la caisse inconnu ");
-                return json;
 
-            }
             if (oTResumeCaisse.getStrSTATUT().equals(Constant.STATUT_IS_USING)) {
                 json.put("success", false).put("msg",
-                        " Impossible de cloturer cette caisse ;La caisse specifiée est déjà  en cours d'utilisation");
+                        " Impossible d'annuler cette caisse ;La caisse specifiée est déjà  en cours d'utilisation");
                 return json;
             }
             TResumeCaisse oTResumeCaisseCurrent = this.getTResumeCaisse(oTResumeCaisse.getLgUSERID().getLgUSERID(),
@@ -673,6 +670,7 @@ public class CaisseServiceImpl implements CaisseService {
                 getEntityManager().remove(oBilletageDetails);
                 getEntityManager().remove(tb);
             }
+            removeLigneResumeCaisse(oTResumeCaisse);
             getEntityManager().merge(oTResumeCaisse);
             String description = "Annulation de la clôture de la caisse de "
                     + oTResumeCaisse.getLgUSERID().getStrFIRSTNAME() + " "
@@ -2128,4 +2126,16 @@ public class CaisseServiceImpl implements CaisseService {
         return mvtCaisse;
 
     }
+
+    private void removeLigneResumeCaisse(TResumeCaisse resumeCaisse) {
+
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaDelete<LigneResumeCaisse> q = cb.createCriteriaDelete(LigneResumeCaisse.class);
+        Root<LigneResumeCaisse> root = q.from(LigneResumeCaisse.class);
+        q.where(cb.equal(root.get(LigneResumeCaisse_.resumeCaisse).get(TResumeCaisse_.ldCAISSEID),
+                resumeCaisse.getLdCAISSEID()));
+        getEntityManager().createQuery(q).executeUpdate();
+
+    }
+
 }

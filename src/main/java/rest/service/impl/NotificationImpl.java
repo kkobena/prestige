@@ -197,52 +197,52 @@ public class NotificationImpl implements NotificationService {
 
                         TypeNotification typeNotification = TypeNotification.fromName(categorie.getName());
                         switch (typeNotification) {
-                            case CLOTURE_DE_CAISSE:
-                                html.append(
-                                        rest.service.notification.template.Mail.buildClotureCaisse(categorieNotifications));
-                                break;
-                            case MVT_DE_CAISSE:
-                                html.append(rest.service.notification.template.Mail.buildMvtCaisse(categorieNotifications));
-                                break;
-                            case ENTREE_EN_STOCK:
-                                html.append(
-                                        rest.service.notification.template.Mail.buildBonLivraison(categorieNotifications));
-                                break;
-                            case RETOUR_FOURNISSEUR:
-                                html.append(rest.service.notification.template.Mail
-                                        .buildRetourFournisseur(categorieNotifications));
-                                break;
-                            case SAISIS_PERIMES:
-                                html.append(rest.service.notification.template.Mail.buildPerimes(categorieNotifications));
-                                break;
-                            case QUANTITE_UG:
-                                html.append(rest.service.notification.template.Mail.buildEntreeUg(categorieNotifications));
-                                break;
-                            case AJUSTEMENT_DE_PRODUIT:
-                                html.append(
-                                        rest.service.notification.template.Mail.buildAjustement(categorieNotifications));
-                                break;
-                            case DECONDITIONNEMENT:
-                                html.append(rest.service.notification.template.Mail
-                                        .buildDeconditionnement(categorieNotifications));
-                                break;
-                            case MODIFICATION_INFO_PRODUIT_COMMANDE:
-                                html.append(rest.service.notification.template.Mail
-                                        .buildModificationProduitCommande(categorieNotifications));
-                                break;
-                            case MODIFICATION_PRIX_VENTE_PRODUIT:
-                                html.append(rest.service.notification.template.Mail
-                                        .buildModificationProduitPu(categorieNotifications));
-                                break;
-                            case AJOUT_DE_NOUVEAU_PRODUIT:
-                                html.append(rest.service.notification.template.Mail
-                                        .buildCreationProduit(categorieNotifications));
-                                break;
-                            case MODIFICATION_VENTE:
-                                html.append(rest.service.notification.template.Mail.buildVente(categorieNotifications));
-                                break;
-                            default:
-                                break;
+                        case CLOTURE_DE_CAISSE:
+                            html.append(
+                                    rest.service.notification.template.Mail.buildClotureCaisse(categorieNotifications));
+                            break;
+                        case MVT_DE_CAISSE:
+                            html.append(rest.service.notification.template.Mail.buildMvtCaisse(categorieNotifications));
+                            break;
+                        case ENTREE_EN_STOCK:
+                            html.append(
+                                    rest.service.notification.template.Mail.buildBonLivraison(categorieNotifications));
+                            break;
+                        case RETOUR_FOURNISSEUR:
+                            html.append(rest.service.notification.template.Mail
+                                    .buildRetourFournisseur(categorieNotifications));
+                            break;
+                        case SAISIS_PERIMES:
+                            html.append(rest.service.notification.template.Mail.buildPerimes(categorieNotifications));
+                            break;
+                        case QUANTITE_UG:
+                            html.append(rest.service.notification.template.Mail.buildEntreeUg(categorieNotifications));
+                            break;
+                        case AJUSTEMENT_DE_PRODUIT:
+                            html.append(
+                                    rest.service.notification.template.Mail.buildAjustement(categorieNotifications));
+                            break;
+                        case DECONDITIONNEMENT:
+                            html.append(rest.service.notification.template.Mail
+                                    .buildDeconditionnement(categorieNotifications));
+                            break;
+                        case MODIFICATION_INFO_PRODUIT_COMMANDE:
+                            html.append(rest.service.notification.template.Mail
+                                    .buildModificationProduitCommande(categorieNotifications));
+                            break;
+                        case MODIFICATION_PRIX_VENTE_PRODUIT:
+                            html.append(rest.service.notification.template.Mail
+                                    .buildModificationProduitPu(categorieNotifications));
+                            break;
+                        case AJOUT_DE_NOUVEAU_PRODUIT:
+                            html.append(rest.service.notification.template.Mail
+                                    .buildCreationProduit(categorieNotifications));
+                            break;
+                        case MODIFICATION_VENTE:
+                            html.append(rest.service.notification.template.Mail.buildVente(categorieNotifications));
+                            break;
+                        default:
+                            break;
                         }
                     });
             html.append(rest.service.notification.template.Mail.endTag());
