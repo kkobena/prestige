@@ -14,8 +14,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,8 +33,8 @@ import rest.report.ReportUtil;
 import rest.service.BalanceService;
 import rest.service.CaisseService;
 import rest.service.dto.BalanceParamsDTO;
-import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
+import util.Constant;
 
 /**
  * @author koben
@@ -59,14 +57,14 @@ public class ExcelExporter extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser oTUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
         boolean ration = Boolean.parseBoolean(request.getParameter("ration"));
         boolean monthly = Boolean.parseBoolean(request.getParameter("monthly"));
         Params params = new Params();
-        params.setOperateur(OTUser);
+        params.setOperateur(oTUser);
 
         if (dtEnd != null && !"".equals(dtEnd)) {
             params.setDtEnd(dtEnd);
