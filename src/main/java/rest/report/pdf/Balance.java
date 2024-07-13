@@ -820,40 +820,6 @@ public class Balance {
         return "/data/reports/pdf/rp_statfamilleart_" + report_generate_file;
     }
 
-    Comparator<VenteDetailsDTO> comparatorQty = Comparator.comparingInt(VenteDetailsDTO::getIntQUANTITY);
-    Comparator<VenteDetailsDTO> comparatorPrice = Comparator.comparingInt(VenteDetailsDTO::getIntPRICE);
-
-    public String geVingtQuatreVingt(String dtStart, String dtEnd, TUser tu, String codeFamile, String codeRayon,
-            String codeGrossiste, boolean qtyOrCa) throws IOException {
-
-        LocalDate dtSt = LocalDate.now(), dtEn = dtSt;
-        try {
-            dtSt = LocalDate.parse(dtStart);
-            dtEn = LocalDate.parse(dtEnd);
-        } catch (Exception e) {
-        }
-        TOfficine oTOfficine = caisseService.findOfficine();
-        String scr_report_file = "rp_vingtquatre";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
-        String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        if (!dtEn.isEqual(dtSt)) {
-            P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        }
-        String tile = qtyOrCa ? " PAR QUANTITE VENDUE " : "PAR CHIFFRE D'AFFAIRE ";
-        parameters.put("P_H_CLT_INFOS", "EDITION DES 20/80" + tile + P_PERIODE);
-        String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        List<VenteDetailsDTO> datas = familleArticleService.geVingtQuatreVingt(dtStart, dtEnd, tu, codeFamile,
-                codeRayon, codeGrossiste, 0, 0, true, qtyOrCa);
-        if (qtyOrCa) {
-            datas.sort(comparatorQty.reversed());
-        } else {
-            datas.sort(comparatorPrice.reversed());
-        }
-        reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
-                jdom.scr_report_pdf + "rp_vingtquatre" + report_generate_file, datas);
-        return "/data/reports/pdf/rp_vingtquatre" + report_generate_file;
-    }
-
     public String produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser tu, String codeFamile,
             String codeRayon, String codeGrossiste) throws IOException {
         LocalDate dtSt = LocalDate.now(), dtEn = dtSt;

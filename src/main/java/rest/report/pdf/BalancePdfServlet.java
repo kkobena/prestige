@@ -58,7 +58,7 @@ public class BalancePdfServlet extends HttpServlet {
 
     private enum Action {
         BALANCE, GESTION_CAISSE, TABLEAU, TVA, REPORT, LISTECAISSE, SUIVIMVT, RECAP, TVA_JOUR, STAT_FAMILLE_ARTICLE,
-        EDITION20_80, PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS, BALANCE_PARA, SAISIE_PERIMES,
+        PERIMES, STAT_RAYONS_ARTICLE, STAT_PROVIDER_ARTICLE, UNITES_AVOIRS, BALANCE_PARA, SAISIE_PERIMES,
         STAT_FAMILLE_ARTICLE_VETO, SUIVI_REMISE, BALANCE_CARNET, TABLEAU_CARNET, LISTECAISSE_V2
     }
 
@@ -189,13 +189,7 @@ public class BalancePdfServlet extends HttpServlet {
             query = request.getParameter("query");
             file = balance.familleArticleveto(dtStart, dtEnd, codeFamile, query, oUser, codeRayon, codeGrossiste);
             break;
-        case EDITION20_80:
-            codeFamile = request.getParameter("codeFamile");
-            codeRayon = request.getParameter("codeRayon");
-            codeGrossiste = request.getParameter("codeGrossiste");
-            boolean qtyOrCa = Boolean.parseBoolean(request.getParameter("qtyOrCa"));
-            file = balance.geVingtQuatreVingt(dtStart, dtEnd, oUser, codeFamile, codeRayon, codeGrossiste, qtyOrCa);
-            break;
+
         case PERIMES:
             codeFamile = request.getParameter("codeFamile");
             codeRayon = request.getParameter("codeRayon");
