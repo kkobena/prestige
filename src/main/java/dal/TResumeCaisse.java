@@ -73,8 +73,12 @@ public class TResumeCaisse implements Serializable {
     @JoinColumn(name = "lg_USER_ID", referencedColumnName = "lg_USER_ID")
     @ManyToOne
     private TUser lgUSERID;
-    @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE }, mappedBy = "resumeCaisse")
+    @OneToMany(cascade = { CascadeType.REMOVE,
+            CascadeType.PERSIST/* , CascadeType.MERGE */ }, mappedBy = "resumeCaisse")
     private List<LigneResumeCaisse> ligneResumeCaisses = new ArrayList<>();
+    // 404 {"requestError":{"serviceException":{"messageId":"SVC0004","text":"No valid addresses provided in message
+    // part %1","variables":["Invalid recipient address: tel:+22507 47 60 03 68","Only numeric phone number is
+    // accepted"]}}} 07 47 60 03 68
 
     public TResumeCaisse() {
     }
