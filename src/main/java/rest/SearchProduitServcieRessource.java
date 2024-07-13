@@ -55,7 +55,7 @@ public class SearchProduitServcieRessource {
     @Path("/produits")
     public Response getProduits(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "produitId") String produitId, @QueryParam(value = "query") String query,
-            @QueryParam(value = "search_value") String search_value) throws JSONException {
+            @QueryParam(value = "search_value") String searchValue) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
@@ -64,7 +64,7 @@ public class SearchProduitServcieRessource {
         }
 
         JSONObject jsono = this.searchProduitServcie.fetchOrderProduits(tu, produitId,
-                StringUtils.isNotEmpty(query) ? query : search_value, limit, start);
+                StringUtils.isNotEmpty(query) ? query : searchValue, limit, start);
         return Response.ok().entity(jsono.toString()).build();
     }
 }
