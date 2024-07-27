@@ -90,7 +90,10 @@ Ext.define('testextjs.controller.EtatControlAnnuelCtr', {
 
             'etatannuel gridpanel': {
                 viewready: this.doInitStore
+            }, 'etatannuel #exportToExcel': {
+                click: this.onExportExcel
             }
+
 
         });
     },
@@ -118,7 +121,29 @@ Ext.define('testextjs.controller.EtatControlAnnuelCtr', {
 
         window.open(linkUrl);
     },
+    onExportExcel: function () {
+        const me = this;
+        const dtStart = me.getDtStart().getSubmitValue();
+        const dtEnd = me.getDtEnd().getSubmitValue();
+        let grossisteId = me.getGrossiste().getValue();
+        let groupeId = me.getGroupe().getValue();
+        let groupBy = me.getGroup().getValue();
 
+        if (grossisteId === null) {
+            grossisteId = '';
+        }
+        if (groupeId === null) {
+            groupeId = '';
+        }
+
+        if (groupBy === null) {
+            groupBy = '';
+        }
+        const linkUrl = '../EtatControlStockServlet?mode=etatAnnuel&dtStart=' + dtStart + '&dtEnd=' + dtEnd
+                + '&grossisteId=' + grossisteId + '&groupBy=' + groupBy + '&groupeId=' + groupeId + '&fileType=excel';
+
+        window.open(linkUrl);
+    },
     doBeforechange: function (page, currentPage) {
         const me = this;
         const myProxy = me.getEtatannuelGrid().getStore().getProxy();
@@ -175,7 +200,7 @@ Ext.define('testextjs.controller.EtatControlAnnuelCtr', {
         me.getTotalVenteTtc().setValue(rec.totalVenteTtc);
         me.getTotalMarge().setValue(rec.totalMarge);
         me.getTotalNbreBon().setValue(rec.totalNbreBon);
-            me.getTotalTtc().setValue(rec.totalTtc);
+        me.getTotalTtc().setValue(rec.totalTtc);
 
 
     }

@@ -12,7 +12,7 @@ Ext.define('testextjs.view.bons.EtatControlAnnuel', {
     cls: 'custompanel',
     layout: 'fit',
     initComponent: function () {
-      
+
         const groupByStore = Ext.create('Ext.data.ArrayStore', {
             data: [['GROSSISTE', 'Grouper par grossiste'], ['GROUP', 'Grouper par groupe']],
             fields: [{name: 'id', type: 'string'}, {name: 'libelle', type: 'string'}]
@@ -207,6 +207,12 @@ Ext.define('testextjs.view.bons.EtatControlAnnuel', {
                             iconCls: 'printable',
                             tooltip: 'imprimer',
                             scope: this
+                        }, {
+                            text: 'Exporter en excel',
+                            tooltip: 'Exporter en excel',
+                            icon: 'resources/images/icons/fam/excel_icon.png',
+                            scope: this,
+                           itemId: 'exportToExcel',
                         }
                     ]
                 },
