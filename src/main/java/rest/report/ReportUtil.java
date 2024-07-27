@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import dal.TOfficine;
 import dal.TUser;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -27,6 +28,7 @@ import javax.print.PrintService;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.MediaSizeName;
+import javax.servlet.http.HttpServletResponse;
 import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;
@@ -44,6 +46,7 @@ import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimplePrintServiceExporterConfiguration;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import org.apache.commons.lang3.StringUtils;
+import rest.report.pdf.excel.ExcelExporter;
 import toolkits.utils.jdom;
 import util.DateConverter;
 
@@ -370,6 +373,7 @@ public class ReportUtil {
             exporter.setExporterInput(SimpleExporterInput.getInstance(List.of(jasperPrint)));
             exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(pdfPath));
             SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+            configuration.setRemoveEmptySpaceBetweenRows(true);
             configuration.setOnePagePerSheet(false);
             exporter.setConfiguration(configuration);
             exporter.exportReport();
@@ -403,5 +407,40 @@ public class ReportUtil {
             LOG.log(Level.SEVERE, null, ex);
         }
         return "/data/reports/pdf/" + fileName;
+    }
+
+    public void exportToxlsx(HttpServletResponse response, File filetoExport) {
+        OutputStream out = null;
+        FileInputStream inStream = null;
+        try {
+            out = response.getOutputStream();
+            inStream = new FileInputStream(filetoExport);
+            String filename = filetoExport.getName() + ".xlsx";
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setContentLengthLong(filetoExport.length());
+            response.setHeader("Content-disposition", "inline; filename=" + filename);
+            OutputStream outStream = response.getOutputStream();
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = inStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        } finally {
+            if (inStream != null) {
+                try {
+                    if (out != null) {
+                        out.flush();
+                    }
+                    inStream.close();
+                } catch (IOException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                }
+            }
+        }
     }
 }
