@@ -49,7 +49,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                   url: '../api/v1/grossiste/all',
+                url: '../api/v1/grossiste/all',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -61,10 +61,10 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
         });
         Me = this;
         Ext.Ajax.request({
-             method: 'GET',
-               url: '../api/v1/common/is-authorized',
+            method: 'GET',
+            url: '../api/v1/common/is-authorized',
             params: {
-                action:'P_BTN_UPDATEBL'
+                action: 'P_BTN_UPDATEBL'
             },
             success: function (response)
             {
@@ -83,7 +83,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
 
         const itemsPerPage = 20;
         const store_etats = new Ext.data.Store({
- 
+
             idProperty: 'id',
             fields: [
                 {
@@ -440,6 +440,14 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                     handler: this.onPrintClick
                 }, '-',
                 {
+                    text: 'Exporter en excel',
+                    tooltip: 'Exporter en excel',
+                    icon: 'resources/images/icons/fam/excel_icon.png',
+                    scope: this,
+                    handler: this.onExportToExcel
+                }, '-',
+
+                {
                     text: 'GESTION DES QUINZAINES',
                     scope: this,
                     hidden: true,
@@ -509,10 +517,8 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
                 });
     },
     onPdfDetailClick: function (grid, rowIndex) {
-
         const rec = grid.getStore().getAt(rowIndex);
         let linkUrl = url_services_pdf_bonlivraison + '?lg_BON_LIVRAISON_ID=' + rec.get('strREFLIVRAISON');
-
         window.open(linkUrl);
 
     },
@@ -527,29 +533,35 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
 
     },
     onPrintClick: function () {
+        const valeur = Ext.getCmp('rechecher').getValue();
+        let lg_GROSSISTE_ID = "";
+        if (Ext.getCmp('lg_GROSSISTE_ID').getValue() !== null) {
+            lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
+        }
+        const dtEnd = Ext.getCmp('datefin').getSubmitValue();
+        const dtStart = Ext.getCmp('datedebut').getSubmitValue();
 
-        Ext.MessageBox.confirm('Message',
-                'Imprimer l\'etat de controle des achats?',
-                function (btn) {
-                    if (btn === 'yes') {
-                        const valeur = Ext.getCmp('rechecher').getValue();
-                        let lg_GROSSISTE_ID = "";
-                        if (Ext.getCmp('lg_GROSSISTE_ID').getValue() !== null) {
-                            lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
-                        }
-                        const dtEnd = Ext.getCmp('datefin').getSubmitValue();
-                        const dtStart = Ext.getCmp('datedebut').getSubmitValue();
-
-                        const linkUrl = '../EtatControlStockServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
-                                + '&grossisteId=' + lg_GROSSISTE_ID + '&search=' + valeur;
-                        window.open(linkUrl);
-
-                    }
-                });
-
-
+        const linkUrl = '../EtatControlStockServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
+                + '&grossisteId=' + lg_GROSSISTE_ID + '&search=' + valeur;
+        window.open(linkUrl);
 
     },
+
+    onExportToExcel: function () {
+        const valeur = Ext.getCmp('rechecher').getValue();
+        let lg_GROSSISTE_ID = "";
+        if (Ext.getCmp('lg_GROSSISTE_ID').getValue() !== null) {
+            lg_GROSSISTE_ID = Ext.getCmp('lg_GROSSISTE_ID').getValue();
+        }
+        const dtEnd = Ext.getCmp('datefin').getSubmitValue();
+        const dtStart = Ext.getCmp('datedebut').getSubmitValue();
+
+        const linkUrl = '../EtatControlStockServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
+                + '&grossisteId=' + lg_GROSSISTE_ID + '&search=' + valeur + '&fileType=excel';
+        window.open(linkUrl);
+
+    },
+
     onRechClick: function () {
         let lg_GROSSISTE_ID = "";
         if (Ext.getCmp('lg_GROSSISTE_ID').getValue() != null) {
@@ -569,7 +581,7 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
             }
         });
     },
-    
+
     onGestionQuinzaine: function () {
         const xtype = "quinzaineManager";
         testextjs.app.getController('App').onLoadNewComponent(xtype, "Gestion des quinzaines", "0");
