@@ -172,7 +172,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             } else {
                 montantCMU += x.getIntPRICE();
             }
-            montantTva += x.getMontantTva();
+//            montantTva += x.getMontantTva();
             TFamille famille = x.getLgFAMILLEID();
 
             int remise = 0;
