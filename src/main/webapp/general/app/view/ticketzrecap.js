@@ -2,25 +2,26 @@
 
 /* global Ext, panel */
 
-Ext.define('testextjs.view.chiffreAnnuel', {
+Ext.define('testextjs.view.ticketzrecap', {
     extend: 'Ext.panel.Panel',
-    xtype: 'caannuel',
+    xtype: 'ticketzmanager',
+    title: 'TICKET Z',
     requires: [
         'Ext.ux.IFrame'
     ],
     layout: 'fit',
     autoScroll: false,
-    width: '95%',
-    height: Ext.Element.getViewportHeight(),
+    width: '99%',
+    height: Ext.getBody().getViewSize().height*0.80,
     border: false,
     initComponent: function () {
         this.items = [{
                 xtype: "component",
                 autoScroll: false,
-                border: false,
+                border: true,
                 autoEl: {
                     tag: "iframe",
-                    src: 'chiffesaffaire.html'
+                    src: 'ticketz.html'
                 }
             }],
                 this.callParent();
