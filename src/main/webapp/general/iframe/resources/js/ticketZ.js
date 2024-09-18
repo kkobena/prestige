@@ -55,7 +55,9 @@ function buildParams() {
 
 }
 function loadData() {
+        const btnStat = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span class="visually-hidden" role="status">Recheche...</span>';
     $("#afficher").prop('disabled', true);
+     $("#afficher").html(btnStat);
     $.ajax({
         url: '../api/v1/caisse/fetch-tickez',
         method: "POST",
@@ -105,6 +107,7 @@ function loadData() {
     }).always(function () {
         $('#spinner').hide();
         $("#afficher").prop('disabled', false);
+         $("#afficher").html("Afficher");
 
     });
 }
