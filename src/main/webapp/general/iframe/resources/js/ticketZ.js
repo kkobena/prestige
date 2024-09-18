@@ -41,7 +41,7 @@ $(document).ready(function () {
 //
 //    });
 
-   loadData();
+    loadData();
 });
 
 function buildParams() {
@@ -70,29 +70,35 @@ function loadData() {
             const datas = tickets.datas;
 
             let html = '';
-            for (let userData of datas) {
-                html += '<div class="col-md-3">';
-                const user = userData.user;
-                html += '<div class="card"> <div class="card-body"><h6 class="card-title">RECAPITULATIF DE  ' + user + '</h6> <table class="table table-striped table-sm"> <tbody>';
-                const modePaymentAmounts = userData.modePaymentAmounts;
-                for (let mode of modePaymentAmounts) {
-                    html += ' <tr><td>' + mode.modeLibelle + '</td><td class="text-right text-black">' + mode.montant + '</td> </tr>';
-                }
+            if (datas) {
+                for (let userData of datas) {
+                    html += '<div class="col-md-3">';
+                    const user = userData.user;
+                    html += '<div class="card"> <div class="card-body"><h6 class="card-title">RECAPITULATIF DE  ' + user + '</h6> <table class="table table-striped table-sm"> <tbody>';
+                    const modePaymentAmounts = userData.modePaymentAmounts;
+                    for (let mode of modePaymentAmounts) {
+                        html += ' <tr><td>' + mode.modeLibelle + '</td><td class="text-right text-black">' + mode.montant + '</td> </tr>';
+                    }
 
-                const totaux = userData.totaux;
-                for (let g of totaux) {
-                    html += ' <tr><th>' + g.modeLibelle + '</th><td class="text-right text-black">' + g.montant + '</td> </tr>';
+                    const totaux = userData.totaux;
+                    for (let g of totaux) {
+                        html += ' <tr><th>' + g.modeLibelle + '</th><td class="text-right text-black">' + g.montant + '</td> </tr>';
+                    }
+                    html += '</tbody> </table></div> </div> </div>  ';
                 }
-                html += '</tbody> </table></div> </div> </div>  ';
             }
 
-            const totauxGeneral = data.data.totaux;
-            html += '<div class="col-md-6"><div class="card"><div class="card-body"> <h6 class="card-title">TOTAL GENERAL</h6><table class="table table-striped table-sm"> <tbody>';
-            for (let gr of totauxGeneral) {
-                html += ' <tr><td>' + gr.modeLibelle + '</td><td class="text-right text-black">' + gr.montant + '</td> </tr>';
+
+            const totauxGeneral = tickets.totaux;
+            if (totauxGeneral) {
+                html += '<div class="col-md-6"><div class="card"><div class="card-body"> <h6 class="card-title">TOTAL GENERAL</h6><table class="table table-striped table-sm"> <tbody>';
+                for (let gr of totauxGeneral) {
+                    html += ' <tr><td>' + gr.modeLibelle + '</td><td class="text-right text-black">' + gr.montant + '</td> </tr>';
+                }
+                html += '</tbody> </table></div> </div>  </div></div>';
+                container.html(html);
             }
-            html += '</tbody> </table></div> </div>  </div></div>';
-            container.html(html);
+
         }
 
 

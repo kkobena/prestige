@@ -2385,7 +2385,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         JSONObject json = new JSONObject();
         TicketRecapWrapper recapWrapper = buildTicketZ(params);
         if (recapWrapper != null) {
-            json.put("data", new JSONObject());
+            json.put("data", new JSONObject(recapWrapper));
         }
 
         return json;
