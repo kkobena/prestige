@@ -21,7 +21,7 @@ Ext.define('testextjs.view.ticketzrecap', {
                 border: true,
                 autoEl: {
                     tag: "iframe",
-                    src: 'ticketz.html'
+                    src: 'ticketzview.html'
                 }
             }],
                 this.callParent();
