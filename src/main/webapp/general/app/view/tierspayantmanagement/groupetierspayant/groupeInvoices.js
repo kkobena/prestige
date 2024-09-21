@@ -506,9 +506,10 @@ Ext.define('testextjs.view.tierspayantmanagement.groupetierspayant.groupeInvoice
     },
 
     onPrint: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
-        var lg_GROUPE_ID = rec.get('lg_GROUPE_ID');
-        var CODEFACTURE = rec.get('CODEFACTURE');
+        const rec = grid.getStore().getAt(rowIndex);
+        const lg_GROUPE_ID = rec.get('lg_GROUPE_ID');
+        const CODEFACTURE = rec.get('CODEFACTURE');
+        
         var linkUrl = "../webservices/configmanagement/groupe/group_invoice_pdf.jsp" + "?lg_GROUPE_ID=" + lg_GROUPE_ID + "&CODEFACTURE=" + CODEFACTURE;
         window.open(linkUrl);
 
