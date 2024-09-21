@@ -56,7 +56,7 @@ Ext.define('testextjs.view.actions.action', {
             }
 
         });
-        me.items = me.buildItems();
+            me.items = me.buildItems();
         me.callParent(arguments);
         me.getCa();
 

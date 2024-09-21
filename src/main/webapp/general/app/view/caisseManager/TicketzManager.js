@@ -3,7 +3,7 @@
 
 Ext.define('testextjs.view.caisseManager.TicketzManager', {
     extend: 'Ext.form.Panel',
-    xtype: 'ticketzmanager',
+    xtype: 'ticketzmanager_old',
     frame: true,
     title: 'TICKET Z',
     bodyPadding: 10,

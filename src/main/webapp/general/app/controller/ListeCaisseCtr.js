@@ -112,7 +112,8 @@ Ext.define('testextjs.controller.ListeCaisseCtr', {
 
                 }
 
-                items.push({
+                items.push(
+                        {
                     xtype: 'displayfield',
                     fieldLabel: e.modeReglement,
 //                    labelWidth: e.modeReglement.toString().length * 8,

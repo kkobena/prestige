@@ -410,7 +410,7 @@ Ext.application({
         'testextjs.view.configmanagement.motifretour.action.add',
         'testextjs.view.commandemanagement.cmde_passees.action.add',
         'testextjs.model.BonLivraison',
-     
+
         'testextjs.model.Suggestion',
         'testextjs.model.SuggestionOrder',
         'testextjs.model.Order',
@@ -421,7 +421,7 @@ Ext.application({
         'testextjs.model.OrderDetail',
 
         'testextjs.view.sm_user.suggerercde.SuggerercdeManager',
- 
+
         'testextjs.view.commandemanagement.suggestion.Suggestion_Manager',
         'testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
         //  Fiche Societe
@@ -445,9 +445,9 @@ Ext.application({
         'testextjs.view.configmanagement.dci.DciManager',
         'testextjs.model.Dci',
         'testextjs.view.configmanagement.dci.action.add',
-       
+
         'testextjs.model.Etiquette',
-       
+
         'testextjs.view.configmanagement.tauxmarque.TauxmarqueManager',
         'testextjs.model.TauxMarque',
         'testextjs.view.configmanagement.tauxmarque.action.add',
@@ -564,10 +564,9 @@ Ext.application({
         'testextjs.model.DetailBon',
         'testextjs.model.Reglement',
         'testextjs.view.sm_user.factureregle.FactureRegleManager',
-      
 
         //Report
-       
+
         'testextjs.model.Statistiquefamille',
 
         'testextjs.model.Statistiquevente',
@@ -726,7 +725,7 @@ Ext.application({
         'testextjs.view.configmanagement.logfile.logManager',
         'testextjs.view.configmanagement.company.company',
         'testextjs.view.actions.Doublons',
-        'testextjs.view.caisseManager.TicketzManager',
+     //   'testextjs.view.caisseManager.TicketzManager',
         'testextjs.view.Report.resultatstva.TvaManager',
         'testextjs.view.sm_user.vente.VenteHistoriqueDepotManager',
         'testextjs.view.produits.mvtproduit.*',
@@ -739,9 +738,10 @@ Ext.application({
         'testextjs.view.depot.Import',
         'testextjs.view.depot.Export',
         'testextjs.view.achat',
-         'testextjs.view.chiffreAnnuel',
-         'testextjs.view.sm_user.mvtcaisse.action.Detail',
-         'testextjs.view.notification.RecapSms'
+        'testextjs.view.chiffreAnnuel',
+        'testextjs.view.sm_user.mvtcaisse.action.Detail',
+        'testextjs.view.notification.RecapSms',
+        'testextjs.view.ticketzrecap'
     ],
     controllers: [
         'App',
@@ -810,7 +810,7 @@ Ext.application({
         'ProuduitsVenteAnnulesCtr',
         'NotificationCtr',
         'CategorieNotificationCtr'
-        
+
     ],
     stores: [
         'Menu'
