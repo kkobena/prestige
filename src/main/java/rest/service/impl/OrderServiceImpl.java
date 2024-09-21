@@ -883,7 +883,7 @@ public class OrderServiceImpl implements OrderService {
             return (TFamilleGrossiste) qry.getSingleResult();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.INFO, null, e.getMessage());
             return null;
 
         }
