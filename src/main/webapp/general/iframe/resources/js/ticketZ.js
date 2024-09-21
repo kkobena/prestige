@@ -55,9 +55,12 @@ function buildParams() {
 
 }
 function loadData() {
-    const btnStat = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span class="visually-hidden" role="status">Recheche...</span>';
+    const container = $('#ticket-container');
+    const btnStat = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span class="visually-hidden" role="status">Recherche...</span>';
+    const spinner = '<div class="spinner-border m-xxl-5 text-success" role="status" id="spinner"></div>';
     $("#afficher").prop('disabled', true);
     $("#afficher").html(btnStat);
+    container.html(spinner);
     $.ajax({
         url: '../api/v1/caisse/fetch-tickez',
         method: "POST",
@@ -68,7 +71,7 @@ function loadData() {
     }).done(function (data) {
         const tickets = data.data;
         if (tickets) {
-            const container = $('#ticket-container');
+
             const datas = tickets.datas;
 
             let html = '';
