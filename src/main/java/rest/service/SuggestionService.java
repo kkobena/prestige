@@ -17,6 +17,7 @@ import javax.ejb.Local;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+import rest.service.dto.ArticleCsvDTO;
 
 /**
  *
@@ -75,5 +76,7 @@ public interface SuggestionService {
     boolean changeGrossiste(String suggestionId, String grossisteId);
 
     void mergeSuggestion(String suggestionId, String grossisteId);
+
+    List<ArticleCsvDTO> buildBySuggestion(String suggestionId);
 
 }
