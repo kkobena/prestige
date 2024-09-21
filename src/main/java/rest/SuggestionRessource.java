@@ -5,8 +5,6 @@
  */
 package rest;
 
-import dal.TFamille;
-import dal.TSuggestionOrderDetails;
 import dal.TUser;
 
 import java.io.IOException;
@@ -40,6 +38,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.SuggestionService;
+import rest.service.dto.ArticleCsvDTO;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
 import util.Constant;
@@ -63,7 +62,7 @@ public class SuggestionRessource {
     public Response exportToCsv(@QueryParam("id") String suggestionId) {
         StreamingOutput output = (OutputStream out) -> {
             try {
-                List<TSuggestionOrderDetails> detailses = suggestionService.findFamillesBySuggestion(suggestionId);
+                List<ArticleCsvDTO> detailses = suggestionService.buildBySuggestion(suggestionId);
                 Writer writer = new OutputStreamWriter(out, "UTF-8");
 
                 try (CSVPrinter printer = CSVFormat.EXCEL.withDelimiter(';').withHeader(ArticleHeader.class)
@@ -71,8 +70,8 @@ public class SuggestionRessource {
 
                     detailses.forEach(f -> {
                         try {
-                            TFamille famille = f.getLgFAMILLEID();
-                            printer.printRecord(famille.getIntCIP(), f.getIntNUMBER());
+
+                            printer.printRecord(f.getCodeCip(), f.getQty());
                         } catch (IOException ex) {
                             Logger.getLogger(SuggestionRessource.class.getName()).log(Level.SEVERE, null, ex);
                         }

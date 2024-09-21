@@ -43,6 +43,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ProductStateService;
 import rest.service.SuggestionService;
+import rest.service.dto.ArticleCsvDTO;
 import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
 
@@ -309,7 +310,7 @@ public class SuggestionImpl implements SuggestionService {
             query.setParameter(1, oTFamille);
             query.setParameter(2, emplacement.getLgEMPLACEMENTID());
             TFamilleStock familleStock = (TFamilleStock) query.getSingleResult();
-            LOG.log(Level.INFO, "familleStock {0} ", new Object[] { familleStock });
+            LOG.log(Level.INFO, "familleStock {0} ", new Object[]{familleStock});
             return familleStock;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -458,10 +459,10 @@ public class SuggestionImpl implements SuggestionService {
         orderDetails.setIntNUMBER(intNumber);
         orderDetails.setIntPRICE(
                 (familleGrossiste != null && familleGrossiste.getIntPAF() != null && familleGrossiste.getIntPAF() != 0)
-                        ? familleGrossiste.getIntPAF() * intNumber : famille.getIntPAF() * intNumber);
+                ? familleGrossiste.getIntPAF() * intNumber : famille.getIntPAF() * intNumber);
         orderDetails.setIntPAFDETAIL(
                 (familleGrossiste != null && familleGrossiste.getIntPAF() != null && familleGrossiste.getIntPAF() != 0)
-                        ? familleGrossiste.getIntPAF() : famille.getIntPAF());
+                ? familleGrossiste.getIntPAF() : famille.getIntPAF());
         orderDetails.setIntPRICEDETAIL((familleGrossiste != null && familleGrossiste.getIntPRICE() != null
                 && familleGrossiste.getIntPRICE() != 0) ? familleGrossiste.getIntPRICE() : famille.getIntPRICE());
         orderDetails.setStrSTATUT(STATUT_IS_PROGRESS);
@@ -703,7 +704,7 @@ public class SuggestionImpl implements SuggestionService {
                     if (otfamille.getBoolDECONDITIONNE().compareTo(Short.valueOf("0")) == 0 && familleStock != null) {
                         initTSuggestionOrderDetail(suggestionOrder, otfamille, grossiste,
                                 (otfamille.getIntQTEREAPPROVISIONNEMENT() > 0 ? otfamille.getIntQTEREAPPROVISIONNEMENT()
-                                        : 0));
+                                : 0));
                         count.increment();
                     }
 
@@ -916,18 +917,6 @@ public class SuggestionImpl implements SuggestionService {
         TSuggestionOrder order = this.getEmg().find(TSuggestionOrder.class, id);
         order.setStrSTATUT(STATUT_PENDING);
         this.getEmg().merge(order);
-    }
-
-    private void updateProduitStatut(TFamille famille) {
-        short statut = famille.getIntORERSTATUS();
-        if (statut == 1) {
-            int st = isOnAnotherSuggestion(famille);
-            if (st == 1) {
-                famille.setIntORERSTATUS((short) 0);
-                famille.setDtUPDATED(new Date());
-                this.getEmg().merge(famille);
-            }
-        }
     }
 
     private List<Tuple> getListSuggestion(String query, int start, int limit) {
@@ -1284,5 +1273,41 @@ public class SuggestionImpl implements SuggestionService {
         cloned.setLgGROSSISTEID(suggestionOrder.getLgGROSSISTEID());
         this.em.persist(cloned);
         return cloned;
+    }
+
+    @Override
+    public List<ArticleCsvDTO> buildBySuggestion(String suggestionId) {
+        List<Tuple> detailses = getSuggestionDetail(suggestionId);
+        List<ArticleCsvDTO> articleCsvs = new ArrayList<>();
+        detailses.forEach(t -> {
+            String parentCip = t.get("parentCip", String.class);
+            String codeCip = t.get("codeEan", String.class);
+            String grossisteCip = t.get("grossisteCip", String.class);
+            int quantite = t.get("quantite", Integer.class);
+            if (StringUtils.isBlank(codeCip)) {
+                if (StringUtils.isNotBlank(grossisteCip)) {
+                    codeCip = grossisteCip;
+                } else {
+                    codeCip = parentCip;
+                }
+            }
+            articleCsvs.add(new ArticleCsvDTO(codeCip, quantite));
+        });
+        return articleCsvs;
+    }
+
+    private List<Tuple> getSuggestionDetail(String suggestionId) {
+        try {
+            Query q = em.createNativeQuery(
+                    "SELECT f.int_CIP AS parentCip, f.int_EAN13 AS codeEan, g.str_CODE_ARTICLE AS grossisteCip, sd.int_NUMBER AS quantite FROM t_suggestion_order_details sd JOIN t_suggestion_order s "
+                    + " ON s.lg_SUGGESTION_ORDER_ID=sd.lg_SUGGESTION_ORDER_ID JOIN t_famille f ON f.lg_FAMILLE_ID=sd.lg_FAMILLE_ID JOIN t_famille_grossiste g ON f.lg_FAMILLE_ID=g.lg_FAMILLE_ID WHERE s.lg_SUGGESTION_ORDER_ID= ?1  AND s.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID AND sd.lg_FAMILLE_ID=g.lg_FAMILLE_ID",
+                    Tuple.class).setParameter(1, suggestionId);
+
+            return q.getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new ArrayList<>();
+        }
     }
 }
