@@ -35,6 +35,7 @@ import dal.TGrossiste_;
 import dal.TGroupeFactures;
 import dal.TGroupeFactures_;
 import dal.TGroupeTierspayant;
+import dal.TGroupeTierspayant_;
 import dal.TLot;
 import dal.TLot_;
 import dal.TModeReglement;
@@ -114,6 +115,7 @@ import org.json.JSONObject;
 import toolkits.parameters.commonparameter;
 import toolkits.utils.Util;
 import toolkits.utils.date;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -136,27 +138,27 @@ public class GroupeTierspayantController implements Serializable {
         return emf.createEntityManager();
     }
 
-    public boolean create(TGroupeTierspayant TGroupeTierspayant) {
+    public boolean create(TGroupeTierspayant tGroupeTierspayant) {
         boolean isOk = false;
-        if (TGroupeTierspayant.getTTiersPayantList() == null) {
-            TGroupeTierspayant.setTTiersPayantList(new ArrayList<>());
+        if (tGroupeTierspayant.getTTiersPayantList() == null) {
+            tGroupeTierspayant.setTTiersPayantList(new ArrayList<>());
         }
         EntityManager em = null;
         try {
             em = getEntityManager();
             em.getTransaction().begin();
             List<TTiersPayant> attachedTTiersPayantList = new ArrayList<>();
-            for (TTiersPayant TTiersPayantListTTiersPayantToAttach : TGroupeTierspayant.getTTiersPayantList()) {
+            for (TTiersPayant TTiersPayantListTTiersPayantToAttach : tGroupeTierspayant.getTTiersPayantList()) {
                 TTiersPayantListTTiersPayantToAttach = em.getReference(TTiersPayantListTTiersPayantToAttach.getClass(),
                         TTiersPayantListTTiersPayantToAttach.getLgTIERSPAYANTID());
                 attachedTTiersPayantList.add(TTiersPayantListTTiersPayantToAttach);
             }
-            TGroupeTierspayant.setTTiersPayantList(attachedTTiersPayantList);
-            em.persist(TGroupeTierspayant);
-            for (TTiersPayant TTiersPayantListTTiersPayant : TGroupeTierspayant.getTTiersPayantList()) {
+            tGroupeTierspayant.setTTiersPayantList(attachedTTiersPayantList);
+            em.persist(tGroupeTierspayant);
+            for (TTiersPayant TTiersPayantListTTiersPayant : tGroupeTierspayant.getTTiersPayantList()) {
                 TGroupeTierspayant oldLgGROUPEIDOfTTiersPayantListTTiersPayant = TTiersPayantListTTiersPayant
                         .getLgGROUPEID();
-                TTiersPayantListTTiersPayant.setLgGROUPEID(TGroupeTierspayant);
+                TTiersPayantListTTiersPayant.setLgGROUPEID(tGroupeTierspayant);
                 TTiersPayantListTTiersPayant = em.merge(TTiersPayantListTTiersPayant);
                 if (oldLgGROUPEIDOfTTiersPayantListTTiersPayant != null) {
                     oldLgGROUPEIDOfTTiersPayantListTTiersPayant.getTTiersPayantList()
@@ -211,20 +213,20 @@ public class GroupeTierspayantController implements Serializable {
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            TGroupeTierspayant TGroupeTierspayant;
+            TGroupeTierspayant tGroupeTierspayant;
             try {
-                TGroupeTierspayant = em.getReference(TGroupeTierspayant.class, id);
-                TGroupeTierspayant.getLgGROUPEID();
+                tGroupeTierspayant = em.getReference(TGroupeTierspayant.class, id);
+                tGroupeTierspayant.getLgGROUPEID();
             } catch (EntityNotFoundException enfe) {
                 throw new NonexistentEntityException("The TGroupeTierspayant with id " + id + " no longer exists.",
                         enfe);
             }
-            List<TTiersPayant> TTiersPayantList = TGroupeTierspayant.getTTiersPayantList();
-            for (TTiersPayant TTiersPayantListTTiersPayant : TTiersPayantList) {
+            List<TTiersPayant> tTiersPayantList = tGroupeTierspayant.getTTiersPayantList();
+            for (TTiersPayant TTiersPayantListTTiersPayant : tTiersPayantList) {
                 TTiersPayantListTTiersPayant.setLgGROUPEID(null);
                 TTiersPayantListTTiersPayant = em.merge(TTiersPayantListTTiersPayant);
             }
-            em.remove(TGroupeTierspayant);
+            em.remove(tGroupeTierspayant);
             em.getTransaction().commit();
             isOk = true;
         } finally {
@@ -325,7 +327,7 @@ public class GroupeTierspayantController implements Serializable {
         try {
 
             em = getEntityManager();
-            // TGroupeTierspayant groupeTierspayant = findTGroupeTierspayant(idGp);
+            // tGroupeTierspayant groupeTierspayant = findTGroupeTierspayant(idGp);
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<TTiersPayant> cq = cb.createQuery(TTiersPayant.class);
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
@@ -360,7 +362,7 @@ public class GroupeTierspayantController implements Serializable {
 
         try {
 
-            TGroupeTierspayant groupeTierspayant = findTGroupeTierspayant(idGp);
+         
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
@@ -739,7 +741,7 @@ public class GroupeTierspayantController implements Serializable {
                 TParameters OParameters = em.find(TParameters.class, Parameter.KEY_CODE_FACTURE);
                 String CODEFACTURE = OParameters.getStrVALUE();
 
-                OParameters.setStrVALUE((Integer.valueOf(CODEFACTURE) + 1) + "");
+                OParameters.setStrVALUE((Integer.parseInt(CODEFACTURE) + 1) + "");
                 em.merge(OParameters);
                 LinkedHashSet<TFacture> listfact = generateInvoices(t.getValue(), dt_start, dt_end, g, em, CODEFACTURE,
                         OUser);
@@ -1029,7 +1031,6 @@ public class GroupeTierspayantController implements Serializable {
     }
 
     // groupe facture
-
     public List<TTiersPayant> findTierspayant(JSONArray lstp) {
         EntityManager em = getEntityManager();
         List<TTiersPayant> list = new ArrayList<>();
@@ -1793,7 +1794,7 @@ public class GroupeTierspayantController implements Serializable {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TGroupeFactures> root = cq.from(TGroupeFactures.class);
-            Join<TGroupeFactures, TGroupeFactures> pr = root.join("lgGROUPEID", JoinType.INNER);
+
             cq.select(cb.sum(root.get("intAMOUNT")));
             cq.where(cb.and(cb.equal(root.get("strCODEFACTURE"), codeFact)),
                     cb.and(cb.equal(root.get("lgGROUPEID").get("lgGROUPEID"), idGrp)));
@@ -1807,18 +1808,23 @@ public class GroupeTierspayantController implements Serializable {
             }
         }
     }
+    // TGroupeFactures
 
     public TGroupeTierspayant getGroupByCODEFACT(String codeFacture) {
         TGroupeTierspayant groupeTierspayant = null;
         try {
-            EntityManager em = getEntityManager();
-            groupeTierspayant = (TGroupeTierspayant) em
+
+            groupeTierspayant = (TGroupeTierspayant) getEntityManager()
                     .createQuery("SELECT o.lgGROUPEID FROM TGroupeFactures o WHERE o.strCODEFACTURE=?1 ")
                     .setParameter(1, codeFacture).setMaxResults(1).getSingleResult();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return groupeTierspayant;
+    }
+
+    public TGroupeTierspayant findById(int id) {
+        return getEntityManager().find(TGroupeTierspayant.class, id);
     }
 
     public TGroupeFactures getgroupeFactureByCodeFacture(String codeFacture) {
@@ -1845,8 +1851,8 @@ public class GroupeTierspayantController implements Serializable {
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TGroupeFactures> root = cq.from(TGroupeFactures.class);
-            Join<TGroupeFactures, TGroupeTierspayant> pr = root.join("lgGROUPEID", JoinType.INNER);
-            Join<TGroupeFactures, TFacture> gf = root.join("lgFACTURESID", JoinType.INNER);
+            // Join<TGroupeFactures, tGroupeTierspayant> pr = root.join("lgGROUPEID", JoinType.INNER);
+            // Join<TGroupeFactures, TFacture> gf = root.join("lgFACTURESID", JoinType.INNER);
 
             Predicate criteria = cb.conjunction();
 
@@ -1886,7 +1892,7 @@ public class GroupeTierspayantController implements Serializable {
                 try {
                     JSONObject json = new JSONObject();
                     String status = "enable";
-                    if (Long.valueOf(objects[3] + "") == 0) {
+                    if (Long.parseLong(objects[3] + "") == 0) {
                         status = "paid";
                     }
                     json.put("lg_GROUPE_ID", objects[0]).put("str_LIB", objects[1]).put("NBFACTURES", objects[2])
@@ -1967,7 +1973,7 @@ public class GroupeTierspayantController implements Serializable {
     }
 
     public List<TFacture> getGroupeInvoiceDetails(String search, String codeFacture) {
-        JSONArray list = new JSONArray();
+
         EntityManager em = null;
         try {
 
@@ -1979,11 +1985,13 @@ public class GroupeTierspayantController implements Serializable {
             Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
 
             Predicate criteria = cb.conjunction();
-
-            if (!"".equals(search)) {
+            if (StringUtils.isNotBlank(search)) {
                 criteria = cb.and(criteria, cb.or(cb.like(root.get("strCODEFACTURE"), search + "%")));
             }
-            criteria = cb.and(criteria, cb.equal(pr.get("strCODEFACTURE"), codeFacture));
+            if (StringUtils.isNotBlank(codeFacture)) {
+                criteria = cb.and(criteria, cb.equal(pr.get("strCODEFACTURE"), codeFacture));
+            }
+
             criteria = cb.and(criteria, cb.notEqual(root.get("strSTATUT"), "paid"));
             cq.orderBy(cb.asc(pr.get("strCODEFACTURE")));
             cq.where(criteria);
@@ -5150,7 +5158,30 @@ public class GroupeTierspayantController implements Serializable {
             Root<TFacture> root = cq.from(TFacture.class);
             Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
             cq.orderBy(cb.asc(pr.get("strCODEFACTURE")));
-            cq.where(cb.and(cb.notEqual(root.get(TFacture_.strSTATUT), commonparameter.statut_paid),
+            cq.where(cb.and(cb.notEqual(root.get(TFacture_.strSTATUT), Constant.STATUT_PAID),
+                    cb.equal(pr.get("strCODEFACTURE"), codeFacture)));
+            Query q = em.createQuery(cq);
+            return q.getResultList();
+
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+            return Collections.emptyList();
+        }
+
+    }
+
+    public List<TFacture> getGroupeInvoiceDetails(int groupeId, String codeFacture) {
+        EntityManager em;
+        try {
+            em = getEntityManager();
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<TFacture> cq = cb.createQuery(TFacture.class);
+            Root<TFacture> root = cq.from(TFacture.class);
+            Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
+            cq.orderBy(cb.asc(pr.get("strCODEFACTURE")));
+            cq.where(cb.and(
+                    cb.equal(root.get(TFacture_.groupeTierspayant).get(TGroupeTierspayant_.lgGROUPEID), groupeId),
+                    cb.notEqual(root.get(TFacture_.strSTATUT), Constant.STATUT_PAID),
                     cb.equal(pr.get("strCODEFACTURE"), codeFacture)));
             Query q = em.createQuery(cq);
             return q.getResultList();
