@@ -172,7 +172,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             } else {
                 montantCMU += x.getIntPRICE();
             }
-//            montantTva += x.getMontantTva();
+            // montantTva += x.getMontantTva();
             TFamille famille = x.getLgFAMILLEID();
 
             int remise = 0;
@@ -292,13 +292,12 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             plafondTiersPayantParVente = getPlafondTiersPayantParVente(tc);
 
             montantTiersPayant = computeCustomerOutstanding(tc, montantTiersPayant);
-            if (montantTiersPayant > plafondTiersPayantParVente) {
-                montantTiersPayant = plafondTiersPayantParVente;
-
+            if (plafondTiersPayantParVente > 0) {
+                if (montantTiersPayant > plafondTiersPayantParVente) {
+                    montantTiersPayant = plafondTiersPayantParVente;
+                }
             }
-
         }
-
         if (Objects.nonNull(payant) && montantTiersPayant != montantTiersPayantCopie) {
             message = "Le plafond du tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'> "
                     + payant.getStrFULLNAME() + "</span>? car son plafond est atteint <br>";
@@ -310,7 +309,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         netComputing.setMontantTiersPayant(montantTiersPayant);
         netComputing.setPlafondGlobal(plafondGlobal);
         netComputing.setMessage(message);
-
         netComputing.setNumBon(tierspayant.getNumBon());
         return netComputing;
 

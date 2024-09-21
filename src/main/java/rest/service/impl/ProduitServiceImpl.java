@@ -1270,10 +1270,10 @@ public class ProduitServiceImpl implements ProduitService {
 
                 break;
             }
-            sub.where(predicates.toArray(new Predicate[predicates.size()]));
+            sub.where(predicates.toArray(Predicate[]::new));
             _predicates
                     .add(cb.in(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.familleId)).value(sub));
-            cq.where(_predicates.toArray(new Predicate[_predicates.size()]));
+            cq.where(_predicates.toArray(Predicate[]::new));
             TypedQuery<Params> q = getEntityManager().createQuery(cq);
             // q.setMaxResults(1);
             return q.getSingleResult();
