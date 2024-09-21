@@ -375,4 +375,17 @@ public class CaisseRessource {
         generateTicketService.printMvtCaisse(mvtCaisseId, tu);
         return Response.ok().build();
     }
+
+    @POST
+    @Path("fetch-tickez")
+    public Response fetchTicketZ(Params params) throws JSONException {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        params.setOperateur(tu);
+        JSONObject json = generateTicketService.fetchTicketZ(params);
+        return Response.ok().entity(json.toString()).build();
+    }
 }

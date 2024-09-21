@@ -66,12 +66,14 @@ import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import rest.report.ReportUtil;
 import rest.service.GenerateTicketService;
-import rest.service.SalesStatsService;
 import rest.service.VenteReglementService;
+import rest.service.dto.ModePaymentAmount;
+import rest.service.dto.TicketRecap;
+import rest.service.dto.TicketRecapWrapper;
 import rest.service.dto.TicketZDTO;
 import toolkits.utils.Maths;
 import toolkits.utils.StringComplexUtils.DataStringManager;
@@ -1692,7 +1694,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         q.setParameter("empl", params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         q.setParameter("dtStart", java.sql.Timestamp.valueOf(dtStart), TemporalType.TIMESTAMP);
         q.setParameter("dtEnd", java.sql.Timestamp.valueOf(dtEnd), TemporalType.TIMESTAMP);
-        if (StringUtils.isNotEmpty(params.getUserId())) {
+        if (StringUtils.isNotEmpty(params.getUserId()) && !"ALL".equals(params.getUserId())) {
             q.setParameter("userId", params.getUserId());
         }
     }
@@ -1728,7 +1730,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     private String replaceSql(Params params, String sql) {
-        if (StringUtils.isNotEmpty(params.getUserId())) {
+        if (StringUtils.isNotEmpty(params.getUserId()) && !"ALL".equals(params.getUserId())) {
             return sql.replace("{userId}", " AND o.caisse.lgUSERID=:userId");
         } else {
             return sql.replace("{userId}", "");
@@ -2200,7 +2202,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             return lstData;
         }
         long totalEsp = 0;
-
         long totalCredit = 0;
         long totalCheque = 0;
         long totalVirement = 0;
@@ -2276,7 +2277,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
             return Integer
                     .parseInt(getEntityManager().find(TParameters.class, "BREAKING_TICKET_Z").getStrVALUE().trim());
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             return 40;
         }
     }
@@ -2377,5 +2378,315 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             return 1;
         }
 
+    }
+
+    @Override
+    public JSONObject fetchTicketZ(Params params) throws JSONException {
+        JSONObject json = new JSONObject();
+        TicketRecapWrapper recapWrapper = buildTicketZ(params);
+        if (recapWrapper != null) {
+            json.put("data", new JSONObject(recapWrapper));
+        }
+
+        return json;
+    }
+
+    @Override
+    public TicketRecapWrapper buildTicketZ(Params params) {
+        Set<TicketZDTO> tickes = dataPerUser(params);
+        if (tickes.isEmpty()) {
+            return null;
+        }
+        return buildTicketBody(tickes);
+    }
+
+    private TicketRecapWrapper buildTicketBody(Set<TicketZDTO> tickets) {
+
+        if (tickets.isEmpty()) {
+            return null;
+        }
+        TicketRecapWrapper wrapper = new TicketRecapWrapper();
+
+        List<TicketRecap> lstData = new ArrayList<>();
+        long totalEsp = 0;
+        long totalCredit = 0;
+        long totalCheque = 0;
+        long totalVirement = 0;
+        long totalCB = 0;
+        long differe = 0;
+        long montantMtn = 0;
+        long montantOrange = 0;
+        long montantMoov = 0;
+        long montantWave = 0;
+        List<ModePaymentAmount> totauxGl = new ArrayList<>();
+        for (TicketZDTO v : tickets) {
+            TicketRecap ticketRecap = new TicketRecap();
+            List<ModePaymentAmount> modePaymentAmounts = new ArrayList<>();
+            List<ModePaymentAmount> totaux = new ArrayList<>();
+            long totalEspUser = (v.getTotalEsp() + v.getTotalEntreeEsp() + v.getTotalReglementEsp()
+                    + v.getTotalSortieEsp());
+            totalEsp += totalEspUser;
+            totalCredit += (v.getTotalCredit() + v.getTotalEntreeCredit() + v.getTotalReglementCredit()
+                    + v.getTotalSortieCredit());
+            totalCheque += (v.getTotalCheque() + v.getTotalEntreeCheque() + v.getTotalReglementCheque()
+                    + v.getTotalSortieCheque());
+            totalVirement += (v.getTotalVirement() + v.getTotalEntreeVirement() + v.getTotalReglementVirement()
+                    + v.getTotalSortieVirement());
+            totalCB += (v.getTotalCB() + v.getTotalEntreeCB() + v.getTotalReglementCB() + v.getTotalSortieCB());
+            differe += v.getDiffere();
+            montantWave += (v.getMontantWave() + v.getMontantSortieWave() + v.getMontantEntreeWave());
+            montantMtn += (v.getMontantMtn() + v.getMontantSortieMtn() + v.getMontantEntreeMtn());
+            montantMoov += (v.getMontantMoov() + v.getMontantSortieMoov() + v.getMontantEntreeMoov());
+            montantOrange += (v.getMontantOrange() + v.getMontantSortieOrange() + v.getMontantEntreeOrange());
+
+            ticketRecap.setUser(v.getUser());
+            if (v.getTotalEsp() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Espèce(vno/vo)",
+                        NumberUtils.formatLongToString(v.getTotalEsp()));
+                modePaymentAmounts.add(modePaymentAmount);
+
+            }
+            if (v.getTotalCredit() != 0) {
+
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Crédit(vno/vo)",
+                        NumberUtils.formatLongToString(v.getTotalCredit()));
+                modePaymentAmounts.add(modePaymentAmount);
+            }
+
+            if (v.getTotalEntreeEsp() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Espèce Entrée",
+                        NumberUtils.formatLongToString(v.getTotalEntreeEsp()));
+                modePaymentAmounts.add(modePaymentAmount);
+            }
+            if (v.getTotalReglementEsp() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Espèce Règlement",
+                        NumberUtils.formatLongToString(v.getTotalReglementEsp()));
+                modePaymentAmounts.add(modePaymentAmount);
+
+            }
+            if (v.getTotalSortieEsp() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Espèce Sortie",
+                        NumberUtils.formatLongToString(v.getTotalSortieEsp()));
+                modePaymentAmounts.add(modePaymentAmount);
+            }
+
+            if (v.getMontantOrange() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("OM (vno/vo)",
+                        NumberUtils.formatLongToString(v.getMontantOrange()));
+                modePaymentAmounts.add(modePaymentAmount);
+            }
+            if (v.getMontantWave() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("WAVE (vno/vo)",
+                        NumberUtils.formatLongToString(v.getMontantWave()));
+                modePaymentAmounts.add(modePaymentAmount);
+            }
+            if (v.getMontantMtn() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("MTN (vno/vo)",
+                        NumberUtils.formatLongToString(v.getMontantMtn()));
+                modePaymentAmounts.add(modePaymentAmount);
+            }
+            if (v.getMontantMoov() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("MOOV (vno/vo)",
+                        NumberUtils.formatLongToString(v.getMontantMoov()));
+                modePaymentAmounts.add(modePaymentAmount);
+            }
+            if (v.getDiffere() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Différé",
+                        NumberUtils.formatLongToString(v.getDiffere()));
+                modePaymentAmounts.add(modePaymentAmount);
+            }
+            if (totalEspUser != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total espèce",
+                        NumberUtils.formatLongToString(totalEspUser));
+                totaux.add(modePaymentAmount);
+            }
+
+            if (v.getTotalCheque() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Ch (vno/vo)",
+                        NumberUtils.formatLongToString(v.getTotalCheque()));
+                totaux.add(modePaymentAmount);
+            }
+
+            if (v.getTotalCB() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total CB (vno/vo)",
+                        NumberUtils.formatLongToString(v.getTotalCB()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalVirement() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Vir",
+                        NumberUtils.formatLongToString(v.getTotalVirement()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalEntreeCheque() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Entrée Chèque",
+                        NumberUtils.formatLongToString(v.getTotalEntreeCheque()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantEntreeOrange() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Entrée OM",
+                        NumberUtils.formatLongToString(v.getMontantEntreeOrange()));
+                totaux.add(modePaymentAmount);
+            }
+
+            if (v.getMontantEntreeWave() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Entrée WAVE",
+                        NumberUtils.formatLongToString(v.getMontantEntreeWave()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantEntreeMtn() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Entrée MTN",
+                        NumberUtils.formatLongToString(v.getMontantEntreeMtn()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantEntreeMoov() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Entrée MOOV",
+                        NumberUtils.formatLongToString(v.getMontantEntreeMoov()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalEntreeCB() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Entrée CB",
+                        NumberUtils.formatLongToString(v.getTotalEntreeCB()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalEntreeVirement() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total entrée.Vir",
+                        NumberUtils.formatLongToString(v.getTotalEntreeCB()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalReglementCheque() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Regl Ch",
+                        NumberUtils.formatLongToString(v.getTotalEntreeCB()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantReglementOrange() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Regl.OM",
+                        NumberUtils.formatLongToString(v.getMontantReglementOrange()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantReglementWave() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Regl.WAVE",
+                        NumberUtils.formatLongToString(v.getMontantReglementWave()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantReglementMtn() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Regl.MTN",
+                        NumberUtils.formatLongToString(v.getMontantReglementMtn()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantReglementMoov() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Regl.MOOV",
+                        NumberUtils.formatLongToString(v.getMontantReglementMoov()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalReglementCB() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Regl CB",
+                        NumberUtils.formatLongToString(v.getTotalReglementCB()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalReglementVirement() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Regl Vir",
+                        NumberUtils.formatLongToString(v.getTotalReglementVirement()));
+                totaux.add(modePaymentAmount);
+            }
+
+            if (v.getTotalSortieCheque() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Sortie Ch",
+                        NumberUtils.formatLongToString(v.getTotalSortieCheque()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalSortieCB() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Sortie CB",
+                        NumberUtils.formatLongToString(v.getTotalSortieCB()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantSortieOrange() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Sortie.OM",
+                        NumberUtils.formatLongToString(v.getMontantSortieOrange()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantSortieWave() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Sortie.WAVE",
+                        NumberUtils.formatLongToString(v.getMontantSortieWave()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantSortieMtn() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Sortie.MTN",
+                        NumberUtils.formatLongToString(v.getMontantSortieMtn()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getMontantSortieMoov() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total.Sortie.MOOV",
+                        NumberUtils.formatLongToString(v.getMontantSortieMoov()));
+                totaux.add(modePaymentAmount);
+            }
+            if (v.getTotalSortieVirement() != 0) {
+                ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Sortie Vir",
+                        NumberUtils.formatLongToString(v.getTotalSortieVirement()));
+                totaux.add(modePaymentAmount);
+            }
+            ticketRecap.setModePaymentAmounts(modePaymentAmounts);
+            ticketRecap.setTotaux(totaux);
+            lstData.add(ticketRecap);
+        }
+
+        if (totalEsp != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL ESP",
+                    NumberUtils.formatLongToString(totalEsp));
+            totauxGl.add(modePaymentAmount);
+        }
+
+        if (montantOrange != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL OM",
+                    NumberUtils.formatLongToString(montantOrange));
+            totauxGl.add(modePaymentAmount);
+
+        }
+        if (montantWave != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL WAVE",
+                    NumberUtils.formatLongToString(montantWave));
+            totauxGl.add(modePaymentAmount);
+
+        }
+        if (montantMtn != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL MTN",
+                    NumberUtils.formatLongToString(montantMtn));
+            totauxGl.add(modePaymentAmount);
+        }
+        if (montantMoov != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL MOOV",
+                    NumberUtils.formatLongToString(montantMoov));
+            totauxGl.add(modePaymentAmount);
+        }
+
+        if (totalCheque != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL CH",
+                    NumberUtils.formatLongToString(totalCheque));
+            totauxGl.add(modePaymentAmount);
+        }
+
+        if (totalCB != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL CB",
+                    NumberUtils.formatLongToString(totalCB));
+            totauxGl.add(modePaymentAmount);
+        }
+
+        if (totalVirement != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL VIR",
+                    NumberUtils.formatLongToString(totalVirement));
+            totauxGl.add(modePaymentAmount);
+        }
+        if (differe != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL DIFFERE",
+                    NumberUtils.formatLongToString(differe));
+            totauxGl.add(modePaymentAmount);
+        }
+        if (totalCredit != 0) {
+            ModePaymentAmount modePaymentAmount = new ModePaymentAmount("TOTAL (VNO/VO)",
+                    NumberUtils.formatLongToString(totalCredit));
+            totauxGl.add(modePaymentAmount);
+        }
+        wrapper.setDatas(lstData);
+        wrapper.setTotaux(totauxGl);
+        return wrapper;
     }
 }

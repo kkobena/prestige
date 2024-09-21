@@ -55,7 +55,6 @@ Ext.define('testextjs.view.caisseManager.Visualisation', {
         var me = this;
         Ext.applyIf(me, {
             dockedItems: [
-
                 {
                     xtype: 'toolbar',
                     dock: 'top',
@@ -154,7 +153,6 @@ Ext.define('testextjs.view.caisseManager.Visualisation', {
                          }*/
                     ]
                 }
-
             ],
             items: [{
                     xtype: 'visualisationGrid',

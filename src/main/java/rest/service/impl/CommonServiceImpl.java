@@ -299,8 +299,10 @@ public class CommonServiceImpl implements Serializable, CommonService {
             }
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
-            q.setFirstResult(start);
-            q.setMaxResults(limit);
+            if (limit > 0) {
+                q.setFirstResult(start);
+                q.setMaxResults(limit);
+            }
 
             return q.getResultList();
         } catch (Exception e) {
