@@ -1,3 +1,4 @@
+<%@page import="util.Constant"%>
 <%@page import="dal.TModelFacture"%>
 <%@page import="bll.configManagement.GroupeTierspayantController"%>
 <%@page import="bll.report.JsonDataSourceApp"%>
@@ -66,8 +67,8 @@
         modeId = request.getParameter("modeId");
 
     }
-    List<InputStream> inputPdfList = new ArrayList<InputStream>();
-    OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+    List<InputStream> inputPdfList = new ArrayList<>();
+    OTUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
 
     jdom Ojdom = new jdom();
     Ojdom.InitRessource();

@@ -39,10 +39,6 @@ import javax.xml.bind.annotation.XmlRootElement;
         @NamedQuery(name = "TGroupeFactures.findByDtCREATED", query = "SELECT t FROM TGroupeFactures t WHERE t.dtCREATED = :dtCREATED"),
         @NamedQuery(name = "TGroupeFactures.findByDtUPDATED", query = "SELECT t FROM TGroupeFactures t WHERE t.dtUPDATED = :dtUPDATED") })
 public class TGroupeFactures implements Serializable {
-
-    @Column(name = "int_PAYE")
-    private Integer intPAYE;
-
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,6 +69,8 @@ public class TGroupeFactures implements Serializable {
     @JoinColumn(name = "lg_FACTURES_ID", referencedColumnName = "lg_FACTURE_ID")
     @ManyToOne
     private TFacture lgFACTURESID;
+    @Column(name = "int_PAYE")
+    private Integer intPAYE;
 
     public TGroupeFactures() {
     }
