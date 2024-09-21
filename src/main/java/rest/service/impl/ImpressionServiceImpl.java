@@ -275,11 +275,11 @@ public class ImpressionServiceImpl implements Printable {
         this.operationLocalTime = operationLocalTime;
     }
 
-    public TImprimante getoTImprimante() {
+    public TImprimante getOTImprimante() {
         return oTImprimante;
     }
 
-    public void setoTImprimante(TImprimante oImprimante) {
+    public void setOTImprimante(TImprimante oImprimante) {
         this.oTImprimante = oImprimante;
     }
 
@@ -322,7 +322,7 @@ public class ImpressionServiceImpl implements Printable {
     public void printTicketVente(int copies) throws PrinterException {
 
         PrinterJob printerjob = findPrinterJob();
-        TImprimante oImprimante = this.getoTImprimante();
+        TImprimante oImprimante = this.getOTImprimante();
         if (oImprimante != null) {
             intBegin = oImprimante.getIntBEGIN();
             columnOne = oImprimante.getIntCOLUMN1();
