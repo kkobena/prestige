@@ -310,7 +310,7 @@ public class SuggestionImpl implements SuggestionService {
             query.setParameter(1, oTFamille);
             query.setParameter(2, emplacement.getLgEMPLACEMENTID());
             TFamilleStock familleStock = (TFamilleStock) query.getSingleResult();
-            LOG.log(Level.INFO, "familleStock {0} ", new Object[]{familleStock});
+            LOG.log(Level.INFO, "familleStock {0} ", new Object[] { familleStock });
             return familleStock;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -459,10 +459,10 @@ public class SuggestionImpl implements SuggestionService {
         orderDetails.setIntNUMBER(intNumber);
         orderDetails.setIntPRICE(
                 (familleGrossiste != null && familleGrossiste.getIntPAF() != null && familleGrossiste.getIntPAF() != 0)
-                ? familleGrossiste.getIntPAF() * intNumber : famille.getIntPAF() * intNumber);
+                        ? familleGrossiste.getIntPAF() * intNumber : famille.getIntPAF() * intNumber);
         orderDetails.setIntPAFDETAIL(
                 (familleGrossiste != null && familleGrossiste.getIntPAF() != null && familleGrossiste.getIntPAF() != 0)
-                ? familleGrossiste.getIntPAF() : famille.getIntPAF());
+                        ? familleGrossiste.getIntPAF() : famille.getIntPAF());
         orderDetails.setIntPRICEDETAIL((familleGrossiste != null && familleGrossiste.getIntPRICE() != null
                 && familleGrossiste.getIntPRICE() != 0) ? familleGrossiste.getIntPRICE() : famille.getIntPRICE());
         orderDetails.setStrSTATUT(STATUT_IS_PROGRESS);
@@ -704,7 +704,7 @@ public class SuggestionImpl implements SuggestionService {
                     if (otfamille.getBoolDECONDITIONNE().compareTo(Short.valueOf("0")) == 0 && familleStock != null) {
                         initTSuggestionOrderDetail(suggestionOrder, otfamille, grossiste,
                                 (otfamille.getIntQTEREAPPROVISIONNEMENT() > 0 ? otfamille.getIntQTEREAPPROVISIONNEMENT()
-                                : 0));
+                                        : 0));
                         count.increment();
                     }
 
@@ -1300,7 +1300,7 @@ public class SuggestionImpl implements SuggestionService {
         try {
             Query q = em.createNativeQuery(
                     "SELECT f.int_CIP AS parentCip, f.int_EAN13 AS codeEan, g.str_CODE_ARTICLE AS grossisteCip, sd.int_NUMBER AS quantite FROM t_suggestion_order_details sd JOIN t_suggestion_order s "
-                    + " ON s.lg_SUGGESTION_ORDER_ID=sd.lg_SUGGESTION_ORDER_ID JOIN t_famille f ON f.lg_FAMILLE_ID=sd.lg_FAMILLE_ID JOIN t_famille_grossiste g ON f.lg_FAMILLE_ID=g.lg_FAMILLE_ID WHERE s.lg_SUGGESTION_ORDER_ID= ?1  AND s.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID AND sd.lg_FAMILLE_ID=g.lg_FAMILLE_ID",
+                            + " ON s.lg_SUGGESTION_ORDER_ID=sd.lg_SUGGESTION_ORDER_ID JOIN t_famille f ON f.lg_FAMILLE_ID=sd.lg_FAMILLE_ID JOIN t_famille_grossiste g ON f.lg_FAMILLE_ID=g.lg_FAMILLE_ID WHERE s.lg_SUGGESTION_ORDER_ID= ?1  AND s.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID AND sd.lg_FAMILLE_ID=g.lg_FAMILLE_ID",
                     Tuple.class).setParameter(1, suggestionId);
 
             return q.getResultList();
