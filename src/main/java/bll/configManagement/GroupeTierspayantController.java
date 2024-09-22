@@ -362,7 +362,6 @@ public class GroupeTierspayantController implements Serializable {
 
         try {
 
-         
             CriteriaBuilder cb = em.getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);

@@ -1907,7 +1907,7 @@ public class reglementManager extends bll.bllBase {
                         + this.getOTUser().getStrLASTNAME();
                 addTransaction(this.getOTUser(), this.getOTUser(), dossierReglement.getLgDOSSIERREGLEMENTID(),
                         dossierReglement.getDblAMOUNT().intValue(), 0, dossierReglement.getDblAMOUNT().intValue(),
-                        dossierReglement.getDblAMOUNT().intValue(), Boolean.TRUE, CategoryTransaction.CREDIT,
+                        (int) int_AMOUNT_RECU, true, CategoryTransaction.CREDIT,
                         TypeTransaction.ENTREE, OTReglement.getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID(),
                         OTTypeMvtCaisse, this.getOdataManager().getEm(), dossierReglement.getDblAMOUNT().intValue(), 0,
                         caisse.getStrREFTICKET(), OTCompteClientTiersPayant.getLgTIERSPAYANTID().getLgTIERSPAYANTID());
@@ -2640,7 +2640,7 @@ public class reglementManager extends bll.bllBase {
             Integer montantNet, Integer montantVerse, Boolean checked, CategoryTransaction categoryTransaction,
             TypeTransaction typeTransaction, TTypeReglement reglement, TTypeMvtCaisse tTypeMvtCaisse, EntityManager emg,
             Integer montantPaye, Integer montantTva, String reference, String organisme) {
-        MvtTransaction _new = new MvtTransaction();
+        MvtTransaction transac = new MvtTransaction();
         int compare = montantNet.compareTo(montantVerse);
         Integer montantPaid, montantRestant = 0;
         if (compare <= 0) {
@@ -2650,30 +2650,30 @@ public class reglementManager extends bll.bllBase {
             montantRestant = montantNet - montantVerse;
         }
 
-        _new.setUuid(UUID.randomUUID().toString());
-        _new.setUser(ooTUser);
-        _new.setCreatedAt(LocalDateTime.now());
-        _new.setPkey(pkey);
-        _new.setMvtDate(LocalDate.now());
-        _new.setAvoidAmount(voidAmount);
-        _new.setMontant(montant);
-        _new.setMagasin(ooTUser.getLgEMPLACEMENTID());
-        _new.setCaisse(ooTUser);
-        _new.setMontantCredit(0);
-        _new.setReference(reference);
-        _new.setMontantVerse(montantVerse);
-        _new.setMontantRegle(montantPaid);
-        _new.setMontantNet(montantNet);
-        _new.settTypeMvtCaisse(tTypeMvtCaisse);
-        _new.setReglement(reglement);
-        _new.setMontantRestant(montantRestant);
-        _new.setMontantPaye(montantPaye);
-        _new.setMontantRemise(montant - montantNet);
-        _new.setCategoryTransaction(categoryTransaction);
-        _new.setTypeTransaction(typeTransaction);
-        _new.setChecked(checked);
-        _new.setMontantTva(montantTva);
-        emg.persist(_new);
+        transac.setUuid(UUID.randomUUID().toString());
+        transac.setUser(ooTUser);
+        transac.setCreatedAt(LocalDateTime.now());
+        transac.setPkey(pkey);
+        transac.setMvtDate(LocalDate.now());
+        transac.setAvoidAmount(voidAmount);
+        transac.setMontant(montant);
+        transac.setMagasin(ooTUser.getLgEMPLACEMENTID());
+        transac.setCaisse(ooTUser);
+        transac.setMontantCredit(0);
+        transac.setReference(reference);
+        transac.setMontantVerse(montantVerse);
+        transac.setMontantRegle(montantPaid);
+        transac.setMontantNet(montantNet);
+        transac.settTypeMvtCaisse(tTypeMvtCaisse);
+        transac.setReglement(reglement);
+        transac.setMontantRestant(montantRestant);
+        transac.setMontantPaye(montantPaye);
+        transac.setMontantRemise(montant - montantNet);
+        transac.setCategoryTransaction(categoryTransaction);
+        transac.setTypeTransaction(typeTransaction);
+        transac.setChecked(checked);
+        transac.setMontantTva(montantTva);
+        emg.persist(transac);
 
     }
 

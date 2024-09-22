@@ -22,6 +22,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.qualifier.Facturation;
 import rest.service.FacturationService;
+import rest.service.GenerateTicketService;
 import rest.service.GenererFactureService;
 import toolkits.parameters.commonparameter;
 import util.Constant;
@@ -38,10 +39,12 @@ public class FacturationRessouce {
     @Inject
     private HttpServletRequest servletRequest;
     @EJB
-    FacturationService facturationService;
+    private FacturationService facturationService;
     @Inject
     @Facturation
-    GenererFactureService genererFactureService;
+    private GenererFactureService genererFactureService;
+    @EJB
+    private GenerateTicketService generateTicketService;
 
     @PUT
     @Path("modelfacture/{id}")
@@ -128,5 +131,16 @@ public class FacturationRessouce {
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "groupTp") String groupTp, @QueryParam(value = "mode") Mode mode) throws JSONException {
         return provisoires(start, limit, query, tpid, codegroup, typetp, dtEnd, dtStart, groupTp, mode);
+    }
+
+    @GET
+    @Path("ticket-facture/{dossier-facture-id}")
+    public Response printTicketReglementFacture(@PathParam("dossier-facture-id") String lgDossierReglementId) {
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        return Response.ok(generateTicketService.printReglementFacture(lgDossierReglementId, tu).toString()).build();
     }
 }
