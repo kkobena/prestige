@@ -15,6 +15,7 @@ import dal.TClient;
 import dal.TDossierReglement;
 import dal.TDossierReglementDetail;
 import dal.TEmplacement;
+import dal.TFacture;
 import dal.TImprimante;
 import dal.TOfficine;
 import dal.TParameters;
@@ -66,7 +67,6 @@ import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.GenerateTicketService;
@@ -200,7 +200,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(oTPreenregistrement);
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTitle(FunctionUtils.RECEIT_TITLE + title);
@@ -292,7 +292,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     oTPreenregistrement.getLgPREENREGISTREMENTID());
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(Constant.ACTION_VENTE);
@@ -636,7 +636,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(oTPreenregistrement);
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTitle("Ticket N° " + title);
@@ -774,7 +774,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     oTPreenregistrement.getLgPREENREGISTREMENTID());
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(Constant.ACTION_VENTE);
@@ -975,7 +975,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         try {
             TDossierReglement dossierReglement = getEntityManager().find(TDossierReglement.class, idDossier);
             List<TDossierReglementDetail> lstTDossierReglementDetail = getListeDossierReglementDetail(idDossier);
-            int numbretiket = nombreExemplaireTicket();
+            int numbretiket = nombreExemplaireMvtCaisseTicket("KEY_TICKET_COUNT");
             MvtTransaction mvtTransaction = findByPkey(idDossier);
             TEmplacement emplacement = mvtTransaction.getMagasin();
             String num = DateConverter.getShortId(10);
@@ -986,7 +986,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(lstTDossierReglementDetail, dossierReglement);
             List<String> infoSellers = generateDataOperateur(mvtTransaction.getUser());
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setEmplacement(emplacement);
             imp.setOfficine(officine);
             imp.setService(printService);
@@ -1007,20 +1007,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             json.put("success", false).put("msg", "Impression n'a pas aboutie");
         }
         return json;
-    }
-
-    private int nombreExemplaireTicket() {
-        try {
-            TParameters nbreTicket = getEntityManager().find(TParameters.class, "KEY_TICKET_COUNT");
-
-            if (nbreTicket != null) {
-                return Integer.parseInt(nbreTicket.getStrVALUE().trim());
-            }
-            return 1;
-        } catch (NumberFormatException e) {
-            return 1;
-        }
-
     }
 
     public List<TDossierReglementDetail> getListeDossierReglementDetail(String idDossier) {
@@ -1109,7 +1095,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     oTPreenregistrement.getLgPREENREGISTREMENTID());
             List<String> infoSellers = generateDataSeller(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(Constant.ACTION_VENTE);
@@ -1211,7 +1197,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(oTPreenregistrement);
             List<String> infoSellers = infoDepot(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(Constant.ACTION_VENTE);
@@ -1337,7 +1323,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(oTPreenregistrement);
             List<String> infoSellers = infoDepot(oTPreenregistrement);
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setOfficine(officine);
             imp.setService(printService);
             imp.setTypeTicket(Constant.ACTION_VENTE);
@@ -1470,11 +1456,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     @Override
     public JSONObject ticketReglementCarnet(String idDossier) throws JSONException {
         JSONObject json = new JSONObject();
-        List<String> infotiersPayants;
+
         try {
             TDossierReglement dossierReglement = getEntityManager().find(TDossierReglement.class, idDossier);
             List<TDossierReglementDetail> lstTDossierReglementDetail = getListeDossierReglementDetail(idDossier);
-            int numbretiket = nombreExemplaireTicket();
+            int numbretiket = nombreExemplaireMvtCaisseTicket("KEY_TICKET_COUNT");
             MvtTransaction mvtTransaction = findByPkey(idDossier);
             TEmplacement emplacement = mvtTransaction.getMagasin();
             String num = DateConverter.getShortId(10);
@@ -1485,15 +1471,15 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(lstTDossierReglementDetail, dossierReglement);
             List<String> infoSellers = generateDataOperateur(mvtTransaction.getUser());
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setEmplacement(emplacement);
             imp.setOfficine(officine);
             imp.setService(printService);
-            imp.setTypeTicket(DateConverter.TICKET_REGLEMENT_CARNET_DEPOT);
+            imp.setTypeTicket(Constant.TICKET_REGLEMENT_CARNET_DEPOT);
             imp.setShowCodeBar(true);
             imp.setOperation(dossierReglement.getDtCREATED());
             imp.setIntBegin(0);
-            infotiersPayants = generateDataTiersPayant(findTiersPayantById(mvtTransaction.getOrganisme()));
+            List<String> infotiersPayants = generateDataTiersPayant(findTiersPayantById(mvtTransaction.getOrganisme()));
             imp.setTitle("");
             imp.buildTicket(datas, infoSellers, infotiersPayants, generateDataSummary(dossierReglement, mvtTransaction),
                     Collections.emptyList(), fileBarecode);
@@ -1570,7 +1556,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             serviceImpression.setInfoSellers(new ArrayList<>());
             serviceImpression.setCommentaires(new ArrayList<>());
             serviceImpression.setShowCodeBar(false);
-            serviceImpression.setoTImprimante(imprimante);
+            serviceImpression.setOTImprimante(imprimante);
             serviceImpression.setOfficine(officine);
             serviceImpression.setService(printService);
             printTicketZ(serviceImpression, body, footer);
@@ -2289,7 +2275,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
             rest.service.dto.MvtCaisseDTO mvtCaisse = getMvtCaisse(mvtCaisseId);
 
-            int numbretiket = nombreExemplaireMvtCaisseTicket();
+            int numbretiket = nombreExemplaireMvtCaisseTicket("KEY_TICKET_COUNTMVT");
 
             String fileBarecode = buildLineBarecode(mvtCaisse.getTiket());
             PrintService printService = findPrintService();
@@ -2298,7 +2284,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             List<String> datas = generateData(mvtCaisse);
 
             ImpressionServiceImpl imp = new ImpressionServiceImpl();
-            imp.setoTImprimante(imprimante);
+            imp.setOTImprimante(imprimante);
             imp.setEmplacement(user.getLgEMPLACEMENTID());
             imp.setOfficine(officine);
             imp.setService(printService);
@@ -2366,9 +2352,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
     }
 
-    private int nombreExemplaireMvtCaisseTicket() {
+    private int nombreExemplaireMvtCaisseTicket(String key) {
+
         try {
-            TParameters nbreTicket = getEntityManager().find(TParameters.class, "KEY_TICKET_COUNTMVT");
+            TParameters nbreTicket = getEntityManager().find(TParameters.class, key);
 
             if (nbreTicket != null) {
                 return Integer.parseInt(nbreTicket.getStrVALUE().trim());
@@ -2688,5 +2675,62 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         wrapper.setDatas(lstData);
         wrapper.setTotaux(totauxGl);
         return wrapper;
+    }
+
+    @Override
+    public JSONObject printReglementFacture(String lgDossierReglementId, TUser user) {
+        JSONObject json = new JSONObject();
+        try {
+            TDossierReglement dossierReglement = getEntityManager().find(TDossierReglement.class, lgDossierReglementId);
+            List<TDossierReglementDetail> lstTDossierReglementDetail = getListDossierReglementDetail(
+                    lgDossierReglementId);
+
+            int numbretiket = nombreExemplaireMvtCaisseTicket("KEY_TICKET_COUNT");
+            MvtTransaction mvtTransaction = findByPkey(lgDossierReglementId);
+            TEmplacement emplacement = mvtTransaction.getMagasin();
+
+            PrintService printService = findPrintService();
+            TImprimante imprimante = findImprimanteByName();
+            TOfficine officine = findOfficine();
+            List<String> datas = generateData(lstTDossierReglementDetail, dossierReglement);
+            List<String> infoSellers = generateDataOperateur(mvtTransaction.getUser());
+            ImpressionServiceImpl imp = new ImpressionServiceImpl();
+            imp.setOTImprimante(imprimante);
+            imp.setEmplacement(emplacement);
+            imp.setOfficine(officine);
+            imp.setService(printService);
+            imp.setTypeTicket(Constant.TICKET_REGLEMENT);
+            imp.setShowCodeBar(false);
+            imp.setOperation(dossierReglement.getDtCREATED());
+            imp.setIntBegin(0);
+            TFacture facture = dossierReglement.getLgFACTUREID();
+            List<String> infotiersPayants = generateDataTiersPayant(facture.getTiersPayant());
+            imp.setTitle("Règlement de la facture N°" + facture.getStrCODEFACTURE());
+            imp.buildTicket(datas, infoSellers, infotiersPayants, generateDataSummary(dossierReglement, mvtTransaction),
+                    Collections.emptyList(), null);
+            for (int i = 0; i < numbretiket; i++) {
+                imp.printTicketVente(1);
+            }
+            json.put("success", true);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            json.put("success", false);
+        }
+        return json;
+    }
+
+    private List<TDossierReglementDetail> getListDossierReglementDetail(String lgDossierReglementId) {
+
+        try {
+            return em.createQuery(
+                    "SELECT t FROM TDossierReglementDetail t WHERE t.lgDOSSIERREGLEMENTID.lgDOSSIERREGLEMENTID = ?1 AND t.strSTATUT = ?2",
+                    TDossierReglementDetail.class).setParameter(1, lgDossierReglementId)
+                    .setParameter(2, Constant.STATUT_IS_CLOSED).getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return Collections.emptyList();
+        }
+
     }
 }

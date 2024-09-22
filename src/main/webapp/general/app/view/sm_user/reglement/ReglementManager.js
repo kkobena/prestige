@@ -4,7 +4,7 @@ var url_services_data_diffclient = '../webservices/sm_user/diffclient/ws_data.js
 var url_ws_generate_reglement_pdf = '../webservices/sm_user/reglement/ws_generate_reglement_pdf.jsp';
 var url_services_transaction_diffclient = '../webservices/sm_user/diffclient/ws_transaction.jsp?mode=';
 var url_services_data_tierspayant = '../webservices/tierspayantmanagement/tierspayant/ws_search_data.jsp';
-var url_services_pdf_ticket = '../webservices/sm_user/reglement/ws_generate_pdf.jsp';
+
 
 var Me;
 var view_title;
@@ -533,48 +533,31 @@ Ext.define('testextjs.view.sm_user.reglement.ReglementManager', {
         });
     },
     onPdfClickTicket: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
-        var linkUrl = url_services_pdf_ticket + '?lg_DOSSIER_REGLEMENT_ID=' + rec.get('lg_DOSSIER_REGLEMENT_ID');
-        Me.lunchPrinter(linkUrl);
-
-
-    },
-    lunchPrinter: function (url) {
+        const rec = grid.getStore().getAt(rowIndex);
         Ext.Ajax.request({
-            url: url,
-            success: function (response)
-            {
-                var object = Ext.JSON.decode(response.responseText, false);
-                if (object.success == "0") {
-                    Ext.MessageBox.alert('Error Message', object.errors);
-                    return;
-                }
-
-            },
+            method: 'GET',
+            url: '../api/v1/facturation/ticket-facture/' + rec.get('lg_DOSSIER_REGLEMENT_ID'),
             failure: function (response)
             {
-
-                var object = Ext.JSON.decode(response.responseText, false);
-                console.log("Bug " + response.responseText);
+                const object = Ext.JSON.decode(response.responseText, false);
                 Ext.MessageBox.alert('Error Message', response.responseText);
-
             }
         });
     },
     onPdfClick: function () {
-        var lg_TIERS_PAYANT_ID = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),
+        const lg_TIERS_PAYANT_ID = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),
                 dt_fin = Ext.getCmp('datefin').getSubmitValue(), dt_debut = Ext.getCmp('datedebut').getSubmitValue()
                 ;
-        var linkUrl = url_ws_generate_reglement_pdf + "?lg_TIERS_PAYANT_ID=" + lg_TIERS_PAYANT_ID + "&dt_debut=" + dt_debut + "&dt_fin=" + dt_fin;
+        const linkUrl = url_ws_generate_reglement_pdf + "?lg_TIERS_PAYANT_ID=" + lg_TIERS_PAYANT_ID + "&dt_debut=" + dt_debut + "&dt_fin=" + dt_fin;
         window.open(linkUrl);
     },
     onPdfPrint: function () {
-        var tiersPayantId = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),
-                 dtEnd= Ext.getCmp('datefin').getSubmitValue(), dtStart = Ext.getCmp('datedebut').getSubmitValue();
+        let tiersPayantId = Ext.getCmp('lg_TIERS_PAYANT_ID').getValue(),
+                dtEnd = Ext.getCmp('datefin').getSubmitValue(), dtStart = Ext.getCmp('datedebut').getSubmitValue();
         if (tiersPayantId == null || tiersPayantId == undefined) {
             tiersPayantId = '';
         }
-        var linkUrl = '../FacturePdfServlet?dtStart=' + dtStart + "&dtEnd=" + dtEnd + "&mode=REGLEMENT_FACTURE_GROUPE" + "&tiersPayantId=" + tiersPayantId;
+        const linkUrl = '../FacturePdfServlet?dtStart=' + dtStart + "&dtEnd=" + dtEnd + "&mode=REGLEMENT_FACTURE_GROUPE" + "&tiersPayantId=" + tiersPayantId;
 
         window.open(linkUrl);
     }

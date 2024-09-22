@@ -65,4 +65,6 @@ public interface GenerateTicketService {
 
     TicketRecapWrapper buildTicketZ(Params params);
 
+    JSONObject printReglementFacture(String lgDossierReglementId, TUser user);
+
 }
