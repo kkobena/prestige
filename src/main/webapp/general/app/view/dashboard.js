@@ -25,7 +25,6 @@ Ext.define('testextjs.view.dashboard', {
         this.items = [{
                 xtype: "component",
                 autoScroll: false,
-                border: false,
                 autoEl: {
                     tag: "iframe",
                     src: url_order_component
