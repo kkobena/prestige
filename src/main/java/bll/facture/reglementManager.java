@@ -1907,9 +1907,9 @@ public class reglementManager extends bll.bllBase {
                         + this.getOTUser().getStrLASTNAME();
                 addTransaction(this.getOTUser(), this.getOTUser(), dossierReglement.getLgDOSSIERREGLEMENTID(),
                         dossierReglement.getDblAMOUNT().intValue(), 0, dossierReglement.getDblAMOUNT().intValue(),
-                        (int) int_AMOUNT_RECU, true, CategoryTransaction.CREDIT,
-                        TypeTransaction.ENTREE, OTReglement.getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID(),
-                        OTTypeMvtCaisse, this.getOdataManager().getEm(), dossierReglement.getDblAMOUNT().intValue(), 0,
+                        (int) int_AMOUNT_RECU, true, CategoryTransaction.CREDIT, TypeTransaction.ENTREE,
+                        OTReglement.getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID(), OTTypeMvtCaisse,
+                        this.getOdataManager().getEm(), dossierReglement.getDblAMOUNT().intValue(), 0,
                         caisse.getStrREFTICKET(), OTCompteClientTiersPayant.getLgTIERSPAYANTID().getLgTIERSPAYANTID());
                 updateItem(this.getOTUser(), caisse.getLgMVTCAISSEID(), Description, TypeLog.MVT_DE_CAISSE, caisse,
                         this.getOdataManager().getEm());
