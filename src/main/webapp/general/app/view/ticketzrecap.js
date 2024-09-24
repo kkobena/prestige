@@ -13,12 +13,11 @@ Ext.define('testextjs.view.ticketzrecap', {
     autoScroll: false,
     width: '99%',
     height: Ext.getBody().getViewSize().height*0.80,
-    border: false,
+    border: true,
     initComponent: function () {
         this.items = [{
                 xtype: "component",
                 autoScroll: false,
-                border: true,
                 autoEl: {
                     tag: "iframe",
                     src: 'ticketzview.html'
