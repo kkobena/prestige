@@ -2537,12 +2537,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             }
             if (v.getTotalEntreeVirement() != 0) {
                 ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total entrée.Vir",
-                        NumberUtils.formatLongToString(v.getTotalEntreeCB()));
+                        NumberUtils.formatLongToString(v.getTotalEntreeVirement()));
                 totaux.add(modePaymentAmount);
             }
             if (v.getTotalReglementCheque() != 0) {
                 ModePaymentAmount modePaymentAmount = new ModePaymentAmount("Total Regl Ch",
-                        NumberUtils.formatLongToString(v.getTotalEntreeCB()));
+                        NumberUtils.formatLongToString(v.getTotalReglementCheque()));
                 totaux.add(modePaymentAmount);
             }
             if (v.getMontantReglementOrange() != 0) {

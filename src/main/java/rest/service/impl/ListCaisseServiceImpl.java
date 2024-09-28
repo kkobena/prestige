@@ -230,7 +230,7 @@ public class ListCaisseServiceImpl implements ListCaisseService {
             caisse.setMontant(m.getMontantRegle());
             caisse.setMontantBrut(m.getMontant());
             caisse.setMontantNet(m.getMontantNet());
-            caisse.setMontantCaisse(m.getMontantPaye());
+            caisse.setMontantCaisse(m.getMontantRegle());
             caisse.setMontantCredit(m.getMontantRestant());
 
             break;
@@ -288,7 +288,7 @@ public class ListCaisseServiceImpl implements ListCaisseService {
 
     private VenteReglementDTO buildFromTypeReglement(TTypeReglement tTypeReglement, int montant, int montantAttendu) {
         VenteReglementDTO reglement = new VenteReglementDTO();
-        reglement.setMontant(montant);
+        reglement.setMontant(montantAttendu);
         reglement.setMontantAttentu(montantAttendu);
         reglement.setTypeReglement(tTypeReglement.getStrNAME());
         reglement.setTypeReglementId(tTypeReglement.getLgTYPEREGLEMENTID());
