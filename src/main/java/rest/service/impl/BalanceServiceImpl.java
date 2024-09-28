@@ -1259,12 +1259,12 @@ public class BalanceServiceImpl implements BalanceService {
         long montantMoov = 0;
         long montantMtn = 0;
         long montantWave = 0;
-        long montantPaye = 0;
+        // long montantPaye = 0;
         long totalModeReglement = 0;
 
         for (BalanceVenteItemDTO balanceVenteItem : values) {
             long montantRegle1 = balanceVenteItem.getMontantRegle().longValue();
-            long montantPaye1 = balanceVenteItem.getMontantPaye().longValue();
+            // long montantPaye1 = balanceVenteItem.getMontantPaye().longValue();
             montantTTC += showAllAmount ? balanceVenteItem.getMontantTTCDetatilReal().longValue()
                     : balanceVenteItem.getMontantTTCDetatil().longValue();
             montantTTCReel += balanceVenteItem.getMontantTTCDetatil().longValue();
@@ -1279,12 +1279,14 @@ public class BalanceServiceImpl implements BalanceService {
             nbreVente += balanceVenteItem.getTotalVente();
             montantCredit += balanceVenteItem.getMontantCredit().longValue();
             montantRegle += montantRegle1;
-            montantPaye += montantPaye1;
+            // montantPaye += montantPaye1;
 
         }
         for (VenteReglementReportDTO reglementReport : reglementReports) {
             long ugNetAmount = checkUg ? reglementReport.getUgNetAmount() : 0;
-            long amount = ((reglementReport.getMontant() - reglementReport.getFlagedAmount()) - ugNetAmount)
+            // long amount = ((reglementReport.getMontant() - reglementReport.getFlagedAmount()) - ugNetAmount)
+            // - reglementReport.getAmountNonCa();
+            long amount = ((reglementReport.getMontantAttentu() - reglementReport.getFlagedAmount()) - ugNetAmount)
                     - reglementReport.getAmountNonCa();
             totalModeReglement += amount;
             switch (reglementReport.getTypeReglement()) {
@@ -1335,7 +1337,7 @@ public class BalanceServiceImpl implements BalanceService {
         marge += (montantNetReel - montantTva) - montantAchat;
 
         balance.setMarge(marge);
-        balance.setMontantPaye(montantPaye);
+        balance.setMontantPaye(montantRegle);// modiffie pour que toutes les valeurs sur tous les menus soient conforme
         balance.setMontantDiff(montantDiff);
         balance.setPanierMoyen(panierMoyen);
         balance.setMontantCB(montantCB);

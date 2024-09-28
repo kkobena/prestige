@@ -343,7 +343,6 @@ Ext.application({
         'testextjs.model.CodeActe',
         'testextjs.model.ZoneGeographique',
         'testextjs.view.configmanagement.client.action.infoCompte',
-        // 'testextjs.view.sm_user.contregisterorder.ContregisterorderManager'
         'testextjs.view.sm_user.retrocession.retrocessionManager',
         'testextjs.model.Retrocession',
 
