@@ -18,9 +18,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import org.json.JSONObject;
-import rest.service.BalanceService;
 import rest.service.CaisseService;
-import rest.service.SalesStatsService;
 import toolkits.parameters.commonparameter;
 import util.Constant;
 
