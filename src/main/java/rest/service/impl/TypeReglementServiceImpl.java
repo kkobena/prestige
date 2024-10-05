@@ -6,7 +6,7 @@ import dal.TTypeReglement_;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -17,7 +17,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import rest.service.TypeReglementService;
-import util.DateConverter;
+import util.Constant;
 
 /**
  *
@@ -42,7 +42,7 @@ public class TypeReglementServiceImpl implements TypeReglementService {
             Root<TTypeReglement> root = cq.from(TTypeReglement.class);
             cq.select(cb.construct(ComboDTO.class, root.get(TTypeReglement_.lgTYPEREGLEMENTID),
                     root.get(TTypeReglement_.strNAME))).orderBy(cb.asc(root.get(TTypeReglement_.strNAME)));
-            predicates.add(cb.equal(root.get(TTypeReglement_.strSTATUT), DateConverter.STATUT_ENABLE));
+            predicates.add(cb.equal(root.get(TTypeReglement_.strSTATUT), Constant.STATUT_ENABLE));
 
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
@@ -55,9 +55,13 @@ public class TypeReglementServiceImpl implements TypeReglementService {
 
     @Override
     public List<ComboDTO> findAllWithoutEspece() {
-        return findAll().stream()
-                .filter(e -> !e.getId().equals("1") && !e.getId().equals("4") && !e.getId().equals("5"))
-                .collect(Collectors.toList());
+        return findAllExclude(Set.of(Constant.MODE_ESP, Constant.REGL_DIFF, Constant.MODE_DEVISE));
+
+    }
+
+    @Override
+    public List<ComboDTO> findAllExclude(Set<String> toExclude) {
+        return findAll().stream().filter(e -> !toExclude.contains(e.getId())).collect(Collectors.toList());
     }
 
 }

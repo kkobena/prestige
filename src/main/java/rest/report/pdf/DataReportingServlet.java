@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import toolkits.parameters.commonparameter;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -41,7 +42,7 @@ public class DataReportingServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/pdf");
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser oTUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
@@ -62,7 +63,7 @@ public class DataReportingServlet extends HttpServlet {
                 critere = Integer.valueOf(request.getParameter("critere"));
             }
             MargeEnum filtre = MargeEnum.valueOf(request.getParameter("filtre"));
-            file = dataReporting.margeProduitsVendus(dtStart, dtEnd, codeFamile, critere, query, OTUser, codeRayon,
+            file = dataReporting.margeProduitsVendus(dtStart, dtEnd, codeFamile, critere, query, oTUser, codeRayon,
                     codeGrossiste, filtre);
             break;
         case UNITES_VENDUES:
@@ -70,7 +71,7 @@ public class DataReportingServlet extends HttpServlet {
             codeRayon = request.getParameter("codeRayon");
             codeGrossiste = request.getParameter("codeGrossiste");
 
-            file = dataReporting.statsUnintesVendues(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon,
+            file = dataReporting.statsUnintesVendues(dtStart, dtEnd, codeFamile, query, oTUser, codeRayon,
                     codeGrossiste);
             break;
         case UNITES_GAMME:
@@ -79,7 +80,7 @@ public class DataReportingServlet extends HttpServlet {
             codeGrossiste = request.getParameter("codeGrossiste");
 
             String gammeId = request.getParameter("gammeId");
-            file = dataReporting.statsUnintesVenduesparGamme(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon,
+            file = dataReporting.statsUnintesVenduesparGamme(dtStart, dtEnd, codeFamile, query, oTUser, codeRayon,
                     codeGrossiste, gammeId);
             break;
         case UNITES_LABORATOIRES:
@@ -88,7 +89,7 @@ public class DataReportingServlet extends HttpServlet {
             codeGrossiste = request.getParameter("codeGrossiste");
 
             String laboratoireId = request.getParameter("laboratoireId");
-            file = dataReporting.statsUnintesVenduesparLaboratoire(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon,
+            file = dataReporting.statsUnintesVenduesparLaboratoire(dtStart, dtEnd, codeFamile, query, oTUser, codeRayon,
                     codeGrossiste, laboratoireId);
             break;
         case ARTICLES_NON_VENDUES:
@@ -105,7 +106,7 @@ public class DataReportingServlet extends HttpServlet {
 
             }
             MargeEnum stockFiltre = MargeEnum.valueOf(request.getParameter("stockFiltre"));
-            file = dataReporting.statsArticlesInvendus(dtStart, dtEnd, codeFamile, query, OTUser, codeRayon,
+            file = dataReporting.statsArticlesInvendus(dtStart, dtEnd, codeFamile, query, oTUser, codeRayon,
                     codeGrossiste, stock, stockFiltre);
             break;
         case ARTICLES_SUR_STOCK:
@@ -129,7 +130,7 @@ public class DataReportingServlet extends HttpServlet {
                 }
 
             }
-            file = dataReporting.articleSurStock(codeFamile, query, OTUser, codeRayon, codeGrossiste, nbreMois,
+            file = dataReporting.articleSurStock(codeFamile, query, oTUser, codeRayon, codeGrossiste, nbreMois,
                     nbreConsommation);
             break;
 
@@ -151,14 +152,14 @@ public class DataReportingServlet extends HttpServlet {
             stock = 0;
             int seuil = 0;
             try {
-                seuil = Integer.valueOf(request.getParameter("seuil"));
+                seuil = Integer.parseInt(request.getParameter("seuil"));
             } catch (NumberFormatException e) {
             }
             try {
                 stock = Integer.valueOf(request.getParameter("stock"));
             } catch (NumberFormatException e) {
             }
-            file = dataReporting.comparaisonStock(OTUser, query, filtreStock, filtreSeuil, codeFamile, codeRayon,
+            file = dataReporting.comparaisonStock(oTUser, query, filtreStock, filtreSeuil, codeFamile, codeRayon,
                     codeGrossiste, stock, seuil);
             break;
 
@@ -167,10 +168,10 @@ public class DataReportingServlet extends HttpServlet {
             String id = request.getParameter("id");
             String libelle = request.getParameter("libelle");
             String cip = request.getParameter("cip");
-            file = dataReporting.produitConsomamation(OTUser, query, dtStart, dtEnd, id, libelle, cip);
+            file = dataReporting.produitConsomamation(oTUser, query, dtStart, dtEnd, id, libelle, cip);
             break;
         case COMPTE_EXPLOITATION:
-            file = dataReporting.donneesCompteExploitation(dtStart, dtEnd, OTUser);
+            file = dataReporting.donneesCompteExploitation(dtStart, dtEnd, oTUser);
             break;
         case ALL_AJUSTEMENTS:
 
@@ -180,7 +181,7 @@ public class DataReportingServlet extends HttpServlet {
             body.setCanCancel(canCancel);
             body.setShowAll(true);
             body.setAll(false);
-            body.setUserId(OTUser);
+            body.setUserId(oTUser);
             body.setQuery(query);
             try {
                 body.setTypeFiltre(request.getParameter("typeFiltre"));
@@ -195,7 +196,7 @@ public class DataReportingServlet extends HttpServlet {
             break;
         case RETOUR_FOURNISSEUR:
 
-            file = dataReporting.loadretoursFournisseur(dtStart, dtEnd, fourId, query, OTUser,
+            file = dataReporting.loadretoursFournisseur(dtStart, dtEnd, fourId, query, oTUser,
                     request.getParameter("filtre"));
             break;
 
