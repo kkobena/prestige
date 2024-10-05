@@ -1034,8 +1034,7 @@ public class bonLivraisonManagement extends bllBase implements Bonlivraisonmanag
             list = this.getOdataManager().getEm().createQuery(
                     "SELECT o FROM TLot o WHERE o.lgLOTID LIKE ?1 AND (o.lgFAMILLEID.strNAME LIKE ?2 OR o.lgFAMILLEID.intCIP LIKE ?2 OR  o.strREFLIVRAISON LIKE ?2 OR o.strREFORDER LIKE ?2 )  AND  FUNCTION('DATE',o.dtUPDATED ) >=?3 AND FUNCTION('DATE',o.dtUPDATED)<=?4   ")
                     .setParameter(1, "%" + lg_LOT_ID + "%").setParameter(2, search_value + "%")
-                   .setParameter(3, dt_start).setParameter(4, dt_end)
-                    .getResultList();
+                    .setParameter(3, dt_start).setParameter(4, dt_end).getResultList();
         } catch (Exception e) {
             e.printStackTrace();
         }
