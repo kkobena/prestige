@@ -2,7 +2,6 @@ package rest.report.pdf;
 
 import commonTasks.dto.Params;
 import commonTasks.dto.TvaDTO;
-import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -21,11 +20,10 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import rest.report.ReportUtil;
 import rest.service.BalanceService;
-import rest.service.CaisseService;
 import rest.service.TvaDataService;
 import rest.service.dto.BalanceParamsDTO;
-import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
+import util.Constant;
 
 /**
  *
@@ -34,8 +32,6 @@ import toolkits.utils.jdom;
 @WebServlet(name = "TvaServlet", urlPatterns = { "/TvaServlet" })
 public class TvaServlet extends HttpServlet {
 
-    @EJB
-    private CaisseService caisseService;
     @EJB
     private ReportUtil reportUtil;
     @EJB
@@ -51,7 +47,7 @@ public class TvaServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/pdf");
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser OTUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
@@ -119,9 +115,8 @@ public class TvaServlet extends HttpServlet {
         }
         TUser tu = parasm.getOperateur();
 
-        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -153,9 +148,8 @@ public class TvaServlet extends HttpServlet {
         }
         TUser tu = parasm.getOperateur();
 
-        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -186,9 +180,8 @@ public class TvaServlet extends HttpServlet {
         }
         TUser tu = parasm.getOperateur();
 
-        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastatjour";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -215,12 +208,11 @@ public class TvaServlet extends HttpServlet {
         LocalDate dtSt = LocalDate.parse(balanceParams.getDtStart());
         LocalDate dtEn = LocalDate.parse(balanceParams.getDtEnd());
 
-        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
         if (balanceParams.isByDay()) {
             scr_report_file = "rp_tvastatjour";
         }
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

@@ -37,7 +37,6 @@ import rest.service.ListCaisseService;
 import rest.service.dto.BalanceParamsDTO;
 import rest.service.dto.CoffreCaisseDTO;
 import rest.service.dto.MvtCaisseSummaryDTO;
-import toolkits.parameters.commonparameter;
 import util.DateConverter;
 import util.Constant;
 
@@ -75,7 +74,7 @@ public class CaisseRessource {
             @QueryParam(value = "startH") String hdebut, @QueryParam(value = "endH") String hfin,
             @QueryParam(value = "findClient") boolean findClient) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -114,7 +113,7 @@ public class CaisseRessource {
     public Response balanceCaisse(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -129,7 +128,7 @@ public class CaisseRessource {
     public Response closeResumeCaisse(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -142,7 +141,7 @@ public class CaisseRessource {
     public Response rolBack(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -156,7 +155,7 @@ public class CaisseRessource {
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "userId") String userId,
             @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -181,7 +180,7 @@ public class CaisseRessource {
             @QueryParam(value = "dtEnd") String dtEnd,
             @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -197,7 +196,7 @@ public class CaisseRessource {
     public Response addMvtCaisse(MvtCaisseDTO caisseDTO) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -210,7 +209,7 @@ public class CaisseRessource {
     @Path("attribuerfondcaisse/{id}")
     public Response attribuerFondCaisse(@PathParam("id") String id, Params p) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -222,7 +221,7 @@ public class CaisseRessource {
     @Path("ouvrir-caisse")
     public Response validationFondCaisse(CoffreCaisseDTO coffreCaisse) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -237,7 +236,7 @@ public class CaisseRessource {
     public Response rapportGestion(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -253,7 +252,7 @@ public class CaisseRessource {
     @Path("tickez")
     public Response ticketZ(Params params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -265,10 +264,10 @@ public class CaisseRessource {
     @GET
     @Path("mvtcaisses")
     public Response mvtcaisses(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "user") String lgUSERID, @QueryParam(value = "dtStart") String dt_debut,
+            @QueryParam(value = "user") String lgUSERID, @QueryParam(value = "dtStart") String dtDebut,
             @QueryParam(value = "dtEnd") String dtFin) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -279,8 +278,8 @@ public class CaisseRessource {
         if (!StringUtils.isEmpty(dtFin)) {
             caisseParams.setEnd(LocalDate.parse(dtFin));
         }
-        if (!StringUtils.isEmpty(dt_debut)) {
-            caisseParams.setStartDate(LocalDate.parse(dt_debut));
+        if (!StringUtils.isEmpty(dtDebut)) {
+            caisseParams.setStartDate(LocalDate.parse(dtDebut));
         }
         if (!StringUtils.isEmpty(lgUSERID)) {
             caisseParams.setUtilisateurId(lgUSERID);
@@ -296,7 +295,7 @@ public class CaisseRessource {
     @Path("ca/ug")
     public Response ugs(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -315,7 +314,7 @@ public class CaisseRessource {
     public Response balanceCaisseCarnet(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -367,7 +366,7 @@ public class CaisseRessource {
     @Path("ticke-mvt-caisse")
     public Response ticketMvtCaisse(@QueryParam(value = "mvtCaisseId") String mvtCaisseId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -380,12 +379,19 @@ public class CaisseRessource {
     @Path("fetch-tickez")
     public Response fetchTicketZ(Params params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setOperateur(tu);
         JSONObject json = generateTicketService.fetchTicketZ(params);
         return Response.ok().entity(json.toString()).build();
+    }
+
+    @POST
+    @Path("send-sms")
+    public Response sendSms(Params params) throws JSONException {
+        generateTicketService.sendToSms(params);
+        return Response.ok().entity("Envoie en cours").build();
     }
 }

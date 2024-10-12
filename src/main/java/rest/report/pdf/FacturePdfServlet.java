@@ -18,7 +18,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import toolkits.parameters.commonparameter;
+
+import util.Constant;
 
 /**
  *
@@ -39,7 +40,7 @@ public class FacturePdfServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/pdf");
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser OTUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
@@ -61,7 +62,7 @@ public class FacturePdfServlet extends HttpServlet {
             file = facture.factureDevis(venteId, OTUser);
             break;
         case LISTE_DIFFERES:
-            boolean pairclient = Boolean.valueOf(request.getParameter("pairclient"));
+            boolean pairclient = Boolean.parseBoolean(request.getParameter("pairclient"));
             if (!"".equals(query)) {
                 params.setDescription(query);
             }
@@ -80,12 +81,11 @@ public class FacturePdfServlet extends HttpServlet {
             break;
 
         case LOG:
-            int criteria = Integer.valueOf(request.getParameter("criteria"));
+            int criteria = Integer.parseInt(request.getParameter("criteria"));
             file = facture.logs(query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), userId, criteria, OTUser);
             break;
         case VENTE_ANNULEES:
-            List<TPrivilege> LstTPrivilege = (List<TPrivilege>) session
-                    .getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+            List<TPrivilege> LstTPrivilege = (List<TPrivilege>) session.getAttribute(Constant.USER_LIST_PRIVILEGE);
             file = facture.annulations(query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), OTUser, LstTPrivilege);
             break;
 
@@ -95,8 +95,7 @@ public class FacturePdfServlet extends HttpServlet {
             file = facture.factureDevisAsFacture(venteId, fileForma, OTUser);
             break;
         case VENTE_ANNULEES_PLUS:
-            List<TPrivilege> LstTPrivilege_ = (List<TPrivilege>) session
-                    .getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+            List<TPrivilege> LstTPrivilege_ = (List<TPrivilege>) session.getAttribute(Constant.USER_LIST_PRIVILEGE);
             file = facture.annulationsPlus(query, LocalDate.parse(dtStart), LocalDate.parse(dtEnd), OTUser,
                     LstTPrivilege_);
 

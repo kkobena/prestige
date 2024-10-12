@@ -1,9 +1,7 @@
 package rest.report.pdf;
 
-import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.EJB;
@@ -14,11 +12,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import rest.report.ReportUtil;
-import rest.service.CommonService;
 import rest.service.OrderService;
 import rest.service.dto.CommandeEncourDetailDTO;
 import rest.service.dto.CommandeFiltre;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -29,8 +26,7 @@ public class EditionCommandeServlet extends HttpServlet {
 
     @EJB
     private ReportUtil reportUtil;
-    @EJB
-    private CommonService commonService;
+
     @EJB
     private OrderService orderService;
 
@@ -66,12 +62,11 @@ public class EditionCommandeServlet extends HttpServlet {
 
     public String buildReport(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String orderId = request.getParameter("orderId");
         String refCommande = request.getParameter("refCommande");
-        TOfficine oTOfficine = commonService.findOfficine();
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
 
         String reportName = "rp_order_items";
 

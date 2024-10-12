@@ -31,8 +31,8 @@ import rest.service.TiersPayantExclusService;
 import rest.service.dto.DepotProduitVendusDTO;
 import rest.service.dto.ExtraitCompteClientDTO;
 import rest.service.dto.RetourCarnetDTO;
-import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
+import util.Constant;
 
 /**
  *
@@ -59,7 +59,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/pdf");
         HttpSession session = request.getSession();
-        TUser OTUser = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser OTUser = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String action = request.getParameter("mode");
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
@@ -150,7 +150,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             tiersPayant = tiersPayantExclusService.getTiersPayantName(tiersPayantId);
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -185,7 +185,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             tiersPayant = tiersPayantExclusService.getTiersPayantName(tiersPayantId) + " ";
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -220,7 +220,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             tiersPayant = tiersPayantExclusService.getTiersPayantName(tiersPayantId) + " ";
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -255,7 +255,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             tiersPayant = tiersPayantExclusService.getTiersPayantName(tiersPayantId) + " ";
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -290,7 +290,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             tiersPayant = tiersPayantExclusService.getTiersPayantName(tiersPayantId);
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -326,7 +326,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             tiersPayant = tiersPayantExclusService.getTiersPayantName(tiersPayantId) + " ";
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -356,7 +356,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
         String tiersPayant = " ";
         String scr_report_file = "rp_retour_au_depot_";
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -392,7 +392,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             tiersPayant = carnetAsDepotService.getTiersPayantName(tiersPayantId) + " ";
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -427,7 +427,7 @@ public class TiersPayantExcludServlet extends HttpServlet {
             tiersPayant = carnetAsDepotService.getTiersPayantName(tiersPayantId);
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = " PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

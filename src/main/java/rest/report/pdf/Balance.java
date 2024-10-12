@@ -85,7 +85,7 @@ public class Balance {
 
     public String generatepdf(Params parasm, boolean exludeSome, boolean showAllAmount) {
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = caisseService.findOfficine();
+        TOfficine oTOfficine = reportUtil.findOfficine();
         String scr_report_file = "rp_balancevente_caissev2";
         String P_H_CLT_INFOS;
         TEmplacement empl = tu.getLgEMPLACEMENTID();
@@ -494,9 +494,9 @@ public class Balance {
         }
         TUser tu = parasm.getOperateur();
         boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_gestioncaisses";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -519,9 +519,9 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_pharma_dashboard";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -569,9 +569,8 @@ public class Balance {
         }
         TUser tu = parasm.getOperateur();
 
-        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_tvastat";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -620,9 +619,8 @@ public class Balance {
         }
         TUser tu = parasm.getOperateur();
 
-        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_reportmanagement";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -652,9 +650,9 @@ public class Balance {
 
     public String suivMvtArticle(LocalDate dtSt, LocalDate dtEn, String produitId, String empl, TUser tu) {
         Comparator<MvtProduitDTO> mvtrByDate = Comparator.comparing(MvtProduitDTO::getDateOperation);
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_suivi_mvt_article";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         TFamille famille = produitService.findById(produitId);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
@@ -697,9 +695,9 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scrreportfile = "rp_recap";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String periode = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             periode += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -763,9 +761,9 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_tvastatjour";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -792,13 +790,13 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_statfamilleart";
         Period periode = Period.between(dtSt, dtEn);
         if (periode.getMonths() > 0) {
             scr_report_file = "rp_statfamilleart_periode";
         }
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -828,9 +826,9 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_perimerquery";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -865,9 +863,9 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_stat_vente_rayon";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -899,9 +897,9 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_stat_vente_rayon";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -925,9 +923,9 @@ public class Balance {
     }
 
     public String listeVentes(SalesStatsParams params) {
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_list_avoirs";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getUserId());
+        Map<String, Object> parameters = reportUtil.officineData(params.getUserId());
         parameters.put("P_H_CLT_INFOS", "LISTE DES AVOIRS");
         parameters.put("avoir_subreport", jdom.scr_report_file);
 
@@ -947,9 +945,9 @@ public class Balance {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_balancevente_caissevpara";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -982,9 +980,9 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_perimev2";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -1021,13 +1019,13 @@ public class Balance {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_statfamilleartveto";
         Period periode = Period.between(dtSt, dtEn);
         if (periode.getMonths() > 0) {
             scr_report_file = "rp_statfamilleart_periodeveto";
         }
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -1061,9 +1059,9 @@ public class Balance {
     }
 
     public String suiviRemise(SalesStatsParams params) {
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scr_report_file = "rp_suivi_remise";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getUserId());
+        Map<String, Object> parameters = reportUtil.officineData(params.getUserId());
         String periode = "PERIODE DU " + params.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!params.getDtStart().isEqual(params.getDtEnd())) {
             periode += " AU " + params.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

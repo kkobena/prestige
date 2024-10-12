@@ -70,6 +70,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.GenerateTicketService;
+import rest.service.SessionHelperService;
+import rest.service.SmsService;
 import rest.service.VenteReglementService;
 import rest.service.dto.ModePaymentAmount;
 import rest.service.dto.TicketRecap;
@@ -103,6 +105,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     @EJB
     private VenteReglementService venteReglementService;
+    @EJB
+    private SessionHelperService sessionHelperService;
+    @EJB
+    private SmsService smsService;
 
     private File buildBarecode(String data) {
         try {
@@ -119,7 +125,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             gd.drawString(data, 10, 65);
             gd.dispose();
             File f = new File(jdom.barecode_file + "" + data + ".png");
-
             ImageIO.write(bi, "png", f);
             return f;
 
@@ -587,17 +592,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
         }
         return ctl;
-    }
-
-    private void print(ImpressionServiceImpl impressionService, int nbreCopie) {
-        try {
-            for (int i = 0; i < nbreCopie; i++) {
-                impressionService.printTicketVente(1);
-            }
-
-        } catch (PrinterException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        }
     }
 
     @Override
@@ -2731,6 +2725,34 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();
         }
+
+    }
+
+    // @Asynchronous
+    @Override
+    public void sendToSms(Params params) throws JSONException {
+        params.setOperateur(this.sessionHelperService.getCurrentUser());
+        TicketRecapWrapper recapWrapper = buildTicketZ(params);
+        StringBuilder sb = new StringBuilder();
+        recapWrapper.getDatas().forEach(ticketRecap -> {
+            sb.append("RECAPITULATIF DE ").append(ticketRecap.getUser()).append("\n\n");
+            ticketRecap.getModePaymentAmounts().forEach((modePaymentAmount) -> {
+                sb.append(modePaymentAmount.getModeLibelle()).append(": ").append(modePaymentAmount.getMontant())
+                        .append("\n");
+            });
+            sb.append("\n").append("TOTAL ").append(ticketRecap.getUser()).append("\n");
+            ticketRecap.getTotaux().forEach((modePaymentAmount) -> {
+                sb.append(modePaymentAmount.getModeLibelle()).append(": ").append(modePaymentAmount.getMontant())
+                        .append("\n");
+            });
+        });
+
+        sb.append("\n").append("TOTAL GENERAL").append("\n\n");
+        recapWrapper.getTotaux().forEach((modePaymentAmount) -> {
+            sb.append(modePaymentAmount.getModeLibelle()).append(": ").append(modePaymentAmount.getMontant())
+                    .append("\n");
+        });
+        this.smsService.sendSMS(sb.toString());
 
     }
 }

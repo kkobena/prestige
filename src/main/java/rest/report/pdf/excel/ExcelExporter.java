@@ -178,9 +178,8 @@ public class ExcelExporter extends HttpServlet {
         } catch (Exception e) {
         }
         TUser tu = parasm.getOperateur();
-        TOfficine oTOfficine = caisseService.findOfficine();
         String scr_report_file = "rp_pharma_dashboard";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

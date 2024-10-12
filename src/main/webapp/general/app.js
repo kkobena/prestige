@@ -808,7 +808,8 @@ Ext.application({
         'FactureSubrogatoireCtr',
         'ProuduitsVenteAnnulesCtr',
         'NotificationCtr',
-        'CategorieNotificationCtr'
+        'CategorieNotificationCtr',
+        'RecapRecetteCaisseCtr'
 
     ],
     stores: [

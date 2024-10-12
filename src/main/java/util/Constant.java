@@ -153,6 +153,11 @@ public final class Constant {
     public static final String P_AFFICHER_STOCK_A_LA_VENTE = "P_AFFICHER_STOCK_A_LA_VENTE";
     public static final String KEY_HEURE_ENVOI_SMS_RECAP_ACTIVITE = "KEY_HEURE_ENVOI_SMS_RECAP_ACTIVITE";
     public static final String STATUT_PAID = "paid";
+    public static final String AUTRES = "AUTRES";
+    public static final String LABOREXCI = "LABOREX-CI";
+    public static final String COPHARMED = "COPHARMED";
+    public static final String TEDIS = "TEDIS PHAR.";
+    public static final String DPCI = "DPCI";
 
     private Constant() {
     }
