@@ -10,7 +10,6 @@ import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.DonneesExploitationDTO;
 import commonTasks.dto.FamilleArticleStatDTO;
 import commonTasks.dto.RetourDetailsDTO;
-import commonTasks.dto.RetourFournisseurDTO;
 import commonTasks.dto.SalesStatsParams;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.TOfficine;
@@ -44,8 +43,7 @@ public class DataReporting {
     private DataReporingService dataReporingService;
     @EJB
     ReportUtil reportUtil;
-    @EJB
-    CommonService commonService;
+
     @EJB
     FicheArticleService ficheArticleService;
     @EJB
@@ -61,9 +59,9 @@ public class DataReporting {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_margeproduits";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -85,9 +83,9 @@ public class DataReporting {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_statistic_unites_vendues";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -110,9 +108,9 @@ public class DataReporting {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_stat_unites_vendues_labo";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -134,9 +132,9 @@ public class DataReporting {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_stat_unites_vendues_labo";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -158,9 +156,9 @@ public class DataReporting {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_articles_invendus";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -182,9 +180,8 @@ public class DataReporting {
     public String articleSurStock(String codeFamile, String query, TUser tu, String codeRayon, String codeGrossiste,
             int nbreMois, int nbreConsommation) throws IOException {
 
-        TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_articles_surstock";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU "
                 + LocalDate.now().minusMonths(nbreMois).format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " AU "
                 + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -210,9 +207,8 @@ public class DataReporting {
     public String comparaisonStock(TUser tu, String query, MargeEnum filtreStock, MargeEnum filtreSeuil,
             String codeFamile, String codeRayon, String codeGrossiste, int stock, int seuil) throws IOException {
 
-        TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_comparaison_surstock";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "";
 
         if (filtreStock != null && filtreStock != MargeEnum.ALL) {
@@ -300,9 +296,8 @@ public class DataReporting {
     public String produitConsomamation(TUser tu, String query, String dtStart, String dtEnd, String id, String libelle,
             String cip) throws IOException {
 
-        TOfficine oTOfficine = commonService.findOfficine();
         String scr_report_file = "rp_consoarticle_comparaison";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + LocalDate.parse(dtStart).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 + " AU " + LocalDate.parse(dtEnd).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         parameters.put("P_H_CLT_INFOS",
@@ -316,9 +311,9 @@ public class DataReporting {
     }
 
     public String donneesCompteExploitation(String dtStart, String dtEnd, TUser tu) throws IOException {
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_compte_exploitation";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + LocalDate.parse(dtStart).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 + " AU " + LocalDate.parse(dtEnd).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         parameters.put("P_H_CLT_INFOS", "PRESENTATION COMPTE D'EXPLOITATION" + P_PERIODE);
@@ -345,9 +340,9 @@ public class DataReporting {
     }
 
     public String ajustements(SalesStatsParams body) throws IOException {
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_all_ajustements";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, body.getUserId());
+        Map<String, Object> parameters = reportUtil.officineData(body.getUserId());
         String P_PERIODE = "PERIODE DU " + body.getDtStart().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " AU "
                 + body.getDtEnd().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         parameters.put("P_H_CLT_INFOS", "AJUSTEMENTS " + P_PERIODE);
@@ -367,9 +362,9 @@ public class DataReporting {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_retour_founisseurs";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             P_PERIODE += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

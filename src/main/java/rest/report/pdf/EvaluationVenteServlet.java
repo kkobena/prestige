@@ -33,8 +33,6 @@ public class EvaluationVenteServlet extends HttpServlet {
     private EvaluationVenteService evaluationVenteService;
     @EJB
     private ReportUtil reportUtil;
-    @EJB
-    private CommonService commonService;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -70,11 +68,9 @@ public class EvaluationVenteServlet extends HttpServlet {
         String filtreValue = request.getParameter("filtreValue");
         String filtre = request.getParameter("filtre");
         String query = request.getParameter("query");
-
-        TOfficine oTOfficine = commonService.findOfficine();
         LocalDate dtSt = LocalDate.now();
         LocalDate dtd = dtSt.minusMonths(3).withDayOfMonth(1);
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " AU "
                 + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 

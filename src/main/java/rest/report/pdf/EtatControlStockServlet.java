@@ -1,6 +1,5 @@
 package rest.report.pdf;
 
-import dal.TOfficine;
 import dal.TUser;
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import rest.report.ReportUtil;
-import rest.service.CommonService;
 import rest.service.EtatControlBonService;
 import rest.service.dto.EtatControlAnnuelDTO;
 import rest.service.dto.EtatControlAnnuelWrapperDTO;
@@ -35,8 +33,6 @@ public class EtatControlStockServlet extends HttpServlet {
     private EtatControlBonService etatControlBonService;
     @EJB
     private ReportUtil reportUtil;
-    @EJB
-    private CommonService commonService;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -87,10 +83,10 @@ public class EtatControlStockServlet extends HttpServlet {
         String grossisteId = request.getParameter("grossisteId");
 
         String search = request.getParameter("search");
-        TOfficine oTOfficine = commonService.findOfficine();
+
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtSt.isEqual(dtd)) {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -117,10 +113,10 @@ public class EtatControlStockServlet extends HttpServlet {
                 ? Integer.valueOf(request.getParameter("groupeId")) : null;
 
         String groupBy = request.getParameter("groupBy");
-        TOfficine oTOfficine = commonService.findOfficine();
+
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtSt.isEqual(dtd)) {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -153,10 +149,10 @@ public class EtatControlStockServlet extends HttpServlet {
         String grossisteId = request.getParameter("grossisteId");
 
         String search = request.getParameter("search");
-        TOfficine oTOfficine = commonService.findOfficine();
+
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtSt.isEqual(dtd)) {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -186,10 +182,10 @@ public class EtatControlStockServlet extends HttpServlet {
                 ? Integer.valueOf(request.getParameter("groupeId")) : null;
 
         String groupBy = request.getParameter("groupBy");
-        TOfficine oTOfficine = commonService.findOfficine();
+
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtSt.isEqual(dtd)) {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

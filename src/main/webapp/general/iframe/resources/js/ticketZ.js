@@ -11,11 +11,29 @@ $(document).ready(function () {
         }
 
     });
-
     $("#afficher").bind("click", function () {
         $("#spinner").show();
-
         loadData();
+    });
+    $("#send-sms").bind("click", function () {
+        $(this).prop('disabled', true);
+        const html = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span class="visually-hidden" role="status">Imprimer...</span>';
+        $(this).html(html);
+        $.ajax({
+            url: '../api/v1/caisse/send-sms',
+            method: "POST",
+            data: JSON.stringify(buildParams()),
+            dataType: "json",
+            contentType: 'application/json'
+
+        }).done(function (data) {
+            console.log("impression terminée");
+        }).always(function () {
+          
+           $("#send-sms").text("Envoyer SMS");
+            $("#send-sms").prop('disabled', false);
+
+        });
     });
 
     $("#imprimer").bind("click", function () {
@@ -37,9 +55,6 @@ $(document).ready(function () {
 
         });
     });
-//    $("#exporter").bind("click", function () {
-//
-//    });
 
     loadData();
 });

@@ -74,7 +74,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CommonService;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -168,7 +168,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
     public List<TNatureVente> findNatureVente() {
         TypedQuery<TNatureVente> tq = getEntityManager().createNamedQuery("TNatureVente.findByStrSTATUT",
                 TNatureVente.class);
-        tq.setParameter("strSTATUT", commonparameter.statut_enable);
+        tq.setParameter("strSTATUT", Constant.STATUT_ENABLE);
         return tq.getResultList();
     }
 
@@ -212,7 +212,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
     @Override
     public List<TTypeVente> findAllTypeVente() {
         TypedQuery<TTypeVente> tq = getEntityManager().createNamedQuery("TTypeVente.findByStrSTATUT", TTypeVente.class);
-        tq.setParameter("strSTATUT", commonparameter.statut_enable);
+        tq.setParameter("strSTATUT", Constant.STATUT_ENABLE);
         return tq.getResultList();
     }
 
@@ -220,7 +220,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
     public List<TypeRemiseDTO> findAllTTypeRemises() {
         TypedQuery<TTypeRemise> tq = getEntityManager().createNamedQuery("TTypeRemise.findByStrSTATUT",
                 TTypeRemise.class);
-        tq.setParameter("strSTATUT", commonparameter.statut_enable);
+        tq.setParameter("strSTATUT", Constant.STATUT_ENABLE);
         List<TTypeRemise> list = tq.getResultList();
         return list.stream().map(TypeRemiseDTO::new).collect(Collectors.toList());
     }
@@ -228,7 +228,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
     @Override
     public List<RemiseDTO> findAllRemise(String typeId) {
         TypedQuery<TRemise> tq = getEntityManager().createNamedQuery("TRemise.findByStrSTATUT", TRemise.class);
-        tq.setParameter("strSTATUT", commonparameter.statut_enable);
+        tq.setParameter("strSTATUT", Constant.STATUT_ENABLE);
         tq.setParameter("typeId", typeId);
         List<TRemise> list = tq.getResultList();
         return list.stream().map(RemiseDTO::new).collect(Collectors.toList());
@@ -243,7 +243,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
             cq.select(cb.construct(ReglementDTO.class, root.get(TTypeReglement_.lgTYPEREGLEMENTID),
                     root.get(TTypeReglement_.strNAME))).orderBy(cb.asc(root.get(TTypeReglement_.strNAME)));
             cq.where(cb.and(cb.equal(root.get(TTypeReglement_.strSTATUT), "enable"),
-                    cb.notEqual(root.get(TTypeReglement_.lgTYPEREGLEMENTID), DateConverter.MODE_DEVISE)));
+                    cb.notEqual(root.get(TTypeReglement_.lgTYPEREGLEMENTID), Constant.MODE_DEVISE)));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
@@ -510,7 +510,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
     @Override
     public List<RemiseDTO> findAllRemise() {
         TypedQuery<TRemise> tq = getEntityManager().createNamedQuery("TRemise.findByAll", TRemise.class);
-        tq.setParameter("strSTATUT", commonparameter.statut_enable);
+        tq.setParameter("strSTATUT", Constant.STATUT_ENABLE);
         List<TRemise> list = tq.getResultList();
         return list.stream().map(RemiseDTO::new).collect(Collectors.toList());
     }

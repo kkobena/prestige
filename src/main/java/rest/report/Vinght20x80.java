@@ -123,9 +123,9 @@ public class Vinght20x80 extends HttpServlet {
             dtEn = LocalDate.parse(dtEnd);
         } catch (Exception e) {
         }
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scrReportFile = "rp_vingtquatre";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         String periode = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
             periode += " AU " + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
