@@ -6,7 +6,6 @@
 package util;
 
 import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortInvalidPortException;
 
 import java.io.IOException;
 import java.io.OutputStream;
