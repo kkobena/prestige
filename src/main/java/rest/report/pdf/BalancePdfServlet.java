@@ -5,7 +5,6 @@
  */
 package rest.report.pdf;
 
-import bll.common.Parameter;
 import commonTasks.dto.CaisseParamsDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
@@ -34,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import rest.report.ReportUtil;
 import rest.service.CaisseService;
 import rest.service.ListCaisseService;
-import toolkits.parameters.commonparameter;
 
 import toolkits.utils.jdom;
 import util.Constant;
@@ -283,9 +281,9 @@ public class BalancePdfServlet extends HttpServlet {
     }
 
     public String listeCaisse(CaisseParamsDTO caisseParams, TUser tu) throws IOException {
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scrreportfile = "rp_listecaisses1";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         final Comparator<VisualisationCaisseDTO> comparatorCaisse = Comparator
                 .comparing(VisualisationCaisseDTO::getDateOperation);
         SumCaisseDTO caisse = caisseService.cumul(caisseParams, true);
@@ -348,9 +346,9 @@ public class BalancePdfServlet extends HttpServlet {
 
     public String listeCaisseVersion2(CaisseParamsDTO caisseParams, TUser tu) throws IOException {
         caisseParams.setAll(true);
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scrreportfile = "rp_caisse_list";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         final Comparator<rest.service.v2.dto.VisualisationCaisseDTO> comparatorCaisse = Comparator
                 .comparing(rest.service.v2.dto.VisualisationCaisseDTO::getDateOperation);
 

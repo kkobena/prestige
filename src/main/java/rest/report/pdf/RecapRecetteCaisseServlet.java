@@ -1,32 +1,33 @@
+
 package rest.report.pdf;
 
-import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import rest.report.ReportUtil;
-import rest.service.CaisseService;
-import rest.service.dto.MvtCaisseSummaryDTO;
+import rest.service.StatCaisseRecetteService;
+import rest.service.dto.StatCaisseRecetteDTO;
 import util.Constant;
 
 /**
  *
  * @author koben
  */
-public class CaisseServlet extends HttpServlet {
+@WebServlet(name = "RecapRecetteCaisseServlet", urlPatterns = { "/RecapRecetteCaisseServlet" })
+public class RecapRecetteCaisseServlet extends HttpServlet {
 
     @EJB
-    private CaisseService caisseService;
+    private StatCaisseRecetteService statCaisseRecetteService;
     @EJB
     private ReportUtil reportUtil;
 
@@ -34,7 +35,6 @@ public class CaisseServlet extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("application/pdf");
         response.sendRedirect(request.getContextPath() + buildReport(request));
-
     }
 
     @Override
@@ -49,20 +49,24 @@ public class CaisseServlet extends HttpServlet {
         processRequest(request, response);
     }
 
+    /**
+     * Returns a short description of the servlet.
+     *
+     * @return a String containing servlet description
+     */
     @Override
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
 
-    public String buildReport(HttpServletRequest request) {
+    private String buildReport(HttpServletRequest request) {
         HttpSession session = request.getSession();
         TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER);
 
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
-        String userId = request.getParameter("userId");
-
-        boolean checked = Boolean.parseBoolean(request.getParameter("checked"));
+        String typeRglementId = request.getParameter("typeRglementId");
+        boolean groupByYear = Boolean.parseBoolean(request.getParameter("groupByYear"));
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
         Map<String, Object> parameters = reportUtil.officineData(user);
@@ -70,17 +74,12 @@ public class CaisseServlet extends HttpServlet {
         if (!dtSt.isEqual(dtd)) {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         }
-        String reportName = "rp_mvt_caisse";
+        String reportName = "rp_recap_caisse_recette";
 
-        parameters.put("P_H_CLT_INFOS", "LISTE DES MOUVEMENTS DE CAISSE \n DU  " + periode);
-        List<rest.service.dto.MvtCaisseDTO> datas = this.caisseService.getAllMvtCaisses(dtStart, dtEnd, checked, userId,
-                0, 0, true);
-        MvtCaisseSummaryDTO caisseSummary = this.caisseService.getAllMvtCaissesSummary(dtStart, dtEnd, userId, checked);
-        if (Objects.nonNull(caisseSummary)) {
-            parameters.put("modes", caisseSummary.getModes());
-        }
+        parameters.put("P_H_CLT_INFOS", "RECAPITULATIF CAISSE/RECETTE\n DU  " + periode);
+        List<StatCaisseRecetteDTO> datas = this.statCaisseRecetteService.fetchStatCaisseRecettes(dtStart, dtEnd,
+                typeRglementId, groupByYear, user.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return reportUtil.buildReport(parameters, reportName, datas);
 
     }
-
 }

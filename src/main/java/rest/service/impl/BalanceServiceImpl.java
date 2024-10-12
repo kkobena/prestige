@@ -697,12 +697,12 @@ public class BalanceServiceImpl implements BalanceService {
 
     private boolean checkUg() {
 
-        return this.findParam(DateConverter.KEY_CHECK_UG);
+        return this.findParam(Constant.KEY_CHECK_UG);
 
     }
 
     private boolean isNormalUse() {
-        return !this.findParam(DateConverter.KEY_TAKE_INTO_ACCOUNT);
+        return !this.findParam(Constant.KEY_TAKE_INTO_ACCOUNT);
 
     }
 
@@ -724,7 +724,7 @@ public class BalanceServiceImpl implements BalanceService {
         String sqlQ = replacePlaceHolder(TABLEAU_BOARD_SQL, balanceParams);
         LOG.log(Level.INFO, "sql--- tableau vente {0}", sqlQ);
         try {
-            Query query = em.createNativeQuery(sqlQ, Tuple.class).setParameter(1, DateConverter.DEPOT_EXTENSION)
+            Query query = em.createNativeQuery(sqlQ, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
                     .setParameter(2, balanceParams.getEmplacementId())
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
@@ -759,7 +759,7 @@ public class BalanceServiceImpl implements BalanceService {
             for (Tuple t : tuple) {
                 long montant = t.get("montant", Double.class).longValue();
                 String libelle = t.get("libelle", String.class);
-                avoisMap.put(StringUtils.isNotEmpty(libelle) ? libelle : DateConverter.AUTRES, montant);
+                avoisMap.put(StringUtils.isNotEmpty(libelle) ? libelle : Constant.AUTRES, montant);
             }
         }
         return avoisMap;
@@ -777,7 +777,7 @@ public class BalanceServiceImpl implements BalanceService {
                 int montant = t.get("montant", BigDecimal.class).intValue();
 
                 String libelleGroupeGrossiste = Objects.nonNull(t.get("libelle", String.class))
-                        ? t.get("libelle", String.class) : DateConverter.AUTRES;
+                        ? t.get("libelle", String.class) : Constant.AUTRES;
                 Map<String, Long> avoisMap = buildAvoir(avoirFournisseur(o.getMvtDate(), o.getMvtDate()));
                 Long avoir = avoisMap.get(libelleGroupeGrossiste);
                 int avoir2 = Objects.isNull(avoir) ? 0 : avoir.intValue();
@@ -785,24 +785,24 @@ public class BalanceServiceImpl implements BalanceService {
                 o.setMontantAchat(montant - avoir2);
                 switch (libelleGroupeGrossiste) {
 
-                case DateConverter.LABOREXCI:
+                case Constant.LABOREXCI:
 
                     o.setMontantAchatOne(montant);
 
                     break;
-                case DateConverter.DPCI:
+                case Constant.DPCI:
                     o.setMontantAchatTwo(montant);
 
                     break;
-                case DateConverter.COPHARMED:
+                case Constant.COPHARMED:
                     o.setMontantAchatThree(montant);
 
                     break;
-                case DateConverter.TEDIS:
+                case Constant.TEDIS:
                     o.setMontantAchatFour(montant);
 
                     break;
-                case DateConverter.AUTRES:
+                case Constant.AUTRES:
                     o.setMontantAchatFive(montant);
                     break;
                 default:
@@ -901,38 +901,6 @@ public class BalanceServiceImpl implements BalanceService {
         tableauBaords.sort(comparator);
         map.put(buildBaordSummary(tableauBaords), tableauBaords);
         return map;
-    }
-
-    private List<TableauBaordPhDTO> buildVente(List<Tuple> tuple) {
-        List<TableauBaordPhDTO> list = new ArrayList<>();
-        boolean checkUg = checkUg();
-        if (CollectionUtils.isNotEmpty(tuple)) {
-            for (Tuple t : tuple) {
-                TableauBaordPhDTO o = new TableauBaordPhDTO();
-                o.setVente(true);
-                o.setMvtDate(LocalDate.parse(t.get("mvtDate", String.class)));
-                int montantTTC = t.get("montantTTCDetatil", BigDecimal.class).intValue();
-                int montantNet = t.get("montantNet", BigDecimal.class).intValue();
-                int montantRemise = t.get("montantRemise", BigDecimal.class).intValue();
-                int montantCredit = t.get("montantCredit", BigDecimal.class).intValue();
-                int montantDiffere = t.get("montantDiffere", BigDecimal.class).intValue();
-                int montantEsp = t.get("montantRegle", BigDecimal.class).intValue();
-                int totalVente = t.get("totalVente", BigDecimal.class).intValue();
-                int montantUg = checkUg ? t.get("montantUg", BigDecimal.class).intValue() : 0;
-                int flagedAmount = t.get("flagedAmount", BigDecimal.class).intValue();
-                o.setMontantTTC((montantTTC - montantUg) - flagedAmount);
-                o.setMontantNet((montantNet - montantUg) - flagedAmount);
-                o.setMontantRemise(montantRemise);
-                o.setMontantEsp((montantEsp - montantUg) - flagedAmount);
-                o.setMontantCredit(montantCredit + montantDiffere);
-                o.setNbreVente(totalVente);
-
-                list.add(o);
-            }
-
-            return list;
-        }
-        return list;
     }
 
     private List<TableauBaordPhDTO> buildVente(List<Tuple> tuple, BalanceParamsDTO balanceParams) {
@@ -1210,7 +1178,7 @@ public class BalanceServiceImpl implements BalanceService {
         String sql = replacePlaceHolder(TYPE_REGELEMENT_QUERY, balanceParams);
         LOG.log(Level.INFO, "sql--- balance vente mode reglement {0}", sql);
         try {
-            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, DateConverter.DEPOT_EXTENSION)
+            Query query = em.createNativeQuery(sql, Tuple.class).setParameter(1, Constant.DEPOT_EXTENSION)
                     .setParameter(2, balanceParams.getEmplacementId())
                     .setParameter(3, java.sql.Date.valueOf(balanceParams.getDtStart()))
                     .setParameter(4, java.sql.Date.valueOf(balanceParams.getDtEnd()));
@@ -1291,32 +1259,32 @@ public class BalanceServiceImpl implements BalanceService {
             totalModeReglement += amount;
             switch (reglementReport.getTypeReglement()) {
 
-            case DateConverter.MODE_ESP:
+            case Constant.MODE_ESP:
                 montantEsp += amount;
                 break;
-            case DateConverter.MODE_CHEQUE:
+            case Constant.MODE_CHEQUE:
                 montantCheque += amount;
                 break;
-            case DateConverter.MODE_CB:
+            case Constant.MODE_CB:
                 montantCB += amount;
 
                 break;
-            case DateConverter.MODE_VIREMENT:
+            case Constant.MODE_VIREMENT:
                 montantVirement += amount;
                 break;
-            case DateConverter.MODE_MOOV:
+            case Constant.MODE_MOOV:
                 montantMoov += amount;
 
                 break;
-            case DateConverter.TYPE_REGLEMENT_ORANGE:
+            case Constant.TYPE_REGLEMENT_ORANGE:
                 montantOrange += amount;
 
                 break;
-            case DateConverter.MODE_MTN:
+            case Constant.MODE_MTN:
                 montantMtn += amount;
 
                 break;
-            case DateConverter.MODE_WAVE:
+            case Constant.MODE_WAVE:
                 montantWave += amount;
 
                 break;

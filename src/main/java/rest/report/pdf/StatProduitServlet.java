@@ -1,6 +1,5 @@
 package rest.report.pdf;
 
-import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -17,11 +16,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import rest.report.ReportUtil;
-import rest.service.CommonService;
 import rest.service.dto.ArticleVenduDTO;
 import rest.service.dto.StatistiqueProduitAnnuelleDTO;
 import rest.service.report.StatistiqueProduitService;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -33,20 +31,18 @@ public class StatProduitServlet extends HttpServlet {
     private StatistiqueProduitService statistiqueProduitService;
     @EJB
     private ReportUtil reportUtil;
-    @EJB
-    private CommonService commonService;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        TOfficine oTOfficine = commonService.findOfficine();
-        TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+
+        TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         response.setContentType("application/pdf");
         String mode = request.getParameter("mode");
         if ("articleAnnules".equals(mode)) {
-            response.sendRedirect(request.getContextPath() + buildArticleAnnulesReport(request, user, oTOfficine));
+            response.sendRedirect(request.getContextPath() + buildArticleAnnulesReport(request, user));
         } else {
-            response.sendRedirect(request.getContextPath() + buildReport(request, user, oTOfficine));
+            response.sendRedirect(request.getContextPath() + buildReport(request, user));
         }
 
     }
@@ -73,7 +69,7 @@ public class StatProduitServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private String buildReport(HttpServletRequest request, TUser user, TOfficine oTOfficine) {
+    private String buildReport(HttpServletRequest request, TUser user) {
 
         int period = Year.now().getValue();
         String year = request.getParameter("year");
@@ -92,7 +88,7 @@ public class StatProduitServlet extends HttpServlet {
             end = LocalDate.of(period, Month.DECEMBER, 31);
         }
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
         periode += " AU " + end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -107,7 +103,7 @@ public class StatProduitServlet extends HttpServlet {
 
     }
 
-    private String buildArticleAnnulesReport(HttpServletRequest request, TUser user, TOfficine oTOfficine) {
+    private String buildArticleAnnulesReport(HttpServletRequest request, TUser user) {
 
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
@@ -115,7 +111,7 @@ public class StatProduitServlet extends HttpServlet {
         LocalDate end = LocalDate.parse(dtEnd);
         LocalDate dtSt = LocalDate.parse(dtStart);
 
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
         periode += " AU " + end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
