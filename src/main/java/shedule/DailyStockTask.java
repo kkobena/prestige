@@ -57,7 +57,7 @@ public class DailyStockTask implements Runnable {
             try (Statement s = con.createStatement(); ResultSet rs = s
                     .executeQuery("SELECT o.* FROM t_parameters o WHERE str_KEY='KEY_VALORISATION_JOURNALIERE'")) {
                 while (rs.next()) {
-                    canContinue = Integer.valueOf(rs.getString("str_VALUE").trim()) == 1;
+                    canContinue = Integer.parseInt(rs.getString("str_VALUE").trim()) == 1;
                     break;
                 }
             }

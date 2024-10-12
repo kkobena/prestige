@@ -5,7 +5,6 @@
  */
 package rest.report.pdf;
 
-import bll.common.Parameter;
 import commonTasks.dto.CaisseParamsDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.SalesStatsParams;
@@ -34,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import rest.report.ReportUtil;
 import rest.service.CaisseService;
 import rest.service.ListCaisseService;
-import toolkits.parameters.commonparameter;
 
 import toolkits.utils.jdom;
 import util.Constant;
