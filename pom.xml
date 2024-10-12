@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.dici</groupId>
     <artifactId>prestige</artifactId>
-    <version>1.2.4</version>
+    <version>2.0.0</version>
     <repositories>
         <repository>
             <id>central</id>
@@ -43,6 +43,11 @@
        
     </developers>
     <dependencies>
+        <dependency>
+            <groupId>com.fazecast</groupId>
+            <artifactId>jSerialComm</artifactId>
+            <version>2.11.0</version>
+        </dependency>
         <dependency>
             <groupId>com.vladmihalcea</groupId>
             <artifactId>hibernate-types-52</artifactId>
@@ -92,7 +97,6 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <!--            <version>2.7</version>    -->
             <version>2.14.0</version>    
         </dependency>
         <dependency>
@@ -155,11 +159,11 @@
             <scope>provided</scope>
             <version>8.0</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>javax.comm</groupId>
             <artifactId>comm</artifactId>
             <version>1.0</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
