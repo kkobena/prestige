@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.print.PrintService;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
@@ -46,7 +48,6 @@ import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
 import net.sf.jasperreports.export.SimplePrintServiceExporterConfiguration;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import org.apache.commons.lang3.StringUtils;
-import rest.report.pdf.excel.ExcelExporter;
 import toolkits.utils.jdom;
 import util.DateConverter;
 
@@ -57,9 +58,15 @@ import util.DateConverter;
 @Stateless
 public class ReportUtil {
 
+    @PersistenceContext(unitName = "JTA_UNIT")
+    private EntityManager em;
     private static final Logger LOG = Logger.getLogger(ReportUtil.class.getName());
 
     private static final String FILE_PATERN = "yyyy_MM_dd_HH_mm_ss";
+
+    public TOfficine findOfficine() {
+        return em.find(TOfficine.class, "1");
+    }
 
     public JasperReport getReport(String reportName, String reportPath) throws JRException, Exception {
 
@@ -159,7 +166,8 @@ public class ReportUtil {
         }
     }
 
-    public Map<String, Object> officineData(TOfficine oTOfficine, TUser op) {
+    public Map<String, Object> officineData(TUser op) {
+        TOfficine oTOfficine = findOfficine();
         Map<String, Object> parameters = new HashMap<>();
         try {
             String logo = jdom.scr_report_file_logo;
@@ -188,7 +196,7 @@ public class ReportUtil {
                         ? "- Tel: " + DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
                 if (!"".equals(oTOfficine.getStrAUTRESPHONES())) {
                     String[] phone = oTOfficine.getStrAUTRESPHONES().split(";");
-                    for (String va : phone) {
+                    for (String va  : phone) {
                         finalphonestring += " / " + DateConverter.phoneNumberFormat(va);
                     }
                 }

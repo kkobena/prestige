@@ -392,7 +392,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 datas.add("Client(e):: "
                         + (oEmplacement != null ? oEmplacement.getStrFIRSTNAME() + " " + oEmplacement.getStrLASTNAME()
                                 : opreenregistrement.getStrFIRSTNAMECUSTOMER() + " "
-                                + opreenregistrement.getStrLASTNAMECUSTOMER()));
+                                        + opreenregistrement.getStrLASTNAMECUSTOMER()));
 
             }
         } catch (Exception e) {
@@ -412,10 +412,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         lstTPreenregistrementDetail.forEach(opr -> {
             datas.add(
                     " " + opr.getIntQUANTITY() + "; *;"
-                    + DataStringManager.subStringData(opr.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
-                            20)
-                    + ";" + DateConverter.amountFormat(opr.getIntPRICEUNITAIR()) + ";"
-                    + DateConverter.amountFormat(opr.getIntPRICE()));
+                            + DataStringManager.subStringData(opr.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
+                                    20)
+                            + ";" + DateConverter.amountFormat(opr.getIntPRICEUNITAIR()) + ";"
+                            + DateConverter.amountFormat(opr.getIntPRICE()));
         });
 
         datas.add(";;;;------");
@@ -433,10 +433,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         lstTPreenregistrementDetail.forEach((ot) -> {
             datas.add(
                     " " + (-1 * ot.getIntQUANTITY()) + ";*;"
-                    + DataStringManager.subStringData(ot.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
-                            16)
-                    + ";" + DateConverter.amountFormat(ot.getIntPRICEUNITAIR()) + ";"
-                    + DateConverter.amountFormat(ot.getIntPRICE() * (-1)));
+                            + DataStringManager.subStringData(ot.getLgFAMILLEID().getStrDESCRIPTION().toUpperCase(), 0,
+                                    16)
+                            + ";" + DateConverter.amountFormat(ot.getIntPRICEUNITAIR()) + ";"
+                            + DateConverter.amountFormat(ot.getIntPRICE() * (-1)));
         });
         datas.add(";;;;------");
         datas.add(";;;;"
@@ -564,9 +564,9 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             datas.add(" ;0");
             datas.add(
                     "MONTANT RESTANT: "
-                    + DateConverter.amountFormat(
-                            Maths.arrondiModuloOfNumber(mvtTransaction.getMontantRestant(), 5), ' ')
-                    + " F CFA;1");
+                            + DateConverter.amountFormat(
+                                    Maths.arrondiModuloOfNumber(mvtTransaction.getMontantRestant(), 5), ' ')
+                            + " F CFA;1");
             datas.add(" ;0");
         }
 
@@ -594,7 +594,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return ctl;
     }
 
-  
     @Override
     public JSONObject lunchPrinterForTicket(ClotureVenteParams clotureVenteParams) throws JSONException {
         JSONObject json = new JSONObject();
@@ -875,12 +874,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
                 datas.add(
                         "Montant Versé: ;     "
-                        + DateConverter.amountFormat(
-                                Maths.arrondiModuloOfNumber(clotureVenteParams.getMontantRecu(), 5))
-                        + "; F CFA;0");
+                                + DateConverter.amountFormat(
+                                        Maths.arrondiModuloOfNumber(clotureVenteParams.getMontantRecu(), 5))
+                                + "; F CFA;0");
                 final Integer change = clotureVenteParams.getMontantRecu()
                         - (DateConverter.arrondiModuloOfNumber(oPreenregistrement.getIntCUSTPART(), 5)
-                        - oPreenregistrement.getIntPRICEREMISE());
+                                - oPreenregistrement.getIntPRICEREMISE());
                 datas.add("Monnaie: ;     " + DateConverter.amountFormat((change >= 0 ? change : 0)) + "; F CFA;0");
 
             }
@@ -1739,38 +1738,38 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             String typeReglement = b.getTypeReglement().getLgTYPEREGLEMENTID();
             int montant = b.getMontant();
             switch (typeReglement) {
-                case DateConverter.MODE_ESP:
-                    ticket.setTotalEsp(ticket.getTotalEsp() + montant);
-                    break;
-                case DateConverter.MODE_VIREMENT:
-                    ticket.setTotalVirement(montant + ticket.getTotalVirement());
+            case DateConverter.MODE_ESP:
+                ticket.setTotalEsp(ticket.getTotalEsp() + montant);
+                break;
+            case DateConverter.MODE_VIREMENT:
+                ticket.setTotalVirement(montant + ticket.getTotalVirement());
 
-                    break;
-                case DateConverter.MODE_CHEQUE:
-                    ticket.setTotalCheque(montant + ticket.getTotalCheque());
+                break;
+            case DateConverter.MODE_CHEQUE:
+                ticket.setTotalCheque(montant + ticket.getTotalCheque());
 
-                    break;
-                case DateConverter.MODE_CB:
-                    ticket.setTotalCB(montant + ticket.getTotalCB());
+                break;
+            case DateConverter.MODE_CB:
+                ticket.setTotalCB(montant + ticket.getTotalCB());
 
-                    break;
-                case DateConverter.MODE_MOOV:
-                    ticket.setMontantMoov(montant + ticket.getMontantMoov());
-                    break;
-                case DateConverter.MODE_MTN:
-                    ticket.setMontantMtn(montant + ticket.getMontantMtn());
-                    break;
-                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                    ticket.setMontantOrange(montant + ticket.getMontantOrange());
-                    break;
-                case DateConverter.MODE_WAVE:
-                    ticket.setMontantWave(montant + ticket.getMontantWave());
-                    break;
-                case DateConverter.MODE_REGL_DIFFERE:
-                    ticket.setDiffere(montant + ticket.getDiffere());
-                    break;
-                default:
-                    break;
+                break;
+            case DateConverter.MODE_MOOV:
+                ticket.setMontantMoov(montant + ticket.getMontantMoov());
+                break;
+            case DateConverter.MODE_MTN:
+                ticket.setMontantMtn(montant + ticket.getMontantMtn());
+                break;
+            case DateConverter.TYPE_REGLEMENT_ORANGE:
+                ticket.setMontantOrange(montant + ticket.getMontantOrange());
+                break;
+            case DateConverter.MODE_WAVE:
+                ticket.setMontantWave(montant + ticket.getMontantWave());
+                break;
+            case DateConverter.MODE_REGL_DIFFERE:
+                ticket.setDiffere(montant + ticket.getDiffere());
+                break;
+            default:
+                break;
             }
         }
     }
@@ -1782,54 +1781,54 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 ticket.setTotalCredit(ticket.getTotalCredit() + b.getMontantCredit());
             }
             switch (b.getReglement().getLgTYPEREGLEMENTID()) {
-                case DateConverter.MODE_ESP:
+            case DateConverter.MODE_ESP:
 
-                    if (b.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT) {
-                        TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
-                        if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
-                            ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
-                        }
-                    }
-                    if (Objects.nonNull(b.getMontantRestant()) && b.getMontantRestant() > 0) {
+                if (b.getTypeTransaction() == TypeTransaction.VENTE_COMPTANT) {
+                    TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
+                    if (mvtCaisse.getLgTYPEMVTCAISSEID().equals(DateConverter.MVT_REGLE_DIFF)) {
                         ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
                     }
-                    List<VenteReglement> venteReglements = this.venteReglementService.getByVenteId(b.getPkey());
-                    if (CollectionUtils.isNotEmpty(venteReglements) && venteReglements.size() > 1) {
-                        updateTicket(ticket, venteReglements);
-                    } else {
-                        ticket.setTotalEsp(ticket.getTotalEsp() + b.getMontantRegle());
-                    }
+                }
+                if (Objects.nonNull(b.getMontantRestant()) && b.getMontantRestant() > 0) {
+                    ticket.setDiffere(ticket.getDiffere() + b.getMontantRestant());
+                }
+                List<VenteReglement> venteReglements = this.venteReglementService.getByVenteId(b.getPkey());
+                if (CollectionUtils.isNotEmpty(venteReglements) && venteReglements.size() > 1) {
+                    updateTicket(ticket, venteReglements);
+                } else {
+                    ticket.setTotalEsp(ticket.getTotalEsp() + b.getMontantRegle());
+                }
 
-                    break;
-                case DateConverter.MODE_VIREMENT:
-                    ticket.setTotalVirement(b.getMontantRegle() + ticket.getTotalVirement());
+                break;
+            case DateConverter.MODE_VIREMENT:
+                ticket.setTotalVirement(b.getMontantRegle() + ticket.getTotalVirement());
 
-                    break;
-                case DateConverter.MODE_CHEQUE:
-                    ticket.setTotalCheque(b.getMontantRegle() + ticket.getTotalCheque());
+                break;
+            case DateConverter.MODE_CHEQUE:
+                ticket.setTotalCheque(b.getMontantRegle() + ticket.getTotalCheque());
 
-                    break;
-                case DateConverter.MODE_CB:
-                    ticket.setTotalCB(b.getMontantRegle() + ticket.getTotalCB());
+                break;
+            case DateConverter.MODE_CB:
+                ticket.setTotalCB(b.getMontantRegle() + ticket.getTotalCB());
 
-                    break;
-                case DateConverter.MODE_MOOV:
-                    ticket.setMontantMoov(b.getMontantRegle() + ticket.getMontantMoov());
-                    break;
-                case DateConverter.MODE_MTN:
-                    ticket.setMontantMtn(b.getMontantRegle() + ticket.getMontantMtn());
-                    break;
-                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                    ticket.setMontantOrange(b.getMontantRegle() + ticket.getMontantOrange());
-                    break;
-                case DateConverter.MODE_WAVE:
-                    ticket.setMontantWave(b.getMontantRegle() + ticket.getMontantWave());
-                    break;
-                case DateConverter.MODE_REGL_DIFFERE:
-                    ticket.setDiffere(b.getMontantRestant() + ticket.getDiffere());
-                    break;
-                default:
-                    break;
+                break;
+            case DateConverter.MODE_MOOV:
+                ticket.setMontantMoov(b.getMontantRegle() + ticket.getMontantMoov());
+                break;
+            case DateConverter.MODE_MTN:
+                ticket.setMontantMtn(b.getMontantRegle() + ticket.getMontantMtn());
+                break;
+            case DateConverter.TYPE_REGLEMENT_ORANGE:
+                ticket.setMontantOrange(b.getMontantRegle() + ticket.getMontantOrange());
+                break;
+            case DateConverter.MODE_WAVE:
+                ticket.setMontantWave(b.getMontantRegle() + ticket.getMontantWave());
+                break;
+            case DateConverter.MODE_REGL_DIFFERE:
+                ticket.setDiffere(b.getMontantRestant() + ticket.getDiffere());
+                break;
+            default:
+                break;
             }
         }
 
@@ -1846,75 +1845,75 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             TTypeMvtCaisse mvtCaisse = b.gettTypeMvtCaisse();
             switch (b.getReglement().getLgTYPEREGLEMENTID()) {
 
-                case DateConverter.MODE_ESP:
+            case DateConverter.MODE_ESP:
 
-                    if (mvtIsReglement(mvtCaisse)) {
-                        ticket.setTotalReglementEsp(b.getMontant() + ticket.getTotalReglementEsp());
-                    } else {
-                        ticket.setTotalEntreeEsp(b.getMontant() + ticket.getTotalEntreeEsp());
+                if (mvtIsReglement(mvtCaisse)) {
+                    ticket.setTotalReglementEsp(b.getMontant() + ticket.getTotalReglementEsp());
+                } else {
+                    ticket.setTotalEntreeEsp(b.getMontant() + ticket.getTotalEntreeEsp());
 
-                    }
+                }
 
-                    break;
-                case DateConverter.MODE_VIREMENT:
+                break;
+            case DateConverter.MODE_VIREMENT:
 
-                    if (mvtIsReglement(mvtCaisse)) {
-                        ticket.setTotalReglementVirement(b.getMontant() + ticket.getTotalReglementVirement());
-                    } else {
+                if (mvtIsReglement(mvtCaisse)) {
+                    ticket.setTotalReglementVirement(b.getMontant() + ticket.getTotalReglementVirement());
+                } else {
 
-                        ticket.setTotalEntreeVirement(b.getMontant() + ticket.getTotalEntreeVirement());
-                    }
+                    ticket.setTotalEntreeVirement(b.getMontant() + ticket.getTotalEntreeVirement());
+                }
 
-                    break;
-                case DateConverter.MODE_CHEQUE:
-                    if (mvtIsReglement(mvtCaisse)) {
+                break;
+            case DateConverter.MODE_CHEQUE:
+                if (mvtIsReglement(mvtCaisse)) {
 
-                        ticket.setTotalReglementCheque(b.getMontant() + ticket.getTotalReglementCheque());
-                    } else {
+                    ticket.setTotalReglementCheque(b.getMontant() + ticket.getTotalReglementCheque());
+                } else {
 
-                        ticket.setTotalEntreeCheque(b.getMontant() + ticket.getTotalEntreeCheque());
-                    }
+                    ticket.setTotalEntreeCheque(b.getMontant() + ticket.getTotalEntreeCheque());
+                }
 
-                    break;
-                case DateConverter.MODE_CB:
-                    if (mvtIsReglement(mvtCaisse)) {
+                break;
+            case DateConverter.MODE_CB:
+                if (mvtIsReglement(mvtCaisse)) {
 
-                        ticket.setTotalReglementCB(b.getMontant() + ticket.getTotalReglementCB());
-                    } else {
-                        ticket.setTotalEntreeCB(b.getMontant() + ticket.getTotalEntreeCB());
-                    }
+                    ticket.setTotalReglementCB(b.getMontant() + ticket.getTotalReglementCB());
+                } else {
+                    ticket.setTotalEntreeCB(b.getMontant() + ticket.getTotalEntreeCB());
+                }
 
-                    break;
-                case DateConverter.MODE_MOOV:
-                    if (mvtIsReglement(mvtCaisse)) {
-                        ticket.setMontantReglementMoov(b.getMontant() + ticket.getMontantReglementMoov());
-                    } else {
-                        ticket.setMontantEntreeMoov(b.getMontant() + ticket.getMontantEntreeMoov());
-                    }
-                    break;
-                case DateConverter.MODE_MTN:
-                    if (mvtIsReglement(mvtCaisse)) {
-                        ticket.setMontantReglementMtn(b.getMontant() + ticket.getMontantReglementMtn());
-                    } else {
-                        ticket.setMontantEntreeMtn(b.getMontant() + ticket.getMontantEntreeMtn());
-                    }
-                    break;
-                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                    if (mvtIsReglement(mvtCaisse)) {
-                        ticket.setMontantReglementOrange(b.getMontant() + ticket.getMontantReglementOrange());
-                    } else {
-                        ticket.setMontantEntreeOrange(b.getMontant() + ticket.getMontantEntreeOrange());
-                    }
-                    break;
-                case DateConverter.MODE_WAVE:
-                    if (mvtIsReglement(mvtCaisse)) {
-                        ticket.setMontantReglementWave(b.getMontant() + ticket.getMontantReglementWave());
-                    } else {
-                        ticket.setMontantEntreeWave(b.getMontant() + ticket.getMontantEntreeWave());
-                    }
-                    break;
-                default:
-                    break;
+                break;
+            case DateConverter.MODE_MOOV:
+                if (mvtIsReglement(mvtCaisse)) {
+                    ticket.setMontantReglementMoov(b.getMontant() + ticket.getMontantReglementMoov());
+                } else {
+                    ticket.setMontantEntreeMoov(b.getMontant() + ticket.getMontantEntreeMoov());
+                }
+                break;
+            case DateConverter.MODE_MTN:
+                if (mvtIsReglement(mvtCaisse)) {
+                    ticket.setMontantReglementMtn(b.getMontant() + ticket.getMontantReglementMtn());
+                } else {
+                    ticket.setMontantEntreeMtn(b.getMontant() + ticket.getMontantEntreeMtn());
+                }
+                break;
+            case DateConverter.TYPE_REGLEMENT_ORANGE:
+                if (mvtIsReglement(mvtCaisse)) {
+                    ticket.setMontantReglementOrange(b.getMontant() + ticket.getMontantReglementOrange());
+                } else {
+                    ticket.setMontantEntreeOrange(b.getMontant() + ticket.getMontantEntreeOrange());
+                }
+                break;
+            case DateConverter.MODE_WAVE:
+                if (mvtIsReglement(mvtCaisse)) {
+                    ticket.setMontantReglementWave(b.getMontant() + ticket.getMontantReglementWave());
+                } else {
+                    ticket.setMontantEntreeWave(b.getMontant() + ticket.getMontantEntreeWave());
+                }
+                break;
+            default:
+                break;
 
             }
         }
@@ -1925,37 +1924,37 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
         for (MvtTransaction b : list) {
             switch (b.getReglement().getLgTYPEREGLEMENTID()) {
-                case DateConverter.MODE_ESP:
-                    ticket.setTotalSortieEsp(ticket.getTotalSortieEsp() + b.getMontant());
-                    break;
-                case DateConverter.MODE_VIREMENT:
-                    ticket.setTotalVirement(ticket.getTotalVirement() + b.getMontant());
-                    ticket.setTotalSortieVirement(ticket.getTotalSortieVirement() + b.getMontant());
+            case DateConverter.MODE_ESP:
+                ticket.setTotalSortieEsp(ticket.getTotalSortieEsp() + b.getMontant());
+                break;
+            case DateConverter.MODE_VIREMENT:
+                ticket.setTotalVirement(ticket.getTotalVirement() + b.getMontant());
+                ticket.setTotalSortieVirement(ticket.getTotalSortieVirement() + b.getMontant());
 
-                    break;
-                case DateConverter.MODE_CHEQUE:
+                break;
+            case DateConverter.MODE_CHEQUE:
 
-                    ticket.setTotalSortieCheque(ticket.getTotalSortieCheque() + b.getMontant());
+                ticket.setTotalSortieCheque(ticket.getTotalSortieCheque() + b.getMontant());
 
-                    break;
-                case DateConverter.MODE_CB:
+                break;
+            case DateConverter.MODE_CB:
 
-                    ticket.setTotalSortieCB(ticket.getTotalSortieCB() + b.getMontant());
-                    break;
-                case DateConverter.MODE_MOOV:
-                    ticket.setMontantSortieMoov(b.getMontant() + ticket.getMontantSortieMoov());
-                    break;
-                case DateConverter.MODE_MTN:
-                    ticket.setMontantSortieMtn(b.getMontant() + ticket.getMontantSortieMtn());
-                    break;
-                case DateConverter.TYPE_REGLEMENT_ORANGE:
-                    ticket.setMontantSortieOrange(b.getMontant() + ticket.getMontantSortieOrange());
-                    break;
-                case DateConverter.MODE_WAVE:
-                    ticket.setMontantSortieWave(b.getMontant() + ticket.getMontantSortieWave());
-                    break;
-                default:
-                    break;
+                ticket.setTotalSortieCB(ticket.getTotalSortieCB() + b.getMontant());
+                break;
+            case DateConverter.MODE_MOOV:
+                ticket.setMontantSortieMoov(b.getMontant() + ticket.getMontantSortieMoov());
+                break;
+            case DateConverter.MODE_MTN:
+                ticket.setMontantSortieMtn(b.getMontant() + ticket.getMontantSortieMtn());
+                break;
+            case DateConverter.TYPE_REGLEMENT_ORANGE:
+                ticket.setMontantSortieOrange(b.getMontant() + ticket.getMontantSortieOrange());
+                break;
+            case DateConverter.MODE_WAVE:
+                ticket.setMontantSortieWave(b.getMontant() + ticket.getMontantSortieWave());
+                break;
+            default:
+                break;
             }
         }
 
@@ -2729,7 +2728,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     }
 
-  //  @Asynchronous
+    // @Asynchronous
     @Override
     public void sendToSms(Params params) throws JSONException {
         params.setOperateur(this.sessionHelperService.getCurrentUser());

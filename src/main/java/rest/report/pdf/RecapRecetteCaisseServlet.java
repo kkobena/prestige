@@ -1,7 +1,6 @@
 
 package rest.report.pdf;
 
-import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -16,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import rest.report.ReportUtil;
-import rest.service.CommonService;
 import rest.service.StatCaisseRecetteService;
 import rest.service.dto.StatCaisseRecetteDTO;
 import util.Constant;
@@ -32,8 +30,6 @@ public class RecapRecetteCaisseServlet extends HttpServlet {
     private StatCaisseRecetteService statCaisseRecetteService;
     @EJB
     private ReportUtil reportUtil;
-    @EJB
-    private CommonService commonService;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -71,10 +67,9 @@ public class RecapRecetteCaisseServlet extends HttpServlet {
         String dtEnd = request.getParameter("dtEnd");
         String typeRglementId = request.getParameter("typeRglementId");
         boolean groupByYear = Boolean.parseBoolean(request.getParameter("groupByYear"));
-        TOfficine oTOfficine = commonService.findOfficine();
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtSt.isEqual(dtd)) {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

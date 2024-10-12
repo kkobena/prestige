@@ -281,9 +281,9 @@ public class BalancePdfServlet extends HttpServlet {
     }
 
     public String listeCaisse(CaisseParamsDTO caisseParams, TUser tu) throws IOException {
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scrreportfile = "rp_listecaisses1";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         final Comparator<VisualisationCaisseDTO> comparatorCaisse = Comparator
                 .comparing(VisualisationCaisseDTO::getDateOperation);
         SumCaisseDTO caisse = caisseService.cumul(caisseParams, true);
@@ -346,9 +346,9 @@ public class BalancePdfServlet extends HttpServlet {
 
     public String listeCaisseVersion2(CaisseParamsDTO caisseParams, TUser tu) throws IOException {
         caisseParams.setAll(true);
-        TOfficine oTOfficine = caisseService.findOfficine();
+
         String scrreportfile = "rp_caisse_list";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         final Comparator<rest.service.v2.dto.VisualisationCaisseDTO> comparatorCaisse = Comparator
                 .comparing(rest.service.v2.dto.VisualisationCaisseDTO::getDateOperation);
 

@@ -1,7 +1,6 @@
 
 package rest.report.pdf;
 
-import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -16,12 +15,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import rest.report.ReportUtil;
-import rest.service.CommonService;
 import rest.service.ListDesBonService;
 import rest.service.dto.BonsDTO;
 import rest.service.dto.BonsParam;
 import rest.service.dto.BonsTotauxDTO;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -33,8 +31,6 @@ public class ListBonsServlet extends HttpServlet {
     private ListDesBonService listDesBonService;
     @EJB
     private ReportUtil reportUtil;
-    @EJB
-    private CommonService commonService;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -63,7 +59,7 @@ public class ListBonsServlet extends HttpServlet {
 
     public String buildReport(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER);
 
         String dtStart = request.getParameter("dtStart");
         String dtEnd = request.getParameter("dtEnd");
@@ -71,10 +67,9 @@ public class ListBonsServlet extends HttpServlet {
         String hEnd = request.getParameter("hEnd");
         String hStart = request.getParameter("hStart");
         String search = request.getParameter("search");
-        TOfficine oTOfficine = commonService.findOfficine();
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtSt.isEqual(dtd)) {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

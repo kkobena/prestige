@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import rest.report.ReportUtil;
 import rest.service.CaisseService;
-import rest.service.CommonService;
 import rest.service.dto.MvtCaisseSummaryDTO;
 import util.Constant;
 
@@ -64,10 +63,9 @@ public class CaisseServlet extends HttpServlet {
         String userId = request.getParameter("userId");
 
         boolean checked = Boolean.parseBoolean(request.getParameter("checked"));
-        TOfficine oTOfficine = caisseService.findOfficine();
         LocalDate dtSt = LocalDate.parse(dtStart);
         LocalDate dtd = LocalDate.parse(dtEnd);
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, user);
+        Map<String, Object> parameters = reportUtil.officineData(user);
         String periode = dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtSt.isEqual(dtd)) {
             periode += " AU " + dtd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));

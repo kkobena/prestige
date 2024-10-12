@@ -19,7 +19,6 @@ import commonTasks.dto.VenteDetailsDTO;
 import dal.TClient;
 import dal.TFacture;
 import dal.TModelFacture;
-import dal.TOfficine;
 import dal.TPreenregistrement;
 import dal.TPrivilege;
 import dal.TTiersPayant;
@@ -79,10 +78,10 @@ public class Facture {
 
     public String factureDevis(String venteId, TUser tu) throws IOException {
         Comparator<VenteDetailsDTO> comparator = Comparator.comparing(VenteDetailsDTO::getStrNAME);
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_proforma";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
         TPreenregistrement op = salesStatsService.findOneById(venteId);
         List<VenteDetailsDTO> datas = salesStatsService.venteDetailsByVenteId(venteId);
         datas.sort(comparator);
@@ -127,10 +126,10 @@ public class Facture {
     }
 
     public String listeDifferes(Params params, boolean pairclient) throws IOException {
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_differeslist";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getOperateur());
+        Map<String, Object> parameters = reportUtil.officineData(params.getOperateur());
         List<DelayedDTO> datas = reglementService.listeDifferes(params, pairclient);
         LocalDate dtEn = LocalDate.parse(params.getDtEnd()), dtSt = LocalDate.parse(params.getDtStart());
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
@@ -146,10 +145,10 @@ public class Facture {
     }
 
     public String listeDifferesRegles(Params params, boolean checked) throws IOException {
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_regledifferes";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getOperateur());
+        Map<String, Object> parameters = reportUtil.officineData(params.getOperateur());
         LocalDate dtEn = LocalDate.parse(params.getDtEnd()), dtSt = LocalDate.parse(params.getDtStart());
         List<DelayedDTO> datas = reglementService.reglementsDifferesDto(dtSt, dtEn, checked,
                 params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), params.getRef());
@@ -168,10 +167,10 @@ public class Facture {
 
     public String logs(String search, LocalDate dtSt, LocalDate dtEn, String userId, int criteria, TUser u)
             throws IOException {
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_logfile";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, u);
+        Map<String, Object> parameters = reportUtil.officineData(u);
         List<LogDTO> datas = logService.logs(search, dtSt, dtEn, 0, 0, true, userId, criteria);
         String P_PERIODE = "PERIODE DU " + dtSt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         if (!dtEn.isEqual(dtSt)) {
@@ -187,10 +186,10 @@ public class Facture {
 
     public String annulations(String query, LocalDate dtSt, LocalDate dtEn, TUser u, List<TPrivilege> LstTPrivilege)
             throws IOException {
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_vente_annulees";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, u);
+        Map<String, Object> parameters = reportUtil.officineData(u);
         boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
         boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
@@ -220,8 +219,8 @@ public class Facture {
     public String facturesprovisoires0(String modeId, TUser u, HttpSession session) throws IOException {
         DateFormat DF = new SimpleDateFormat("dd_MM_YYYY_HH_mm_ss");
         LongAdder longAdder = new LongAdder();
-        TOfficine oTOfficine = commonService.findOfficine();
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, u);
+
+        Map<String, Object> parameters = reportUtil.officineData(u);
         parameters.put("P_PRINTED_BY", " ");
         SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
         List<CodeFactureDTO> code = (List<CodeFactureDTO>) session.getAttribute("codefacturedto");
@@ -313,11 +312,11 @@ public class Facture {
 
     public String factureDevisAsFacture(String venteId, FileForma fileForma, TUser tu) throws IOException {
         Comparator<VenteDetailsDTO> comparator = Comparator.comparing(VenteDetailsDTO::getStrNAME);
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_proforma_facture";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH_mm_ss"))
                 + ".pdf";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, tu);
+        Map<String, Object> parameters = reportUtil.officineData(tu);
 
         VenteDTO venteDTO = salesStatsService.findVenteDTOById(venteId);
         List<VenteDetailsDTO> datas = venteDTO.getItems();
@@ -360,10 +359,10 @@ public class Facture {
 
     public String annulationsPlus(String query, LocalDate dtSt, LocalDate dtEn, TUser u, List<TPrivilege> LstTPrivilege)
             throws IOException {
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_produits_annules";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, u);
+        Map<String, Object> parameters = reportUtil.officineData(u);
         boolean asAuthority = DateConverter.hasAuthorityByName(LstTPrivilege, commonparameter.str_SHOW_VENTE);
         boolean allActivitis = DateConverter.hasAuthorityByName(LstTPrivilege, Parameter.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
@@ -394,10 +393,10 @@ public class Facture {
         if (StringUtils.isEmpty(params.getDtEnd())) {
             params.setDtEnd(LocalDate.now().toString());
         }
-        TOfficine oTOfficine = commonService.findOfficine();
+
         String scr_report_file = "rp_reglement_facture_group";
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        Map<String, Object> parameters = reportUtil.officineData(oTOfficine, params.getOperateur());
+        Map<String, Object> parameters = reportUtil.officineData(params.getOperateur());
         List<DossierReglementDTO> datas = reglementService.listeReglementFactures(params.getDtStart(),
                 params.getDtEnd(), params.getRef());
         LocalDate dtEn = LocalDate.parse(params.getDtEnd()), dtSt = LocalDate.parse(params.getDtStart());
