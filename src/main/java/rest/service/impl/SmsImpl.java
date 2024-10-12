@@ -198,13 +198,10 @@ public class SmsImpl implements SmsService {
     public void sendSMS(String message) {
         SmsToken smsToken = getOrupdateSmsToken();
         if (smsToken != null) {
-
             try {
                 Client client = ClientBuilder.newClient();
-
                 JSONObject jSONObject = new JSONObject();
                 JSONObject outboundSMSMessageRequest = new JSONObject();
-
                 outboundSMSMessageRequest.put("senderAddress", sp.senderAddress);
                 JSONObject outboundSMSTextMessage = new JSONObject();
                 outboundSMSTextMessage.put("message", message);
