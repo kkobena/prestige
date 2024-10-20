@@ -114,7 +114,6 @@ import rest.service.*;
 import rest.service.dto.UpdateVenteParamDTO;
 import rest.service.v2.dto.VenteModification;
 import toolkits.parameters.commonparameter;
-import toolkits.utils.StringComplexUtils.DataStringManager;
 import util.Afficheur;
 import util.Constant;
 import util.DateConverter;
@@ -3469,10 +3468,10 @@ public class SalesServiceImpl implements SalesService {
         if (afficheurActif()) {
             try {
                 Afficheur afficheur = Afficheur.getInstance();
-                afficheur.affichage(DataStringManager.subStringData(libelle.toUpperCase(), 0, 20));
+                afficheur.affichage(util.StringUtils.subStringData(libelle.toUpperCase(), 0, 20));
                 afficheur.affichage(
-                        DataStringManager.subStringData(qty + "*" + DateConverter.amountFormat(prixUnitaire, '.')
-                                + " = " + DateConverter.amountFormat(montantTotal, '.'), 0, 20),
+                        util.StringUtils.subStringData(qty + "*" + DateConverter.amountFormat(prixUnitaire, '.') + " = "
+                                + DateConverter.amountFormat(montantTotal, '.'), 0, 20),
                         "begin");
             } catch (Exception e) {
             }
@@ -3484,9 +3483,9 @@ public class SalesServiceImpl implements SalesService {
         if (afficheurActif()) {
             try {
                 Afficheur afficheur = Afficheur.getInstance();
-                afficheur.affichage(DataStringManager.subStringData(libelle, 0, 20));
+                afficheur.affichage(util.StringUtils.subStringData(libelle, 0, 20));
                 afficheur.affichage(
-                        DataStringManager.subStringData(DateConverter.amountFormat(montantTotal, '.'), 0, 20), "begin");
+                        util.StringUtils.subStringData(DateConverter.amountFormat(montantTotal, '.'), 0, 20), "begin");
             } catch (Exception e) {
                 LOG.log(Level.SEVERE, null, e);
             }
