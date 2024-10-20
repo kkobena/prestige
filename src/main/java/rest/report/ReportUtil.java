@@ -196,7 +196,7 @@ public class ReportUtil {
                         ? "- Tel: " + DateConverter.phoneNumberFormat("+225", oTOfficine.getStrPHONE()) : "";
                 if (!"".equals(oTOfficine.getStrAUTRESPHONES())) {
                     String[] phone = oTOfficine.getStrAUTRESPHONES().split(";");
-                    for (String va  : phone) {
+                    for (String va : phone) {
                         finalphonestring += " / " + DateConverter.phoneNumberFormat(va);
                     }
                 }
