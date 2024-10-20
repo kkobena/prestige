@@ -52,6 +52,7 @@ public class Afficheur {
     }
 
     public void communique(char envoie) {
+        open();
         try {
             // affiche un caractere a l'ecran
             outStream.write(envoie);
@@ -88,6 +89,7 @@ public class Afficheur {
     }
 
     public void affichage(String data, String position) {
+        open();
         String remain = "";
         try {
             for (int i = 0; i < (20 - data.length()); i++) {
@@ -110,6 +112,7 @@ public class Afficheur {
     }
 
     public void affichage(String data) {
+        open();
         String remain = "";
         try {
             for (int i = 0; i < (20 - data.length()); i++) {
