@@ -389,7 +389,6 @@ public class SuggestionImpl implements SuggestionService {
                 && oFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN()) {
 
             int statut = verifierProduitDansLeProcessusDeCommande(famille);
-
             if (statut == 0 || statut == 1) {
                 TSuggestionOrder oSuggestionOrder;
                 int intQTEASUGGERE;
@@ -623,6 +622,7 @@ public class SuggestionImpl implements SuggestionService {
             q.setParameter(2, Boolean.FALSE);
             q.setMaxResults(1);
             TOrderDetail detail = q.getSingleResult();
+
             if (detail == null) {
                 return 0;
             }
