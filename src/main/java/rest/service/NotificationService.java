@@ -16,6 +16,7 @@ import dal.enumeration.TypeNotification;
 import java.util.Map;
 import javax.ejb.Local;
 import org.json.JSONObject;
+import rest.service.v2.dto.ActiviteParam;
 
 /**
  *
@@ -43,6 +44,6 @@ public interface NotificationService {
 
     void sendSms(Notification notification);
 
-    void sendPointActiviteSms(String date);
+    void sendPointActivite(ActiviteParam activiteParam);
 
 }
