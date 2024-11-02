@@ -158,6 +158,7 @@ public final class Constant {
     public static final String COPHARMED = "COPHARMED";
     public static final String TEDIS = "TEDIS PHAR.";
     public static final String DPCI = "DPCI";
+    public static final String USER_ROLE_ID = "USER_ROLE_ID";
 
     private Constant() {
     }

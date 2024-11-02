@@ -1675,6 +1675,17 @@ public class SalesServiceImpl implements SalesService {
             return Optional.empty();
         }
     }
+    // Solution de contournement pour le bug PRES-603 non reproductible à ce jour
+
+    private boolean isAlreadyClosedVente(TPreenregistrement tp, JSONObject json) {
+
+        if (tp.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)) {
+            json.put("success", true).put("msg", "Opération effectuée avec success").put("copy", tp.getCopy())
+                    .put("ref", tp.getLgPREENREGISTREMENTID());
+            return true;
+        }
+        return false;
+    }
 
     @Override
     public JSONObject updateVenteClotureAssurance(ClotureVenteParams clotureVenteParams) {
@@ -1699,6 +1710,8 @@ public class SalesServiceImpl implements SalesService {
                     return json;
                 }
                 annulerVenteAnterieur(tUser, venteAsupprimer);
+            } else if (isAlreadyClosedVente(tp, json)) {
+                return json;
             }
             tp.setChecked(Boolean.TRUE);
             TModeReglement modeReglement = findModeReglement(clotureVenteParams.getTypeRegleId());
@@ -1901,7 +1914,7 @@ public class SalesServiceImpl implements SalesService {
     public JSONObject updateVenteClotureComptant(ClotureVenteParams clotureVenteParams) {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
-        TPreenregistrement tp = null;
+        TPreenregistrement tp;
         try {
             final TUser tUser = clotureVenteParams.getUserId();
             if (!checkResumeCaisse(tUser, emg).isPresent()) {
@@ -1913,6 +1926,8 @@ public class SalesServiceImpl implements SalesService {
             if (tp.getCopy()) {
                 TPreenregistrement venteAsupprimer = getEm().find(TPreenregistrement.class, tp.getLgPARENTID());
                 annulerVenteAnterieur(tUser, venteAsupprimer);
+            } else if (isAlreadyClosedVente(tp, json)) {
+                return json;
             }
             String old = tp.getLgTYPEVENTEID().getLgTYPEVENTEID();
             if (!old.equals(clotureVenteParams.getTypeVenteId())) {
@@ -2022,8 +2037,10 @@ public class SalesServiceImpl implements SalesService {
             json.put("success", true).put("msg", "Opération effectuée avec success").put("copy", tp.getCopy())
                     .put("ref", tp.getLgPREENREGISTREMENTID());
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, String.format("Erreur a la closture de la vente %s,%s,%s date :: %s",
-                    tp.getLgPREENREGISTREMENTID(), tp.getStrREF(), tp.getLgUSERID().getLgUSERID(), LocalDateTime.now()),
+            LOG.info(String.format("***************   Erreur a la closture de la vente %s,:: %s ***************",
+                    clotureVenteParams, LocalDateTime.now()));
+            LOG.log(Level.SEVERE,
+                    String.format("Erreur a la closture de la vente %s,:: %s", clotureVenteParams, LocalDateTime.now()),
                     e);
 
             try {
@@ -3059,9 +3076,7 @@ public class SalesServiceImpl implements SalesService {
             op.setAyantDroit(null);
             List<TPreenregistrementCompteClientTiersPayent> list = getTPreenregistrementCompteClientTiersPayent(
                     venteId);
-            list.forEach(c -> {
-                getEm().remove(c);
-            });
+            list.forEach(c -> getEm().remove(c));
             getEm().merge(op);
             return new JSONObject().put("success", true);
         } catch (Exception e) {
@@ -3173,7 +3188,7 @@ public class SalesServiceImpl implements SalesService {
         newTP.setClient(tp.getClient());
         newTP.setAyantDroit(tp.getAyantDroit());
         newTP.setMedecin(tp.getMedecin());
-        newTP.setStrSTATUT(DateConverter.STATUT_PROCESS);
+        newTP.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
         newTP.setLgPREENGISTREMENTANNULEID(tp.getLgPREENREGISTREMENTID());
         newTP.setStrREF(buildRefTmp(LocalDate.now(), ooTUser.getLgEMPLACEMENTID()).getReferenceTemp());
         newTP.setChecked(true);
@@ -3251,7 +3266,7 @@ public class SalesServiceImpl implements SalesService {
         newTd.setIntQUANTITYSERVED(tp.getIntQUANTITYSERVED());
         newTd.setMontantTva(tp.getMontantTva());
         newTd.setDtCREATED(new Date());
-        newTd.setStrSTATUT(DateConverter.STATUT_PROCESS);
+        newTd.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
         newTd.setDtUPDATED(new Date());
         newTd.setBoolACCOUNT(tp.getBoolACCOUNT());
         newTd.setLgFAMILLEID(tp.getLgFAMILLEID());
@@ -3281,7 +3296,7 @@ public class SalesServiceImpl implements SalesService {
             newCmp.setLgPREENREGISTREMENTID(preenregistrement);
             newCmp.setIntPRICE(a.getIntPRICE());
             newCmp.setLgUSERID(o);
-            newCmp.setStrSTATUT(DateConverter.STATUT_PROCESS);
+            newCmp.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
             newCmp.setDtCREATED(a.getDtCREATED());
             newCmp.setDtUPDATED(a.getDtUPDATED());
             newCmp.setLgCOMPTECLIENTTIERSPAYANTID(oTCompteClientTiersPayant);
@@ -4197,7 +4212,7 @@ public class SalesServiceImpl implements SalesService {
     @Override
     public JSONObject closePreventeVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID) {
         TPreenregistrement p = getEm().find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
-        p.setStrSTATUT(DateConverter.STATUT_PROCESS);
+        p.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
         p.setLgUSERID(ooTUser);
         p.setCompletionDate(new Date());
         getEm().merge(p);

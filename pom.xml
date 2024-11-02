@@ -159,11 +159,6 @@
             <scope>provided</scope>
             <version>8.0</version>
         </dependency>
-<!--        <dependency>
-            <groupId>javax.comm</groupId>
-            <artifactId>comm</artifactId>
-            <version>1.0</version>
-        </dependency>-->
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
@@ -195,34 +190,7 @@
     <build>
         <finalName>laborex</finalName>
         <plugins>
-            <plugin>
-                <groupId>com.rodiontsev.maven.plugins</groupId>
-                <artifactId>build-info-maven-plugin</artifactId>
-                <version>1.3</version>
-                <configuration>
-                    <fileDir>src/main/resources</fileDir>
-                    <filename>build.properties</filename>
-                    <systemProperties>
-                        <systemProperty>user.name</systemProperty>
-                        <systemProperty>java.runtime.version</systemProperty>
-                    </systemProperties>
-                    <declaredProperties>
-                        <declaredProperty>laborex.version</declaredProperty>
-                        <declaredProperty>branch</declaredProperty>
-                    </declaredProperties>
-                    <dateTimePattern>dd-MM-yyyy HH:mm:ss</dateTimePattern>
-                    <includeVcsInfo>false</includeVcsInfo>
-               
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>extract</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+         
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
