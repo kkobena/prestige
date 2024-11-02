@@ -365,16 +365,16 @@ public class user extends bllBase {
 
             if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_SUPERADMIN)) {
                 lstTRole = this.getOdataManager().getEm().createQuery(
-                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) ORDER BY t.strDESIGNATION")
+                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strSTATUT='enable' ORDER BY t.strDESIGNATION")
                         .setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%").getResultList();
             } else if (str_NAME_ROLE.equalsIgnoreCase(commonparameter.ROLE_ADMIN)) {
                 lstTRole = this.getOdataManager().getEm().createQuery(
-                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strNAME NOT LIKE ?3 ORDER BY t.strDESIGNATION")
+                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strNAME NOT LIKE ?3 AND t.strSTATUT='enable' ORDER BY t.strDESIGNATION")
                         .setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%")
                         .setParameter(3, commonparameter.ROLE_SUPERADMIN).getResultList();
             } else {
                 lstTRole = this.getOdataManager().getEm().createQuery(
-                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strNAME NOT LIKE ?3 AND t.strNAME NOT LIKE ?4 ORDER BY t.strDESIGNATION")
+                        "SELECT t FROM TRole t WHERE t.lgROLEID LIKE ?1 AND (t.strNAME LIKE ?2 OR t.strDESIGNATION LIKE ?2) AND t.strNAME NOT LIKE ?3 AND t.strNAME NOT LIKE ?4 AND t.strSTATUT='enable' ORDER BY t.strDESIGNATION")
                         .setParameter(1, lg_ROLE_ID).setParameter(2, search_value + "%")
                         .setParameter(3, commonparameter.ROLE_SUPERADMIN).setParameter(4, commonparameter.ROLE_ADMIN)
                         .getResultList();
