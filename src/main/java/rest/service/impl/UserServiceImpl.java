@@ -110,16 +110,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean deConnexion(HttpServletRequest request, TUser OTUser) {
+    public boolean deConnexion(HttpServletRequest request, TUser user) {
         try {
-            OTUser.setBIsConnected(false);
-            getEm().merge(OTUser);
+            user.setBIsConnected(false);
+            getEm().merge(user);
             HttpSession hs = request.getSession();
             hs.invalidate();
-            String desc = " Déconnection de " + OTUser.getStrFIRSTNAME() + " " + OTUser.getStrLASTNAME()
+            String desc = " Déconnection de " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME()
                     + " à partir de l'adresse " + request.getRemoteAddr() + " : nom poste " + getHostName(request);
-            logService.updateLogFile(OTUser, OTUser.getStrLOGIN(), desc, TypeLog.DECONNECTION, OTUser,
-                    getHostName(request), request.getRemoteAddr());
+            logService.updateLogFile(user, user.getStrLOGIN(), desc, TypeLog.DECONNECTION, user, getHostName(request),
+                    request.getRemoteAddr());
             afficheur("   CAISSE FERMEE");
             return true;
         } catch (Exception e) {
@@ -230,4 +230,4 @@ public class UserServiceImpl implements UserService {
         return this.em.merge(usr);
 
     }
-}
+    }

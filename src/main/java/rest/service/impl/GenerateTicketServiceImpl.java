@@ -1680,7 +1680,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     List<MvtTransaction> ticketZVenteData(Params params) {
-        String sql = "SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac {userId} AND o.pkey IN (SELECT p.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID FROM TPreenregistrementDetail p) ";
+        String sql = "SELECT o FROM MvtTransaction o WHERE TIMESTAMP(o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction IN :typetransac {userId} AND o.pkey IN (SELECT p.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID FROM TPreenregistrementDetail p) ";
 
         try {
             TypedQuery<MvtTransaction> q = getEntityManager().createQuery(replaceSql(params, sql),
@@ -1695,7 +1695,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     List<MvtTransaction> ticketZSortieData(Params params) {
-        String sql = "SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac {userId}";
+        String sql = "SELECT o FROM MvtTransaction o WHERE TIMESTAMP(o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac {userId}";
 
         try {
             TypedQuery<MvtTransaction> q = getEntityManager().createQuery(replaceSql(params, sql),
@@ -1719,7 +1719,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
     }
 
     List<MvtTransaction> ticketZEntreesData(Params params) {
-        String sql = "SELECT o FROM MvtTransaction o WHERE FUNCTION('DATE',o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac {userId}";
+        String sql = "SELECT o FROM MvtTransaction o WHERE TIMESTAMP(o.createdAt)  BETWEEN :dtStart AND :dtEnd AND o.checked=TRUE AND o.magasin.lgEMPLACEMENTID=:empl AND  o.typeTransaction=:typetransac {userId}";
 
         try {
             TypedQuery<MvtTransaction> q = getEntityManager().createQuery(replaceSql(params, sql),

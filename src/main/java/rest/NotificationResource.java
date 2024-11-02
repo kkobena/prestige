@@ -90,7 +90,7 @@ public class NotificationResource {
     @POST
     @Path("sms-recap")
     public Response sendSmsRecap(ActiviteParam activiteParam) {
-        notificationService.sendPointActiviteSms(activiteParam.getDateActivite());
+        notificationService.sendPointActivite(activiteParam);
         return Response.ok().build();
     }
 

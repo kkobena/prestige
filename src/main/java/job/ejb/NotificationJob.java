@@ -1,6 +1,7 @@
 package job.ejb;
 
 import dal.TParameters;
+import dal.enumeration.Canal;
 import java.time.LocalDate;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -15,6 +16,7 @@ import javax.ejb.TimerService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import rest.service.NotificationService;
+import rest.service.v2.dto.ActiviteParam;
 import util.Constant;
 
 /**
@@ -58,7 +60,7 @@ public class NotificationJob {
     public void timeout(Timer timer) {
 
         if ("recapActivity".equals(timer.getInfo())) {
-            notificationService.sendPointActiviteSms(LocalDate.now().toString());
+            notificationService.sendPointActivite(new ActiviteParam(LocalDate.now().toString(), Canal.SMS));
 
         }
     }

@@ -247,7 +247,10 @@ public class Params implements Serializable {
     @Override
     public String toString() {
         return "Params{" + "ref=" + ref + ", description=" + description + ", refParent=" + refParent + ", refTwo="
-                + refTwo + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", checkug=" + checkug + '}';
+                + refTwo + ", value=" + value + ", valueTwo=" + valueTwo + ", valueThree=" + valueThree + ", valueFour="
+                + valueFour + ", dtStart=" + dtStart + ", dtEnd=" + dtEnd + ", hrEnd=" + hrEnd + ", hrStart=" + hrStart
+                + ", operateur=" + operateur + ", scheduled=" + scheduled + ", checkug=" + checkug + ", userId="
+                + userId + '}';
     }
 
 }

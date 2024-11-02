@@ -14,6 +14,10 @@ Ext.define('testextjs.view.notification.RecapSms', {
         type: 'fit'
     },
     initComponent: function () {
+        const canaux = Ext.create('Ext.data.ArrayStore', {
+            data: [['SMS'], ['EMAIL']],
+            fields: [{name: 'canal', type: 'string'}]
+        });
         const me = this;
         Ext.applyIf(me, {
             dockedItems: [
@@ -48,17 +52,18 @@ Ext.define('testextjs.view.notification.RecapSms', {
                             collapsible: false,
                             bodyPadding: 5,
                             flex: 0.5,
-                            title: '<span style="color:blue;">Envoi SMS de Récaptilatif activité</span>',
+                            title: '<span style="color:blue;">Envoi SMS/Mail de Récaptilatif activité</span>',
                             layout: 'anchor',
                             items: [
                                 {
                                     xtype: 'fieldcontainer',
-                                    layout: 'anchor',
+                                    layout: 'vbox',
 
                                     items: [
 
                                         {
-                                            anchor:'95%',
+                                            labelWidth: 120,
+                                            flex: 1,
                                             xtype: 'datefield',
                                             fieldLabel: 'Choisir une date',
                                             name: 'dateActivite',
@@ -66,6 +71,19 @@ Ext.define('testextjs.view.notification.RecapSms', {
                                             format: 'd/m/Y',
                                             value: new Date()
 
+                                        },
+                                        {
+                                            xtype: 'combobox',
+                                            fieldLabel: 'Canal',
+                                            labelWidth: 120,
+                                            name: 'canal',
+                                            store: canaux,
+                                            flex: 1,
+                                            valueField: 'canal',
+                                            displayField: 'canal',
+                                            typeAhead: false,
+                                            mode: 'local',
+                                            value: 'SMS'
                                         }
                                     ]
                                 }
@@ -86,8 +104,7 @@ Ext.define('testextjs.view.notification.RecapSms', {
         const form = wind.down('form');
         if (form.isValid()) {
             const values = form.getValues();
-            const data = {"dateActivite": values.dateActivite};
-
+            const data = {"dateActivite": values.dateActivite,"canal": values.canal};
             const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'POST',
