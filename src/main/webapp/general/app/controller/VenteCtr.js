@@ -43,7 +43,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         medecinId: null,
         showStock: false,
         checkUg: false,
-        extraModeReglementId: null
+        extraModeReglementId: null,
+        ticketCaisse: true
 
     },
     refs: [
@@ -622,6 +623,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         me.checkShowStock();
         me.oncheckUg();
         me.checkSansBon();
+        me.checkParamImpressionTicketCaisse();
 
     },
     cheickCaisse: function () {
@@ -1324,10 +1326,28 @@ Ext.define('testextjs.controller.VenteCtr', {
                 const result = Ext.JSON.decode(response.responseText, true);
                 progress.hide();
                 if (result.success) {
-                    me.onPrintTicket(param, typeVenteCombo);
-                    me.resetAll(montantRemis);
-                    me.getVnoproduitCombo().focus(false, 100, function () {
-                    });
+                    if (!me.getTicketCaisse()) {
+                        me.onPrintTicket(param, typeVenteCombo);
+                        me.resetAll(montantRemis);
+                        me.getVnoproduitCombo().focus(false, 100, function () {
+                        });
+                    } else {
+                        Ext.MessageBox.show({
+                            title: 'Impression du ticket',
+                            msg: 'Voulez-vous imprimer le ticket ?',
+                            buttons: Ext.MessageBox.YESNO,
+                            fn: function (button) {
+                                if ('yes' == button) {
+                                    me.onPrintTicket(param, typeVenteCombo);
+                                }
+                                me.resetAll(montantRemis);
+                                me.getVnoproduitCombo().focus(false, 100, function () {
+                                });
+                            },
+                            icon: Ext.MessageBox.QUESTION
+                        });
+                    }
+
 
                 } else {
                     let codeError = result.codeError;
@@ -3810,12 +3830,28 @@ Ext.define('testextjs.controller.VenteCtr', {
                     let result = Ext.JSON.decode(response.responseText, true);
                     progress.hide();
                     if (result.success) {
-                        me.onPrintTicket(param, typeVenteCombo);
-                        me.resetAll(montantRemis);
-                        me.getVnoproduitCombo().focus(false, 100, function () {
-                        });
+                        if (!me.getTicketCaisse()) {
+                            me.onPrintTicket(param, typeVenteCombo);
+                            me.resetAll(montantRemis);
+                            me.getVnoproduitCombo().focus(false, 100, function () {
+                            });
+                        } else {
+                            Ext.MessageBox.show({
+                                title: 'Impression du ticket',
+                                msg: 'Voulez-vous imprimer le ticket ?',
+                                buttons: Ext.MessageBox.YESNO,
+                                fn: function (button) {
+                                    if ('yes' == button) {
+                                        me.onPrintTicket(param, typeVenteCombo);
+                                    }
+                                    me.resetAll(montantRemis);
+                                    me.getVnoproduitCombo().focus(false, 100, function () {
+                                    });
+                                },
+                                icon: Ext.MessageBox.QUESTION
+                            });
 
-
+                        }
                     } else {
                         let codeError = result.codeError;
                         //il faut ajouter un medecin à la vente 
@@ -4475,6 +4511,21 @@ Ext.define('testextjs.controller.VenteCtr', {
                 const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.checkUg = result.data;
+                }
+            }
+
+        });
+    },
+
+    checkParamImpressionTicketCaisse: function () {
+        const me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/app-params/key/KEY_IMPRIMER_TICKET_CAISSE',
+            success: function (response, options) {
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.ticketCaisse = result.data;
                 }
             }
 
