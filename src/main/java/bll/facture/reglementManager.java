@@ -1484,7 +1484,7 @@ public class reglementManager extends bll.bllBase {
         TCompteClient OTCompteClient;
         TCompteClientTiersPayant OTCompteClientTiersPayant = null;
 
-        double AmountReglement;
+        double amountReglement;
         try {
             if (!new caisseManagement(this.getOdataManager(), this.getOTUser()).CheckResumeCaisse()) {
                 this.buildErrorTraceMessage("Impossible de faire le règlement", "La caisse est fermée");
@@ -1545,7 +1545,7 @@ public class reglementManager extends bll.bllBase {
                             }
                             // fin code ajotué 18/08/2016
 
-                            AmountReglement = detailAmount;
+                            amountReglement = detailAmount;
                             int_AMOUNT -= detailAmount;
                             OTPreenregistrementCompteClientTiersPayent.setIntPRICERESTE(0);
                             OTPreenregistrementCompteClientTiersPayent.setDtUPDATED(new Date());
@@ -1557,8 +1557,8 @@ public class reglementManager extends bll.bllBase {
 
                             this.getOdataManager().getEm().merge(OTPreenregistrementCompteClientTiersPayent);
                             updateCompteClientTierspayant(OTPreenregistrementCompteClientTiersPayent,
-                                    (int) AmountReglement);
-                            this.createReglementDetail(tFactureDetail, dossierReglement, AmountReglement);
+                                    (int) amountReglement);
+                            this.createReglementDetail(tFactureDetail, dossierReglement, amountReglement);
                         } else if (int_AMOUNT < detailAmount && int_AMOUNT > 0) {
                             new logger().OCategory.info(
                                     "paiement total   Traitement de chaque dossiers de la facture-----int_AMOUNT <  detailAmount && int_AMOUNT >0------------------------------------------ amount "
@@ -1588,13 +1588,13 @@ public class reglementManager extends bll.bllBase {
 
                             tFactureDetail.setDtUPDATED(new Date());
                             this.getOdataManager().getEm().merge(tFactureDetail);
-                            AmountReglement = int_AMOUNT;
+                            amountReglement = int_AMOUNT;
                             int_AMOUNT -= int_AMOUNT;
                             this.getOdataManager().getEm().merge(OTPreenregistrementCompteClientTiersPayent);
 
-                            this.createReglementDetail(tFactureDetail, dossierReglement, AmountReglement);
+                            this.createReglementDetail(tFactureDetail, dossierReglement, amountReglement);
                             // updateCompteClientTierspayant(OTPreenregistrementCompteClientTiersPayent, (int)
-                            // AmountReglement);
+                            // amountReglement);
                         }
 
                     }
@@ -1641,12 +1641,12 @@ public class reglementManager extends bll.bllBase {
                                 // fin code ajotué 18/08/2016
 
                                 this.getOdataManager().getEm().merge(OTPreenregistrementCompteClientTiersPayent);
-                                AmountReglement = detailAmount;
+                                amountReglement = detailAmount;
                                 int_AMOUNT -= detailAmount;
                                 this.getOdataManager().getEm().merge(tFactureDetail);
                                 // updateCompteClientTierspayant(OTPreenregistrementCompteClientTiersPayent, (int)
-                                // AmountReglement);
-                                this.createReglementDetail(tFactureDetail, dossierReglement, AmountReglement);
+                                // amountReglement);
+                                this.createReglementDetail(tFactureDetail, dossierReglement, amountReglement);
                             } else if (int_AMOUNT < detailAmount && int_AMOUNT > 0) {
                                 new logger().OCategory.info(
                                         "paiement partiel montant de la facture int_AMOUNT< tFactureDetail.getDblMONTANT() -------------------------------"
@@ -1677,13 +1677,13 @@ public class reglementManager extends bll.bllBase {
                                 // fin code ajotué 18/08/2016
 
                                 tFactureDetail.setDtUPDATED(new Date());
-                                AmountReglement = int_AMOUNT;
+                                amountReglement = int_AMOUNT;
                                 int_AMOUNT -= int_AMOUNT;
                                 this.getOdataManager().getEm().merge(tFactureDetail);
                                 this.getOdataManager().getEm().merge(OTPreenregistrementCompteClientTiersPayent);
                                 // updateCompteClientTierspayant(OTPreenregistrementCompteClientTiersPayent, (int)
-                                // AmountReglement);
-                                this.createReglementDetail(tFactureDetail, dossierReglement, AmountReglement);
+                                // amountReglement);
+                                this.createReglementDetail(tFactureDetail, dossierReglement, amountReglement);
                             }
 
                         }
@@ -1735,13 +1735,13 @@ public class reglementManager extends bll.bllBase {
                                 }
                                 // fin code ajotué 18/08/2016
 
-                                AmountReglement = detailAmount;
+                                amountReglement = detailAmount;
                                 int_AMOUNT -= detailAmount;
                                 this.getOdataManager().getEm().merge(tFactureDetail);
                                 this.getOdataManager().getEm().merge(OTPreenregistrementCompteClientTiersPayent);
                                 // updateCompteClientTierspayant(OTPreenregistrementCompteClientTiersPayent, (int)
-                                // AmountReglement);
-                                this.createReglementDetail(tFactureDetail, dossierReglement, AmountReglement);
+                                // amountReglement);
+                                this.createReglementDetail(tFactureDetail, dossierReglement, amountReglement);
                             } else if (int_AMOUNT < detailAmount && int_AMOUNT > 0) {
                                 new logger().OCategory.info(
                                         "paiement partiel LE CAS USER SELECTION ALL ET DECOCHE DAUTRES int_AMOUNT < tFactureDetail.getDblMONTANT()  -------------------------- "
@@ -1773,14 +1773,14 @@ public class reglementManager extends bll.bllBase {
                                                 + OTPreenregistrementCompteClientTiersPayent.getIntPRICERESTE()
                                                 + "   ");
                                 tFactureDetail.setDtUPDATED(new Date());
-                                AmountReglement = int_AMOUNT;
+                                amountReglement = int_AMOUNT;
                                 int_AMOUNT -= int_AMOUNT;
 
                                 this.getOdataManager().getEm().merge(tFactureDetail);
                                 this.getOdataManager().getEm().merge(OTPreenregistrementCompteClientTiersPayent);
                                 // updateCompteClientTierspayant(OTPreenregistrementCompteClientTiersPayent, (int)
-                                // AmountReglement);
-                                this.createReglementDetail(tFactureDetail, dossierReglement, AmountReglement);
+                                // amountReglement);
+                                this.createReglementDetail(tFactureDetail, dossierReglement, amountReglement);
                             }
 
                         }
@@ -1817,7 +1817,7 @@ public class reglementManager extends bll.bllBase {
                                 }
                                 // fin code ajotué 18/08/2016
 
-                                AmountReglement = detailAmount;
+                                amountReglement = detailAmount;
                                 int_AMOUNT_RECU -= detailAmount;
                                 OTPreenregistrementCompteClientTiersPayent.setIntPRICERESTE(0);
                                 OTPreenregistrementCompteClientTiersPayent.setDtUPDATED(new Date());
@@ -1829,8 +1829,8 @@ public class reglementManager extends bll.bllBase {
 
                                 this.getOdataManager().getEm().merge(OTPreenregistrementCompteClientTiersPayent);
                                 updateCompteClientTierspayant(OTPreenregistrementCompteClientTiersPayent,
-                                        (int) AmountReglement);
-                                this.createReglementDetail(tFactureDetail, dossierReglement, AmountReglement);
+                                        (int) amountReglement);
+                                this.createReglementDetail(tFactureDetail, dossierReglement, amountReglement);
                             } else if (int_AMOUNT_RECU < detailAmount && int_AMOUNT_RECU > 0) {
                                 new logger().OCategory.info(
                                         "paiement total   Traitement de chaque dossiers de la facture-----int_AMOUNT <  detailAmount && int_AMOUNT >0------------------------------------------ amount "
@@ -1864,13 +1864,13 @@ public class reglementManager extends bll.bllBase {
 
                                 tFactureDetail.setDtUPDATED(new Date());
                                 this.getOdataManager().getEm().merge(tFactureDetail);
-                                AmountReglement = int_AMOUNT_RECU;
+                                amountReglement = int_AMOUNT_RECU;
                                 int_AMOUNT_RECU -= int_AMOUNT_RECU;
                                 this.getOdataManager().getEm().merge(OTPreenregistrementCompteClientTiersPayent);
 
-                                this.createReglementDetail(tFactureDetail, dossierReglement, AmountReglement);
+                                this.createReglementDetail(tFactureDetail, dossierReglement, amountReglement);
                                 // updateCompteClientTierspayant(OTPreenregistrementCompteClientTiersPayent, (int)
-                                // AmountReglement);
+                                // amountReglement);
                                 break;
                             }
 

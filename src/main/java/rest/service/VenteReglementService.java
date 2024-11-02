@@ -1,6 +1,7 @@
 package rest.service;
 
 import commonTasks.dto.VenteReglementDTO;
+import commonTasks.dto.VenteReglementReportDTO;
 import dal.MvtTransaction;
 import dal.TPreenregistrement;
 import dal.TTypeReglement;
@@ -24,4 +25,6 @@ public interface VenteReglementService {
             LocalDateTime mvtDate);
 
     void createCopyVenteReglement(TPreenregistrement tp, VenteReglement venteReglement);
+
+    List<VenteReglementReportDTO> buildFromEntities(List<VenteReglement> reglements);
 }

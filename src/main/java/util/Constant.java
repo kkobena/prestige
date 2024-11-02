@@ -159,6 +159,8 @@ public final class Constant {
     public static final String TEDIS = "TEDIS PHAR.";
     public static final String DPCI = "DPCI";
     public static final String USER_ROLE_ID = "USER_ROLE_ID";
+    public static final String SEUIL = "SEUIL";
+    public static final String DIFF = "DIFF";
 
     private Constant() {
     }
