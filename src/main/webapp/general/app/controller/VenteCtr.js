@@ -1324,21 +1324,11 @@ Ext.define('testextjs.controller.VenteCtr', {
                 const result = Ext.JSON.decode(response.responseText, true);
                 progress.hide();
                 if (result.success) {
-                    Ext.MessageBox.show({
-                        title: 'Impression du ticket',
-                        msg: 'Voulez-vous imprimer le ticket ?',
-                        buttons: Ext.MessageBox.YESNO,
-                        fn: function (button) {
-                            if ('yes' == button) {
-
-                                me.onPrintTicket(param, typeVenteCombo);
-                            }
-                            me.resetAll(montantRemis);
-                            me.getVnoproduitCombo().focus(false, 100, function () {
-                            });
-                        },
-                        icon: Ext.MessageBox.QUESTION
+                    me.onPrintTicket(param, typeVenteCombo);
+                    me.resetAll(montantRemis);
+                    me.getVnoproduitCombo().focus(false, 100, function () {
                     });
+
                 } else {
                     let codeError = result.codeError;
                     //il faut ajouter un medecin à la vente 
@@ -3820,21 +3810,12 @@ Ext.define('testextjs.controller.VenteCtr', {
                     let result = Ext.JSON.decode(response.responseText, true);
                     progress.hide();
                     if (result.success) {
-                        Ext.MessageBox.show({
-                            title: 'Impression du ticket',
-                            msg: 'Voulez-vous imprimer le ticket ?',
-                            buttons: Ext.MessageBox.YESNO,
-                            fn: function (button) {
-                                if ('yes' == button) {
-
-                                    me.onPrintTicket(param, typeVenteCombo);
-                                }
-                                me.resetAll(montantRemis);
-                                me.getVnoproduitCombo().focus(false, 100, function () {
-                                });
-                            },
-                            icon: Ext.MessageBox.QUESTION
+                        me.onPrintTicket(param, typeVenteCombo);
+                        me.resetAll(montantRemis);
+                        me.getVnoproduitCombo().focus(false, 100, function () {
                         });
+
+
                     } else {
                         let codeError = result.codeError;
                         //il faut ajouter un medecin à la vente 

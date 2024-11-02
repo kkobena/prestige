@@ -60,14 +60,16 @@ public class AccountResource {
 
             if (tu.getLgUSERID().equals("00")) {
                 xtypeuser = dashboard;
+                hs.setAttribute(Constant.USER_ROLE_ID, "00");
             } else {
 
                 Collection<TRoleUser> tRoleUserCollection = tu.getTRoleUserCollection();
+
                 TRoleUser oTRoleUser = tRoleUserCollection.stream()
                         .filter(e -> e.getLgROLEID().getStrSTATUT().equals(Constant.STATUT_ENABLE)).findFirst()
                         .orElse(null);
                 TRole role = oTRoleUser.getLgROLEID();
-
+                hs.setAttribute(Constant.USER_ROLE_ID, role.getLgROLEID());
                 xtypeuser = (role.getStrNAME().equalsIgnoreCase(Constant.ROLE_PHARMACIEN)
                         || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_SUPERADMIN)
                         || role.getStrNAME().equalsIgnoreCase(Constant.ROLE_ADMIN) ? dashboard : "mainmenumanager");

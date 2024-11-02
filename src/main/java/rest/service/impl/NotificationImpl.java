@@ -56,6 +56,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import rest.service.NotificationService;
 import rest.service.SmsService;
+import rest.service.v2.dto.ActiviteParam;
 import util.FunctionUtils;
 import util.NumberUtils;
 import util.SmsParameters;
@@ -105,9 +106,7 @@ public class NotificationImpl implements NotificationService {
         Notification notification = new Notification();
         CategorieNotification categorieNotification = this.getOneByName(TypeNotification.MASSE);
         notification.setCategorieNotification(categorieNotification);
-        // notification.setCanal(Canal.SMS_MASSE);
         notification.setMessage(notificationDto.getMessage());
-        // notification.setTypeNotification(TypeNotification.MASSE);
         notification.setUser(user);
         if (CollectionUtils.isNotEmpty(notificationDto.getClients())) {
             notificationDto.getClients().stream().forEach(u -> {
@@ -317,8 +316,7 @@ public class NotificationImpl implements NotificationService {
         this.smsService.sendSMS(notification.getMessage());
     }
 
-    @Override
-    public void sendPointActiviteSms(String date) {
+    private String sendPointActiviteSms(String date) {
         Data achat = buildAchat(date);
         Data ventes = buildVentes(date);
         List<Data> mvts = buildMvts(date);
@@ -361,10 +359,11 @@ public class NotificationImpl implements NotificationService {
         }
 
         if (sb.length() > 0) {
-            String content = "*** RECAP  ACTIVITE DU "
-                    + LocalDate.parse(date).format(DateTimeFormatter.ofPattern("dd/MM/YYYY")) + "***\n" + sb.toString();
-            this.smsService.sendSMS(content);
+            return "*** RECAP  ACTIVITE DU " + LocalDate.parse(date).format(DateTimeFormatter.ofPattern("dd/MM/YYYY"))
+                    + "***\n" + sb.toString();
+            // this.smsService.sendSMS(content);
         }
+        return null;
 
     }
 
@@ -467,6 +466,19 @@ public class NotificationImpl implements NotificationService {
             data.setModeReglement(v.get("modeReglement", String.class));
             return data;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public void sendPointActivite(ActiviteParam activiteParam) {
+        String content = sendPointActiviteSms(activiteParam.getDateActivite());
+        if (StringUtils.isNotBlank(content)) {
+            if (activiteParam.getCanal() == Canal.SMS) {
+                this.smsService.sendSMS(content);
+            } else if (activiteParam.getCanal() == Canal.EMAIL) {
+                sendMail(content);
+            }
+        }
+
     }
 
     private class Data {

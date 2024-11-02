@@ -31,7 +31,7 @@ import org.json.JSONObject;
  *
  * @author koben
  */
-@WebFilter(filterName = "LicenceFilter", urlPatterns = { "/*" })
+@WebFilter(filterName = "LicenceFilter", urlPatterns = { "/custom", "/flag/list" })
 public class LicenceFilter implements Filter {
 
     private static final boolean debug = true;
