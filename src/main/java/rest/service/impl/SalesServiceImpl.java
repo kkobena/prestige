@@ -136,19 +136,19 @@ public class SalesServiceImpl implements SalesService {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
-    LogService logService;
+    private LogService logService;
     @EJB
-    MvtProduitService mvtProduitService;
+    private MvtProduitService mvtProduitService;
     @EJB
-    MouvementProduitService mouvementProduitService;
+    private MouvementProduitService mouvementProduitService;
     @EJB
-    SalesStatsService salesStatsService;
+    private SalesStatsService salesStatsService;
     @EJB
-    MedecinService medecinService;
+    private MedecinService medecinService;
     @EJB
-    ClientService clientService;
+    private ClientService clientService;
     @EJB
-    NotificationService notificationService;
+    private NotificationService notificationService;
     @EJB
     private TiersPayantExclusService payantExclusService;
     @EJB
@@ -158,6 +158,8 @@ public class SalesServiceImpl implements SalesService {
     @EJB
     private SalesNetComputingService computingService;
     private static Boolean KEY_TAKE_INTO_ACCOUNT;
+    @EJB
+    private SessionHelperService sessionHelperService;
 
     private final java.util.function.Predicate<Optional<TParameters>> test = e -> {
         if (e.isPresent()) {
@@ -387,10 +389,9 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public Optional<TPreenregistrementCompteClient> findOptionalCmt(TPreenregistrement preenregistrement,
-            EntityManager emg) {
+    public Optional<TPreenregistrementCompteClient> findOptionalCmt(TPreenregistrement preenregistrement) {
         try {
-            TypedQuery<TPreenregistrementCompteClient> query = emg.createQuery(
+            TypedQuery<TPreenregistrementCompteClient> query = em.createQuery(
                     "SELECT o FROM TPreenregistrementCompteClient o WHERE o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID =?1 ",
                     TPreenregistrementCompteClient.class);
             query.setMaxResults(1);
@@ -532,7 +533,7 @@ public class SalesServiceImpl implements SalesService {
             ref = newItem.getLgPREENREGISTREMENTID();
 
             LongAdder montantRestant = new LongAdder();
-            findOptionalCmt(tp, emg).ifPresent(cp -> {
+            findOptionalCmt(tp).ifPresent(cp -> {
                 montantRestant.add(cp.getIntPRICERESTE());
                 cp.setIntPRICE(0);
                 cp.setIntPRICERESTE(0);
@@ -986,7 +987,7 @@ public class SalesServiceImpl implements SalesService {
                             .setStrREF(buildRefTmp(LocalDate.now(), salesParams.getUserId().getLgEMPLACEMENTID())
                                     .getReferenceTemp());
                     emg.persist(preenregistrement);
-                    createPreenregistrementTierspayant(salesParams.getTierspayants(), preenregistrement, emg);
+                    createPreenregistrementTierspayant(salesParams.getTierspayants(), preenregistrement);
 
                 } else {
                     preenregistrement
@@ -999,7 +1000,7 @@ public class SalesServiceImpl implements SalesService {
                             salesParams.getClientId(), emg);
                     for (TCompteClientTiersPayant fda : clientTiersPayants) {
                         createTPreenregistrementCompteClientTiersPayent(preenregistrement, fda, 100,
-                                salesParams.getBonRef(), emg);
+                                salesParams.getBonRef());
                     }
 
                 }
@@ -1272,7 +1273,7 @@ public class SalesServiceImpl implements SalesService {
                 if (p.isPresent()) {
                     TParameters v = p.get();
                     int checkPersmission = Integer.parseInt(v.getStrVALUE());
-                    if (checkPersmission == 1 && !checkpricevente(famille, params.getItemPu(), emg)) {
+                    if (checkPersmission == 1 && !checkpricevente(famille, params.getItemPu())) {
                         return json.put("success", false).put("decondition", false).put("msg",
                                 "Impossible. Vous n'ête pas autorisé à modifier du prix de vente");
 
@@ -1376,8 +1377,8 @@ public class SalesServiceImpl implements SalesService {
                     TPreenregistrementCompteClientTiersPayent.class);
             q.setParameter(1, refBon);
             q.setParameter(2, cmpt);
-            q.setParameter(3, DateConverter.STATUT_IS_CLOSED);
-            q.setParameter(4, DateConverter.STATUT_IS_CLOSED);
+            q.setParameter(3, STATUT_IS_CLOSED);
+            q.setParameter(4, STATUT_IS_CLOSED);
             q.setMaxResults(1);
             return q.getSingleResult() != null;
         } catch (Exception e) {
@@ -1386,51 +1387,48 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void createTPreenregistrementCompteClientTiersPayent(TPreenregistrement OTPreenregistrement,
-            TCompteClientTiersPayant OTCompteClientTiersPayant, int taux, String str_REFBON, EntityManager emg)
-            throws Exception {
+    public void createTPreenregistrementCompteClientTiersPayent(TPreenregistrement oTPreenregistrement,
+            TCompteClientTiersPayant oTCompteClientTiersPayant, int taux, String strREFBON) throws Exception {
         Date today = new Date();
-        TPreenregistrementCompteClientTiersPayent OTPreenregistrementCompteClientTiersPayent = new TPreenregistrementCompteClientTiersPayent(
+        TPreenregistrementCompteClientTiersPayent preenregistrementCompteClientTiersPayent = new TPreenregistrementCompteClientTiersPayent(
                 UUID.randomUUID().toString());
-        OTPreenregistrementCompteClientTiersPayent.setLgPREENREGISTREMENTID(OTPreenregistrement);
-        OTPreenregistrementCompteClientTiersPayent.setLgCOMPTECLIENTTIERSPAYANTID(OTCompteClientTiersPayant);
-        OTPreenregistrementCompteClientTiersPayent.setDtCREATED(today);
-        OTPreenregistrementCompteClientTiersPayent.setDtUPDATED(today);
-        OTPreenregistrementCompteClientTiersPayent.setIntPERCENT(taux);
-        OTPreenregistrementCompteClientTiersPayent.setIntPRICE(0);
-        OTPreenregistrementCompteClientTiersPayent.setIntPRICERESTE(0);
-        OTPreenregistrementCompteClientTiersPayent.setStrREFBON(str_REFBON);
-        OTPreenregistrementCompteClientTiersPayent.setStrSTATUTFACTURE("unpaid");
-        OTPreenregistrementCompteClientTiersPayent
-                .setDblQUOTACONSOVENTE(OTCompteClientTiersPayant.getDblQUOTACONSOVENTE() != null
-                        ? OTCompteClientTiersPayant.getDblQUOTACONSOVENTE() : 0);
-        OTPreenregistrementCompteClientTiersPayent.setStrSTATUT(OTPreenregistrement.getStrSTATUT());
-        emg.persist(OTPreenregistrementCompteClientTiersPayent);
-        OTPreenregistrement.setStrINFOSCLT(OTCompteClientTiersPayant.getLgCOMPTECLIENTID().getLgCOMPTECLIENTID());
-        if (OTCompteClientTiersPayant.getIntPRIORITY() == 1) {
-            OTPreenregistrement.setStrREFBON(str_REFBON);
+        preenregistrementCompteClientTiersPayent.setLgPREENREGISTREMENTID(oTPreenregistrement);
+        preenregistrementCompteClientTiersPayent.setLgCOMPTECLIENTTIERSPAYANTID(oTCompteClientTiersPayant);
+        preenregistrementCompteClientTiersPayent.setDtCREATED(today);
+        preenregistrementCompteClientTiersPayent.setDtUPDATED(today);
+        preenregistrementCompteClientTiersPayent.setIntPERCENT(taux);
+        preenregistrementCompteClientTiersPayent.setIntPRICE(0);
+        preenregistrementCompteClientTiersPayent.setIntPRICERESTE(0);
+        preenregistrementCompteClientTiersPayent.setStrREFBON(strREFBON);
+        preenregistrementCompteClientTiersPayent.setStrSTATUTFACTURE("unpaid");
+        preenregistrementCompteClientTiersPayent
+                .setDblQUOTACONSOVENTE(oTCompteClientTiersPayant.getDblQUOTACONSOVENTE() != null
+                        ? oTCompteClientTiersPayant.getDblQUOTACONSOVENTE() : 0);
+        preenregistrementCompteClientTiersPayent.setStrSTATUT(oTPreenregistrement.getStrSTATUT());
+        em.persist(preenregistrementCompteClientTiersPayent);
+        oTPreenregistrement.setStrINFOSCLT(oTCompteClientTiersPayant.getLgCOMPTECLIENTID().getLgCOMPTECLIENTID());
+        if (oTCompteClientTiersPayant.getIntPRIORITY() == 1) {
+            oTPreenregistrement.setStrREFBON(strREFBON);
 
         }
 
     }
 
-    public void createPreenregistrementTierspayant(List<TiersPayantParams> tierspayants,
-            TPreenregistrement OTPreenregistrement, EntityManager emg) throws Exception {
+    public void createPreenregistrementTierspayant(List<TiersPayantParams> tierspayants, TPreenregistrement otp)
+            throws Exception {
         for (TiersPayantParams v : tierspayants) {
-            TCompteClientTiersPayant OTCompteClientTiersPayant = emg.find(TCompteClientTiersPayant.class,
-                    v.getCompteTp());
-            createTPreenregistrementCompteClientTiersPayent(OTPreenregistrement, OTCompteClientTiersPayant, v.getTaux(),
-                    v.getNumBon(), emg);
+            TCompteClientTiersPayant cmp = em.find(TCompteClientTiersPayant.class, v.getCompteTp());
+            createTPreenregistrementCompteClientTiersPayent(otp, cmp, v.getTaux(), v.getNumBon());
         }
 
     }
 
-    public boolean checkpricevente(TFamille OTFamille, int newPu, EntityManager emg) {
+    public boolean checkpricevente(TFamille oFamille, int newPu) {
         try {
-            TParameters OTParameters = emg.find(TParameters.class, commonparameter.KEY_MAX_PRICE_POURCENT_VENTE);
-            int int_PRICE_COEF = (OTFamille.getIntPRICE() * Integer.valueOf(OTParameters.getStrVALUE())) / 100;
-            if ((!((OTFamille.getIntPRICE() - int_PRICE_COEF) <= newPu))
-                    || (!(newPu <= (OTFamille.getIntPRICE() + int_PRICE_COEF)))) {
+            TParameters oTParameters = em.find(TParameters.class, Constant.KEY_MAX_PRICE_POURCENT_VENTE);
+            int intPRICECOEF = (oFamille.getIntPRICE() * Integer.valueOf(oTParameters.getStrVALUE())) / 100;
+            if ((!((oFamille.getIntPRICE() - intPRICECOEF) <= newPu))
+                    || (!(newPu <= (oFamille.getIntPRICE() + intPRICECOEF)))) {
                 return false;
 
             }
@@ -1771,10 +1769,9 @@ public class SalesServiceImpl implements SalesService {
 
             }
 
-            if (clotureVenteParams.getTypeRegleId().equals(DateConverter.REGL_DIFF)) {
+            if (clotureVenteParams.getTypeRegleId().equals(REGL_DIFF)) {
                 isDiff = true;
-                addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
-
+                updateDiffere(clotureVenteParams, tp, compteClient);
             }
             TTypeVente oTTypeVente = typeVenteFromId(clotureVenteParams.getTypeVenteId());
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement, "",
@@ -1986,9 +1983,7 @@ public class SalesServiceImpl implements SalesService {
                 tp.setClient(client);
             }
 
-            if (clotureVenteParams.getTypeRegleId().equals(REGL_DIFF)) {
-                addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId());
-            }
+            updateDiffere(clotureVenteParams, tp, compteClient);
             TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement, "",
                     tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getBanque(), clotureVenteParams.getLieux(),
                     clotureVenteParams.getCommentaire(), STATUT_IS_CLOSED, "");
@@ -2051,6 +2046,22 @@ public class SalesServiceImpl implements SalesService {
             }
         }
         return json;
+    }
+
+    private void updateDiffere(ClotureVenteParams clotureVenteParams, TPreenregistrement tp,
+            TCompteClient compteClient) {
+        if (clotureVenteParams.getTypeRegleId().equals(REGL_DIFF)) {
+            findOptionalCmt(tp).ifPresentOrElse(ctp -> {
+
+                ctp.setIntPRICE(tp.getIntCUSTPART() == 0 ? tp.getIntPRICE() - tp.getIntPRICEREMISE()
+                        : tp.getIntCUSTPART() - tp.getIntPRICEREMISE());
+                ctp.setIntPRICERESTE(ctp.getIntPRICE() - clotureVenteParams.getMontantPaye());
+                ctp.setStrSTATUT(STATUT_IS_CLOSED);
+                em.merge(ctp);
+
+            }, () -> addDiffere(compteClient, tp, clotureVenteParams.getMontantPaye(), clotureVenteParams.getUserId()));
+
+        }
     }
 
     public boolean checkRefBonIsUse(String refBon, TCompteClientTiersPayant oTCompteClientTiersPayant,
@@ -3142,7 +3153,7 @@ public class SalesServiceImpl implements SalesService {
                     op.setAyantDroit(a);
                 });
             }
-            createPreenregistrementTierspayant(params.getTierspayants(), op, getEm());
+            createPreenregistrementTierspayant(params.getTierspayants(), op);
             getEm().merge(op);
             return new JSONObject().put("success", true);
         } catch (Exception e) {
@@ -3223,8 +3234,9 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public JSONObject modificationVenteCloturee(String venteId, TUser u) throws JSONException {
+    public JSONObject modificationVenteCloturee(String venteId) {
         JSONObject json = new JSONObject();
+        TUser u = sessionHelperService.getCurrentUser();
         try {
             JSONObject data = new JSONObject();
             TPreenregistrement tp = getEm().find(TPreenregistrement.class, venteId);
@@ -3239,7 +3251,7 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrement newTP = createPreventeCopy(u, tp);
             getItems(tp).forEach(z -> createItemCopy(z, newTP));
             copyPreenregistrementTp(newTP, venteId, u);
-            findOptionalCmt(tp, getEm()).ifPresent(cp -> addDiffere(newTP, cp));
+            findOptionalCmt(tp).ifPresent(cp -> addDiffere(newTP, cp));
 
             data.put("lgPREENREGISTREMENTID", newTP.getLgPREENREGISTREMENTID());
             data.put("strREF", newTP.getStrREF());
@@ -3337,7 +3349,7 @@ public class SalesServiceImpl implements SalesService {
         oTPreenregistrementCompteClient.setLgUSERID(newP.getLgUSERID());
         oTPreenregistrementCompteClient.setIntPRICE(old.getIntPRICE());
         oTPreenregistrementCompteClient.setIntPRICERESTE(old.getIntPRICERESTE());
-        oTPreenregistrementCompteClient.setStrSTATUT(STATUT_IS_CLOSED);
+        oTPreenregistrementCompteClient.setStrSTATUT(STATUT_IS_PROGRESS);
         getEm().persist(oTPreenregistrementCompteClient);
     }
 
@@ -3707,7 +3719,7 @@ public class SalesServiceImpl implements SalesService {
         String idVente = tp.getLgPREENREGISTREMENTID();
         TPreenregistrement clonedPreen = cloneVente(ooTUser, tp);
         LongAdder montantRestant = new LongAdder();
-        findOptionalCmt(tp, emg).ifPresent(cp -> {
+        findOptionalCmt(tp).ifPresent(cp -> {
             montantRestant.add(cp.getIntPRICERESTE());
             cp.setIntPRICE(0);
             cp.setIntPRICERESTE(0);

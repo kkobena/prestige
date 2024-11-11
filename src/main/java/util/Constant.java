@@ -159,6 +159,7 @@ public final class Constant {
     public static final String TEDIS = "TEDIS PHAR.";
     public static final String DPCI = "DPCI";
     public static final String USER_ROLE_ID = "USER_ROLE_ID";
+    public static final String KEY_MAX_PRICE_POURCENT_VENTE = "KEY_MAX_PRICE_POURCENT_VENTE";
 
     private Constant() {
     }
