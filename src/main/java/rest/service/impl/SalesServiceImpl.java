@@ -158,6 +158,8 @@ public class SalesServiceImpl implements SalesService {
     @EJB
     private SalesNetComputingService computingService;
     private static Boolean KEY_TAKE_INTO_ACCOUNT;
+    @EJB
+    private RemiseService remiseService;
 
     private final java.util.function.Predicate<Optional<TParameters>> test = e -> {
         if (e.isPresent()) {
@@ -2375,20 +2377,8 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public JSONObject addRemisse(SalesParams params) throws JSONException {
-        // A revoir pour le calcul du net à payer
-        JSONObject json = new JSONObject();
-        EntityManager emg = this.getEm();
-        try {
-            TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, params.getVenteId());
-            preenregistrement.setLgREMISEID(params.getRemiseId());
-            preenregistrement.setRemise(findTRemise(params.getRemiseId(), emg));
-            emg.merge(preenregistrement);
-            json.put("success", true).put("msg", "Opération effectuée avec success");
-        } catch (Exception e) {
-            json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
-        }
-        return json;
+    public JSONObject addRemise(SalesParams params) {
+        return remiseService.addRemise(params);
     }
 
     @Override
@@ -2398,98 +2388,6 @@ public class SalesServiceImpl implements SalesService {
         }
         return createPreVenteVo(params);
 
-    }
-
-    private TRemise findTRemise(String id, EntityManager emg) {
-        try {
-            return emg.find(TRemise.class, id);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private TWorkflowRemiseArticle findByArticleRemise(String strCODEREMISE) {
-        if (StringUtils.isEmpty(strCODEREMISE)) {
-            return null;
-        }
-        try {
-            TypedQuery<TWorkflowRemiseArticle> q = getEm().createQuery(
-                    "SELECT t FROM TWorkflowRemiseArticle t WHERE t.strCODEREMISEARTICLE = ?1  AND t.strSTATUT = ?2 ",
-                    TWorkflowRemiseArticle.class);
-            q.setParameter(1, strCODEREMISE).setParameter(2, STATUT_ENABLE);
-            q.setMaxResults(1);
-            return q.getSingleResult();
-
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private TGrilleRemise grilleRemiseRemiseFromWorkflow(TPreenregistrement preenregistrement, TFamille oFamille,
-            String remiseId) {
-        int grilleRemise;
-        TGrilleRemise oTGrilleRemise;
-        try {
-            TWorkflowRemiseArticle workflowRemiseArticle = findByArticleRemise(oFamille.getStrCODEREMISE());
-            if (workflowRemiseArticle == null) {
-                return null;
-            }
-            if ((preenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(VENTE_ASSURANCE_ID))
-                    || (preenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(VENTE_AVEC_CARNET))) {
-                grilleRemise = workflowRemiseArticle.getStrCODEGRILLEVO();
-                oTGrilleRemise = (TGrilleRemise) getEm().createQuery(
-                        "SELECT t FROM TGrilleRemise t WHERE t.strCODEGRILLE = ?1  AND t.strSTATUT = ?2  AND t.lgREMISEID.lgREMISEID = ?3 ")
-                        .setParameter(1, grilleRemise).setParameter(2, STATUT_ENABLE).setParameter(3, remiseId)
-                        .getSingleResult();
-
-                return oTGrilleRemise;
-            } else {
-                grilleRemise = workflowRemiseArticle.getStrCODEGRILLEVNO();
-                oTGrilleRemise = (TGrilleRemise) getEm().createQuery(
-                        "SELECT t FROM TGrilleRemise t WHERE t.strCODEGRILLE  = ?1  AND t.strSTATUT = ?2 AND t.lgREMISEID.lgREMISEID = ?3 ")
-                        .setParameter(1, grilleRemise).setParameter(2, STATUT_ENABLE).setParameter(3, remiseId)
-                        .getSingleResult();
-                return oTGrilleRemise;
-            }
-
-        } catch (Exception e) {
-            return null;
-        }
-
-    }
-
-    private MontantAPaye calculCarnetNet(List<TiersPayantParams> tierspayants, MontantAPaye montantAPaye,
-            boolean asRestrictions) {
-
-        MontantAPaye map = computeCarnetNet(montantAPaye, tierspayants.get(0).getCompteTp(), asRestrictions);
-        TiersPayantParams tp = map.getTierspayants().get(0);
-        tp.setCompteTp(tierspayants.get(0).getCompteTp());
-        tp.setNumBon(tierspayants.get(0).getNumBon());
-        map.setTierspayants(List.of(tp));
-        return map;
-
-    }
-
-    private MontantAPaye calculVoNet(TPreenregistrement op, List<TiersPayantParams> tierspayants) {
-        boolean asRestrictions = checkPlafondVente();
-        List<TPreenregistrementDetail> lstTPreenregistrementDetail = getItems(op);
-        TRemise remise = op.getRemise();
-        remise = remise != null ? remise : op.getClient().getRemise();
-        TTypeVente tTypeVente = op.getLgTYPEVENTEID();
-        MontantAPaye montantAPaye;
-        if (remise != null) {
-            montantAPaye = getRemiseVno(op, remise, lstTPreenregistrementDetail);
-
-        } else {
-            montantAPaye = sumVenteSansRemise(lstTPreenregistrementDetail);
-        }
-
-        if (tTypeVente.getLgTYPEVENTEID().equals(VENTE_AVEC_CARNET)) {
-            return calculCarnetNet(tierspayants, montantAPaye, asRestrictions);
-        } else {
-            return calculAssuranceNet(tierspayants, montantAPaye, asRestrictions);
-
-        }
     }
 
     private MontantAPaye getRemiseVno(TPreenregistrement op, TRemise oTRemise,
@@ -2517,8 +2415,8 @@ public class SalesServiceImpl implements SalesService {
             int remise = 0;
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
-                TGrilleRemise grilleRemise = grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(), famille,
-                        oTRemise.getLgREMISEID());
+                TGrilleRemise grilleRemise = remiseService.grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(),
+                        famille, oTRemise.getLgREMISEID());
                 if (grilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * grilleRemise.getDblTAUX()) / 100);
                     if (!x.getBoolACCOUNT()) {
@@ -4110,8 +4008,8 @@ public class SalesServiceImpl implements SalesService {
             Integer remise = 0;
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
-                TGrilleRemise oGrilleRemise = grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(), famille,
-                        oTRemise.getLgREMISEID());
+                TGrilleRemise oGrilleRemise = remiseService.grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(),
+                        famille, oTRemise.getLgREMISEID());
                 if (oGrilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * oGrilleRemise.getDblTAUX()) / 100);
                     if (!x.getBoolACCOUNT()) {

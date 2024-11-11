@@ -812,8 +812,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         remiseCombo.getStore().loadData(record.get('remises'));
         remiseCombo.focus(false, 100);
     },
+    
     onComputeNet: function () {
-
         const me = this;
         const typeVente = me.getTypeVenteCombo().getValue();
         if (typeVente === '1') {
@@ -1071,21 +1071,20 @@ Ext.define('testextjs.controller.VenteCtr', {
                         }
                     }
 
-//
                 }
             }
         }
     },
 
     refresh: function () {
-        var me = this;
-        var vente = me.getCurrent();
-        var venteId = null;
+        const me = this;
+        let vente = me.getCurrent();
+        let venteId = null;
         if (vente) {
             venteId = vente.lgPREENREGISTREMENTID;
         }
-        var query = me.getQueryField().getValue();
-        var grid = me.getVnogrid();
+        let query = me.getQueryField().getValue();
+        let grid = me.getVnogrid();
         grid.getStore()
                 .load(
                         {
@@ -1103,8 +1102,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                 );
     },
     addVenteVno: function (data, url, field, comboxProduit) {
-        var me = this;
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        const me = this;
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -1112,7 +1111,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             params: Ext.JSON.encode(data),
             success: function (response, options) {
                 progress.hide();
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.updateStockField(0);
                     me.getVnoemplacementField().setValue('');
@@ -1181,12 +1180,12 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     showNetPaidVno: function () {
-        var me = this;
-        var vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
+        const me = this;
+        let vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
         if (vente) {
-            var venteId = vente.lgPREENREGISTREMENTID;
-            var data = {"remiseId": remiseId, "venteId": venteId, "checkUg": me.getCheckUg()};
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            let venteId = vente.lgPREENREGISTREMENTID;
+            let data = {"remiseId": remiseId, "venteId": venteId, "checkUg": me.getCheckUg()};
+            let progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -1194,11 +1193,11 @@ Ext.define('testextjs.controller.VenteCtr', {
                 params: Ext.JSON.encode(data),
                 success: function (response, options) {
                     progress.hide();
-                    var result = Ext.JSON.decode(response.responseText, true);
+                    const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         me.netAmountToPay = result.data;
                         me.toRecalculate = false;
-                        var montantNet = me.getNetAmountToPay().montantNet;
+                        let montantNet = me.getNetAmountToPay().montantNet;
                         me.getMontantNet().setValue(me.getNetAmountToPay().montantNet);
                         me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
                         me.handleMontantField(montantNet);
@@ -1548,6 +1547,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 params: Ext.JSON.encode(data),
                 success: function (response, options) {
                     progress.hide();
+                     me.toRecalculate = true;
                     const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         me.getVnoproduitCombo()

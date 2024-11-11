@@ -54,7 +54,7 @@ public interface SalesService {
 
     JSONObject shownetpayVno(TPreenregistrement p) throws JSONException;
 
-    JSONObject addRemisse(SalesParams params) throws JSONException;
+    JSONObject addRemise(SalesParams params);
 
     JSONObject faireDevis(SalesParams params) throws JSONException;
 
