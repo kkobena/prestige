@@ -33,23 +33,19 @@ public class Afficheur {
     }
 
     private Afficheur() {
+        getPort();
+    }
 
-        try {
-            serialPort = SerialPort.getCommPort(jdom.com_port_displayer);
-            outStream = serialPort.getOutputStream();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, e.getLocalizedMessage());
+    private void getPort() {
+        if (org.apache.commons.lang3.StringUtils.isNoneEmpty(PORT_NUM)) {
+            try {
+                serialPort = SerialPort.getCommPort(PORT_NUM);
+                outStream = serialPort.getOutputStream();
+            } catch (Exception e) {
+                LOG.log(Level.SEVERE, e.getLocalizedMessage());
+            }
+
         }
-
-        /*
-         * try { outStream = sPort.getOutputStream(); bufRead = new BufferedReader(new
-         * InputStreamReader(sPort.getInputStream())); } catch (IOException e) {
-         *
-         * } try { // sPort.setSerialPortParams(9600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1,
-         * SerialPort.PARITY_NONE); } catch (UnsupportedCommOperationException e) {
-         *
-         * }
-         */
     }
 
     public void communique(char envoie) {
@@ -63,7 +59,7 @@ public class Afficheur {
                 close();
             }
         }
-    
+
     }
 
     /**
