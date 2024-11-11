@@ -23,6 +23,7 @@ public class Afficheur {
     private OutputStream outStream;
     private SerialPort serialPort; // le port série
     private static Afficheur INSTANCE = null;
+    private static final String PORT_NUM = jdom.com_port_displayer;
 
     public static Afficheur getInstance() {
         if (INSTANCE == null) {
@@ -52,13 +53,17 @@ public class Afficheur {
     }
 
     public void communique(char envoie) {
-        open();
-        try {
-            // affiche un caractere a l'ecran
-            outStream.write(envoie);
-        } catch (IOException e) {
-            LOG.log(Level.SEVERE, e.getLocalizedMessage());
+        if (org.apache.commons.lang3.StringUtils.isNoneEmpty(PORT_NUM)) {
+            open();
+            try {
+                // affiche un caractere a l'ecran
+                outStream.write(envoie);
+            } catch (IOException e) {
+                LOG.log(Level.SEVERE, e.getLocalizedMessage());
+                close();
+            }
         }
+    
     }
 
     /**
