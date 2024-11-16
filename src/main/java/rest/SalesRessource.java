@@ -551,12 +551,8 @@ public class SalesRessource {
     @PUT
     @Path("modifier-vente-terme/{id}")
     public Response modifierventeterme(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        JSONObject json = salesService.modificationVenteCloturee(id, tu);
+
+        JSONObject json = salesService.modificationVenteCloturee(id);
         return Response.ok().entity(json.toString()).build();
     }
 
