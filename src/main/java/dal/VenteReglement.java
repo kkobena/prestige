@@ -67,8 +67,19 @@ public class VenteReglement implements Serializable {
     @Column(name = "amount_non_ca", nullable = false, columnDefinition = "int default 0 ")
     private Integer amountNonCa = 0;
 
+    @Column(name = "montant_verse", columnDefinition = "int default 0 ")
+    private Integer montantVerse = 0;
+
     public String getId() {
         return id;
+    }
+
+    public Integer getMontantVerse() {
+        return montantVerse;
+    }
+
+    public void setMontantVerse(Integer montantVerse) {
+        this.montantVerse = montantVerse;
     }
 
     public Integer getFlagedAmount() {

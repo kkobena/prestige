@@ -114,7 +114,7 @@ public class VenteRessource {
     public Response addRemise(SalesParams params) {
         JSONObject json = new JSONObject();
         try {
-            json = salesService.addRemisse(params);
+            json = salesService.addRemise(params);
 
         } catch (JSONException ex) {
 

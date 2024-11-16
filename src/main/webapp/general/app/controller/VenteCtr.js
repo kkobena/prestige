@@ -812,8 +812,8 @@ Ext.define('testextjs.controller.VenteCtr', {
         remiseCombo.getStore().loadData(record.get('remises'));
         remiseCombo.focus(false, 100);
     },
+    
     onComputeNet: function () {
-
         const me = this;
         const typeVente = me.getTypeVenteCombo().getValue();
         if (typeVente === '1') {
@@ -1071,21 +1071,20 @@ Ext.define('testextjs.controller.VenteCtr', {
                         }
                     }
 
-//
                 }
             }
         }
     },
 
     refresh: function () {
-        var me = this;
-        var vente = me.getCurrent();
-        var venteId = null;
+        const me = this;
+        let vente = me.getCurrent();
+        let venteId = null;
         if (vente) {
             venteId = vente.lgPREENREGISTREMENTID;
         }
-        var query = me.getQueryField().getValue();
-        var grid = me.getVnogrid();
+        let query = me.getQueryField().getValue();
+        let grid = me.getVnogrid();
         grid.getStore()
                 .load(
                         {
@@ -1103,8 +1102,8 @@ Ext.define('testextjs.controller.VenteCtr', {
                 );
     },
     addVenteVno: function (data, url, field, comboxProduit) {
-        var me = this;
-        var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        const me = this;
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -1112,7 +1111,7 @@ Ext.define('testextjs.controller.VenteCtr', {
             params: Ext.JSON.encode(data),
             success: function (response, options) {
                 progress.hide();
-                var result = Ext.JSON.decode(response.responseText, true);
+                const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
                     me.updateStockField(0);
                     me.getVnoemplacementField().setValue('');
@@ -1181,12 +1180,12 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
     },
     showNetPaidVno: function () {
-        var me = this;
-        var vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
+        const me = this;
+        let vente = me.getCurrent(), remiseId = me.getVnoremise().getValue();
         if (vente) {
-            var venteId = vente.lgPREENREGISTREMENTID;
-            var data = {"remiseId": remiseId, "venteId": venteId, "checkUg": me.getCheckUg()};
-            var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+            let venteId = vente.lgPREENREGISTREMENTID;
+            let data = {"remiseId": remiseId, "venteId": venteId, "checkUg": me.getCheckUg()};
+            let progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -1194,11 +1193,11 @@ Ext.define('testextjs.controller.VenteCtr', {
                 params: Ext.JSON.encode(data),
                 success: function (response, options) {
                     progress.hide();
-                    var result = Ext.JSON.decode(response.responseText, true);
+                    const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         me.netAmountToPay = result.data;
                         me.toRecalculate = false;
-                        var montantNet = me.getNetAmountToPay().montantNet;
+                        let montantNet = me.getNetAmountToPay().montantNet;
                         me.getMontantNet().setValue(me.getNetAmountToPay().montantNet);
                         me.getVnomontantRemise().setValue(me.getNetAmountToPay().remise);
                         me.handleMontantField(montantNet);
@@ -1548,6 +1547,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 params: Ext.JSON.encode(data),
                 success: function (response, options) {
                     progress.hide();
+                     me.toRecalculate = true;
                     const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         me.getVnoproduitCombo()
@@ -2041,10 +2041,15 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
 
     },
-    updateComboxFields: function (lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, typeRemiseId, lgREMISEID) {
+    updateComboxFields: function (lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, typeReglementId, lgREMISEID) {
         const me = this;
         me.getVnotypeReglement().getStore().load(function (records, operation, success) {
-            me.getVnotypeReglement().setValue('1');
+            if (typeReglementId) {
+                me.getVnotypeReglement().setValue(typeReglementId);
+            } else {
+                me.getVnotypeReglement().setValue('1');
+            }
+
         });
         let _typeVenteId = (lgTYPEVENTEID ? lgTYPEVENTEID : '1');
         let _natureVenteId = (lgNATUREVENTEID ? lgNATUREVENTEID : '1');
@@ -2107,6 +2112,22 @@ Ext.define('testextjs.controller.VenteCtr', {
         }
 
     },
+    getTypeReglementToDisplay: function (reglements) {
+        if (reglements && reglements.length > 0) {
+            if (reglements.length === 1) {
+                return reglements[0].typeReglement;
+            } else {
+                const hasCach = reglements.find((e) => e.typeReglement === "1");
+                if (hasCach) {
+                    return '1';
+                } else {
+                    return reglements[0].typeReglement;
+                }
+            }
+        } else {
+            return '1';
+        }
+    },
     loadVenteData: function (venteId) {
         const me = this;
         Ext.Ajax.request({
@@ -2120,14 +2141,15 @@ Ext.define('testextjs.controller.VenteCtr', {
                             lgUSERVENDEURID = record.lgUSERVENDEURID;
                     let lgNATUREVENTEID = record.lgNATUREVENTEID, intPRICEREMISE = record.intPRICEREMISE,
                             intPRICE = record.intPRICE,
-                            typeRemiseId = record.typeRemiseId, ayantDroit = record.ayantDroit, client = record.client;
+                            ayantDroit = record.ayantDroit, client = record.client;
+                    const reglements = record.reglements;
                     me.current = {
                         'intPRICE': record.intPRICE,
                         'lgPREENREGISTREMENTID': record.lgPREENREGISTREMENTID
                     };
                     me.netAmountToPay = null;
                     me.ayantDroit = ayantDroit;
-                    me.updateComboxFields(lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, typeRemiseId, lgREMISEID);
+                    me.updateComboxFields(lgTYPEVENTEID, lgNATUREVENTEID, lgUSERVENDEURID, me.getTypeReglementToDisplay(reglements), lgREMISEID);
                     me.updateAmountFields((parseInt(intPRICE) - parseInt(intPRICEREMISE)), intPRICEREMISE, intPRICE);
                     if (lgTYPEVENTEID === '2' || lgTYPEVENTEID === '3') {
                         me.loadClientAssurance(client, lgTYPEVENTEID, ayantDroit);
@@ -2137,7 +2159,6 @@ Ext.define('testextjs.controller.VenteCtr', {
                         me.updateClientLambdInfos();
                         me.showAndHideInfosStandardClient(true);
                     }
-
                     me.refresh();
 
 

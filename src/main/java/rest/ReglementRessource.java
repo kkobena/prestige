@@ -104,13 +104,9 @@ public class ReglementRessource {
     public Response listeReglementDifferes(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "clientId") String clientId)
             throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject jsono = reglementService.reglementsDifferes(LocalDate.parse(dtStart), LocalDate.parse(dtEnd), true,
-                tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), clientId);
+                clientId);
         return Response.ok().entity(jsono.toString()).build();
     }
 
