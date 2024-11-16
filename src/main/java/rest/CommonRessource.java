@@ -250,7 +250,8 @@ public class CommonRessource {
             @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "criteria") int criteria) throws JSONException {
-        LocalDate dtSt = LocalDate.now(), dtEd = dtSt;
+        LocalDate dtSt = LocalDate.now();
+        LocalDate dtEd = dtSt;
         if (dtStart != null && !"".equals(dtStart)) {
             dtSt = LocalDate.parse(dtStart);
         }

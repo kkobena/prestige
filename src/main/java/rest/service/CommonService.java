@@ -32,7 +32,6 @@ import org.json.JSONObject;
  * @author Kobena
  */
 @Local
-
 public interface CommonService {
 
     List<ReglementDTO> findReglements();

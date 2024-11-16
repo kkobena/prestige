@@ -166,19 +166,9 @@ public class SalesRessource {
     @POST
     @Path("remise")
     public Response addRemise(SalesParams params) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        JSONObject json = new JSONObject();
-        try {
-            json = salesService.addRemisse(params);
 
-        } catch (JSONException ex) {
+        return Response.ok().entity(salesService.addRemise(params).toString()).build();
 
-        }
-        return Response.ok().entity(json.toString()).build();
     }
 
     @POST
@@ -561,12 +551,8 @@ public class SalesRessource {
     @PUT
     @Path("modifier-vente-terme/{id}")
     public Response modifierventeterme(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        JSONObject json = salesService.modificationVenteCloturee(id, tu);
+
+        JSONObject json = salesService.modificationVenteCloturee(id);
         return Response.ok().entity(json.toString()).build();
     }
 

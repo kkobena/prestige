@@ -5,7 +5,6 @@
  */
 package rest.service.impl;
 
-import bll.common.Parameter;
 import commonTasks.dto.AyantDroitDTO;
 import commonTasks.dto.ClientDTO;
 import commonTasks.dto.ClotureVenteParams;
@@ -81,6 +80,7 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -88,9 +88,9 @@ import org.json.JSONObject;
 import rest.service.CaisseService;
 import rest.service.SalesStatsService;
 import rest.service.SuggestionService;
+import rest.service.VenteReglementService;
 import rest.service.dto.builder.VenteDTOBuilder;
-import toolkits.parameters.commonparameter;
-import util.DateConverter;
+import util.Constant;
 
 /**
  *
@@ -107,6 +107,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     CaisseService caisseService;
     @EJB
     private SuggestionService suggestionService;
+    @EJB
+    private VenteReglementService venteReglementService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -170,9 +172,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             cq.select(st.get(TPreenregistrement_.lgPREENREGISTREMENTID));
             List<Predicate> predicates = predicatesVentesAnnulees(params, cb, root, st);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
-            cm.where(cb.and(cb.greaterThan(mv.get(MvtTransaction_.montantPaye), 0),
-                    cb.equal(mv.get(MvtTransaction_.reglement).get(TTypeReglement_.lgTYPEREGLEMENTID),
-                            DateConverter.MODE_ESP),
+            cm.where(cb.and(cb.greaterThan(mv.get(MvtTransaction_.montantPaye), 0), cb
+                    .equal(mv.get(MvtTransaction_.reglement).get(TTypeReglement_.lgTYPEREGLEMENTID), Constant.MODE_ESP),
                     cb.in(mv.get(MvtTransaction_.pkey)).value(cq)));
             Query q = getEntityManager().createQuery(cm);
             Long sumAnnulation = (Long) q.getSingleResult();
@@ -286,11 +287,11 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.pkBrand), "")));
         } else {
             predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.lgNATUREVENTEID).get("lgNATUREVENTEID"),
-                    Parameter.KEY_NATURE_VENTE_DEPOT)));
+                    Constant.KEY_NATURE_VENTE_DEPOT)));
         }
-        if (params.getStatut().equals(DateConverter.ALL)) {
-            predicates.add(cb.or(cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_PROCESS),
-                    cb.equal(st.get(TPreenregistrement_.strSTATUT), DateConverter.STATUT_PENDING)));
+        if (params.getStatut().equals(Constant.ALL)) {
+            predicates.add(cb.or(cb.equal(st.get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_PROGRESS),
+                    cb.equal(st.get(TPreenregistrement_.strSTATUT), Constant.STATUT_PENDING)));
         } else {
 
             predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), params.getStatut())));
@@ -571,6 +572,16 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         VenteDTO data = new VenteDTO(p, venteTps,
                 (p.getAyantDroit() != null ? new AyantDroitDTO(p.getAyantDroit()) : null), o);
+        if (CollectionUtils.isNotEmpty(p.getVenteReglements())) {
+            data.setReglements(this.venteReglementService.buildFromEntities(p.getVenteReglements()));
+        } else {
+            if (StringUtils.isNotEmpty(p.getLgPARENTID())) {
+                data.setReglements(
+                        this.venteReglementService.buildFromEntities(findById(p.getLgPARENTID()).getVenteReglements()));
+            }
+
+        }
+
         json.put("success", true).put("data", new JSONObject(data));
         return json;
     }
@@ -677,7 +688,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                             params.getDtEnd().toString() + " " + params.gethEnd().toString().concat(":59"),
                             formatter)));
             predicates.add(btw);
-            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed)));
+            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_CLOSED)));
             if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
                 predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
             }
@@ -703,7 +714,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                         st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"),
                         te.getLgEMPLACEMENTID())));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -752,9 +763,6 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         } else {
             datas = tvasRapport(params);
         }
-
-        // List<TvaDTO> datas = effectivesSaless(LocalDate.parse(params.getDtStart()),
-        // LocalDate.parse(params.getDtEnd()), true, params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         json.put("total", datas.size());
         json.put("data", new JSONArray(datas));
         return json;
@@ -769,7 +777,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             return query.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -788,7 +796,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             query.setParameter("typeVente", venteType);
             return query.getResultList();
         } catch (Exception e) {
@@ -807,7 +815,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             return query.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -827,7 +835,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
             query.setParameter("typeVente", venteType);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             return query.getSingleResult();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -948,8 +956,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     @Override
     public TPreenregistrement findOneById(String venteId) {
         try {
-            TPreenregistrement tp = getEntityManager().find(TPreenregistrement.class, venteId);
-            return tp;
+            return getEntityManager().find(TPreenregistrement.class, venteId);
+
         } catch (Exception e) {
             return null;
         }
@@ -993,7 +1001,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
         return new TicketDTO(p, findByParent(venteId).stream().map(VenteDetailsDTO::new).collect(Collectors.toList()),
                 findByVente(venteId),
-                (p.getStrTYPEVENTE().equals(DateConverter.VENTE_ASSURANCE) ? findClientTiersPayents(venteId).stream()
+                (p.getStrTYPEVENTE().equals(Constant.VENTE_ASSURANCE) ? findClientTiersPayents(venteId).stream()
                         .map(TiersPayantParams::new).collect(Collectors.toList()) : Collections.emptyList()),
                 (!StringUtils.isEmpty(p.getPkBrand()) ? findEmplacementById(p.getPkBrand()) : null));
     }
@@ -1004,7 +1012,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 findByParent(p.getLgPREENREGISTREMENTID())
                         .stream().map(VenteDetailsDTO::new).collect(Collectors.toList()),
                 findByVente(p.getLgPREENREGISTREMENTID()),
-                (p.getStrTYPEVENTE().equals(DateConverter.VENTE_ASSURANCE)
+                (p.getStrTYPEVENTE().equals(Constant.VENTE_ASSURANCE)
                         ? findClientTiersPayents(p.getLgPREENREGISTREMENTID()).stream().map(TiersPayantParams::new)
                                 .collect(Collectors.toList())
                         : Collections.emptyList()),
@@ -1079,7 +1087,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Predicate btw = cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrement_.dtUPDATED)),
                     java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd));
             predicates.add(btw);
-            predicates.add(cb.equal(root.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed));
+            predicates.add(cb.equal(root.get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_CLOSED));
 
             if (!StringUtils.isEmpty(medecinId)) {
                 predicates.add(cb.equal(root.get(TPreenregistrement_.medecin).get(Medecin_.id), medecinId));
@@ -1237,28 +1245,28 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         predicates.add(cb.equal(st.get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmplacementId));
         if (!StringUtils.isEmpty(param.getTypeTransaction())) {
             switch (param.getTypeTransaction()) {
-            case Parameter.LESS:
+            case Constant.LESS:
                 predicates.add(cb.lessThan(jf.get(TFamille_.intSEUILMIN), param.getNbre()));
 
                 break;
-            case Parameter.EQUAL:
+            case Constant.EQUAL:
                 predicates.add(cb.equal(jf.get(TFamille_.intSEUILMIN), param.getNbre()));
 
                 break;
-            case Parameter.SEUIL:
+            case Constant.SEUIL:
                 predicates.add(
                         cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), jf.get(TFamille_.intSEUILMIN)));
 
                 break;
-            case Parameter.MORE:
+            case Constant.MORE:
                 predicates.add(cb.greaterThan(jf.get(TFamille_.intSEUILMIN), param.getNbre()));
 
                 break;
-            case Parameter.MOREOREQUAL:
+            case Constant.MOREOREQUAL:
                 predicates.add(cb.greaterThanOrEqualTo(jf.get(TFamille_.intSEUILMIN), param.getNbre()));
 
                 break;
-            case Parameter.LESSOREQUAL:
+            case Constant.LESSOREQUAL:
                 predicates.add(cb.lessThanOrEqualTo(jf.get(TFamille_.intSEUILMIN), param.getNbre()));
 
                 break;
@@ -1268,15 +1276,15 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         if (!StringUtils.isEmpty(param.getPrixachatFiltre())) {
             switch (param.getPrixachatFiltre()) {
-            case Parameter.LESS:
+            case Constant.LESS:
                 predicates.add(cb.lessThan(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
 
                 break;
-            case Parameter.EQUAL:
+            case Constant.EQUAL:
                 predicates.add(cb.equal(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
 
                 break;
-            case Parameter.MORE:
+            case Constant.MORE:
                 predicates.add(cb.greaterThan(jf.get(TFamille_.intPRICE), jf.get(TFamille_.intPAF)));
 
                 break;
@@ -1286,26 +1294,26 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         if (!StringUtils.isEmpty(param.getStockFiltre()) && param.getStock() != null) {
             switch (param.getStockFiltre()) {
-            case Parameter.LESS:
+            case Constant.LESS:
                 predicates.add(cb.lessThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
 
                 break;
-            case Parameter.EQUAL:
+            case Constant.EQUAL:
                 predicates.add(cb.equal(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
 
                 break;
-            case Parameter.DIFF:
+            case Constant.DIFF:
                 predicates.add(cb.notEqual(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
 
                 break;
-            case Parameter.MORE:
+            case Constant.MORE:
                 predicates.add(cb.greaterThan(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
 
                 break;
-            case Parameter.MOREOREQUAL:
+            case Constant.MOREOREQUAL:
                 predicates.add(cb.greaterThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
                 break;
-            case Parameter.LESSOREQUAL:
+            case Constant.LESSOREQUAL:
                 predicates.add(cb.lessThanOrEqualTo(st.get(TFamilleStock_.intNUMBERAVAILABLE), param.getStock()));
 
                 break;
@@ -1316,27 +1324,27 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
         if (!StringUtils.isEmpty(param.getStockFiltre()) && param.getQteVendu() != null) {
             switch (param.getStockFiltre()) {
-            case Parameter.LESS:
+            case Constant.LESS:
                 predicates.add(cb.lessThan(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
 
                 break;
-            case Parameter.EQUAL:
+            case Constant.EQUAL:
                 predicates.add(cb.equal(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
 
                 break;
-            case Parameter.DIFF:
+            case Constant.DIFF:
                 predicates.add(cb.notEqual(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
 
                 break;
-            case Parameter.MORE:
+            case Constant.MORE:
                 predicates.add(cb.greaterThan(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
 
                 break;
-            case Parameter.MOREOREQUAL:
+            case Constant.MOREOREQUAL:
                 predicates.add(
                         cb.greaterThanOrEqualTo(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
                 break;
-            case Parameter.LESSOREQUAL:
+            case Constant.LESSOREQUAL:
                 predicates.add(
                         cb.lessThanOrEqualTo(root.get(TPreenregistrementDetail_.intQUANTITY), param.getQteVendu()));
 
@@ -1370,7 +1378,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     root.get(TPreenregistrementDetail_.intPRICE), jp.get(TPreenregistrement_.strREFTICKET)))
                     .orderBy(cb.asc(jp.get(TPreenregistrement_.dtUPDATED)));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
                 q.setFirstResult(params.getStart());
@@ -1724,7 +1732,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             return query.getSingleResult();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -1739,7 +1747,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         try {
             long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()),
                     LocalDate.parse(params.getDtEnd()), params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(),
-                    TypeTransaction.VENTE_COMPTANT, DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
+                    TypeTransaction.VENTE_COMPTANT, Constant.MODE_ESP, Constant.MVT_REGLE_VNO);
 
             List<HMvtProduit> details = donneesTvas(LocalDate.parse(params.getDtStart()),
                     LocalDate.parse(params.getDtEnd()), true,
@@ -1822,7 +1830,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             return query.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -1862,7 +1870,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             long montant = caisseService.montantAccount(LocalDate.parse(params.getDtStart()),
                     LocalDate.parse(params.getDtEnd()), true,
                     params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), TypeTransaction.VENTE_COMPTANT,
-                    DateConverter.MODE_ESP, DateConverter.MVT_REGLE_VNO);
+                    Constant.MODE_ESP, Constant.MVT_REGLE_VNO);
             List<TvaDTO> details = donneesTvas2(LocalDate.parse(params.getDtStart()),
                     LocalDate.parse(params.getDtEnd()), true,
                     params.getOperateur().getLgEMPLACEMENTID().getLgEMPLACEMENTID());
@@ -1931,7 +1939,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             query.setParameter("typeVente", venteType);
             return query.getResultList();
         } catch (Exception e) {
@@ -1981,7 +1989,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             query.setParameter("typeVente", venteType);
             return query.getResultList();
         } catch (Exception e) {
@@ -2020,7 +2028,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             query.setParameter("dtEnd", dtEnd);
             query.setParameter("empl", emplacementId);
             query.setParameter("checked", checked);
-            query.setParameter("categ", Arrays.asList(DateConverter.VENTE, DateConverter.ANNULATION_DE_VENTE));
+            query.setParameter("categ", Arrays.asList(Constant.VENTE, Constant.ANNULATION_DE_VENTE));
             return query.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -2060,7 +2068,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
         }
 
-        predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), commonparameter.statut_is_Closed));
+        predicates.add(cb.equal(st.get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_CLOSED));
         if (StringUtils.isNoneEmpty(params.getTypeVenteId())) {
             predicates.add(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId()));
         }

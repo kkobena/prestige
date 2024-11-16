@@ -6,6 +6,7 @@ package commonTasks.dto;
  */
 public class VenteReglementReportDTO {
 
+    private String typeReglementLibelle;
     private String typeReglement;
     private String typeVente;
     private String libelle;
@@ -15,12 +16,21 @@ public class VenteReglementReportDTO {
     private long ugNetAmount;
     private long ugTtcAmount;
     private long amountNonCa;
+    private int montantVerse;
 
     public VenteReglementReportDTO() {
     }
 
     public String getTypeVente() {
         return typeVente;
+    }
+
+    public String getTypeReglementLibelle() {
+        return typeReglementLibelle;
+    }
+
+    public void setTypeReglementLibelle(String typeReglementLibelle) {
+        this.typeReglementLibelle = typeReglementLibelle;
     }
 
     public long getFlagedAmount() {
@@ -85,6 +95,14 @@ public class VenteReglementReportDTO {
 
     public long getAmountNonCa() {
         return amountNonCa;
+    }
+
+    public int getMontantVerse() {
+        return montantVerse;
+    }
+
+    public void setMontantVerse(int montantVerse) {
+        this.montantVerse = montantVerse;
     }
 
     public void setAmountNonCa(long amountNonCa) {

@@ -22,6 +22,7 @@ import rest.service.dto.UpdateVenteParamDTO;
 // @Local
 // @Remote
 public interface SalesService {
+
     JSONObject annulerVente(TUser ooTUser, String id);
 
     JSONObject createPreVente(SalesParams salesParams);
@@ -54,7 +55,7 @@ public interface SalesService {
 
     JSONObject shownetpayVno(TPreenregistrement p) throws JSONException;
 
-    JSONObject addRemisse(SalesParams params) throws JSONException;
+    JSONObject addRemise(SalesParams params);
 
     JSONObject faireDevis(SalesParams params) throws JSONException;
 
@@ -90,7 +91,7 @@ public interface SalesService {
 
     JSONObject mettreAjourDonneesClientVenteExistante(String venteId, SalesParams params) throws JSONException;
 
-    JSONObject modificationVenteCloturee(String venteId, TUser u) throws JSONException;
+    JSONObject modificationVenteCloturee(String venteId);
 
     JSONObject modificationVentetierpayantprincipal(String venteId, ClotureVenteParams params) throws JSONException;
 
