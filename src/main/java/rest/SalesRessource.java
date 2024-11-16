@@ -35,7 +35,6 @@ import rest.service.SmsService;
 import rest.service.dto.UpdateVenteParamDTO;
 import util.CommonUtils;
 
-import util.DateConverter;
 import util.Constant;
 
 /**
@@ -74,13 +73,6 @@ public class SalesRessource {
     @POST
     @Path("ticket/vno/{id}")
     public Response getTicketById(@PathParam("id") String id) throws JSONException {
-
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-
         JSONObject json = generateTicketService.lunchPrinterForTicket(id);
         return Response.ok().entity(json.toString()).build();
     }
@@ -123,7 +115,7 @@ public class SalesRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUserId(tu);
-        params.setStatut(params.isPrevente() ? DateConverter.STATUT_PENDING : DateConverter.STATUT_PROCESS);
+        params.setStatut(params.isPrevente() ? Constant.STATUT_PENDING : Constant.STATUT_IS_PROGRESS);
         JSONObject json = salesService.createPreVente(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -137,7 +129,7 @@ public class SalesRessource {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         params.setUserId(tu);
-        params.setStatut(params.isPrevente() ? DateConverter.STATUT_PENDING : DateConverter.STATUT_PROCESS);
+        params.setStatut(params.isPrevente() ? Constant.STATUT_PENDING : Constant.STATUT_IS_PROGRESS);
         JSONObject json = salesService.createPreVenteVo(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -187,11 +179,7 @@ public class SalesRessource {
     @POST
     @Path("net/vno")
     public Response netPayer(SalesParams params) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+       
         JSONObject json = salesService.shownetpayVno(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -199,11 +187,7 @@ public class SalesRessource {
     @POST
     @Path("net/assurance")
     public Response netPayerAssurance(SalesParams params) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+       
         JSONObject json = salesService.computeVONet(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -211,12 +195,7 @@ public class SalesRessource {
     @POST
     @Path("cloturer/assurance")
     public Response cloturerAssurance(ClotureVenteParams clotureVenteParams) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        clotureVenteParams.setUserId(tu);
+       
         JSONObject json = salesService.updateVenteClotureAssurance(clotureVenteParams);
         return Response.ok().entity(json.toString()).build();
     }

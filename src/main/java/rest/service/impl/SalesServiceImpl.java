@@ -1652,12 +1652,12 @@ public class SalesServiceImpl implements SalesService {
         return recette;
     }
 
-    private TCompteClient findByClientId(String id, EntityManager emg) {
+    private TCompteClient findByClientId(String id) {
         if (id == null || "".equals(id)) {
             return null;
         }
         try {
-            TypedQuery<TCompteClient> tq = emg.createQuery(
+            TypedQuery<TCompteClient> tq = em.createQuery(
                     "SELECT o FROM TCompteClient o WHERE o.lgCLIENTID.lgCLIENTID=?1 ", TCompteClient.class);
             tq.setParameter(1, id);
             tq.setMaxResults(1);
@@ -1692,7 +1692,7 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         TPreenregistrement tp = null;
         try {
-            final TUser tUser = clotureVenteParams.getUserId();
+            final TUser tUser = this.sessionHelperService.getCurrentUser();
             if (!checkResumeCaisse(tUser, emg).isPresent()) {
                 json.put("success", false);
                 json.put("msg", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à validation");
@@ -1727,7 +1727,7 @@ public class SalesServiceImpl implements SalesService {
             boolean isAvoir = checkAvoir(lstTPreenregistrementDetail);
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId());
-            TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
+            TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId());
             Optional<TParameters> takeInAcount = findParamettre("KEY_TAKE_INTO_ACCOUNT");
             TClient client = findClientById(clotureVenteParams.getClientId()).orElse(null);
 
@@ -1775,7 +1775,7 @@ public class SalesServiceImpl implements SalesService {
                 updateDiffere(clotureVenteParams, tp, compteClient);
             }
             TTypeVente oTTypeVente = typeVenteFromId(clotureVenteParams.getTypeVenteId());
-            TReglement tReglement = createTReglement(clotureVenteParams.getUserId(), modeReglement, "",
+            TReglement tReglement = createTReglement(tUser, modeReglement, "",
                     tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getBanque(), clotureVenteParams.getLieux(),
                     clotureVenteParams.getCommentaire(), STATUT_IS_CLOSED, "");
             tp.setBWITHOUTBON(clotureVenteParams.isSansBon());
@@ -1795,7 +1795,7 @@ public class SalesServiceImpl implements SalesService {
             }
 
             tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()),
-                    clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
+                    tUser.getLgEMPLACEMENTID()).getReference());
 
             boolean keyAccount = test.test(takeInAcount);
             if (keyAccount) {
@@ -1804,7 +1804,7 @@ public class SalesServiceImpl implements SalesService {
             if (amount > 0) {
 
                 addRecette(clotureVenteParams.getMontantPaye(), VENTE_ASSURANCE, tp.getLgPREENREGISTREMENTID(),
-                        clotureVenteParams.getUserId(), emg);
+                        tUser, emg);
             }
             TTypeReglement typeReglement = findById(clotureVenteParams.getTypeRegleId());
             MvtTransaction mvtTransaction = addTransaction(tUser, tp, montant, amount,
@@ -1974,7 +1974,7 @@ public class SalesServiceImpl implements SalesService {
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId());
             Integer amount = montant - tp.getIntPRICEREMISE();
-            TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
+            TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId());
             Optional<TParameters> toInAccount = findParamettre("KEY_TAKE_INTO_ACCOUNT");
             TClient client = findClientById(clotureVenteParams.getClientId()).orElse(null);
             if (client != null) {
@@ -2803,7 +2803,7 @@ public class SalesServiceImpl implements SalesService {
             String statut = statutDiff(clotureVenteParams.getTypeRegleId());
             TUser vendeur = userFromId(clotureVenteParams.getUserVendeurId());
             Integer amount = montant - tp.getIntPRICEREMISE();
-            TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId(), emg);
+            TCompteClient compteClient = findByClientId(clotureVenteParams.getClientId());
             TEmplacement emplacement = emg.find(TEmplacement.class, tp.getPkBrand());
             tp.setStrFIRSTNAMECUSTOMER(emplacement.getStrFIRSTNAME());
             tp.setStrLASTNAMECUSTOMER(emplacement.getStrLASTNAME());
