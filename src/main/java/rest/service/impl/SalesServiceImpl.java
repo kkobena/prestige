@@ -57,7 +57,6 @@ import dal.TTypeRecette;
 import dal.TTypeReglement;
 import dal.TTypeVente;
 import dal.TUser;
-import dal.TWorkflowRemiseArticle;
 import dal.Typemvtproduit;
 import dal.VenteExclus;
 import dal.VenteReglement;
@@ -160,6 +159,7 @@ public class SalesServiceImpl implements SalesService {
     private static Boolean KEY_TAKE_INTO_ACCOUNT;
     @EJB
     private RemiseService remiseService;
+    @EJB
     private SessionHelperService sessionHelperService;
 
     private final java.util.function.Predicate<Optional<TParameters>> test = e -> {
@@ -2354,6 +2354,7 @@ public class SalesServiceImpl implements SalesService {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
+            // this.remiseService.addRemise(params);
             if (!params.isCheckUg()) {
                 MontantAPaye montantAPaye;
                 TPreenregistrement p = emg.find(TPreenregistrement.class, params.getVenteId());
@@ -2425,7 +2426,7 @@ public class SalesServiceImpl implements SalesService {
             int remise = 0;
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
-                TGrilleRemise grilleRemise = remiseService.grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(),
+                TGrilleRemise grilleRemise = remiseService.getGrilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(),
                         famille, oTRemise.getLgREMISEID());
                 if (grilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * grilleRemise.getDblTAUX()) / 100);
@@ -3977,6 +3978,8 @@ public class SalesServiceImpl implements SalesService {
                 p.setIntPRICE(montantAPaye.getMontant());
                 p.setIntACCOUNT(montantAPaye.getMontantAccount());
                 p.setIntPRICEOTHER(montantAPaye.getMontant());
+                p.setIntPRICEREMISE(0);
+                p.setIntREMISEPARA(0);
                 json.put("success", true).put("msg", "Opération effectuée avec success");
                 json.put("data", new JSONObject(montantAPaye));
 
@@ -4019,7 +4022,7 @@ public class SalesServiceImpl implements SalesService {
             Integer remise = 0;
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
-                TGrilleRemise oGrilleRemise = remiseService.grilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(),
+                TGrilleRemise oGrilleRemise = remiseService.getGrilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(),
                         famille, oTRemise.getLgREMISEID());
                 if (oGrilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * oGrilleRemise.getDblTAUX()) / 100);

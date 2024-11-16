@@ -16,6 +16,6 @@ public interface RemiseService {
 
     JSONObject addRemise(SalesParams params);
 
-    TGrilleRemise grilleRemiseRemiseFromWorkflow(TPreenregistrement preenregistrement, TFamille oFamille,
+    TGrilleRemise getGrilleRemiseRemiseFromWorkflow(TPreenregistrement preenregistrement, TFamille oFamille,
             String remiseId);
 }

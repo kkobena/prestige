@@ -1,8 +1,6 @@
-
 package rest.service.impl;
 
 import commonTasks.dto.SalesParams;
-import dal.MvtTransaction;
 import dal.TFamille;
 import dal.TGrilleRemise;
 import dal.TPreenregistrement;
@@ -10,7 +8,6 @@ import dal.TPreenregistrementDetail;
 import dal.TRemise;
 import dal.TWorkflowRemiseArticle;
 import java.util.Collection;
-import java.util.Optional;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -39,12 +36,14 @@ public class RemiseServiceImpl implements RemiseService {
         JSONObject json = new JSONObject();
 
         try {
+          
             TPreenregistrement preenregistrement = em.find(TPreenregistrement.class, params.getVenteId());
             preenregistrement.setLgREMISEID(params.getRemiseId());
             removeRemise(preenregistrement, findTRemise(params.getRemiseId()));
             em.merge(preenregistrement);
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
+          
             json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
         }
         return json;
@@ -52,6 +51,9 @@ public class RemiseServiceImpl implements RemiseService {
     }
 
     private TRemise findTRemise(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
         try {
             return em.find(TRemise.class, id);
         } catch (Exception e) {
@@ -64,6 +66,7 @@ public class RemiseServiceImpl implements RemiseService {
         preenregistrement.setRemise(newRemise);
 
         if (oldRemise != null) {
+           
             preenregistrement.setIntPRICEREMISE(0);
             preenregistrement.setIntREMISEPARA(0);
             Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection = preenregistrement
@@ -74,23 +77,7 @@ public class RemiseServiceImpl implements RemiseService {
                     em.merge(it);
                 });
             }
-            getTransaction(preenregistrement.getLgPREENREGISTREMENTID()).ifPresent(mvt -> {
-                mvt.setMontantRemise(0);
-                em.merge(mvt);
-            });
-        }
 
-    }
-
-    private Optional<MvtTransaction> getTransaction(String idVente) {
-        try {
-            TypedQuery<MvtTransaction> q = em
-                    .createQuery("SELECT o FROM MvtTransaction o WHERE o.preenregistrement.lgPREENREGISTREMENTID =?1 ", MvtTransaction.class)
-                    .setParameter(1, idVente);
-            return Optional.ofNullable(q.getSingleResult());
-
-        } catch (Exception e) {
-            return Optional.empty();
         }
 
     }
@@ -113,7 +100,7 @@ public class RemiseServiceImpl implements RemiseService {
     }
 
     @Override
-    public TGrilleRemise grilleRemiseRemiseFromWorkflow(TPreenregistrement preenregistrement, TFamille oFamille,
+    public TGrilleRemise getGrilleRemiseRemiseFromWorkflow(TPreenregistrement preenregistrement, TFamille oFamille,
             String remiseId) {
         int grilleRemise;
         TGrilleRemise oTGrilleRemise;
