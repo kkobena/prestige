@@ -22,7 +22,6 @@ import rest.service.dto.DossierReglementDTO;
  * @author DICI
  */
 @Local
-// @Remote
 public interface ReglementService {
 
     JSONObject listeDifferesData(Params params, boolean pairclient) throws JSONException;
@@ -33,8 +32,8 @@ public interface ReglementService {
 
     JSONObject reglerDiffere(ClotureVenteParams clotureVenteParams) throws JSONException;
 
-    JSONObject reglementsDifferes(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
-            String clientId) throws JSONException;
+    JSONObject reglementsDifferes(LocalDate dtStart, LocalDate dtEnd, boolean checked, String clientId)
+            throws JSONException;
 
     List<DelayedDTO> reglementsDifferesDto(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
             String clientId);

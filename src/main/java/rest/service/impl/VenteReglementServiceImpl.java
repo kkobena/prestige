@@ -1,6 +1,7 @@
 package rest.service.impl;
 
 import commonTasks.dto.VenteReglementDTO;
+import commonTasks.dto.VenteReglementReportDTO;
 import dal.MvtTransaction;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
@@ -8,10 +9,13 @@ import dal.TTypeReglement;
 import dal.VenteReglement;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import org.apache.commons.collections.CollectionUtils;
 import rest.service.VenteReglementService;
 import util.Constant;
 import util.DateCommonUtils;
@@ -50,6 +54,12 @@ public class VenteReglementServiceImpl implements VenteReglementService {
         venteReglement.setUgAmount(mt.getMontantttcug());
         venteReglement.setUgNetAmount(mt.getMontantnetug());
         venteReglement.setAmountNonCa(computeSumOfExclusVenteItemFromCa(preenregistrement));
+        if (typeReglement.getLgTYPEREGLEMENTID().equals("1")) {
+            venteReglement.setMontantVerse(mt.getMontantVerse());
+        } else {
+            venteReglement.setMontantVerse(venteReglement.getMontantAttentu());
+        }
+
         em.persist(venteReglement);
     }
 
@@ -80,6 +90,7 @@ public class VenteReglementServiceImpl implements VenteReglementService {
         venteReglement.setMontantAttentu(p.getMontantAttentu());
         venteReglement.setUgAmount(p.getMontantTttcug());
         venteReglement.setUgNetAmount(p.getMontantnetug());
+        venteReglement.setMontantVerse(p.getMontant());
         this.createNew(venteReglement);
     }
 
@@ -87,5 +98,23 @@ public class VenteReglementServiceImpl implements VenteReglementService {
         return tp.getTPreenregistrementDetailCollection().stream().filter(
                 e -> !e.getBoolACCOUNT() && tp.getLgTYPEVENTEID().getLgTYPEVENTEID().equals(Constant.VENTE_COMPTANT_ID))
                 .mapToInt(TPreenregistrementDetail::getIntPRICE).sum();
+    }
+
+    @Override
+    public List<VenteReglementReportDTO> buildFromEntities(List<VenteReglement> reglements) {
+        if (CollectionUtils.isNotEmpty(reglements)) {
+            return reglements.stream().map(e -> {
+                TTypeReglement tTypeReglement = e.getTypeReglement();
+                VenteReglementReportDTO o = new VenteReglementReportDTO();
+                o.setTypeReglementLibelle(tTypeReglement.getStrDESCRIPTION());
+                o.setTypeReglement(tTypeReglement.getLgTYPEREGLEMENTID());
+                o.setLibelle(o.getTypeReglementLibelle());
+                o.setMontant(e.getMontant());
+                o.setMontantAttentu(e.getMontantAttentu());
+                o.setMontantVerse(Objects.requireNonNullElse(e.getMontantVerse(), 0));
+                return o;
+            }).collect(Collectors.toList());
+        }
+        return List.of();
     }
 }

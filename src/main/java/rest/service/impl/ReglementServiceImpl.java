@@ -26,6 +26,7 @@ import dal.TMotifReglement;
 import dal.TMvtCaisse;
 import dal.TPreenregistrementCompteClient;
 import dal.TPreenregistrementCompteClient_;
+import dal.TPreenregistrement_;
 import dal.TReglement;
 import dal.TResumeCaisse;
 import dal.TTiersPayant;
@@ -72,6 +73,7 @@ import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.ReglementService;
+import rest.service.SessionHelperService;
 import rest.service.TransactionService;
 import rest.service.dto.DossierReglementDTO;
 import util.Constant;
@@ -90,19 +92,21 @@ public class ReglementServiceImpl implements ReglementService {
 
     private static final Logger LOG = Logger.getLogger(ReglementServiceImpl.class.getName());
 
+    @EJB
+    private TransactionService transactionService;
+    @EJB
+    private LogService logService;
+    @EJB
+    private NotificationService notificationService;
+    @EJB
+    private SessionHelperService sessionHelperService;
+
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
     public EntityManager getEmg() {
         return em;
     }
-
-    @EJB
-    TransactionService transactionService;
-    @EJB
-    LogService logService;
-    @EJB
-    NotificationService notificationService;
 
     @Override
     public boolean checkCaisse(TUser ooTUser) {
@@ -167,8 +171,11 @@ public class ReglementServiceImpl implements ReglementService {
             CriteriaQuery<TPreenregistrementCompteClient> cq = cb.createQuery(TPreenregistrementCompteClient.class);
             Root<TPreenregistrementCompteClient> root = cq.from(TPreenregistrementCompteClient.class);
             cq.select(root).orderBy(cb.desc(root.get(TPreenregistrementCompteClient_.dtUPDATED)));
-            predicates.add(cb.and(
-                    cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), DateConverter.STATUT_IS_CLOSED)));
+            predicates.add(
+                    cb.and(cb.equal(root.get(TPreenregistrementCompteClient_.strSTATUT), Constant.STATUT_IS_CLOSED)));
+            predicates.add(cb.and(cb.equal(
+                    root.get(TPreenregistrementCompteClient_.lgPREENREGISTREMENTID).get(TPreenregistrement_.bISCANCEL),
+                    Boolean.FALSE)));
             predicates.add(cb.and(cb.equal(
                     root.get(TPreenregistrementCompteClient_.lgUSERID).get(TUser_.lgEMPLACEMENTID)
                             .get(TEmplacement_.lgEMPLACEMENTID),
@@ -721,7 +728,7 @@ public class ReglementServiceImpl implements ReglementService {
             String emplacementId, String typeMvt) {
         try {
             TypedQuery<MvtTransaction> query = getEmg().createQuery(
-                    "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN ?1 AND ?2 AND o.magasin.lgEMPLACEMENTID=?3 AND o.checked=?4 AND o.tTypeMvtCaisse.lgTYPEMVTCAISSEID=?5 ORDER BY o.createdAt ASC ",
+                    "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN ?1 AND ?2 AND o.magasin.lgEMPLACEMENTID=?3 AND o.checked=?4 AND o.tTypeMvtCaisse.lgTYPEMVTCAISSEID=?5 AND o.preenregistrement.bISCANCEL=FALSE  ORDER BY o.createdAt ASC ",
                     MvtTransaction.class);
             query.setParameter(1, dtStart);
             query.setParameter(2, dtEnd);
@@ -736,9 +743,10 @@ public class ReglementServiceImpl implements ReglementService {
     }
 
     @Override
-    public JSONObject reglementsDifferes(LocalDate dtStart, LocalDate dtEnd, boolean checked, String emplacementId,
-            String clientId) throws JSONException {
-        List<DelayedDTO> list = reglementsDifferesDto(dtStart, dtEnd, checked, emplacementId, clientId);
+    public JSONObject reglementsDifferes(LocalDate dtStart, LocalDate dtEnd, boolean checked, String clientId)
+            throws JSONException {
+        List<DelayedDTO> list = reglementsDifferesDto(dtStart, dtEnd, checked,
+                sessionHelperService.getCurrentUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID(), clientId);
         return new JSONObject().put("total", list.size()).put("data", new JSONArray(list));
     }
 
