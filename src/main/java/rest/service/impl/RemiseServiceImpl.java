@@ -36,14 +36,14 @@ public class RemiseServiceImpl implements RemiseService {
         JSONObject json = new JSONObject();
 
         try {
-          
+
             TPreenregistrement preenregistrement = em.find(TPreenregistrement.class, params.getVenteId());
             preenregistrement.setLgREMISEID(params.getRemiseId());
             removeRemise(preenregistrement, findTRemise(params.getRemiseId()));
             em.merge(preenregistrement);
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
-          
+
             json.put("success", false).put("msg", "Erreur::: L'Opération n'a pas aboutie");
         }
         return json;
@@ -66,7 +66,7 @@ public class RemiseServiceImpl implements RemiseService {
         preenregistrement.setRemise(newRemise);
 
         if (oldRemise != null) {
-           
+
             preenregistrement.setIntPRICEREMISE(0);
             preenregistrement.setIntREMISEPARA(0);
             Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection = preenregistrement

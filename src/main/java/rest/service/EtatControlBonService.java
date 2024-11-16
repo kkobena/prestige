@@ -5,6 +5,7 @@ import javax.ejb.Local;
 import org.json.JSONObject;
 import rest.service.dto.EtatControlAnnuelWrapperDTO;
 import rest.service.dto.EtatControlBon;
+import rest.service.dto.EtatControlBonEditDto;
 
 /**
  *
@@ -25,5 +26,7 @@ public interface EtatControlBonService {
     JSONObject listBonAnnuelView(String groupBy, String dtStart, String dtEnd, String grossisteId, Integer groupeId);
 
     JSONObject etatLastThreeYears();
+
+    JSONObject updateBon(EtatControlBonEditDto bonEdit);
 
 }

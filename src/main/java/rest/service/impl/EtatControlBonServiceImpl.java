@@ -1,11 +1,14 @@
 package rest.service.impl;
 
+import dal.MvtTransaction;
 import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
 import dal.TBonLivraisonDetail_;
 import dal.TBonLivraison_;
 import dal.TFamille_;
+import dal.TGrossiste;
 import dal.TGrossiste_;
+import dal.TOrder;
 import dal.TOrder_;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -40,6 +43,7 @@ import rest.service.dto.EtatAnnuelWrapperDTO;
 import rest.service.dto.EtatControlAnnuelDTO;
 import rest.service.dto.EtatControlAnnuelWrapperDTO;
 import rest.service.dto.EtatControlBon;
+import rest.service.dto.EtatControlBonEditDto;
 import rest.service.dto.builder.EtatControlBonBuilder;
 import util.Constant;
 import util.FunctionUtils;
@@ -292,7 +296,6 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
         EtatAnnuelDTO annuel = new EtatAnnuelDTO();
         annuel.setAnnee(tuple.get("annee", Integer.class));
         int mois = tuple.get("mois", Integer.class);
-        // long montantHtaxe=tuple.get("montantHtaxe", BigDecimal.class).longValue();
         long montantTtc = tuple.get("montantTtc", BigDecimal.class).longValue();
         switch (mois) {
         case 1:
@@ -336,4 +339,67 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
         }
         return annuel;
     }
+
+    @Override
+    public JSONObject updateBon(EtatControlBonEditDto bonEdit) {
+        JSONObject json = new JSONObject();
+        TBonLivraison bonLivraison = getById(bonEdit.getBonId());
+        TGrossiste grossiste = getByNameOrId(bonEdit.getGrossisteId());
+        MvtTransaction mt = getByPkey(bonLivraison.getLgBONLIVRAISONID());
+        TOrder order = bonLivraison.getLgORDERID();
+        order.setLgGROSSISTEID(grossiste);
+
+        long amount = getDetailsAmount(new ArrayList<>(bonLivraison.getTBonLivraisonDetailCollection()));
+        if (bonEdit.getMontantHt() != amount) {
+            json.put("status", 0).put("message",
+                    "Le montant HT saisie est différent du montant HT de la somme des différents articles du BL qui est : "
+                            + amount);
+            return json;
+        }
+        bonLivraison.setDtDATELIVRAISON(java.sql.Date.valueOf(bonEdit.getDateLivraison()));
+        bonLivraison.setIntMHT(bonEdit.getMontantHt());
+        bonLivraison.setIntTVA(bonEdit.getTva());
+        bonLivraison.setIntHTTC(bonEdit.getTva() + bonEdit.getMontantHt());
+        bonLivraison.setStrREFLIVRAISON(bonEdit.getReferenceBon());
+        mt.setGrossiste(grossiste);
+        mt.setReference(bonLivraison.getStrREFLIVRAISON());
+        mt.setMontant(bonLivraison.getIntHTTC());
+        mt.setMontantNet(bonLivraison.getIntMHT());
+        mt.setMontantTva(bonLivraison.getIntTVA());
+        mt.setMontantRestant(bonLivraison.getIntHTTC());
+        mt.setMontantAcc(bonLivraison.getIntMHT());
+
+        em.merge(bonLivraison);
+        em.merge(order);
+        em.merge(mt);
+        return json.put("status", 1).put("message", "Le BL mis à jour avec succès");
+    }
+
+    private TBonLivraison getById(String bonId) {
+        return em.find(TBonLivraison.class, bonId);
+    }
+
+    private TGrossiste getByNameOrId(String nameOrId) {
+        TypedQuery<TGrossiste> q = em.createQuery(
+                "SELECT o FROM TGrossiste o WHERE (o.lgGROSSISTEID=:nameOrId OR o.strLIBELLE=:nameOrId)",
+                TGrossiste.class);
+        q.setParameter("nameOrId", nameOrId.trim());
+        q.setMaxResults(1);
+        return q.getSingleResult();
+    }
+
+    private MvtTransaction getByPkey(String bonId) {
+        TypedQuery<MvtTransaction> q = em.createQuery("SELECT o FROM MvtTransaction o WHERE o.pkey=?1",
+                MvtTransaction.class);
+        q.setParameter(1, bonId);
+        q.setMaxResults(1);
+        return q.getSingleResult();
+    }
+
+    private long getDetailsAmount(List<TBonLivraisonDetail> bonLivraisonDetails) {
+        return bonLivraisonDetails.stream().mapToLong((value) -> {
+            return (value.getIntPAF() * value.getIntQTECMDE());
+        }).sum();
+    }
+
 }
