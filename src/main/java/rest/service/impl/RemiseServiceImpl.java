@@ -1,10 +1,8 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package rest.service.impl;
 
 import commonTasks.dto.SalesParams;
+import dal.MvtTransaction;
 import dal.TFamille;
 import dal.TGrilleRemise;
 import dal.TPreenregistrement;
@@ -12,6 +10,7 @@ import dal.TPreenregistrementDetail;
 import dal.TRemise;
 import dal.TWorkflowRemiseArticle;
 import java.util.Collection;
+import java.util.Optional;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -75,6 +74,23 @@ public class RemiseServiceImpl implements RemiseService {
                     em.merge(it);
                 });
             }
+            getTransaction(preenregistrement.getLgPREENREGISTREMENTID()).ifPresent(mvt -> {
+                mvt.setMontantRemise(0);
+                em.merge(mvt);
+            });
+        }
+
+    }
+
+    private Optional<MvtTransaction> getTransaction(String idVente) {
+        try {
+            TypedQuery<MvtTransaction> q = em
+                    .createQuery("SELECT o FROM MvtTransaction o WHERE o.preenregistrement.lgPREENREGISTREMENTID =?1 ", MvtTransaction.class)
+                    .setParameter(1, idVente);
+            return Optional.ofNullable(q.getSingleResult());
+
+        } catch (Exception e) {
+            return Optional.empty();
         }
 
     }
@@ -96,6 +112,7 @@ public class RemiseServiceImpl implements RemiseService {
         }
     }
 
+    @Override
     public TGrilleRemise grilleRemiseRemiseFromWorkflow(TPreenregistrement preenregistrement, TFamille oFamille,
             String remiseId) {
         int grilleRemise;
