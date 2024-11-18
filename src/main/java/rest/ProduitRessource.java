@@ -31,7 +31,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.MvtProduitService;
 import rest.service.ProduitService;
-import toolkits.parameters.commonparameter;
+import rest.service.dto.CreationProduitDTO;
 import util.DateConverter;
 import util.Constant;
 
@@ -57,7 +57,7 @@ public class ProduitRessource {
             @QueryParam(value = "query") String query) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -65,7 +65,7 @@ public class ProduitRessource {
         body.setLimit(limit);
         body.setStart(start);
         body.setQuery(query);
-        body.setStatut(commonparameter.statut_disable);
+        body.setStatut(Constant.STATUT_DISABLE);
         body.setEmplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         JSONObject jsono = produitService.produitDesactives(body, false);
         return Response.ok().entity(jsono.toString()).build();
@@ -75,7 +75,7 @@ public class ProduitRessource {
     @Path("enable-desactives/{id}")
     public Response activerProduitDesactiver(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -87,7 +87,7 @@ public class ProduitRessource {
     @Path("disable-produit/{id}")
     public Response desactiverProduitDesactiver(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -99,7 +99,7 @@ public class ProduitRessource {
     @Path("remove-desactive/{id}")
     public Response removeProduitDesactiver(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -111,7 +111,7 @@ public class ProduitRessource {
     @Path("validerretourfour")
     public Response validerRetourFournisseur(Params params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -151,7 +151,7 @@ public class ProduitRessource {
     ) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -176,7 +176,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -191,7 +191,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -207,7 +207,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "produitId") String produitId,
             @QueryParam(value = "positif") boolean positif) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -223,7 +223,7 @@ public class ProduitRessource {
             @QueryParam(value = "produitId") String produitId, @QueryParam(value = "positif") boolean positif)
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -238,7 +238,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -253,7 +253,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -268,7 +268,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -284,7 +284,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "produitId") String produitId)
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -299,7 +299,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "produitId") String produitId) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -315,7 +315,7 @@ public class ProduitRessource {
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "produitId") String produitId)
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -330,15 +330,15 @@ public class ProduitRessource {
             @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "lgFAMILLEARTICLEID") String lgFAMILLEARTICLEID,
             @QueryParam(value = "lgGROSSISTEID") String lgGROSSISTEID,
-            @QueryParam(value = "lgZONEGEOID") String lgZONEGEOID, @QueryParam(value = "END") String END,
-            @QueryParam(value = "BEGIN") String BEGIN) throws JSONException {
+            @QueryParam(value = "lgZONEGEOID") String lgZONEGEOID, @QueryParam(value = "END") String end,
+            @QueryParam(value = "BEGIN") String begin) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
         JSONObject jsono = produitService.valorisationStock(mode, LocalDate.parse(dtStart), lgGROSSISTEID,
-                lgFAMILLEARTICLEID, lgZONEGEOID, END, BEGIN, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+                lgFAMILLEARTICLEID, lgZONEGEOID, end, begin, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         jsono.put("user", tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME()).put("dtCREATED",
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
 
@@ -353,7 +353,7 @@ public class ProduitRessource {
             @QueryParam(value = "query") String query, @QueryParam(value = "filtre") String filtre)
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
@@ -363,11 +363,22 @@ public class ProduitRessource {
         if (StringUtils.isEmpty(dtStart)) {
             dtStart = LocalDate.now().toString();
         }
-        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(commonparameter.USER_LIST_PRIVILEGE);
+        List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
         boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, DateConverter.ACTION_DELETE_RETOUR);
         JSONObject json = mvtProduitService.loadetourFournisseur(dtStart, dtEnd, start, limit, fourId, query,
                 asAuthority, filtre);
         return Response.ok().entity(json.toString()).build();
     }
 
+    @POST
+    @Path("create-detail")
+    public Response createProduitDetail(CreationProduitDTO produit) {
+        return Response.ok().entity(produitService.createProduitDetail(produit)).build();
+    }
+
+    @POST
+    @Path("create")
+    public Response createProduit(CreationProduitDTO produit) {
+        return Response.ok().entity(produitService.createProduit(produit)).build();
+    }
 }

@@ -1422,6 +1422,95 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 Ext.MessageBox.alert('Error Message', response.responseText);
             }
         });
+    },
+    
+    onCreateDetailProduit:function(internal_url,str_CODE_REMISE,int_TAUX_MARQUE,int_PRICE_TIPS,int_PRICE,int_DECONDITIONNE){
+        
+        
+          Ext.Ajax.request({
+                url: internal_url,
+                params: {
+                    int_NUMBER_AVAILABLE: Ext.getCmp('int_NUMBER_AVAILABLE').getValue(),
+                    lg_CODE_GESTION_ID: Ext.getCmp('lg_CODE_GESTION_ID').getValue(),
+                    int_STOCK_REAPROVISONEMENT: Ext.getCmp('int_STOCK_REAPROVISONEMENT').getValue(),
+                    lg_GROSSISTE_ID: Ext.getCmp('lg_GROSSISTE_ID').getValue(),
+                    str_CODE_REMISE: str_CODE_REMISE,
+                    dt_Peremtion: Ext.getCmp('dt_Peremtion_new').getSubmitValue(),
+//                lg_REMISE_ID: Ext.getCmp('lg_REMISE_ID').getValue(),
+                    lg_TYPEETIQUETTE_ID: Ext.getCmp('lg_TYPEETIQUETTE_ID').getValue(),
+//                str_CODE_TVA: Ext.getCmp('str_CODE_TVA').getValue(),
+                    int_T: Ext.getCmp('int_T').getValue(),
+                    str_CODE_TAUX_REMBOURSEMENT: Ext.getCmp('str_CODE_TAUX_REMBOURSEMENT').getValue(),
+                    int_QTE_REAPPROVISIONNEMENT: Ext.getCmp('int_QTE_REAPPROVISIONNEMENT').getValue(),
+                    lg_CODE_ACTE_ID: Ext.getCmp('lg_CODE_ACTE_ID').getValue(),
+                    int_TAUX_MARQUE: int_TAUX_MARQUE,
+                    int_PAT: Ext.getCmp('int_PAT').getValue(),
+                    int_PAF: Ext.getCmp('int_PAF').getValue(),
+                    int_PRICE_TIPS: int_PRICE_TIPS,
+                    int_PRICE: int_PRICE,
+                    lg_FAMILLEARTICLE_ID: Ext.getCmp('lg_FAMILLEARTICLE_ID').getValue(),
+                    lg_ZONE_GEO_ID: Ext.getCmp('lg_ZONE_GEO_ID').getValue(),
+                    lg_FABRIQUANT_ID: Ext.getCmp('lg_FABRIQUANT_ID').getValue(),
+                    str_DESCRIPTION: Ext.getCmp('str_DESCRIPTION').getValue(),
+                    int_CIP: Ext.getCmp('int_CIP').getValue(),
+                    int_EAN13: Ext.getCmp('int_EAN13').getValue(),
+                    int_QTEDETAIL: Ext.getCmp('int_QTEDETAIL').getValue(),
+                    lg_CODE_TVA_ID: Ext.getCmp('lg_CODE_TVA_ID').getValue(),
+                    int_SEUIL_RESERVE: Ext.getCmp('int_SEUIL_RESERVE').getValue(),
+                    bool_RESERVE: Ext.getCmp('bool_RESERVE').getValue(),
+                    laboratoireId: Ext.getCmp('laboratoireId').getValue(),
+                    gammeId: Ext.getCmp('gammeId').getValue(),
+                    bool_DECONDITIONNE: int_DECONDITIONNE,
+                    cmu_price: Ext.getCmp('cmu_price').getValue()
+
+                },
+                success: function (response)
+                {
+                    testextjs.app.getController('App').StopWaitingProcess();
+                    var object = Ext.JSON.decode(response.responseText, false);
+                    if (object.success == "0") {
+
+                        Ext.MessageBox.show({
+                            title: 'Message d\'erreur',
+                            width: 320,
+                            msg: object.errors,
+                            buttons: Ext.MessageBox.OK,
+                            icon: Ext.MessageBox.WARNING
+                        });
+                      
+                    } else {
+                        win.close();
+                        Ext.MessageBox.alert('Confirmation', object.errors, function () {
+                            if (Omode === "create" || Omode === "update" || Omode === "decondition") {
+                                if (type == "famillemanager") {
+                                    Me_Workflow = Oview;
+                                    Me_Workflow.onRechClick();
+                                } else if (type == "commande") {
+                                    Ext.getCmp('lgFAMILLEID').setValue(str_DESCRIPTION);
+                                    Ext.getCmp('lgFAMILLEID').getStore().reload();
+                                }
+                            }
+
+                        });
+
+
+                    }
+
+
+
+                },
+                failure: function (response)
+                {
+                    testextjs.app.getController('App').StopWaitingProcess();
+                    Ext.MessageBox.show({
+                        title: 'Message d\'erreur',
+                        width: 320,
+                        msg: response.responseText,
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.WARNING
+                    });
+                }
+            });
     }
 
 

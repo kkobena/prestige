@@ -162,6 +162,11 @@ public final class Constant {
     public static final String SEUIL = "SEUIL";
     public static final String DIFF = "DIFF";
     public static final String KEY_MAX_PRICE_POURCENT_VENTE = "KEY_MAX_PRICE_POURCENT_VENTE";
+    public static final String KEY_TAUX_CODE_TABLEAU = "KEY_TAUX_CODE_TABLEAU";
+    public static final String DEFAUL_GROSSISTE = "001";
+    public static final String DEFAUL_RAYON_ID = "1";
+    public static final String DEFAUL_CODE_TVA = "1";
+     public static final String STATUT_DISABLE = "disable";
 
     private Constant() {
     }

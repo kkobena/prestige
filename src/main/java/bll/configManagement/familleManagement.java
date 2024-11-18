@@ -57,7 +57,6 @@ import dal.TParameters;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import dal.TPreenregistrement_;
-import dal.TPrivilege;
 import dal.TRemise;
 import dal.TSnapshotFamillesell;
 import dal.TTypeStock;
@@ -67,8 +66,6 @@ import dal.TTypeetiquette;
 import dal.TUser;
 import dal.TZoneGeographique;
 import dal.dataManager;
-import dal.enumeration.Canal;
-import dal.enumeration.Statut;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 import dal.jconnexion;
@@ -100,7 +97,6 @@ import util.Constant;
 import util.DateCommonUtils;
 import util.DateConverter;
 import util.NotificationUtils;
-import util.NumberUtils;
 
 /**
  *
@@ -2104,15 +2100,9 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
     public String generateCIP(String int_CIP) {
         String result = "";
         int resultCIP = 0;
-        // new logger().OCategory.info("int_CIP "+int_CIP.length());
+
         char[] charArray = int_CIP.toCharArray();
-        /*
-         * // ancien bon code .a decommenter en cas de probleme if (int_CIP.length() == 6) { for (int i = 0; i <
-         * charArray.length; i++) { // new logger().OCategory.info("Valeur i "+charArray[i]); resultCIP +=
-         * Integer.parseInt(charArray[i] + ""); }
-         *
-         * int mod = resultCIP % int_CIP.length(); result = int_CIP + "" + mod; } else { result = int_CIP; }
-         */
+
         if (int_CIP.length() == 6) {
             for (int i = 1; i <= charArray.length; i++) {
                 resultCIP += Integer.parseInt(charArray[(i - 1)] + "") * (i + 1);
@@ -2124,7 +2114,6 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
             result = int_CIP;
         }
 
-        new logger().OCategory.info("result " + result);
         return result;
     }
     // fin calcul du denier caractere du code cip

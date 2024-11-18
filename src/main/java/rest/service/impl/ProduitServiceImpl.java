@@ -16,13 +16,20 @@ import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.SearchDTO;
 import commonTasks.dto.ValorisationDTO;
 import commonTasks.dto.VenteDetailsDTO;
+import dal.CategorieNotification;
+import dal.GammeProduit;
 import dal.HMvtProduit;
 import dal.HMvtProduit_;
+import dal.Laboratoire;
 import dal.Notification;
 import dal.TAjustementDetail;
 import dal.TBonLivraisonDetail;
+import dal.TCodeActe;
+import dal.TCodeGestion;
+import dal.TCodeTva;
 import dal.TDeconditionnement;
 import dal.TEmplacement_;
+import dal.TEventLog;
 import dal.TFabriquant;
 import dal.TFabriquant_;
 import dal.TFamille;
@@ -32,14 +39,17 @@ import dal.TFamilleStock_;
 import dal.TFamille_;
 import dal.TFamillearticle;
 import dal.TFamillearticle_;
+import dal.TFormeArticle;
 import dal.TGrossiste;
 import dal.TGrossiste_;
 import dal.TInventaireFamille;
+import dal.TParameters;
 import dal.TPreenregistrementDetail;
 import dal.TRetourFournisseurDetail;
 import dal.TStockSnapshot;
 import dal.TStockSnapshotPK_;
 import dal.TStockSnapshot_;
+import dal.TTypeetiquette;
 import dal.TUser;
 import dal.TWarehouse;
 import dal.TZoneGeographique;
@@ -54,6 +64,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,12 +84,17 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.ProduitService;
+import rest.service.SessionHelperService;
+import rest.service.dto.CreationProduitDTO;
+import util.Constant;
 import util.DateCommonUtils;
 import util.DateConverter;
 import util.NotificationUtils;
@@ -93,9 +110,11 @@ public class ProduitServiceImpl implements ProduitService {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
-    LogService logService;
+    private LogService logService;
     @EJB
-    NotificationService notificationService;
+    private NotificationService notificationService;
+    @EJB
+    private SessionHelperService sessionHelperService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -610,47 +629,47 @@ public class ProduitServiceImpl implements ProduitService {
                         .collect(Collectors.groupingBy(p -> p.getTypemvtproduit().getId()));
                 map.forEach((e, val) -> {
                     switch (e) {
-                    case DateConverter.ENTREE_EN_STOCK:
-                        mvt.setQtyEntree(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.VENTE:
-                        venteStock.add(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.ANNULATION_DE_VENTE:
-                        mvt.setQtyAnnulation(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.TMVTP_VENTE_DEPOT_EXTENSION:
-                        venteStock.add(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.INVENTAIRE:
-                        mvt.setEcartInventaire(findEcartInventaire(Long.parseLong(val.get(0).getPkey())));
-                        mvt.setQtyInv(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.DECONDTIONNEMENT_POSITIF:
-                        mvt.setQtyDeconEntrant(
-                                val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.DECONDTIONNEMENT_NEGATIF:
-                        mvt.setQtyDecondSortant(
-                                val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.AJUSTEMENT_NEGATIF:
-                        mvt.setQtyAjustSortie(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.AJUSTEMENT_POSITIF:
-                        mvt.setQtyAjust(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.RETOUR_FOURNISSEUR:
-                        mvt.setQtyRetour(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.PERIME:
-                        mvt.setQtyPerime(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.TMVTP_RETOUR_DEPOT:
-                        mvt.setQtyRetourDepot(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    default:
-                        break;
+                        case DateConverter.ENTREE_EN_STOCK:
+                            mvt.setQtyEntree(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.VENTE:
+                            venteStock.add(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.ANNULATION_DE_VENTE:
+                            mvt.setQtyAnnulation(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.TMVTP_VENTE_DEPOT_EXTENSION:
+                            venteStock.add(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.INVENTAIRE:
+                            mvt.setEcartInventaire(findEcartInventaire(Long.parseLong(val.get(0).getPkey())));
+                            mvt.setQtyInv(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.DECONDTIONNEMENT_POSITIF:
+                            mvt.setQtyDeconEntrant(
+                                    val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.DECONDTIONNEMENT_NEGATIF:
+                            mvt.setQtyDecondSortant(
+                                    val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.AJUSTEMENT_NEGATIF:
+                            mvt.setQtyAjustSortie(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.AJUSTEMENT_POSITIF:
+                            mvt.setQtyAjust(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.RETOUR_FOURNISSEUR:
+                            mvt.setQtyRetour(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.PERIME:
+                            mvt.setQtyPerime(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.TMVTP_RETOUR_DEPOT:
+                            mvt.setQtyRetourDepot(val.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        default:
+                            break;
                     }
                 });
                 mvt.setQtyVente(venteStock.intValue());
@@ -714,57 +733,57 @@ public class ProduitServiceImpl implements ProduitService {
                 mvtProduit.setCurrentStock(getFamilleStockByProduitId(v.getLgFAMILLEID(), params.getMagasinId()));
                 Map<String, List<HMvtProduit>> hmps = suivitMvtArcticle(params.getDtStart(), params.getDtEnd(),
                         v.getLgFAMILLEID(), params.getMagasinId()).stream()
-                                .collect(Collectors.groupingBy(p -> p.getTypemvtproduit().getId()));
+                        .collect(Collectors.groupingBy(p -> p.getTypemvtproduit().getId()));
 
                 hmps.forEach((k, values) -> {
                     switch (k) {
-                    case DateConverter.ENTREE_EN_STOCK:
-                        // case DateConverter.TMVTP_RETOUR_DEPOT:
-                        mvtProduit.setQtyEntree(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.VENTE:
-                    case DateConverter.TMVTP_VENTE_DEPOT_EXTENSION:
-                        Integer qtyVente = values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum);
-                        venteStock.add(qtyVente);
-                        break;
-                    case DateConverter.ANNULATION_DE_VENTE:
-                    case DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION:
-                        mvtProduit
-                                .setQtyAnnulation(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
+                        case DateConverter.ENTREE_EN_STOCK:
+                            // case DateConverter.TMVTP_RETOUR_DEPOT:
+                            mvtProduit.setQtyEntree(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.VENTE:
+                        case DateConverter.TMVTP_VENTE_DEPOT_EXTENSION:
+                            Integer qtyVente = values.parallelStream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum);
+                            venteStock.add(qtyVente);
+                            break;
+                        case DateConverter.ANNULATION_DE_VENTE:
+                        case DateConverter.TMVTP_ANNUL_VENTE_DEPOT_EXTENSION:
+                            mvtProduit
+                                    .setQtyAnnulation(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
 
-                    case DateConverter.INVENTAIRE:
-                        mvtProduit.setEcartInventaire(findEcartInventaire(Long.parseLong(values.get(0).getPkey())));
-                        mvtProduit.setQtyInv(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.DECONDTIONNEMENT_POSITIF:
-                        mvtProduit.setQtyDeconEntrant(
-                                values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.DECONDTIONNEMENT_NEGATIF:
-                        mvtProduit.setQtyDecondSortant(
-                                values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
+                        case DateConverter.INVENTAIRE:
+                            mvtProduit.setEcartInventaire(findEcartInventaire(Long.parseLong(values.get(0).getPkey())));
+                            mvtProduit.setQtyInv(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.DECONDTIONNEMENT_POSITIF:
+                            mvtProduit.setQtyDeconEntrant(
+                                    values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.DECONDTIONNEMENT_NEGATIF:
+                            mvtProduit.setQtyDecondSortant(
+                                    values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
 
-                    case DateConverter.AJUSTEMENT_NEGATIF:
-                        mvtProduit
-                                .setQtyAjustSortie(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.AJUSTEMENT_POSITIF:
-                        mvtProduit.setQtyAjust(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.RETOUR_FOURNISSEUR:
-                        mvtProduit.setQtyRetour(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.PERIME:
-                        mvtProduit.setQtyPerime(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    case DateConverter.TMVTP_RETOUR_DEPOT:
-                        mvtProduit
-                                .setQtyRetourDepot(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
-                        break;
-                    default:
-                        break;
+                        case DateConverter.AJUSTEMENT_NEGATIF:
+                            mvtProduit
+                                    .setQtyAjustSortie(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.AJUSTEMENT_POSITIF:
+                            mvtProduit.setQtyAjust(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.RETOUR_FOURNISSEUR:
+                            mvtProduit.setQtyRetour(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.PERIME:
+                            mvtProduit.setQtyPerime(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        case DateConverter.TMVTP_RETOUR_DEPOT:
+                            mvtProduit
+                                    .setQtyRetourDepot(values.stream().map(HMvtProduit::getQteMvt).reduce(0, Integer::sum));
+                            break;
+                        default:
+                            break;
                     }
                 });
                 mvtProduit.setQtyVente(venteStock.intValue());
@@ -1114,56 +1133,56 @@ public class ProduitServiceImpl implements ProduitService {
             predicates.add(cb.equal(stock.get(TFamilleStock_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID),
                     emplacementId));
             switch (mode) {
-            case 3:
-                Join<TFamille, TGrossiste> gr = root.join(TFamille_.lgGROSSISTEID, JoinType.INNER);
-                if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
-                        && !"".equals(lgGROSSISTEID)) {
-                    predicates.add(cb.equal(gr.get(TGrossiste_.lgGROSSISTEID), lgGROSSISTEID));
+                case 3:
+                    Join<TFamille, TGrossiste> gr = root.join(TFamille_.lgGROSSISTEID, JoinType.INNER);
+                    if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
+                            && !"".equals(lgGROSSISTEID)) {
+                        predicates.add(cb.equal(gr.get(TGrossiste_.lgGROSSISTEID), lgGROSSISTEID));
 
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(cb.greaterThanOrEqualTo(gr.get(TGrossiste_.strCODE), BEGIN));
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(cb.greaterThanOrEqualTo(gr.get(TGrossiste_.strCODE), BEGIN));
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(cb.lessThanOrEqualTo(gr.get(TGrossiste_.strCODE), END));
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(cb.lessThanOrEqualTo(gr.get(TGrossiste_.strCODE), END));
-                    }
-                }
 
-                break;
-            case 2:
-                Join<TFamille, TZoneGeographique> zne = root.join(TFamille_.lgZONEGEOID, JoinType.INNER);
-                if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
-                        && !"".equals(lgZONEGEOID)) {
-                    predicates.add(cb.equal(zne.get(TZoneGeographique_.lgZONEGEOID), lgZONEGEOID));
+                    break;
+                case 2:
+                    Join<TFamille, TZoneGeographique> zne = root.join(TFamille_.lgZONEGEOID, JoinType.INNER);
+                    if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
+                            && !"".equals(lgZONEGEOID)) {
+                        predicates.add(cb.equal(zne.get(TZoneGeographique_.lgZONEGEOID), lgZONEGEOID));
 
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(cb.greaterThanOrEqualTo(zne.get(TZoneGeographique_.strCODE), BEGIN));
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(cb.greaterThanOrEqualTo(zne.get(TZoneGeographique_.strCODE), BEGIN));
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(cb.lessThanOrEqualTo(zne.get(TZoneGeographique_.strCODE), END));
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(cb.lessThanOrEqualTo(zne.get(TZoneGeographique_.strCODE), END));
-                    }
-                }
-                break;
+                    break;
 
-            case 1:
-                Join<TFamille, TFamillearticle> fm = root.join(TFamille_.lgFAMILLEARTICLEID, JoinType.INNER);
-                if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
-                        && !"".equals(lgFAMILLEARTICLEID)) {
-                    predicates.add(cb.equal(fm.get(TFamillearticle_.lgFAMILLEARTICLEID), lgFAMILLEARTICLEID));
+                case 1:
+                    Join<TFamille, TFamillearticle> fm = root.join(TFamille_.lgFAMILLEARTICLEID, JoinType.INNER);
+                    if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
+                            && !"".equals(lgFAMILLEARTICLEID)) {
+                        predicates.add(cb.equal(fm.get(TFamillearticle_.lgFAMILLEARTICLEID), lgFAMILLEARTICLEID));
 
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(cb.greaterThanOrEqualTo(fm.get(TFamillearticle_.strCODEFAMILLE), BEGIN));
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(cb.greaterThanOrEqualTo(fm.get(TFamillearticle_.strCODEFAMILLE), BEGIN));
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(cb.lessThanOrEqualTo(fm.get(TFamillearticle_.strCODEFAMILLE), END));
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(cb.lessThanOrEqualTo(fm.get(TFamillearticle_.strCODEFAMILLE), END));
-                    }
-                }
-                break;
-            default:
+                    break;
+                default:
 
-                break;
+                    break;
             }
 
             cq.where(cb.and(predicates.toArray(new Predicate[predicates.size()])));
@@ -1205,15 +1224,15 @@ public class ProduitServiceImpl implements ProduitService {
             String lgZONEGEOID, String END, String BEGIN, String emplacementId) {
         try {
             List<Predicate> predicates = new ArrayList<>();
-            List<Predicate> _predicates = new ArrayList<>();
+            List<Predicate> predicates2 = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Params> cq = cb.createQuery(Params.class);
             Root<TStockSnapshot> root = cq.from(TStockSnapshot.class);
             cq.select(cb.construct(Params.class,
                     cb.sumAsLong(cb.prod(root.get(TStockSnapshot_.prixPaf), root.get(TStockSnapshot_.qty))),
                     cb.sumAsLong(cb.prod(root.get(TStockSnapshot_.prixUni), root.get(TStockSnapshot_.qty)))));
-            _predicates.add(cb.equal(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.id), date));
-            _predicates.add(
+            predicates2.add(cb.equal(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.id), date));
+            predicates2.add(
                     cb.equal(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.magasin), emplacementId));
             Subquery<String> sub = cq.subquery(String.class);
             Root<TFamille> subroot = sub.from(TFamille.class);
@@ -1221,59 +1240,59 @@ public class ProduitServiceImpl implements ProduitService {
             predicates.add(cb.equal(subroot.get(TFamille_.lgFAMILLEID),
                     root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.familleId)));
             switch (mode) {
-            case 3:
-                Join<TFamille, TGrossiste> gr = subroot.join(TFamille_.lgGROSSISTEID, JoinType.INNER);
-                if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
-                        && !"".equals(lgGROSSISTEID)) {
-                    predicates.add(cb.equal(gr.get(TGrossiste_.lgGROSSISTEID), lgGROSSISTEID));
+                case 3:
+                    Join<TFamille, TGrossiste> gr = subroot.join(TFamille_.lgGROSSISTEID, JoinType.INNER);
+                    if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
+                            && !"".equals(lgGROSSISTEID)) {
+                        predicates.add(cb.equal(gr.get(TGrossiste_.lgGROSSISTEID), lgGROSSISTEID));
 
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(cb.greaterThanOrEqualTo(gr.get(TGrossiste_.strCODE), BEGIN));
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(cb.greaterThanOrEqualTo(gr.get(TGrossiste_.strCODE), BEGIN));
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(cb.lessThanOrEqualTo(gr.get(TGrossiste_.strCODE), END));
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(cb.lessThanOrEqualTo(gr.get(TGrossiste_.strCODE), END));
+                    break;
+                case 2:
+                    Join<TFamille, TZoneGeographique> zne = subroot.join(TFamille_.lgZONEGEOID, JoinType.INNER);
+                    if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
+                            && !"".equals(lgZONEGEOID)) {
+                        predicates.add(cb.equal(zne.get(TZoneGeographique_.lgZONEGEOID), lgZONEGEOID));
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(cb.greaterThanOrEqualTo(zne.get(TZoneGeographique_.strCODE), BEGIN));
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(cb.lessThanOrEqualTo(zne.get(TZoneGeographique_.strCODE), END));
+                        }
                     }
-                }
-                break;
-            case 2:
-                Join<TFamille, TZoneGeographique> zne = subroot.join(TFamille_.lgZONEGEOID, JoinType.INNER);
-                if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
-                        && !"".equals(lgZONEGEOID)) {
-                    predicates.add(cb.equal(zne.get(TZoneGeographique_.lgZONEGEOID), lgZONEGEOID));
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(cb.greaterThanOrEqualTo(zne.get(TZoneGeographique_.strCODE), BEGIN));
-                    }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(cb.lessThanOrEqualTo(zne.get(TZoneGeographique_.strCODE), END));
-                    }
-                }
-                break;
+                    break;
 
-            case 1:
-                Join<TFamille, TFamillearticle> fm = subroot.join(TFamille_.lgFAMILLEARTICLEID, JoinType.INNER);
-                if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
-                        && !"".equals(lgFAMILLEARTICLEID)) {
-                    predicates.add(cb.equal(fm.get(TFamillearticle_.lgFAMILLEARTICLEID), lgFAMILLEARTICLEID));
+                case 1:
+                    Join<TFamille, TFamillearticle> fm = subroot.join(TFamille_.lgFAMILLEARTICLEID, JoinType.INNER);
+                    if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
+                            && !"".equals(lgFAMILLEARTICLEID)) {
+                        predicates.add(cb.equal(fm.get(TFamillearticle_.lgFAMILLEARTICLEID), lgFAMILLEARTICLEID));
 
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(cb.greaterThanOrEqualTo(fm.get(TFamillearticle_.strCODEFAMILLE), BEGIN));
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(cb.greaterThanOrEqualTo(fm.get(TFamillearticle_.strCODEFAMILLE), BEGIN));
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(cb.lessThanOrEqualTo(fm.get(TFamillearticle_.strCODEFAMILLE), END));
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(cb.lessThanOrEqualTo(fm.get(TFamillearticle_.strCODEFAMILLE), END));
-                    }
-                }
-                break;
-            default:
+                    break;
+                default:
 
-                break;
+                    break;
             }
             sub.where(predicates.toArray(Predicate[]::new));
-            _predicates
+            predicates2
                     .add(cb.in(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.familleId)).value(sub));
-            cq.where(_predicates.toArray(Predicate[]::new));
+            cq.where(predicates2.toArray(Predicate[]::new));
             TypedQuery<Params> q = getEntityManager().createQuery(cq);
             // q.setMaxResults(1);
             return q.getSingleResult();
@@ -1299,102 +1318,102 @@ public class ProduitServiceImpl implements ProduitService {
             parasm.put("operationDate", date);
             parasm.put("emplacementId", emplacementId);
             switch (mode) {
-            case 3:
-                query.append(
-                        ",g.str_LIBELLE AS LIBELLE,g.str_CODE AS CODE FROM t_stock_snapshot o, t_famille f, t_grossiste g ");
-                predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
-                predicates.add(" f.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID ");
-                if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
-                        && !"".equals(lgGROSSISTEID)) {
-                    predicates.add(" f.lg_GROSSISTE_ID = :idParam ");
-                    parasm.put("idParam", lgGROSSISTEID);
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                case 3:
+                    query.append(
+                            ",g.str_LIBELLE AS LIBELLE,g.str_CODE AS CODE FROM t_stock_snapshot o, t_famille f, t_grossiste g ");
+                    predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
+                    predicates.add(" f.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID ");
+                    if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
+                            && !"".equals(lgGROSSISTEID)) {
+                        predicates.add(" f.lg_GROSSISTE_ID = :idParam ");
+                        parasm.put("idParam", lgGROSSISTEID);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE <= :fin ");
-                        parasm.put("fin", END);
+                    query.append(" WHERE ");
+                    for (int i = 0; i < predicates.size(); i++) {
+                        if (i > 0) {
+                            query.append(" AND ");
+                        }
+                        query.append(predicates.get(i));
                     }
-                }
-                query.append(" WHERE ");
-                for (int i = 0; i < predicates.size(); i++) {
-                    if (i > 0) {
-                        query.append(" AND ");
+                    query.append(" GROUP BY g.lg_GROSSISTE_ID ORDER BY g.str_CODE ASC ");
+                    break;
+                case 2:
+                    query.append(
+                            ",g.str_LIBELLEE AS LIBELLE,g.str_CODE AS CODE FROM t_stock_snapshot o, t_famille f, t_zone_geographique g ");
+                    predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
+                    predicates.add(" f.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
+                    if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
+                            && !"".equals(lgZONEGEOID)) {
+                        predicates.add(" f.lg_ZONE_GEO_ID = :idParam ");
+                        parasm.put("idParam", lgZONEGEOID);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    query.append(predicates.get(i));
-                }
-                query.append(" GROUP BY g.lg_GROSSISTE_ID ORDER BY g.str_CODE ASC ");
-                break;
-            case 2:
-                query.append(
-                        ",g.str_LIBELLEE AS LIBELLE,g.str_CODE AS CODE FROM t_stock_snapshot o, t_famille f, t_zone_geographique g ");
-                predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
-                predicates.add(" f.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
-                if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
-                        && !"".equals(lgZONEGEOID)) {
-                    predicates.add(" f.lg_ZONE_GEO_ID = :idParam ");
-                    parasm.put("idParam", lgZONEGEOID);
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                    query.append(" WHERE ");
+                    for (int i = 0; i < predicates.size(); i++) {
+                        if (i > 0) {
+                            query.append(" AND ");
+                        }
+                        query.append(predicates.get(i));
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE <= :fin ");
-                        parasm.put("fin", END);
-                    }
-                }
-                query.append(" WHERE ");
-                for (int i = 0; i < predicates.size(); i++) {
-                    if (i > 0) {
-                        query.append(" AND ");
-                    }
-                    query.append(predicates.get(i));
-                }
-                query.append(" GROUP BY g.lg_ZONE_GEO_ID ORDER BY g.str_CODE ASC ");
-                break;
-            case 1:
-                query.append(
-                        ",g.str_LIBELLE AS LIBELLE,g.str_CODE_FAMILLE AS CODE FROM t_stock_snapshot o, t_famille f, t_famillearticle g");
-                predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
-                predicates.add(" f.lg_FAMILLEARTICLE_ID=g.lg_FAMILLEARTICLE_ID ");
-                if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
-                        && !"".equals(lgFAMILLEARTICLEID)) {
-                    predicates.add(" f.lg_FAMILLEARTICLE_ID = :idParam ");
-                    parasm.put("idParam", lgFAMILLEARTICLEID);
+                    query.append(" GROUP BY g.lg_ZONE_GEO_ID ORDER BY g.str_CODE ASC ");
+                    break;
+                case 1:
+                    query.append(
+                            ",g.str_LIBELLE AS LIBELLE,g.str_CODE_FAMILLE AS CODE FROM t_stock_snapshot o, t_famille f, t_famillearticle g");
+                    predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
+                    predicates.add(" f.lg_FAMILLEARTICLE_ID=g.lg_FAMILLEARTICLE_ID ");
+                    if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
+                            && !"".equals(lgFAMILLEARTICLEID)) {
+                        predicates.add(" f.lg_FAMILLEARTICLE_ID = :idParam ");
+                        parasm.put("idParam", lgFAMILLEARTICLEID);
 
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE_FAMILLE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE_FAMILLE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE_FAMILLE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE_FAMILLE <= :fin ");
-                        parasm.put("fin", END);
+                    query.append(" WHERE ");
+                    for (int i = 0; i < predicates.size(); i++) {
+                        if (i > 0) {
+                            query.append(" AND ");
+                        }
+                        query.append(predicates.get(i));
                     }
-                }
-                query.append(" WHERE ");
-                for (int i = 0; i < predicates.size(); i++) {
-                    if (i > 0) {
-                        query.append(" AND ");
+                    query.append(" GROUP BY g.lg_FAMILLEARTICLE_ID ORDER BY g.str_CODE_FAMILLE ASC ");
+                    break;
+                default:
+                    query.append(",o.valeurTva AS tva FROM t_stock_snapshot o ");
+                    query.append(" WHERE ");
+                    for (int i = 0; i < predicates.size(); i++) {
+                        if (i > 0) {
+                            query.append(" AND ");
+                        }
+                        query.append(predicates.get(i));
                     }
-                    query.append(predicates.get(i));
-                }
-                query.append(" GROUP BY g.lg_FAMILLEARTICLE_ID ORDER BY g.str_CODE_FAMILLE ASC ");
-                break;
-            default:
-                query.append(",o.valeurTva AS tva FROM t_stock_snapshot o ");
-                query.append(" WHERE ");
-                for (int i = 0; i < predicates.size(); i++) {
-                    if (i > 0) {
-                        query.append(" AND ");
-                    }
-                    query.append(predicates.get(i));
-                }
-                query.append(" GROUP BY o.valeurTva");
-                break;
+                    query.append(" GROUP BY o.valeurTva");
+                    break;
             }
 
             Query q = getEntityManager().createNativeQuery(query.toString());
@@ -1462,74 +1481,74 @@ public class ProduitServiceImpl implements ProduitService {
             parasm.put("operationDate", date);
             parasm.put("emplacementId", emplacementId);
             switch (mode) {
-            case 3:
-                query.append(" FROM t_stock_snapshot o, t_famille f, t_grossiste g ");
-                predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
-                predicates.add(" f.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID ");
-                if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
-                        && !"".equals(lgGROSSISTEID)) {
-                    predicates.add(" f.lg_GROSSISTE_ID = :idParam ");
-                    parasm.put("idParam", lgGROSSISTEID);
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                case 3:
+                    query.append(" FROM t_stock_snapshot o, t_famille f, t_grossiste g ");
+                    predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
+                    predicates.add(" f.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID ");
+                    if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
+                            && !"".equals(lgGROSSISTEID)) {
+                        predicates.add(" f.lg_GROSSISTE_ID = :idParam ");
+                        parasm.put("idParam", lgGROSSISTEID);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE >= :debut ");
+                            parasm.put("debut", BEGIN);
 
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE <= :fin ");
-                        parasm.put("fin", END);
+
+                    break;
+                case 2:
+                    query.append("  FROM t_stock_snapshot o, t_famille f, t_zone_geographique g ");
+                    predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
+                    predicates.add(" f.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
+
+                    if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
+                            && !"".equals(lgZONEGEOID)) {
+                        predicates.add(" f.lg_ZONE_GEO_ID = :idParam ");
+                        parasm.put("idParam", lgZONEGEOID);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                }
 
-                break;
-            case 2:
-                query.append("  FROM t_stock_snapshot o, t_famille f, t_zone_geographique g ");
-                predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
-                predicates.add(" f.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
+                    break;
 
-                if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
-                        && !"".equals(lgZONEGEOID)) {
-                    predicates.add(" f.lg_ZONE_GEO_ID = :idParam ");
-                    parasm.put("idParam", lgZONEGEOID);
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                case 1:
+                    query.append("  FROM t_stock_snapshot o, t_famille f, t_famillearticle g");
+                    predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
+                    predicates.add(" f.lg_FAMILLEARTICLE_ID=g.lg_FAMILLEARTICLE_ID ");
+                    if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
+                            && !"".equals(lgFAMILLEARTICLEID)) {
+                        predicates.add(" f.lg_FAMILLEARTICLE_ID = :idParam ");
+                        parasm.put("idParam", lgFAMILLEARTICLEID);
+
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE_FAMILLE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE_FAMILLE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE <= :fin ");
-                        parasm.put("fin", END);
-                    }
-                }
 
-                break;
+                    break;
+                default:
+                    query.append("  FROM t_stock_snapshot o");
 
-            case 1:
-                query.append("  FROM t_stock_snapshot o, t_famille f, t_famillearticle g");
-                predicates.add(" o.familleId=f.lg_FAMILLE_ID ");
-                predicates.add(" f.lg_FAMILLEARTICLE_ID=g.lg_FAMILLEARTICLE_ID ");
-                if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
-                        && !"".equals(lgFAMILLEARTICLEID)) {
-                    predicates.add(" f.lg_FAMILLEARTICLE_ID = :idParam ");
-                    parasm.put("idParam", lgFAMILLEARTICLEID);
-
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE_FAMILLE >= :debut ");
-                        parasm.put("debut", BEGIN);
-                    }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE_FAMILLE <= :fin ");
-                        parasm.put("fin", END);
-                    }
-                }
-
-                break;
-            default:
-                query.append("  FROM t_stock_snapshot o");
-
-                break;
+                    break;
 
             }
             query.append(" WHERE ");
@@ -1598,105 +1617,105 @@ public class ProduitServiceImpl implements ProduitService {
             parasm.put("statut", DateConverter.STATUT_ENABLE);
             parasm.put("emplacementId", emplacementId);
             switch (mode) {
-            case 3:
-                query.append(
-                        ",g.str_LIBELLE AS LIBELLE,g.str_CODE AS CODE FROM t_famille o, t_famille_stock s, t_grossiste g ");
-                predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
-                predicates.add(" o.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID ");
-                if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
-                        && !"".equals(lgGROSSISTEID)) {
-                    predicates.add(" o.lg_GROSSISTE_ID = :idParam ");
-                    parasm.put("idParam", lgGROSSISTEID);
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                case 3:
+                    query.append(
+                            ",g.str_LIBELLE AS LIBELLE,g.str_CODE AS CODE FROM t_famille o, t_famille_stock s, t_grossiste g ");
+                    predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
+                    predicates.add(" o.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID ");
+                    if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
+                            && !"".equals(lgGROSSISTEID)) {
+                        predicates.add(" o.lg_GROSSISTE_ID = :idParam ");
+                        parasm.put("idParam", lgGROSSISTEID);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE <= :fin ");
-                        parasm.put("fin", END);
+                    query.append(" WHERE ");
+                    for (int i = 0; i < predicates.size(); i++) {
+                        if (i > 0) {
+                            query.append(" AND ");
+                        }
+                        query.append(predicates.get(i));
                     }
-                }
-                query.append(" WHERE ");
-                for (int i = 0; i < predicates.size(); i++) {
-                    if (i > 0) {
-                        query.append(" AND ");
+                    query.append(" GROUP BY g.lg_GROSSISTE_ID ORDER BY g.str_CODE ASC ");
+                    break;
+                case 2:
+                    query.append(
+                            ",g.str_LIBELLEE AS LIBELLE,g.str_CODE AS CODE FROM t_famille o, t_famille_stock s, t_zone_geographique g ");
+                    predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
+                    predicates.add(" o.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
+                    if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
+                            && !"".equals(lgZONEGEOID)) {
+                        predicates.add(" o.lg_ZONE_GEO_ID = :idParam ");
+                        parasm.put("idParam", lgZONEGEOID);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    query.append(predicates.get(i));
-                }
-                query.append(" GROUP BY g.lg_GROSSISTE_ID ORDER BY g.str_CODE ASC ");
-                break;
-            case 2:
-                query.append(
-                        ",g.str_LIBELLEE AS LIBELLE,g.str_CODE AS CODE FROM t_famille o, t_famille_stock s, t_zone_geographique g ");
-                predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
-                predicates.add(" o.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
-                if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
-                        && !"".equals(lgZONEGEOID)) {
-                    predicates.add(" o.lg_ZONE_GEO_ID = :idParam ");
-                    parasm.put("idParam", lgZONEGEOID);
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                    query.append(" WHERE ");
+                    for (int i = 0; i < predicates.size(); i++) {
+                        if (i > 0) {
+                            query.append(" AND ");
+                        }
+                        query.append(predicates.get(i));
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE <= :fin ");
-                        parasm.put("fin", END);
-                    }
-                }
-                query.append(" WHERE ");
-                for (int i = 0; i < predicates.size(); i++) {
-                    if (i > 0) {
-                        query.append(" AND ");
-                    }
-                    query.append(predicates.get(i));
-                }
-                query.append(" GROUP BY g.lg_ZONE_GEO_ID ORDER BY g.str_CODE ASC ");
-                break;
+                    query.append(" GROUP BY g.lg_ZONE_GEO_ID ORDER BY g.str_CODE ASC ");
+                    break;
 
-            case 1:
-                query.append(
-                        ",g.str_LIBELLE AS LIBELLE,g.str_CODE_FAMILLE AS CODE FROM t_famille o, t_famille_stock s, t_famillearticle g");
-                predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
-                predicates.add(" o.lg_FAMILLEARTICLE_ID=g.lg_FAMILLEARTICLE_ID ");
-                if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
-                        && !"".equals(lgFAMILLEARTICLEID)) {
-                    predicates.add(" o.lg_FAMILLEARTICLE_ID = :idParam ");
-                    parasm.put("idParam", lgFAMILLEARTICLEID);
+                case 1:
+                    query.append(
+                            ",g.str_LIBELLE AS LIBELLE,g.str_CODE_FAMILLE AS CODE FROM t_famille o, t_famille_stock s, t_famillearticle g");
+                    predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
+                    predicates.add(" o.lg_FAMILLEARTICLE_ID=g.lg_FAMILLEARTICLE_ID ");
+                    if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
+                            && !"".equals(lgFAMILLEARTICLEID)) {
+                        predicates.add(" o.lg_FAMILLEARTICLE_ID = :idParam ");
+                        parasm.put("idParam", lgFAMILLEARTICLEID);
 
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE_FAMILLE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE_FAMILLE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE_FAMILLE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE_FAMILLE <= :fin ");
-                        parasm.put("fin", END);
+                    query.append(" WHERE ");
+                    for (int i = 0; i < predicates.size(); i++) {
+                        if (i > 0) {
+                            query.append(" AND ");
+                        }
+                        query.append(predicates.get(i));
                     }
-                }
-                query.append(" WHERE ");
-                for (int i = 0; i < predicates.size(); i++) {
-                    if (i > 0) {
-                        query.append(" AND ");
+                    query.append(" GROUP BY g.lg_FAMILLEARTICLE_ID ORDER BY g.str_CODE_FAMILLE ASC ");
+                    break;
+                default:
+                    query.append(",v.int_VALUE AS tva FROM t_famille o, t_famille_stock s,t_code_tva v ");
+                    predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
+                    predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
+                    query.append(" WHERE ");
+                    for (int i = 0; i < predicates.size(); i++) {
+                        if (i > 0) {
+                            query.append(" AND ");
+                        }
+                        query.append(predicates.get(i));
                     }
-                    query.append(predicates.get(i));
-                }
-                query.append(" GROUP BY g.lg_FAMILLEARTICLE_ID ORDER BY g.str_CODE_FAMILLE ASC ");
-                break;
-            default:
-                query.append(",v.int_VALUE AS tva FROM t_famille o, t_famille_stock s,t_code_tva v ");
-                predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
-                predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
-                query.append(" WHERE ");
-                for (int i = 0; i < predicates.size(); i++) {
-                    if (i > 0) {
-                        query.append(" AND ");
-                    }
-                    query.append(predicates.get(i));
-                }
-                query.append(" GROUP BY v.int_VALUE");
-                break;
+                    query.append(" GROUP BY v.int_VALUE");
+                    break;
             }
 
             Query q = getEntityManager().createNativeQuery(query.toString());
@@ -1765,75 +1784,75 @@ public class ProduitServiceImpl implements ProduitService {
             parasm.put("emplacementId", emplacementId);
             predicates.add(" o.lg_FAMILLE_ID=s.lg_FAMILLE_ID ");
             switch (mode) {
-            case 3:
-                query.append(" ,v.int_VALUE AS tva FROM t_famille o, t_famille_stock s, t_grossiste g ,t_code_tva v ");
-                predicates.add(" o.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID ");
-                predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
-                if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
-                        && !"".equals(lgGROSSISTEID)) {
-                    predicates.add(" o.lg_GROSSISTE_ID = :idParam ");
-                    parasm.put("idParam", lgGROSSISTEID);
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                case 3:
+                    query.append(" ,v.int_VALUE AS tva FROM t_famille o, t_famille_stock s, t_grossiste g ,t_code_tva v ");
+                    predicates.add(" o.lg_GROSSISTE_ID=g.lg_GROSSISTE_ID ");
+                    predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
+                    if (lgGROSSISTEID != null && !"0".equals(lgGROSSISTEID) && !"%%".equals(lgGROSSISTEID)
+                            && !"".equals(lgGROSSISTEID)) {
+                        predicates.add(" o.lg_GROSSISTE_ID = :idParam ");
+                        parasm.put("idParam", lgGROSSISTEID);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE >= :debut ");
+                            parasm.put("debut", BEGIN);
 
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE <= :fin ");
-                        parasm.put("fin", END);
-                    }
-                }
 
-                break;
-            case 2:
-                query.append(
-                        " ,v.int_VALUE AS tva FROM t_famille o, t_famille_stock s, t_zone_geographique g ,t_code_tva v ");
-                predicates.add(" o.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
-                predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
-                if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
-                        && !"".equals(lgZONEGEOID)) {
-                    predicates.add(" o.lg_ZONE_GEO_ID = :idParam ");
-                    parasm.put("idParam", lgZONEGEOID);
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE >= :debut ");
-                        parasm.put("debut", BEGIN);
+                    break;
+                case 2:
+                    query.append(
+                            " ,v.int_VALUE AS tva FROM t_famille o, t_famille_stock s, t_zone_geographique g ,t_code_tva v ");
+                    predicates.add(" o.lg_ZONE_GEO_ID=g.lg_ZONE_GEO_ID ");
+                    predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
+                    if (lgZONEGEOID != null && !"0".equals(lgZONEGEOID) && !"%%".equals(lgZONEGEOID)
+                            && !"".equals(lgZONEGEOID)) {
+                        predicates.add(" o.lg_ZONE_GEO_ID = :idParam ");
+                        parasm.put("idParam", lgZONEGEOID);
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE <= :fin ");
-                        parasm.put("fin", END);
+
+                    break;
+
+                case 1:
+                    query.append(
+                            " ,v.int_VALUE AS tva FROM t_famille o, t_famille_stock s, t_famillearticle g,t_code_tva v ");
+                    predicates.add(" o.lg_FAMILLEARTICLE_ID=g.lg_FAMILLEARTICLE_ID ");
+                    predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
+                    if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
+                            && !"".equals(lgFAMILLEARTICLEID)) {
+                        predicates.add(" o.lg_FAMILLEARTICLE_ID = :idParam ");
+                        parasm.put("idParam", lgFAMILLEARTICLEID);
+
+                    } else {
+                        if (BEGIN != null && !"".equals(BEGIN)) {
+                            predicates.add(" g.str_CODE_FAMILLE >= :debut ");
+                            parasm.put("debut", BEGIN);
+                        }
+                        if (END != null && !"".equals(END)) {
+                            predicates.add(" g.str_CODE_FAMILLE <= :fin ");
+                            parasm.put("fin", END);
+                        }
                     }
-                }
 
-                break;
-
-            case 1:
-                query.append(
-                        " ,v.int_VALUE AS tva FROM t_famille o, t_famille_stock s, t_famillearticle g,t_code_tva v ");
-                predicates.add(" o.lg_FAMILLEARTICLE_ID=g.lg_FAMILLEARTICLE_ID ");
-                predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
-                if (lgFAMILLEARTICLEID != null && !"0".equals(lgFAMILLEARTICLEID) && !"%%".equals(lgFAMILLEARTICLEID)
-                        && !"".equals(lgFAMILLEARTICLEID)) {
-                    predicates.add(" o.lg_FAMILLEARTICLE_ID = :idParam ");
-                    parasm.put("idParam", lgFAMILLEARTICLEID);
-
-                } else {
-                    if (BEGIN != null && !"".equals(BEGIN)) {
-                        predicates.add(" g.str_CODE_FAMILLE >= :debut ");
-                        parasm.put("debut", BEGIN);
-                    }
-                    if (END != null && !"".equals(END)) {
-                        predicates.add(" g.str_CODE_FAMILLE <= :fin ");
-                        parasm.put("fin", END);
-                    }
-                }
-
-                break;
-            default:
-                query.append(",v.int_VALUE FROM t_famille o, t_famille_stock s, t_code_tva v ");
-                predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
-                break;
+                    break;
+                default:
+                    query.append(",v.int_VALUE FROM t_famille o, t_famille_stock s, t_code_tva v ");
+                    predicates.add("  o.lg_CODE_TVA_ID=v.lg_CODE_TVA_ID ");
+                    break;
             }
 
             query.append(" WHERE ");
@@ -1887,4 +1906,382 @@ public class ProduitServiceImpl implements ProduitService {
             return new ValorisationDTO();
         }
     }
+
+    private String generateCIP(String codeCip) {
+        if (codeCip.length() == 6) {
+            int resultCIP = 0;
+            for (int i = 0; i < codeCip.length(); i++) {
+                resultCIP += Character.getNumericValue(codeCip.charAt(i)) * (i + 2);
+            }
+            return codeCip + (resultCIP % 11);
+        }
+        return codeCip;
+    }
+
+    private Optional<TParameters> getParamettre(String key) {
+        if (StringUtils.isEmpty(key)) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(em.find(TParameters.class, key));
+    }
+
+    @Override
+    public JSONObject createProduit(CreationProduitDTO creationProduit) {
+        JSONObject json = new JSONObject();
+
+        if (StringUtils.isEmpty(creationProduit.getIntCip()) || creationProduit.getIntCip().length() < 6) {
+            return json.put("message", "Le code CIP doit avoir au minimum 6 caractères").put("success", "0");
+
+        }
+        TGrossiste grossiste = getGrossiste(creationProduit.getLgGrossisteId());
+        String codeCip = generateCIP(creationProduit.getIntCip());
+        TFamilleGrossiste existant = this.isCIPExist(codeCip, grossiste.getLgGROSSISTEID());
+        if (existant != null) {
+            return json.put("message", "Impossible d'utiliser ce code. Code CIP du grossiste principal de l'article "
+                    + existant.getLgFAMILLEID().getStrDESCRIPTION()).put("success", "0");
+        }
+        TFamille existProduct = isCIPGrossistet(codeCip, grossiste.getLgGROSSISTEID());
+        if (existProduct != null) {
+            return json.put("message", "Impossible d'utiliser ce code. Code CIP du grossiste principal de l'article "
+                    + existProduct.getStrDESCRIPTION()).put("success", "0");
+        }
+
+        TFamille famille = new TFamille(UUID.randomUUID().toString());
+        famille.setDtCREATED(new Date());
+        famille.setLgGROSSISTEID(grossiste);
+        famille.setIntCIP(codeCip);
+        updateProduitCommon(famille, creationProduit);
+
+        em.persist(famille);
+        createFamilleGrossiste(famille);
+        createFamilleStock(famille, creationProduit.getIntQuantityStock());
+        buildNotificationCreationProduit(famille, TypeNotification.AJOUT_DE_NOUVEAU_PRODUIT, TypeLog.AJOUT_DE_NOUVEAU_PRODUIT);
+        return json.put("success", "1");
+
+    }
+
+    private void updateProduitCommon(TFamille famille, CreationProduitDTO creationProduit) {
+        int intTauxTableau = getParamettre(Constant.KEY_TAUX_CODE_TABLEAU)
+                .map(p -> Integer.valueOf(p.getStrVALUE().trim())).orElse(0);
+        int unitPrice = StringUtils.isNoneBlank(creationProduit.getIntT())
+                && StringUtils.isEmpty(creationProduit.getLgFamilleParentId())
+                ? creationProduit.getIntPrice() + intTauxTableau : creationProduit.getIntPrice();
+        famille.setStrNAME(creationProduit.getStrName());
+        famille.setStrDESCRIPTION(creationProduit.getStrDescription());
+        famille.setIntPRICE(unitPrice);
+        famille.setIntPRICETIPS(creationProduit.getIntPriceTips());
+        famille.setIntTAUXMARQUE(creationProduit.getIntTauxMarque());
+        famille.setIntPAF(creationProduit.getIntPaf());
+        famille.setIntPAT(creationProduit.getIntPat());
+        famille.setIntS(creationProduit.getIntS());
+        famille.setIntT(creationProduit.getIntT());
+        famille.setIntEAN13(creationProduit.getIntEan13());
+        famille.setCmuPrice(creationProduit.getCmuPrice());
+        if (StringUtils.isNotEmpty(creationProduit.getDtPeremtion())) {
+            famille.setDtPEREMPTION(java.sql.Date.valueOf(creationProduit.getDtPeremtion()));
+        }
+
+        famille.setLgFAMILLEARTICLEID(getFamillearticle(creationProduit.getLgFamilleArticleId()));
+        famille.setLgCODEACTEID(getCodeActe(creationProduit.getLgCodeActeId()));
+        famille.setLgCODEGESTIONID(getCodeGestion(creationProduit.getLgCodeGestionId()));
+        famille.setStrCODEREMISE(creationProduit.getStrCodeRemise());
+        famille.setStrCODETAUXREMBOURSEMENT(creationProduit.getStrCodeTauxRemboursement());
+        famille.setLgZONEGEOID(getRayon(creationProduit.getLgZoneGeoId()));
+        famille.setIntSEUILMAX(creationProduit.getSeuilMax());
+        famille.setIntNUMBERDETAIL(creationProduit.getIntQteDetail());
+        famille.setLgFORMEID(getFormeArticle(creationProduit.getLgFormeArticleId()));
+        famille.setLgFABRIQUANTID(getFabriquant(creationProduit.getLgFabriquantId()));
+        famille.setBoolDECONDITIONNE(creationProduit.getBoolDeconditionne());
+        famille.setLgTYPEETIQUETTEID(getTypeetiquette(creationProduit.getLgTypeEtiquetteId()));
+
+        famille.setLgCODETVAID(getCodeTva(creationProduit.getLgCodeTvaId()));
+        famille.setBoolRESERVE(creationProduit.isBoolReserve());
+        famille.setIntSEUILRESERVE(creationProduit.getIntSeuilReserve());
+        famille.setLgFAMILLEPARENTID(creationProduit.getLgFamilleParentId());
+        famille.setIntSTOCKREAPROVISONEMENT(creationProduit.getIntStockReaprovisonement());
+        famille.setIntQTEREAPPROVISIONNEMENT(creationProduit.getIntQteReapprovisionnement());
+        famille.setIntSEUILMIN(famille.getIntSTOCKREAPROVISONEMENT());
+        famille.setBoolCHECKEXPIRATIONDATE(isExpirationDateActivated());
+        famille.setLaboratoire(getLaboratoire(creationProduit.getLaboratoireId()));
+        famille.setGamme(getGammeProduit(creationProduit.getGammeId()));
+        famille.setDtUPDATED(new Date());
+
+        if (famille.getBoolDECONDITIONNE() == 1) {
+            famille.setBoolDECONDITIONNEEXIST(Short.valueOf("1"));
+        } else {
+
+            famille.setBoolDECONDITIONNEEXIST(Short.valueOf("0"));
+        }
+
+    }
+
+    public TFamilleGrossiste isCIPExist(String intCip, String grossisteId) {
+        try {
+            TypedQuery<TFamilleGrossiste> q = em.createQuery(
+                    "SELECT t FROM TFamilleGrossiste t WHERE t.strCODEARTICLE = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2",
+                    TFamilleGrossiste.class);
+            q.setParameter(1, intCip).setParameter(2, grossisteId).setMaxResults(1);
+
+            return q.getSingleResult();
+
+        } catch (Exception e) {
+
+        }
+        return null;
+    }
+
+    public TFamille isCIPGrossistet(String intCip, String grossisteId) {
+        try {
+            TypedQuery<TFamille> q = em.createQuery(
+                    "SELECT t FROM TFamille t WHERE t.intCIP=?1 AND t.lgGROSSISTEID.lgGROSSISTEID =?2", TFamille.class);
+            q.setParameter(1, intCip).setParameter(2, grossisteId).setMaxResults(1);
+
+            return q.getSingleResult();
+
+        } catch (Exception e) {
+
+        }
+        return null;
+    }
+
+    private TGrossiste getGrossiste(String grossisteId) {
+        TypedQuery<TGrossiste> q = em.createQuery(
+                "SELECT t FROM TGrossiste t WHERE (t.lgGROSSISTEID = ?1 OR t.strLIBELLE = ?1)", TGrossiste.class);
+        q.setParameter(1, grossisteId).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TCodeActe getCodeActe(String codeActeId) {
+        if (StringUtils.isEmpty(codeActeId)) {
+            return null;
+        }
+        TypedQuery<TCodeActe> q = em.createQuery(
+                "SELECT t FROM TCodeActe t WHERE t.lgCODEACTEID LIKE ?1 OR t.strLIBELLEE LIKE ?2", TCodeActe.class);
+        q.setParameter(1, codeActeId).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TFamillearticle getFamillearticle(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        TypedQuery<TFamillearticle> q = em.createQuery(
+                "SELECT t FROM TFamillearticle t WHERE (t.lgFAMILLEARTICLEID LIKE ?1 OR t.strLIBELLE LIKE ?1 OR t.strCODEFAMILLE LIKE ?1)",
+                TFamillearticle.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TZoneGeographique getRayon(String id) {
+        if (StringUtils.isEmpty(id)) {
+            id = Constant.DEFAUL_RAYON_ID;
+        }
+        TypedQuery<TZoneGeographique> q = em.createQuery(
+                "SELECT t FROM TZoneGeographique t WHERE (t.lgZONEGEOID LIKE ?1 OR t.strLIBELLEE LIKE ?1 )",
+                TZoneGeographique.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TCodeGestion getCodeGestion(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        TypedQuery<TCodeGestion> q = em.createQuery(
+                "SELECT t FROM TCodeGestion t WHERE (t.lgCODEGESTIONID = ?1 OR t.strCODEBAREME = ?1)",
+                TCodeGestion.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TTypeetiquette getTypeetiquette(String id) {
+        if (StringUtils.isEmpty(id)) {
+            id = Constant.DEFAUL_TYPEETIQUETTE;
+        }
+        TypedQuery<TTypeetiquette> q = em.createQuery(
+                "SELECT t FROM TTypeetiquette t WHERE t.lgTYPEETIQUETTEID LIKE ?1 OR t.strDESCRIPTION LIKE ?2",
+                TTypeetiquette.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TFormeArticle getFormeArticle(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        TypedQuery<TFormeArticle> q = em.createQuery(
+                "SELECT t FROM TFormeArticle t WHERE t.lgFORMEARTICLEID LIKE ?1 OR t.strLIBELLE LIKE ?2",
+                TFormeArticle.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TFabriquant getFabriquant(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        TypedQuery<TFabriquant> q = em.createQuery(
+                "SELECT t FROM TFabriquant t WHERE t.lgFABRIQUANTID LIKE ?1 OR t.strDESCRIPTION LIKE ?2",
+                TFabriquant.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TCodeTva getCodeTva(String id) {
+        if (StringUtils.isEmpty(id)) {
+            id = Constant.DEFAUL_CODE_TVA;
+        }
+        TypedQuery<TCodeTva> q = em.createQuery("SELECT t FROM TCodeTva t WHERE (t.strNAME = ?1 OR t.lgCODETVAID = ?1)",
+                TCodeTva.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private boolean isExpirationDateActivated() {
+        return getParamettre(Constant.KEY_ACTIVATE_PEREMPTION_DATE)
+                .map(p -> Integer.parseInt(p.getStrVALUE().trim()) == 1).orElse(false);
+
+    }
+
+    private Laboratoire getLaboratoire(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        return em.find(Laboratoire.class, id);
+    }
+
+    private GammeProduit getGammeProduit(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        return em.find(GammeProduit.class, id);
+    }
+
+    private void createFamilleGrossiste(TFamille famille) {
+        TFamilleGrossiste familleGrossiste = new TFamilleGrossiste();
+        familleGrossiste.setStrCODEARTICLE(famille.getIntCIP());
+        familleGrossiste.setLgFAMILLEID(famille);
+        familleGrossiste.setLgGROSSISTEID(famille.getLgGROSSISTEID());
+        familleGrossiste.setIntPAF(famille.getIntPAF());
+        familleGrossiste.setIntPRICE(famille.getIntPRICE());
+        familleGrossiste.setStrSTATUT(Constant.STATUT_ENABLE);
+        familleGrossiste.setDtCREATED(famille.getDtCREATED());
+        em.persist(familleGrossiste);
+
+    }
+
+    private void createFamilleStock(TFamille famille, int qty) {
+        TFamilleStock stock = new TFamilleStock();
+        stock.setLgFAMILLESTOCKID(UUID.randomUUID().toString());
+        stock.setIntNUMBER(qty);
+        stock.setIntNUMBERAVAILABLE(qty);
+        stock.setLgFAMILLEID(famille);
+        stock.setStrSTATUT(Constant.STATUT_ENABLE);
+        stock.setDtCREATED(famille.getDtCREATED());
+        stock.setLgEMPLACEMENTID(sessionHelperService.getCurrentUser().getLgEMPLACEMENTID());
+        em.persist(stock);
+    }
+
+    private void buildNotificationCreationProduit(TFamille famille, TypeNotification typeNotification, TypeLog typeLog) {
+        CategorieNotification categorieNotification = em.find(CategorieNotification.class,
+                typeNotification.ordinal());
+        Notification notification = new Notification();
+        notification.setCategorieNotification(categorieNotification);
+        notification.setUser(this.sessionHelperService.getCurrentUser());
+        Map<String, Object> donneesMap = new HashMap<>();
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), typeNotification.getValue());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donneesMap.put(NotificationUtils.ITEM_KEY.getId(), famille.getIntCIP());
+        donneesMap.put(NotificationUtils.ITEM_DESC.getId(), famille.getStrNAME());
+        notification.donnees(buildDonnees(donneesMap));
+        notification.setMessage("");
+        notification.entityRef(famille.getLgFAMILLEID());
+        em.persist(notification);
+
+        TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
+        eventLog.setLgUSERID(notification.getUser());
+        eventLog.setDtCREATED(new Date());
+        eventLog.setDtUPDATED(eventLog.getDtCREATED());
+        eventLog.setStrSTATUT(Constant.STATUT_ENABLE);
+        eventLog.setStrTABLECONCERN(famille.getClass().getName());
+        eventLog.setTypeLog(typeLog);
+        eventLog.setStrDESCRIPTION("Création du produit " + " cip [" + famille.getIntCIP() + " " + famille.getStrNAME()
+                + " par "
+                + notification.getUser().getStrFIRSTNAME().concat(" ").concat(notification.getUser().getStrLASTNAME())
+                + " ]");
+
+        em.persist(eventLog);
+    }
+
+    private String buildDonnees(Map<String, Object> donneesMap) {
+        if (MapUtils.isEmpty(donneesMap)) {
+            return null;
+        }
+        JSONObject json = new JSONObject();
+        donneesMap.forEach(json::put);
+        return json.toString();
+    }
+
+    @Override
+    public JSONObject createProduitDetail(CreationProduitDTO creationProduit) {
+        TFamille familleParent = em.find(TFamille.class, creationProduit.getLgFamilleId());
+        JSONObject json = new JSONObject();
+        if (familleParent.getBoolDECONDITIONNE() == 1) {
+            return json.put("message", "Désolé! Cet article n'est pas autorisé à être déconditionné").put("success", "0");
+        }
+        if (familleParent.getBoolDECONDITIONNEEXIST() == 1) {
+            return json.put("message", "Désolé! Une version décondition de ce produit existe déjà").put("success", "0");
+
+        }
+        TFamille famille = new TFamille(UUID.randomUUID().toString());
+        famille.setDtCREATED(new Date());
+        famille.setLgGROSSISTEID(familleParent.getLgGROSSISTEID());
+        famille.setStrNAME(creationProduit.getStrName() + " DET");
+        famille.setIntCIP(creationProduit.getIntCip() + "D");
+        famille.setStrDESCRIPTION(creationProduit.getStrDescription() + " DET");
+        famille.setIntPRICE(creationProduit.getIntPrice());
+        famille.setIntPRICETIPS(creationProduit.getIntPriceTips());
+        famille.setIntTAUXMARQUE(creationProduit.getIntTauxMarque());
+        famille.setIntPAF(creationProduit.getIntPaf());
+        famille.setIntPAT(creationProduit.getIntPat());
+        famille.setIntS(creationProduit.getIntS());
+        famille.setIntT(creationProduit.getIntT());
+        famille.setIntEAN13(creationProduit.getIntEan13());
+
+        famille.setDtPEREMPTION(familleParent.getDtPEREMPTION());
+
+        famille.setLgFAMILLEARTICLEID(familleParent.getLgFAMILLEARTICLEID());
+        famille.setLgCODEACTEID(familleParent.getLgCODEACTEID());
+        famille.setLgCODEGESTIONID(familleParent.getLgCODEGESTIONID());
+        famille.setStrCODEREMISE(creationProduit.getStrCodeRemise());
+        famille.setStrCODETAUXREMBOURSEMENT(creationProduit.getStrCodeTauxRemboursement());
+        famille.setLgZONEGEOID(getRayon(creationProduit.getLgZoneGeoId()));
+        famille.setIntSEUILMAX(creationProduit.getSeuilMax());
+        famille.setIntNUMBERDETAIL(creationProduit.getIntQteDetail());
+        famille.setLgFORMEID(getFormeArticle(creationProduit.getLgFormeArticleId()));
+        famille.setLgFABRIQUANTID(getFabriquant(creationProduit.getLgFabriquantId()));
+        famille.setBoolDECONDITIONNE(Short.valueOf("1"));
+        famille.setLgTYPEETIQUETTEID(familleParent.getLgTYPEETIQUETTEID());
+
+        famille.setLgCODETVAID(familleParent.getLgCODETVAID());
+        famille.setBoolRESERVE(creationProduit.isBoolReserve());
+        famille.setIntSEUILRESERVE(creationProduit.getIntSeuilReserve());
+        famille.setLgFAMILLEPARENTID(familleParent.getLgFAMILLEID());
+        famille.setIntSTOCKREAPROVISONEMENT(creationProduit.getIntStockReaprovisonement());
+        famille.setIntQTEREAPPROVISIONNEMENT(creationProduit.getIntQteReapprovisionnement());
+        famille.setIntSEUILMIN(famille.getIntSTOCKREAPROVISONEMENT());
+        famille.setBoolCHECKEXPIRATIONDATE(familleParent.getBoolCHECKEXPIRATIONDATE());
+        famille.setLaboratoire(familleParent.getLaboratoire());
+        famille.setGamme(familleParent.getGamme());
+        familleParent.setBoolDECONDITIONNEEXIST(Short.valueOf("1"));
+        familleParent.setDtUPDATED(famille.getDtCREATED());
+        em.merge(familleParent);
+        em.persist(famille);
+        createFamilleGrossiste(famille);
+        createFamilleStock(famille, creationProduit.getIntQuantityStock());
+        buildNotificationCreationProduit(famille, TypeNotification.AJOUT_DE_DETAIL_PRODUIT, TypeLog.AJOUT_DE_DETAIL_PRODUIT);
+        return json.put("success", "1");
+
+    }
+
 }

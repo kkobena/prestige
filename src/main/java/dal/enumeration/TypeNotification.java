@@ -23,7 +23,7 @@ public enum TypeNotification {
     AVOIR_PRODUIT("Reception avoir"), QUANTITE_UG("Entrée quantité UG"), RETOUR_FOURNISSEUR("Retour fournisseur"),
     MODIFICATION_INFO_PRODUIT_COMMANDE("Modification info produit à la commande"),
     MASSE("Notification informationnelle"), MODIFICATION_VENTE("Modification de vente"),
-    SAISIS_PERIMES("Saisis de périmés"), AJOUT_DE_NOUVEAU_PRODUIT("Ajout de nouveau produit");
+    SAISIS_PERIMES("Saisis de périmés"), AJOUT_DE_NOUVEAU_PRODUIT("Ajout de nouveau produit"), AJOUT_DE_DETAIL_PRODUIT("Creation de detail de  produit");
 
     private final String value;
 

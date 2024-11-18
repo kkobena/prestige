@@ -1775,9 +1775,9 @@ public class SalesServiceImpl implements SalesService {
                 updateDiffere(clotureVenteParams, tp, compteClient);
             }
             TTypeVente oTTypeVente = typeVenteFromId(clotureVenteParams.getTypeVenteId());
-            TReglement tReglement = createTReglement(tUser, modeReglement, "",
-                    tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getBanque(), clotureVenteParams.getLieux(),
-                    clotureVenteParams.getCommentaire(), STATUT_IS_CLOSED, "");
+            TReglement tReglement = createTReglement(tUser, modeReglement, "", tp.getLgPREENREGISTREMENTID(),
+                    clotureVenteParams.getBanque(), clotureVenteParams.getLieux(), clotureVenteParams.getCommentaire(),
+                    STATUT_IS_CLOSED, "");
             tp.setBWITHOUTBON(clotureVenteParams.isSansBon());
             tp.setLgTYPEVENTEID(oTTypeVente);
             tp.setLgREGLEMENTID(tReglement);
@@ -1794,8 +1794,8 @@ public class SalesServiceImpl implements SalesService {
                 tp.setDtUPDATED(new Date());
             }
 
-            tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()),
-                    tUser.getLgEMPLACEMENTID()).getReference());
+            tp.setStrREF(buildRef(DateConverter.convertDateToLocalDate(tp.getDtUPDATED()), tUser.getLgEMPLACEMENTID())
+                    .getReference());
 
             boolean keyAccount = test.test(takeInAcount);
             if (keyAccount) {
@@ -1803,8 +1803,8 @@ public class SalesServiceImpl implements SalesService {
             }
             if (amount > 0) {
 
-                addRecette(clotureVenteParams.getMontantPaye(), VENTE_ASSURANCE, tp.getLgPREENREGISTREMENTID(),
-                        tUser, emg);
+                addRecette(clotureVenteParams.getMontantPaye(), VENTE_ASSURANCE, tp.getLgPREENREGISTREMENTID(), tUser,
+                        emg);
             }
             TTypeReglement typeReglement = findById(clotureVenteParams.getTypeRegleId());
             MvtTransaction mvtTransaction = addTransaction(tUser, tp, montant, amount,

@@ -19,13 +19,13 @@ import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.CreationProduitDTO;
 
 /**
  *
  * @author DICI
  */
 @Local
-// @Remote
 public interface ProduitService {
 
     JSONObject produitDesactives(QueryDTO dto, boolean all) throws JSONException;
@@ -93,5 +93,9 @@ public interface ProduitService {
 
     ValorisationDTO getValeurStockPdf(int mode, LocalDate dtStart, String lgGROSSISTEID, String lgFAMILLEARTICLEID,
             String lgZONEGEOID, String end, String begin, String emplacementId);
+
+    JSONObject createProduit(CreationProduitDTO creationProduit);
+    
+    JSONObject createProduitDetail(CreationProduitDTO creationProduit);
 
 }
