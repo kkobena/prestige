@@ -74,6 +74,7 @@ public final class CommonUtils {
     public static boolean isMobileTypeReglement(String reglId) {
 
         return Constant.MODE_WAVE.equals(reglId) || Constant.TYPE_REGLEMENT_ORANGE.equals(reglId)
-                || Constant.MODE_MOOV.equals(reglId) || Constant.MODE_MTN.equals(reglId);
+                || Constant.MODE_MOOV.equals(reglId) || Constant.MODE_MTN.equals(reglId)
+                || Constant.MODE_CB.equals(reglId);
     }
 }
