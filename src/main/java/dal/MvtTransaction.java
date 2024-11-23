@@ -61,9 +61,9 @@ public class MvtTransaction implements Serializable {
     private Integer montantAcc = 0;
     @Column(name = "checked")
     private Boolean checked = true;
-    @Column(name = "mvtdate", nullable = false, updatable = false)
+    @Column(name = "mvtdate", nullable = false)
     private LocalDate mvtDate = LocalDate.now();
-    @Column(name = "createdAt", nullable = false, updatable = false)
+    @Column(name = "createdAt", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
     @JoinColumn(name = "lg_USER_ID", referencedColumnName = "lg_USER_ID", nullable = false)
     @ManyToOne

@@ -343,6 +343,7 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
     @Override
     public JSONObject updateBon(EtatControlBonEditDto bonEdit) {
         JSONObject json = new JSONObject();
+
         TBonLivraison bonLivraison = getById(bonEdit.getBonId());
         TGrossiste grossiste = getByNameOrId(bonEdit.getGrossisteId());
         MvtTransaction mt = getByPkey(bonLivraison.getLgBONLIVRAISONID());
@@ -368,10 +369,12 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
         mt.setMontantTva(bonLivraison.getIntTVA());
         mt.setMontantRestant(bonLivraison.getIntHTTC());
         mt.setMontantAcc(bonLivraison.getIntMHT());
-
+        mt.setMvtDate(LocalDate.parse(bonEdit.getDateLivraison()));
+        mt.setCreatedAt(mt.getMvtDate().atStartOfDay());
         em.merge(bonLivraison);
         em.merge(order);
         em.merge(mt);
+
         return json.put("status", 1).put("message", "Le BL mis à jour avec succès");
     }
 
