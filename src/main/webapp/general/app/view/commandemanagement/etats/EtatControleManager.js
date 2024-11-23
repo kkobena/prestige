@@ -31,15 +31,9 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
     plugins: [{
             ptype: 'rowexpander',
             rowBodyTpl: new Ext.XTemplate(
-                    '<p> {items}</p>'/*,
-                     {
-                     formatChange: function (v) {
-                     let color = v >= 0 ? 'green' : 'red';
-                     return '<span style="color: ' + color + ';">' + Ext.util.Format.usMoney(v) + '</span>';
-                     }
-                     }*/)
+                    '<p> {items}</p>')
         }],
-//    iconCls: 'icon-grid',
+
     initComponent: function () {
 
 

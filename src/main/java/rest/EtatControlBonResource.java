@@ -6,12 +6,13 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import org.json.JSONObject;
 import rest.service.EtatControlBonService;
+import rest.service.dto.EtatControlBonEditDto;
 
 /**
  *
@@ -35,9 +36,10 @@ public class EtatControlBonResource {
         boolean returnFullBLLAuthority = Utils.hasAuthorityByName(Utils.getconnectedUserPrivileges(servletRequest),
                 Parameter.ACTION_RETURN_FULL_BL);
 
-        JSONObject json = etatControlBonService.list(returnFullBLLAuthority, search, dtStart, dtEnd, grossisteId, start,
-                limit);
-        return Response.ok().entity(json.toString()).build();
+        return Response.ok()
+                .entity(etatControlBonService
+                        .list(returnFullBLLAuthority, search, dtStart, dtEnd, grossisteId, start, limit).toString())
+                .build();
 
     }
 
@@ -46,18 +48,23 @@ public class EtatControlBonResource {
     public Response listAnnuelle(@QueryParam(value = "groupeId") Integer groupeId,
             @QueryParam(value = "groupBy") String groupBy, @QueryParam(value = "grossisteId") String grossisteId,
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
-
-        JSONObject json = etatControlBonService.listBonAnnuelView(groupBy, dtStart, dtEnd, grossisteId, groupeId);
-        return Response.ok().entity(json.toString()).build();
+        return Response.ok().entity(
+                etatControlBonService.listBonAnnuelView(groupBy, dtStart, dtEnd, grossisteId, groupeId).toString())
+                .build();
 
     }
 
     @GET
     @Path("etat-annuel")
     public Response etatLastThreeYears() {
+        return Response.ok().entity(etatControlBonService.etatLastThreeYears().toString()).build();
 
-        JSONObject json = etatControlBonService.etatLastThreeYears();
-        return Response.ok().entity(json.toString()).build();
+    }
+
+    @POST
+    @Path("edit")
+    public Response editBon(EtatControlBonEditDto bonEditDto) {
+        return Response.ok().entity(etatControlBonService.updateBon(bonEditDto).toString()).build();
 
     }
 }
