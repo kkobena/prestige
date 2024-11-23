@@ -223,7 +223,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                         generateDataSummaryVno(oTPreenregistrement, mvtTransaction),
                         generateCommentaire(oTPreenregistrement, mvtTransaction), fileBarecode);
 
-                printCashierReceipt(imp, isNotCash, isReedit);
+                printCashierReceipt(oTPreenregistrement, imp, isReedit);
             } else {
                 page = datas.size() / counter;
                 while (page != pageCurrent) {
@@ -232,7 +232,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infoClientAvoir, Collections.emptyList(),
                             Collections.emptyList(), fileBarecode);
-                    printCashierReceipt(imp, isNotCash, isReedit);
+                    printCashierReceipt(oTPreenregistrement, imp, isReedit);
 
                     k = counter;
                     diff = datas.size() - counter;
@@ -253,7 +253,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                             generateDataSummaryVno(oTPreenregistrement, mvtTransaction),
                             generateCommentaire(oTPreenregistrement, mvtTransaction), fileBarecode);
                 }
-                printCashierReceipt(imp, isNotCash, isReedit);
+                printCashierReceipt(oTPreenregistrement, imp, isReedit);
 
             }
             json.put("success", true);
@@ -615,7 +615,6 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             boolean isNotCash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
                     .equals(Constant.TYPE_REGLEMENT_ESPECE);
 
-            // copies = nbreDeCopiesOranges(oTPreenregistrement, copies);
             String fileBarecode = buildLineBarecode(oTPreenregistrement.getStrREFTICKET());
             TEmplacement te = oTPreenregistrement.getLgUSERID().getLgEMPLACEMENTID();
             boolean voirNumTicket = voirNumeroTicket();
@@ -648,7 +647,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             if (datas.size() <= counter) {
                 imp.buildTicket(datas, infoSellers, infoClientAvoir, generateDataSummaryVno, generateCommentaire,
                         fileBarecode);
-                printCashierReceipt(imp, isNotCash, isReedit);
+                printCashierReceipt(oTPreenregistrement, imp, isReedit);
 
             } else {
                 page = datas.size() / counter;
@@ -658,7 +657,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     }
                     imp.buildTicket(lstDataFinal, infoSellers, infoClientAvoir, Collections.emptyList(),
                             Collections.emptyList(), fileBarecode);
-                    printCashierReceipt(imp, isNotCash, isReedit);
+                    printCashierReceipt(oTPreenregistrement, imp, isReedit);
 
                     k = counter;
                     diff = datas.size() - counter;
@@ -678,7 +677,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                     imp.buildTicket(lstDataFinal, infoSellers, infoClientAvoir, generateDataSummaryVno,
                             generateCommentaire, fileBarecode);
                 }
-                printCashierReceipt(imp, isNotCash, isReedit);
+                printCashierReceipt(oTPreenregistrement, imp, isReedit);
 
             }
             json.put("success", true);
@@ -693,7 +692,7 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
 
     private boolean printUniqueTicket() {
         try {
-            TParameters p = getEntityManager().find(TParameters.class, DateConverter.KEY_NOMBRE_TICKETS_VNO);
+            TParameters p = getEntityManager().find(TParameters.class, Constant.KEY_NOMBRE_TICKETS_VNO);
             return Integer.valueOf(p.getStrVALUE()).compareTo(0) == 0;
         } catch (Exception e) {
             return false;
@@ -712,9 +711,8 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 }
             }
             if (Objects.nonNull(mvtTransaction)) {
-                boolean isNotCash = !mvtTransaction.getReglement().getLgTYPEREGLEMENTID()
-                        .equals(Constant.TYPE_REGLEMENT_ESPECE);
-                printCashierReceipt(impressionService, isNotCash, isReedit);
+
+                printCashierReceipt(oTPreenregistrement, impressionService, isReedit);
             } else {
                 int copies = nbreDeCopiesOranges(oTPreenregistrement, 1);
                 for (int i = 0; i < copies; i++) {
@@ -724,9 +722,9 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
     }
 
-    private void printCashierReceipt(ImpressionServiceImpl impressionService, boolean isNotCash, boolean isReedit)
-            throws PrinterException {
-        int copies = isReedit ? 1 : nbreDeCopiesOranges(isNotCash, 1);
+    private void printCashierReceipt(TPreenregistrement oTPreenregistrement, ImpressionServiceImpl impressionService,
+            boolean isReedit) throws PrinterException {
+        int copies = isReedit ? 1 : nbreDeCopiesOranges(oTPreenregistrement, 1);
         for (int i = 0; i < copies; i++) {
             impressionService.printTicketVente(1);
 
@@ -1509,18 +1507,10 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
                 .anyMatch(r -> CommonUtils.isMobileTypeReglement(r.getTypeReglement().getLgTYPEREGLEMENTID()));
 
         if (hasMobile) {
-            Optional<Integer> nbreCopieOtherEspece = findOrangeNumberOfTicket();
-            return nbreCopieOtherEspece.orElse(copies);
+            return findOrangeNumberOfTicket().orElse(copies);
+
         }
         return copies;
-    }
-
-    private int nbreDeCopiesOranges(boolean isNotCash, int defaultCopie) {
-        if (isNotCash) {
-            Optional<Integer> nbreCopieOtherEspece = findOrangeNumberOfTicket();
-            return nbreCopieOtherEspece.orElse(defaultCopie);
-        }
-        return defaultCopie;
     }
 
     @Override
