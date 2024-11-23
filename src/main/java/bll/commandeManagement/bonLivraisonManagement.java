@@ -126,6 +126,16 @@ public class bonLivraisonManagement extends bllBase implements Bonlivraisonmanag
 
     }
 
+    public int articleStatus(String lgFamilleID) {
+        int status = getStatusInOrder(lgFamilleID);
+        if (status == 0) {
+            status = articleStatusSuggestion(lgFamilleID);
+        }
+
+        return status;
+
+    }
+
     public List<TFamille> findFamilleBLDetail(String search_value, String lg_BON_LIVRAISON_ID) {
 
         List<TFamille> lstTFamille = new ArrayList<>();
@@ -713,14 +723,14 @@ public class bonLivraisonManagement extends bllBase implements Bonlivraisonmanag
             OTParameters = new TparameterManager(this.getOdataManager())
                     .getParameter(Parameter.KEY_ACTIVATE_PEREMPTION_DATE);
             if (OTParameters == null) { // replace true apres par la valeur boolean qui reprensente de la fermeture
-                                        // automatique. False = fermeture automatique desactivée
+                // automatique. False = fermeture automatique desactivée
                 this.buildErrorTraceMessage(
                         "Paramètre d'autorisation de saisie de produit sans date de péremption inexistant");
                 return false;
             }
             OTBonLivraison = this.FindTBonLivraison(lg_BON_LIVRAISON_ID, commonparameter.statut_enable);
             lstTBonLivraisonDetail = this.getTBonLivraisonDetail(OTBonLivraison.getLgBONLIVRAISONID());// modifie le
-                                                                                                       // 12/02/2018
+            // 12/02/2018
             new logger().OCategory.info("lstTBonLivraisonDetail size " + lstTBonLivraisonDetail.size());
 
             if (Integer.valueOf(OTParameters.getStrVALUE()) == 1) {
@@ -1169,7 +1179,7 @@ public class bonLivraisonManagement extends bllBase implements Bonlivraisonmanag
     @Override
     public TBonLivraisonDetail getTBonLivraisonDetailLast(String lg_BON_LIVRAISON_ID, String lg_FAMILLE_ID) {
         throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        // Tools | Templates.
     }
 
     @Override
@@ -1409,84 +1419,6 @@ public class bonLivraisonManagement extends bllBase implements Bonlivraisonmanag
         }
 
         return isExist;
-    }
-
-    public JSONObject updateBL(String idBL, String dt_DATELIVRAISON, int intMHT, int intTVA, String lgGROSSISTEIDEDIT,
-            String ref) {
-        JSONObject json = new JSONObject();
-        try {
-            TBonLivraison bl = this.getOdataManager().getEm().find(TBonLivraison.class, idBL);
-
-            TGrossiste tg = (TGrossiste) this.getOdataManager().getEm()
-                    .createQuery("SELECT o FROM TGrossiste o WHERE (o.strLIBELLE LIKE ?1 OR o.lgGROSSISTEID LIKE ?1 )")
-                    .setParameter(1, lgGROSSISTEIDEDIT.trim()).getSingleResult();
-            List<TBonLivraisonDetail> list = getByBL(bl.getLgBONLIVRAISONID());
-
-            long amount = getDetailsAmount(list);
-            if (intMHT != amount) {
-                json.put("status", 0).put("message",
-                        "Le montant HT saisie est différent du montant HT de la somme des différents articles du BL qui est : "
-                                + amount);
-                return json;
-            }
-            if (!this.getOdataManager().getEm().getTransaction().isActive()) {
-                this.getOdataManager().getEm().getTransaction().begin();
-            }
-
-            bl.setDtDATELIVRAISON(java.sql.Date.valueOf(dt_DATELIVRAISON));
-            bl.setIntMHT(intMHT);
-            bl.setIntTVA(intTVA);
-            bl.setIntHTTC(intTVA + intMHT);
-            bl.setStrREFLIVRAISON(ref);
-            TOrder o = bl.getLgORDERID();
-            o.setLgGROSSISTEID(tg);
-            // o.setIntPRICE(intMHT);
-
-            list.forEach((detail) -> {
-
-                detail.setLgGROSSISTEID(tg);
-                this.getOdataManager().getEm().merge(detail);
-            });
-            this.getOdataManager().getEm().merge(o);
-            this.getOdataManager().getEm().merge(bl);
-
-            if (this.getOdataManager().getEm().getTransaction().isActive()) {
-                this.getOdataManager().getEm().getTransaction().commit();
-            }
-            json.put("status", 1).put("message", "Le BL mis à jour avec succès");
-        } catch (Exception e) {
-            e.printStackTrace();
-
-        }
-        return json;
-    }
-
-    private List<TBonLivraisonDetail> getByBL(String id) {
-        List<TBonLivraisonDetail> list = new ArrayList<>();
-        try {
-            list = this.getOdataManager().getEm()
-                    .createQuery("SELECT o FROM TBonLivraisonDetail o WHERE o.lgBONLIVRAISONID.lgBONLIVRAISONID =?1 ")
-                    .setParameter(1, id).getResultList();
-        } catch (Exception e) {
-
-        }
-        return list;
-    }
-
-    private long getDetailsAmount(List<TBonLivraisonDetail> bonLivraisonDetails) {
-        return bonLivraisonDetails.stream().mapToLong((value) -> {
-            return (value.getIntPAF() * value.getIntQTECMDE());
-        }).sum();
-    }
-
-    public int articleStatus(String lgFamilleID) {
-        int status = getStatusInOrder(lgFamilleID);
-        if (status == 0) {
-            status = articleStatusSuggestion(lgFamilleID);
-        }
-
-        return status;
-
     }
 
     public int articleStatusSuggestion(String lgFamilleID) {

@@ -143,12 +143,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     dataIndex: 'int_CIP',
                     flex: 0.6,
                     renderer: function (v, m, r) {
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return v;
@@ -160,12 +160,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 2,
                     renderer: function (v, m, r) {
 
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return v;
@@ -178,12 +178,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 0.5,
                     renderer: function (v, m, r) {
 
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return amountformat(v);
@@ -195,12 +195,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     align: 'right',
                     flex: 0.5,
                     renderer: function (v, m, r) {
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return amountformat(v);
@@ -214,12 +214,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 0.5,
                     renderer: function (v, m, r) {
 
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return amountformat(v);
@@ -232,12 +232,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     flex: 0.5,
                     renderer: function (v, m, r) {
 
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return v;
@@ -250,12 +250,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     ,
                     renderer: function (v, m, r) {
 
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return v;
@@ -268,12 +268,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     ,
                     renderer: function (v, m, r) {
 
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return v;
@@ -286,12 +286,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     ,
                     renderer: function (v, m, r) {
 
-                        const Stock = r.data.int_NUMBER_AVAILABLE;
-                        if (Stock == 0) {
+                        const stock = r.data.int_NUMBER_AVAILABLE;
+                        if (stock == 0) {
                             m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (Stock > 0) {
+                        } else if (stock > 0) {
                             m.style = 'font-weight:800;';
-                        } else if (Stock < 0) {
+                        } else if (stock < 0) {
                             m.style = 'background-color:#F5BCA9;font-weight:800;';
                         }
                         return v;
@@ -642,7 +642,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
                 {
                     text: 'Importer des articles',
-                    tooltip: 'Importer Stock',
+                    tooltip: 'Importer stock',
                     iconCls: 'importicon',
                     scope: this,
                     hidden: (lg_EMPLACEMENT_ID === '1'),
@@ -650,7 +650,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
                         var win = new Ext.window.Window({
                             autoShow: false,
-                            title: 'Importer Stock dépôt',
+                            title: 'Importer stock dépôt',
                             width: 500,
                             height: 150,
                             layout: 'fit',
@@ -1118,7 +1118,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
                                         var dt_debut = Ext.getCmp('dt_debut').getSubmitValue();
                                         var dt_fin = Ext.getCmp('dt_fin').getSubmitValue();
-                                        /*   new testextjs.view.stockmanagement.suivistockvente.action.detailStock({
+                                        /*   new testextjs.view.stockmanagement.suivistockvente.action.detailstock({
                                          odatasource: id,
                                          parentview: this,
                                          mode: "update",
