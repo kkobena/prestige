@@ -19,10 +19,10 @@ public class KeyUtilGen {
     int jour;
     int annee;
     int mls;
-    Date newDate_depart = new Date();
-    Date lastDate_depart = new Date();
-    Date newDate_return = new Date();
-    Date lastDate_return = new Date();
+    private final Date newDateDepart = new Date();
+    private final Date lastDateDepart = newDateDepart;
+    private final Date newDateReturn = newDateDepart;
+    private final Date lastDateReturn = newDateDepart;
     public static final SimpleDateFormat formatterMysqlShort = new SimpleDateFormat("yyyy-MM-dd");
     public static final SimpleDateFormat formatterMysqlShort2 = new SimpleDateFormat("yyyy/MM/dd");
     public static final SimpleDateFormat formatterMysql = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -61,10 +61,7 @@ public class KeyUtilGen {
     }
 
     public String getDateTime() {
-        this.newDate_depart = new Date();
-        this.newDate_return = new Date();
-        this.lastDate_depart = new Date();
-        this.lastDate_return = new Date();
+
         Calendar now = Calendar.getInstance();
         this.mm = now.get(12);
         this.ss = now.get(13);
@@ -78,10 +75,7 @@ public class KeyUtilGen {
     }
 
     public String getDate() {
-        this.newDate_depart = new Date();
-        this.newDate_return = new Date();
-        this.lastDate_depart = new Date();
-        this.lastDate_return = new Date();
+
         Calendar now = Calendar.getInstance();
         this.mm = now.get(12);
         this.ss = now.get(13);
@@ -114,10 +108,7 @@ public class KeyUtilGen {
     }
 
     public String gettimeid() {
-        this.newDate_depart = new Date();
-        this.newDate_return = new Date();
-        this.lastDate_depart = new Date();
-        this.lastDate_return = new Date();
+
         Calendar now = Calendar.getInstance();
         this.mm = now.get(12);
         this.ss = now.get(13);
@@ -132,10 +123,7 @@ public class KeyUtilGen {
     }
 
     public String getComplexId() {
-        this.newDate_depart = new Date();
-        this.newDate_return = new Date();
-        this.lastDate_depart = new Date();
-        this.lastDate_return = new Date();
+
         Calendar now = Calendar.getInstance();
         this.mm = now.get(12);
         this.ss = now.get(13);
@@ -177,10 +165,7 @@ public class KeyUtilGen {
     }
 
     public String getSimpletimeid() {
-        this.newDate_depart = new Date();
-        this.newDate_return = new Date();
-        this.lastDate_depart = new Date();
-        this.lastDate_return = new Date();
+
         Calendar now = Calendar.getInstance();
         this.mm = now.get(12);
         this.ss = now.get(13);
@@ -216,7 +201,6 @@ public class KeyUtilGen {
             this.catime = this.catime.substring(0, 11);
         }
 
-        System.out.println(this.catime);
         String UPCA = Md5.SimpleUPCA(this.catime);
         return UPCA;
     }

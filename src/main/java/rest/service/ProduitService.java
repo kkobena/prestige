@@ -95,7 +95,9 @@ public interface ProduitService {
             String lgZONEGEOID, String end, String begin, String emplacementId);
 
     JSONObject createProduit(CreationProduitDTO creationProduit);
-    
+
     JSONObject createProduitDetail(CreationProduitDTO creationProduit);
+
+    JSONObject updateProduitDetail(CreationProduitDTO creationProduit, String idProduit);
 
 }

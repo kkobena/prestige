@@ -32,7 +32,8 @@ public enum TypeLog {
     MODIFICATION_PU_PRODUIT_COMMANDE("Modification prix de vente produit à la commande", false),
     MVT_DE_CAISSE_REGLEMENT_DIFFERE("Règlement différé", false),
     MVT_DE_CAISSE_REGLEMENT_DEPOT("Règlement dépôt", false), MODIFICATION_VENTE("Modification de vente", true),
-    AJOUT_DE_NOUVEAU_PRODUIT("Ajout de nouveau produit", true), AJOUT_DE_DETAIL_PRODUIT("Creation de detail de  produit", true);
+    AJOUT_DE_NOUVEAU_PRODUIT("Ajout de nouveau produit", true),
+    AJOUT_DE_DETAIL_PRODUIT("Creation de detail de  produit", true);
 
     private final String value;
     private final boolean checked;

@@ -21,6 +21,7 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -373,12 +374,19 @@ public class ProduitRessource {
     @POST
     @Path("create-detail")
     public Response createProduitDetail(CreationProduitDTO produit) {
-        return Response.ok().entity(produitService.createProduitDetail(produit)).build();
+        return Response.ok().entity(produitService.createProduitDetail(produit).toString()).build();
     }
 
     @POST
     @Path("create")
     public Response createProduit(CreationProduitDTO produit) {
-        return Response.ok().entity(produitService.createProduit(produit)).build();
+        return Response.ok().entity(produitService.createProduit(produit).toString()).build();
     }
+
+    @PUT
+    @Path("create-detail/{id}")
+    public Response updateProduitDetail(@PathParam("id") String id, CreationProduitDTO produit) {
+        return Response.ok().entity(produitService.updateProduitDetail(produit, id).toString()).build();
+    }
+
 }

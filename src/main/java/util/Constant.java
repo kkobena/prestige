@@ -166,7 +166,7 @@ public final class Constant {
     public static final String DEFAUL_GROSSISTE = "001";
     public static final String DEFAUL_RAYON_ID = "1";
     public static final String DEFAUL_CODE_TVA = "1";
-     public static final String STATUT_DISABLE = "disable";
+    public static final String STATUT_DISABLE = "disable";
 
     private Constant() {
     }
