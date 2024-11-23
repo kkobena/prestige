@@ -2426,8 +2426,8 @@ public class SalesServiceImpl implements SalesService {
             int remise = 0;
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
-                TGrilleRemise grilleRemise = remiseService.getGrilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(),
-                        famille, oTRemise.getLgREMISEID());
+                TGrilleRemise grilleRemise = remiseService.getGrilleRemiseRemiseFromWorkflow(
+                        x.getLgPREENREGISTREMENTID(), famille, oTRemise.getLgREMISEID());
                 if (grilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * grilleRemise.getDblTAUX()) / 100);
                     if (!x.getBoolACCOUNT()) {
@@ -4022,8 +4022,8 @@ public class SalesServiceImpl implements SalesService {
             Integer remise = 0;
             if (!StringUtils.isEmpty(famille.getStrCODEREMISE()) && !famille.getStrCODEREMISE().equals("2")
                     && !famille.getStrCODEREMISE().equals("3")) {
-                TGrilleRemise oGrilleRemise = remiseService.getGrilleRemiseRemiseFromWorkflow(x.getLgPREENREGISTREMENTID(),
-                        famille, oTRemise.getLgREMISEID());
+                TGrilleRemise oGrilleRemise = remiseService.getGrilleRemiseRemiseFromWorkflow(
+                        x.getLgPREENREGISTREMENTID(), famille, oTRemise.getLgREMISEID());
                 if (oGrilleRemise != null) {
                     remise = (int) ((x.getIntPRICE() * oGrilleRemise.getDblTAUX()) / 100);
                     if (!x.getBoolACCOUNT()) {
