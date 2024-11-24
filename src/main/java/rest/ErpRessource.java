@@ -5,9 +5,7 @@
  */
 package rest;
 
-import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
