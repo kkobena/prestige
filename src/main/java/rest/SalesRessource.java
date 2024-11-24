@@ -179,7 +179,7 @@ public class SalesRessource {
     @POST
     @Path("net/vno")
     public Response netPayer(SalesParams params) throws JSONException {
-       
+
         JSONObject json = salesService.shownetpayVno(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -187,7 +187,7 @@ public class SalesRessource {
     @POST
     @Path("net/assurance")
     public Response netPayerAssurance(SalesParams params) throws JSONException {
-       
+
         JSONObject json = salesService.computeVONet(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -195,7 +195,7 @@ public class SalesRessource {
     @POST
     @Path("cloturer/assurance")
     public Response cloturerAssurance(ClotureVenteParams clotureVenteParams) {
-       
+
         JSONObject json = salesService.updateVenteClotureAssurance(clotureVenteParams);
         return Response.ok().entity(json.toString()).build();
     }

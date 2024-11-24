@@ -32,7 +32,6 @@ public class ErpRessource {
     @EJB
     private DataExportService dataExportService;
 
-
     @GET
     @Path("valorisation")
     public Response valorisation(@QueryParam(value = "dtJour") String dtJour) {
