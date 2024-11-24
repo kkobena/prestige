@@ -5,6 +5,7 @@
  */
 package rest.service.impl;
 
+import commonTasks.dto.ErProduitDTO;
 import commonTasks.dto.ErpAchatFournisseurDTO;
 import commonTasks.dto.ErpCaComptant;
 import commonTasks.dto.ErpFactureDTO;
@@ -23,6 +24,7 @@ import dal.TClient;
 import dal.TCompteClientTiersPayant;
 import dal.TDossierReglement;
 import dal.TFacture;
+import dal.TFamille;
 import dal.TGroupeTierspayant;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TReglement;
@@ -241,6 +243,13 @@ public class ErpServiceImpl implements ErpService {
     }
 
     @Override
+    public List<ErProduitDTO> produits() {
+        return getEntityManager().createQuery(
+                "SELECT new commonTasks.dto.ErProduitDTO(o) FROM TFamilleStock o WHERE o.strSTATUT='enable'",
+                ErProduitDTO.class).getResultList();
+    }
+
+    @Override
     public List<ErpAchatFournisseurDTO> achatsFournisseurs(String dtStart, String dtEnd) {
         return getEntityManager().createQuery(
                 "SELECT new commonTasks.dto.ErpAchatFournisseurDTO(o) FROM TBonLivraison  o WHERE o.strSTATUT='is_Closed' AND FUNCTION('DATE',o.dtCREATED) BETWEEN ?1 AND ?2",
@@ -292,6 +301,12 @@ public class ErpServiceImpl implements ErpService {
                         TClient.class)
                 .setFirstResult(start).setMaxResults(limit).getResultList();
     }
+
+    /*
+     * private List<TFamille> produits(int start, int limit) { return getEntityManager()
+     * .createQuery("SELECT o  FROM TFamille o WHERE o.strSTATUT='enable'  ORDER BY o.strNAME ASC", TFamille.class)
+     * .setFirstResult(start).setMaxResults(limit).getResultList(); }
+     */
 
     private List<TCompteClientTiersPayant> compteClientTiersPayantByTiersPayant(String clientId) {
         return getEntityManager()

@@ -5,6 +5,7 @@
  */
 package rest.service;
 
+import commonTasks.dto.ErProduitDTO;
 import commonTasks.dto.ErpAchatFournisseurDTO;
 import commonTasks.dto.ErpCaComptant;
 import commonTasks.dto.ErpFactureDTO;
@@ -35,6 +36,8 @@ public interface ErpService {
     List<ErpFactureDTO> erpFactures(String dtStart, String dtEnd);
 
     List<ErpFournisseur> fournisseurs();
+
+    List<ErProduitDTO> produits();
 
     List<ErpAchatFournisseurDTO> achatsFournisseurs(String dtStart, String dtEnd);
 

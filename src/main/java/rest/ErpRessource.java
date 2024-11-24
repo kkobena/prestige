@@ -72,6 +72,12 @@ public class ErpRessource {
     }
 
     @GET
+    @Path("produits")
+    public Response produits() {
+        return Response.ok().entity(erpService.produits()).build();
+    }
+
+    @GET
     @Path("achats-fournisseurs")
     public Response achatsFournisseurs(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd) {
