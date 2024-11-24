@@ -34,8 +34,6 @@ public class ErpRessource {
     @EJB
     private DataExportService dataExportService;
 
-    @Resource(name = "concurrent/__defaultManagedExecutorService")
-    ManagedExecutorService mes;
 
     @GET
     @Path("valorisation")
