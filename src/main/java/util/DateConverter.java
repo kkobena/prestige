@@ -285,7 +285,7 @@ public final class DateConverter {
         int mm = now.get(Calendar.MINUTE);
         int ss = now.get(Calendar.SECOND);
         int mls = now.get(Calendar.MILLISECOND);
-        String catime = (String.valueOf(mm) + "" + String.valueOf(ss) + "" + String.valueOf(mls));
+        String catime = (String.valueOf(mm) + "" + ss + "" + mls);
         int intlenght = catime.length();
         while (intlenght < intSize) {
             catime = catime + getNumberRandom();
@@ -338,15 +338,15 @@ public final class DateConverter {
         int mm = now.get(Calendar.MINUTE);
         int ss = now.get(Calendar.SECOND);
         int mls = now.get(Calendar.MILLISECOND);
-        String catime = (String.valueOf(mm) + "" + String.valueOf(ss) + "" + String.valueOf(mls));
-        int int_lenght = catime.length();
-        if (int_lenght < 20) {
+        String catime = (String.valueOf(mm) + "" + ss + "" + mls);
+        int intLenght = catime.length();
+        if (intLenght < 20) {
             catime = catime + getNumberRandom();
         }
-        if (int_lenght == 20) {
+        if (intLenght == 20) {
             return catime;
         }
-        if (int_lenght > 20) {
+        if (intLenght > 20) {
             return catime.substring(0, 20);
         }
         return catime;
