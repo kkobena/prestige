@@ -117,25 +117,94 @@ public class ErpServiceImpl implements ErpService {
                     caComptant.setRemiseSurCA(caComptant.getRemiseSurCA() + e.getRemiseSurCA());
                     caComptant.setTotTVA(caComptant.getTotTVA() + e.getTotTVA());
                     switch (e.getMode()) {
-                    case DateConverter.MODE_ESP:
-                        caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
-                        break;
-                    case DateConverter.MODE_CHEQUE:
-                        caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
-                        break;
-                    case DateConverter.MODE_CB:
-                        caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
-                        break;
-                    case DateConverter.MODE_VIREMENT:
-                        caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
-                        break;
-                    case DateConverter.MODE_MOOV:
-                    case DateConverter.TYPE_REGLEMENT_ORANGE:
-                    case DateConverter.MODE_MTN:
-                        caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
-                        break;
-                    default:
-                        break;
+                        case DateConverter.MODE_ESP:
+                            caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
+                            break;
+                        case DateConverter.MODE_CHEQUE:
+                            caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
+                            break;
+                        case DateConverter.MODE_CB:
+                            caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
+                            break;
+                        case DateConverter.MODE_VIREMENT:
+                            caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
+                            break;
+                        case DateConverter.MODE_MOOV:
+                        case DateConverter.TYPE_REGLEMENT_ORANGE:
+                        case DateConverter.MODE_MTN:
+                            caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
+                            break;
+                        default:
+                            break;
+                    }
+                });
+
+                caComptants2.add(caComptant);
+            });
+            return caComptants2;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "caComptant =====>>", e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<ErpCaComptant> caAll(String dtStart, String dtEnd) {
+        try {
+            List<Tuple> list = getEntityManager().createNativeQuery(
+                    "SELECT SUM(m.montantCredit) AS montantCredit,SUM(m.montantPaye) AS montantPaye, SUM(m.montantRemise) AS montantRemise, SUM(m.montantTva) as montantTva,m.mvtdate,m.typeReglementId FROM mvttransaction m where m.checked=1 AND (m.typeTransaction=0 OR m.typeTransaction=1) AND m.lg_EMPLACEMENT_ID='1' AND DATE(m.mvtdate) BETWEEN ?1 AND ?2 GROUP BY m.mvtdate,m.typeReglementId",
+                    Tuple.class).setParameter(1, LocalDate.parse(dtStart)).setParameter(2, LocalDate.parse(dtEnd))
+                    .getResultList();
+            List<ErpCaComptant> caComptants = new ArrayList<>();
+            list.stream().map(t -> {
+                long montantCredit = t.get("montantCredit", BigDecimal.class).longValue();                
+                long montantPaye = t.get("montantPaye", BigDecimal.class).longValue();
+                long montantRemise = t.get("montantRemise", BigDecimal.class).longValue();
+                long montantTva = t.get("montantTva", BigDecimal.class).longValue();
+                LocalDate mvtDate = t.get("mvtdate", java.sql.Date.class).toLocalDate();
+                String typeReglementId = t.get("typeReglementId", String.class);
+                ErpCaComptant caComptant = new ErpCaComptant();
+                caComptant.setMode(typeReglementId);
+                caComptant.setTotEsp(montantPaye);
+                caComptant.setRemiseSurCA(montantRemise);
+                caComptant.setTotTVA(montantTva);
+                caComptant.setMvtDate(mvtDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+                caComptant.setMontantCredit(montantCredit);
+                return caComptant;
+            }).forEachOrdered(caComptant -> {
+                caComptants.add(caComptant);
+            });
+            List<ErpCaComptant> caComptants2 = new ArrayList<>();
+            Map<String, List<ErpCaComptant>> map = caComptants.stream()
+                    .collect(Collectors.groupingBy(ErpCaComptant::getMvtDate));
+            map.forEach((k, v) -> {
+                ErpCaComptant caComptant = new ErpCaComptant();
+                caComptant.setMvtDate(k);
+
+                v.forEach(e -> {
+                    caComptant.setRemiseSurCA(caComptant.getRemiseSurCA() + e.getRemiseSurCA());
+                    caComptant.setTotTVA(caComptant.getTotTVA() + e.getTotTVA());
+                    caComptant.setMontantCredit(caComptant.getMontantCredit() + e.getMontantCredit());
+                    switch (e.getMode()) {
+                        case DateConverter.MODE_ESP:
+                            caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
+                            break;
+                        case DateConverter.MODE_CHEQUE:
+                            caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
+                            break;
+                        case DateConverter.MODE_CB:
+                            caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
+                            break;
+                        case DateConverter.MODE_VIREMENT:
+                            caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
+                            break;
+                        case DateConverter.MODE_MOOV:
+                        case DateConverter.TYPE_REGLEMENT_ORANGE:
+                        case DateConverter.MODE_MTN:
+                            caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
+                            break;
+                        default:
+                            break;
                     }
                 });
 
@@ -250,6 +319,22 @@ public class ErpServiceImpl implements ErpService {
     }
 
     @Override
+    public List<ErProduitDTO> checkproduit(String nom) {
+        if (StringUtils.isEmpty(nom)) {
+            nom = "%%";
+        } else {
+            nom = nom.toUpperCase() + "%";
+        }
+        System.err.println("checkproduit " + nom);
+        TypedQuery<ErProduitDTO> q = getEntityManager().createQuery(
+                "SELECT new commonTasks.dto.ErProduitDTO(o) FROM TFamilleStock o WHERE o.strSTATUT='enable' AND "
+                + " (o.lgFAMILLEID.strNAME LIKE ?1 OR o.lgFAMILLEID.intCIP LIKE ?1 ) AND o.lgFAMILLEID.strSTATUT='enable'  ",
+                ErProduitDTO.class);
+        q.setParameter(1, nom);
+        return q.getResultList();
+    }
+
+    @Override
     public List<ErpAchatFournisseurDTO> achatsFournisseurs(String dtStart, String dtEnd) {
         return getEntityManager().createQuery(
                 "SELECT new commonTasks.dto.ErpAchatFournisseurDTO(o) FROM TBonLivraison  o WHERE o.strSTATUT='is_Closed' AND FUNCTION('DATE',o.dtCREATED) BETWEEN ?1 AND ?2",
@@ -307,14 +392,10 @@ public class ErpServiceImpl implements ErpService {
      * .createQuery("SELECT o  FROM TFamille o WHERE o.strSTATUT='enable'  ORDER BY o.strNAME ASC", TFamille.class)
      * .setFirstResult(start).setMaxResults(limit).getResultList(); }
      */
-
     private List<TCompteClientTiersPayant> compteClientTiersPayantByTiersPayant(String clientId) {
-        return getEntityManager()
-                .createQuery(
-                        "SELECT o FROM TCompteClientTiersPayant o WHERE  o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 ",
-                        TCompteClientTiersPayant.class)
-
-                .setParameter(1, clientId).getResultList();
+        return getEntityManager().createQuery(
+                "SELECT o FROM TCompteClientTiersPayant o WHERE  o.lgCOMPTECLIENTID.lgCLIENTID.lgCLIENTID=?1 ",
+                TCompteClientTiersPayant.class).setParameter(1, clientId).getResultList();
     }
 
     private List<CustomerDTO> buildAyantDroits(String idClient, String numAssure) {
@@ -348,8 +429,9 @@ public class ErpServiceImpl implements ErpService {
         System.out.println("startAt at " + startAt.toString());
         // long count=clientsCount();
         long count = 5000;
-        if (count == 0)
+        if (count == 0) {
             return Collections.emptyList();
+        }
 
         int start = 0;
         int limit = 100;
@@ -429,16 +511,19 @@ public class ErpServiceImpl implements ErpService {
     }
 
     private boolean checkPhoneNumber(String phone) {
-        if (StringUtils.isEmpty(phone))
+        if (StringUtils.isEmpty(phone)) {
             return false;
-        if (phone.length() < 8)
+        }
+        if (phone.length() < 8) {
             return false;
+        }
         return NumberUtils.isCreatable(phone);
     }
 
     private LocalDate fromDate(Date date) {
-        if (date == null)
+        if (date == null) {
             return null;
+        }
         return DateConverter.convertDateToLocalDate(date);
     }
 
