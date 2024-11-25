@@ -16,13 +16,20 @@ import commonTasks.dto.RetourDetailsDTO;
 import commonTasks.dto.SearchDTO;
 import commonTasks.dto.ValorisationDTO;
 import commonTasks.dto.VenteDetailsDTO;
+import dal.CategorieNotification;
+import dal.GammeProduit;
 import dal.HMvtProduit;
 import dal.HMvtProduit_;
+import dal.Laboratoire;
 import dal.Notification;
 import dal.TAjustementDetail;
 import dal.TBonLivraisonDetail;
+import dal.TCodeActe;
+import dal.TCodeGestion;
+import dal.TCodeTva;
 import dal.TDeconditionnement;
 import dal.TEmplacement_;
+import dal.TEventLog;
 import dal.TFabriquant;
 import dal.TFabriquant_;
 import dal.TFamille;
@@ -32,14 +39,19 @@ import dal.TFamilleStock_;
 import dal.TFamille_;
 import dal.TFamillearticle;
 import dal.TFamillearticle_;
+import dal.TFormeArticle;
 import dal.TGrossiste;
 import dal.TGrossiste_;
 import dal.TInventaireFamille;
+import dal.TParameters;
 import dal.TPreenregistrementDetail;
 import dal.TRetourFournisseurDetail;
 import dal.TStockSnapshot;
 import dal.TStockSnapshotPK_;
 import dal.TStockSnapshot_;
+import dal.TTypeStock;
+import dal.TTypeStockFamille;
+import dal.TTypeetiquette;
 import dal.TUser;
 import dal.TWarehouse;
 import dal.TZoneGeographique;
@@ -54,6 +66,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,14 +86,20 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.ProduitService;
+import rest.service.SessionHelperService;
+import rest.service.dto.CreationProduitDTO;
+import util.Constant;
 import util.DateCommonUtils;
 import util.DateConverter;
+import util.IdGenerator;
 import util.NotificationUtils;
 
 /**
@@ -93,9 +113,11 @@ public class ProduitServiceImpl implements ProduitService {
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
-    LogService logService;
+    private LogService logService;
     @EJB
-    NotificationService notificationService;
+    private NotificationService notificationService;
+    @EJB
+    private SessionHelperService sessionHelperService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -1205,15 +1227,15 @@ public class ProduitServiceImpl implements ProduitService {
             String lgZONEGEOID, String END, String BEGIN, String emplacementId) {
         try {
             List<Predicate> predicates = new ArrayList<>();
-            List<Predicate> _predicates = new ArrayList<>();
+            List<Predicate> predicates2 = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Params> cq = cb.createQuery(Params.class);
             Root<TStockSnapshot> root = cq.from(TStockSnapshot.class);
             cq.select(cb.construct(Params.class,
                     cb.sumAsLong(cb.prod(root.get(TStockSnapshot_.prixPaf), root.get(TStockSnapshot_.qty))),
                     cb.sumAsLong(cb.prod(root.get(TStockSnapshot_.prixUni), root.get(TStockSnapshot_.qty)))));
-            _predicates.add(cb.equal(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.id), date));
-            _predicates.add(
+            predicates2.add(cb.equal(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.id), date));
+            predicates2.add(
                     cb.equal(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.magasin), emplacementId));
             Subquery<String> sub = cq.subquery(String.class);
             Root<TFamille> subroot = sub.from(TFamille.class);
@@ -1271,9 +1293,9 @@ public class ProduitServiceImpl implements ProduitService {
                 break;
             }
             sub.where(predicates.toArray(Predicate[]::new));
-            _predicates
+            predicates2
                     .add(cb.in(root.get(TStockSnapshot_.tStockSnapshotPK).get(TStockSnapshotPK_.familleId)).value(sub));
-            cq.where(_predicates.toArray(Predicate[]::new));
+            cq.where(predicates2.toArray(Predicate[]::new));
             TypedQuery<Params> q = getEntityManager().createQuery(cq);
             // q.setMaxResults(1);
             return q.getSingleResult();
@@ -1886,5 +1908,446 @@ public class ProduitServiceImpl implements ProduitService {
             LOG.log(Level.SEVERE, null, e);
             return new ValorisationDTO();
         }
+    }
+
+    private String generateCIP(String codeCip) {
+        if (codeCip.length() == 6) {
+            int resultCIP = 0;
+            for (int i = 0; i < codeCip.length(); i++) {
+                resultCIP += Character.getNumericValue(codeCip.charAt(i)) * (i + 2);
+            }
+            return codeCip + (resultCIP % 11);
+        }
+        return codeCip;
+    }
+
+    private Optional<TParameters> getParamettre(String key) {
+        if (StringUtils.isEmpty(key)) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(em.find(TParameters.class, key));
+    }
+
+    @Override
+    public JSONObject createProduit(CreationProduitDTO creationProduit) {
+        JSONObject json = new JSONObject();
+
+        if (StringUtils.isEmpty(creationProduit.getIntCip()) || creationProduit.getIntCip().length() < 6) {
+            return json.put("message", "Le code CIP doit avoir au minimum 6 caractères").put("success", "0");
+
+        }
+        TGrossiste grossiste = getGrossiste(creationProduit.getLgGrossisteId());
+        String codeCip = generateCIP(creationProduit.getIntCip());
+        TFamilleGrossiste existant = this.isCIPExist(codeCip, grossiste.getLgGROSSISTEID());
+        if (existant != null) {
+            return json.put("message", "Impossible d'utiliser ce code. Code CIP du grossiste principal de l'article "
+                    + existant.getLgFAMILLEID().getStrDESCRIPTION()).put("success", "0");
+        }
+        TFamille existProduct = isCIPGrossistet(codeCip, grossiste.getLgGROSSISTEID());
+        if (existProduct != null) {
+            return json.put("message", "Impossible d'utiliser ce code. Code CIP du grossiste principal de l'article "
+                    + existProduct.getStrDESCRIPTION()).put("success", "0");
+        }
+
+        TFamille famille = new TFamille(UUID.randomUUID().toString());
+        famille.setDtCREATED(new Date());
+        famille.setLgGROSSISTEID(grossiste);
+        famille.setIntCIP(codeCip);
+        updateProduitCommon(famille, creationProduit);
+
+        em.persist(famille);
+        createFamilleGrossiste(famille);
+        createFamilleStock(famille, creationProduit.getIntQuantityStock());
+        buildNotificationCreationProduit(famille, TypeNotification.AJOUT_DE_NOUVEAU_PRODUIT,
+                TypeLog.AJOUT_DE_NOUVEAU_PRODUIT);
+        return json.put("success", "1");
+
+    }
+
+    private void updateProduitCommon(TFamille famille, CreationProduitDTO creationProduit) {
+        int intTauxTableau = getParamettre(Constant.KEY_TAUX_CODE_TABLEAU)
+                .map(p -> Integer.valueOf(p.getStrVALUE().trim())).orElse(0);
+        int unitPrice = StringUtils.isNoneBlank(creationProduit.getIntT())
+                && StringUtils.isEmpty(creationProduit.getLgFamilleParentId())
+                        ? creationProduit.getIntPrice() + intTauxTableau : creationProduit.getIntPrice();
+        famille.setStrNAME(creationProduit.getStrName());
+        famille.setStrDESCRIPTION(creationProduit.getStrDescription());
+        famille.setIntPRICE(unitPrice);
+        famille.setIntPRICETIPS(creationProduit.getIntPriceTips());
+        famille.setIntTAUXMARQUE(creationProduit.getIntTauxMarque());
+        famille.setIntPAF(creationProduit.getIntPaf());
+        famille.setIntPAT(creationProduit.getIntPat());
+        famille.setIntS(creationProduit.getIntS());
+        famille.setIntT(creationProduit.getIntT());
+        famille.setIntEAN13(creationProduit.getIntEan13());
+        famille.setCmuPrice(creationProduit.getCmuPrice());
+        if (StringUtils.isNotEmpty(creationProduit.getDtPeremtion())) {
+            famille.setDtPEREMPTION(java.sql.Date.valueOf(creationProduit.getDtPeremtion()));
+        }
+
+        famille.setLgFAMILLEARTICLEID(getFamillearticle(creationProduit.getLgFamilleArticleId()));
+        famille.setLgCODEACTEID(getCodeActe(creationProduit.getLgCodeActeId()));
+        famille.setLgCODEGESTIONID(getCodeGestion(creationProduit.getLgCodeGestionId()));
+        famille.setStrCODEREMISE(creationProduit.getStrCodeRemise());
+        famille.setStrCODETAUXREMBOURSEMENT(creationProduit.getStrCodeTauxRemboursement());
+        famille.setLgZONEGEOID(getRayon(creationProduit.getLgZoneGeoId()));
+        famille.setIntSEUILMAX(creationProduit.getSeuilMax());
+        famille.setIntNUMBERDETAIL(creationProduit.getIntQteDetail());
+        famille.setLgFORMEID(getFormeArticle(creationProduit.getLgFormeArticleId()));
+        famille.setLgFABRIQUANTID(getFabriquant(creationProduit.getLgFabriquantId()));
+        famille.setBoolDECONDITIONNE(creationProduit.getBoolDeconditionne());
+        famille.setLgTYPEETIQUETTEID(getTypeetiquette(creationProduit.getLgTypeEtiquetteId()));
+
+        famille.setLgCODETVAID(getCodeTva(creationProduit.getLgCodeTvaId()));
+        famille.setBoolRESERVE(creationProduit.isBoolReserve());
+        famille.setIntSEUILRESERVE(creationProduit.getIntSeuilReserve());
+        famille.setLgFAMILLEPARENTID(creationProduit.getLgFamilleParentId());
+        famille.setIntSTOCKREAPROVISONEMENT(creationProduit.getIntStockReaprovisonement());
+        famille.setIntQTEREAPPROVISIONNEMENT(creationProduit.getIntQteReapprovisionnement());
+        famille.setIntSEUILMIN(famille.getIntSTOCKREAPROVISONEMENT());
+        famille.setBoolCHECKEXPIRATIONDATE(isExpirationDateActivated());
+        famille.setLaboratoire(getLaboratoire(creationProduit.getLaboratoireId()));
+        famille.setGamme(getGammeProduit(creationProduit.getGammeId()));
+        famille.setDtUPDATED(new Date());
+
+        if (famille.getBoolDECONDITIONNE() == 1) {
+            famille.setBoolDECONDITIONNEEXIST(Short.valueOf("1"));
+        } else {
+
+            famille.setBoolDECONDITIONNEEXIST(Short.valueOf("0"));
+        }
+
+    }
+
+    public TFamilleGrossiste isCIPExist(String intCip, String grossisteId) {
+        try {
+            TypedQuery<TFamilleGrossiste> q = em.createQuery(
+                    "SELECT t FROM TFamilleGrossiste t WHERE t.strCODEARTICLE = ?1 AND t.lgGROSSISTEID.lgGROSSISTEID = ?2",
+                    TFamilleGrossiste.class);
+            q.setParameter(1, intCip).setParameter(2, grossisteId).setMaxResults(1);
+
+            return q.getSingleResult();
+
+        } catch (Exception e) {
+
+        }
+        return null;
+    }
+
+    public TFamille isCIPGrossistet(String intCip, String grossisteId) {
+        try {
+            TypedQuery<TFamille> q = em.createQuery(
+                    "SELECT t FROM TFamille t WHERE t.intCIP=?1 AND t.lgGROSSISTEID.lgGROSSISTEID =?2", TFamille.class);
+            q.setParameter(1, intCip).setParameter(2, grossisteId).setMaxResults(1);
+
+            return q.getSingleResult();
+
+        } catch (Exception e) {
+
+        }
+        return null;
+    }
+
+    private TGrossiste getGrossiste(String grossisteId) {
+        TypedQuery<TGrossiste> q = em.createQuery(
+                "SELECT t FROM TGrossiste t WHERE (t.lgGROSSISTEID = ?1 OR t.strLIBELLE = ?1)", TGrossiste.class);
+        q.setParameter(1, grossisteId).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TCodeActe getCodeActe(String codeActeId) {
+        if (StringUtils.isEmpty(codeActeId)) {
+            return null;
+        }
+        TypedQuery<TCodeActe> q = em.createQuery(
+                "SELECT t FROM TCodeActe t WHERE t.lgCODEACTEID LIKE ?1 OR t.strLIBELLEE LIKE ?2", TCodeActe.class);
+        q.setParameter(1, codeActeId).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TFamillearticle getFamillearticle(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        TypedQuery<TFamillearticle> q = em.createQuery(
+                "SELECT t FROM TFamillearticle t WHERE (t.lgFAMILLEARTICLEID LIKE ?1 OR t.strLIBELLE LIKE ?1 OR t.strCODEFAMILLE LIKE ?1)",
+                TFamillearticle.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TZoneGeographique getRayon(String id) {
+        if (StringUtils.isEmpty(id)) {
+            id = Constant.DEFAUL_RAYON_ID;
+        }
+        TypedQuery<TZoneGeographique> q = em.createQuery(
+                "SELECT t FROM TZoneGeographique t WHERE (t.lgZONEGEOID LIKE ?1 OR t.strLIBELLEE LIKE ?1 )",
+                TZoneGeographique.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TCodeGestion getCodeGestion(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        TypedQuery<TCodeGestion> q = em.createQuery(
+                "SELECT t FROM TCodeGestion t WHERE (t.lgCODEGESTIONID = ?1 OR t.strCODEBAREME = ?1)",
+                TCodeGestion.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TTypeetiquette getTypeetiquette(String id) {
+        if (StringUtils.isEmpty(id)) {
+            id = Constant.DEFAUL_TYPEETIQUETTE;
+        }
+        TypedQuery<TTypeetiquette> q = em.createQuery(
+                "SELECT t FROM TTypeetiquette t WHERE t.lgTYPEETIQUETTEID LIKE ?1 OR t.strDESCRIPTION LIKE ?2",
+                TTypeetiquette.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TFormeArticle getFormeArticle(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        TypedQuery<TFormeArticle> q = em.createQuery(
+                "SELECT t FROM TFormeArticle t WHERE t.lgFORMEARTICLEID LIKE ?1 OR t.strLIBELLE LIKE ?2",
+                TFormeArticle.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TFabriquant getFabriquant(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        TypedQuery<TFabriquant> q = em.createQuery(
+                "SELECT t FROM TFabriquant t WHERE t.lgFABRIQUANTID LIKE ?1 OR t.strDESCRIPTION LIKE ?2",
+                TFabriquant.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private TCodeTva getCodeTva(String id) {
+        if (StringUtils.isEmpty(id)) {
+            id = Constant.DEFAUL_CODE_TVA;
+        }
+        TypedQuery<TCodeTva> q = em.createQuery("SELECT t FROM TCodeTva t WHERE (t.strNAME = ?1 OR t.lgCODETVAID = ?1)",
+                TCodeTva.class);
+        q.setParameter(1, id).getSingleResult();
+        return q.getSingleResult();
+    }
+
+    private boolean isExpirationDateActivated() {
+        return getParamettre(Constant.KEY_ACTIVATE_PEREMPTION_DATE)
+                .map(p -> Integer.parseInt(p.getStrVALUE().trim()) == 1).orElse(false);
+
+    }
+
+    private Laboratoire getLaboratoire(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        return em.find(Laboratoire.class, id);
+    }
+
+    private GammeProduit getGammeProduit(String id) {
+        if (StringUtils.isEmpty(id)) {
+            return null;
+        }
+        return em.find(GammeProduit.class, id);
+    }
+
+    private void createFamilleGrossiste(TFamille famille) {
+        TFamilleGrossiste familleGrossiste = new TFamilleGrossiste();
+        familleGrossiste.setStrCODEARTICLE(famille.getIntCIP());
+        familleGrossiste.setLgFAMILLEID(famille);
+        familleGrossiste.setLgGROSSISTEID(famille.getLgGROSSISTEID());
+        familleGrossiste.setIntPAF(famille.getIntPAF());
+        familleGrossiste.setIntPRICE(famille.getIntPRICE());
+        familleGrossiste.setStrSTATUT(Constant.STATUT_ENABLE);
+        familleGrossiste.setDtCREATED(famille.getDtCREATED());
+        em.persist(familleGrossiste);
+
+    }
+
+    private TFamilleGrossiste findOneByCodeAndProduitId(String code, String idpProduit) {
+        TypedQuery<TFamilleGrossiste> q = em.createQuery(
+                "SELECT o  FROM TFamilleGrossiste o WHERE o.strCODEARTICLE=?1 AND o.lgFAMILLEID.lgFAMILLEID=?2",
+                TFamilleGrossiste.class);
+        q.setParameter(1, code);
+        q.setParameter(2, idpProduit);
+        q.setMaxResults(1);
+        return q.getSingleResult();
+    }
+
+    private void createFamilleStock(TFamille famille, int qty) {
+        TFamilleStock stock = new TFamilleStock();
+        stock.setLgFAMILLESTOCKID(UUID.randomUUID().toString());
+        stock.setIntNUMBER(qty);
+        stock.setIntNUMBERAVAILABLE(qty);
+        stock.setLgFAMILLEID(famille);
+        stock.setStrSTATUT(Constant.STATUT_ENABLE);
+        stock.setDtCREATED(famille.getDtCREATED());
+        stock.setLgEMPLACEMENTID(sessionHelperService.getCurrentUser().getLgEMPLACEMENTID());
+        em.persist(stock);
+    }
+
+    private void buildNotificationCreationProduit(TFamille famille, TypeNotification typeNotification,
+            TypeLog typeLog) {
+        CategorieNotification categorieNotification = em.find(CategorieNotification.class, typeNotification.ordinal());
+        Notification notification = new Notification();
+        notification.setCategorieNotification(categorieNotification);
+        notification.setUser(this.sessionHelperService.getCurrentUser());
+        Map<String, Object> donneesMap = new HashMap<>();
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), typeNotification.getValue());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donneesMap.put(NotificationUtils.ITEM_KEY.getId(), famille.getIntCIP());
+        donneesMap.put(NotificationUtils.ITEM_DESC.getId(), famille.getStrNAME());
+        notification.donnees(buildDonnees(donneesMap));
+        notification.setMessage("");
+        notification.entityRef(famille.getLgFAMILLEID());
+        em.persist(notification);
+
+        TEventLog eventLog = new TEventLog(UUID.randomUUID().toString());
+        eventLog.setLgUSERID(notification.getUser());
+        eventLog.setDtCREATED(new Date());
+        eventLog.setDtUPDATED(eventLog.getDtCREATED());
+        eventLog.setStrSTATUT(Constant.STATUT_ENABLE);
+        eventLog.setStrTABLECONCERN(famille.getClass().getName());
+        eventLog.setTypeLog(typeLog);
+        eventLog.setStrDESCRIPTION("Création du produit " + " cip [" + famille.getIntCIP() + " " + famille.getStrNAME()
+                + " par "
+                + notification.getUser().getStrFIRSTNAME().concat(" ").concat(notification.getUser().getStrLASTNAME())
+                + " ]");
+
+        em.persist(eventLog);
+    }
+
+    private String buildDonnees(Map<String, Object> donneesMap) {
+        if (MapUtils.isEmpty(donneesMap)) {
+            return null;
+        }
+        JSONObject json = new JSONObject();
+        donneesMap.forEach(json::put);
+        return json.toString();
+    }
+
+    @Override
+    public JSONObject createProduitDetail(CreationProduitDTO creationProduit) {
+        TFamille familleParent = em.find(TFamille.class, creationProduit.getLgFamilleId());
+        JSONObject json = new JSONObject();
+        if (familleParent.getBoolDECONDITIONNE() == 1) {
+            return json.put("message", "Désolé! Cet article n'est pas autorisé à être déconditionné").put("success",
+                    false);
+        }
+        if (familleParent.getBoolDECONDITIONNEEXIST() == 1) {
+            return json.put("message", "Désolé! Une version décondition de ce produit existe déjà").put("success",
+                    false);
+
+        }
+        TFamille famille = new TFamille(IdGenerator.getComplexId());
+        famille.setBoolDECONDITIONNE(Short.valueOf("1"));
+        familleParent.setBoolDECONDITIONNEEXIST(Short.valueOf("1"));
+        famille.setStrSTATUT(Constant.STATUT_ENABLE);
+        famille.setDtCREATED(new Date());
+        famille.setDtUPDATED(famille.getDtCREATED());
+        familleParent.setIntNUMBERDETAIL(creationProduit.getIntQteDetail());
+        famille.setStrNAME(creationProduit.getStrDescription() + " DET");
+        famille.setIntCIP(creationProduit.getIntCip() + "D");
+        famille.setIntNUMBERDETAIL(1);
+        intProduitDetailCommon(creationProduit, famille, familleParent);
+        em.merge(familleParent);
+        em.persist(famille);
+        createFamilleGrossiste(famille);
+        createFamilleStock(famille, 0);
+        createTypeStockFamille(famille, "1", 0);
+        if (creationProduit.isBoolReserve()) {
+            createTypeStockFamille(famille, "2", 0);
+        }
+        buildNotificationCreationProduit(famille, TypeNotification.AJOUT_DE_DETAIL_PRODUIT,
+                TypeLog.AJOUT_DE_DETAIL_PRODUIT);
+        return json.put("success", true);
+
+    }
+
+    @Override
+    public JSONObject updateProduitDetail(CreationProduitDTO creationProduit, String idProduit) {
+        TFamille famille = em.find(TFamille.class, idProduit);
+        TFamille familleParent = em.find(TFamille.class, famille.getLgFAMILLEPARENTID());
+        JSONObject json = new JSONObject();
+        famille.setStrNAME(creationProduit.getStrDescription());
+        famille.setDtUPDATED(new Date());
+        intProduitDetailCommon(creationProduit, famille, familleParent);
+
+        em.merge(familleParent);
+        em.merge(famille);
+        TFamilleGrossiste familleGrossiste = findOneByCodeAndProduitId(famille.getIntCIP(), famille.getLgFAMILLEID());
+        familleGrossiste.setIntPAF(famille.getIntPAF());
+        familleGrossiste.setIntPRICE(famille.getIntPRICE());
+        familleGrossiste.setLgGROSSISTEID(famille.getLgGROSSISTEID());
+        em.merge(familleGrossiste);
+        return json.put("success", true);
+
+    }
+
+    private void intProduitDetailCommon(CreationProduitDTO creationProduit, TFamille famille, TFamille familleParent) {
+        famille.setLgGROSSISTEID(familleParent.getLgGROSSISTEID());
+        famille.setStrDESCRIPTION(famille.getStrNAME());
+        famille.setIntPRICE(creationProduit.getIntPrice());
+        famille.setIntPRICETIPS(creationProduit.getIntPriceTips());
+        famille.setIntTAUXMARQUE(creationProduit.getIntTauxMarque());
+        famille.setIntPAF(creationProduit.getIntPaf());
+        famille.setIntPAT(creationProduit.getIntPat());
+        famille.setIntS(creationProduit.getIntS());
+        famille.setIntT(creationProduit.getIntT());
+        famille.setIntEAN13(creationProduit.getIntEan13());
+        famille.setLgFAMILLEARTICLEID(familleParent.getLgFAMILLEARTICLEID());
+        famille.setLgCODEACTEID(familleParent.getLgCODEACTEID());
+        famille.setLgCODEGESTIONID(familleParent.getLgCODEGESTIONID());
+        famille.setStrCODEREMISE(creationProduit.getStrCodeRemise());
+        famille.setStrCODETAUXREMBOURSEMENT(creationProduit.getStrCodeTauxRemboursement());
+        famille.setLgZONEGEOID(getRayon(creationProduit.getLgZoneGeoId()));
+        famille.setIntSEUILMAX(creationProduit.getSeuilMax());
+        famille.setIntNUMBERDETAIL(1);
+        famille.setLgFORMEID(familleParent.getLgFORMEID());
+        famille.setLgFABRIQUANTID(familleParent.getLgFABRIQUANTID());
+
+        famille.setLgTYPEETIQUETTEID(familleParent.getLgTYPEETIQUETTEID());
+
+        famille.setLgCODETVAID(familleParent.getLgCODETVAID());
+        famille.setBoolRESERVE(creationProduit.isBoolReserve());
+        famille.setIntSEUILRESERVE(creationProduit.getIntSeuilReserve());
+        famille.setLgFAMILLEPARENTID(familleParent.getLgFAMILLEID());
+        famille.setIntSTOCKREAPROVISONEMENT(creationProduit.getIntStockReaprovisonement());
+        famille.setIntQTEREAPPROVISIONNEMENT(creationProduit.getIntQteReapprovisionnement());
+        famille.setIntSEUILMIN(famille.getIntSTOCKREAPROVISONEMENT());
+        famille.setBoolCHECKEXPIRATIONDATE(familleParent.getBoolCHECKEXPIRATIONDATE());
+        famille.setLaboratoire(familleParent.getLaboratoire());
+        famille.setGamme(familleParent.getGamme());
+
+        familleParent.setDtUPDATED(famille.getDtCREATED());
+
+    }
+
+    public void createTypeStockFamille(TFamille famille, String typeStockId, int qty) {
+
+        TTypeStockFamille typeStockFamille = new TTypeStockFamille();
+        TTypeStock typeStock = em.find(TTypeStock.class, typeStockId);
+
+        typeStockFamille.setLgTYPESTOCKFAMILLEID(IdGenerator.getComplexId());
+        typeStockFamille.setLgFAMILLEID(famille);
+        typeStockFamille.setLgTYPESTOCKID(typeStock);
+        typeStockFamille.setStrNAME(famille.getStrDESCRIPTION() + " " + typeStock.getStrDESCRIPTION());
+        typeStockFamille.setStrDESCRIPTION(typeStockFamille.getStrNAME());
+        typeStockFamille.setIntNUMBER(qty);
+        typeStockFamille.setDtCREATED(new Date());
+        typeStockFamille.setLgEMPLACEMENTID(this.sessionHelperService.getCurrentUser().getLgEMPLACEMENTID());
+        typeStockFamille.setStrSTATUT(Constant.STATUT_ENABLE);
+        em.persist(typeStockFamille);
+
     }
 }
