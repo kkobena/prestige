@@ -46,6 +46,12 @@ public class ErpRessource {
     }
 
     @GET
+    @Path("ca-all")
+    public Response caAll(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
+        return Response.ok().entity(erpService.caAll(dtStart, dtEnd)).build();
+    }
+
+    @GET
     @Path("ca-credit")
     public Response caCredis(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(erpService.rrpTiersPayant(dtStart, dtEnd)).build();
@@ -69,6 +75,18 @@ public class ErpRessource {
     @Path("fournisseurs")
     public Response fournisseurs() {
         return Response.ok().entity(erpService.fournisseurs()).build();
+    }
+
+    @GET
+    @Path("produits")
+    public Response produits() {
+        return Response.ok().entity(erpService.produits()).build();
+    }
+
+    @GET
+    @Path("checkproduit")
+    public Response checkproduit(@QueryParam(value = "nompdt") String nompdt) {
+        return Response.ok().entity(erpService.checkproduit(nompdt)).build();
     }
 
     @GET
