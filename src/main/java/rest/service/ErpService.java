@@ -5,6 +5,7 @@
  */
 package rest.service;
 
+import commonTasks.dto.ErProduitDTO;
 import commonTasks.dto.ErpAchatFournisseurDTO;
 import commonTasks.dto.ErpCaComptant;
 import commonTasks.dto.ErpFactureDTO;
@@ -27,6 +28,8 @@ public interface ErpService {
     StockDailyValueDTO valorisation(String day);
 
     List<ErpCaComptant> caComptant(String dtStart, String dtEnd);
+    
+    List<ErpCaComptant> caAll(String dtStart, String dtEnd);
 
     List<ErpTiersPayantDTO> rrpTiersPayant(String dtStart, String dtEnd);
 
@@ -35,6 +38,10 @@ public interface ErpService {
     List<ErpFactureDTO> erpFactures(String dtStart, String dtEnd);
 
     List<ErpFournisseur> fournisseurs();
+
+    List<ErProduitDTO> produits();
+
+    List<ErProduitDTO> checkproduit(String nom);
 
     List<ErpAchatFournisseurDTO> achatsFournisseurs(String dtStart, String dtEnd);
 
