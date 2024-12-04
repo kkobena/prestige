@@ -8,6 +8,7 @@ package rest.service.impl;
 import commonTasks.dto.ErProduitDTO;
 import commonTasks.dto.ErpAchatFournisseurDTO;
 import commonTasks.dto.ErpCaComptant;
+import commonTasks.dto.ErpCheckInfo;
 import commonTasks.dto.ErpFactureDTO;
 import commonTasks.dto.ErpFournisseur;
 import commonTasks.dto.ErpReglementDTO;
@@ -117,25 +118,25 @@ public class ErpServiceImpl implements ErpService {
                     caComptant.setRemiseSurCA(caComptant.getRemiseSurCA() + e.getRemiseSurCA());
                     caComptant.setTotTVA(caComptant.getTotTVA() + e.getTotTVA());
                     switch (e.getMode()) {
-                        case DateConverter.MODE_ESP:
-                            caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CHEQUE:
-                            caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CB:
-                            caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_VIREMENT:
-                            caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_MOOV:
-                        case DateConverter.TYPE_REGLEMENT_ORANGE:
-                        case DateConverter.MODE_MTN:
-                            caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
-                            break;
-                        default:
-                            break;
+                    case DateConverter.MODE_ESP:
+                        caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CHEQUE:
+                        caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CB:
+                        caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_VIREMENT:
+                        caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_MOOV:
+                    case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    case DateConverter.MODE_MTN:
+                        caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
+                        break;
+                    default:
+                        break;
                     }
                 });
 
@@ -157,7 +158,7 @@ public class ErpServiceImpl implements ErpService {
                     .getResultList();
             List<ErpCaComptant> caComptants = new ArrayList<>();
             list.stream().map(t -> {
-                long montantCredit = t.get("montantCredit", BigDecimal.class).longValue();                
+                long montantCredit = t.get("montantCredit", BigDecimal.class).longValue();
                 long montantPaye = t.get("montantPaye", BigDecimal.class).longValue();
                 long montantRemise = t.get("montantRemise", BigDecimal.class).longValue();
                 long montantTva = t.get("montantTva", BigDecimal.class).longValue();
@@ -186,25 +187,25 @@ public class ErpServiceImpl implements ErpService {
                     caComptant.setTotTVA(caComptant.getTotTVA() + e.getTotTVA());
                     caComptant.setMontantCredit(caComptant.getMontantCredit() + e.getMontantCredit());
                     switch (e.getMode()) {
-                        case DateConverter.MODE_ESP:
-                            caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CHEQUE:
-                            caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CB:
-                            caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_VIREMENT:
-                            caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_MOOV:
-                        case DateConverter.TYPE_REGLEMENT_ORANGE:
-                        case DateConverter.MODE_MTN:
-                            caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
-                            break;
-                        default:
-                            break;
+                    case DateConverter.MODE_ESP:
+                        caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CHEQUE:
+                        caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CB:
+                        caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_VIREMENT:
+                        caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_MOOV:
+                    case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    case DateConverter.MODE_MTN:
+                        caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
+                        break;
+                    default:
+                        break;
                     }
                 });
 
@@ -305,6 +306,31 @@ public class ErpServiceImpl implements ErpService {
     }
 
     @Override
+    public List<ErpCheckInfo> checkinfo(String nom) {
+        if (StringUtils.isEmpty(nom)) {
+            nom = "%%";
+        } else {
+            nom = nom.toUpperCase() + "%";
+        }
+        // affiche valeur parametre
+        // System.err.println("checkproduit " + nom);
+
+        TypedQuery<ErpCheckInfo> q = getEntityManager().createQuery(
+                // "SELECT new commonTasks.dto.ErProduitDTO(o) FROM TFamilleStock f, TBonLivraisonDetail b o WHERE
+                // o.strSTATUT='enable' AND "
+                // + " (o.lgFAMILLEID.strNAME LIKE ?1 OR o.lgFAMILLEID.intCIP LIKE ?1 ) AND
+                // o.lgFAMILLEID.strSTATUT='enable' AND f.lgFAMILLEID=b.lgFAMILLEID ORDER BY ASC LIMIT 1 ",
+                "SELECT f.int_CIP, f.str_NAME, f.int_PAF, f.int_PRICE, bl.int_QTE_RECUE,b.str_REF_LIVRAISON,b.dt_UPDATED "
+                        + "FROM t_famille f, t_bon_livraison_detail bl,t_bon_livraison b "
+                        + "WHERE f.lg_FAMILLE_ID=bl.lg_FAMILLE_ID AND b.lg_BON_LIVRAISON_ID=bl.lg_BON_LIVRAISON_ID "
+                        + " AND f.strNAME=?1 OR f.intCIP LIKE ?1 ORDER BY bl.dt_UPDATED DESC ",
+
+                ErpCheckInfo.class);
+        q.setParameter(1, nom);
+        return q.getResultList();
+    }
+
+    @Override
     public List<ErpFournisseur> fournisseurs() {
         return getEntityManager()
                 .createQuery("SELECT new commonTasks.dto.ErpFournisseur(o) FROM TGrossiste o", ErpFournisseur.class)
@@ -328,7 +354,7 @@ public class ErpServiceImpl implements ErpService {
         System.err.println("checkproduit " + nom);
         TypedQuery<ErProduitDTO> q = getEntityManager().createQuery(
                 "SELECT new commonTasks.dto.ErProduitDTO(o) FROM TFamilleStock o WHERE o.strSTATUT='enable' AND "
-                + " (o.lgFAMILLEID.strNAME LIKE ?1 OR o.lgFAMILLEID.intCIP LIKE ?1 ) AND o.lgFAMILLEID.strSTATUT='enable'  ",
+                        + " (o.lgFAMILLEID.strNAME LIKE ?1 OR o.lgFAMILLEID.intCIP LIKE ?1 ) AND o.lgFAMILLEID.strSTATUT='enable'  ",
                 ErProduitDTO.class);
         q.setParameter(1, nom);
         return q.getResultList();

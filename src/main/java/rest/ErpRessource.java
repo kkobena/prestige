@@ -90,6 +90,12 @@ public class ErpRessource {
     }
 
     @GET
+    @Path("infoproduit")
+    public Response infoproduit(@QueryParam(value = "nompdt") String nompdt) {
+        return Response.ok().entity(erpService.checkinfo(nompdt)).build();
+    }
+
+    @GET
     @Path("achats-fournisseurs")
     public Response achatsFournisseurs(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd) {
