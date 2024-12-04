@@ -69,7 +69,7 @@ public class tierspayantManagement extends bllBase {
             String lg_RISQUE_ID, double dbl_CAUTION, double dbl_QUOTA_CONSO_MENSUELLE, int dbl_SOLDE,
             boolean bool_IsACCOUNT, TSequencier OTSequencier, String str_REGISTRE_COMMERCE, String str_CODE_OFFICINE,
             String str_COMPTE_CONTRIBUABLE, boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons, Integer montantFact,
-            boolean groupingByTaux, boolean cmu) {
+            boolean groupingByTaux, boolean cmu, int caution) {
         boolean result = false;
         String str_PHOTO = "default.png";
         try {
@@ -134,6 +134,7 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setLgSEQUENCIERID(OTSequencier);
             OTTiersPayant.setStrCODEOFFICINE(str_CODE_OFFICINE);
             OTTiersPayant.setStrREGISTRECOMMERCE(str_REGISTRE_COMMERCE);
+            OTTiersPayant.setCaution(caution);
             OModelFacture = this.getModelFacture(str_CODE_EDIT_BORDEREAU);
             if (OModelFacture == null) {
                 OModelFacture = this.getOdataManager().getEm().find(TModelFacture.class,
@@ -219,7 +220,7 @@ public class tierspayantManagement extends bllBase {
             String lg_VILLE_ID, String lg_TYPE_TIERS_PAYANT_ID, String lg_TYPE_CONTRAT_ID, String lg_REGIMECAISSE_ID,
             String lg_RISQUE_ID, String str_CODE_OFFICINE, String str_REGISTRE_COMMERCE, String str_COMPTE_CONTRIBUABLE,
             double dbl_QUOTA_CONSO_MENSUELLE, boolean b_IsAbsolute, String lg_GROUPE_ID, int nbrbons,
-            Integer montantFact, boolean groupingByTaux, boolean cmu) {
+            Integer montantFact, boolean groupingByTaux, boolean cmu, int caution) {
         TTiersPayant OTTiersPayant = null, OTTiersPayantOld = null;
         TCompteClient OTCompteClient = null;
         try {
@@ -290,7 +291,7 @@ public class tierspayantManagement extends bllBase {
                 }
             } catch (Exception e) {
             }
-
+            OTTiersPayant.setCaution(caution);
             OTTiersPayant.setIntMONTANTFAC(montantFact);
             OTTiersPayant.setIntNBREBONS(nbrbons);
             OTTiersPayant.setStrCODEORGANISME(str_CODE_ORGANISME);
@@ -1807,13 +1808,14 @@ public class tierspayantManagement extends bllBase {
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("ligne " + i + "------" + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
 
                 if (this.create(tabString[0].trim(), tabString[1].trim(), tabString[2].trim(), tabString[3].trim(),
                         tabString[4].trim(), tabString[4].trim(), "", 0, 0, "", "", "", 0, false, "46700000000", false,
                         0, "", 0, 0, 0, "1", Integer.parseInt(tabString[5].trim()), 0, 0, "", 0, 0, "", false, "1",
                         (tabString[6].trim().equalsIgnoreCase("X") ? "2" : "1"), "", "", "55181642844215217016", 0, 0,
-                        0, false, OfactureManagement.CreateSequencier(), "", "", "", false, "", -1, -1, false, false)) {
+                        0, false, OfactureManagement.CreateSequencier(), "", "", "", false, "", -1, -1, false, false,
+                        0)) {
                     count++;
                 }
 
@@ -1902,7 +1904,7 @@ public class tierspayantManagement extends bllBase {
             for (int i = 0; i < lstData.size(); i++) { // lstData: liste des lignes du fichier xls ou csv
                 new logger().OCategory.info("i:" + i + " ///ligne--------" + lstData.get(i)); // ligne courant
                 String[] tabString = lstData.get(i).split(";"); // on case la ligne courante pour recuperer les
-                                                                // differentes colonnes
+                // differentes colonnes
                 OTTiersPayant = this.getTTiersPayant(tabString[0].trim());
                 if (OTTiersPayant == null) {
                     new logger().OCategory.info("Ligne inexistante " + i);

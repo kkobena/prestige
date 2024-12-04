@@ -387,10 +387,7 @@ public class DashBoardServiceImpl implements DashBoardService {
 
             int pourEp = (int) Math.ceil(
                     Double.valueOf(recapActivite.getMontantEsp()) * 100 / Math.abs(recapActivite.getMontantNet()));
-            /*
-             * int pourCr = (int) Math.ceil( Double.valueOf(recapActivite.getMontantCredit()) * 100 /
-             * Math.abs(recapActivite.getMontantNet()));
-             */
+
             recapActivite.setPourcentageEsp(pourEp);
             recapActivite.setPourcentageCredit(100 - pourEp);
         } catch (Exception e) {

@@ -167,6 +167,7 @@ public final class Constant {
     public static final String DEFAUL_RAYON_ID = "1";
     public static final String DEFAUL_CODE_TVA = "1";
     public static final String STATUT_DISABLE = "disable";
+    public static final String P_BTN_DESACTIVER_TIERS_PAYANT = "P_BTN_DESACTIVER_TIERS_PAYANT";
 
     private Constant() {
     }
