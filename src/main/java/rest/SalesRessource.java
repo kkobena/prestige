@@ -166,12 +166,7 @@ public class SalesRessource {
     @POST
     @Path("cloturer/vno")
     public Response cloturerVno(ClotureVenteParams clotureVenteParams) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        clotureVenteParams.setUserId(tu);
+
         JSONObject json = salesService.updateVenteClotureComptant(clotureVenteParams);
         return Response.ok().entity(json.toString()).build();
     }
