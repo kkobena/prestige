@@ -117,25 +117,25 @@ public class ErpServiceImpl implements ErpService {
                     caComptant.setRemiseSurCA(caComptant.getRemiseSurCA() + e.getRemiseSurCA());
                     caComptant.setTotTVA(caComptant.getTotTVA() + e.getTotTVA());
                     switch (e.getMode()) {
-                        case DateConverter.MODE_ESP:
-                            caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CHEQUE:
-                            caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CB:
-                            caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_VIREMENT:
-                            caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_MOOV:
-                        case DateConverter.TYPE_REGLEMENT_ORANGE:
-                        case DateConverter.MODE_MTN:
-                            caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
-                            break;
-                        default:
-                            break;
+                    case DateConverter.MODE_ESP:
+                        caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CHEQUE:
+                        caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CB:
+                        caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_VIREMENT:
+                        caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_MOOV:
+                    case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    case DateConverter.MODE_MTN:
+                        caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
+                        break;
+                    default:
+                        break;
                     }
                 });
 
@@ -157,7 +157,7 @@ public class ErpServiceImpl implements ErpService {
                     .getResultList();
             List<ErpCaComptant> caComptants = new ArrayList<>();
             list.stream().map(t -> {
-                long montantCredit = t.get("montantCredit", BigDecimal.class).longValue();                
+                long montantCredit = t.get("montantCredit", BigDecimal.class).longValue();
                 long montantPaye = t.get("montantPaye", BigDecimal.class).longValue();
                 long montantRemise = t.get("montantRemise", BigDecimal.class).longValue();
                 long montantTva = t.get("montantTva", BigDecimal.class).longValue();
@@ -186,25 +186,25 @@ public class ErpServiceImpl implements ErpService {
                     caComptant.setTotTVA(caComptant.getTotTVA() + e.getTotTVA());
                     caComptant.setMontantCredit(caComptant.getMontantCredit() + e.getMontantCredit());
                     switch (e.getMode()) {
-                        case DateConverter.MODE_ESP:
-                            caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CHEQUE:
-                            caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_CB:
-                            caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_VIREMENT:
-                            caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
-                            break;
-                        case DateConverter.MODE_MOOV:
-                        case DateConverter.TYPE_REGLEMENT_ORANGE:
-                        case DateConverter.MODE_MTN:
-                            caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
-                            break;
-                        default:
-                            break;
+                    case DateConverter.MODE_ESP:
+                        caComptant.setTotEsp(caComptant.getTotEsp() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CHEQUE:
+                        caComptant.setTotChq(caComptant.getTotChq() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_CB:
+                        caComptant.setTotCB(caComptant.getTotCB() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_VIREMENT:
+                        caComptant.setTotVirement(caComptant.getTotVirement() + e.getTotEsp());
+                        break;
+                    case DateConverter.MODE_MOOV:
+                    case DateConverter.TYPE_REGLEMENT_ORANGE:
+                    case DateConverter.MODE_MTN:
+                        caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
+                        break;
+                    default:
+                        break;
                     }
                 });
 
@@ -328,7 +328,7 @@ public class ErpServiceImpl implements ErpService {
         System.err.println("checkproduit " + nom);
         TypedQuery<ErProduitDTO> q = getEntityManager().createQuery(
                 "SELECT new commonTasks.dto.ErProduitDTO(o) FROM TFamilleStock o WHERE o.strSTATUT='enable' AND "
-                + " (o.lgFAMILLEID.strNAME LIKE ?1 OR o.lgFAMILLEID.intCIP LIKE ?1 ) AND o.lgFAMILLEID.strSTATUT='enable'  ",
+                        + " (o.lgFAMILLEID.strNAME LIKE ?1 OR o.lgFAMILLEID.intCIP LIKE ?1 ) AND o.lgFAMILLEID.strSTATUT='enable'  ",
                 ErProduitDTO.class);
         q.setParameter(1, nom);
         return q.getResultList();

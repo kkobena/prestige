@@ -1693,6 +1693,7 @@ public class SalesServiceImpl implements SalesService {
         TPreenregistrement tp = null;
         try {
             final TUser tUser = this.sessionHelperService.getCurrentUser();
+            clotureVenteParams.setUserId(tUser);
             if (!checkResumeCaisse(tUser, emg).isPresent()) {
                 json.put("success", false);
                 json.put("msg", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à validation");
@@ -1914,7 +1915,8 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         TPreenregistrement tp;
         try {
-            final TUser tUser = clotureVenteParams.getUserId();
+            final TUser tUser = this.sessionHelperService.getCurrentUser();
+            clotureVenteParams.setUserId(tUser);
             if (!checkResumeCaisse(tUser, emg).isPresent()) {
                 json.put("success", false);
                 json.put("msg", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à validation");
