@@ -9,14 +9,18 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -207,19 +211,13 @@ public class TTiersPayant implements Serializable {
     private Boolean groupingByTaux = Boolean.FALSE;
     @Column(name = "is_cmus", nullable = false)
     private Boolean cmus = Boolean.FALSE;
-    @Column(name = "caution")
-    private Integer caution = 0;
+
+    @OneToOne(mappedBy = "tiersPayant", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    @PrimaryKeyJoinColumn
+    private Caution caution;
 
     public Boolean getCmus() {
         return cmus;
-    }
-
-    public Integer getCaution() {
-        return caution;
-    }
-
-    public void setCaution(Integer caution) {
-        this.caution = caution;
     }
 
     public void setCmus(Boolean cmus) {
@@ -724,6 +722,14 @@ public class TTiersPayant implements Serializable {
 
     public void setIsDepot(Boolean isDepot) {
         this.isDepot = isDepot;
+    }
+
+    public Caution getCaution() {
+        return caution;
+    }
+
+    public void setCaution(Caution caution) {
+        this.caution = caution;
     }
 
 }

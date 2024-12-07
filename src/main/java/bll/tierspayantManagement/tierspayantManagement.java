@@ -134,7 +134,7 @@ public class tierspayantManagement extends bllBase {
             OTTiersPayant.setLgSEQUENCIERID(OTSequencier);
             OTTiersPayant.setStrCODEOFFICINE(str_CODE_OFFICINE);
             OTTiersPayant.setStrREGISTRECOMMERCE(str_REGISTRE_COMMERCE);
-            OTTiersPayant.setCaution(caution);
+
             OModelFacture = this.getModelFacture(str_CODE_EDIT_BORDEREAU);
             if (OModelFacture == null) {
                 OModelFacture = this.getOdataManager().getEm().find(TModelFacture.class,
@@ -291,7 +291,7 @@ public class tierspayantManagement extends bllBase {
                 }
             } catch (Exception e) {
             }
-            OTTiersPayant.setCaution(caution);
+
             OTTiersPayant.setIntMONTANTFAC(montantFact);
             OTTiersPayant.setIntNBREBONS(nbrbons);
             OTTiersPayant.setStrCODEORGANISME(str_CODE_ORGANISME);

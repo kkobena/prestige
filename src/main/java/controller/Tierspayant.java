@@ -89,7 +89,7 @@ public class Tierspayant extends HttpServlet {
 
         response.setContentType("application/json;charset=UTF-8");
         HttpSession session = request.getSession();
-    
+
         List<TPrivilege> privileges = (List<TPrivilege>) session.getAttribute(Constant.USER_LIST_PRIVILEGE);
         String searchValue = "", id = "";
         try (PrintWriter out = response.getWriter()) {

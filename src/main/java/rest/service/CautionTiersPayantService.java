@@ -1,7 +1,8 @@
 package rest.service;
 
-import dal.TTiersPayant;
+import dal.Caution;
 import javax.ejb.Local;
+import org.json.JSONObject;
 
 /**
  *
@@ -10,7 +11,13 @@ import javax.ejb.Local;
 @Local
 public interface CautionTiersPayantService {
 
-    void addCaution(String idTiersPayant, int caution);
+    void addCaution(String idTiersPayant, int amount);
 
-    void update(TTiersPayant payant, int caution);
+    JSONObject update(String idCaution, int amount);
+
+    JSONObject supprimerHistorique(String cautionHistoriqueId);
+
+    JSONObject supprimerCaution(String idCaution);
+
+    void updateCaution(Caution caution, int saleAmount);
 }
