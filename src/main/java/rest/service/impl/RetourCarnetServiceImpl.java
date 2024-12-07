@@ -353,7 +353,7 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
                 .orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
         List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query,
                 dtStart, dtEnd);
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
         return q.getResultList().stream()
                 .map(e -> new RetourCarnetDTO(e, findByRetourCarnetId(e.getId(), null).stream()
@@ -371,7 +371,7 @@ public class RetourCarnetServiceImpl implements RetourCarnetService {
                 .orderBy(cb.desc(root.get(RetourCarnetDetail_.retourCarnet).get(RetourCarnet_.createdAt)));
         List<Predicate> predicates = listRetourByTierspayantIdAndPeriodePredicates(cb, root, idTierspayant, query,
                 dtStart, dtEnd);
-        cq.where(cb.and(predicates.toArray(new Predicate[0])));
+        cq.where(cb.and(predicates.toArray(Predicate[]::new)));
         TypedQuery<RetourCarnet> q = getEntityManager().createQuery(cq);
 
         return q.getResultList().stream().sorted(comparatorTiersPayant.thenComparing(comparatorDate))

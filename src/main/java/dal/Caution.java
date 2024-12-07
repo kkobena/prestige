@@ -55,8 +55,19 @@ public class Caution implements Serializable {
     @JoinColumn(name = "user_id", referencedColumnName = "lg_USER_ID", nullable = false, updatable = false)
     @ManyToOne
     private TUser user;
-    @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST }, mappedBy = "caution")
+    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST}, mappedBy = "caution")
     private List<CautionHistorique> historiques = new ArrayList<>();
+    @NotNull
+    @Column(name = "mvt_update", nullable = false)
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     public String getId() {
         return id;
