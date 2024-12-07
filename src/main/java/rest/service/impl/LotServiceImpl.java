@@ -32,11 +32,11 @@ import util.FunctionUtils;
 public class LotServiceImpl implements LotService {
 
     private static final Logger LOG = Logger.getLogger(LotServiceImpl.class.getName());
-    private static final String MVT_QUERY = "SELECT f.lg_FAMILLE_ID,f.int_CIP, f.str_NAME, f.int_PAF, f.int_PRICE,g.str_LIBELLE, l.int_NUM_LOT,l.dt_CREATED, l.dt_UPDATED, l.str_REF_LIVRAISON,l.int_NUMBER, l.int_NUMBER_GRATUIT,\n"
+    private static final String MVT_QUERY = "SELECT f.int_CIP, f.str_NAME, f.int_PAF, f.int_PRICE,g.str_LIBELLE, l.int_NUM_LOT, l.str_REF_LIVRAISON,l.int_NUMBER, l.int_NUMBER_GRATUIT,\n"
             + "l.dt_SORTIE_USINE, l.dt_PEREMPTION\n" + "FROM t_lot l, t_famille f, t_grossiste g\n"
             + "WHERE l.lg_FAMILLE_ID = f.lg_FAMILLE_ID AND f.lg_GROSSISTE_ID = g.lg_GROSSISTE_ID AND DATE(l.dt_CREATED) BETWEEN ?1 AND ?2";
 
-    private static final String MVT_QUERY2 = "SELECT f.int_CIP, f.str_NAME, f.int_PAF, f.int_PRICE,g.str_LIBELLE, l.int_NUM_LOT,l.dt_CREATED, l.dt_UPDATED, l.str_REF_LIVRAISON,l.int_NUMBER, l.int_NUMBER_GRATUIT,\n"
+    private static final String MVT_QUERY2 = "SELECT f.int_CIP, f.str_NAME, f.int_PAF, f.int_PRICE,g.str_LIBELLE, l.int_NUM_LOT, l.str_REF_LIVRAISON,l.int_NUMBER, l.int_NUMBER_GRATUIT,\n"
             + "l.dt_SORTIE_USINE, l.dt_PEREMPTION\n" + "FROM t_lot l, t_famille f, t_grossiste g\n"
             + "WHERE l.lg_FAMILLE_ID = f.lg_FAMILLE_ID AND f.lg_GROSSISTE_ID = g.lg_GROSSISTE_ID";
 
@@ -115,17 +115,23 @@ public class LotServiceImpl implements LotService {
         if (Objects.nonNull(dtPeremptionTuple)) {
             dtPeremption = dtPeremptionTuple.toLocalDateTime().format(formatter);
         }
-        return rest.service.dto.LotDTO.builder().lgFamilleId(t.get("lg_FAMILLE_ID", String.class))
-                .intCip(t.get("int_CIP", String.class)).strName(t.get("str_NAME", String.class))
-                .intPrice(t.get("int_PRICE", Integer.class)).intPaf(t.get("int_PAF", Integer.class))
-                .intNumLot(t.get("int_NUM_LOT", String.class)).intNumber(t.get("int_NUMBER", Integer.class))
-                .dtCreated(t.get("dt_CREATED", Timestamp.class).toLocalDateTime().format(formatter))
-                .dtUpdated(t.get("dt_UPDATED", Timestamp.class).toLocalDateTime().format(formatter))
-                .intPaf(t.get("int_PAF", Integer.class)).lgGrossisteId(t.get("lg_GROSSISTE_ID", String.class))
+        return rest.service.dto.LotDTO.builder()
+               // .lgFamilleId(t.get("lg_FAMILLE_ID", String.class))
+                .intCip(t.get("int_CIP", String.class))
+                .strName(t.get("str_NAME", String.class))
+                .intPaf(t.get("int_PAF", Integer.class))
+                .intPrice(t.get("int_PRICE", Integer.class))
+                .lgGrossisteId(t.get("str_LIBELLE", String.class))
+                .intNumLot(t.get("int_NUM_LOT", String.class))
                 .strRefLivraison(t.get("str_REF_LIVRAISON", String.class))
+                .intNumber(t.get("int_NUMBER", Integer.class))
+                .intNumberGratuit(t.get("int_NUMBER_GRATUIT", Integer.class))
                 .dtSortieUsine(t.get("dt_SORTIE_USINE", Timestamp.class).toLocalDateTime().format(formatter))
-                .intNumberGratuit(t.get("int_NUMBER_GRATUIT", Integer.class)).dtPeremption(dtPeremption)
-                .intQtyVendue(t.get("int_QTY_VENDUE", Integer.class)).lgUserId(t.get("lg_USER_ID", String.class))
+                .dtPeremption(dtPeremption)
+                //.dtCreated(t.get("dt_CREATED", Timestamp.class).toLocalDateTime().format(formatter))
+                //.dtUpdated(t.get("dt_UPDATED", Timestamp.class).toLocalDateTime().format(formatter))
+                //.intQtyVendue(t.get("int_QTY_VENDUE", Integer.class))
+                //.lgUserId(t.get("lg_USER_ID", String.class))
                 .build();
         /*
          * .heureOpreration(t.get("heureOpreration", String.class)) .dateOpreration(t.get("dateOpreration",
