@@ -5,16 +5,13 @@
 package rest;
 
 import javax.ejb.EJB;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import org.json.JSONObject;
-import rest.service.CaisseService;
+
 import rest.service.LotService;
 
 /**
@@ -27,23 +24,24 @@ import rest.service.LotService;
 @Consumes("application/json")
 public class LotRessource {
 
-    @Inject
-    private HttpServletRequest servletRequest;
     @EJB
     private LotService lotService;
 
     @GET
     @Path("listlot")
+    // methode avec parametre
     public Response getAllLots(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
-        JSONObject json = lotService.getAllLots(dtStart, dtEnd, limit, start);
-        return Response.ok().entity(json.toString()).build();
+
+        return Response.ok().entity(lotService.getAllLots(dtStart, dtEnd, limit, start).toString()).build();
     }
 
     @GET
-    @Path("listlots")
-    public Response getLots() {
-        JSONObject json = lotService.getLots();
-        return Response.ok().entity(json.toString()).build();
+    @Path("lots")
+    // methode sans parametre
+    public Response getAllLots() {
+
+        return Response.ok().entity(lotService.getAllLots().toString()).build();
     }
+
 }
