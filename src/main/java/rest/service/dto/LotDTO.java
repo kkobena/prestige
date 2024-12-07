@@ -34,14 +34,6 @@ public class LotDTO implements Serializable {
         this.strName = strName;
     }
 
-    public Integer getIntCip() {
-        return intCip;
-    }
-
-    public void setIntCip(Integer intCip) {
-        this.intCip = intCip;
-    }
-
     public Integer getIntPrice() {
         return intPrice;
     }
@@ -150,7 +142,15 @@ public class LotDTO implements Serializable {
 
     private String strName;
 
-    private Integer intCip;
+    public String getIntCip() {
+        return intCip;
+    }
+
+    public void setIntCip(String intCip) {
+        this.intCip = intCip;
+    }
+
+    private String intCip;
 
     private Integer intPrice;
 

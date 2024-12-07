@@ -39,7 +39,7 @@ public class LotRessource {
     @GET
     @Path("lots")
     // methode sans parametre
-    public Response getAllLots() {
+    public Response getAll() {
 
         return Response.ok().entity(lotService.getAllLots().toString()).build();
     }
