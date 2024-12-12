@@ -116,22 +116,18 @@ public class LotServiceImpl implements LotService {
             dtPeremption = dtPeremptionTuple.toLocalDateTime().format(formatter);
         }
         return rest.service.dto.LotDTO.builder()
-               // .lgFamilleId(t.get("lg_FAMILLE_ID", String.class))
-                .intCip(t.get("int_CIP", String.class))
-                .strName(t.get("str_NAME", String.class))
-                .intPaf(t.get("int_PAF", Integer.class))
-                .intPrice(t.get("int_PRICE", Integer.class))
-                .lgGrossisteId(t.get("str_LIBELLE", String.class))
-                .intNumLot(t.get("int_NUM_LOT", String.class))
-                .strRefLivraison(t.get("str_REF_LIVRAISON", String.class))
-                .intNumber(t.get("int_NUMBER", Integer.class))
+                // .lgFamilleId(t.get("lg_FAMILLE_ID", String.class))
+                .intCip(t.get("int_CIP", String.class)).strName(t.get("str_NAME", String.class))
+                .intPaf(t.get("int_PAF", Integer.class)).intPrice(t.get("int_PRICE", Integer.class))
+                .lgGrossisteId(t.get("str_LIBELLE", String.class)).intNumLot(t.get("int_NUM_LOT", String.class))
+                .strRefLivraison(t.get("str_REF_LIVRAISON", String.class)).intNumber(t.get("int_NUMBER", Integer.class))
                 .intNumberGratuit(t.get("int_NUMBER_GRATUIT", Integer.class))
                 .dtSortieUsine(t.get("dt_SORTIE_USINE", Timestamp.class).toLocalDateTime().format(formatter))
                 .dtPeremption(dtPeremption)
-                //.dtCreated(t.get("dt_CREATED", Timestamp.class).toLocalDateTime().format(formatter))
-                //.dtUpdated(t.get("dt_UPDATED", Timestamp.class).toLocalDateTime().format(formatter))
-                //.intQtyVendue(t.get("int_QTY_VENDUE", Integer.class))
-                //.lgUserId(t.get("lg_USER_ID", String.class))
+                // .dtCreated(t.get("dt_CREATED", Timestamp.class).toLocalDateTime().format(formatter))
+                // .dtUpdated(t.get("dt_UPDATED", Timestamp.class).toLocalDateTime().format(formatter))
+                // .intQtyVendue(t.get("int_QTY_VENDUE", Integer.class))
+                // .lgUserId(t.get("lg_USER_ID", String.class))
                 .build();
         /*
          * .heureOpreration(t.get("heureOpreration", String.class)) .dateOpreration(t.get("dateOpreration",

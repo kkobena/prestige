@@ -132,7 +132,7 @@ public class ErpServiceImpl implements ErpService {
                     case DateConverter.MODE_MOOV:
                     case DateConverter.TYPE_REGLEMENT_ORANGE:
                     case DateConverter.MODE_MTN:
-                        case DateConverter.MODE_WAVE:
+                    case DateConverter.MODE_WAVE:
                         caComptant.setTotMobile(caComptant.getTotMobile() + e.getTotEsp());
                         break;
                     default:
@@ -153,19 +153,19 @@ public class ErpServiceImpl implements ErpService {
     public List<ErpCaComptant> caAll(String dtStart, String dtEnd) {
         try {
             List<Tuple> list = getEntityManager().createNativeQuery(
-                    "SELECT SUM(m.montantCredit) AS montantCredit,SUM(m.montantPaye) AS montantPaye, SUM(m.montantRemise) AS montantRemise, SUM(m.montantTva) as montantTva,m.mvtdate,m.typeReglementId FROM mvttransaction m where m.checked=1 AND (m.typeTransaction=0 OR m.typeTransaction=1) AND m.lg_EMPLACEMENT_ID='1' AND DATE(m.mvtdate) BETWEEN ?1 AND ?2 GROUP BY m.mvtdate,m.typeReglementId",
+                    "SELECT SUM(m.montantCredit) AS montantCredit, sum(v.montant_verse) AS montantVerse, SUM(m.montantRemise) AS montantRemise, SUM(m.montantTva) as montantTva,m.mvtdate,v.type_regelement FROM mvttransaction m, vente_reglement v where m.vente_id=v.vente_id AND m.checked=1 AND (m.typeTransaction=0 OR m.typeTransaction=1) AND m.lg_EMPLACEMENT_ID='1' AND DATE(m.mvtdate) BETWEEN ?1 AND ?2 GROUP BY m.mvtdate,v.type_regelement",
                     Tuple.class).setParameter(1, LocalDate.parse(dtStart)).setParameter(2, LocalDate.parse(dtEnd))
                     .getResultList();
             List<ErpCaComptant> caComptants = new ArrayList<>();
             list.stream().map(t -> {
                 long montantCredit = t.get("montantCredit", BigDecimal.class).longValue();
-                long montantPaye = t.get("montantPaye", BigDecimal.class).longValue();
+                long montantPaye = t.get("montantVerse", BigDecimal.class).longValue();
                 long montantRemise = t.get("montantRemise", BigDecimal.class).longValue();
                 long montantTva = t.get("montantTva", BigDecimal.class).longValue();
                 LocalDate mvtDate = t.get("mvtdate", java.sql.Date.class).toLocalDate();
-                String typeReglementId = t.get("typeReglementId", String.class);
+                String type_regelement = t.get("type_regelement", String.class);
                 ErpCaComptant caComptant = new ErpCaComptant();
-                caComptant.setMode(typeReglementId);
+                caComptant.setMode(type_regelement);
                 caComptant.setTotEsp(montantPaye);
                 caComptant.setRemiseSurCA(montantRemise);
                 caComptant.setTotTVA(montantTva);
