@@ -138,10 +138,6 @@ public class LotDTO implements Serializable {
         this.lgUserId = lgUserId;
     }
 
-    private String lgFamilleId;
-
-    private String strName;
-
     public String getIntCip() {
         return intCip;
     }
@@ -177,5 +173,9 @@ public class LotDTO implements Serializable {
     private Integer intQtyVendue;
 
     private String lgUserId;
+
+    private String lgFamilleId;
+
+    private String strName;
 
 }
