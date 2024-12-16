@@ -3,6 +3,7 @@ package rest.service.impl;
 import commonTasks.dto.MontantAPaye;
 import commonTasks.dto.SalesParams;
 import commonTasks.dto.TiersPayantParams;
+import dal.Caution;
 import dal.TCompteClientTiersPayant;
 import dal.TFamille;
 import dal.TGrilleRemise;
@@ -41,9 +42,19 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         List<TPreenregistrementDetail> items = getItems(params.getVenteId());
         TPreenregistrement op = items.get(0).getLgPREENREGISTREMENTID();
         boolean isCarnet = Constant.VENTE_AVEC_CARNET.equals(op.getLgTYPEVENTEID().getLgTYPEVENTEID());
+
         TRemise remise = op.getRemise();
         remise = remise != null ? remise : op.getClient().getRemise();
         MontantAPaye aPaye = computeRemise(op, remise, items);
+        if (isCarnet) {
+            TCompteClientTiersPayant tc = em.find(TCompteClientTiersPayant.class,
+                    params.getTierspayants().get(0).getCompteTp());
+            TTiersPayant tTiersPayant = tc.getLgTIERSPAYANTID();
+            if (tTiersPayant.hasCaution()) {
+                return calculNetAvecCaution(aPaye, op, params, tTiersPayant);
+            }
+
+        }
 
         int montantVente = op.getIntPRICE();
         int cmuAmount = op.getCmuAmount();
@@ -333,4 +344,54 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
     private int getPlafondTiersPayantParVente(TCompteClientTiersPayant tc) {
         return (tc.getDblPLAFOND() == null || tc.getDblPLAFOND() <= 0 ? 0 : tc.getDblPLAFOND().intValue());
     }
+
+    private NetComputingDTO computeCaution(TiersPayantParams tierspayant, TTiersPayant payant, TPreenregistrement op) {
+        int montantTp;
+        Caution c = payant.getCaution();
+        int caution = c.getMontant();
+        int montantPaye = op.getIntPRICE() - op.getIntPRICEREMISE();
+        if (caution >= montantPaye) {
+            montantTp = montantPaye;
+        } else {
+            montantTp = caution;
+        }
+        NetComputingDTO netComputing = new NetComputingDTO();
+        netComputing.setIdCompteClientTiersPayant(tierspayant.getCompteTp());
+        netComputing.setPlafondVente(0);
+        netComputing.setMontantTiersPayant(montantTp);
+        netComputing.setPlafondGlobal(0);
+        netComputing.setNumBon(tierspayant.getNumBon());
+        op.setCaution(c);
+        return netComputing;
+
+    }
+
+    private MontantAPaye calculNetAvecCaution(MontantAPaye aPaye, TPreenregistrement op, SalesParams params,
+            TTiersPayant payant) {
+        MontantAPaye montantAPaye = new MontantAPaye();
+
+        TiersPayantParams tierspayant = params.getTierspayants().get(0);
+        NetComputingDTO netComputing = computeCaution(tierspayant, payant, op);
+
+        int custPart = (op.getIntPRICE() - op.getIntPRICEREMISE()) - netComputing.getMontantTiersPayant();
+        op.setIntCUSTPART(custPart);
+        em.merge(op);
+
+        montantAPaye.setRemise(op.getIntPRICEREMISE());
+        montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
+        montantAPaye.setMontant(op.getIntPRICE());
+        montantAPaye.setMarge(aPaye.getMarge());
+        montantAPaye.setMontantTva(aPaye.getMontantTva());
+        montantAPaye.setMontantTp(netComputing.getMontantTiersPayant());
+        TiersPayantParams tp = new TiersPayantParams();
+        tp.setCompteTp(tierspayant.getCompteTp());
+        tp.setTaux(op.getIntCUSTPART() == 0 ? tierspayant.getTaux()
+                : (int) Math.ceil(netComputing.getMontantTiersPayant()));
+        tp.setNumBon(tierspayant.getNumBon());
+        tp.setTpnet(montantAPaye.getMontantTp());
+        montantAPaye.getTierspayants().add(tp);
+
+        return montantAPaye;
+    }
+
 }

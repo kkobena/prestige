@@ -4,6 +4,7 @@ import dal.Caution;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONObject;
+import rest.service.dto.AddCautionDTO;
 import rest.service.dto.CautionDTO;
 
 /**
@@ -13,11 +14,9 @@ import rest.service.dto.CautionDTO;
 @Local
 public interface CautionTiersPayantService {
 
-    void addCaution(String idTiersPayant, int amount);
+    void addCaution(AddCautionDTO addCaution);
 
-    JSONObject update(String idCaution, int amount);
-
-    JSONObject supprimerHistorique(String cautionHistoriqueId);
+    JSONObject update(AddCautionDTO addCaution);
 
     JSONObject supprimerCaution(String idCaution);
 

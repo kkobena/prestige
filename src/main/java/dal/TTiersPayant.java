@@ -6,8 +6,11 @@
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -24,8 +27,11 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.apache.commons.collections4.CollectionUtils;
+import org.hibernate.annotations.JoinFormula;
 
 /**
  *
@@ -211,13 +217,23 @@ public class TTiersPayant implements Serializable {
     private Boolean groupingByTaux = Boolean.FALSE;
     @Column(name = "is_cmus", nullable = false)
     private Boolean cmus = Boolean.FALSE;
-
-    @OneToOne(mappedBy = "tiersPayant", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
-    @PrimaryKeyJoinColumn
+    @OneToMany(mappedBy = "tiersPayant")
+    private List<Caution> cautions = new ArrayList<>();
+    /// @ManyToOne(fetch = FetchType.EAGER)
+    // @JoinFormula("(SELECT o.id FROM caution o WHERE o.tiersPayant_id=lg_TIERS_PAYANT_ID LIMIT 1)")
+    @Transient
     private Caution caution;
 
     public Boolean getCmus() {
         return cmus;
+    }
+
+    public List<Caution> getCautions() {
+        return cautions;
+    }
+
+    public void setCautions(List<Caution> cautions) {
+        this.cautions = cautions;
     }
 
     public void setCmus(Boolean cmus) {
@@ -725,11 +741,13 @@ public class TTiersPayant implements Serializable {
     }
 
     public Caution getCaution() {
+        if (CollectionUtils.isNotEmpty(cautions)) {
+            this.caution = cautions.get(0);
+        }
         return caution;
     }
 
-    public void setCaution(Caution caution) {
-        this.caution = caution;
+    public boolean hasCaution() {
+        return Objects.nonNull(getCaution());
     }
-
 }

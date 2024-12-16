@@ -17,9 +17,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -47,15 +45,14 @@ public class Caution implements Serializable {
     @NotNull
     @Column(name = "mvt_date", nullable = false, updatable = false)
     private LocalDateTime mvtDate = LocalDateTime.now();
-    @OneToOne
-    @MapsId(value = "lgTIERSPAYANTID")
-    @JoinColumn(name = "tiersPayant_id")
+    @ManyToOne
+    @JoinColumn(name = "tiersPayant_id", referencedColumnName = "lg_TIERS_PAYANT_ID", nullable = false)
     private TTiersPayant tiersPayant;
     @NotNull
-    @JoinColumn(name = "user_id", referencedColumnName = "lg_USER_ID", nullable = false, updatable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "lg_USER_ID", nullable = false)
     @ManyToOne
     private TUser user;
-    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.PERSIST}, mappedBy = "caution")
+    @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST }, mappedBy = "caution")
     private List<CautionHistorique> historiques = new ArrayList<>();
     @NotNull
     @Column(name = "mvt_update", nullable = false)

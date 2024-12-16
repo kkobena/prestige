@@ -20,6 +20,7 @@ CREATE TABLE `caution_historique` (
 	`id` VARCHAR(100) NOT NULL COLLATE 'utf8mb3_general_ci',
 	`montant` INT(11) NOT NULL,
 	`mvt_date` DATETIME NOT NULL,
+        `mvt_update` DATETIME NOT NULL,
 	`caution_id` VARCHAR(255) NOT NULL COLLATE 'utf8mb3_general_ci',
 	`user_id` VARCHAR(40) NOT NULL COLLATE 'utf8mb3_general_ci',
 	PRIMARY KEY (`id`) USING BTREE,

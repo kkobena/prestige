@@ -9,7 +9,7 @@ import java.util.List;
 public class CautionDTO {
 
     private String tiersPayantName;
-  
+
     private String id;
     private int montant;
     private int conso;
@@ -33,8 +33,6 @@ public class CautionDTO {
     public void setTiersPayantName(String tiersPayantName) {
         this.tiersPayantName = tiersPayantName;
     }
-
-
 
     public String getId() {
         return id;
@@ -83,7 +81,5 @@ public class CautionDTO {
     public void setCautionHistoriques(List<CautionHistoriqueDTO> cautionHistoriques) {
         this.cautionHistoriques = cautionHistoriques;
     }
-    
-    
-    
+
 }

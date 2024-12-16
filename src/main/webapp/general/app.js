@@ -806,6 +806,7 @@ Ext.application({
         'CategorieNotificationCtr',
         'RecapRecetteCaisseCtr',
         'StatVenteDepotCtr'
+        'CautionCtr'
 
     ],
     stores: [

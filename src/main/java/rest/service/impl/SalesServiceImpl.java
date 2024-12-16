@@ -161,6 +161,8 @@ public class SalesServiceImpl implements SalesService {
     private RemiseService remiseService;
     @EJB
     private SessionHelperService sessionHelperService;
+    @EJB
+    private CautionTiersPayantService cautionTiersPayantService;
 
     private final java.util.function.Predicate<Optional<TParameters>> test = e -> {
         if (e.isPresent()) {
@@ -1545,8 +1547,8 @@ public class SalesServiceImpl implements SalesService {
         return this.getEm().find(TTypeReglement.class, "1");
     }
 
-    private TTypeRecette findTTypeRecetteById(EntityManager emg) {
-        return emg.find(TTypeRecette.class, "1");
+    private TTypeRecette findTTypeRecetteById() {
+        return em.find(TTypeRecette.class, "1");
     }
 
     private String statutDiff(String v) {
@@ -1636,10 +1638,10 @@ public class SalesServiceImpl implements SalesService {
         this.getEm().persist(oTPreenregistrementCompteClient);
     }
 
-    public TRecettes addRecette(Integer montant, String desc, String refId, TUser user, EntityManager emg) {
+    public TRecettes addRecette(Integer montant, String desc, String refId, TUser user) {
         TRecettes recette = new TRecettes();
         recette.setIdRecette(UUID.randomUUID().toString());
-        recette.setLgTYPERECETTEID(findTTypeRecetteById(emg));
+        recette.setLgTYPERECETTEID(findTTypeRecetteById());
         recette.setIntAMOUNT(montant.doubleValue());
         recette.setDtCREATED(new Date());
         recette.setDtUPDATED(recette.getDtCREATED());
@@ -1647,7 +1649,7 @@ public class SalesServiceImpl implements SalesService {
         recette.setStrREFFACTURE(refId);
         recette.setStrCREATEDBY(user.getStrLOGIN());
         recette.setLgUSERID(user);
-        emg.persist(recette);
+        em.persist(recette);
 
         return recette;
     }
@@ -1704,7 +1706,8 @@ public class SalesServiceImpl implements SalesService {
             tp = emg.find(TPreenregistrement.class, clotureVenteParams.getVenteId());
             if (tp.getCopy()) {
                 TPreenregistrement venteAsupprimer = getEm().find(TPreenregistrement.class, tp.getLgPARENTID());
-                if (checkChargedCompteClientPreenregistrement(venteAsupprimer.getLgPREENREGISTREMENTID()).isPresent()) {
+                if (checkChargedCompteClientPreenregistrement(venteAsupprimer.getLgPREENREGISTREMENTID()).isPresent()
+                        && Objects.isNull(venteAsupprimer.getCaution())) {
                     json.put("success", false);
                     json.put("msg", "Désolé la vente a été facturée");
                     return json;
@@ -1742,11 +1745,18 @@ public class SalesServiceImpl implements SalesService {
                 }
 
             }
-            JSONObject result = createPreenregistrementCompteClientTierspayant(clotureVenteParams.getTierspayants(), tp,
-                    clotureVenteParams.isSansBon(), tUser);
-            if (result.has("success")) {
-                return result;
+            if (Objects.nonNull(tp.getCaution())) {
+                if (!updateCaution(clotureVenteParams.getTierspayants().get(0), tp, tUser)) {
+                    return json.put("success", false).put("msg", "Désolé la vente a été facturée");
+                }
+            } else {
+                JSONObject result = createPreenregistrementCompteClientTierspayant(clotureVenteParams.getTierspayants(),
+                        tp, clotureVenteParams.isSansBon(), tUser);
+                if (result.has("success")) {
+                    return result;
+                }
             }
+
             if (clotureVenteParams.getTypeVenteId().equals(VENTE_ASSURANCE_ID)) {
                 Optional<TAyantDroit> ayantDroitop = findAyantDroit(clotureVenteParams.getAyantDroitId());
                 if (ayantDroitop.isPresent()) {
@@ -1804,8 +1814,7 @@ public class SalesServiceImpl implements SalesService {
             }
             if (amount > 0) {
 
-                addRecette(clotureVenteParams.getMontantPaye(), VENTE_ASSURANCE, tp.getLgPREENREGISTREMENTID(), tUser,
-                        emg);
+                addRecette(clotureVenteParams.getMontantPaye(), VENTE_ASSURANCE, tp.getLgPREENREGISTREMENTID(), tUser);
             }
             TTypeReglement typeReglement = findById(clotureVenteParams.getTypeRegleId());
             MvtTransaction mvtTransaction = addTransaction(tUser, tp, montant, amount,
@@ -2019,7 +2028,7 @@ public class SalesServiceImpl implements SalesService {
             }
             TTypeReglement tTypeReglement = findById(clotureVenteParams.getTypeRegleId());
             addRecette(clotureVenteParams.getMontantPaye(), VENTE_COMPTANT, tp.getLgPREENREGISTREMENTID(),
-                    clotureVenteParams.getUserId(), emg);
+                    clotureVenteParams.getUserId());
             MvtTransaction mt = addTransaction(tUser, tp, montant, tp.getIntACCOUNT(), amount,
                     clotureVenteParams.getMontantRecu(), true, CategoryTransaction.CREDIT,
                     TypeTransaction.VENTE_COMPTANT, tTypeReglement, typeMvtCaisse.get(),
@@ -2837,7 +2846,7 @@ public class SalesServiceImpl implements SalesService {
                     clotureVenteParams.getUserId().getLgEMPLACEMENTID()).getReference());
             cloturerItemsVente(tp.getLgPREENREGISTREMENTID());
             addRecette(clotureVenteParams.getMontantPaye(), tp.getStrREFTICKET() + "_" + tp.getStrREF(),
-                    tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId(), emg);
+                    tp.getLgPREENREGISTREMENTID(), clotureVenteParams.getUserId());
             MvtTransaction mvtTransaction = addTransaction(tUser, tp, montant, tp.getIntACCOUNT(), amount,
                     clotureVenteParams.getMontantRecu(), true, CategoryTransaction.CREDIT,
                     TypeTransaction.VENTE_COMPTANT, findById(clotureVenteParams.getTypeRegleId()), typeMvtCaisse.get(),
@@ -4538,40 +4547,6 @@ public class SalesServiceImpl implements SalesService {
         return json;
     }
 
-    private MontantAPaye computeCarnetNet(MontantAPaye montantAPaye, String compteTp, boolean asRestrictions) {
-        String msg = " ";
-        boolean hasRestructuring = false;
-        int remiseCarnet = montantAPaye.getRemise();
-        int montantvente = montantAPaye.getMontant();
-        TiersPayantParams tp = new TiersPayantParams();
-        int totalTp = montantvente - remiseCarnet;
-        int tierspayantAmount = totalTp;
-
-        tp.setDiscount(remiseCarnet);
-        tp.setTaux(100);
-        if (asRestrictions) {
-            JSONObject json = chechCustomerTiersPayantConsumption(compteTp, tierspayantAmount);
-            if (json.getBoolean("hasRestructuring")) {
-                msg = json.getString("msg");
-                hasRestructuring = json.getBoolean("hasRestructuring");
-                tierspayantAmount = json.getInt("montantToBePaid");
-                if (totalTp != tierspayantAmount) {
-
-                    tp.setTaux((int) Math.ceil((Double.valueOf(totalTp) * 100) / totalTp));
-
-                }
-            }
-        }
-        tp.setTpnet(tierspayantAmount);
-        MontantAPaye map = new MontantAPaye(totalTp - tierspayantAmount, montantvente, tierspayantAmount, remiseCarnet,
-                montantAPaye.getMarge(), montantAPaye.getMontantTva());
-        map.setTierspayants(List.of(tp));
-        map.setMessage(msg);
-        map.setRestructuring(hasRestructuring);
-        return map;
-
-    }
-
     private JSONObject calculVoNetAvecPlafondVente(TPreenregistrement pr, int montantVariable, int taux,
             List<TPreenregistrementDetail> list) {
         JSONObject tp = new JSONObject();
@@ -4787,5 +4762,34 @@ public class SalesServiceImpl implements SalesService {
             return null;
         }
         return new TUser(id);
+    }
+
+    private boolean updateCaution(TiersPayantParams params, TPreenregistrement op, TUser u) {
+        try {
+            TCompteClientTiersPayant cmptClient = this.getEm().find(TCompteClientTiersPayant.class,
+                    params.getCompteTp());
+
+            TPreenregistrementCompteClientTiersPayent item = getPreenregistrementCompteClientTiersPayent(
+                    op.getLgPREENREGISTREMENTID(), cmptClient.getLgCOMPTECLIENTTIERSPAYANTID());
+            item.setStrSTATUTFACTURE("paid");
+            op.setStrREFBON(params.getNumBon());
+            item.setDtUPDATED(op.getDtUPDATED());
+            item.setIntPERCENT(params.getTaux());
+            item.setIntPRICE(params.getTpnet());
+            item.setIntPRICERESTE(params.getTpnet());
+            item.setStrREFBON(params.getNumBon());
+            item.setDblQUOTACONSOVENTE(item.getLgCOMPTECLIENTTIERSPAYANTID().getDblQUOTACONSOVENTE() != null
+                    ? item.getLgCOMPTECLIENTTIERSPAYANTID().getDblQUOTACONSOVENTE() + item.getIntPRICE() : 0);
+            item.setStrSTATUT(STATUT_IS_CLOSED);
+            item.setLgUSERID(u);
+            this.getEm().merge(item);
+            this.cautionTiersPayantService.updateCaution(op.getCaution(), params.getTpnet());
+            return true;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+
+        }
+
+        return false;
     }
 }
