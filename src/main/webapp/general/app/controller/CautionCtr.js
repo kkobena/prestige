@@ -173,17 +173,13 @@ Ext.define('testextjs.controller.CautionCtr', {
     },
     fetchDepots: function (view, rowIndex, colIndex, item, e, record, row) {
         const me = this;
-        const formwin = Ext.create('testextjs.view.caution.Add');
-        me.getForm().loadRecord(record);
-        formwin.show();
+        Ext.Msg.alert("Message", 'not implemented yet' );
 
     },
     fetchVentes: function (view, rowIndex, colIndex, item, e, record, row) {
 
         const me = this;
-        const formwin = Ext.create('testextjs.view.caution.Add');
-        me.getForm().loadRecord({"id": record.data.id});
-        formwin.show();
+         Ext.Msg.alert("Message", 'not implemented yet' );
 
     },
     editer: function (view, rowIndex, colIndex, item, e, record, row) {
