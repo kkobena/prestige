@@ -26,7 +26,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.MvtProduitService;
 import rest.service.impl.ImportationVente;
-import toolkits.parameters.commonparameter;
 import util.Constant;
 
 /**
@@ -49,7 +48,7 @@ public class DepotRessource {
     @Path("validerretourdepot/{id}")
     public Response validerRetourDepot(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }

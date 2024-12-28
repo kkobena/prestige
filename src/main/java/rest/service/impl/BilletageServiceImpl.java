@@ -404,7 +404,7 @@ public class BilletageServiceImpl implements BilletageService {
 
     }
 
-    List<Predicate> predicatesFondCaisses(LocalDate dtStart, LocalDate dtEnd, String search, CriteriaBuilder cb,
+    private List<Predicate> predicatesFondCaisses(LocalDate dtStart, LocalDate dtEnd, String search, CriteriaBuilder cb,
             Root<TCoffreCaisse> root) {
         List<Predicate> predicates = new ArrayList<>();
 

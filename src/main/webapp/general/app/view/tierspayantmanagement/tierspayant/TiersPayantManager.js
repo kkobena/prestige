@@ -64,9 +64,9 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantManager'
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: '../tierspayant',
+                url: '../api/v1/tierspayant/list',
                 reader: {
-                    type: 'json',
+                     type: 'json',
                     root: 'results',
                     totalProperty: 'total'
                 }
@@ -477,14 +477,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantManager'
         var extension = "xls";
         window.location = '../MigrationServlet?table_name=TABLE_TIERS_PAYANTS' + "&extension=" + extension;
     },
-    onManageFoneClick: function (grid, rowIndex) {
 
-//        var rec = grid.getStore().getAt(rowIndex);
-//        var xtype = "userphonemanager";
-//        var  alias ='widget.' + xtype;
-//        testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype,"",rec.get('str_FIRST_NAME'),rec.data);
-//        
-    },
     onAddClick: function () {
 
         new testextjs.view.tierspayantmanagement.tierspayant.action.add({
@@ -629,7 +622,6 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.TiersPayantManager'
 
     onDetailClick: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
-//       alert(JSON.stringify( rec.data));
         new testextjs.view.tierspayantmanagement.tierspayant.action.detailstierspayant({
             odatasource: rec.data,
             parentview: this,
