@@ -56,4 +56,16 @@ public class CautionRessource {
 
         return Response.ok().entity(cautionTiersPayantService.update(addCaution).toString()).build();
     }
+
+    @GET
+    @Path("/historiques")
+    public Response getHistoriques(@QueryParam(value = "idCaution") String idCaution) {
+        return Response.ok().entity(cautionTiersPayantService.getHistoriquesView(idCaution).toString()).build();
+    }
+
+    @GET
+    @Path("/ventes")
+    public Response getVentes(@QueryParam(value = "idCaution") String idCaution) {
+        return Response.ok().entity(cautionTiersPayantService.getVentesView(idCaution).toString()).build();
+    }
 }

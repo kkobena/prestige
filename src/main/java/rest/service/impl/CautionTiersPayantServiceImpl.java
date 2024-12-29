@@ -1,11 +1,15 @@
 package rest.service.impl;
 
+import commonTasks.dto.VenteDTO;
 import dal.Caution;
 import dal.CautionHistorique;
 import dal.Caution_;
+import dal.TClient;
+import dal.TPreenregistrement;
 import dal.TTiersPayant;
 import dal.TTiersPayant_;
 import dal.TUser;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,6 +33,7 @@ import rest.service.SessionHelperService;
 import rest.service.dto.AddCautionDTO;
 import rest.service.dto.CautionDTO;
 import rest.service.dto.CautionHistoriqueDTO;
+import util.DateUtil;
 import util.FunctionUtils;
 
 /**
@@ -38,6 +43,8 @@ import util.FunctionUtils;
 @Stateless
 public class CautionTiersPayantServiceImpl implements CautionTiersPayantService {
 
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    private final SimpleDateFormat heureFormat = new SimpleDateFormat("HH:mm");
     private static final Logger LOG = Logger.getLogger(CautionTiersPayantServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -212,5 +219,75 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
         caution.setUser(user.getStrFIRSTNAME().concat(" ").concat(user.getStrLASTNAME()));
         return caution;
 
+    }
+
+    @Override
+    public List<VenteDTO> getVentes(String idCaution) {
+        TypedQuery<TPreenregistrement> query = em
+                .createQuery("SELECT o FROM TPreenregistrement o WHERE o.caution.id=?1", TPreenregistrement.class);
+        query.setParameter(1, idCaution);
+        return query.getResultStream().map(this::buildVente).collect(Collectors.toList());
+    }
+
+    @Override
+    public JSONObject getVentesView(String idCaution) {
+        return FunctionUtils.returnData(getVentes(idCaution));
+    }
+
+    private VenteDTO buildVente(TPreenregistrement tp) {
+        VenteDTO vente = new VenteDTO();
+        vente.setLgPREENREGISTREMENTID(tp.getLgPREENREGISTREMENTID());
+        vente.setStrREF(tp.getStrREF());
+        vente.setStrREFTICKET(tp.getStrREFTICKET());
+        vente.setIntPRICE(tp.getIntPRICE());
+        vente.setIntPRICEREMISE(tp.getIntPRICEREMISE());
+        vente.setStrTYPEVENTE(tp.getStrTYPEVENTE());
+        vente.setIntCUSTPART(tp.getIntCUSTPART());
+        vente.setDtUPDATED(dateFormat.format(tp.getDtUPDATED()));
+        vente.setHeure(heureFormat.format(tp.getDtUPDATED()));
+        vente.setDtCREATED(dateFormat.format(tp.getDtUPDATED()));
+        vente.setHEUREVENTE(heureFormat.format(tp.getDtUPDATED()));
+        vente.setStrSTATUT(tp.getStrSTATUT());
+        vente.setAvoir(tp.getBISAVOIR());
+        vente.setCancel(tp.getBISCANCEL());
+        vente.setSansbon(tp.getBWITHOUTBON());
+        vente.setLgTYPEVENTEID(tp.getLgTYPEVENTEID().getLgTYPEVENTEID());
+        vente.setCopy(tp.getCopy());
+        vente.setMvdate(DateUtil.convertDateToDD_MM_YYYY(tp.getDtUPDATED()));
+        TClient cl = tp.getClient();
+        if (cl != null) {
+            vente.setClientFullName(cl.getStrFIRSTNAME() + " " + cl.getStrLASTNAME());
+        }
+        try {
+
+            vente.setDateAnnulation(dateFormat.format(tp.getDtANNULER()));
+            vente.setHeureAnnulation(heureFormat.format(tp.getDtANNULER()));
+        } catch (Exception e) {
+        }
+        return vente;
+
+    }
+
+    private CautionHistoriqueDTO buildHistoriques(CautionHistorique cautionHistorique) {
+        CautionHistoriqueDTO historique = new CautionHistoriqueDTO();
+        historique.setId(cautionHistorique.getId());
+        historique.setMontant(cautionHistorique.getMontant());
+        historique.setMvtDate(cautionHistorique.getMvtDate().format(DateTimeFormatter.ofPattern("dd/MM/YYYY HH:mm")));
+        TUser user = cautionHistorique.getUser();
+        historique.setUser(user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        return historique;
+    }
+
+    @Override
+    public List<CautionHistoriqueDTO> getHistoriques(String idCaution) {
+        TypedQuery<CautionHistorique> query = em.createQuery("SELECT o FROM CautionHistorique o WHERE o.caution.id=?1",
+                CautionHistorique.class);
+        query.setParameter(1, idCaution);
+        return query.getResultStream().map(this::buildHistoriques).collect(Collectors.toList());
+    }
+
+    @Override
+    public JSONObject getHistoriquesView(String idCaution) {
+        return FunctionUtils.returnData(getHistoriques(idCaution));
     }
 }
