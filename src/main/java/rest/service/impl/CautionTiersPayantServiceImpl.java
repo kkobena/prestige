@@ -1,18 +1,24 @@
 package rest.service.impl;
 
+import commonTasks.dto.MvtCaisseDTO;
 import commonTasks.dto.VenteDTO;
 import dal.Caution;
 import dal.CautionHistorique;
 import dal.Caution_;
 import dal.TClient;
 import dal.TPreenregistrement;
+import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TTiersPayant;
 import dal.TTiersPayant_;
+import dal.TTypeMvtCaisse;
 import dal.TUser;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -26,13 +32,16 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import rest.service.CaisseService;
 import rest.service.CautionTiersPayantService;
 import rest.service.SessionHelperService;
 import rest.service.dto.AddCautionDTO;
 import rest.service.dto.CautionDTO;
 import rest.service.dto.CautionHistoriqueDTO;
+import util.Constant;
 import util.DateUtil;
 import util.FunctionUtils;
 
@@ -50,9 +59,11 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
     private EntityManager em;
     @EJB
     private SessionHelperService sessionHelperService;
+    @EJB
+    private CaisseService caisseService;
 
     @Override
-    public void addCaution(AddCautionDTO addCaution) {
+    public JSONObject addCaution(AddCautionDTO addCaution) throws Exception {
 
         TTiersPayant tTiersPayant = this.em.find(TTiersPayant.class, addCaution.getTiersPayantId());
 
@@ -67,10 +78,11 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
             em.merge(caution);
         }
 
+        return caisseService.createMvt(buildCaisseDTO(amount), sessionHelperService.getCurrentUser());
     }
 
     @Override
-    public JSONObject update(AddCautionDTO addCaution) {
+    public JSONObject update(AddCautionDTO addCaution) throws Exception {
         JSONObject json = new JSONObject();
         int amount = addCaution.getMontant();
         if (amount == 0) {
@@ -78,17 +90,19 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
         }
         Caution caution = this.em.find(Caution.class, addCaution.getIdCaution());
         int montant = caution.getMontant() + amount;
+        if (caution.getMontant() < 0) {
+            if (!canModifyCaution(caution.getMontant(), amount)) {
+                return json.put("success", false).put("msg", "Impossible de reduire le montant");
 
-        if (!canModifyCaution(caution.getMontant(), amount)) {
-            return json.put("success", false).put("msg", "Impossible de reduire le montant");
-
+            }
         }
 
         addCautionHistorique(caution, amount);
         caution.setMontant(montant);
         caution.setUpdatedAt(LocalDateTime.now());
         em.merge(caution);
-        return json.put("success", true).put("msg", "Opération effectuée");
+        return caisseService.createMvt(buildCaisseDTO(amount), sessionHelperService.getCurrentUser());
+        // return json.put("success", true).put("msg", "Opération effectuée");
     }
 
     private boolean canModifyCaution(int montant, int newAmount) {
@@ -205,8 +219,9 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
         caution.setMvtDate(c.getMvtDate().format(DateTimeFormatter.ofPattern("dd/MM/YYYY HH:mm")));
         caution.setUpdatedAt(c.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd/MM/YYYY HH:mm")));
         caution.setUser(user.getStrFIRSTNAME().concat(" ").concat(user.getStrLASTNAME()));
-        caution.setCautionHistoriques(
-                c.getHistoriques().stream().map(this::buildCautionHistoriqueFromEntity).collect(Collectors.toList()));
+        caution.setCautionHistoriques(c.getHistoriques().stream()
+                .sorted(Comparator.comparing(CautionHistorique::getMvtDate, Comparator.reverseOrder()))
+                .map(this::buildCautionHistoriqueFromEntity).collect(Collectors.toList()));
         return caution;
 
     }
@@ -222,16 +237,27 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
     }
 
     @Override
-    public List<VenteDTO> getVentes(String idCaution) {
-        TypedQuery<TPreenregistrement> query = em
-                .createQuery("SELECT o FROM TPreenregistrement o WHERE o.caution.id=?1", TPreenregistrement.class);
+    public List<VenteDTO> getVentes(String idCaution, String dtStart, String dtEnd) {
+        if (StringUtils.isEmpty(dtStart)) {
+            dtStart = LocalDate.now().minusYears(1).toString();
+        }
+        if (StringUtils.isEmpty(dtEnd)) {
+            dtEnd = LocalDate.now().toString();
+        }
+        TypedQuery<TPreenregistrement> query = em.createQuery(
+                "SELECT o FROM TPreenregistrement o WHERE o.caution.id=?1 AND FUNCTION('DATE',o.dtUPDATED) BETWEEN ?2 AND ?3",
+                TPreenregistrement.class);
         query.setParameter(1, idCaution);
-        return query.getResultStream().map(this::buildVente).collect(Collectors.toList());
+        query.setParameter(2, java.sql.Date.valueOf(dtStart));
+        query.setParameter(3, java.sql.Date.valueOf(dtEnd));
+        return query.getResultStream()
+                .sorted(Comparator.comparing(TPreenregistrement::getDtUPDATED, Comparator.reverseOrder()))
+                .map(this::buildVente).collect(Collectors.toList());
     }
 
     @Override
-    public JSONObject getVentesView(String idCaution) {
-        return FunctionUtils.returnData(getVentes(idCaution));
+    public JSONObject getVentesView(String idCaution, String dtStart, String dtEnd) {
+        return FunctionUtils.returnData(getVentes(idCaution, dtStart, dtEnd));
     }
 
     private VenteDTO buildVente(TPreenregistrement tp) {
@@ -254,6 +280,8 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
         vente.setLgTYPEVENTEID(tp.getLgTYPEVENTEID().getLgTYPEVENTEID());
         vente.setCopy(tp.getCopy());
         vente.setMvdate(DateUtil.convertDateToDD_MM_YYYY(tp.getDtUPDATED()));
+        TUser u = tp.getLgUSERCAISSIERID();
+        vente.setUserCaissierName(u.getStrFIRSTNAME() + " " + u.getStrLASTNAME());
         TClient cl = tp.getClient();
         if (cl != null) {
             vente.setClientFullName(cl.getStrFIRSTNAME() + " " + cl.getStrLASTNAME());
@@ -263,6 +291,14 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
             vente.setDateAnnulation(dateFormat.format(tp.getDtANNULER()));
             vente.setHeureAnnulation(heureFormat.format(tp.getDtANNULER()));
         } catch (Exception e) {
+        }
+        Collection<TPreenregistrementCompteClientTiersPayent> c = tp
+                .getTPreenregistrementCompteClientTiersPayentCollection();
+        if (CollectionUtils.isNotEmpty(c)) {
+            c.stream().findFirst().ifPresent(e -> {
+                vente.setCaution(e.getIntPRICE());
+
+            });
         }
         return vente;
 
@@ -279,15 +315,50 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
     }
 
     @Override
-    public List<CautionHistoriqueDTO> getHistoriques(String idCaution) {
-        TypedQuery<CautionHistorique> query = em.createQuery("SELECT o FROM CautionHistorique o WHERE o.caution.id=?1",
+    public List<CautionHistoriqueDTO> getHistoriques(String idCaution, String dtStart, String dtEnd) {
+        if (StringUtils.isEmpty(dtStart)) {
+            dtStart = LocalDate.now().minusYears(1).toString();
+        }
+        if (StringUtils.isEmpty(dtEnd)) {
+            dtEnd = LocalDate.now().toString();
+        }
+        TypedQuery<CautionHistorique> query = em.createQuery(
+                "SELECT o FROM CautionHistorique o WHERE o.caution.id=?1 AND FUNCTION('DATE',o.mvtDate) BETWEEN ?2 AND ?3",
                 CautionHistorique.class);
         query.setParameter(1, idCaution);
-        return query.getResultStream().map(this::buildHistoriques).collect(Collectors.toList());
+        query.setParameter(2, java.sql.Date.valueOf(dtStart));
+        query.setParameter(3, java.sql.Date.valueOf(dtEnd));
+        return query.getResultStream()
+                .sorted(Comparator.comparing(CautionHistorique::getMvtDate, Comparator.reverseOrder()))
+                .map(this::buildHistoriques).collect(Collectors.toList());
     }
 
     @Override
-    public JSONObject getHistoriquesView(String idCaution) {
-        return FunctionUtils.returnData(getHistoriques(idCaution));
+    public JSONObject getHistoriquesView(String idCaution, String dtStart, String dtEnd) {
+        return FunctionUtils.returnData(getHistoriques(idCaution, dtStart, dtEnd));
+    }
+
+    @Override
+    public Caution getCautionById(String idCaution) {
+        return em.find(Caution.class, idCaution);
+    }
+
+    private MvtCaisseDTO buildCaisseDTO(int montant) {
+
+        MvtCaisseDTO caisse = new MvtCaisseDTO();
+        caisse.setIdTypeMvt(Constant.CAUTION_ID);
+        caisse.setBanque("");
+        caisse.setLieux("");
+        caisse.setNumPieceComptable("");
+        caisse.setTaux(0);
+        caisse.setAmount(montant);
+        caisse.setCommentaire("Versement de caution");
+        caisse.setCodeMonnaie("Fr");
+        caisse.setMvtDate(LocalDate.now().toString());
+        caisse.setDateMvt(caisse.getMvtDate());
+        caisse.setIdModeRegle(Constant.MODE_ESP);
+        caisse.setIdTypeRegl(Constant.TYPE_REGLEMENT_ESPECE);
+        return caisse;
+
     }
 }

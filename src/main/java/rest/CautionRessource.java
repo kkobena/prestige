@@ -39,9 +39,9 @@ public class CautionRessource {
     }
 
     @POST
-    public Response add(AddCautionDTO addCaution) {
-        cautionTiersPayantService.addCaution(addCaution);
-        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
+    public Response add(AddCautionDTO addCaution) throws Exception {
+
+        return Response.ok().entity(cautionTiersPayantService.addCaution(addCaution).toString()).build();
     }
 
     @DELETE
@@ -52,20 +52,24 @@ public class CautionRessource {
     }
 
     @PUT
-    public Response update(AddCautionDTO addCaution) {
+    public Response update(AddCautionDTO addCaution) throws Exception {
 
         return Response.ok().entity(cautionTiersPayantService.update(addCaution).toString()).build();
     }
 
     @GET
     @Path("/historiques")
-    public Response getHistoriques(@QueryParam(value = "idCaution") String idCaution) {
-        return Response.ok().entity(cautionTiersPayantService.getHistoriquesView(idCaution).toString()).build();
+    public Response getHistoriques(@QueryParam(value = "idCaution") String idCaution,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart) {
+        return Response.ok().entity(cautionTiersPayantService.getHistoriquesView(idCaution, dtStart, dtEnd).toString())
+                .build();
     }
 
     @GET
     @Path("/ventes")
-    public Response getVentes(@QueryParam(value = "idCaution") String idCaution) {
-        return Response.ok().entity(cautionTiersPayantService.getVentesView(idCaution).toString()).build();
+    public Response getVentes(@QueryParam(value = "idCaution") String idCaution,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart) {
+        return Response.ok().entity(cautionTiersPayantService.getVentesView(idCaution, dtStart, dtEnd).toString())
+                .build();
     }
 }

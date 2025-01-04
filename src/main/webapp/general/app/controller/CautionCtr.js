@@ -2,7 +2,7 @@
 
 Ext.define('testextjs.controller.CautionCtr', {
     extend: 'Ext.app.Controller',
-    views: ['testextjs.view.caution.Caution', 'testextjs.view.caution.Add', 'testextjs.view.caution.Edit'],
+    views: ['testextjs.view.caution.Caution', 'testextjs.view.caution.Add', 'testextjs.view.caution.Edit', 'testextjs.view.caution.Historiques', 'testextjs.view.caution.Achats'],
     refs: [{
             ref: 'cautiontierspayant',
             selector: 'cautiontierspayant'
@@ -59,7 +59,51 @@ Ext.define('testextjs.controller.CautionCtr', {
         {ref: 'tiersPayantIdAddForm',
             selector: 'cautionAddForm #tiersPayantId'
 
+        },
+        {ref: 'historiques',
+            selector: 'cautionHistoriques'
+
+        },
+        {ref: 'cautionAchats',
+            selector: 'cautionAchats'
+
         }
+        ,
+        {ref: 'historiquesDtEnd',
+            selector: 'cautionHistoriques #dtEnd'
+
+        }
+        ,
+        {ref: 'historiquesDtStart',
+            selector: 'cautionHistoriques #dtStart'
+
+        },
+        {ref: 'cautionAchatsDtEnd',
+            selector: 'cautionAchats #dtEnd'
+
+        }
+        ,
+        {ref: 'cautionAchatsDtStart',
+            selector: 'cautionAchats #dtStart'
+
+        },
+        {ref: 'cautionAchatsGrid',
+            selector: 'cautionAchats fieldset gridpanel'
+
+        }
+        ,
+        {ref: 'historiquesGrid',
+            selector: 'cautionHistoriques fieldset gridpanel'
+
+        },
+        {ref: 'historiquesIdCaution',
+            selector: 'cautionHistoriques #idCaution'
+
+        }, {ref: 'cautionAchatsIdCaution',
+            selector: 'cautionAchats #idCaution'
+
+        }
+
     ],
     init: function (application) {
         this.control({
@@ -98,6 +142,23 @@ Ext.define('testextjs.controller.CautionCtr', {
             },
             'cautionEditForm #btnCancel': {
                 click: this.closeEditWindows
+            },
+            'cautionHistoriques #btnCancel': {
+                click: this.closeHistoriques
+            },
+            'cautionAchats #btnCancel': {
+                click: this.closeAchat
+            }
+            ,
+            'cautionHistoriques #btnPrint': {
+                click: this.onPrintHistoriques
+            },
+            'cautionAchats #btnPrint': {
+                click: this.onPrintAchats
+            }, 'cautionAchats #rechercher': {
+                click: this.loadAchats
+            }, 'cautionHistoriques #rechercher': {
+                click: this.loadHistoriques
             }
 
         });
@@ -114,6 +175,57 @@ Ext.define('testextjs.controller.CautionCtr', {
         const me = this;
         me.getCautionEditForm().destroy();
     },
+    closeHistoriques: function () {
+        const me = this;
+        me.getHistoriques().destroy();
+    },
+    closeAchat: function () {
+        const me = this;
+        me.getCautionAchats().destroy();
+    },
+    onPrintHistoriques: function () {
+        const me = this;
+
+        let dtStart = me.getHistoriquesDtStart().getSubmitValue();
+        if (dtStart === null || dtStart === undefined) {
+            dtStart = '';
+        }
+        let dtEnd = me.getHistoriquesDtEnd().getSubmitValue();
+        if (dtEnd === null || dtEnd === undefined) {
+            dtEnd = '';
+        }
+        const linkUrl = '../cautionServlet?mode=historiques&idCaution=' + me.getHistoriquesIdCaution().getValue() + '&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
+        window.open(linkUrl);
+    },
+    onPrintAchats: function () {
+        const me = this;
+        let dtStart = me.getCautionAchatsDtStart().getSubmitValue();
+        if (dtStart === null || dtStart === undefined) {
+            dtStart = '';
+        }
+        let dtEnd = me.getCautionAchatsDtEnd().getSubmitValue();
+        if (dtEnd === null || dtEnd === undefined) {
+            dtEnd = '';
+        }
+        const linkUrl = '../cautionServlet?mode=achats&idCaution=' + me.getCautionAchatsIdCaution().getValue() + '&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
+        window.open(linkUrl);
+    },
+    lunchPrinter: function (mvtCaisseId) {
+
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/caisse/ticke-mvt-caisse?mvtCaisseId=' + mvtCaisseId,
+            failure: function (response)
+            {
+
+                const object = Ext.JSON.decode(response.responseText, false);
+                console.log("Bug " + object);
+                console.log("Bug " + response.responseText);
+                Ext.MessageBox.alert('Error Message', response.responseText);
+
+            }
+        });
+    },
     edit: function () {
         const me = this;
         const   form = me.getEditForm();
@@ -129,6 +241,21 @@ Ext.define('testextjs.controller.CautionCtr', {
                     progress.hide();
                     const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
+                        Ext.MessageBox.show({
+                            title: 'Message d\'erreur',
+                            width: 320,
+                            msg: "Voulez-vous imprimer le ticket ?",
+                            buttons: Ext.MessageBox.OKCANCEL,
+                            icon: Ext.MessageBox.INFO,
+                            fn: function (buttonId) {
+                                if (buttonId === "ok") {
+
+                                    me.lunchPrinter(result.mvtId);
+                                }
+                            }
+                        });
+
+
                         me.closeEditWindows();
                         me.doSearch();
                     } else {
@@ -159,7 +286,29 @@ Ext.define('testextjs.controller.CautionCtr', {
                 url: '../api/v1/cautions',
                 params: Ext.JSON.encode(datas),
                 success: function (response, options) {
-                    progress.hide();
+                     progress.hide();
+                    const result = Ext.JSON.decode(response.responseText, true);
+                
+                    if (result.success) {
+                        Ext.MessageBox.show({
+                            title: 'Message d\'erreur',
+                            width: 320,
+                            msg: "Voulez-vous imprimer le ticket ?",
+                            buttons: Ext.MessageBox.OKCANCEL,
+                            icon: Ext.MessageBox.INFO,
+                            fn: function (buttonId) {
+                                if (buttonId === "ok") {
+
+                                    me.lunchPrinter(result.mvtId);
+                                }
+                            }
+                        });
+                    }else{
+                         Ext.Msg.alert("Message", result.msg);
+                    }
+
+
+                   
                     me.closeWindows();
                     me.doSearch();
                 },
@@ -173,14 +322,40 @@ Ext.define('testextjs.controller.CautionCtr', {
     },
     fetchDepots: function (view, rowIndex, colIndex, item, e, record, row) {
         const me = this;
-        Ext.Msg.alert("Message", 'not implemented yet' );
+        const formwin = Ext.create('testextjs.view.caution.Historiques', {"caution": record.data});
+        me.loadHistoriques();
+        formwin.show();
+
+
+    },
+    loadHistoriques: function () {
+        const me = this;
+        me.getHistoriquesGrid().getStore().load({
+            params: {
+                "idCaution": me.getHistoriquesIdCaution().getValue(),
+                "dtStart": me.getHistoriquesDtStart().getSubmitValue(),
+                "dtEnd": me.getHistoriquesDtEnd().getSubmitValue()
+            }
+        });
+
+    },
+    loadAchats: function () {
+        const me = this;
+        me.getCautionAchatsGrid().getStore().load({
+            params: {
+                "idCaution": me.getCautionAchatsIdCaution().getValue(),
+                "dtStart": me.getCautionAchatsDtStart().getSubmitValue(),
+                "dtEnd": me.getCautionAchatsDtEnd().getSubmitValue()
+            }
+        });
 
     },
     fetchVentes: function (view, rowIndex, colIndex, item, e, record, row) {
-
         const me = this;
-         Ext.Msg.alert("Message", 'not implemented yet' );
+        const formwin = Ext.create('testextjs.view.caution.Achats', {"caution": record.data});
 
+        me.loadAchats();
+        formwin.show();
     },
     editer: function (view, rowIndex, colIndex, item, e, record, row) {
         const formwin = Ext.create('testextjs.view.caution.Edit', {"idCaution": record.data.id, "tiersPayantName": record.data.tiersPayantName});

@@ -16,9 +16,9 @@ import rest.service.dto.CautionHistoriqueDTO;
 @Local
 public interface CautionTiersPayantService {
 
-    void addCaution(AddCautionDTO addCaution);
+    JSONObject addCaution(AddCautionDTO addCaution) throws Exception;
 
-    JSONObject update(AddCautionDTO addCaution);
+    JSONObject update(AddCautionDTO addCaution) throws Exception;
 
     JSONObject supprimerCaution(String idCaution);
 
@@ -28,11 +28,13 @@ public interface CautionTiersPayantService {
 
     JSONObject fetch(String tiersPayantId, int start, int limit);
 
-    List<VenteDTO> getVentes(String idCaution);
+    List<VenteDTO> getVentes(String idCaution, String dtStart, String dtEnd);
 
-    JSONObject getVentesView(String idCaution);
+    JSONObject getVentesView(String idCaution, String dtStart, String dtEnd);
 
-    List<CautionHistoriqueDTO> getHistoriques(String idCaution);
+    List<CautionHistoriqueDTO> getHistoriques(String idCaution, String dtStart, String dtEnd);
 
-    JSONObject getHistoriquesView(String idCaution);
+    JSONObject getHistoriquesView(String idCaution, String dtStart, String dtEnd);
+
+    Caution getCautionById(String idCaution);
 }

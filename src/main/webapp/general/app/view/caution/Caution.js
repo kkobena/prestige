@@ -9,7 +9,7 @@ Ext.define('testextjs.view.caution.Caution', {
     width: '97%',
     height: 'auto',
     minHeight: 570,
-    cls: 'custompanel',
+ 
     layout: {
         type: 'fit'
     },
@@ -165,7 +165,7 @@ Ext.define('testextjs.view.caution.Caution', {
                             
                         },
                         {
-                            header: 'Consommation',
+                            header: 'Achat',
                             dataIndex: 'conso',
                             xtype: 'numbercolumn',
                             align: 'right',
@@ -223,22 +223,8 @@ Ext.define('testextjs.view.caution.Caution', {
                                     }
 
                                 }]
-                        }
-                        ,/* {
-                            xtype: 'actioncolumn',
-                            width: 30,
-                           
-
-                            items: [{
-                                    icon: 'resources/images/edit_task.png',
-                                    tooltip: 'Modifier',
-                               
-                                      handler: function (view, rowIndex, colIndex, item, e, record, row) {
-                                       this.fireEvent('editer', view, rowIndex, colIndex, item, e, record, row);
-                                     }
-
-                                }]
-                        },*/
+                        },
+                       
                         {
                             xtype: 'actioncolumn',
                             width: 30,
@@ -264,7 +250,8 @@ Ext.define('testextjs.view.caution.Caution', {
                         displayInfo: true
 
                     }
-                }]
+                }
+            ]
 
         });
         me.callParent(arguments);

@@ -1,11 +1,11 @@
-Ext.define('testextjs.view.caution.Historiques', {
+Ext.define('testextjs.view.caution.Achats', {
     extend: 'Ext.window.Window',
-    xtype: 'cautionHistoriques',
+    xtype: 'cautionAchats',
     autoShow: false,
     height: 500,
     width: '50%',
     modal: true,
-    title: 'Historiques de dépôts de caution',
+    title: 'Liste des achats',
     closeAction: 'hide',
     closable: true,
     layout: 'fit',
@@ -20,36 +20,15 @@ Ext.define('testextjs.view.caution.Historiques', {
     initComponent: function () {
         const me = this;
         const caution = me.getCaution();
-        const historiques = Ext.create('Ext.data.Store', {
-            idProperty: 'id',
-            fields:
-                    [
-                        {
-                            name: 'id',
-                            type: 'string'
-                        },
+        const achatsStore = Ext.create('Ext.data.Store', {
 
-                        {
-                            name: 'mvtDate',
-                            type: 'string'
-                        }
-                        ,
-                        {
-                            name: 'user',
-                            type: 'string'
-                        },
-
-                        {
-                            name: 'montant',
-                            type: 'int'
-                        }
-
-                    ], autoLoad: false,
+            model: 'testextjs.model.caisse.Vente',
+            autoLoad: false,
             pageSize: 999999,
 
             proxy: {
                 type: 'ajax',
-                url: '../api/v1/cautions/historiques',
+                url: '../api/v1/cautions/ventes',
                 reader: {
                     type: 'json',
                     root: 'data',
@@ -57,9 +36,8 @@ Ext.define('testextjs.view.caution.Historiques', {
                 }
 
             }
-
         });
-    
+
         Ext.applyIf(me, {
             dockedItems: [{
                     xtype: 'toolbar',
@@ -79,7 +57,7 @@ Ext.define('testextjs.view.caution.Historiques', {
                             flex: 1,
                             labelWidth: 20,
                             maxValue: new Date(),
-                             value: new Date(),
+                            value: new Date(),
                             format: 'd/m/Y'
 
                         }, {
@@ -89,11 +67,12 @@ Ext.define('testextjs.view.caution.Historiques', {
                             labelWidth: 20,
                             flex: 1,
                             maxValue: new Date(),
-                             value: new Date(),
+                            value: new Date(),
                             margin: '0 9 0 0',
                             submitFormat: 'Y-m-d',
                             format: 'd/m/Y'
-                        }, {
+                        },
+                        {
                             xtype: 'button',
                             itemId: 'rechercher',
                             iconCls: 'searchicon',
@@ -136,7 +115,7 @@ Ext.define('testextjs.view.caution.Historiques', {
             items: [
                 {
                     xtype: 'fieldset',
-                    title: '<span style="color:blue;font-size:14px;">Historiques de depôts de ' + caution.tiersPayantName + '</span>',
+                    title: '<span style="color:blue;font-size:14px;">Lieste des achats ' + caution.tiersPayantName + '</span>',
                     collapsible: false,
                     defaultType: 'textfield',
                     layout: 'anchor',
@@ -148,32 +127,62 @@ Ext.define('testextjs.view.caution.Historiques', {
                         {
                             xtype: 'gridpanel',
 
-                            store: historiques,
+                            store: achatsStore,
 
                             columns: [
-                                {xtype: 'rownumberer',
+                                {
+                                    xtype: 'rownumberer',
                                     width: 50
                                 },
 
                                 {
-                                    header: 'Montant',
-                                    dataIndex: 'montant',
+                                    header: 'Reference',
+                                    dataIndex: 'strREF',
                                     flex: 1,
+                                    sortable: false,
+                                    menuDisabled: true
+                                }, {
+                                    header: 'Montant',
                                     xtype: 'numbercolumn',
+                                    dataIndex: 'intPRICE',
                                     align: 'right',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 1,
                                     format: '0,000.'
 
                                 }, {
-                                    header: 'Date',
-                                    dataIndex: 'mvtDate',
-                                    flex: 1
+                                    header: 'Montant caution',
+                                    xtype: 'numbercolumn',
+                                    dataIndex: 'caution',
+                                    align: 'right',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 1,
+                                    format: '0,000.'
 
+                                },
+                                {
+                                    header: 'Date',
+                                    dataIndex: 'dtUPDATED',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 0.6,
+                                    align: 'center'
+                                }, {
+                                    header: 'Heure',
+                                    dataIndex: 'heure',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 0.6,
+                                    align: 'center'
                                 }
                                 , {
-                                    header: 'Opérateur',
-                                    dataIndex: 'user',
+                                    header: 'Vendeur',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    dataIndex: 'userCaissierName',
                                     flex: 1
-
                                 }
 
 
