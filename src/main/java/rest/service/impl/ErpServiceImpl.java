@@ -5,6 +5,7 @@
  */
 package rest.service.impl;
 
+import com.google.common.collect.Comparators;
 import commonTasks.dto.ErProduitDTO;
 import commonTasks.dto.ErpAchatFournisseurDTO;
 import commonTasks.dto.ErpCaComptant;
@@ -18,6 +19,8 @@ import commonTasks.ws.ClientTiersPayantDTO;
 import commonTasks.ws.CustomerDTO;
 import commonTasks.ws.GroupeTiersPayantDTO;
 import commonTasks.ws.TiersPayantDto;
+import commonTasks.ws.WsCaAchatVente;
+import commonTasks.ws.WsCaAchatVenteDTO;
 import dal.StockDailyValue;
 import dal.TAyantDroit;
 import dal.TClient;
@@ -38,12 +41,15 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -477,8 +483,7 @@ public class ErpServiceImpl implements ErpService {
             start += limit;
         }
         LocalDateTime endAt = LocalDateTime.now();
-        System.out.println("end at " + endAt);
-        System.out.println("tempas passe ===>" + ChronoUnit.MINUTES.between(startAt, endAt));
+
         return customers;
     }
 
@@ -592,4 +597,60 @@ public class ErpServiceImpl implements ErpService {
         return list;
     }
 
+    @Override
+    public List<WsCaAchatVente> getCaAchatVente(String dtStart, String dtEnd) {
+        List<WsCaAchatVente> achatVentes = new ArrayList<>();
+        Stream.concat(fetchVentesCa(dtStart, dtEnd).stream().map(this::buildFromTupleVente),
+                fetchAchats(dtStart, dtEnd).stream().map(this::buildFromTupleAchat))
+                .sorted(Comparator.comparing(WsCaAchatVenteDTO::getMvtDay))
+                .collect(Collectors.groupingBy(WsCaAchatVenteDTO::getMvtDay)).forEach((date, values) -> {
+                    String dateMvt = date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    BigDecimal montantVente = BigDecimal.ZERO;
+                    BigDecimal montantAchat = BigDecimal.ZERO;
+                    for (WsCaAchatVenteDTO value : values) {
+                        if (value.getType().equals("Vente")) {
+                            montantVente = value.getMontant();
+                        } else {
+                            montantAchat = value.getMontant();
+                        }
+                    }
+                    achatVentes.add(new WsCaAchatVente(dateMvt, montantVente, montantAchat));
+
+                });
+        return achatVentes;
+    }
+
+    private List<Tuple> fetchVentesCa(String dtStart, String dtEnd) {
+        try {
+            return getEntityManager().createNativeQuery(
+                    "SELECT  IFNULL(SUM(p.int_PRICE) ,0) AS montant,DATE(p.dt_UPDATED) AS mvtDay FROM t_preenregistrement p WHERE p.b_IS_CANCEL=FALSE AND p.int_PRICE >0 AND p.str_STATUT='is_Closed' AND p.lg_TYPE_VENTE_ID <>'5' AND  DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2 GROUP  BY  DATE(p.dt_UPDATED)",
+                    Tuple.class).setParameter(1, java.sql.Date.valueOf(dtStart))
+                    .setParameter(2, java.sql.Date.valueOf(dtEnd)).getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "fetchVentesCa =====>>", e);
+            return Collections.emptyList();
+        }
+    }
+
+    private List<Tuple> fetchAchats(String dtStart, String dtEnd) {
+        try {
+            return getEntityManager().createNativeQuery(
+                    "SELECT  IFNULL(SUM(b.int_HTTC) ,0) AS montant, DATE(b.dt_CREATED) AS mvtDay FROM t_bon_livraison b WHERE DATE(b.dt_CREATED) BETWEEN ?1 AND ?2 GROUP  BY DATE(b.dt_CREATED)",
+                    Tuple.class).setParameter(1, java.sql.Date.valueOf(dtStart))
+                    .setParameter(2, java.sql.Date.valueOf(dtEnd)).getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "fetchAchats =====>>", e);
+            return Collections.emptyList();
+        }
+    }
+
+    private WsCaAchatVenteDTO buildFromTupleVente(Tuple t) {
+        return new WsCaAchatVenteDTO("Vente", LocalDate.parse(t.get("mvtDay").toString()),
+                t.get("montant", BigDecimal.class));
+    }
+
+    private WsCaAchatVenteDTO buildFromTupleAchat(Tuple t) {
+        return new WsCaAchatVenteDTO("Achat", LocalDate.parse(t.get("mvtDay").toString()),
+                t.get("montant", BigDecimal.class));
+    }
 }
