@@ -117,13 +117,14 @@ public class ErpRessource {
 
     @GET
     @Path("whareouse-vno")
-    public Response venteVNO(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd) {
+    public Response getVenteVNO(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(dataExportService.listVentes(dtStart, dtEnd, "VNO")).build();
     }
 
     @GET
     @Path("whareouse-maxmin")
-    public Response maxmin() {
+    public Response geMmaxmin() {
         return Response.ok().entity(dataExportService.getMaxAndMinDate()).build();
     }
 
@@ -143,5 +144,12 @@ public class ErpRessource {
     @Path("ws/clients")
     public Response allWsClients() {
         return Response.ok().entity(erpService.allWsClients()).build();
+    }
+
+    @GET
+    @Path("ws/ca-achats-ventes")
+    public Response getCaAchatVente(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
+        return Response.ok().entity(erpService.getCaAchatVente(dtStart, dtEnd)).build();
     }
 }

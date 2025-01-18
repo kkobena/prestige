@@ -17,6 +17,8 @@ import commonTasks.dto.StockDailyValueDTO;
 import commonTasks.ws.CustomerDTO;
 import commonTasks.ws.GroupeTiersPayantDTO;
 import commonTasks.ws.TiersPayantDto;
+import commonTasks.ws.WsCaAchatVente;
+import commonTasks.ws.WsCaAchatVenteDTO;
 import java.util.List;
 
 /**
@@ -52,5 +54,7 @@ public interface ErpService {
     List<TiersPayantDto> allWsTiersPayants();
 
     List<CustomerDTO> allWsClients();
+
+    List<WsCaAchatVente> getCaAchatVente(String dtStart, String dtEnd);
 
 }
