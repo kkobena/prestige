@@ -724,9 +724,7 @@ Ext.application({
         'testextjs.view.configmanagement.logfile.logManager',
         'testextjs.view.configmanagement.company.company',
         'testextjs.view.actions.Doublons',
-     //   'testextjs.view.caisseManager.TicketzManager',
         'testextjs.view.Report.resultatstva.TvaManager',
-        'testextjs.view.sm_user.vente.VenteHistoriqueDepotManager',
         'testextjs.view.produits.mvtproduit.*',
         'testextjs.view.facturation.ModelFacture',
         'testextjs.view.facturation.FactureProvisoire',
@@ -809,7 +807,8 @@ Ext.application({
         'ProuduitsVenteAnnulesCtr',
         'NotificationCtr',
         'CategorieNotificationCtr',
-        'RecapRecetteCaisseCtr'
+        'RecapRecetteCaisseCtr',
+        'StatVenteDepotCtr'
 
     ],
     stores: [

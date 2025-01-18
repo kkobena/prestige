@@ -130,4 +130,6 @@ public interface SalesStatsService {
 
     rest.service.dto.VenteDTO getOne(String id);
 
+    long montantDepot(SalesStatsParams params);
+
 }

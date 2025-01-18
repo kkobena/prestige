@@ -83,7 +83,8 @@ Ext.define('testextjs.view.vente.VentesFinis', {
                             format: 'd/m/Y',
                             value: new Date()
 
-                        }, '-', {
+                        },
+                        '-', {
 
                             xtype: 'timefield',
                             fieldLabel: 'De',
