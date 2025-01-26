@@ -670,14 +670,11 @@ Ext.application({
         'testextjs.view.stockmanagement.etiquette.action.addBis',
         'testextjs.view.configmanagement.famille.action.detailArticleOther',
         'testextjs.view.sm_user.reglement.FactureenAttendeEditionManager',
-        'testextjs.view.sm_user.vente.VenteManagerBis',
-        'testextjs.view.sm_user.vente.action.add',
         'testextjs.view.configmanagement.famille.action.updatezonegeo',
         'testextjs.view.stockmanagement.etatstock.action.removeLot',
         'testextjs.view.sm_user.outboudmessage.action.add',
         'testextjs.view.configmanagement.zonegeographique.action.changeProduitEmplacement',
         'testextjs.view.sm_user.mvtcaisse.action.addBis',
-        'testextjs.view.sm_user.vente.VendeurCaissierManager',
         'testextjs.view.commandemanagement.evaluation.Evaluationoffreprix',
         'testextjs.view.commandemanagement.evaluation.action.add',
         'testextjs.view.configmanagement.famille.ArticleVenduBis',
@@ -724,9 +721,7 @@ Ext.application({
         'testextjs.view.configmanagement.logfile.logManager',
         'testextjs.view.configmanagement.company.company',
         'testextjs.view.actions.Doublons',
-     //   'testextjs.view.caisseManager.TicketzManager',
         'testextjs.view.Report.resultatstva.TvaManager',
-        'testextjs.view.sm_user.vente.VenteHistoriqueDepotManager',
         'testextjs.view.produits.mvtproduit.*',
         'testextjs.view.facturation.ModelFacture',
         'testextjs.view.facturation.FactureProvisoire',
@@ -809,7 +804,8 @@ Ext.application({
         'ProuduitsVenteAnnulesCtr',
         'NotificationCtr',
         'CategorieNotificationCtr',
-        'RecapRecetteCaisseCtr'
+        'RecapRecetteCaisseCtr',
+        'StatVenteDepotCtr'
 
     ],
     stores: [

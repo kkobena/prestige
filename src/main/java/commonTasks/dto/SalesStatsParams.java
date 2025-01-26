@@ -48,6 +48,24 @@ public class SalesStatsParams implements Serializable {
     private String tiersPayantId;
     private String nature;
     private boolean modificationVenteDate;
+    private String depotId;
+    private String typeDepotId;
+
+    public String getDepotId() {
+        return depotId;
+    }
+
+    public String getTypeDepotId() {
+        return typeDepotId;
+    }
+
+    public void setTypeDepotId(String typeDepotId) {
+        this.typeDepotId = typeDepotId;
+    }
+
+    public void setDepotId(String depotId) {
+        this.depotId = depotId;
+    }
 
     public String getNature() {
         return nature;
