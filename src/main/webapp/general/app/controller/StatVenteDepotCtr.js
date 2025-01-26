@@ -83,6 +83,9 @@ Ext.define('testextjs.controller.StatVenteDepotCtr', {
             },
             'ventemanager #query': {
                 specialkey: this.onSpecialKey
+            },
+            'ventemanager #depotId': {
+                select: this.doSearch
             }
         });
     },
