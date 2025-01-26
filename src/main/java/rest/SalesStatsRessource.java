@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -199,11 +200,7 @@ public class SalesStatsRessource {
             @QueryParam(value = "query") String query, @QueryParam(value = "typeVenteId") String typeVenteId,
             @QueryParam(value = "statut") String statut) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
         List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
         boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
         boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
@@ -248,19 +245,13 @@ public class SalesStatsRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-    @GET
-    public Response getAlls(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
-            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
-            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "sansBon") boolean sansBon,
-            @QueryParam(value = "onlyAvoir") boolean onlyAvoir, @QueryParam(value = "typeVenteId") String typeVenteId,
-            @QueryParam(value = "nature") String nature) throws JSONException {
+    private SalesStatsParams buildParams(int start, int limit, String query, String dtStart, String dtEnd,
+            String hStart, String hEnd, boolean sansBon, boolean onlyAvoir, String typeVenteId, String nature,
+            Boolean depotOnly, String typeDepotId, String depotId) {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
         boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
         boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
@@ -271,6 +262,9 @@ public class SalesStatsRessource {
         boolean modificationVenteDate = CommonUtils.hasAuthorityByName(lstTPrivilege,
                 Constant.P_BTN_UPDATE_VENTE_CLIENT_DATE);
         SalesStatsParams body = new SalesStatsParams();
+        if (Objects.nonNull(depotOnly)) {
+            body.setDepotOnly(depotOnly);
+        }
         body.setCanCancel(canCancel);
         body.setLimit(limit);
         body.setStart(start);
@@ -287,6 +281,8 @@ public class SalesStatsRessource {
         body.setModification(modification);
         body.setModificationClientTp(modificationClientTp);
         body.setModificationVenteDate(modificationVenteDate);
+        body.setTypeDepotId(typeDepotId);
+        body.setDepotId(depotId);
         try {
             body.sethEnd(LocalTime.parse(hEnd));
         } catch (Exception e) {
@@ -300,6 +296,20 @@ public class SalesStatsRessource {
             body.setDtStart(LocalDate.parse(dtStart));
         } catch (Exception e) {
         }
+        return body;
+    }
+
+    @GET
+    public Response getAlls(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "sansBon") boolean sansBon,
+            @QueryParam(value = "onlyAvoir") boolean onlyAvoir, @QueryParam(value = "typeVenteId") String typeVenteId,
+            @QueryParam(value = "nature") String nature, @QueryParam(value = "depotOnly") Boolean depotOnly,
+            @QueryParam(value = "typeDepotId") String typeDepotId, @QueryParam(value = "depotId") String depotId)
+            throws JSONException {
+        SalesStatsParams body = buildParams(start, limit, query, dtStart, dtEnd, hStart, hEnd, sansBon, onlyAvoir,
+                typeVenteId, nature, depotOnly, typeDepotId, depotId);
         JSONObject jsono = salesService.listeVentes(body);
         return Response.ok().entity(jsono.toString()).build();
     }
@@ -628,11 +638,28 @@ public class SalesStatsRessource {
 
     @GET
     @Path("find-one/{id}")
-
     public Response getOne(@PathParam("id") String venteId) {
 
         JSONObject json = FunctionUtils.returnData(salesService.getOne(venteId));
         return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("depot-amount")
+    public Response getDepotAmount(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+            @QueryParam(value = "query") String query, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "hStart") String hStart,
+            @QueryParam(value = "hEnd") String hEnd, @QueryParam(value = "sansBon") boolean sansBon,
+            @QueryParam(value = "onlyAvoir") boolean onlyAvoir, @QueryParam(value = "typeVenteId") String typeVenteId,
+            @QueryParam(value = "nature") String nature, @QueryParam(value = "depotOnly") Boolean depotOnly,
+            @QueryParam(value = "typeDepotId") String typeDepotId, @QueryParam(value = "depotId") String depotId)
+            throws JSONException {
+        SalesStatsParams body = buildParams(start, limit, query, dtStart, dtEnd, hStart, hEnd, sansBon, onlyAvoir,
+                typeVenteId, nature, depotOnly, typeDepotId, depotId);
+        JSONObject jsono = new JSONObject();
+        long amount = salesService.montantDepot(body);
+        jsono.put("amount", amount);
+        return Response.ok().entity(jsono.toString()).build();
     }
 
 }
