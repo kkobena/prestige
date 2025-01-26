@@ -46,7 +46,7 @@ public class CautionRessource {
 
     @DELETE
     @Path("{id}")
-    public Response supprimerCaution(@PathParam("id") String id) {
+    public Response supprimerCaution(@PathParam("id") String id) throws Exception {
 
         return Response.ok().entity(cautionTiersPayantService.supprimerCaution(id).toString()).build();
     }

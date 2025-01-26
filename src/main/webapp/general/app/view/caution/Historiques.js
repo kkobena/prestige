@@ -3,7 +3,7 @@ Ext.define('testextjs.view.caution.Historiques', {
     xtype: 'cautionHistoriques',
     autoShow: false,
     height: 500,
-    width: '50%',
+    width: '60%',
     modal: true,
     title: 'Historiques de dépôts de caution',
     closeAction: 'hide',
@@ -59,7 +59,7 @@ Ext.define('testextjs.view.caution.Historiques', {
             }
 
         });
-    
+
         Ext.applyIf(me, {
             dockedItems: [{
                     xtype: 'toolbar',
@@ -79,7 +79,7 @@ Ext.define('testextjs.view.caution.Historiques', {
                             flex: 1,
                             labelWidth: 20,
                             maxValue: new Date(),
-                             value: new Date(),
+                            value: new Date(),
                             format: 'd/m/Y'
 
                         }, {
@@ -89,7 +89,7 @@ Ext.define('testextjs.view.caution.Historiques', {
                             labelWidth: 20,
                             flex: 1,
                             maxValue: new Date(),
-                             value: new Date(),
+                            value: new Date(),
                             margin: '0 9 0 0',
                             submitFormat: 'Y-m-d',
                             format: 'd/m/Y'
@@ -181,14 +181,18 @@ Ext.define('testextjs.view.caution.Historiques', {
                             selModel: {
                                 selType: 'cellmodel'
 
+                            },
+                            bbar: {
+                                xtype: 'pagingtoolbar',
+                                store: historiques,
+                                dock: 'bottom',
+                                displayInfo: true
+
                             }
 
                         }
                     ]
                 }
-
-
-
             ]
         });
         me.callParent(arguments);

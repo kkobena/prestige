@@ -102,7 +102,7 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
         caution.setUpdatedAt(LocalDateTime.now());
         em.merge(caution);
         return caisseService.createMvt(buildCaisseDTO(amount), sessionHelperService.getCurrentUser());
-        // return json.put("success", true).put("msg", "Opération effectuée");
+
     }
 
     private boolean canModifyCaution(int montant, int newAmount) {
@@ -141,12 +141,13 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
     }
 
     @Override
-    public JSONObject supprimerCaution(String idCaution) {
+    public JSONObject supprimerCaution(String idCaution) throws Exception {
         JSONObject json = new JSONObject();
         Caution caution = this.em.find(Caution.class, idCaution);
         if (caution.getConso() > 0) {
             return json.put("success", false).put("msg", "Impossible de supprimer il y a des ventes liées");
         }
+        caisseService.createMvt(buildCaisseDTO(caution.getMontant()), sessionHelperService.getCurrentUser());
         em.remove(caution);
         return json.put("success", true).put("msg", "Opération effectuée");
 

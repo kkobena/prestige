@@ -20,7 +20,7 @@ public interface CautionTiersPayantService {
 
     JSONObject update(AddCautionDTO addCaution) throws Exception;
 
-    JSONObject supprimerCaution(String idCaution);
+    JSONObject supprimerCaution(String idCaution) throws Exception;
 
     void updateCaution(Caution caution, int saleAmount);
 

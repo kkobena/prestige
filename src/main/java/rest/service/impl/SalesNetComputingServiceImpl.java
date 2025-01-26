@@ -285,6 +285,12 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
     }
 
+    private int computePourcentage(Integer total, Integer valeurPatielle) {
+        return (int) Math
+                .ceil(((Objects.requireNonNullElse(valeurPatielle, 0) / (double) Objects.requireNonNullElse(total, 1)))
+                        * 100);
+    }
+
     private NetComputingDTO computeTiesrPayantNetAmount(TiersPayantParams tierspayant, int amountToCompute,
             boolean asRestrictions) {
 
@@ -385,8 +391,8 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         montantAPaye.setMontantTp(netComputing.getMontantTiersPayant());
         TiersPayantParams tp = new TiersPayantParams();
         tp.setCompteTp(tierspayant.getCompteTp());
-        tp.setTaux(op.getIntCUSTPART() == 0 ? tierspayant.getTaux()
-                : (int) Math.ceil(netComputing.getMontantTiersPayant()));
+        tp.setTaux(op.getIntCUSTPART() == 0 ? tierspayant.getTaux() : computePourcentage(
+                (op.getIntPRICE() - op.getIntPRICEREMISE()), netComputing.getMontantTiersPayant()));
         tp.setNumBon(tierspayant.getNumBon());
         tp.setTpnet(montantAPaye.getMontantTp());
         montantAPaye.getTierspayants().add(tp);

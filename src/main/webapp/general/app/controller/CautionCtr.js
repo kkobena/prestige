@@ -110,6 +110,12 @@ Ext.define('testextjs.controller.CautionCtr', {
             'cautiontierspayant gridpanel pagingtoolbar': {
                 beforechange: this.doBeforechange
             },
+            'cautionAchats gridpanel pagingtoolbar': {
+                beforechange: this.doBeforechangeCautionAchats
+            },
+            'cautionHistoriques gridpanel pagingtoolbar': {
+                beforechange: this.doBeforechangeHistoriques
+            },
             'cautiontierspayant #tiersPayantId': {
                 select: this.doSearch
             },
@@ -286,9 +292,9 @@ Ext.define('testextjs.controller.CautionCtr', {
                 url: '../api/v1/cautions',
                 params: Ext.JSON.encode(datas),
                 success: function (response, options) {
-                     progress.hide();
+                    progress.hide();
                     const result = Ext.JSON.decode(response.responseText, true);
-                
+
                     if (result.success) {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
@@ -303,12 +309,12 @@ Ext.define('testextjs.controller.CautionCtr', {
                                 }
                             }
                         });
-                    }else{
-                         Ext.Msg.alert("Message", result.msg);
+                    } else {
+                        Ext.Msg.alert("Message", result.msg);
                     }
 
 
-                   
+
                     me.closeWindows();
                     me.doSearch();
                 },
@@ -323,9 +329,24 @@ Ext.define('testextjs.controller.CautionCtr', {
     fetchDepots: function (view, rowIndex, colIndex, item, e, record, row) {
         const me = this;
         const formwin = Ext.create('testextjs.view.caution.Historiques', {"caution": record.data});
-        me.loadHistoriques();
-        formwin.show();
+        me.intloadHistoriques(formwin);
 
+
+
+    },
+    intloadHistoriques: function (formwin) {
+        const me = this;
+        me.getHistoriquesGrid().getStore().load({
+            params: {
+                "idCaution": me.getHistoriquesIdCaution().getValue(),
+                "dtStart": me.getHistoriquesDtStart().getSubmitValue(),
+                "dtEnd": me.getHistoriquesDtEnd().getSubmitValue()
+            }, callback: function (records, operation, successful) {
+
+                formwin.show();
+            }
+
+        });
 
     },
     loadHistoriques: function () {
@@ -335,6 +356,21 @@ Ext.define('testextjs.controller.CautionCtr', {
                 "idCaution": me.getHistoriquesIdCaution().getValue(),
                 "dtStart": me.getHistoriquesDtStart().getSubmitValue(),
                 "dtEnd": me.getHistoriquesDtEnd().getSubmitValue()
+            }
+
+        });
+
+    },
+    initAchats: function (win) {
+        const me = this;
+        me.getCautionAchatsGrid().getStore().load({
+            params: {
+                "idCaution": me.getCautionAchatsIdCaution().getValue(),
+                "dtStart": me.getCautionAchatsDtStart().getSubmitValue(),
+                "dtEnd": me.getCautionAchatsDtEnd().getSubmitValue()
+            }, callback: function (records, operation, successful) {
+
+                win.show();
             }
         });
 
@@ -354,8 +390,8 @@ Ext.define('testextjs.controller.CautionCtr', {
         const me = this;
         const formwin = Ext.create('testextjs.view.caution.Achats', {"caution": record.data});
 
-        me.loadAchats();
-        formwin.show();
+        me.initAchats(formwin);
+
     },
     editer: function (view, rowIndex, colIndex, item, e, record, row) {
         const formwin = Ext.create('testextjs.view.caution.Edit', {"idCaution": record.data.id, "tiersPayantName": record.data.tiersPayantName});
@@ -393,8 +429,6 @@ Ext.define('testextjs.controller.CautionCtr', {
         const myProxy = me.getCautiontierspayantGrid().getStore().getProxy();
         myProxy.params = {
             tiersPayantId: null
-
-
         };
         const query = me.getTiersPayantId().getValue();
         myProxy.setExtraParam('tiersPayantId', query);
@@ -404,6 +438,39 @@ Ext.define('testextjs.controller.CautionCtr', {
         const me = this;
         me.doSearch();
     },
+
+    doBeforechangeHistoriques: function (page, currentPage) {
+        const me = this;
+        const myProxy = me.getHistoriquesGrid().getStore().getProxy();
+        myProxy.params = {
+            idCaution: null,
+            dtStart: null,
+            dtEnd: null
+        };
+      
+        myProxy.setExtraParam('idCaution', me.getHistoriquesIdCaution().getValue());
+        myProxy.setExtraParam('dtStart', me.getHistoriquesDtStart().getSubmitValue());
+        myProxy.setExtraParam('dtEnd',  me.getHistoriquesDtEnd().getSubmitValue());
+
+    },
+    doBeforechangeCautionAchats: function (page, currentPage) {
+        const me = this;
+        const myProxy = me.getCautionAchatsGrid().getStore().getProxy();
+        myProxy.params = {
+            idCaution: null,
+            dtStart: null,
+            dtEnd: null
+        };
+          myProxy.setExtraParam('idCaution', me.getCautionAchatsIdCaution().getValue());
+        myProxy.setExtraParam('dtStart', me.getCautionAchatsDtStart().getSubmitValue());
+        myProxy.setExtraParam('dtEnd',  me.getCautionAchatsDtEnd().getSubmitValue());
+
+    },
+    doInitStoreHistoriques: function () {
+        const me = this;
+        me.loadHistoriques();
+    },
+
     doSearch: function () {
         const me = this;
         const query = me.getTiersPayantId().getValue();

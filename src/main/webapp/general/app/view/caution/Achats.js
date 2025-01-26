@@ -3,7 +3,7 @@ Ext.define('testextjs.view.caution.Achats', {
     xtype: 'cautionAchats',
     autoShow: false,
     height: 500,
-    width: '50%',
+    width: '60%',
     modal: true,
     title: 'Liste des achats',
     closeAction: 'hide',
@@ -190,7 +190,14 @@ Ext.define('testextjs.view.caution.Achats', {
                             selModel: {
                                 selType: 'cellmodel'
 
-                            }
+                            },
+                    bbar: {
+                        xtype: 'pagingtoolbar',
+                        store: achatsStore,
+                        dock: 'bottom',
+                        displayInfo: true
+
+                    }
 
                         }
                     ]
