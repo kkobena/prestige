@@ -150,11 +150,11 @@ public class TPreenregistrement implements Serializable {
     @ManyToOne
     private TUser lgUSERID;
     @OneToMany(mappedBy = "lgPREENREGISTREMENTID")
-    private Collection<TPreenregistrementCompteClient> tPreenregistrementCompteClientCollection;
+    private Collection<TPreenregistrementCompteClient> tPreenregistrementCompteClientCollection = new ArrayList<>();
     @OneToMany(mappedBy = "lgPREENREGISTREMENTID")
     private Collection<TPreenregistrementCompteClientTiersPayent> tPreenregistrementCompteClientTiersPayentCollection;
     @OneToMany(mappedBy = "lgPREENREGISTREMENTID")
-    private Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection;
+    private Collection<TPreenregistrementDetail> tPreenregistrementDetailCollection = new ArrayList<>();
     @Column(name = "int_ACCOUNT")
     private Integer intACCOUNT;
     @Column(name = "int_REMISE_PARA")
