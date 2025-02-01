@@ -17,7 +17,6 @@ import rest.service.v2.dto.DeconditionnementParamsDTO;
  * @author Kobena
  */
 @Local
-
 public interface DeconditionService {
 
     JSONObject deconditionnementVente(SalesParams params) throws JSONException;

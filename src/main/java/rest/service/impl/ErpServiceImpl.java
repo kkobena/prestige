@@ -5,7 +5,6 @@
  */
 package rest.service.impl;
 
-import com.google.common.collect.Comparators;
 import commonTasks.dto.ErProduitDTO;
 import commonTasks.dto.ErpAchatFournisseurDTO;
 import commonTasks.dto.ErpCaComptant;
@@ -27,7 +26,6 @@ import dal.TClient;
 import dal.TCompteClientTiersPayant;
 import dal.TDossierReglement;
 import dal.TFacture;
-import dal.TFamille;
 import dal.TGroupeTierspayant;
 import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TReglement;
@@ -38,14 +36,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
