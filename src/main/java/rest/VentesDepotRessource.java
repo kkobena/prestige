@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import org.json.JSONArray;
 import rest.service.impl.ImportationVente;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -51,7 +51,7 @@ public class VentesDepotRessource {
 
         body.setQuery(query);
         body.setTypeVenteId(typeVenteId);
-        body.setStatut(commonparameter.statut_is_Closed);
+        body.setStatut(Constant.STATUT_IS_CLOSED);
 
         try {
             body.setDtStart(LocalDate.parse(dtStart));

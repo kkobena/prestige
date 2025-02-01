@@ -24,7 +24,6 @@ import util.DateConverter;
  *
  * @author koben
  */
-
 public class VenteTiersPayantsDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -41,11 +40,20 @@ public class VenteTiersPayantsDTO implements Serializable {
     private String refVente, dateVente, refBon;
     private String operateur;
     private LocalDateTime createdAt;
+    private String groupBy;
     private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-    private static String dateFormat_PATTERN = "dd/MM/yyyy HH:mm:ss";
+    private static String dateFormatPattern = "dd/MM/yyyy HH:mm:ss";
 
     public long getAccount() {
         return account;
+    }
+
+    public String getGroupBy() {
+        return groupBy;
+    }
+
+    public void setGroupBy(String groupBy) {
+        this.groupBy = groupBy;
     }
 
     public void setAccount(long account) {
@@ -213,6 +221,9 @@ public class VenteTiersPayantsDTO implements Serializable {
         if (groupe != null) {
             this.groupeId = groupe.getLgGROUPEID();
             this.libelleGroupe = groupe.getStrLIBELLE();
+            this.groupBy = groupe.getStrLIBELLE();
+        } else {
+            this.groupBy = "";
         }
 
         this.nbreDossier = (int) nbreDossier;
@@ -254,7 +265,7 @@ public class VenteTiersPayantsDTO implements Serializable {
     public VenteTiersPayantsDTO(VenteExclusDTO venteExclus) {
         this.montant = venteExclus.getMontantTiersPayant();
         this.operateur = venteExclus.getUserFullName();
-        this.dateVente = venteExclus.getModifiedAt().format(DateTimeFormatter.ofPattern(dateFormat_PATTERN));
+        this.dateVente = venteExclus.getModifiedAt().format(DateTimeFormatter.ofPattern(dateFormatPattern));
 
         this.refBon = venteExclus.getRefBon();
         this.refVente = venteExclus.getPreenregistrementRef();

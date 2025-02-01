@@ -88,7 +88,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
             cq.select(root).orderBy(cb.asc(root.get(TTiersPayant_.strNAME)));
             List<Predicate> predicates = depotPredicatCountAll(cb, root, query, exclude);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<TTiersPayant> q = getEntityManager().createQuery(cq);
             if (!all) {
                 q.setFirstResult(start);
@@ -137,7 +137,7 @@ public class CarnetDepotServiceImpl implements CarnetAsDepotService {
             Root<TTiersPayant> root = cq.from(TTiersPayant.class);
             cq.select(cb.count(root));
             List<Predicate> predicates = depotPredicatCountAll(cb, root, query, exclude);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<Long> q = getEntityManager().createQuery(cq);
             return q.getSingleResult();
         } catch (Exception e) {
