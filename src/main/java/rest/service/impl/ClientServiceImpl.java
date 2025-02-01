@@ -39,6 +39,7 @@ import dal.TTypeTiersPayant;
 import dal.TTypeTiersPayant_;
 import dal.TUser_;
 import dal.TVille;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,11 +47,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -67,6 +70,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ClientService;
+import rest.service.ExcelGeneratorService;
+import rest.service.dto.GenericExcelDTO;
 import util.Constant;
 import util.DateConverter;
 import util.FunctionUtils;
@@ -80,7 +85,8 @@ public class ClientServiceImpl implements ClientService {
 
     private static final Logger LOG = Logger.getLogger(ClientServiceImpl.class.getName());
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
+    @EJB
+    private ExcelGeneratorService excelGeneratorService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -954,8 +960,8 @@ public class ClientServiceImpl implements ClientService {
                     if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                         json.put("success", false).put("msg",
                                 "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
-                                        + client.getStrNUMEROSECURITESOCIAL()
-                                        + " </span>] est déjà utilisé dans le système");
+                                + client.getStrNUMEROSECURITESOCIAL()
+                                + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
                 }
@@ -971,8 +977,8 @@ public class ClientServiceImpl implements ClientService {
                         if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                             json.put("success", false).put("msg",
                                     "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
-                                            + client.getStrNUMEROSECURITESOCIAL()
-                                            + " </span>] est déjà utilisé dans le système");
+                                    + client.getStrNUMEROSECURITESOCIAL()
+                                    + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
                     }
@@ -1025,8 +1031,8 @@ public class ClientServiceImpl implements ClientService {
                     if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                         json.put("success", false).put("msg",
                                 "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
-                                        + client.getStrNUMEROSECURITESOCIAL()
-                                        + " </span>] est déjà utilisé dans le système");
+                                + client.getStrNUMEROSECURITESOCIAL()
+                                + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
                 }
@@ -1038,8 +1044,8 @@ public class ClientServiceImpl implements ClientService {
                         if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                             json.put("success", false).put("msg",
                                     "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
-                                            + client.getStrNUMEROSECURITESOCIAL()
-                                            + " </span>] est déjà utilisé dans le système");
+                                    + client.getStrNUMEROSECURITESOCIAL()
+                                    + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
                     }
@@ -1495,5 +1501,56 @@ public class ClientServiceImpl implements ClientService {
         q.setMaxResults(limit);
 
         return q.getResultList();
+    }
+
+    private GenericExcelDTO buildExeclData(boolean isGroupe, String query, String dtStart, String dtEnd,
+            String tiersPayantId, String groupeId, String typeTp) {
+        GenericExcelDTO genericExcel = new GenericExcelDTO();
+        List<VenteTiersPayantsDTO> data = this.ventesTiersPayants(query, dtStart, dtEnd, tiersPayantId, groupeId,
+                typeTp, 0, 0, true);
+        if (isGroupe) {
+
+            genericExcel.addColumn("Groupe tiers-payant", "Nbre dossiers", "Montant");
+            genericExcel.addWidths(16000, 6000, 8000);
+
+            Map<String, List<VenteTiersPayantsDTO>> groupeDtata = data.stream()
+                    .sorted(Comparator
+                            .comparing(VenteTiersPayantsDTO::getLibelleGroupe,
+                                    Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant))
+                    .collect(Collectors.groupingBy(VenteTiersPayantsDTO::getGroupBy));
+            groupeDtata.forEach((g, v) -> {
+                int nbre = 0;
+                int montant = 0;
+                for (VenteTiersPayantsDTO venteTiersPayantsDTO : v) {
+                    nbre += venteTiersPayantsDTO.getNbreDossier();
+                    montant += venteTiersPayantsDTO.getMontant();
+                }
+                Object[] row = {g, nbre, montant};
+                genericExcel.addRow(row);
+            });
+        } else {
+            data.sort(Comparator.comparing(VenteTiersPayantsDTO::getTypeTiersPayant)
+                    .thenComparing(VenteTiersPayantsDTO::getLibelleTiersPayant));
+            genericExcel.addColumn("Tiers-payant", "Code organisme", "Nbre dossiers", "Montant");
+            genericExcel.addWidths(20000, 8000, 6000, 8000);
+            data.forEach(d -> {
+
+                Object[] row = {StringUtils.isNotEmpty(d.getLibelleTiersPayant()) ? d.getLibelleTiersPayant() : "",
+                    StringUtils.isNotEmpty(d.getCodeTiersPayant()) ? d.getCodeTiersPayant() : "",
+                    d.getNbreDossier(), d.getMontant()};
+                genericExcel.addRow(row);
+            });
+        }
+
+        return genericExcel;
+    }
+
+    @Override
+    public byte[] generate(boolean isGroupe, String query, String dtStart, String dtEnd, String tiersPayantId,
+            String groupeId, String typeTp) throws IOException {
+
+        return this.excelGeneratorService.generate(
+                buildExeclData(isGroupe, query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp), "bordereau");
     }
 }
