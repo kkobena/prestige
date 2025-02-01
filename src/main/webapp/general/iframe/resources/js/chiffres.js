@@ -118,12 +118,12 @@ function buildChart(htmlEl, lineHtml, datas) {
     const currentYear = datas.currentYear;
     const yearMinusOne = datas.yearMinusOne;
     const yearMinusTwo = datas.yearMinusTwo;
-    const currentYearData = [currentYear.janvier,
-        currentYear.fevrier, currentYear.mars, currentYear.avril, currentYear.mai, currentYear.juin, currentYear.juillet, currentYear.aout, currentYear.septembre, currentYear.octobre, currentYear.novembre, currentYear.decembre];
-    const yearMinusOneData = [yearMinusOne.janvier,
-        yearMinusOne.fevrier, yearMinusOne.mars, yearMinusOne.avril, yearMinusOne.mai, yearMinusOne.juin, yearMinusOne.juillet, yearMinusOne.aout, yearMinusOne.septembre, yearMinusOne.octobre, yearMinusOne.novembre, yearMinusOne.decembre];
-    const yearMinusTwoData = [yearMinusTwo.janvier,
-        yearMinusTwo.fevrier, yearMinusTwo.mars, yearMinusTwo.avril, yearMinusTwo.mai, yearMinusTwo.juin, yearMinusTwo.juillet, yearMinusTwo.aout, yearMinusTwo.septembre, yearMinusTwo.octobre, yearMinusTwo.novembre, yearMinusTwo.decembre];
+    const currentYearData = [currentYear?.janvier,
+        currentYear?.fevrier, currentYear?.mars, currentYear?.avril, currentYear?.mai, currentYear?.juin, currentYear?.juillet, currentYear?.aout, currentYear?.septembre, currentYear?.octobre, currentYear?.novembre, currentYear?.decembre];
+    const yearMinusOneData = [yearMinusOne?.janvier,
+        yearMinusOne?.fevrier, yearMinusOne?.mars, yearMinusOne?.avril, yearMinusOne?.mai, yearMinusOne?.juin, yearMinusOne?.juillet, yearMinusOne?.aout, yearMinusOne?.septembre, yearMinusOne?.octobre, yearMinusOne?.novembre, yearMinusOne?.decembre];
+    const yearMinusTwoData = [yearMinusTwo?.janvier,
+        yearMinusTwo?.fevrier, yearMinusTwo?.mars, yearMinusTwo?.avril, yearMinusTwo?.mai, yearMinusTwo?.juin, yearMinusTwo?.juillet, yearMinusTwo?.aout, yearMinusTwo?.septembre, yearMinusTwo?.octobre, yearMinusTwo?.novembre, yearMinusTwo?.decembre];
     const data = [yearMinusTwoData, yearMinusOneData, currentYearData];
     new Chart(htmlEl, barChartConfig(data, 'bar'));
     new Chart(lineHtml, barChartConfig(data, 'line'));

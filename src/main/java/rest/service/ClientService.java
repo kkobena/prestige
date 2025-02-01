@@ -14,10 +14,12 @@ import commonTasks.dto.VenteTiersPayantsDTO;
 import dal.TClient;
 import dal.TCompteClientTiersPayant;
 import dal.TTiersPayant;
+import java.io.IOException;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.GenericExcelDTO;
 
 /**
  *
@@ -77,4 +79,7 @@ public interface ClientService {
             String groupeId, String typeTp, int start, int limit, boolean all);
 
     JSONObject fetchClients(String query, String typeClientId, int start, int limit);
+
+    byte[] generate(boolean isGroupe, String query, String dtStart, String dtEnd, String tiersPayantId, String groupeId,
+            String typeTp) throws IOException;
 }
