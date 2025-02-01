@@ -41,7 +41,7 @@ public class SearchProduitServcieRessource {
             throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
