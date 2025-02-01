@@ -960,8 +960,8 @@ public class ClientServiceImpl implements ClientService {
                     if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                         json.put("success", false).put("msg",
                                 "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
-                                + client.getStrNUMEROSECURITESOCIAL()
-                                + " </span>] est déjà utilisé dans le système");
+                                        + client.getStrNUMEROSECURITESOCIAL()
+                                        + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
                 }
@@ -977,8 +977,8 @@ public class ClientServiceImpl implements ClientService {
                         if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                             json.put("success", false).put("msg",
                                     "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
-                                    + client.getStrNUMEROSECURITESOCIAL()
-                                    + " </span>] est déjà utilisé dans le système");
+                                            + client.getStrNUMEROSECURITESOCIAL()
+                                            + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
                     }
@@ -1031,8 +1031,8 @@ public class ClientServiceImpl implements ClientService {
                     if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                         json.put("success", false).put("msg",
                                 "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
-                                + client.getStrNUMEROSECURITESOCIAL()
-                                + " </span>] est déjà utilisé dans le système");
+                                        + client.getStrNUMEROSECURITESOCIAL()
+                                        + " </span>] est déjà utilisé dans le système");
                         return json;
                     }
                 }
@@ -1044,8 +1044,8 @@ public class ClientServiceImpl implements ClientService {
                         if (doesNumeroSecuriteSocialExist(client.getStrNUMEROSECURITESOCIAL(), p)) {
                             json.put("success", false).put("msg",
                                     "Le numéro de sécurité :: [<span style=\"color: blue; \"> "
-                                    + client.getStrNUMEROSECURITESOCIAL()
-                                    + " </span>] est déjà utilisé dans le système");
+                                            + client.getStrNUMEROSECURITESOCIAL()
+                                            + " </span>] est déjà utilisé dans le système");
                             return json;
                         }
                     }
@@ -1526,7 +1526,7 @@ public class ClientServiceImpl implements ClientService {
                     nbre += venteTiersPayantsDTO.getNbreDossier();
                     montant += venteTiersPayantsDTO.getMontant();
                 }
-                Object[] row = {g, nbre, montant};
+                Object[] row = { g, nbre, montant };
                 genericExcel.addRow(row);
             });
         } else {
@@ -1536,9 +1536,9 @@ public class ClientServiceImpl implements ClientService {
             genericExcel.addWidths(20000, 8000, 6000, 8000);
             data.forEach(d -> {
 
-                Object[] row = {StringUtils.isNotEmpty(d.getLibelleTiersPayant()) ? d.getLibelleTiersPayant() : "",
-                    StringUtils.isNotEmpty(d.getCodeTiersPayant()) ? d.getCodeTiersPayant() : "",
-                    d.getNbreDossier(), d.getMontant()};
+                Object[] row = { StringUtils.isNotEmpty(d.getLibelleTiersPayant()) ? d.getLibelleTiersPayant() : "",
+                        StringUtils.isNotEmpty(d.getCodeTiersPayant()) ? d.getCodeTiersPayant() : "",
+                        d.getNbreDossier(), d.getMontant() };
                 genericExcel.addRow(row);
             });
         }
