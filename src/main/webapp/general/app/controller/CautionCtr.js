@@ -2,7 +2,8 @@
 
 Ext.define('testextjs.controller.CautionCtr', {
     extend: 'Ext.app.Controller',
-    views: ['testextjs.view.caution.Caution', 'testextjs.view.caution.Add', 'testextjs.view.caution.Edit', 'testextjs.view.caution.Historiques', 'testextjs.view.caution.Achats'],
+
+    views: ['testextjs.view.caution.Caution', 'testextjs.view.caution.Add', 'testextjs.view.caution.Edit'],
     refs: [{
             ref: 'cautiontierspayant',
             selector: 'cautiontierspayant'
@@ -59,50 +60,10 @@ Ext.define('testextjs.controller.CautionCtr', {
         {ref: 'tiersPayantIdAddForm',
             selector: 'cautionAddForm #tiersPayantId'
 
-        },
-        {ref: 'historiques',
-            selector: 'cautionHistoriques'
-
-        },
-        {ref: 'cautionAchats',
-            selector: 'cautionAchats'
-
         }
-        ,
-        {ref: 'historiquesDtEnd',
-            selector: 'cautionHistoriques #dtEnd'
 
-        }
-        ,
-        {ref: 'historiquesDtStart',
-            selector: 'cautionHistoriques #dtStart'
 
-        },
-        {ref: 'cautionAchatsDtEnd',
-            selector: 'cautionAchats #dtEnd'
 
-        }
-        ,
-        {ref: 'cautionAchatsDtStart',
-            selector: 'cautionAchats #dtStart'
-
-        },
-        {ref: 'cautionAchatsGrid',
-            selector: 'cautionAchats fieldset gridpanel'
-
-        }
-        ,
-        {ref: 'historiquesGrid',
-            selector: 'cautionHistoriques fieldset gridpanel'
-
-        },
-        {ref: 'historiquesIdCaution',
-            selector: 'cautionHistoriques #idCaution'
-
-        }, {ref: 'cautionAchatsIdCaution',
-            selector: 'cautionAchats #idCaution'
-
-        }
 
     ],
     init: function (application) {
@@ -110,12 +71,7 @@ Ext.define('testextjs.controller.CautionCtr', {
             'cautiontierspayant gridpanel pagingtoolbar': {
                 beforechange: this.doBeforechange
             },
-            'cautionAchats gridpanel pagingtoolbar': {
-                beforechange: this.doBeforechangeCautionAchats
-            },
-            'cautionHistoriques gridpanel pagingtoolbar': {
-                beforechange: this.doBeforechangeHistoriques
-            },
+
             'cautiontierspayant #tiersPayantId': {
                 select: this.doSearch
             },
@@ -148,24 +104,8 @@ Ext.define('testextjs.controller.CautionCtr', {
             },
             'cautionEditForm #btnCancel': {
                 click: this.closeEditWindows
-            },
-            'cautionHistoriques #btnCancel': {
-                click: this.closeHistoriques
-            },
-            'cautionAchats #btnCancel': {
-                click: this.closeAchat
             }
-            ,
-            'cautionHistoriques #btnPrint': {
-                click: this.onPrintHistoriques
-            },
-            'cautionAchats #btnPrint': {
-                click: this.onPrintAchats
-            }, 'cautionAchats #rechercher': {
-                click: this.loadAchats
-            }, 'cautionHistoriques #rechercher': {
-                click: this.loadHistoriques
-            }
+
 
         });
     },
@@ -181,41 +121,8 @@ Ext.define('testextjs.controller.CautionCtr', {
         const me = this;
         me.getCautionEditForm().destroy();
     },
-    closeHistoriques: function () {
-        const me = this;
-        me.getHistoriques().destroy();
-    },
-    closeAchat: function () {
-        const me = this;
-        me.getCautionAchats().destroy();
-    },
-    onPrintHistoriques: function () {
-        const me = this;
-
-        let dtStart = me.getHistoriquesDtStart().getSubmitValue();
-        if (dtStart === null || dtStart === undefined) {
-            dtStart = '';
-        }
-        let dtEnd = me.getHistoriquesDtEnd().getSubmitValue();
-        if (dtEnd === null || dtEnd === undefined) {
-            dtEnd = '';
-        }
-        const linkUrl = '../cautionServlet?mode=historiques&idCaution=' + me.getHistoriquesIdCaution().getValue() + '&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
-        window.open(linkUrl);
-    },
-    onPrintAchats: function () {
-        const me = this;
-        let dtStart = me.getCautionAchatsDtStart().getSubmitValue();
-        if (dtStart === null || dtStart === undefined) {
-            dtStart = '';
-        }
-        let dtEnd = me.getCautionAchatsDtEnd().getSubmitValue();
-        if (dtEnd === null || dtEnd === undefined) {
-            dtEnd = '';
-        }
-        const linkUrl = '../cautionServlet?mode=achats&idCaution=' + me.getCautionAchatsIdCaution().getValue() + '&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
-        window.open(linkUrl);
-    },
+   
+   
     lunchPrinter: function (mvtCaisseId) {
 
         Ext.Ajax.request({
@@ -328,69 +235,15 @@ Ext.define('testextjs.controller.CautionCtr', {
     },
     fetchDepots: function (view, rowIndex, colIndex, item, e, record, row) {
         const me = this;
-        const formwin = Ext.create('testextjs.view.caution.Historiques', {"caution": record.data});
-        me.intloadHistoriques(formwin);
-
-
-
+        me.buildHistorique(record);
+      
     },
-    intloadHistoriques: function (formwin) {
-        const me = this;
-        me.getHistoriquesGrid().getStore().load({
-            params: {
-                "idCaution": me.getHistoriquesIdCaution().getValue(),
-                "dtStart": me.getHistoriquesDtStart().getSubmitValue(),
-                "dtEnd": me.getHistoriquesDtEnd().getSubmitValue()
-            }, callback: function (records, operation, successful) {
-
-                formwin.show();
-            }
-
-        });
-
-    },
-    loadHistoriques: function () {
-        const me = this;
-        me.getHistoriquesGrid().getStore().load({
-            params: {
-                "idCaution": me.getHistoriquesIdCaution().getValue(),
-                "dtStart": me.getHistoriquesDtStart().getSubmitValue(),
-                "dtEnd": me.getHistoriquesDtEnd().getSubmitValue()
-            }
-
-        });
-
-    },
-    initAchats: function (win) {
-        const me = this;
-        me.getCautionAchatsGrid().getStore().load({
-            params: {
-                "idCaution": me.getCautionAchatsIdCaution().getValue(),
-                "dtStart": me.getCautionAchatsDtStart().getSubmitValue(),
-                "dtEnd": me.getCautionAchatsDtEnd().getSubmitValue()
-            }, callback: function (records, operation, successful) {
-
-                win.show();
-            }
-        });
-
-    },
-    loadAchats: function () {
-        const me = this;
-        me.getCautionAchatsGrid().getStore().load({
-            params: {
-                "idCaution": me.getCautionAchatsIdCaution().getValue(),
-                "dtStart": me.getCautionAchatsDtStart().getSubmitValue(),
-                "dtEnd": me.getCautionAchatsDtEnd().getSubmitValue()
-            }
-        });
-
-    },
+  
+  
     fetchVentes: function (view, rowIndex, colIndex, item, e, record, row) {
         const me = this;
-        const formwin = Ext.create('testextjs.view.caution.Achats', {"caution": record.data});
-
-        me.initAchats(formwin);
+        me.buildAchats(record);
+     
 
     },
     editer: function (view, rowIndex, colIndex, item, e, record, row) {
@@ -439,37 +292,6 @@ Ext.define('testextjs.controller.CautionCtr', {
         me.doSearch();
     },
 
-    doBeforechangeHistoriques: function (page, currentPage) {
-        const me = this;
-        const myProxy = me.getHistoriquesGrid().getStore().getProxy();
-        myProxy.params = {
-            idCaution: null,
-            dtStart: null,
-            dtEnd: null
-        };
-      
-        myProxy.setExtraParam('idCaution', me.getHistoriquesIdCaution().getValue());
-        myProxy.setExtraParam('dtStart', me.getHistoriquesDtStart().getSubmitValue());
-        myProxy.setExtraParam('dtEnd',  me.getHistoriquesDtEnd().getSubmitValue());
-
-    },
-    doBeforechangeCautionAchats: function (page, currentPage) {
-        const me = this;
-        const myProxy = me.getCautionAchatsGrid().getStore().getProxy();
-        myProxy.params = {
-            idCaution: null,
-            dtStart: null,
-            dtEnd: null
-        };
-          myProxy.setExtraParam('idCaution', me.getCautionAchatsIdCaution().getValue());
-        myProxy.setExtraParam('dtStart', me.getCautionAchatsDtStart().getSubmitValue());
-        myProxy.setExtraParam('dtEnd',  me.getCautionAchatsDtEnd().getSubmitValue());
-
-    },
-    doInitStoreHistoriques: function () {
-        const me = this;
-        me.loadHistoriques();
-    },
 
     doSearch: function () {
         const me = this;
@@ -480,6 +302,460 @@ Ext.define('testextjs.controller.CautionCtr', {
 
             }
         });
+    },
+
+    buildHistorique: function (rec) {
+        const me = this;
+        const dtStart = new Ext.form.field.Date({
+            //  xtype: 'datefield',
+            fieldLabel: 'Du',
+            itemId: 'dtStart',
+            margin: '0 10 0 0',
+            submitFormat: 'Y-m-d',
+            flex: 1,
+            labelWidth: 20,
+            maxValue: new Date(),
+            value: new Date(),
+            format: 'd/m/Y'
+
+        });
+        const dtEnd = new Ext.form.field.Date({
+            //  xtype: 'datefield',
+            fieldLabel: 'Au',
+            itemId: 'dtEnd',
+            labelWidth: 20,
+            flex: 1,
+            maxValue: new Date(),
+            value: new Date(),
+            margin: '0 9 0 0',
+            submitFormat: 'Y-m-d',
+            format: 'd/m/Y'
+        });
+        const historiques = Ext.create('Ext.data.Store', {
+            idProperty: 'id',
+            fields:
+                    [
+                        {
+                            name: 'id',
+                            type: 'string'
+                        },
+
+                        {
+                            name: 'mvtDate',
+                            type: 'string'
+                        }
+                        ,
+                        {
+                            name: 'user',
+                            type: 'string'
+                        },
+
+                        {
+                            name: 'montant',
+                            type: 'int'
+                        }
+
+                    ], autoLoad: false,
+            pageSize: 999999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/cautions/historiques',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+
+        });
+
+        historiques.load({
+            params: {
+                idCaution: rec.get('id'),
+                dtStart: dtStart.getSubmitValue(),
+                dtEnd: dtEnd.getSubmitValue()
+            }
+        });
+        const form = Ext.create('Ext.window.Window',
+                {
+                    xtype: 'cautionHistoriques',
+                    alias: 'widget.cautionHistoriques',
+                    autoShow: true,
+                    height: 570,
+                    width: '80%',
+                    modal: true,
+                    title: '<span style="font-size:14px;">Historiques de depôts de ' + rec.get('tiersPayantName') + '</span>',
+
+                    closeAction: 'hide',
+
+                    closable: true,
+                    maximizable: true,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'top',
+                            items: [
+                                dtStart, dtEnd, {
+                                    xtype: 'button',
+                                    itemId: 'rechercher',
+                                    iconCls: 'searchicon',
+                                    text: 'Rechercher'
+                                    ,
+                                    handler: function () {
+                                        historiques.load({
+                                            params: {
+                                                idCaution: rec.get('id'),
+                                                dtStart: dtStart.getSubmitValue(),
+                                                dtEnd: dtEnd.getSubmitValue()
+                                            }
+                                        });
+                                    }
+
+                                },
+                                {
+                                    xtype: 'button',
+                                    itemId: 'btnPrint',
+                                    iconCls: 'printable',
+                                    // scope: this,
+                                    text: 'Imprimer', handler: function () {
+                                        const me = this;
+                                        let dtStartV = dtStart.getSubmitValue();
+                                        if (dtStartV === null || dtStartV === undefined) {
+                                            dtStartV = '';
+                                        }
+                                        let dtEndV = dtEnd.getSubmitValue();
+                                        if (dtEndV === null || dtEndV === undefined) {
+                                            dtEndV = '';
+                                        }
+                                        const linkUrl = '../cautionServlet?mode=historiques&idCaution=' + rec.get('id') + '&dtStart=' + dtStartV + '&dtEnd=' + dtEndV;
+                                        window.open(linkUrl);
+                                    }
+
+                                }
+
+                            ]
+                        },
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+
+                                {
+                                    xtype: 'button',
+                                    itemId: 'btnCancel',
+                                    text: 'Fermer',
+                                    handler: function () {
+                                        form.destroy();
+                                    }
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [
+                        {
+                            xtype: 'gridpanel',
+                            store: historiques,
+                            viewConfig: {
+                                forceFit: true,
+                                columnLines: true,
+                                enableColumnHide: false
+
+                            },
+                            columns:
+                                    [
+                                        {xtype: 'rownumberer',
+                                            width: 50
+                                        },
+
+                                        {
+                                            header: 'Montant',
+                                            dataIndex: 'montant',
+                                            flex: 1,
+                                            xtype: 'numbercolumn',
+                                            align: 'right',
+                                            format: '0,000.'
+
+                                        }, {
+                                            header: 'Date',
+                                            dataIndex: 'mvtDate',
+                                            flex: 1
+
+                                        }
+                                        , {
+                                            header: 'Opérateur',
+                                            dataIndex: 'user',
+                                            flex: 1
+
+                                        }
+
+
+                                    ],
+
+                            bbar: {
+                                xtype: 'pagingtoolbar',
+                                store: historiques,
+                                dock: 'bottom',
+                                displayInfo: true,
+                                beforechange: function (page, currentPage) {
+                                    var myProxy = historiques.getProxy();
+                                    myProxy.params = {
+                                        idCaution: rec.get('id'),
+                                        dtStart: null,
+                                        dtEnd: null
+                                    };
+                                    myProxy.setExtraParam('idCaution', rec.get('id')),
+                                            myProxy.setExtraParam('dtStart', me.getHistoriquesDtStart().getSubmitValue());
+                                    myProxy.setExtraParam('dtEnd', me.getHistoriquesDtEnd().getSubmitValue());
+
+                                }
+                            }
+                        }
+                    ]
+                });
+    },
+
+    buildAchats: function (rec) {
+        const me = this;
+        const dtStart = new Ext.form.field.Date({
+            //  xtype: 'datefield',
+            fieldLabel: 'Du',
+            itemId: 'dtStart',
+            margin: '0 10 0 0',
+            submitFormat: 'Y-m-d',
+            flex: 1,
+            labelWidth: 20,
+            maxValue: new Date(),
+            value: new Date(),
+            format: 'd/m/Y'
+
+        });
+        const dtEnd = new Ext.form.field.Date({
+            //  xtype: 'datefield',
+            fieldLabel: 'Au',
+            itemId: 'dtEnd',
+            labelWidth: 20,
+            flex: 1,
+            maxValue: new Date(),
+            value: new Date(),
+            margin: '0 9 0 0',
+            submitFormat: 'Y-m-d',
+            format: 'd/m/Y'
+        });
+        const achatsStore = Ext.create('Ext.data.Store', {
+
+            model: 'testextjs.model.caisse.Vente',
+            autoLoad: false,
+            pageSize: 999999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/cautions/ventes',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+        });
+
+        achatsStore.load({
+            params: {
+                idCaution: rec.get('id'),
+                dtStart: dtStart.getSubmitValue(),
+                dtEnd: dtEnd.getSubmitValue()
+            }
+        });
+        const form = Ext.create('Ext.window.Window',
+                {
+                    xtype: 'cautionAchats',
+                    alias: 'widget.cautionAchats',
+                    autoShow: true,
+                    height: 570,
+                    width: '80%',
+                    modal: true,
+                    title: '<span style="font-size:14px;">Liste des achats de ' + rec.get('tiersPayantName') + '</span>',
+
+                    closeAction: 'hide',
+
+                    closable: true,
+                    maximizable: true,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                        {
+                            xtype: 'toolbar',
+                            dock: 'top',
+                            items: [
+                                dtStart, dtEnd
+                                        , {
+                                            xtype: 'button',
+                                            itemId: 'rechercher',
+                                            iconCls: 'searchicon',
+                                            text: 'Rechercher',
+
+                                            handler: function () {
+                                                achatsStore.load({
+                                                    params: {
+                                                        idCaution: rec.get('id'),
+                                                        dtStart: dtStart.getSubmitValue(),
+                                                        dtEnd: dtEnd.getSubmitValue()
+                                                    }
+                                                });
+                                            }
+
+                                        },
+                                {
+                                    xtype: 'button',
+                                    itemId: 'btnPrint',
+                                    iconCls: 'printable',
+                                    // scope: this,
+                                    text: 'Imprimer',
+                                    handler: function () {
+                                        const me = this;
+                                        let dtStartV = dtStart.getSubmitValue();
+                                        if (dtStartV === null || dtStartV === undefined) {
+                                            dtStartV = '';
+                                        }
+                                        let dtEndV = dtEnd.getSubmitValue();
+                                        if (dtEndV === null || dtEndV === undefined) {
+                                            dtEndV = '';
+                                        }
+                                        const linkUrl = '../cautionServlet?mode=achats&idCaution=' + rec.get('id') + '&dtStart=' + dtStartV + '&dtEnd=' + dtEndV;
+                                        window.open(linkUrl);
+                                    }
+
+                                }
+
+                            ]
+                        },
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+
+                                {
+                                    xtype: 'button',
+                                    itemId: 'btnCancel',
+                                    text: 'Fermer',
+                                    handler: function () {
+                                        form.destroy();
+                                    }
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [
+                        {
+                            xtype: 'gridpanel',
+                            store: achatsStore,
+                            viewConfig: {
+                                forceFit: true,
+                                columnLines: true,
+                                enableColumnHide: false
+
+                            },
+
+                            columns: [
+                                {
+                                    xtype: 'rownumberer',
+                                    width: 50
+                                },
+
+                                {
+                                    header: 'Reference',
+                                    dataIndex: 'strREF',
+                                    flex: 1,
+                                    sortable: false,
+                                    menuDisabled: true
+                                }, {
+                                    header: 'Montant',
+                                    xtype: 'numbercolumn',
+                                    dataIndex: 'intPRICE',
+                                    align: 'right',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 1,
+                                    format: '0,000.'
+
+                                }, {
+                                    header: 'Montant caution',
+                                    xtype: 'numbercolumn',
+                                    dataIndex: 'caution',
+                                    align: 'right',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 1,
+                                    format: '0,000.'
+
+                                },
+                                {
+                                    header: 'Date',
+                                    dataIndex: 'dtUPDATED',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 0.6,
+                                    align: 'center'
+                                }, {
+                                    header: 'Heure',
+                                    dataIndex: 'heure',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 0.6,
+                                    align: 'center'
+                                }
+                                , {
+                                    header: 'Vendeur',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    dataIndex: 'userCaissierName',
+                                    flex: 1
+                                }
+
+
+                            ],
+
+                            bbar: {
+                                xtype: 'pagingtoolbar',
+                                store: achatsStore,
+                                dock: 'bottom',
+                                displayInfo: true,
+                                beforechange: function (page, currentPage) {
+                                    var myProxy = achatsStore.getProxy();
+                                    myProxy.params = {
+                                        idCaution: rec.get('id'),
+                                        dtStart: null,
+                                        dtEnd: null
+                                    };
+                                    myProxy.setExtraParam('idCaution', rec.get('id')),
+                                            myProxy.setExtraParam('dtStart', dtStart.getSubmitValue());
+                                    myProxy.setExtraParam('dtEnd', dtEnd.getSubmitValue());
+
+                                }
+                            }
+                        }
+                    ]
+                });
     }
 
 });
