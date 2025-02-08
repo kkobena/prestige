@@ -1,5 +1,6 @@
 package rest.service;
 
+import java.io.IOException;
 import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONObject;
@@ -28,5 +29,10 @@ public interface EtatControlBonService {
     JSONObject etatLastThreeYears();
 
     JSONObject updateBon(EtatControlBonEditDto bonEdit);
+
+    byte[] generate(String search, String dtStart, String dtEnd, String grossisteId) throws IOException;
+
+    byte[] generate(String groupBy, String dtStart, String dtEnd, String grossisteId, Integer groupeId)
+            throws IOException;
 
 }

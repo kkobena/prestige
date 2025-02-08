@@ -1,5 +1,6 @@
 package rest.service.impl;
 
+import commonTasks.dto.VenteTiersPayantsDTO;
 import dal.MvtTransaction;
 import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
@@ -10,6 +11,7 @@ import dal.TGrossiste;
 import dal.TGrossiste_;
 import dal.TOrder;
 import dal.TOrder_;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -24,6 +26,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -38,12 +41,14 @@ import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import rest.service.EtatControlBonService;
+import rest.service.ExcelGeneratorService;
 import rest.service.dto.EtatAnnuelDTO;
 import rest.service.dto.EtatAnnuelWrapperDTO;
 import rest.service.dto.EtatControlAnnuelDTO;
 import rest.service.dto.EtatControlAnnuelWrapperDTO;
 import rest.service.dto.EtatControlBon;
 import rest.service.dto.EtatControlBonEditDto;
+import rest.service.dto.GenericExcelDTO;
 import rest.service.dto.builder.EtatControlBonBuilder;
 import util.Constant;
 import util.FunctionUtils;
@@ -67,6 +72,8 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
     private EntityManager em;
 
     private static final String DELETE = "delete";
+    @EJB
+    private ExcelGeneratorService excelGeneratorService;
 
     @Override
     public List<EtatControlBon> list(boolean fullAuth, String search, String dtStart, String dtEnd, String grossisteId,
@@ -405,4 +412,51 @@ public class EtatControlBonServiceImpl implements EtatControlBonService {
         }).sum();
     }
 
+    @Override
+    public byte[] generate(String search, String dtStart, String dtEnd, String grossisteId) throws IOException {
+        return this.excelGeneratorService.generate(buildExeclData(search, dtStart, dtEnd, grossisteId), "bordereau");
+    }
+
+    @Override
+    public byte[] generate(String groupBy, String dtStart, String dtEnd, String grossisteId, Integer groupeId)
+            throws IOException {
+        return this.excelGeneratorService.generate(buildExeclData(groupBy, dtStart, dtEnd, grossisteId, groupeId),
+                "bordereau_annuel");
+    }
+
+    private GenericExcelDTO buildExeclData(String search, String dtStart, String dtEnd, String grossisteId) {
+        GenericExcelDTO genericExcel = new GenericExcelDTO();
+        List<EtatControlBon> data = this.list(false, search, dtStart, dtEnd, grossisteId, 0, 0, true);
+
+        genericExcel.addColumn("Grossiste", "No Commande", "Réf Bon", "Montant Ht", "Montant Tva", "Montant Ttc",
+                "Date livraison", "Date d'entrée", "Montant avoir", "Opérateur");
+        genericExcel.addWidths(12000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000);
+        data.forEach(d -> {
+
+            Object[] row = { d.getFournisseurLibelle(), d.getOrderRef(), d.getStrREFLIVRAISON(), d.getIntMHT(),
+                    d.getIntTVA(), d.getIntHTTC(), d.getDtDATELIVRAISON(), d.getDtCREATED(), d.getMontantAvoir(),
+                    d.getUserName() };
+            genericExcel.addRow(row);
+        });
+
+        return genericExcel;
+    }
+
+    private GenericExcelDTO buildExeclData(String groupBy, String dtStart, String dtEnd, String grossisteId,
+            Integer groupeId) {
+        GenericExcelDTO genericExcel = new GenericExcelDTO();
+        EtatControlAnnuelWrapperDTO annuelSummary = listBonAnnuel(groupBy, dtStart, dtEnd, grossisteId, groupeId);
+        List<EtatControlAnnuelDTO> annuels = annuelSummary.getEtatControlAnnuels();
+        genericExcel.addColumn("Libellé", "Total Ht", "Total Tva", "Total Ttc", "Total vente Ttc", "Totam marge",
+                "Nombre de bon", "Ttc%");
+        genericExcel.addWidths(12000, 6000, 6000, 6000, 6000, 6000, 6000, 6000);
+        annuels.forEach(d -> {
+
+            Object[] row = { d.getGroupByLibelle(), d.getMontantHtaxe(), d.getMontantTaxe(), d.getMontantTtc(),
+                    d.getMontantVenteTtc(), d.getMontantMarge(), d.getNbreBon(), d.getPourcentage() };
+            genericExcel.addRow(row);
+        });
+
+        return genericExcel;
+    }
 }

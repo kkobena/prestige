@@ -212,7 +212,7 @@ Ext.define('testextjs.view.bons.EtatControlAnnuel', {
                             tooltip: 'Exporter en excel',
                             icon: 'resources/images/icons/fam/excel_icon.png',
                             scope: this,
-                           itemId: 'exportToExcel',
+                           itemId: 'exportToExcel'
                         }
                     ]
                 },

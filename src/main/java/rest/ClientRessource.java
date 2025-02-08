@@ -13,9 +13,6 @@ import commonTasks.dto.TiersPayantParams;
 import dal.TClient;
 import dal.TUser;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -29,10 +26,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ClientService;
@@ -52,6 +47,8 @@ public class ClientRessource {
     private HttpServletRequest servletRequest;
     @EJB
     private ClientService clientService;
+    @EJB
+    private ExportExcelUtilService exportExcelUtilService;
 
     @GET
     @Path("lambda")
@@ -299,22 +296,21 @@ public class ClientRessource {
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "tiersPayantId") String tiersPayantId, @QueryParam(value = "groupeId") String groupeId,
             @QueryParam(value = "typeTp") String typeTp, @QueryParam(value = "query") String query,
-            @QueryParam(value = "isGroupe") boolean isGroupe) {
+            @QueryParam(value = "isGroupe") boolean isGroupe) throws IOException {
 
-        StreamingOutput output = (OutputStream out) -> {
-            try {
-
-                out.write(clientService.generate(isGroupe, query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp));
-                out.flush();
-
-            } catch (IOException ex) {
-                throw new WebApplicationException("File Not Found !!");
-            }
-        };
-        String filename = "bordereaux_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss"))
-                + ".xls";
-        return Response.ok(output, MediaType.APPLICATION_OCTET_STREAM)
-
-                .header("content-disposition", "attachment; filename = " + filename).build();
+        return this.exportExcelUtilService.exportToExecel(
+                clientService.generate(isGroupe, query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp),
+                "bordereaux_");
+        /*
+         * StreamingOutput output = (OutputStream out) -> { try {
+         *
+         * out.write(clientService.generate(isGroupe, query, dtStart, dtEnd, tiersPayantId, groupeId, typeTp));
+         * out.flush();
+         *
+         * } catch (IOException ex) { throw new WebApplicationException("File Not Found !!"); } }; String filename =
+         * "bordereaux_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_H_mm_ss")) + ".xls";
+         * return Response.ok(output, MediaType.APPLICATION_OCTET_STREAM) .header("content-disposition",
+         * "attachment; filename = " + filename).build(); }
+         */
     }
 }
