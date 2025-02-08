@@ -12,7 +12,6 @@ public class GenericExcelDTO {
 
     private final List<String> columns = new ArrayList<>();
     private final List<Object[]> data = new ArrayList<>();
-    private final List<XcelColumnType> types = new ArrayList<>();
     private final List<Integer> columnWidths = new ArrayList<>();
 
     public List<String> getColumns() {
@@ -27,10 +26,6 @@ public class GenericExcelDTO {
         return columnWidths;
     }
 
-    public List<XcelColumnType> getTypes() {
-        return types;
-    }
-
     public void addWidths(Integer... widths) {
         this.columnWidths.addAll(Arrays.asList(widths));
 
@@ -39,10 +34,6 @@ public class GenericExcelDTO {
     public void addColumn(String... columns) {
         this.columns.addAll(Arrays.asList(columns));
 
-    }
-
-    public void addType(XcelColumnType columnType) {
-        types.add(columnType);
     }
 
     public void addRow(Object[] row) {
