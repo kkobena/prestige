@@ -585,6 +585,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     displayField: 'str_NAME',
                     typeAhead: true,
 //                    editable: false,
+                    width: 350,
+                    minChars: 2,
                     queryMode: 'remote',
 //                    flex: 2,
                     emptyText: 'Selectionner un DCI...',
@@ -1260,7 +1262,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                                         }
                                                     });
 
-
+                                                    //focus sur le champ cip
+                                                    Ext.getCmp('rechecher').focus(true, 100, function () { });
                                                 }
 
 
