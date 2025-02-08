@@ -568,14 +568,14 @@ public class CaisseServiceImpl implements CaisseService {
                     .groupBy(root.get(MvtTransaction_.tTypeMvtCaisse), root.get(MvtTransaction_.reglement));
             predicates.add(cb.and(
                     cb.equal(root.get(MvtTransaction_.magasin).get(TEmplacement_.lgEMPLACEMENTID), emplacementId)));
-            Predicate btw = cb.between(root.get(MvtTransaction_.mvtDate), dtStart, dtEnd);
-            predicates.add(btw);
+
+            predicates.add(cb.between(root.get(MvtTransaction_.mvtDate), dtStart, dtEnd));
             predicates.add(cb.isTrue(root.get(MvtTransaction_.checked)));
             predicates.add(cb.notEqual(root.get(MvtTransaction_.typeTransaction), TypeTransaction.ACHAT));
             predicates.add(root.get(MvtTransaction_.tTypeMvtCaisse).get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID)
                     .in(Arrays.asList(DateConverter.MVT_FOND_CAISSE, DateConverter.MVT_ENTREE_CAISSE,
-                            DateConverter.MVT_SORTIE_CAISSE, DateConverter.MVT_REGLE_TP,
-                            DateConverter.MVT_REGLE_DIFF)));
+                            DateConverter.MVT_SORTIE_CAISSE, DateConverter.MVT_REGLE_TP, DateConverter.MVT_REGLE_DIFF,
+                            DateConverter.CAUTION_ID)));
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<VisualisationCaisseDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();

@@ -187,6 +187,7 @@ public class Balance {
                         ' '));
         String P_FONDCAISSE_LABEL = "", P_SORIECAISSE_LABEL = "", P_ENTREECAISSE_LABEL = "", P_REGLEMENT_LABEL = "",
                 P_ACCOMPTE_LABEL = "", P_DIFFERE_LABEL = "", P_TOTAL_CAISSE_LABEL;
+        String cautionLabel = "";
         long P_SORTIECAISSE_ESPECE = 0, P_SORTIECAISSE_CHEQUES = 0, P_SORTIECAISSE_MOBILE = 0, P_SORTIECAISSE_CB = 0,
                 P_SORTIECAISSE_VIREMENT = 0, P_TOTAL_SORTIE_CAISSE, P_ENTREECAISSE_ESPECE = 0,
                 P_ENTREECAISSE_VIREMENT = 0, P_ENTREECAISSE_MOBILE = 0, P_ENTREECAISSE_CHEQUES = 0,
@@ -197,14 +198,23 @@ public class Balance {
                 P_TOTAL_GLOBAL_CAISSE, P_TOTAL_GLOBALE_MOBILE, P_DIFFERE_ESPECE = 0, P_DIFFERE_VIREMENT = 0,
                 P_TOTAL_VIREMENT_GLOBAL, P_TOTAL_DIFFERE_CAISSE, P_TOTAL_ESPECES_GLOBAL, P_TOTAL_CHEQUES_GLOBAL,
                 P_TOTAL_CB_GLOBAL;
+        long cautionMontant = 0;
+        long totalCautionMontant = 0;
         Map<String, List<VisualisationCaisseDTO>> typeMvtMap = findAllMvtCaisse.stream()
                 .collect(Collectors.groupingBy(VisualisationCaisseDTO::getTypeMvt));
+
         for (Map.Entry<String, List<VisualisationCaisseDTO>> entry : typeMvtMap.entrySet()) {
             String key = entry.getKey();
+
             List<VisualisationCaisseDTO> val = entry.getValue();
             Map<String, List<VisualisationCaisseDTO>> typeRe;
             List<VisualisationCaisseDTO> list;
             switch (key) {
+            case DateConverter.CAUTION_ID:
+                cautionLabel = val.get(0).getTypeMouvement();
+                cautionMontant = val.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
+
+                break;
             case DateConverter.MVT_FOND_CAISSE:
                 P_FONDCAISSE_LABEL = val.get(0).getTypeMouvement();
                 P_FONDCAISSE = val.stream().mapToLong(VisualisationCaisseDTO::getMontantNet).sum();
@@ -376,12 +386,13 @@ public class Balance {
                 + P_SORTIECAISSE_MOBILE;
         P_TOTAL_ENTREE_CAISSE = P_ENTREECAISSE_ESPECE + P_ENTREECAISSE_CHEQUES + P_ENTREECAISSE_CB
                 + P_ENTREECAISSE_MOBILE;
+        totalCautionMontant = cautionMontant;
         P_TOTAL_REGLEMENT_CAISSE = P_REGLEMENT_ESPECE + P_REGLEMENT_CHEQUES + P_REGLEMENT_CB + P_REGLEMENT_MOBILE;
         P_TOTAL_ACCOMPTE_CAISSE = P_ACCOMPTE_ESPECE + P_ACCOMPTE_CHEQUES + P_ACCOMPTE_CB;
         P_TOTAL_DIFFERE_CAISSE = P_DIFFERE_ESPECE + P_DIFFERE_CHEQUES + P_DIFFERE_CB;
 
         P_TOTAL_ESPECES_GLOBAL = (P_FONDCAISSE + summary.getMontantEsp() + P_ENTREECAISSE_ESPECE + P_REGLEMENT_ESPECE
-                + P_ACCOMPTE_ESPECE + P_DIFFERE_ESPECE) + P_SORTIECAISSE_ESPECE;
+                + P_ACCOMPTE_ESPECE + P_DIFFERE_ESPECE) + P_SORTIECAISSE_ESPECE + cautionMontant;
         P_TOTAL_CHEQUES_GLOBAL = summary.getMontantCheque() + P_SORTIECAISSE_CHEQUES + P_ENTREECAISSE_CHEQUES
                 + P_REGLEMENT_CHEQUES + P_ACCOMPTE_CHEQUES + P_DIFFERE_CHEQUES;
         P_TOTAL_VIREMENT_GLOBAL = summary.getMontantVirement() + P_ENTREECAISSE_VIREMENT + P_SORTIECAISSE_VIREMENT
@@ -404,7 +415,7 @@ public class Balance {
         parameters.put("P_SORTIECAISSE_CHEQUES", DateConverter.amountFormat(P_SORTIECAISSE_CHEQUES, ' '));
         parameters.put("P_SORTIECAISSE_CB", DateConverter.amountFormat(P_SORTIECAISSE_CB, ' '));
         parameters.put("P_SORTIECAISSE_MOBILE", DateConverter.amountFormat(P_SORTIECAISSE_MOBILE, ' '));
-
+        parameters.put("P_CAUTION_MONTANT", DateConverter.amountFormat(cautionMontant, ' '));
         parameters.put("P_SORTIECAISSE_VIREMENT", DateConverter.amountFormat(P_SORTIECAISSE_VIREMENT, ' '));
         parameters.put("P_TOTAL_FONDCAISSE", DateConverter.amountFormat(P_FONDCAISSE, ' '));
         parameters.put("P_TOTAL_SORTIE_CAISSE", DateConverter.amountFormat(P_TOTAL_SORTIE_CAISSE, ' '));
@@ -412,7 +423,7 @@ public class Balance {
         parameters.put("P_ENTREECAISSE_VIREMENT", DateConverter.amountFormat(P_ENTREECAISSE_VIREMENT, ' '));
         parameters.put("P_ENTREECAISSE_CHEQUES", DateConverter.amountFormat(P_ENTREECAISSE_CHEQUES, ' '));
         parameters.put("P_ENTREECAISSE_MOBILE", DateConverter.amountFormat(P_ENTREECAISSE_MOBILE, ' '));
-
+        parameters.put("P_TOTAL_CAUTION_AMOUNT", DateConverter.amountFormat(totalCautionMontant, ' '));
         parameters.put("P_ENTREECAISSE_CB", DateConverter.amountFormat(P_ENTREECAISSE_CB, ' '));
         parameters.put("P_TOTAL_ENTREE_CAISSE", DateConverter.amountFormat(P_TOTAL_ENTREE_CAISSE, ' '));
         parameters.put("P_REGLEMENT_ESPECE", DateConverter.amountFormat(P_REGLEMENT_ESPECE, ' '));
@@ -435,6 +446,7 @@ public class Balance {
                 + dtEn.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         parameters.put("P_TOTAL_CAISSE_LABEL", P_TOTAL_CAISSE_LABEL);
         parameters.put("P_FONDCAISSE_LABEL", P_FONDCAISSE_LABEL);
+        parameters.put("P_CAUTION_LABEL", cautionLabel);
         parameters.put("P_ENTREECAISSE_LABEL", P_ENTREECAISSE_LABEL);
         parameters.put("P_DIFFERE_LABEL", P_DIFFERE_LABEL);
         parameters.put("P_ACCOMPTE_LABEL", P_ACCOMPTE_LABEL);

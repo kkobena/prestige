@@ -147,7 +147,7 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
         if (caution.getConso() > 0) {
             return json.put("success", false).put("msg", "Impossible de supprimer il y a des ventes liées");
         }
-        caisseService.createMvt(buildCaisseDTO(caution.getMontant()), sessionHelperService.getCurrentUser());
+        caisseService.createMvt(buildCaisseDTO((-1) * caution.getMontant()), sessionHelperService.getCurrentUser());
         em.remove(caution);
         return json.put("success", true).put("msg", "Opération effectuée");
 
@@ -188,11 +188,6 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
         if (!StringUtils.isEmpty(tiersPayantId)) {
             predicates.add(cb.equal(root.get(Caution_.tiersPayant).get(TTiersPayant_.lgTIERSPAYANTID), tiersPayantId));
         }
-
-        /*
-         * predicates.add(cb.between( cb.function("DATE", Date.class, root.get(Caution_.mvtDate)),
-         * java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)));
-         */
         return predicates;
     }
 

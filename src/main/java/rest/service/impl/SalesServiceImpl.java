@@ -4625,67 +4625,6 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    private MontantAPaye calculAssuranceNet(List<TiersPayantParams> tierspayants, MontantAPaye montantAPaye,
-            boolean asRestrictions) {
-        String msg = " ";
-
-        boolean hasRestructuring = false;
-        int remiseCarnet = montantAPaye.getRemise();
-        int montantvente = montantAPaye.getMontant();
-        int cmuAmount = montantAPaye.getCmuAmount();
-
-        int totalTp = 0;
-        int totalTaux = 0;
-        List<TiersPayantParams> resultat = new ArrayList<>();
-        boolean isCmu = tierspayants.stream().allMatch(TiersPayantParams::isCmu) && (cmuAmount != montantvente);
-        int tiersPayantAmount = isCmu ? cmuAmount : montantvente;
-        int montantVariable = tiersPayantAmount;
-        for (TiersPayantParams tierspayant : tierspayants) {
-            TiersPayantParams tp = new TiersPayantParams();
-            int taux = tierspayant.getTaux();
-            double montantTp = tiersPayantAmount * (Double.valueOf(taux) / 100);
-            int tpnet = (int) Math.ceil(montantTp);
-            int thatTaux;
-            if (asRestrictions) {
-                JSONObject json = chechCustomerTiersPayantConsumption(tierspayant.getCompteTp(), tpnet);
-                if (json.getBoolean("hasRestructuring")) {
-                    msg += json.getString("msg") + " ";
-                    hasRestructuring = json.getBoolean("hasRestructuring");
-                    tpnet = json.getInt("montantToBePaid");
-
-                }
-            }
-
-            if (montantVariable > tpnet) {
-                montantVariable -= tpnet;
-                thatTaux = taux;
-                totalTaux += thatTaux;
-            } else {
-                tpnet = montantVariable;
-                thatTaux = hasRestructuring ? (int) Math.ceil((Double.valueOf(tpnet) * 100) / montantvente)
-                        : 100 - totalTaux;
-                totalTaux += thatTaux;
-
-            }
-            totalTp += tpnet;
-            tp.setTaux(thatTaux);
-            tp.setCompteTp(tierspayant.getCompteTp());
-            tp.setNumBon(tierspayant.getNumBon());
-            tp.setTpnet(tpnet);
-            tp.setDiscount(0);
-            resultat.add(tp);
-        }
-        int netCustomer = (montantvente - totalTp) - remiseCarnet;
-        MontantAPaye map = new MontantAPaye(netCustomer, montantvente, totalTp, remiseCarnet, montantAPaye.getMarge(),
-                montantAPaye.getMontantTva());
-
-        map.setTierspayants(resultat);
-        map.setCmuAmount(cmuAmount);
-        map.setMessage(msg);
-        map.setRestructuring(hasRestructuring);
-        return map;
-    }
-
     private void createNotification(String msg, TypeNotification typeNotification, TUser user,
             Map<String, Object> donneesMap, String entityRef) {
         try {

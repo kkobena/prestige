@@ -391,8 +391,12 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         montantAPaye.setMontantTp(netComputing.getMontantTiersPayant());
         TiersPayantParams tp = new TiersPayantParams();
         tp.setCompteTp(tierspayant.getCompteTp());
-        tp.setTaux(op.getIntCUSTPART() == 0 ? tierspayant.getTaux() : computePourcentage(
-                (op.getIntPRICE() - op.getIntPRICEREMISE()), netComputing.getMontantTiersPayant()));
+        /*
+         * tp.setTaux(op.getIntCUSTPART() == 0 ? tierspayant.getTaux() : computePourcentage( (op.getIntPRICE() -
+         * op.getIntPRICEREMISE()), netComputing.getMontantTiersPayant()));
+         */
+
+        tp.setTaux(100);
         tp.setNumBon(tierspayant.getNumBon());
         tp.setTpnet(montantAPaye.getMontantTp());
         montantAPaye.getTierspayants().add(tp);
