@@ -75,24 +75,27 @@ public class ExcelGeneratorServiceImpl implements ExcelGeneratorService {
             Row row = sheet.createRow(rowNum++);
             for (int i = 0; i < rowData.length; i++) {
                 var rowIndexData = rowData[i];
-                if (rowIndexData instanceof String) {
-                    row.createCell(i).setCellValue(rowData[i].toString());
-                }
+
                 if (rowIndexData instanceof Integer) {
                     row.createCell(i).setCellType(CellType.NUMERIC);
                     row.createCell(i).setCellValue((int) rowData[i]);
-                }
-                if (rowIndexData instanceof Long) {
+                } else if (rowIndexData instanceof Long) {
                     row.createCell(i).setCellType(CellType.NUMERIC);
                     row.createCell(i).setCellValue((long) rowData[i]);
-                }
-                if (rowIndexData instanceof BigDecimal) {
+                } else if (rowIndexData instanceof BigDecimal) {
                     row.createCell(i).setCellType(CellType.NUMERIC);
                     row.createCell(i).setCellValue(new BigDecimal(rowData[i].toString()).longValue());
-                }
-                if (rowIndexData instanceof Double) {
+                } else if (rowIndexData instanceof Double) {
                     row.createCell(i).setCellType(CellType.NUMERIC);
                     row.createCell(i).setCellValue((double) rowData[i]);
+                } else if (rowIndexData instanceof Short) {
+                    row.createCell(i).setCellType(CellType.NUMERIC);
+                    row.createCell(i).setCellValue((short) rowData[i]);
+                } else if (rowIndexData instanceof Float) {
+                    row.createCell(i).setCellType(CellType.NUMERIC);
+                    row.createCell(i).setCellValue((float) rowData[i]);
+                } else {
+                    row.createCell(i).setCellValue(rowData[i].toString());
                 }
 
             }

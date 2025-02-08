@@ -139,10 +139,10 @@ Ext.define('testextjs.controller.EtatControlAnnuelCtr', {
         if (groupBy === null) {
             groupBy = '';
         }
-        const linkUrl = '../EtatControlStockServlet?mode=etatAnnuel&dtStart=' + dtStart + '&dtEnd=' + dtEnd
+        window.location = '../api/v1/etat-control-bon/export-annuel-excel?mode=etatAnnuel&dtStart=' + dtStart + '&dtEnd=' + dtEnd
                 + '&grossisteId=' + grossisteId + '&groupBy=' + groupBy + '&groupeId=' + groupeId + '&fileType=excel';
 
-        window.open(linkUrl);
+     
     },
     doBeforechange: function (page, currentPage) {
         const me = this;

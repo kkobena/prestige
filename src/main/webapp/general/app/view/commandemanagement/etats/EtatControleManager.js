@@ -550,9 +550,9 @@ Ext.define('testextjs.view.commandemanagement.etats.EtatControleManager', {
         const dtEnd = Ext.getCmp('datefin').getSubmitValue();
         const dtStart = Ext.getCmp('datedebut').getSubmitValue();
 
-        const linkUrl = '../EtatControlStockServlet?dtStart=' + dtStart + '&dtEnd=' + dtEnd
+        window.location = '../api/v1/etat-control-bon/export-excel?dtStart=' + dtStart + '&dtEnd=' + dtEnd
                 + '&grossisteId=' + lg_GROSSISTE_ID + '&search=' + valeur + '&fileType=excel';
-        window.open(linkUrl);
+      
 
     },
 
