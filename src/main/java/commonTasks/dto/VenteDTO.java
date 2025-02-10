@@ -90,6 +90,7 @@ public class VenteDTO implements Serializable {
     private boolean modificationClientTp;
     private List<VenteReglementReportDTO> reglements = new ArrayList<>();
     private boolean modificationVenteDate;
+    private int caution;
 
     public boolean isModificationVenteDate() {
         return modificationVenteDate;
@@ -1293,4 +1294,13 @@ public class VenteDTO implements Serializable {
         }
         this.items = tpds.stream().map(VenteDetailsDTO::new).collect(Collectors.toList());
     }
+
+    public int getCaution() {
+        return caution;
+    }
+
+    public void setCaution(int caution) {
+        this.caution = caution;
+    }
+
 }

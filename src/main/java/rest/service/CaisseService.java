@@ -70,7 +70,7 @@ public interface CaisseService {
 
     JSONObject closeCaisse(TUser o, String idCaisse) throws JSONException;
 
-    JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException;
+    JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws Exception;
 
     boolean checkCaisse(TUser user);
 

@@ -674,7 +674,6 @@ Ext.application({
         'testextjs.view.stockmanagement.etatstock.action.removeLot',
         'testextjs.view.sm_user.outboudmessage.action.add',
         'testextjs.view.configmanagement.zonegeographique.action.changeProduitEmplacement',
-        'testextjs.view.sm_user.mvtcaisse.action.addBis',
         'testextjs.view.commandemanagement.evaluation.Evaluationoffreprix',
         'testextjs.view.commandemanagement.evaluation.action.add',
         'testextjs.view.configmanagement.famille.ArticleVenduBis',
@@ -805,7 +804,8 @@ Ext.application({
         'NotificationCtr',
         'CategorieNotificationCtr',
         'RecapRecetteCaisseCtr',
-        'StatVenteDepotCtr'
+        'StatVenteDepotCtr',
+        'CautionCtr'
 
     ],
     stores: [

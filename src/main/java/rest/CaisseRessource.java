@@ -193,7 +193,7 @@ public class CaisseRessource {
 
     @POST
     @Path("addmvtCaisse")
-    public Response addMvtCaisse(MvtCaisseDTO caisseDTO) throws JSONException {
+    public Response addMvtCaisse(MvtCaisseDTO caisseDTO) throws Exception {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
