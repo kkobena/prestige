@@ -1,6 +1,5 @@
 package rest.report.pdf;
 
-import dal.TOfficine;
 import dal.TUser;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -16,11 +15,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import rest.report.ReportUtil;
-import rest.service.CommonService;
 import rest.service.EvaluationVenteService;
 import rest.service.dto.EvaluationVenteDto;
 import rest.service.dto.EvaluationVenteFiltre;
-import toolkits.parameters.commonparameter;
+import util.Constant;
 
 /**
  *
@@ -61,7 +59,7 @@ public class EvaluationVenteServlet extends HttpServlet {
 
     public String buildReport(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        TUser user = (TUser) session.getAttribute(commonparameter.AIRTIME_USER);
+        TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER);
         String pattern = "MM/yyyy";
         String familleId = request.getParameter("familleId");
         String emplacementId = request.getParameter("emplacementId");

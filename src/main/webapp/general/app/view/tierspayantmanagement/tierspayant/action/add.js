@@ -348,7 +348,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
 
                             ]
                         },
-                        
+
                         {
                             xtype: 'container',
                             layout: 'hbox',
@@ -356,20 +356,27 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             margin: '0 0 5 0',
                             items: [
 
-                              
                                 {
-                                    
+
                                     xtype: 'checkbox',
                                     fieldLabel: 'Grouper les factures par taux',
                                     name: 'groupingByTaux',
                                     id: 'groupingByTaux'
                                 },
-                                  {
-                                    
+                                {
+
                                     xtype: 'checkbox',
                                     fieldLabel: 'Utilise la cmu',
                                     name: 'cmu',
                                     id: 'cmu'
+                                }
+                                ,
+                                {
+
+                                    maskRe: /[0-9.]/,
+                                    fieldLabel: 'Caution',
+                                    name: 'caution',
+                                    id: 'caution'
                                 }
 
                             ]
@@ -881,8 +888,10 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
             Ext.getCmp('lg_GROUPE_ID').setValue(this.getOdatasource().lgGROUPEID);
             Ext.getCmp('montantFact').setValue(this.getOdatasource().montantFact);
             Ext.getCmp('nbrbons').setValue(this.getOdatasource().nbrbons);
-              Ext.getCmp('groupingByTaux').setValue(this.getOdatasource().groupingByTaux);
-                 Ext.getCmp('cmu').setValue(this.getOdatasource().cmu);
+            Ext.getCmp('groupingByTaux').setValue(this.getOdatasource().groupingByTaux);
+            Ext.getCmp('cmu').setValue(this.getOdatasource().cmu);
+            Ext.getCmp('caution').setValue(this.getOdatasource().caution);
+            
             Ext.getCmp('dbl_CAUTION').disable();
 
             Ext.getCmp('bool_IsACCOUNT').hide();
@@ -919,15 +928,15 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                 formulaire = fenetre.down('form');
         var dbl_QUOTA_CONSO_MENSUELLE = 0;
         if (Ext.getCmp('bool_IsACCOUNT').getValue()) {
-          
+
             dbl_QUOTA_CONSO_MENSUELLE = Ext.getCmp('int_ACCOUNT').getValue();
         } else {
             dbl_QUOTA_CONSO_MENSUELLE = Ext.getCmp('dbl_QUOTA_CONSO_MENSUELLE').getValue();
-            
+
         }
 
 
-      
+
         if (formulaire.isValid()) {
 
             if (Ext.getCmp('lg_TYPE_TIERS_PAYANT_ID_ADD').getValue() == "1" && Ext.getCmp('bool_IsACCOUNT').getValue() == "true") {
@@ -1003,8 +1012,9 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                     lg_GROUPE_ID: lg_GROUPE_ID,
                     montantFact: Ext.getCmp('montantFact').getValue(),
                     nbrbons: Ext.getCmp('nbrbons').getValue(),
-                    groupingByTaux:  Ext.getCmp('groupingByTaux').getValue(),
-                    cmu:Ext.getCmp('cmu').getValue()
+                    groupingByTaux: Ext.getCmp('groupingByTaux').getValue(),
+                    cmu: Ext.getCmp('cmu').getValue(),
+                    caution: Ext.getCmp('caution').getValue()
                 },
                 success: function (response)
                 {
@@ -1025,7 +1035,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                 {
                     testextjs.app.getController('App').StopWaitingProcess();
                     var object = Ext.JSON.decode(response.responseText, false);
-                   
+
                     Ext.MessageBox.alert('Error Message', response.responseText);
 
                 }
