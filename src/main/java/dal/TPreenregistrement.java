@@ -197,9 +197,10 @@ public class TPreenregistrement implements Serializable {
     private Date completionDate = new Date();
     @Column(name = "cmu_amount")
     private Integer cmuAmount = 0;
-
     @OneToMany(mappedBy = "preenregistrement")
     private List<VenteReglement> venteReglements = new ArrayList<>();
+    @ManyToOne
+    private Caution caution;
 
     public boolean isImported() {
         return imported;
@@ -694,6 +695,14 @@ public class TPreenregistrement implements Serializable {
 
     public void setVenteReglements(List<VenteReglement> venteReglements) {
         this.venteReglements = venteReglements;
+    }
+
+    public Caution getCaution() {
+        return caution;
+    }
+
+    public void setCaution(Caution caution) {
+        this.caution = caution;
     }
 
 }

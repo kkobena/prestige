@@ -193,6 +193,7 @@ public final class DateConverter {
      * SEUIL DE REAPPRO (EN NOMBRE DE SEMAINES) A DEFNIR
      */
     public static final String Q1 = "Q1";
+    public static final String CAUTION_ID = "10";
 
     // Runtime.getRuntime().totalMemory() -
     // Runtime.getRuntime().freeMemory()

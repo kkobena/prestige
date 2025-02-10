@@ -2,7 +2,6 @@
 
 var url_services_data_modereglement_mvt_caisse = '../webservices/sm_user/modereglement/ws_data.jsp';
 var url_services_data_typereglement_mvt_caisse = '../webservices/sm_user/typereglement/ws_data.jsp';
-var url_services_data_typemvtcaisse_mvt_caisse = '../webservices/sm_user/typemvtcaisse/ws_data.jsp';
 var url_services_data_mvtcaisse_mvt_caisse = '../webservices/sm_user/mvtcaisse/ws_data.jsp';
 var url_services_pdf_ticket_mouvement = '../webservices/sm_user/mvtcaisse/ws_generate_pdf.jsp';
 
@@ -53,8 +52,23 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
         LaborexWorkFlow_Add_MvtCaisse = Ext.create('testextjs.controller.LaborexWorkFlow', {});
         var store_modereglement_Add_MvtCaisse = LaborexWorkFlow_Add_MvtCaisse.BuildStore('testextjs.model.ModeReglement', itemsPerPage, url_services_data_modereglement_mvt_caisse);
         var store_typereglement_Add_MvtCaisse = LaborexWorkFlow_Add_MvtCaisse.BuildStore('testextjs.model.TypeReglement', itemsPerPage, url_services_data_typereglement_mvt_caisse);
-        var store_typemvtcaisse_Add_MvtCaisse = LaborexWorkFlow_Add_MvtCaisse.BuildStore('testextjs.model.TypeEcartMvt', itemsPerPage, url_services_data_typemvtcaisse_mvt_caisse);
+        const store_typemvtcaisse_Add_MvtCaisse = Ext.create('Ext.data.Store', {
 
+            model: 'testextjs.model.TypeEcartMvt',
+            autoLoad: true,
+            pageSize: 999999,
+
+            proxy: {
+                type: 'ajax',
+                url: '../api/v1/typeMvtCaisse/list',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    totalProperty: 'total'
+                }
+
+            }
+        });
         var form = new Ext.form.Panel({
             bodyPadding: 10,
             //    id: 'AddCltGridId',
@@ -408,7 +422,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
         const fenetre = Ext.getCmp("paydebtID"),
                 formulaire = fenetre.down('form');
         if (formulaire.isValid()) {
-         
+
             testextjs.app.getController('App').ShowWaitingProcess();
             let datas = {
                 "idTypeRegl": Ext.getCmp('lg_TYPE_REGLEMENT_ID').getValue(),
@@ -437,7 +451,7 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
 
                     if (!object.success) {
                         Ext.MessageBox.alert('Error Message', object.msg);
-           
+
                     } else {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
@@ -452,8 +466,8 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.action.add', {
                                 }
                             }
                         });
-                       // Oview.getStore().load();
-                       Oview.onRechClick();
+                        // Oview.getStore().load();
+                        Oview.onRechClick();
                         fenetre.destroy();
 
                     }

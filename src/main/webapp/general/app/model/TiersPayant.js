@@ -203,7 +203,7 @@ Ext.define('testextjs.model.TiersPayant', {
             name: 'int_NUMBER_CLIENT',
             type: 'int'
         }, {name: 'BTNDELETE', type: 'boolean'}
-        ,{name:'groupingByTaux',type: 'boolean'},
+        , {name: 'groupingByTaux', type: 'boolean'},
         {
             name: 'str_CODE_OFFICINE',
             type: 'string'
@@ -268,7 +268,11 @@ Ext.define('testextjs.model.TiersPayant', {
             type: 'number'
         },
         {name: 'P_BTN_DESACTIVER_TIERS_PAYANT', type: 'boolean'},
-             {name: 'cmu', type: 'boolean'}
+        {name: 'cmu', type: 'boolean'},
+         {
+            name: 'caution',
+            type: 'int'
+        }
 
 
     ]

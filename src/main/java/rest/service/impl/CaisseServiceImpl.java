@@ -568,14 +568,14 @@ public class CaisseServiceImpl implements CaisseService {
                     .groupBy(root.get(MvtTransaction_.tTypeMvtCaisse), root.get(MvtTransaction_.reglement));
             predicates.add(cb.and(
                     cb.equal(root.get(MvtTransaction_.magasin).get(TEmplacement_.lgEMPLACEMENTID), emplacementId)));
-            Predicate btw = cb.between(root.get(MvtTransaction_.mvtDate), dtStart, dtEnd);
-            predicates.add(btw);
+
+            predicates.add(cb.between(root.get(MvtTransaction_.mvtDate), dtStart, dtEnd));
             predicates.add(cb.isTrue(root.get(MvtTransaction_.checked)));
             predicates.add(cb.notEqual(root.get(MvtTransaction_.typeTransaction), TypeTransaction.ACHAT));
             predicates.add(root.get(MvtTransaction_.tTypeMvtCaisse).get(TTypeMvtCaisse_.lgTYPEMVTCAISSEID)
                     .in(Arrays.asList(DateConverter.MVT_FOND_CAISSE, DateConverter.MVT_ENTREE_CAISSE,
-                            DateConverter.MVT_SORTIE_CAISSE, DateConverter.MVT_REGLE_TP,
-                            DateConverter.MVT_REGLE_DIFF)));
+                            DateConverter.MVT_SORTIE_CAISSE, DateConverter.MVT_REGLE_TP, DateConverter.MVT_REGLE_DIFF,
+                            DateConverter.CAUTION_ID)));
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<VisualisationCaisseDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
@@ -734,55 +734,52 @@ public class CaisseServiceImpl implements CaisseService {
     }
 
     @Override
-    public JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws JSONException {
+    public JSONObject createMvt(MvtCaisseDTO caisseDTO, TUser user) throws Exception {
         JSONObject json = new JSONObject();
         EntityManager emg = getEntityManager();
-        try {
-            if (!checkCaisse(user)) {
-                return json.put("success", false).put("msg", "Votre caisse est fermée.");
-            }
-            TTypeMvtCaisse typeMvtCaisse = emg.find(TTypeMvtCaisse.class, caisseDTO.getIdTypeMvt());
-            TModeReglement modeReglement = findModeByIdOrName(caisseDTO.getIdModeRegle(), emg);
-            TTypeReglement tTypeReglement = findTypeRegByIdOrName(caisseDTO.getIdTypeRegl(), emg);
-            if (modeReglement == null) {
-                return json.put("success", false).put("msg", "Echec d'encaissement. Mode de règlement inexistant.");
-            }
-            if (typeMvtCaisse.getLgTYPEMVTCAISSEID().equals(Constant.MVT_SORTIE_CAISSE)) {
-                caisseDTO.setAmount(caisseDTO.getAmount() * (-1));
-            }
-            TMvtCaisse mvtCaisse = addTMvtCaisse(typeMvtCaisse, caisseDTO, emg, modeReglement, user);
-            String description = "Mouvement d'une somme de  " + mvtCaisse.getIntAMOUNT().intValue()
-                    + " Type de mouvement " + typeMvtCaisse.getStrDESCRIPTION() + " par " + user.getStrFIRSTNAME() + " "
-                    + user.getStrLASTNAME();
-            createReglement(caisseDTO, user, mvtCaisse, modeReglement, emg);
-            transactionService.addTransaction(user, user, mvtCaisse.getLgMVTCAISSEID(),
-                    mvtCaisse.getIntAMOUNT().intValue(), mvtCaisse.getIntAMOUNT().intValue(),
-                    mvtCaisse.getIntAMOUNT().intValue(), 0, caisseDTO.getAmount() > 0 ? caisseDTO.getAmount() : 0,
-                    Boolean.TRUE, caisseDTO.getAmount() > 0 ? CategoryTransaction.CREDIT : CategoryTransaction.DEBIT,
-                    caisseDTO.getAmount() > 0 ? TypeTransaction.ENTREE : TypeTransaction.SORTIE, tTypeReglement,
-                    typeMvtCaisse, 0, emg, caisseDTO.getAmount() > 0 ? caisseDTO.getAmount() : 0, 0, 0,
-                    mvtCaisse.getStrREFTICKET());
-
-            logService.updateItem(user, mvtCaisse.getStrREFTICKET(), description, TypeLog.MVT_DE_CAISSE, mvtCaisse);
-            Map<String, Object> donneesMap = new HashMap<>();
-            donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MVT_DE_CAISSE.getValue());
-            donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
-            donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-            donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(mvtCaisse.getIntAMOUNT()));
-            createNotification(description, TypeNotification.MVT_DE_CAISSE, user, donneesMap,
-                    mvtCaisse.getLgMVTCAISSEID());
-            return json.put("success", true).put("msg", "Opération effectuée .").put("mvtId",
-                    mvtCaisse.getLgMVTCAISSEID());
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return json.put("success", false).put("msg", "L'opération a échouée.");
+        // try {
+        if (!checkCaisse(user)) {
+            return json.put("success", false).put("msg", "Votre caisse est fermée.");
         }
+        TTypeMvtCaisse typeMvtCaisse = emg.find(TTypeMvtCaisse.class, caisseDTO.getIdTypeMvt());
+        TModeReglement modeReglement = findModeByIdOrName(caisseDTO.getIdModeRegle());
+        TTypeReglement tTypeReglement = findTypeRegByIdOrName(caisseDTO.getIdTypeRegl());
+        if (modeReglement == null) {
+            return json.put("success", false).put("msg", "Echec d'encaissement. Mode de règlement inexistant.");
+        }
+        if (typeMvtCaisse.getLgTYPEMVTCAISSEID().equals(Constant.MVT_SORTIE_CAISSE)) {
+            caisseDTO.setAmount(caisseDTO.getAmount() * (-1));
+        }
+        TMvtCaisse mvtCaisse = addTMvtCaisse(typeMvtCaisse, caisseDTO, modeReglement, user);
+        String description = "Mouvement d'une somme de  " + mvtCaisse.getIntAMOUNT().intValue() + " Type de mouvement "
+                + typeMvtCaisse.getStrDESCRIPTION() + " par " + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+        createReglement(caisseDTO, user, mvtCaisse, modeReglement);
+        transactionService.addTransaction(user, user, mvtCaisse.getLgMVTCAISSEID(), mvtCaisse.getIntAMOUNT().intValue(),
+                mvtCaisse.getIntAMOUNT().intValue(), mvtCaisse.getIntAMOUNT().intValue(), 0,
+                caisseDTO.getAmount() > 0 ? caisseDTO.getAmount() : 0, Boolean.TRUE,
+                caisseDTO.getAmount() > 0 ? CategoryTransaction.CREDIT : CategoryTransaction.DEBIT,
+                caisseDTO.getAmount() > 0 ? TypeTransaction.ENTREE : TypeTransaction.SORTIE, tTypeReglement,
+                typeMvtCaisse, 0, emg, caisseDTO.getAmount() > 0 ? caisseDTO.getAmount() : 0, 0, 0,
+                mvtCaisse.getStrREFTICKET());
+
+        logService.updateItem(user, mvtCaisse.getStrREFTICKET(), description, TypeLog.MVT_DE_CAISSE, mvtCaisse);
+        Map<String, Object> donneesMap = new HashMap<>();
+        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MVT_DE_CAISSE.getValue());
+        donneesMap.put(NotificationUtils.USER.getId(), user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
+        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(mvtCaisse.getIntAMOUNT()));
+        createNotification(description, TypeNotification.MVT_DE_CAISSE, user, donneesMap, mvtCaisse.getLgMVTCAISSEID());
+        return json.put("success", true).put("msg", "Opération effectuée .").put("mvtId", mvtCaisse.getLgMVTCAISSEID());
+        /*
+         * } catch (Exception e) { LOG.log(Level.SEVERE, null, e); return json.put("success", false).put("msg",
+         * "L'opération a échouée."); }
+         */
 
     }
 
-    private TModeReglement findModeByIdOrName(String id, EntityManager emg) {
+    private TModeReglement findModeByIdOrName(String id) {
         try {
-            TypedQuery<TModeReglement> tq = emg.createQuery(
+            TypedQuery<TModeReglement> tq = em.createQuery(
                     "SELECT o FROM TModeReglement o WHERE o.lgMODEREGLEMENTID LIKE ?1 OR o.strNAME LIKE ?1 OR o.strDESCRIPTION LIKE ?1",
                     TModeReglement.class);
             tq.setParameter(1, id + "%");
@@ -804,9 +801,9 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-    private TTypeReglement findTypeRegByIdOrName(String id, EntityManager emg) {
+    private TTypeReglement findTypeRegByIdOrName(String id) {
         try {
-            TypedQuery<TTypeReglement> tq = emg.createQuery(
+            TypedQuery<TTypeReglement> tq = em.createQuery(
                     "SELECT o FROM TTypeReglement o WHERE o.lgTYPEREGLEMENTID LIKE ?1 OR o.strNAME LIKE ?1 OR o.strDESCRIPTION LIKE ?1",
                     TTypeReglement.class);
             tq.setParameter(1, id + "%");
@@ -818,8 +815,8 @@ public class CaisseServiceImpl implements CaisseService {
         }
     }
 
-    public TMvtCaisse addTMvtCaisse(TTypeMvtCaisse typeMvtCaisse, MvtCaisseDTO caisseDTO, EntityManager emg,
-            TModeReglement modeReglement, TUser user) throws Exception {
+    public TMvtCaisse addTMvtCaisse(TTypeMvtCaisse typeMvtCaisse, MvtCaisseDTO caisseDTO, TModeReglement modeReglement,
+            TUser user) throws Exception {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         TMvtCaisse mvtCaisse = new TMvtCaisse(UUID.randomUUID().toString());
         mvtCaisse.setBoolCHECKED(Boolean.TRUE);
@@ -837,13 +834,13 @@ public class CaisseServiceImpl implements CaisseService {
         mvtCaisse.setDtUPDATED(mvtCaisse.getDtCREATED());
         mvtCaisse.setStrREFTICKET(DateConverter.getShortId(10));
         mvtCaisse.setLgUSERID(user.getLgUSERID());
-        emg.persist(mvtCaisse);
+        em.persist(mvtCaisse);
         return mvtCaisse;
 
     }
 
     private TReglement createReglement(MvtCaisseDTO caisseDTO, TUser user, TMvtCaisse mvtCaisse,
-            TModeReglement modeReglement, EntityManager emg) throws Exception {
+            TModeReglement modeReglement) throws Exception {
         TReglement tReglement = new TReglement();
         tReglement.setLgREGLEMENTID(UUID.randomUUID().toString());
         tReglement.setStrBANQUE(caisseDTO.getBanque());
@@ -859,7 +856,7 @@ public class CaisseServiceImpl implements CaisseService {
         tReglement.setDtREGLEMENT(mvtCaisse.getDtDATEMVT());
         tReglement.setLgUSERID(user);
         tReglement.setBoolCHECKED(mvtCaisse.getBoolCHECKED());
-        emg.persist(tReglement);
+        em.persist(tReglement);
         return tReglement;
     }
 

@@ -274,7 +274,7 @@ public class BilletageServiceImpl implements BilletageService {
                 donneesMap, oTResumeCaisse.getLdCAISSEID());
         notificationService.sendMail(notification);
         notificationService.sendSms(notification);
-        // createNotification(description, TypeNotification.CLOTURE_DE_CAISSE, user);
+
     }
 
     private Notification createNotification(String msg, TypeNotification typeNotification, TUser user,
@@ -404,7 +404,7 @@ public class BilletageServiceImpl implements BilletageService {
 
     }
 
-    List<Predicate> predicatesFondCaisses(LocalDate dtStart, LocalDate dtEnd, String search, CriteriaBuilder cb,
+    private List<Predicate> predicatesFondCaisses(LocalDate dtStart, LocalDate dtEnd, String search, CriteriaBuilder cb,
             Root<TCoffreCaisse> root) {
         List<Predicate> predicates = new ArrayList<>();
 
