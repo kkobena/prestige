@@ -2088,7 +2088,7 @@ public class GroupeTierspayantController implements Serializable {
     }
 
     public List<TFacture> getGroupeInvoiceDetails(JSONArray excludList, String codeFacture) {
-        JSONArray list = new JSONArray();
+
         EntityManager em = null;
         try {
 
@@ -2151,10 +2151,9 @@ public class GroupeTierspayantController implements Serializable {
 
             return ((Long) q.getSingleResult()).intValue();
 
-        } finally {
-            if (em != null) {
-
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         }
 
     }
@@ -2193,7 +2192,6 @@ public class GroupeTierspayantController implements Serializable {
 
             em = getEntityManager();
 
-            CriteriaBuilder cb = em.getCriteriaBuilder();
             String query = "SELECT SUM(o.dblMONTANTRESTANT),SUM(o.dblMONTANTCMDE),SUM(o.dblMONTANTPAYE) FROM TFacture o,TTiersPayant p WHERE  FUNCTION('DATE',o.dtCREATED)>= FUNCTION('DATE',?3) AND FUNCTION('DATE',o.dtCREATED)<=FUNCTION('DATE',?4) AND  p.lgTIERSPAYANTID=o.strCUSTOMER ";
 
             if (!"".equals(lgTP)) {
@@ -2476,7 +2474,7 @@ public class GroupeTierspayantController implements Serializable {
                     }
 
                 } else {
-                    if (finalTp.size() > 0) {
+                    if (!finalTp.isEmpty()) {
                         try {
                             TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
                                     date.formatterMysqlShort.parse(dt_end), p, em, u);
@@ -2539,7 +2537,7 @@ public class GroupeTierspayantController implements Serializable {
                 }
                 break;
             default:
-                if (finalTp.size() > 0) {
+                if (!finalTp.isEmpty()) {
                     try {
                         TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
                                 date.formatterMysqlShort.parse(dt_end), p, em, u);
@@ -2618,10 +2616,8 @@ public class GroupeTierspayantController implements Serializable {
                 }
             });
 
-        } finally {
-            if (em != null) {
-
-            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
         return array;
@@ -3833,7 +3829,7 @@ public class GroupeTierspayantController implements Serializable {
             CriteriaQuery<Object[]> cq = cb.createQuery(Object[].class);
             Root<TMvtCaisse> root = cq.from(TMvtCaisse.class);
             Join<TMvtCaisse, TTypeMvtCaisse> tm = root.join("lgTYPEMVTCAISSEID", JoinType.INNER);
-            Join<TMvtCaisse, TModeReglement> mvt = root.join("lgMODEREGLEMENTID", JoinType.INNER);
+
             Subquery<String> sub = cq.subquery(String.class);
             Root<TUser> urs = sub.from(TUser.class);
             Join<TUser, TEmplacement> um = urs.join("lgEMPLACEMENTID", JoinType.INNER);
@@ -5128,7 +5124,7 @@ public class GroupeTierspayantController implements Serializable {
                     break;
                 default:
 
-                    if (finalTp.size() > 0) {
+                    if (!finalTp.isEmpty()) {
                         try {
                             TFacture of = this.createInvoices(finalTp, date.formatterMysqlShort.parse(dt_start),
                                     date.formatterMysqlShort.parse(dt_end), p, em, us);
@@ -5163,33 +5159,25 @@ public class GroupeTierspayantController implements Serializable {
             return q.getResultList();
 
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
             return Collections.emptyList();
         }
 
     }
 
     public List<TFacture> getGroupeInvoiceDetails(int groupeId, String codeFacture) {
-        EntityManager em;
-        try {
-            em = getEntityManager();
-            CriteriaBuilder cb = em.getCriteriaBuilder();
-            CriteriaQuery<TFacture> cq = cb.createQuery(TFacture.class);
-            Root<TFacture> root = cq.from(TFacture.class);
-            Join<TGroupeFactures, TFacture> pr = root.join("tGroupeFacturesList", JoinType.INNER);
-            cq.orderBy(cb.asc(pr.get("strCODEFACTURE")));
-            cq.where(cb.and(
-                    cb.equal(root.get(TFacture_.groupeTierspayant).get(TGroupeTierspayant_.lgGROUPEID), groupeId),
-                    cb.notEqual(root.get(TFacture_.strSTATUT), Constant.STATUT_PAID),
-                    cb.equal(pr.get("strCODEFACTURE"), codeFacture)));
-            Query q = em.createQuery(cq);
-            return q.getResultList();
 
+        try {
+            TypedQuery<TFacture> tp = getEntityManager().createQuery(
+                    "SELECT o FROM TFacture o WHERE o.lgFACTUREID IN (SELECT e.lgFACTURESID.lgFACTUREID FROM TGroupeFactures e WHERE e.lgGROUPEID.lgGROUPEID=?1 AND e.strCODEFACTURE=?2) ORDER BY o.dtCREATED ASC",
+                    TFacture.class);
+            tp.setParameter(1, groupeId);
+            tp.setParameter(2, codeFacture);
+            return tp.getResultList();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
+
             return Collections.emptyList();
         }
 
     }
-
 }
