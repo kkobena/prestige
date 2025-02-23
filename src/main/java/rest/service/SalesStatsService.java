@@ -132,4 +132,5 @@ public interface SalesStatsService {
 
     long montantDepot(SalesStatsParams params);
 
+    JSONObject getPreVentes(SalesStatsParams params);
 }
