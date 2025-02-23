@@ -96,6 +96,7 @@
     String P_H_LOGO = jdom.scr_report_file_logo;
 
     factures = controller.getGroupeInvoiceDetails(lg_GROUPE_ID, CODEFACTURE);
+   
     /* les factures à imprimer */
     long P_ATT_AMOUNTGROUPE = 0l;
     String P_FOOTER_RC = "";
