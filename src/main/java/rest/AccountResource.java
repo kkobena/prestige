@@ -23,8 +23,8 @@ import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import rest.service.UserService;
 import rest.service.dto.AccountInfoDTO;
+import util.CommonUtils;
 import util.Constant;
-import util.DateConverter;
 
 /**
  * @author koben
@@ -84,7 +84,12 @@ public class AccountResource {
                     ? userService.getOfficine().getStrNOMABREGE() : tu.getLgEMPLACEMENTID().getStrDESCRIPTION());
             List<TPrivilege> lstTPrivilege = userService.getAllPrivilege(tu);
             hs.setAttribute(Constant.USER_LIST_PRIVILEGE, lstTPrivilege);
-            boolean asAuthority = DateConverter.hasAuthorityByName(lstTPrivilege, Constant.P_BT_UPDATE_PRICE_EDIT);
+            boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_BT_UPDATE_PRICE_EDIT);
+            List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
+            boolean asAuthorityVente = CommonUtils.hasAuthorityByName(hsAttribute, Constant.SHOW_VENTE);
+            boolean allActivitis = CommonUtils.hasAuthorityByName(hsAttribute, Constant.P_SHOW_ALL_ACTIVITY);
+            hs.setAttribute(Constant.P_SHOW_ALL_ACTIVITY, allActivitis);
+            hs.setAttribute(Constant.SHOW_VENTE, asAuthorityVente);
             hs.setAttribute(Constant.UPDATE_PRICE, asAuthority);
             json.put("success", true);
             return Response.ok().entity(json.toString()).build();

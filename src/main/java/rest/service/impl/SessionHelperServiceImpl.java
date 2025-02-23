@@ -3,6 +3,7 @@ package rest.service.impl;
 import dal.TUser;
 import javax.ejb.Stateless;
 import rest.service.SessionHelperService;
+import rest.service.dto.SessionHelperData;
 
 /**
  *
@@ -12,6 +13,7 @@ import rest.service.SessionHelperService;
 public class SessionHelperServiceImpl implements SessionHelperService {
 
     private TUser user;
+    private SessionHelperData data;
 
     @Override
     public TUser getCurrentUser() {
@@ -22,6 +24,16 @@ public class SessionHelperServiceImpl implements SessionHelperService {
     public void setCurrentUser(TUser user) {
         this.user = user;
 
+    }
+
+    @Override
+    public void setData(SessionHelperData data) {
+        this.data = data;
+    }
+
+    @Override
+    public SessionHelperData getData() {
+        return data;
     }
 
 }
