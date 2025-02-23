@@ -73,6 +73,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
@@ -90,6 +91,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CaisseService;
 import rest.service.SalesStatsService;
+import rest.service.SessionHelperService;
 import rest.service.SuggestionService;
 import rest.service.VenteReglementService;
 import rest.service.dto.builder.VenteDTOBuilder;
@@ -112,6 +114,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     private SuggestionService suggestionService;
     @EJB
     private VenteReglementService venteReglementService;
+    @EJB
+    private SessionHelperService sessionHelperService;
 
     public EntityManager getEntityManager() {
         return em;
@@ -281,48 +285,50 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         }
     }
 
-    void listePreenregistrement(SalesStatsParams params, CriteriaBuilder cb, Root<TPreenregistrementDetail> root,
-            Join<TPreenregistrementDetail, TPreenregistrement> st, List<Predicate> predicates) {
-        Predicate btw = cb.between(cb.function("DATE", Date.class, st.get(TPreenregistrement_.dtUPDATED)),
-                java.sql.Date.valueOf(params.getDtStart()), java.sql.Date.valueOf(params.getDtEnd()));
-        predicates.add(cb.and(btw));
+    private void listePreenregistrement(SalesStatsParams params, CriteriaBuilder cb, Root<TPreenregistrement> root,
+            List<Predicate> predicates) {
+        params.setUserId(this.sessionHelperService.getCurrentUser());
+
+        predicates.add(cb.between(cb.function("DATE", Date.class, root.get(TPreenregistrement_.dtUPDATED)),
+                java.sql.Date.valueOf(params.getDtStart()), java.sql.Date.valueOf(params.getDtEnd())));
         if (params.isDepotOnly()) {
-            predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.pkBrand), "")));
+            predicates.add(cb.notEqual(root.get(TPreenregistrement_.pkBrand), ""));
         } else {
-            predicates.add(cb.and(cb.notEqual(st.get(TPreenregistrement_.lgNATUREVENTEID).get("lgNATUREVENTEID"),
-                    Constant.KEY_NATURE_VENTE_DEPOT)));
+            predicates.add(cb.notEqual(root.get(TPreenregistrement_.lgNATUREVENTEID).get("lgNATUREVENTEID"),
+                    Constant.KEY_NATURE_VENTE_DEPOT));
         }
         if (params.getStatut().equals(Constant.ALL)) {
-            predicates.add(cb.or(cb.equal(st.get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_PROGRESS),
-                    cb.equal(st.get(TPreenregistrement_.strSTATUT), Constant.STATUT_PENDING)));
+            predicates.add(cb.or(cb.equal(root.get(TPreenregistrement_.strSTATUT), Constant.STATUT_IS_PROGRESS),
+                    cb.equal(root.get(TPreenregistrement_.strSTATUT), Constant.STATUT_PENDING)));
         } else {
 
-            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strSTATUT), params.getStatut())));
+            predicates.add(cb.equal(root.get(TPreenregistrement_.strSTATUT), params.getStatut()));
         }
+        if (StringUtils.isNotEmpty(params.getQuery())) {
+            var search = params.getQuery() + "%";
+            Join<TPreenregistrement, TPreenregistrementDetail> st = root
+                    .join(TPreenregistrement_.tPreenregistrementDetailCollection, JoinType.INNER);
+            predicates.add(cb.or(
+                    cb.like(st.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP),
+                            params.getQuery() + "%"),
+                    cb.like(root.get(TPreenregistrement_.strREF), search),
+                    cb.like(st.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME), search),
+                    cb.like(st.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13), search)));
 
-        if (params.getQuery() != null && !"".equals(params.getQuery())) {
-            Predicate predicate = cb.and(cb.or(
-                    cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intCIP),
-                            params.getQuery() + "%"),
-                    cb.like(st.get(TPreenregistrement_.strREF), "%" + params.getQuery() + "%"),
-                    cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.strNAME),
-                            params.getQuery() + "%"),
-                    cb.like(root.get(TPreenregistrementDetail_.lgFAMILLEID).get(TFamille_.intEAN13),
-                            params.getQuery() + "%")));
-            predicates.add(predicate);
         }
-        if (params.getTypeVenteId() != null && !"".equals(params.getTypeVenteId())) {
-            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId())));
+        if (StringUtils.isNotEmpty(params.getTypeVenteId())) {
+
+            predicates.add(cb.equal(root.get(TPreenregistrement_.strTYPEVENTE), params.getTypeVenteId()));
         }
-        if (!params.isShowAll()) {
-            predicates.add(cb.and(cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgUSERID),
-                    params.getUserId().getLgUSERID())));
+        if (!this.sessionHelperService.getData().isShowAllVente()) {
+            predicates.add(cb.equal(root.get(TPreenregistrement_.lgUSERID).get(TUser_.lgUSERID),
+                    params.getUserId().getLgUSERID()));
         }
-        if (!params.isShowAllActivities()) {
+        if (!this.sessionHelperService.getData().isShowAllActivity()) {
             TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
-            predicates.add(cb.and(
-                    cb.equal(st.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"),
-                            te.getLgEMPLACEMENTID())));
+            predicates.add(
+                    cb.equal(root.get(TPreenregistrement_.lgUSERID).get(TUser_.lgEMPLACEMENTID).get("lgEMPLACEMENTID"),
+                            te.getLgEMPLACEMENTID()));
         }
     }
 
@@ -332,10 +338,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<Long> cq = cb.createQuery(Long.class);
-            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)));
-            listePreenregistrement(params, cb, root, st, predicates);
+            Root<TPreenregistrement> root = cq.from(TPreenregistrement.class);
+            cq.select(cb.count(root));
+            listePreenregistrement(params, cb, root, predicates);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return (Long) q.getSingleResult();
@@ -359,11 +364,11 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TPreenregistrement> cq = cb.createQuery(TPreenregistrement.class);
-            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID", JoinType.INNER);
-            cq.select(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)).distinct(true)
-                    .orderBy(cb.asc(st.get(TPreenregistrement_.dtUPDATED)));
-            listePreenregistrement(params, cb, root, st, predicates);
+            Root<TPreenregistrement> root = cq.from(TPreenregistrement.class);
+            // Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID",
+            // JoinType.INNER);
+            cq.select(root).orderBy(cb.asc(root.get(TPreenregistrement_.dtUPDATED)));
+            listePreenregistrement(params, cb, root, predicates);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             if (!params.isAll()) {
@@ -432,7 +437,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaUpdate<TPreenregistrementDetail> cq = cb.createCriteriaUpdate(TPreenregistrementDetail.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            cq.set(root.get(TPreenregistrementDetail_.strSTATUT).get("strSTATUT"), statut);
+            cq.set(root.get(TPreenregistrementDetail_.strSTATUT), statut);
             cq.where(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID).get("lgPREENREGISTREMENTID"),
                     venteId));
             getEntityManager().createQuery(cq).executeUpdate();
@@ -2241,4 +2246,77 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     }
 
+    private VenteDTO buldFromTuple(Tuple t) {
+        VenteDTO v = new VenteDTO();
+        v.setLgPREENREGISTREMENTID(t.get("id", String.class));
+        v.setStrREF(t.get("ref", String.class));
+        v.setIntPRICE(t.get("montant", Integer.class));
+        v.setDtUPDATED(t.get("dateVente", String.class));
+        v.setHeure(t.get("heureVente", String.class));
+        v.setStrTYPEVENTE(t.get("typeVente", String.class));
+        v.setUserFullName(t.get("userVendeur", String.class));
+        return v;
+    }
+
+    @Override
+    public JSONObject getPreVentes(SalesStatsParams params) throws JSONException {
+        JSONObject json = new JSONObject();
+        try {
+
+            List<VenteDTO> data = getPreventeTuples(params).stream().map(this::buldFromTuple)
+                    .collect(Collectors.toList());
+
+            json.put("total", data.size());
+            json.put("data", new JSONArray(data));
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return json;
+    }
+
+    private List<Tuple> getPreventeTuples(SalesStatsParams params) {
+        try {
+            Query q = this.getEntityManager().createNativeQuery(buildPreVentesQuery(params), Tuple.class)
+                    .setParameter(1, params.getStatut());
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return List.of();
+        }
+    }
+
+    private String buildPreVentesQuery(SalesStatsParams params) {
+
+        String query = preventeSql;
+        if (!this.sessionHelperService.getData().isShowAllActivity()) {
+            TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
+            query = query.replace("{user_join}", userJoin);
+            query = query.concat(String.format(emplacementClose, te.getLgEMPLACEMENTID()));
+
+        } else {
+            query = query.replace("{user_join}", "");
+        }
+        if (!this.sessionHelperService.getData().isShowAllVente()) {
+            query = query.concat(String.format(userClose, this.sessionHelperService.getCurrentUser().getLgUSERID()));
+        }
+        if (StringUtils.isNotEmpty(params.getTypeVenteId())) {
+            query = query.concat(String.format(natureClose, params.getTypeVenteId()));
+
+        }
+        if (StringUtils.isNotEmpty(params.getQuery())) {
+            String search = params.getQuery() + "%";
+            query = query.concat(String.format(searchClose, search, search, search));
+
+        }
+
+        return query;
+    }
+
+    private final String preventeSql = "SELECT p.lg_PREENREGISTREMENT_ID AS id, p.str_REF AS ref,p.int_PRICE AS montant,DATE_FORMAT(p.dt_UPDATED, '%d/%m/%Y') AS dateVente,DATE_FORMAT(p.dt_UPDATED, '%H:%i') AS heureVente, p.str_TYPE_VENTE AS typeVente,CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeur FROM  t_preenregistrement p JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID {user_join} WHERE p.str_STATUT =?1 AND p.lg_NATURE_VENTE_ID <> '3' AND DATE(p.dt_UPDATED)=DATE(NOW()) ";
+    private final String userJoin = " JOIN t_user u ON u.lg_USER_ID=p.lg_USER_ID ";
+    private final String emplacementClose = " AND u.lg_EMPLACEMENT_ID='%s' ";
+    private final String userClose = " AND p.lg_USER_ID='%s' ";
+    private final String searchClose = " AND ((p.lg_PREENREGISTREMENT_ID  IN (SELECT d.lg_PREENREGISTREMENT_ID FROM  t_preenregistrement_detail d JOIN t_famille f ON d.lg_FAMILLE_ID=f.lg_FAMILLE_ID WHERE f.int_CIP LIKE '%s' OR f.str_NAME LIKE '%s' )) OR p.str_REF LIKE '%s' )";
+    private final String natureClose = " AND p.str_TYPE_VENTE='%s' ";
 }
