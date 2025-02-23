@@ -75,15 +75,6 @@ public class SalesStatsRessource {
             @QueryParam(value = "query") String query, @QueryParam(value = "typeVenteId") String typeVenteId,
             @QueryParam(value = "statut") String statut, @QueryParam(value = "nature") String nature)
             throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
-        boolean asAuthority = CommonUtils.hasAuthorityByName(hsAttribute, Constant.SHOW_VENTE);
-        boolean allActivitis = CommonUtils.hasAuthorityByName(hsAttribute, Constant.P_SHOW_ALL_ACTIVITY);
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);
@@ -92,10 +83,7 @@ public class SalesStatsRessource {
         body.setNature(nature);
         body.setAll(false);
         body.setTypeVenteId(typeVenteId);
-        body.setShowAll(asAuthority);
-        body.setShowAllActivities(allActivitis);
-        body.setUserId(tu);
-        JSONObject jsono = salesService.getListeTPreenregistrement(body);
+        JSONObject jsono = salesService.getPreVentes(body);
         return Response.ok().entity(jsono.toString()).build();
     }
 
@@ -146,17 +134,12 @@ public class SalesStatsRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
-    @POST
-    @Path("update/{venteId}")
-    public Response update(@PathParam("venteId") String venteId, String statut) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+    @PUT
+    @Path("update/{venteId}/{statut}")
+    public Response update(@PathParam("venteId") String venteId, @PathParam("statut") String statut)
+            throws JSONException {
         JSONObject json = salesService.trash(venteId, statut);
-        return Response.ok().entity(json).build();
+        return Response.ok().entity(json.toString()).build();
     }
 
     @GET

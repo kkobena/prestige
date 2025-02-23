@@ -13,6 +13,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import rest.service.SessionHelperService;
+import rest.service.dto.SessionHelperData;
 import util.Constant;
 
 /**
@@ -40,6 +41,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
         if (Objects.nonNull(tu)) {
             this.sessionHelperService.setCurrentUser(tu);
+
+            SessionHelperData data = new SessionHelperData((boolean) hs.getAttribute(Constant.UPDATE_PRICE),
+                    (boolean) hs.getAttribute(Constant.SHOW_VENTE),
+                    (boolean) hs.getAttribute(Constant.P_SHOW_ALL_ACTIVITY));
+            this.sessionHelperService.setData(data);
         }
 
     }

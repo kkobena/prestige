@@ -1303,4 +1303,47 @@ public class VenteDTO implements Serializable {
         this.caution = caution;
     }
 
+    public VenteDTO(TPreenregistrement tp) {
+        this.lgPREENREGISTREMENTID = tp.getLgPREENREGISTREMENTID();
+        this.strREF = tp.getStrREF();
+        this.strREFTICKET = tp.getStrREFTICKET();
+        this.intPRICE = tp.getIntPRICE();
+        this.intPRICEREMISE = tp.getIntPRICEREMISE();
+        this.strTYPEVENTE = tp.getStrTYPEVENTE();
+        this.intCUSTPART = tp.getIntCUSTPART();
+        this.dtUPDATED = dateFormat.format(tp.getDtUPDATED());
+        this.heure = heureFormat.format(tp.getDtUPDATED());
+        this.dtCREATED = dateFormat.format(tp.getDtUPDATED());
+        this.HEUREVENTE = heureFormat.format(tp.getDtUPDATED());
+        this.strSTATUT = tp.getStrSTATUT();
+        this.avoir = tp.getBISAVOIR();
+        this.cancel = tp.getBISCANCEL();
+        this.sansbon = tp.getBWITHOUTBON();
+        this.lgTYPEVENTEID = tp.getLgTYPEVENTEID().getLgTYPEVENTEID();
+        this.copy = tp.getCopy();
+        this.mvdate = DateConverter.convertDateToYYYY_MM_DD(tp.getDtUPDATED());
+        TClient cl = tp.getClient();
+        if (cl != null) {
+            this.clientFullName = cl.getStrFIRSTNAME() + " " + cl.getStrLASTNAME();
+        }
+        try {
+
+            this.dateAnnulation = dateFormat.format(tp.getDtANNULER());
+            this.heureAnnulation = heureFormat.format(tp.getDtANNULER());
+        } catch (Exception e) {
+        }
+        try {
+            TUser tu = tp.getLgUSERVENDEURID();
+            TUser c = tp.getLgUSERCAISSIERID();
+            TUser op = tp.getLgUSERID();
+            this.lgUSERVENDEURID = tu.getLgUSERID();
+            this.userVendeurName = tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
+            this.userCaissierName = c.getStrFIRSTNAME() + " " + c.getStrLASTNAME();
+            this.lgUSERCAISSIERID = c.getLgUSERID();
+            this.userFullName = op.getStrFIRSTNAME() + " " + op.getStrLASTNAME();
+        } catch (Exception e) {
+        }
+
+    }
+
 }
