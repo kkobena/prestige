@@ -193,14 +193,32 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     fieldLabel: 'Nom Abrege',
                                     emptyText: 'Nom Abrege',
                                     name: 'str_NAME_ADD',
-                                    id: 'str_NAME_ADD'
+                                    id: 'str_NAME_ADD',
+                                    style: 'background-color: #647973;',
+                                    listeners: {
+                                        change: function (field, newValue) {
+                                            // Récupérer les autres champs
+                                            var fullnameField = Ext.getCmp('str_FULLNAME');
+                                            var codeOrganismeField = Ext.getCmp('str_CODE_ORGANISME');
+
+                                            // Mettre à jour leur valeur
+                                            if (fullnameField) {
+                                                fullnameField.setValue(newValue);
+                                            }
+                                            if (codeOrganismeField) {
+                                                codeOrganismeField.setValue(newValue);
+                                            }
+                                        }
+                                    }
+                                    
                                 },
                                 {
                                     allowBlank: false,
                                     fieldLabel: 'Nom complet',
                                     emptyText: 'Nom complet',
                                     name: 'str_FULLNAME',
-                                    id: 'str_FULLNAME'
+                                    id: 'str_FULLNAME',
+                                    style: 'background-color: #647973;'
                                 },
                                 {
                                     //allowBlank: false,
@@ -222,7 +240,9 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     fieldLabel: 'Adresse',
                                     emptyText: 'ADRESSE',
                                     name: 'str_ADRESSE',
-                                    id: 'str_ADRESSE'
+                                    id: 'str_ADRESSE',
+                                    style: 'background-color: #647973;',
+                                    value: '225'
                                 },
                                 {
                                     allowBlank: false,
@@ -236,7 +256,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
 //                                    typeAhead: true,
                                     editable: false,
                                     queryMode: 'remote',
-                                    emptyText: 'Choisir un type tiers payant ...'
+                                    emptyText: 'Choisir un type tiers payant ...',
+                                    style: 'background-color: #647973;'
                                 },
                                 {
                                     // allowBlank: false,
@@ -259,14 +280,18 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     fieldLabel: 'Telephone',
                                     emptyText: 'TELEPHONE',
                                     name: 'str_TELEPHONE',
-                                    id: 'str_TELEPHONE'
+                                    id: 'str_TELEPHONE',
+                                    style: 'background-color: #647973;',
+                                    value: 'ABJ'
                                 },
                                 {
                                     allowBlank: false,
                                     fieldLabel: 'Code.Organisme',
                                     emptyText: 'CODE ORGANISME',
                                     name: 'str_CODE_ORGANISME',
-                                    id: 'str_CODE_ORGANISME'
+                                    id: 'str_CODE_ORGANISME',
+                                    style: 'background-color: #647973;',
+                                    
                                 },
                                 {
                                     //allowBlank: false,
