@@ -543,14 +543,8 @@ public class SalesStatsRessource {
             @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "stock") Integer stock, @QueryParam(value = "prixachatFiltre") String prixachatFiltre,
             @QueryParam(value = "stockFiltre") String stockFiltre, @QueryParam(value = "rayonId") String rayonId,
-            @QueryParam(value = "qteVendu") Integer qteVendu) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+            @QueryParam(value = "qteVendu") Integer qteVendu, @QueryParam(value = "isReappro") Boolean isReappro) {
         SalesStatsParams body = new SalesStatsParams();
-        body.setUserId(tu);
         body.setUser(user);
         body.setLimit(limit);
         body.setStart(start);
@@ -582,7 +576,7 @@ public class SalesStatsRessource {
 
         } catch (Exception e) {
         }
-        JSONObject json = salesService.articleVendusASuggerer(body);
+        JSONObject json = salesService.articleVendusASuggerer(body, Objects.requireNonNullElse(isReappro, false));
         return Response.ok().entity(json.toString()).build();
     }
 

@@ -96,7 +96,7 @@ public interface SalesStatsService {
 
     JSONObject articlesVendusRecap(SalesStatsParams params) throws JSONException;
 
-    JSONObject articleVendusASuggerer(SalesStatsParams params) throws JSONException;
+    JSONObject articleVendusASuggerer(SalesStatsParams params, boolean isReappro) throws JSONException;
 
     List<TPreenregistrementDetail> venteDetailByVenteId(String venteId);
 
