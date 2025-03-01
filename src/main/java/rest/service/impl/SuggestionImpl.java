@@ -48,6 +48,7 @@ import rest.service.dto.SuggestionDTO;
 import rest.service.dto.SuggestionOrderDetailDTO;
 
 import rest.service.dto.SuggestionsDTO;
+import util.Constant;
 import static util.Constant.*;
 import util.DateConverter;
 
@@ -379,14 +380,27 @@ public class SuggestionImpl implements SuggestionService {
         getEmg().merge(oSuggestionOrder);
     }
 
+    private boolean checkQteSeuilCondition(TFamilleStock oFamilleStock, TFamille famille) {
+        switch (getOptionSuggestion()) {
+        case EQUALS:
+            return oFamilleStock.getIntNUMBERAVAILABLE().compareTo(famille.getIntSEUILMIN()) == 0;
+        case LESS:
+            return oFamilleStock.getIntNUMBERAVAILABLE().compareTo(famille.getIntSEUILMIN()) == -1;
+        case LESS_EQUALS:
+            return oFamilleStock.getIntNUMBERAVAILABLE().compareTo(famille.getIntSEUILMIN()) < 1;
+
+        default:
+            return false;
+        }
+    }
+
     @Override
     public void makeSuggestionAuto(TFamilleStock oFamilleStock, TFamille famille) {
         if (famille.getBoolDECONDITIONNE() == 1 || !STATUT_ENABLE.equals(famille.getStrSTATUT())) {
             return;
         }
 
-        if (Objects.nonNull(famille.getIntSEUILMIN())
-                && oFamilleStock.getIntNUMBERAVAILABLE() <= famille.getIntSEUILMIN()) {
+        if (Objects.nonNull(famille.getIntSEUILMIN()) && checkQteSeuilCondition(oFamilleStock, famille)) {
 
             int statut = verifierProduitDansLeProcessusDeCommande(famille);
             if (statut == 0 || statut == 1) {
@@ -435,7 +449,7 @@ public class SuggestionImpl implements SuggestionService {
             oTFamilleGrossiste.setDtCREATED(new Date());
             oTFamilleGrossiste.setDtUPDATED(oTFamilleGrossiste.getDtCREATED());
             oTFamilleGrossiste.setIntNBRERUPTURE(0);
-            oTFamilleGrossiste.setBlRUPTURE(Boolean.TRUE);
+            oTFamilleGrossiste.setBlRUPTURE(true);
             oTFamilleGrossiste.setStrCODEARTICLE(lgFAMILLEID.getIntCIP());
             oTFamilleGrossiste.setIntPAF(lgFAMILLEID.getIntPAF());
             oTFamilleGrossiste.setStrSTATUT(STATUT_ENABLE);
@@ -512,7 +526,7 @@ public class SuggestionImpl implements SuggestionService {
             Query q = this.getEmg().createQuery(cq);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
-
+            LOG.log(Level.SEVERE, null, e);
         }
         return qty;
     }
@@ -532,6 +546,7 @@ public class SuggestionImpl implements SuggestionService {
 
             }
         } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
         }
 
         return (qteReappro > 0 ? qteReappro : 1);
@@ -556,7 +571,7 @@ public class SuggestionImpl implements SuggestionService {
             Query q = this.getEmg().createQuery(cq);
             return (Integer) q.getSingleResult();
         } catch (Exception e) {
-
+            LOG.log(Level.SEVERE, null, e);
         }
         return qty;
     }
@@ -604,7 +619,7 @@ public class SuggestionImpl implements SuggestionService {
             q.setParameter(1, famille.getLgFAMILLEID());
             q.setParameter(2, STATUT_AUTO);
             q.setParameter(3, STATUT_IS_PROGRESS);
-            // q.setParameter(4, STATUT_PENDING);
+
             q.setMaxResults(1);
             return q.getSingleResult() != null ? 1 : 0;
 
@@ -1254,7 +1269,7 @@ public class SuggestionImpl implements SuggestionService {
                 if (!isExist) {
                     TSuggestionOrderDetails orderDetail = createMergeDetails(suggestionOrder, tOrderDetail);
                     tOrderDetailCollection.add(orderDetail);
-                    // this.productStateService.addState(famille, ProductStateEnum.SUGGESTION);
+
                 }
             }
             this.em.remove(order0);
@@ -1308,6 +1323,41 @@ public class SuggestionImpl implements SuggestionService {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return new ArrayList<>();
+        }
+    }
+
+    private OptionSuggestion getOptionSuggestion() {
+        try {
+            TParameters tp = em.find(TParameters.class, Constant.KEY_OPTION_SUGGESTION);
+            return OptionSuggestion.getByValue(tp.getStrVALUE().trim());
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return OptionSuggestion.LESS_EQUALS;
+        }
+
+    }
+
+    private enum OptionSuggestion {
+        EQUALS("="), LESS("<"), LESS_EQUALS("<=");
+
+        private final String value;
+
+        public String getValue() {
+            return value;
+        }
+
+        private OptionSuggestion(String value) {
+            this.value = value;
+        }
+
+        public static OptionSuggestion getByValue(String value) {
+            for (OptionSuggestion option : values()) {
+                if (Objects.equals(option.value, value)) {
+                    return option;
+                }
+            }
+            return OptionSuggestion.LESS_EQUALS;
         }
     }
 }

@@ -61,19 +61,6 @@ public class TestController {
     }
 
     @GET
-
-    @Path("vente/{id}")
-    public Response updateVente(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        mouvementProduitService.updateVenteStock2(id);
-        return Response.ok().build();
-    }
-
-    @GET
     @Path("correction-marie/produit")
     public Response updateFamille() throws JSONException {
         HttpSession hs = servletRequest.getSession();
