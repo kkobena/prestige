@@ -79,4 +79,6 @@ public interface SuggestionService {
 
     List<ArticleCsvDTO> buildBySuggestion(String suggestionId);
 
+    JSONObject suggererQteReappro(Set<VenteDetailsDTO> datas);
+
 }

@@ -41,22 +41,22 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
         Me = this;
         str_TYPE_TRANSACTION = "ALL";
         var itemsPerPage = 20;
-
-
-        var storeUser = new Ext.data.Store({
-            model: 'testextjs.model.Utilisateur',
-            pageSize: itemsPerPage,
+        const storeUser = new Ext.data.Store({
+            model: 'testextjs.model.caisse.User',
+            pageSize: 100,
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_utilisateur,
+                url: '../api/v1/common/users',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 }
             }
         });
+
+
         var rayons = Ext.create('Ext.data.Store', {
             idProperty: 'id',
             fields:
@@ -343,11 +343,24 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                             handler: this.onPdfClick
                         }, '-',
                         {
+                            xtype: 'splitbutton',
                             text: 'Suggerer',
                             tooltip: 'Suggerer',
                             iconCls: 'suggestionreapro',
                             scope: this,
-                            handler: this.onSuggereClick
+                            menu:
+                                    [
+                                        {text: 'Suggerer les  quantités vendues',
+                                            handler: function () {
+                                                Me.onSuggereClick(false);
+                                            }
+
+                                        },
+                                        {text: 'Suggerer  les quantités de réappro', handler: function () {
+                                                Me.onSuggereClick(true);
+                                            }}
+                                    ]
+
                         }
 
                     ]
@@ -367,8 +380,8 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                             hidden: false,
                             flex: 1,
                             pageSize: 20,
-                            valueField: 'lg_USER_ID',
-                            displayField: 'str_FIRST_LAST_NAME',
+                            valueField: 'lgUSERID',
+                            displayField: 'fullName',
                             typeAhead: true,
                             queryMode: 'remote',
                             emptyText: 'Choisir un utilisateur...',
@@ -479,7 +492,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                                 }
                             }
                         }, '-',
-                          {
+                        {
                             xtype: 'textfield',
                             id: 'qteVendu',
                             flex: 0.5,
@@ -494,8 +507,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                                 }
                             }
                         }, '-',
-                        
-                        
+
                         {
                             xtype: 'combobox',
                             fieldLabel: 'Filtre prix achat',
@@ -568,8 +580,8 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
                         myProxy.setExtraParam('prixachatFiltre', Ext.getCmp('prixachatFiltre').getValue());
                         myProxy.setExtraParam('stockFiltre', Ext.getCmp('stockFiltre').getValue());
                         myProxy.setExtraParam('stock', (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : null));
-                          myProxy.setExtraParam('qteVendu', (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : null));
-                        
+                        myProxy.setExtraParam('qteVendu', (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : null));
+
                     }
 
                 }
@@ -654,7 +666,7 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
         linkUrl += "&nbre=" + (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0) + '&prixachatFiltre=' + Ext.getCmp('prixachatFiltre').getValue();
         linkUrl += "&stock=" + (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : "") + '&stockFiltre=' + (Ext.getCmp('stockFiltre').getValue() != null ? Ext.getCmp('stockFiltre').getValue() : "");
         linkUrl += "&user=" + (Ext.getCmp('lg_USER_ID').getValue() != null ? Ext.getCmp('lg_USER_ID').getValue() : "");
-        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=detail&qteVendu='+ (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : "");
+        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=detail&qteVendu=' + (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : "");
 
         window.open(linkUrl);
     },
@@ -668,12 +680,12 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
         linkUrl += "&nbre=" + (Ext.getCmp('int_NUMBER').getValue() != null ? Ext.getCmp('int_NUMBER').getValue() : 0) + '&prixachatFiltre=' + Ext.getCmp('prixachatFiltre').getValue();
         linkUrl += "&stock=" + (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : "") + '&stockFiltre=' + (Ext.getCmp('stockFiltre').getValue() != null ? Ext.getCmp('stockFiltre').getValue() : "");
         linkUrl += "&user=" + (Ext.getCmp('lg_USER_ID').getValue() != null ? Ext.getCmp('lg_USER_ID').getValue() : "");
-        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=rayon&qteVendu='+ (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : "");
+        linkUrl += "&rayonId=" + (Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "") + '&type=rayon&qteVendu=' + (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : "");
 
         window.open(linkUrl);
     },
-    onSuggereClick: function () {
-        let data = {
+    buildDataSuggestion: function () {
+        return {
             dtStart: Ext.getCmp('dt_debut').getSubmitValue(),
             prixachatFiltre: Ext.getCmp('prixachatFiltre').getValue(),
             dtEnd: Ext.getCmp('dt_fin').getSubmitValue(),
@@ -686,7 +698,25 @@ Ext.define('testextjs.view.configmanagement.famille.ArticleVenduBis', {
             stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : null),
             stockFiltre: Ext.getCmp('stockFiltre').getValue(),
             rayonId: Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "",
-             qteVendu: (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : null),
+            qteVendu: (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : null),
+        };
+    },
+    onSuggereClick: function (isReappro) {
+        const data = {
+            dtStart: Ext.getCmp('dt_debut').getSubmitValue(),
+            prixachatFiltre: Ext.getCmp('prixachatFiltre').getValue(),
+            dtEnd: Ext.getCmp('dt_fin').getSubmitValue(),
+            hStart: (Ext.getCmp('h_debut').getSubmitValue() !== null ? Ext.getCmp('h_debut').getSubmitValue() : ""),
+            hEnd: (Ext.getCmp('h_fin').getSubmitValue() !== null ? Ext.getCmp('h_fin').getSubmitValue() : ""),
+            user: (Ext.getCmp('lg_USER_ID').getValue() !== null ? Ext.getCmp('lg_USER_ID').getValue() : ""),
+            query: Ext.getCmp('rechecher').getValue(),
+            typeTransaction: (Ext.getCmp('str_TYPE_TRANSACTION').getValue() !== null ? Ext.getCmp('str_TYPE_TRANSACTION').getValue() : "ALL"),
+            nbre: (Ext.getCmp('int_NUMBER').getValue() !== null ? Ext.getCmp('int_NUMBER').getValue() : 0),
+            stock: (Ext.getCmp('stock').getValue() != null ? Ext.getCmp('stock').getValue() : null),
+            stockFiltre: Ext.getCmp('stockFiltre').getValue(),
+            rayonId: Ext.getCmp('rayons').getValue() != null ? Ext.getCmp('rayons').getValue() : "",
+            qteVendu: (Ext.getCmp('qteVendu').getValue() != null ? Ext.getCmp('qteVendu').getValue() : null),
+            isReappro
         };
         var progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
         Ext.Ajax.request({
