@@ -1296,6 +1296,32 @@ public class SuggestionImpl implements SuggestionService {
         return articleCsvs;
     }
 
+    @Override
+    public JSONObject suggererQteReappro(Set<VenteDetailsDTO> datas) {
+        try {
+            LongAdder count = new LongAdder();
+            Map<String, List<VenteDetailsDTO>> groupingByGrossisteId = datas.stream()
+                    .collect(Collectors.groupingBy(VenteDetailsDTO::getTypeVente));
+            groupingByGrossisteId.forEach((k, v) -> {
+                TGrossiste oGrossiste = getEmg().find(TGrossiste.class, k);
+                TSuggestionOrder suggestionOrder = createSuggestionOrder(oGrossiste, STATUT_IS_PROGRESS);
+                v.forEach(o -> {
+                    TFamille oFamille = getEmg().find(TFamille.class, o.getLgFAMILLEID());
+                    initTSuggestionOrderDetail(suggestionOrder, oFamille, oGrossiste,
+                            oFamille.getIntQTEREAPPROVISIONNEMENT().compareTo(0) == 1
+                                    ? oFamille.getIntQTEREAPPROVISIONNEMENT() : 1);
+                    count.increment();
+                });
+
+            });
+            return new JSONObject().put("success", true).put("count", count.intValue());
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new JSONObject().put("success", false);
+        }
+
+    }
+
     private List<Tuple> getSuggestionDetail(String suggestionId) {
         try {
             Query q = em.createNativeQuery(

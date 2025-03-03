@@ -1268,11 +1268,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
 
                                             }
-                                        }/*,
-                                         afterrender: function (field) {
-                                         console.log('fffffff  ', field);
-                                         field.focus();
-                                         }*/
+                                        }
                                     }
                                 }
 

@@ -62,6 +62,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
@@ -1239,7 +1240,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             Join<TPreenregistrementDetail, TPreenregistrement> jp, Join<TPreenregistrementDetail, TFamille> jf,
             Join<TFamille, TFamilleStock> st, SalesStatsParams param) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String lgEmplacementId = param.getUserId().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        String lgEmplacementId = this.sessionHelperService.getCurrentUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(jp.get("lgUSERID").get("lgEMPLACEMENTID").get("lgEMPLACEMENTID"), lgEmplacementId));
         predicates.add(cb.equal(jp.get(TPreenregistrement_.bISCANCEL), Boolean.FALSE));
@@ -1249,9 +1250,9 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             predicates.add(cb.equal(jf.get(TFamille_.lgFAMILLEID), param.getProduitId()));
         }
         if (!StringUtils.isEmpty(param.getQuery())) {
-            predicates.add(cb.or(cb.like(jf.get(TFamille_.strDESCRIPTION), param.getQuery() + "%"),
-                    cb.like(jf.get(TFamille_.intCIP), param.getQuery() + "%"),
-                    cb.like(jf.get(TFamille_.intEAN13), param.getQuery() + "%")));
+            var searchQ = param.getQuery() + "%";
+            predicates.add(cb.or(cb.like(jf.get(TFamille_.strDESCRIPTION), searchQ),
+                    cb.like(jf.get(TFamille_.intCIP), searchQ), cb.like(jf.get(TFamille_.intEAN13), searchQ)));
         }
         Predicate btw = cb.between(cb.function("TIMESTAMP", Timestamp.class, jp.get(TPreenregistrement_.dtUPDATED)),
                 java.sql.Timestamp.valueOf(LocalDateTime.parse(
@@ -1523,7 +1524,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
             cq.select(cb.countDistinct(root.get(TPreenregistrementDetail_.lgFAMILLEID)))
                     .groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             Query q = getEntityManager().createQuery(cq);
             return q.getResultList().size();
 
@@ -1553,7 +1554,10 @@ public class SalesStatsServiceImpl implements SalesStatsService {
     }
 
     @Override
-    public JSONObject articleVendusASuggerer(SalesStatsParams params) throws JSONException {
+    public JSONObject articleVendusASuggerer(SalesStatsParams params, boolean isReappro) throws JSONException {
+        if (isReappro) {
+            return suggestionService.suggererQteReappro(articlesVendusASuggerer(params));
+        }
         return suggestionService.makeSuggestion(articlesVendusASuggerer(params));
     }
 
@@ -1571,7 +1575,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                     jf.get(TFamille_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), jf.get(TFamille_.boolDECONDITIONNE),
                     jf.get(TFamille_.lgFAMILLEPARENTID))).groupBy(root.get(TPreenregistrementDetail_.lgFAMILLEID));
             List<Predicate> predicates = articlesVendusSpecialisation(cb, root, jp, jf, st, params);
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<VenteDetailsDTO> q = getEntityManager().createQuery(cq);
             datas = q.getResultList();
             List<VenteDetailsDTO> details = new ArrayList<>();
