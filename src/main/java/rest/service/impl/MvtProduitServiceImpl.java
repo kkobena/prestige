@@ -285,10 +285,7 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                         + tu.getStrFIRSTNAME() + " " + tu.getStrLASTNAME();
                 logService.updateItem(tu, tFamille.getIntCIP(), desc, TypeLog.MODIFICATION_PRIX_VENTE_PRODUIT,
                         tFamille);
-                /*
-                 * notificationService.save(new Notification().canal(Canal.EMAIL)
-                 * .typeNotification(TypeNotification.MODIFICATION_PRIX_VENTE_PRODUIT).message(desc).addUser(tu));
-                 */
+
                 JSONObject jsonItemUg = new JSONObject();
                 jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), tFamille.getIntCIP());
                 jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), tFamille.getStrNAME());
@@ -315,9 +312,10 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             updateStock(familleStock, tp, it);
             emg.merge(familleStock);
             emg.merge(it);
+            this.suggestionService.makeSuggestionAuto(familleStock, tFamille);
 
         });
-        makeSuggestionAutoAsync(list, emplacement);
+        // makeSuggestionAutoAsync(list, emplacement);
         if (!items.isEmpty()) {
             Map<String, Object> donnee = new HashMap<>();
             donnee.put(NotificationUtils.ITEM_KEY.getId(), tp.getStrREF());
