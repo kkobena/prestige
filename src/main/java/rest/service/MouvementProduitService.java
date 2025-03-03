@@ -84,5 +84,4 @@ public interface MouvementProduitService {
             TEmplacement emplacement, Integer qteMvt, Integer qteDebut, Integer qteFinale, Integer valeurTva,
             boolean checked);
 
-    void updateVenteStock2(String idVente);
 }

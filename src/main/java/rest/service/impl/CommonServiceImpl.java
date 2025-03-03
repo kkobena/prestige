@@ -608,7 +608,7 @@ public class CommonServiceImpl implements Serializable, CommonService {
                 predicates.add(cb.or(cb.like(root.get(TFamillearticle_.strCODEFAMILLE), query + "%"),
                         cb.like(root.get(TFamillearticle_.strLIBELLE), query + "%")));
             }
-            cq.where(cb.and(predicates.toArray(new Predicate[0])));
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
             TypedQuery<ComboDTO> q = getEntityManager().createQuery(cq);
             return q.getResultList();
         } catch (Exception e) {
