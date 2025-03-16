@@ -277,6 +277,9 @@ public class MvtProduitServiceImpl implements MvtProduitService {
 
             it.setStrSTATUT(statut);
             TFamille tFamille = it.getLgFAMILLEID();
+            boolean isDetail = tFamille.getBoolDECONDITIONNE() == 1;
+            TFamilleStock stockParent = null;
+            TFamille otFamilleParent = null;
             if (it.getIntPRICEUNITAIR().compareTo(tFamille.getIntPRICE()) != 0) {
                 saveMouvementPrice(tu, tFamille, tFamille.getIntPRICE(), it.getIntPRICEUNITAIR(), 0, ACTION_VENTE,
                         tp.getStrREF());
@@ -296,12 +299,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
                 items.put(jsonItemUg);
             }
             TFamilleStock familleStock = findStock(tFamille.getLgFAMILLEID(), emplacement);
+
             Integer initStock = familleStock.getIntNUMBERAVAILABLE();
 
-            if (tFamille.getBoolDECONDITIONNE() == 1 && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
-                TFamille otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID());
-                TFamilleStock stockParent = findStockByProduitId(otFamilleParent.getLgFAMILLEID(),
-                        emplacement.getLgEMPLACEMENTID());
+            if (isDetail && !checkIsVentePossible(familleStock, it.getIntQUANTITY())) {
+                otFamilleParent = findProduitById(tFamille.getLgFAMILLEPARENTID());
+                stockParent = findStockByProduitId(otFamilleParent.getLgFAMILLEID(), emplacement.getLgEMPLACEMENTID());
                 deconditionner(tu, stockParent, familleStock, it.getIntQUANTITY());
 
             }
@@ -312,7 +315,12 @@ public class MvtProduitServiceImpl implements MvtProduitService {
             updateStock(familleStock, tp, it);
             emg.merge(familleStock);
             emg.merge(it);
-            this.suggestionService.makeSuggestionAuto(familleStock, tFamille);
+
+            if (isDetail && stockParent != null) {
+                this.suggestionService.makeSuggestionAuto(stockParent, otFamilleParent);
+            } else {
+                this.suggestionService.makeSuggestionAuto(familleStock, tFamille);
+            }
 
         });
         // makeSuggestionAutoAsync(list, emplacement);
