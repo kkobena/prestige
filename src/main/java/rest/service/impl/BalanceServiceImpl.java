@@ -139,7 +139,7 @@ public class BalanceServiceImpl implements BalanceService {
             BalanceDTO balanceVno = buildVenteBalance(vnoData, checkUg, balanceParams.isShowAllAmount(),
                     venteRegelementMap.remove("1"));
 
-            balanceVno.setTypeVente(DateConverter.VENTE_COMPTANT);
+            balanceVno.setTypeVente(Constant.VENTE_COMPTANT);
             balanceVno.setBalanceId(balanceVno.getTypeVente());
             balanceVno.setMontantTTC((balanceVno.getMontantTTC() - this.montantToRemove(balanceParams)));
             balances.add(balanceVno);
@@ -150,7 +150,7 @@ public class BalanceServiceImpl implements BalanceService {
             BalanceDTO balanceVo = buildVenteBalance(vnoData, false, balanceParams.isShowAllAmount(),
                     venteRegelementMap.values().stream().flatMap(v -> v.stream()).collect(Collectors.toList()));
 
-            balanceVo.setTypeVente(DateConverter.VENTE_ASSURANCE);
+            balanceVo.setTypeVente(Constant.VENTE_ASSURANCE);
             balanceVo.setBalanceId(balanceVo.getTypeVente());
             balances.add(balanceVo);
         }
