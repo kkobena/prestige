@@ -109,4 +109,13 @@ public class VenteReglementReportDTO {
         this.amountNonCa = amountNonCa;
     }
 
+    @Override
+    public String toString() {
+        return "VenteReglementReportDTO{" + "typeReglementLibelle=" + typeReglementLibelle + ", typeReglement="
+                + typeReglement + ", typeVente=" + typeVente + ", libelle=" + libelle + ", montant=" + montant
+                + ", montantAttentu=" + montantAttentu + ", flagedAmount=" + flagedAmount + ", ugNetAmount="
+                + ugNetAmount + ", ugTtcAmount=" + ugTtcAmount + ", amountNonCa=" + amountNonCa + ", montantVerse="
+                + montantVerse + '}';
+    }
+
 }

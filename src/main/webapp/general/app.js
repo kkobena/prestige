@@ -251,7 +251,7 @@ Ext.application({
         'testextjs.model.VPropositionCde',
         'testextjs.model.CodeGestion',
         'testextjs.model.CodeActe',
-        'testextjs.model.ZoneGeographique',
+      
         'testextjs.view.configmanagement.client.action.infoCompte',
 
         'testextjs.model.EscompteSocieteTranche',
@@ -297,8 +297,7 @@ Ext.application({
         'testextjs.view.configmanagement.famillearticle.FamilleArticleManager',
         'testextjs.model.FamilleGrossiste',
         'testextjs.view.configmanagement.famille.action.addgrossiste',
-        // Zone Geo 
-        'testextjs.model.ZoneGeographique',
+     
         'testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueManager',
         'testextjs.view.configmanagement.zonegeographique.action.add',
         // Representant grossiste
@@ -341,7 +340,7 @@ Ext.application({
         'testextjs.model.VPropositionCde',
         'testextjs.model.CodeGestion',
         'testextjs.model.CodeActe',
-        'testextjs.model.ZoneGeographique',
+      
         'testextjs.view.configmanagement.client.action.infoCompte',
         'testextjs.view.sm_user.retrocession.retrocessionManager',
         'testextjs.model.Retrocession',
@@ -351,9 +350,7 @@ Ext.application({
         'testextjs.model.FamilleArticle',
         'testextjs.view.configmanagement.famillearticle.FamilleArticleManager',
         'testextjs.view.configmanagement.famille.action.detailArticle',
-        // Zone Geo 
-        'testextjs.model.ZoneGeographique',
-        'testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueManager',
+       
         'testextjs.view.configmanagement.zonegeographique.action.add',
         // Representant grossiste
         'testextjs.model.Representantgrossiste',

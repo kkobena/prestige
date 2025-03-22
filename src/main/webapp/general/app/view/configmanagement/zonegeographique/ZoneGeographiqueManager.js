@@ -86,42 +86,7 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
                     editor: {
                         allowBlank: false
                     }
-                },
-                {
-                    xtype: 'checkcolumn',
-                    header: ' ',
-                    dataIndex: 'bool_ACCOUNT',
-                    width: 30,
-                   sortable: false,
-                    menuDisabled: true,
-                    hidden:true,
-                    listeners: {checkchange: function (scr, rowIndex, checked, eOpts) {
-                            console.log(scr, rowIndex, checked);
-                            var rec = Ext.getCmp('zonegeographiquegridID').getStore().getAt(rowIndex);
-
-                            Ext.Ajax.request({
-                                url: '../webservices/configmanagement/zonegeographique/ws_transaction.jsp?mode=updateCount',
-                                params: {
-                                    lg_ZONE_GEO_ID: rec.get("lg_ZONE_GEO_ID"),
-                                    bool_ACCOUNT: checked
-                                },
-                                success: function (response)
-                                {
-
-
-
-                                },
-                                failure: function (response)
-                                {
-
-                                }
-                            });
-                        }}
-
-
                 }
-
-
                 , {
                     xtype: 'actioncolumn',
                     width: 30,
