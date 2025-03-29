@@ -17,30 +17,29 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
     layout: {
         type: 'fit'
     },
-//    iconCls: 'fa fa-key fa-lg',
-//    glyph: 0xf115,
+
     title: 'Importer',
     closeAction: 'destroy',
     closable: true,
     draggable: true,
     resizable: false,
     initComponent: function () {
-        var _this = this;
+        const _this = this;
         storetype = new Ext.data.Store({
             fields: ['name', 'value'],
-            data: [{name: 'LABOREX', value: 'Laborex'}, {name: 'COPHARMED', value: 'Copharmed'}, {name: 'TEDIS', value: 'Tedis'},{name: 'DPCI', value: 'DPCI'}
-            ,{name: 'CIP_QTE', value: 'MODEL CIP-QTE'}
-            ,{name: 'CIP_QTE_CIP_QTER_PA', value: 'MODEL CIP_QTE_PRIX_ACHAT'}
+            data: [{name: 'LABOREX', value: 'Laborex'}, {name: 'COPHARMED', value: 'Copharmed'}, {name: 'TEDIS_2', value: 'Tedis'}, {name: 'DPCI', value: 'DPCI'}
+                , {name: 'CIP_QTE', value: 'MODEL CIP-QTE'}
+                , {name: 'CIP_QTE_CIP_QTER_PA', value: 'MODEL CIP_QTE_PRIX_ACHAT'}
+                , {name: 'CIP_QTE_CIP_QTER_PA', value: 'MODEL CIP_QTE_PRIX_ACHAT'}
             ]
         });
         ImportXLSStore = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
             pageSize: 999,
-            // autoLoad: true,
+     
             proxy: {
                 type: 'ajax',
                      url: '../api/v1/grossiste/all',
-//                url: '../webservices/configmanagement/grossiste/ws_data.jsp',
                 reader: {
                     type: 'json',
                     root: 'results',

@@ -1,7 +1,6 @@
 /* global Ext */
 
 
-var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
 var Me;
 var val;
 var listOrderSelected;

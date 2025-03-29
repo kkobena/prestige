@@ -6,6 +6,7 @@
 package fileupload;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 /**
  *
@@ -28,6 +29,8 @@ public class OrderItem implements Serializable {
     private String facture;
     private Integer prixAchat;
     private String etablissement;
+    private String numeroLot;
+    private LocalDate datePeremption;
 
     public Integer getPrixAchat() {
         return prixAchat;
@@ -74,6 +77,24 @@ public class OrderItem implements Serializable {
 
     public OrderItem montant(Double montant) {
         this.montant = montant;
+        return this;
+    }
+
+    public String getNumeroLot() {
+        return numeroLot;
+    }
+
+    public OrderItem setNumeroLot(String numeroLot) {
+        this.numeroLot = numeroLot;
+        return this;
+    }
+
+    public LocalDate getDatePeremption() {
+        return datePeremption;
+    }
+
+    public OrderItem setDatePeremption(LocalDate datePeremption) {
+        this.datePeremption = datePeremption;
         return this;
     }
 

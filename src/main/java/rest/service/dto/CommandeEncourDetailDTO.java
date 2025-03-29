@@ -1,5 +1,6 @@
 package rest.service.dto;
 
+import dal.OrderDetailLot;
 import dal.TFamille;
 import dal.TFamilleGrossiste;
 import dal.TFamilleStock;
@@ -7,7 +8,9 @@ import dal.TGrossiste;
 import dal.TOrder;
 import dal.TOrderDetail;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.json.JSONPropertyName;
@@ -67,6 +70,8 @@ public class CommandeEncourDetailDTO {
     private int stock;
     private String codeArticle;
     private int[] produitStates;
+    private Set<OrderDetailLot> lots = new HashSet<>();
+    private String datePeremption;
 
     public int[] getProduitStates() {
         return produitStates;
@@ -227,6 +232,14 @@ public class CommandeEncourDetailDTO {
         return codeArticle;
     }
 
+    public String getDatePeremption() {
+        return datePeremption;
+    }
+
+    public void setDatePeremption(String datePeremption) {
+        this.datePeremption = datePeremption;
+    }
+
     public CommandeEncourDetailDTO(TOrderDetail detail) {
         this.prixUnitaire = detail.getPrixUnitaire();
         this.prixAchat = detail.getPrixAchat();
@@ -289,9 +302,8 @@ public class CommandeEncourDetailDTO {
                     this.qteReasor = 0;
                 });
 
-        // this.produitStates = famille.getProductStates().stream().mapToInt(e -> e.getProduitStateEnum().ordinal())
-        // .toArray();
-
+        this.lots = detail.getLots();
+        this.datePeremption = buildDatePeremption(this.lots);
     }
 
     public void setProduitCip(String produitCip) {
@@ -304,6 +316,14 @@ public class CommandeEncourDetailDTO {
 
     public void setStock(int stock) {
         this.stock = stock;
+    }
+
+    public Set<OrderDetailLot> getLots() {
+        return lots;
+    }
+
+    public void setLots(Set<OrderDetailLot> lots) {
+        this.lots = lots;
     }
 
     public void setCodeArticle(String codeArticle) {
@@ -362,8 +382,15 @@ public class CommandeEncourDetailDTO {
         this.seuil = famille.getIntSEUILMIN();
         this.stock = familleStock.getIntNUMBERAVAILABLE();
         this.qteReasor = Math.abs(familleStock.getIntNUMBERAVAILABLE() - famille.getIntSEUILMIN());
-        // this.produitStates = famille.getProductStates().stream().mapToInt(e -> e.getProduitStateEnum().ordinal())
-        // .toArray();
+        this.lots = detail.getLots();
+        this.datePeremption = buildDatePeremption(this.lots);
 
+    }
+
+    private String buildDatePeremption(Set<OrderDetailLot> lots) {
+        if (lots != null) {
+            return lots.stream().map(OrderDetailLot::getDatePeremption).collect(Collectors.joining(", "));
+        }
+        return null;
     }
 }

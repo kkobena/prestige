@@ -1,9 +1,5 @@
 /* global Ext */
 
-
-var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
-var url_services_data_famille_select_dovente = '../webservices/sm_user/famille/ws_data_jdbc.jsp';
-
 var Me_Window;
 var Omode;
 var ref;
@@ -482,7 +478,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 },
                                 {
                                     text: 'STOCK',
-                                    flex: 1,
+                                    flex: 0.5,
                                     sortable: true,
                                     dataIndex: 'lg_FAMILLE_QTE_STOCK',
                                     align: 'right'
@@ -561,7 +557,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 {
                                     header: 'QTE',
                                     dataIndex: 'int_NUMBER',
-                                    flex: 1,
+                                    flex: 0.5,
                                     align: 'right',
                                     editor: {
                                         minValue: 1,
@@ -571,12 +567,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                         maskRe: /[0-9.]/
                                     }
                                 },
-                                {
-                                    header: 'QTE A LIVRER',
-                                    align: 'right',
-                                    dataIndex: 'int_QTE_REP_GROSSISTE',
-                                    flex: 1
-                                },
+
                                 {
                                     text: 'MONTANT',
                                     flex: 1,
@@ -584,6 +575,30 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     renderer: amountformat,
                                     sortable: true,
                                     dataIndex: 'int_PRICE'
+                                },
+                                {
+                                    header: 'Date de péremption',
+
+                                    dataIndex: 'datePeremption',
+                                    flex: 1.3
+                                }, {
+                                    xtype: 'actioncolumn',
+                                    width: 30,
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    items: [{
+                                            icon: 'resources/images/duplicate_3671686.png',
+                                            tooltip: 'Voir lots',
+                                            scope: this,
+                                            handler: this.onVoirLots,
+                                            getClass: function (value, metadata, record) {
+                                                if (record.get('lots').length > 0) {
+                                                    return 'x-display-hide'; //affiche l'icone
+                                                } else {
+                                                    return 'x-hide-display'; //cache l'icone
+                                                }
+                                            }
+                                        }]
                                 },
                                 {
                                     xtype: 'actioncolumn',
@@ -813,7 +828,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     },
     onchangeGrossiste: function () {
         testextjs.app.getController('App').ShowWaitingProcess();
-      
+
         Ext.Ajax.request({
             url: '../api/v1/commande/change-grossiste',
             method: 'GET',
@@ -1091,7 +1106,115 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
             titre: "Detail sur l'article [" + rec.get('str_DESCRIPTION') + "]"
         });
     },
+    onVoirLots: function (grid, rowIndex) {
+      
+        const rec = grid.getStore().getAt(rowIndex);
 
+
+
+
+        const achatsStore = Ext.create('Ext.data.Store', {
+            fields: [
+                {name: 'numeroLot', type: 'string'},
+                {name: 'datePeremption', type: 'string'},
+                {name: 'quantity', type: 'int'}
+            ],
+            data:rec.get('lots')
+
+         
+        });
+
+     
+        const form = Ext.create('Ext.window.Window',
+                {
+                    xtype: 'detailLot',
+                    alias: 'widget.detailLot',
+                    autoShow: true,
+                    height: 400,
+                    width: '50%',
+                    modal: true,
+                    title: '<span style="font-size:14px;"> DETAILS LOTS ' + rec.get('lg_FAMILLE_NAME') + '</span>',
+
+                    closeAction: 'hide',
+
+                    closable: true,
+                    maximizable: true,
+                    layout: {
+                        type: 'fit'
+
+                    },
+                    dockedItems: [
+                       
+                        {
+                            xtype: 'toolbar',
+                            dock: 'bottom',
+                            ui: 'footer',
+                            layout: {
+                                pack: 'end',
+                                type: 'hbox'
+                            },
+                            items: [
+
+                                {
+                                    xtype: 'button',
+                                    itemId: 'btnCancel',
+                                    text: 'Fermer',
+                                    handler: function () {
+                                        form.destroy();
+                                    }
+
+                                }
+                            ]
+                        }
+                    ],
+                    items: [
+                        {
+                            xtype: 'gridpanel',
+                            store: achatsStore,
+                            viewConfig: {
+                                forceFit: true,
+                                columnLines: true,
+                                enableColumnHide: false
+
+                            },
+
+                            columns: [
+                                {
+                                    xtype: 'rownumberer',
+                                    width: 50
+                                },
+
+                                {
+                                    header: 'Numéro de lot',
+                                    dataIndex: 'numeroLot',
+                                    flex: 1,
+                                    sortable: false,
+                                    menuDisabled: true
+                                }, {
+                                    header: 'Quantité',
+                                    xtype: 'numbercolumn',
+                                    dataIndex: 'quantity',
+                                    align: 'right',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 1,
+                                    format: '0,000.'
+
+                                }, {
+                                    header: 'Date de péremption',
+                                    dataIndex: 'datePeremption',
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    flex: 1
+                                }
+                            ]
+
+                           
+                        }
+                    ]
+                });
+
+    },
     onRechClick: function () {
         const me = this;
         const val = Ext.getCmp('rechercherDetail');

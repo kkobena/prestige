@@ -102,4 +102,34 @@ public final class DateUtil {
     private DateUtil() {
     }
 
+    public static LocalDate convertStringToDate(String date) {
+        if (Objects.isNull(date)) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String convertDateToString(LocalDate date) {
+        if (Objects.isNull(date)) {
+            return "";
+        }
+        try {
+            return date.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String convert(LocalDate date) {
+
+        if (date != null) {
+            return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } else {
+            return null;
+        }
+    }
 }
