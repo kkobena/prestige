@@ -170,6 +170,8 @@ public final class Constant {
     public static final String P_BTN_DESACTIVER_TIERS_PAYANT = "P_BTN_DESACTIVER_TIERS_PAYANT";
     public static final String CAUTION_ID = "10";
     public static final String KEY_OPTION_SUGGESTION = "KEY_OPTION_SUGGESTION";
+    public static final String STATUT_PERIME = "perime";
+    public static final String STATUT_ENCOURS_PEREMPTION = "en peremption";
 
     private Constant() {
     }

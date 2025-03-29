@@ -389,7 +389,7 @@ public class CommandeEncourDetailDTO {
 
     private String buildDatePeremption(Set<OrderDetailLot> lots) {
         if (lots != null) {
-            return lots.stream().map(OrderDetailLot::getDatePeremption).collect(Collectors.joining(", "));
+            return lots.stream().map(OrderDetailLot::getDatePeremption).distinct().collect(Collectors.joining(", "));
         }
         return null;
     }

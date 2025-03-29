@@ -44,10 +44,13 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     },
     xtype: 'ordermanagerlist',
     id: 'ordermanagerlistID',
-    frame: true,
+
     title: 'Modifier les informations de la commande',
     bodyPadding: 5,
     layout: 'column',
+    width: '97%',
+    height: 'auto',
+    minHeight: 570,
     initComponent: function () {
         Me_Window = this;
         let itemsPerPage = 100;
@@ -729,10 +732,19 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                     border: '0',
                     items: ['->',
                         {
+                            text: 'CREER BL',
+                            id: 'btn_creerbl',
+                            iconCls: 'icon-clear-group',
+                            scope: this,
+                            // handler: this.onbtncreerbl
+                            handler: this.onCreateBLClick
+                        },
+                        {
                             text: 'Passer la commande',
                             id: 'btn_save',
                             iconCls: 'icon-clear-group',
                             scope: this,
+                            hidden: true,
                             handler: this.onbtnsave
                         },
                         {
@@ -1107,11 +1119,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         });
     },
     onVoirLots: function (grid, rowIndex) {
-      
+
         const rec = grid.getStore().getAt(rowIndex);
-
-
-
 
         const achatsStore = Ext.create('Ext.data.Store', {
             fields: [
@@ -1119,12 +1128,12 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                 {name: 'datePeremption', type: 'string'},
                 {name: 'quantity', type: 'int'}
             ],
-            data:rec.get('lots')
+            data: rec.get('lots')
 
-         
+
         });
 
-     
+
         const form = Ext.create('Ext.window.Window',
                 {
                     xtype: 'detailLot',
@@ -1144,7 +1153,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
                     },
                     dockedItems: [
-                       
+
                         {
                             xtype: 'toolbar',
                             dock: 'bottom',
@@ -1209,7 +1218,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                 }
                             ]
 
-                           
+
                         }
                     ]
                 });
@@ -1296,6 +1305,18 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                 }
             });
         }
+    },
+    onCreateBLClick: function () {
+        const me = this;
+
+        new testextjs.view.commandemanagement.cmde_passees.action.add({
+            idOrder: me.getOdatasource().lg_ORDER_ID,
+            odatasource: me.getOdatasource().str_REF_ORDER,
+            montantachat: me.getOdatasource().PRIX_ACHAT_TOTAL,
+            parentview: this,
+            mode: "create",
+            titre: "Creation bon de livraison"
+        });
     }
 });
 

@@ -132,4 +132,22 @@ public final class DateUtil {
             return null;
         }
     }
+
+    public static Date from(LocalDate date) {
+
+        if (date != null) {
+            return DateCommonUtils.convertLocalDateToDate(date);
+        } else {
+            return null;
+        }
+    }
+
+    public static LocalDate fromString(String date) {
+
+        if (date != null) {
+            return LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } else {
+            return null;
+        }
+    }
 }

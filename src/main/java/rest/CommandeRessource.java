@@ -6,6 +6,7 @@
 package rest;
 
 import commonTasks.dto.ArticleDTO;
+import commonTasks.dto.EntreeStockDetailFiltre;
 import commonTasks.dto.Params;
 import dal.TUser;
 import java.io.IOException;
@@ -121,7 +122,7 @@ public class CommandeRessource {
 
     @GET
     @Path("commande-en-cours-items")
-    public Response reglements(@DefaultValue("ALL") @QueryParam(value = "filtre") CommandeFiltre filtre,
+    public Response getCommandeEncours(@DefaultValue("ALL") @QueryParam(value = "filtre") CommandeFiltre filtre,
             @QueryParam(value = "orderId") String orderId, @QueryParam(value = "start") int start,
             @QueryParam(value = "query") String query, @QueryParam(value = "limit") int limit) throws JSONException {
 
@@ -274,5 +275,32 @@ public class CommandeRessource {
 
         this.orderService.changeGrossiste(orderId, grossisteId);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("list-bons")
+    public Response getListBons(@QueryParam(value = "query") String query) throws JSONException {
+
+        return Response.ok().entity(orderService.getListBons(Constant.STATUT_ENABLE, query).toString()).build();
+    }
+
+    @DELETE
+    @Path("bon/{id}")
+    public Response deleteBon(@PathParam("id") String id) throws JSONException {
+
+        this.orderService.deleteBonLivraison(id);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("bon/items/{id}")
+    public Response getBonItems(@PathParam("id") String id, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @DefaultValue("") @QueryParam(value = "query") String query,
+            @DefaultValue("ALL") @QueryParam(value = "filtre") EntreeStockDetailFiltre filtre,
+            @DefaultValue("false") @QueryParam(value = "checkDatePeremption") Boolean checkDatePeremption) {
+
+        return Response.ok().entity(
+                orderService.getListBonsDetails(id, query, start, limit, filtre, checkDatePeremption).toString())
+                .build();
     }
 }

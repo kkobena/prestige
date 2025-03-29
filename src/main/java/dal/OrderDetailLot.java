@@ -11,9 +11,18 @@ public class OrderDetailLot {
     private String numeroLot;
     private String datePeremption;
     private int quantity;
+    private int quantityGratuit;
 
     public String getNumeroLot() {
         return numeroLot;
+    }
+
+    public int getQuantityGratuit() {
+        return quantityGratuit;
+    }
+
+    public void setQuantityGratuit(int quantityGratuit) {
+        this.quantityGratuit = quantityGratuit;
     }
 
     public void setNumeroLot(String numeroLot) {
