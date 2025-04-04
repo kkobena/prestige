@@ -51,7 +51,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     xtype: 'suggerercdemanager',
     id: 'suggerercdemanagerID',
     frame: true,
-    title: 'Suggerer une Commande',
+    title: 'Traitement de suggestion',
+    bodyStyle: 'background-color:  #E5E9EC;',
     bodyPadding: 5,
     layout: 'column',
     initComponent: function () {
@@ -158,7 +159,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             id: 'panelID',
             items: [{
                     xtype: 'fieldset',
-                    title: 'Infos Generales',
+                    title: 'Informations sur la suggestion',
                     collapsible: true,
                     defaultType: 'textfield',
                     margin: '5 0 5 0',
@@ -192,7 +193,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     listeners: {
                                         select: function (cmp) {
                                            
-                                            if (titre === 'Suggerer une commande') {
+                                            if (titre === 'Suggestion de commande') {
 
                                                 Me_Window.onchangeGrossiste();
                                             }
@@ -459,6 +460,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     dataIndex: 'int_VALUE0',
 
                                     flex: 1,
+                                    
                                     align: 'right',
                                     renderer: Me_Window.numberColumnRenderer
                                 },
@@ -466,7 +468,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     header: AppController.getMonthToDisplay(1, currentMonth),
                                     dataIndex: 'int_VALUE1',
                                     align: 'right',
-
                                     renderer: Me_Window.numberColumnRenderer,
                                     flex: 0.7
                                 },
@@ -475,12 +476,13 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     dataIndex: 'int_VALUE2',
                                     align: 'right',
                                     format: '0,000.',
-                                    renderer: Me_Window.numberColumnRenderer,
+                                   renderer: Me_Window.numberColumnRenderer,
+                                    
                                     flex: 0.7
                                 },
                                 {
                                     header: AppController.getMonthToDisplay(3, currentMonth),
-                                    dataIndex: 'int_VALUE3',
+                                    dataIndex: 'int_VALUE3',                                    
                                     align: 'right',
                                     renderer: Me_Window.numberColumnRenderer,
                                     flex: 0.7
@@ -609,7 +611,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             delay: 1,
             single: true
         });
-        if (titre === "Suggerer une commande") {
+        if (titre === "Suggestion de commande") {
             const OgridpanelSuggestionID = Ext.getCmp('gridpanelSuggestionID');
             Ext.getCmp('lg_GROSSISTE_ID').setValue(this.getOdatasource().lg_GROSSISTE_ID);
             Ext.getCmp('btn_print').show();
