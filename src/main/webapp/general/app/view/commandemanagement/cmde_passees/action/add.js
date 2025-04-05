@@ -82,8 +82,8 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
                             value: "0"
                         },
                         {
-                            fieldLabel: 'REF BL',
-                            emptyText: 'REF BL',
+                            fieldLabel: 'NUMERO BL:',
+                            emptyText: 'NUMERO BL',
                             name: 'str_REF_LIVRAISON',
                             allowBlank: false,
                             id: 'str_REF_LIVRAISON'
