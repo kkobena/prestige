@@ -230,6 +230,10 @@ Ext.define('testextjs.model.OrderDetail', {
          {
             name: 'datePeremption',
             type: 'string'
+        },
+         {
+            name: 'lotNums',
+            type: 'string'
         }
         
         //fin code ajouté

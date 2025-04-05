@@ -40,7 +40,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         plain: true,
         maximizable: true,
         closable: false,
-        nameintern: ''
+        nameintern: '',
+        orderRef: null,
+        prixAchat: null
     },
     xtype: 'ordermanagerlist',
     id: 'ordermanagerlistID',
@@ -578,13 +580,20 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     renderer: amountformat,
                                     sortable: true,
                                     dataIndex: 'int_PRICE'
-                                },
+                                }, {
+                                    header: 'LOTS',
+                                    dataIndex: 'lotNums',
+                                    flex: 1.1
+                                }, 
                                 {
-                                    header: 'Date de péremption',
+                                    header: 'DATE DE PEREMPTION',
 
                                     dataIndex: 'datePeremption',
-                                    flex: 1.3
-                                }, {
+                                    flex: 1.1
+                                }, 
+                                
+                                
+                                {
                                     xtype: 'actioncolumn',
                                     width: 30,
                                     sortable: false,
@@ -736,17 +745,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                             id: 'btn_creerbl',
                             iconCls: 'icon-clear-group',
                             scope: this,
-                            // handler: this.onbtncreerbl
                             handler: this.onCreateBLClick
                         },
-                        {
-                            text: 'Passer la commande',
-                            id: 'btn_save',
-                            iconCls: 'icon-clear-group',
-                            scope: this,
-                            hidden: true,
-                            handler: this.onbtnsave
-                        },
+
                         {
                             text: 'Retour',
                             id: 'btn_cancel',
@@ -866,14 +867,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         });
     },
     onbtncancel: function () {
-        let xtype = "";
-        if (str_STATUT === "is_Process" || str_STATUT === "is_Process") {
-            xtype = "i_order_manager";
-        } else {
-            xtype = "orderpassmanager";
-        }
 
-        testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
+        testextjs.app.getController('App').onLoadNewComponentWithDataSource("i_order_manager", "", "", "");
     },
 
     updateCip: function (win, formulaire) {
@@ -1074,40 +1069,6 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                 });
     },
 
-    onbtnsave: function () {
-        const me = this;
-        const xtype = "orderpassmanager";
-        Ext.MessageBox.confirm('Message',
-                'Confirme la passation',
-                function (btn) {
-                    if (btn === 'yes') {
-                        testextjs.app.getController('App').ShowWaitingProcess();
-                        Ext.Ajax.request({
-                            method: 'GET',
-                            url: '../api/v1/commande/statut/' + Me_Window.getNameintern() + '/passe',
-                            success: function () {
-                                testextjs.app.getController('App').StopWaitingProcess();
-                                Ext.MessageBox.confirm('Message',
-                                        'Imprimer le bon de commande?',
-                                        function (btn) {
-                                            if (btn === 'yes') {
-                                                me.onPdfClick( );
-                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
-                                            } else {
-                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
-                                            }
-                                        });
-
-                            },
-                            failure: function (response) {
-                                testextjs.app.getController('App').StopWaitingProcess();
-                                console.log("Bug " + response.responseText);
-                                Ext.MessageBox.alert('Error Message', response.responseText);
-                            }
-                        });
-                    }
-                });
-    },
     onDetailClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.configmanagement.famille.action.detailArticle({
@@ -1253,11 +1214,15 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
     },
     updateAmountFields: function (data) {
+        const me = this;
         if (data) {
             int_montant_achat = Ext.util.Format.number(data.prixAchat, '0,000.');
             int_montant_vente = Ext.util.Format.number(data.prixVente, '0,000.');
             Ext.getCmp('int_VENTE').setValue(int_montant_vente + '  CFA');
             Ext.getCmp('int_ACHAT').setValue(int_montant_achat + '  CFA');
+            me.orderRef = data.orderRef;
+            me.prixAchat = data.prixAchat;
+
 
         }
 
@@ -1307,12 +1272,14 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         }
     },
     onCreateBLClick: function () {
-        const me = this;
-
+        const me = this;//
+        const orderId = me.getOdatasource()?.lg_ORDER_ID ? me.getOdatasource().lg_ORDER_ID : me.getNameintern();
+        const  montantAchat = me.getOdatasource()?.PRIX_ACHAT_TOTAL ? me.getOdatasource().PRIX_ACHAT_TOTAL : me.getPrixAchat();
+        const orderRef = me.getOdatasource()?.str_REF_ORDER ? me.getOdatasource().str_REF_ORDER : me.getOrderRef();
         new testextjs.view.commandemanagement.cmde_passees.action.add({
-            idOrder: me.getOdatasource().lg_ORDER_ID,
-            odatasource: me.getOdatasource().str_REF_ORDER,
-            montantachat: me.getOdatasource().PRIX_ACHAT_TOTAL,
+            idOrder: orderId,
+            odatasource: orderRef,
+            montantachat: montantAchat,
             parentview: this,
             mode: "create",
             titre: "Creation bon de livraison"

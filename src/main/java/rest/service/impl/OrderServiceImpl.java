@@ -1017,20 +1017,21 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public JSONObject getCommandeAmount(String commandeId) {
-        long montantAchat = 0;
-        long montantVente = 0;
+
         try {
+            long montantAchat = 0;
+            long montantVente = 0;
             TOrder order = getEmg().find(TOrder.class, commandeId);
             for (TOrderDetail item : order.getTOrderDetailCollection()) {
                 montantAchat += item.getIntPRICE();
                 montantVente += ((long) item.getIntNUMBER() * item.getIntPRICEDETAIL());
             }
-
+            return new JSONObject().put("orderRef", order.getStrREFORDER()).put("success", true)
+                    .put("prixAchat", montantAchat).put("prixVente", montantVente);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-
+            return new JSONObject();
         }
-        return new JSONObject().put("success", true).put("prixAchat", montantAchat).put("prixVente", montantVente);
 
     }
 

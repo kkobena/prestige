@@ -72,9 +72,18 @@ public class CommandeEncourDetailDTO {
     private int[] produitStates;
     private Set<OrderDetailLot> lots = new HashSet<>();
     private String datePeremption;
+    private String lotNums;
 
     public int[] getProduitStates() {
         return produitStates;
+    }
+
+    public String getLotNums() {
+        return lotNums;
+    }
+
+    public void setLotNums(String lotNums) {
+        this.lotNums = lotNums;
     }
 
     public void setProduitStates(int[] produitStates) {
@@ -304,6 +313,7 @@ public class CommandeEncourDetailDTO {
 
         this.lots = detail.getLots();
         this.datePeremption = buildDatePeremption(this.lots);
+        this.lotNums = buildLotNums(this.lots);
     }
 
     public void setProduitCip(String produitCip) {
@@ -384,12 +394,20 @@ public class CommandeEncourDetailDTO {
         this.qteReasor = Math.abs(familleStock.getIntNUMBERAVAILABLE() - famille.getIntSEUILMIN());
         this.lots = detail.getLots();
         this.datePeremption = buildDatePeremption(this.lots);
+        this.lotNums = buildLotNums(this.lots);
 
     }
 
     private String buildDatePeremption(Set<OrderDetailLot> lots) {
         if (lots != null) {
             return lots.stream().map(OrderDetailLot::getDatePeremption).distinct().collect(Collectors.joining(", "));
+        }
+        return null;
+    }
+
+    private String buildLotNums(Set<OrderDetailLot> lots) {
+        if (lots != null) {
+            return lots.stream().map(OrderDetailLot::getNumeroLot).distinct().collect(Collectors.joining(", "));
         }
         return null;
     }
