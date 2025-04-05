@@ -163,8 +163,11 @@ public class OrderServiceImpl implements OrderService {
         oTBonLivraisonDetail.setLgGROSSISTEID(oTGrossiste);
         oTBonLivraisonDetail.setLgFAMILLEID(oTFamille);
         oTBonLivraisonDetail.setLgZONEGEOID(oTZoneGeographique);
-        oTBonLivraisonDetail.setIntQTECMDE(d.getIntQTEREPGROSSISTE());
-        oTBonLivraisonDetail.setIntQTERECUE(d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT());
+        oTBonLivraisonDetail.setIntQTECMDE(d.getIntNUMBER());
+        int qteCmd = Objects.requireNonNullElse(d.getIntNUMBER(), 0);
+        int qteRecu = Objects.requireNonNullElse(d.getIntQTEREPGROSSISTE(), 0);
+        oTBonLivraisonDetail.setIntQTERECUE(qteRecu);
+
         oTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
         oTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
         oTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
@@ -175,7 +178,7 @@ public class OrderServiceImpl implements OrderService {
         oTBonLivraisonDetail.setStrLIVRAISONADP("");
         oTBonLivraisonDetail.setStrMANQUEFORCES("");
         oTBonLivraisonDetail.setIntINITSTOCK(initStock);
-        oTBonLivraisonDetail.setIntQTEMANQUANT(oTBonLivraisonDetail.getIntQTECMDE());
+        oTBonLivraisonDetail.setIntQTEMANQUANT(qteRecu < qteCmd ? qteCmd - qteRecu : 0);
         oTBonLivraisonDetail.setDtCREATED(new Date());
         oTBonLivraisonDetail.setDtUPDATED(oTBonLivraisonDetail.getDtCREATED());
         oTBonLivraisonDetail.setStrSTATUT(Constant.STATUT_ENABLE);

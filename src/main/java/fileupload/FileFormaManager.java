@@ -556,7 +556,7 @@ public class FileFormaManager extends HttpServlet {
                     oTOrderDetail.setLgGROSSISTEID(order.getLgGROSSISTEID());
                     oTOrderDetail.setIntNUMBER(qty);
                     oTOrderDetail.setIntQTEREPGROSSISTE(qty);
-                    oTOrderDetail.setIntQTEMANQUANT(qty);
+                    oTOrderDetail.setIntQTEMANQUANT(0);
                     oTOrderDetail.setIntPRICE(qty * intPafDetail);
                     oTOrderDetail.setIntPRICEDETAIL((pu == 0 ? oTFamilleGrossiste.getIntPRICE() : pu));
                     oTOrderDetail.setIntPAFDETAIL(intPafDetail);
@@ -570,7 +570,7 @@ public class FileFormaManager extends HttpServlet {
                 } else {
                     oTOrderDetail.setUg(oTOrderDetail.getUg() + ug);
                     oTOrderDetail.setIntNUMBER(oTOrderDetail.getIntNUMBER() + qty);
-                    oTOrderDetail.setIntQTEMANQUANT(oTOrderDetail.getIntNUMBER());
+                    oTOrderDetail.setIntQTEMANQUANT(0);
                     oTOrderDetail.setIntPRICE(oTOrderDetail.getIntNUMBER() * intPafDetail);
                     oTOrderDetail.setIntQTEREPGROSSISTE(oTOrderDetail.getIntNUMBER());
                     addLot(oTOrderDetail, qty, numeroLot, datePeremption);
@@ -733,7 +733,7 @@ public class FileFormaManager extends HttpServlet {
                     oTOrderDetail.setLgGROSSISTEID(order.getLgGROSSISTEID());
                     oTOrderDetail.setIntNUMBER(qty);
                     oTOrderDetail.setIntQTEREPGROSSISTE(qty);
-                    oTOrderDetail.setIntQTEMANQUANT(qty);
+                    oTOrderDetail.setIntQTEMANQUANT(0);
                     oTOrderDetail.setIntPRICEDETAIL(oTFamille.getIntPRICE());
                     oTOrderDetail.setIntPAFDETAIL(prixAchat == null ? oTFamille.getIntPAF() : prixAchat);
                     oTOrderDetail.setPrixAchat(oTOrderDetail.getIntPAFDETAIL());
@@ -747,7 +747,7 @@ public class FileFormaManager extends HttpServlet {
                 } else {
 
                     oTOrderDetail.setIntNUMBER(oTOrderDetail.getIntNUMBER() + qty);
-                    oTOrderDetail.setIntQTEMANQUANT(oTOrderDetail.getIntNUMBER());
+                    oTOrderDetail.setIntQTEMANQUANT(0);
                     oTOrderDetail.setIntPRICE(oTOrderDetail.getIntNUMBER() * oTOrderDetail.getIntPAFDETAIL());
                     oTOrderDetail.setIntQTEREPGROSSISTE(oTOrderDetail.getIntNUMBER());
                     oTOrderDetail.setDtUPDATED(new Date());
