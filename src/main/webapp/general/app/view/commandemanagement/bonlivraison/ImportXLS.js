@@ -27,19 +27,21 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
         const _this = this;
         storetype = new Ext.data.Store({
             fields: ['name', 'value'],
-            data: [{name: 'LABOREX', value: 'Laborex'}, {name: 'COPHARMED', value: 'Copharmed'}, {name: 'TEDIS_2', value: 'Tedis'}, {name: 'DPCI', value: 'DPCI'}
+            data: [{name: 'LABOREX', value: 'Laborex'},
+                {name: 'COPHARMED', value: 'Copharmed'},
+                {name: 'TEDIS_2', value: 'Tedis'},
+                {name: 'DPCI', value: 'DPCI'}
                 , {name: 'CIP_QTE', value: 'MODEL CIP-QTE'}
-                , {name: 'CIP_QTE_CIP_QTER_PA', value: 'MODEL CIP_QTE_PRIX_ACHAT'}
                 , {name: 'CIP_QTE_CIP_QTER_PA', value: 'MODEL CIP_QTE_PRIX_ACHAT'}
             ]
         });
         ImportXLSStore = new Ext.data.Store({
             model: 'testextjs.model.Grossiste',
             pageSize: 999,
-     
+
             proxy: {
                 type: 'ajax',
-                     url: '../api/v1/grossiste/all',
+                url: '../api/v1/grossiste/all',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -85,8 +87,8 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
                         displayField: 'value',
                         queryMode: 'local',
                         width: '100%',
-                        emptyText: 'Choisir le modèle du BL'
-                     
+                        emptyText: 'Choisir le modèle'
+
                     },
                     {
                         xtype: 'combo',
@@ -98,7 +100,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
                         displayField: 'str_LIBELLE',
                         typeAhead: true,
                         queryMode: 'remote',
-                             pageSize: 999,
+                        pageSize: 999,
                         emptyText: 'Choisir un grossiste...',
                         store: ImportXLSStore
                     }
@@ -125,27 +127,27 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.ImportXLS', {
                                     success: function (form, action) {
 
                                         var result = Ext.JSON.decode(action.response.responseText, false);
-                                        console.log('result ',result);
+                                        console.log('result ', result);
                                         Ext.getCmp('OderGrid').getStore().load();
                                         Ext.getCmp('xlsxdialog').destroy();
-                                          if(!result.toBe){
+                                        if (!result.toBe) {
                                             Ext.MessageBox.show({
-                                            title: 'Info',
-                                            msg: result.success,
-                                            icon: Ext.MessageBox.INFO,
-                                            buttons:Ext.MessageBox.OK
-                                        });
-                                          }else{
-                                             Ext.MessageBox.show({
-                                            title: 'Info',
-                                            msg: result.success,
-                                            icon: Ext.MessageBox.INFO,
-                                            width:500,
-                                            height:140,
-                                            buttons: Ext.MessageBox.OK
-                                        });  
-                                          }
-                                        
+                                                title: 'Info',
+                                                msg: result.success,
+                                                icon: Ext.MessageBox.INFO,
+                                                buttons: Ext.MessageBox.OK
+                                            });
+                                        } else {
+                                            Ext.MessageBox.show({
+                                                title: 'Info',
+                                                msg: result.success,
+                                                icon: Ext.MessageBox.INFO,
+                                                width: 500,
+                                                height: 140,
+                                                buttons: Ext.MessageBox.OK
+                                            });
+                                        }
+
 
                                     },
                                     failure: function (form, action) {
