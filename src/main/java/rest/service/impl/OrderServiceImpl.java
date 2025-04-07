@@ -6,6 +6,7 @@
 package rest.service.impl;
 
 import commonTasks.dto.ArticleDTO;
+import commonTasks.dto.EntreeStockDetailFiltre;
 import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.RuptureDTO;
@@ -53,7 +54,8 @@ public class OrderServiceImpl implements OrderService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    private @EJB LogService logService;
+    @EJB
+    private LogService logService;
     @EJB
     private NotificationService notificationService;
     @EJB
@@ -113,7 +115,7 @@ public class OrderServiceImpl implements OrderService {
             TBonLivraison oBonLivraison = createBL(order, params.getOperateur(), params.getRef(),
                     DateConverter.convertLocalDateToDate(LocalDate.parse(params.getDtStart())), params.getValue(),
                     params.getValueTwo());
-            List<TOrderDetail> listTOrderDetail = getTOrderDetail(params.getRefParent(), DateConverter.PASSE);
+            List<TOrderDetail> listTOrderDetail = new ArrayList<>(order.getTOrderDetailCollection());
             LongAdder montant = new LongAdder();
             LongAdder count = new LongAdder();
             LongAdder count2 = new LongAdder();
@@ -125,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
                     createBLDetail(oBonLivraison, grossiste, famille, d, famille.getLgZONEGEOID(),
                             stock.getIntNUMBERAVAILABLE());
                     d.setStrSTATUT(Constant.STATUT_ENTREE_STOCK);
-                    this.productStateService.manageProduitState(famille, ProductStateEnum.COMMANDE_PASSE,
+                    this.productStateService.manageProduitState(famille, ProductStateEnum.COMMANDE_EN_COURS,
                             ProductStateEnum.ENTREE);
                     d.setDtUPDATED(new Date());
                     d.setIntORERSTATUS((short) 4);
@@ -151,14 +153,21 @@ public class OrderServiceImpl implements OrderService {
 
     private TBonLivraisonDetail createBLDetail(TBonLivraison oTBonLivraison, TGrossiste oTGrossiste, TFamille oTFamille,
             TOrderDetail d, TZoneGeographique oTZoneGeographique, int initStock) {
+        TUser user = oTBonLivraison.getLgUSERID();
+
+        TOrder order = oTBonLivraison.getLgORDERID();
+        TGrossiste grossiste = order.getLgGROSSISTEID();
         TBonLivraisonDetail oTBonLivraisonDetail = new TBonLivraisonDetail();
         oTBonLivraisonDetail.setLgBONLIVRAISONDETAIL(UUID.randomUUID().toString());
         oTBonLivraisonDetail.setLgBONLIVRAISONID(oTBonLivraison);
         oTBonLivraisonDetail.setLgGROSSISTEID(oTGrossiste);
         oTBonLivraisonDetail.setLgFAMILLEID(oTFamille);
         oTBonLivraisonDetail.setLgZONEGEOID(oTZoneGeographique);
-        oTBonLivraisonDetail.setIntQTECMDE(d.getIntQTEREPGROSSISTE());
-        oTBonLivraisonDetail.setIntQTERECUE(d.getIntQTEREPGROSSISTE() - d.getIntQTEMANQUANT());
+        oTBonLivraisonDetail.setIntQTECMDE(d.getIntNUMBER());
+        int qteCmd = Objects.requireNonNullElse(d.getIntNUMBER(), 0);
+        int qteRecu = Objects.requireNonNullElse(d.getIntQTEREPGROSSISTE(), 0);
+        oTBonLivraisonDetail.setIntQTERECUE(qteRecu);
+
         oTBonLivraisonDetail.setIntPRIXREFERENCE(d.getIntPRICEDETAIL());
         oTBonLivraisonDetail.setIntPRIXVENTE(d.getIntPRICEDETAIL());
         oTBonLivraisonDetail.setIntPAF(d.getIntPAFDETAIL());
@@ -169,28 +178,124 @@ public class OrderServiceImpl implements OrderService {
         oTBonLivraisonDetail.setStrLIVRAISONADP("");
         oTBonLivraisonDetail.setStrMANQUEFORCES("");
         oTBonLivraisonDetail.setIntINITSTOCK(initStock);
-        oTBonLivraisonDetail.setIntQTEMANQUANT(oTBonLivraisonDetail.getIntQTECMDE());
+        oTBonLivraisonDetail.setIntQTEMANQUANT(qteRecu < qteCmd ? qteCmd - qteRecu : 0);
         oTBonLivraisonDetail.setDtCREATED(new Date());
         oTBonLivraisonDetail.setDtUPDATED(oTBonLivraisonDetail.getDtCREATED());
         oTBonLivraisonDetail.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTBonLivraisonDetail.setLots(d.getLots());
+        TTypeetiquette tTypeetiquette = oTFamille.getLgTYPEETIQUETTEID() == null
+                ? em.find(TTypeetiquette.class, Constant.DEFAUL_TYPEETIQUETTE) : oTFamille.getLgTYPEETIQUETTEID();
+
+        oTBonLivraisonDetail.getLots().forEach(lotDTO -> {
+            LocalDate dtpremption = DateUtil.fromString(lotDTO.getDatePeremption());
+            Date dtp = DateUtil.from(dtpremption);
+
+            TEtiquette etiquette = createEtiquette(oTBonLivraisonDetail, user, tTypeetiquette, dtp, oTFamille,
+                    String.valueOf(lotDTO.getQuantity() + lotDTO.getQuantityGratuit()));
+            createTLot(lotDTO, user, oTFamille, oTBonLivraison.getStrREFLIVRAISON(), grossiste, order.getStrREFORDER(),
+                    dtp, dtpremption, etiquette);
+
+        });
         getEmg().persist(oTBonLivraisonDetail);
         return oTBonLivraisonDetail;
 
     }
 
-    private List<TOrderDetail> getTOrderDetail(String orderId, String statut) {
+    private void createTLot(OrderDetailLot orderDetailLot, TUser u, TFamille oFamille, String strRELIVRAISON,
+            TGrossiste grossiste, String strREFORDER, Date peremption, LocalDate dtpremption, TEtiquette etiquette) {
 
+        TLot lot = new TLot(UUID.randomUUID().toString());
+        lot.setDtCREATED(new Date());
+        lot.setLgUSERID(u);
+        lot.setLgFAMILLEID(oFamille);
+        lot.setIntNUMBER(orderDetailLot.getQuantity());
+        lot.setDtSORTIEUSINE(lot.getDtCREATED());
+        lot.setStrREFLIVRAISON(strRELIVRAISON);
+        lot.setLgGROSSISTEID(grossiste);
+        lot.setDtUPDATED(lot.getDtCREATED());
+        lot.setStrREFORDER(strREFORDER);
+        lot.setIntNUMBERGRATUIT(orderDetailLot.getQuantityGratuit());
+        lot.setStrSTATUT(Constant.STATUT_ENABLE);
+        lot.setIntQTYVENDUE(0);
+        lot.setIntNUMLOT(orderDetailLot.getNumeroLot());
+        lot.setDtPEREMPTION(peremption);
+
+        LocalDate tonow = LocalDate.now();
+
+        if (dtpremption.isBefore(tonow) || dtpremption.isEqual(tonow)) {
+            lot.setStrSTATUT(Constant.STATUT_PERIME);
+        } else {
+
+            if (tonow.plusMonths(getNombreMois()).isBefore(tonow)) {
+                lot.setStrSTATUT(Constant.STATUT_ENCOURS_PEREMPTION);
+            }
+
+        }
+        getEmg().persist(lot);
+        addWarehouse(u, oFamille, lot, grossiste, etiquette);
+
+    }
+
+    private int getNombreMois() {
         try {
-            TypedQuery<TOrderDetail> q = getEmg()
-                    .createQuery("SELECT t FROM TOrderDetail t WHERE t.strSTATUT = ?1 AND t.lgORDERID.lgORDERID = ?2",
-                            TOrderDetail.class)
-                    .setParameter(1, statut).setParameter(2, orderId);
-            return q.getResultList();
+            return Integer.parseInt(getEmg().find(TParameters.class, "KEY_MONTH_PERIME").getStrVALUE().trim());
+        } catch (Exception e) {
+            return 1000;
+        }
+    }
+
+    private TEtiquette createEtiquette(TBonLivraisonDetail bn, TUser u, TTypeetiquette oTypeetiquette,
+            Date dtPeremption, TFamille oFamille, String intNUMBER) {
+        TEtiquette etiquette = null;
+        String result;
+        try {
+            String typeEtiquetteName = oTypeetiquette.getStrNAME();
+            if (typeEtiquetteName.equalsIgnoreCase("CIP")) {
+                result = oFamille.getIntCIP();
+            } else if (typeEtiquetteName.equalsIgnoreCase("CIP_PRIX")) {
+                result = DateConverter.getShortId(4) + "-" + oFamille.getIntCIP() + "-" + bn.getIntPRIXVENTE();
+            } else if (typeEtiquetteName.equalsIgnoreCase("CIP_DESIGNATION")) {
+                result = DateConverter.getShortId(4) + "-" + oFamille.getIntCIP() + "-" + oFamille.getStrNAME();
+            } else if (typeEtiquetteName.equalsIgnoreCase("CIP_PRIX_DESIGNATION")) {
+                result = DateConverter.getShortId(4) + "-" + oFamille.getIntCIP() + "-" + bn.getIntPRIXVENTE() + "-"
+                        + oFamille.getStrNAME();
+            } else if (typeEtiquetteName.equalsIgnoreCase("POSITION")) {
+                result = DateConverter.getShortId(4) + "-" + oFamille.getLgZONEGEOID().getStrLIBELLEE();
+            } else {
+                result = DateConverter.getShortId(4) + "-" + oFamille.getIntCIP() + "-" + bn.getIntPRIXVENTE() + "-"
+                        + oFamille.getStrNAME();
+            }
+            etiquette = createEtiquette(u, dtPeremption, oTypeetiquette, result, typeEtiquetteName, oFamille,
+                    intNUMBER);
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-            return Collections.emptyList();
-        }
 
+        }
+        return etiquette;
+    }
+
+    private TEtiquette createEtiquette(TUser u, Date dtPeremption, TTypeetiquette typeetiquette, String strCODE,
+            String strNAME, TFamille oTFamille, String intNUMBER) {
+        TEtiquette tEtiquette = null;
+        try {
+            tEtiquette = new TEtiquette();
+            tEtiquette.setLgETIQUETTEID(UUID.randomUUID().toString());
+            tEtiquette.setStrCODE(strCODE);
+            tEtiquette.setStrNAME(strNAME);
+            tEtiquette.setDtPEROMPTION(dtPeremption);
+            tEtiquette.setLgFAMILLEID(oTFamille);
+            tEtiquette.setStrSTATUT(Constant.STATUT_ENABLE);
+            tEtiquette.setDtCREATED(new Date());
+            tEtiquette.setIntNUMBER(intNUMBER);
+            tEtiquette.setLgTYPEETIQUETTEID(typeetiquette);
+            tEtiquette.setLgEMPLACEMENTID(u.getLgEMPLACEMENTID());
+            this.getEmg().persist(tEtiquette);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+        return tEtiquette;
     }
 
     private boolean isRefBLExistForGrossiste(String ref, String idGrossiste) {
@@ -848,7 +953,7 @@ public class OrderServiceImpl implements OrderService {
         return order.getLgORDERID();
     }
 
-    public long fetchOrderItemsCount(CommandeFiltre filtre, String orderId, String query) {
+    private long fetchOrderItemsCount(CommandeFiltre filtre, String orderId, String query) {
         try {
 
             CriteriaBuilder cb = getEmg().getCriteriaBuilder();
@@ -912,20 +1017,21 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public JSONObject getCommandeAmount(String commandeId) {
-        long montantAchat = 0;
-        long montantVente = 0;
+
         try {
+            long montantAchat = 0;
+            long montantVente = 0;
             TOrder order = getEmg().find(TOrder.class, commandeId);
             for (TOrderDetail item : order.getTOrderDetailCollection()) {
                 montantAchat += item.getIntPRICE();
                 montantVente += ((long) item.getIntNUMBER() * item.getIntPRICEDETAIL());
             }
-
+            return new JSONObject().put("orderRef", order.getStrREFORDER()).put("success", true)
+                    .put("prixAchat", montantAchat).put("prixVente", montantVente);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
-
+            return new JSONObject();
         }
-        return new JSONObject().put("success", true).put("prixAchat", montantAchat).put("prixVente", montantVente);
 
     }
 
@@ -1389,5 +1495,353 @@ public class OrderServiceImpl implements OrderService {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
         }
+    }
+
+    @Override
+    public JSONObject getListBons(String statut, String search) {
+        JSONObject json = new JSONObject();
+        int count = getListBonsCount(statut, search);
+
+        json.put("total", count);
+        return json.put("data", buildListBons(statut, search));
+
+    }
+
+    private List<Predicate> getListBonsPredicats(CriteriaBuilder cb, Root<TBonLivraison> root, String statut,
+            String search) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(cb.equal(root.get(TBonLivraison_.strSTATUT), statut));
+
+        return predicates;
+    }
+
+    private int getListBonsCount(String statut, String search) {
+        try {
+
+            CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TBonLivraison> root = cq.from(TBonLivraison.class);
+            cq.select(cb.count(root));
+            List<Predicate> predicates = getListBonsPredicats(cb, root, statut, search);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            TypedQuery<Long> q = getEmg().createQuery(cq);
+
+            return q.getSingleResult().intValue();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private List<TBonLivraison> fetchListBons(String statut, String search) {
+        try {
+
+            CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+            CriteriaQuery<TBonLivraison> cq = cb.createQuery(TBonLivraison.class);
+            Root<TBonLivraison> root = cq.from(TBonLivraison.class);
+            cq.select(root);
+            List<Predicate> predicates = getListBonsPredicats(cb, root, statut, search);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            TypedQuery<TBonLivraison> q = getEmg().createQuery(cq);
+
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return List.of();
+        }
+    }
+
+    private boolean displayFilter() {
+        try {
+            TParameters p = getEmg().find(TParameters.class, "KEY_ACTIVATE_PEREMPTION_DATE");
+            return !p.getStrVALUE().trim().equals("1");
+        } catch (Exception e) {
+            return true;
+        }
+
+    }
+
+    private JSONArray buildListBons(String statut, String search) {
+        try {
+            JSONArray array = new JSONArray();
+            List<TBonLivraison> datats = fetchListBons(statut, search);
+
+            for (TBonLivraison bonLivraison : datats) {
+                JSONObject json = new JSONObject();
+
+                json.put("lg_BON_LIVRAISON_ID", bonLivraison.getLgBONLIVRAISONID());
+                json.put("str_REF_LIVRAISON", bonLivraison.getStrREFLIVRAISON());
+
+                json.put("lg_USER_ID", bonLivraison.getLgUSERID().getStrFIRSTNAME() + " "
+                        + bonLivraison.getLgUSERID().getStrLASTNAME());
+                json.put("str_REF_ORDER", bonLivraison.getLgORDERID().getStrREFORDER());
+                json.put("lg_GROSSISTE_ID", bonLivraison.getLgORDERID().getLgGROSSISTEID().getLgGROSSISTEID());
+                json.put("str_GROSSISTE_LIBELLE", bonLivraison.getLgORDERID().getLgGROSSISTEID().getStrLIBELLE());
+
+                json.put("int_MHT", bonLivraison.getIntMHT());
+                json.put("int_TVA", bonLivraison.getIntTVA());
+                json.put("int_HTTC", bonLivraison.getIntHTTC());
+                int totalQte = 0;
+                int prixAchat = 0;
+                int count = 0;
+                for (TBonLivraisonDetail it : bonLivraison.getTBonLivraisonDetailCollection()) {
+                    totalQte += it.getIntQTECMDE();
+                    prixAchat += (it.getIntPAF() * it.getIntQTECMDE());
+                    count++;
+                }
+                json.put("int_NBRE_LIGNE_BL_DETAIL", count);
+                json.put("int_NBRE_PRODUIT", totalQte);
+
+                json.put("PRIX_ACHAT_TOTAL", prixAchat);
+                json.put("DISPLAYFILTER", displayFilter());
+
+                json.put("str_STATUT", bonLivraison.getStrSTATUT());
+                json.put("dt_DATE_LIVRAISON", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtDATELIVRAISON()));
+                json.put("dt_CREATED", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtCREATED()));
+                json.put("dt_CREATED", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtUPDATED()));
+
+                array.put(json);
+            }
+            return array;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new JSONArray();
+        }
+    }
+
+    @Override
+    public void deleteBonLivraison(String id) {
+        TBonLivraison bonLivraison = getEmg().find(TBonLivraison.class, id);
+        bonLivraison.getTBonLivraisonDetailCollection().forEach(getEmg()::remove);
+        deleteLots(bonLivraison.getStrREFLIVRAISON());
+        TOrder order = bonLivraison.getLgORDERID();
+        order.getTOrderDetailCollection().forEach(d -> {
+
+            d.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+            getEmg().merge(d);
+        });
+        order.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        getEmg().remove(bonLivraison);
+        getEmg().merge(order);
+    }
+
+    private void deleteLots(String blRef) {
+
+        try {
+            List<TLot> lot = getEmg().createQuery("SELECT o FROM  TLot o WHERE o.strREFLIVRAISON=?1")
+                    .setParameter(1, blRef).getResultList();
+            lot.forEach(getEmg()::remove);
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+
+    }
+
+    @Override
+    public JSONObject getListBonsDetails(String bonId, String search, int start, int limit,
+            EntreeStockDetailFiltre filtre, Boolean checkDatePeremption) {
+        JSONObject json = new JSONObject();
+        int count = getListBonsDetailsCount(bonId, search, filtre, checkDatePeremption);
+
+        json.put("total", count);
+        return json.put("data",
+                buildListBonsDetails(fetchListBonsDetails(bonId, search, start, limit, filtre, checkDatePeremption)));
+    }
+
+    private int getListBonsDetailsCount(String bonId, String search, EntreeStockDetailFiltre filtre,
+            Boolean checkDatePeremption) {
+        boolean checkDate = Objects.requireNonNullElse(checkDatePeremption, false);
+        String searchQuery = " AND (t.lgFAMILLEID.intCIP LIKE '%s' OR t.lgFAMILLEID.intEAN13 LIKE '%s' OR t.lgFAMILLEID.strDESCRIPTION LIKE '%s') ";
+        String searchQueryFinal = StringUtils.isNotEmpty(search)
+                ? String.format(searchQuery, search + "%", search + "%", search + "%") : "";
+
+        try {
+            String query = "SELECT COUNT(t) FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONID.lgBONLIVRAISONID = ?1 %s ";
+            if (filtre == EntreeStockDetailFiltre.PRIX) {
+                String prix = checkDate ? "  AND t.lgFAMILLEID.boolCHECKEXPIRATIONDATE=TRUE  " : "";
+                query = "SELECT COUNT(t) FROM TBonLivraisonDetail t WHERE  t.lgBONLIVRAISONID.lgBONLIVRAISONID = ?1 %s AND t.intQTERECUE = 0 AND t.intPRIXVENTE <> t.lgFAMILLEID.intPRICE "
+                        + prix;
+
+            }
+
+            return ((Number) getEmg().createQuery(String.format(query, searchQueryFinal)).setParameter(1, bonId)
+                    .getSingleResult()).intValue();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private List<TBonLivraisonDetail> fetchListBonsDetails(String bonId, String search, int start, int limit,
+            EntreeStockDetailFiltre filtre, Boolean checkDatePeremption) {
+        boolean checkDate = Objects.requireNonNullElse(checkDatePeremption, false);
+        String searchQuery = " AND (t.lgFAMILLEID.intCIP LIKE '%s' OR t.lgFAMILLEID.intEAN13 LIKE '%s' OR t.lgFAMILLEID.strDESCRIPTION LIKE '%s') ";
+        String searchQueryFinal = StringUtils.isNotEmpty(search)
+                ? String.format(searchQuery, search + "%", search + "%", search + "%") : "";
+
+        try {
+            String query = "SELECT t FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONID.lgBONLIVRAISONID = ?1 %s  ORDER BY t.dtUPDATED DESC";
+            if (filtre == EntreeStockDetailFiltre.PRIX) {
+                String prix = checkDate
+                        ? "  AND t.lgFAMILLEID.boolCHECKEXPIRATIONDATE=TRUE   ORDER BY t.dtUPDATED DESC "
+                        : "  ORDER BY t.dtUPDATED DESC ";
+                query = "SELECT t FROM TBonLivraisonDetail t WHERE  t.lgBONLIVRAISONID.lgBONLIVRAISONID = ?1 %s AND t.intQTERECUE = 0 AND t.intPRIXVENTE <> t.lgFAMILLEID.intPRICE "
+                        + prix;
+
+            }
+
+            return getEmg().createQuery(String.format(query, searchQueryFinal)).setParameter(1, bonId)
+                    .setFirstResult(start).setMaxResults(limit).getResultList();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return List.of();
+        }
+    }
+
+    private JSONArray buildListBonsDetails(List<TBonLivraisonDetail> bonLivraisonDetails) {
+        try {
+            JSONArray array = new JSONArray();
+            TBonLivraison bonLivraison = bonLivraisonDetails.get(0).getLgBONLIVRAISONID();
+            String grossiste = bonLivraison.getLgORDERID().getLgGROSSISTEID().getLgGROSSISTEID();
+            for (TBonLivraisonDetail bonLivraisonDetail : bonLivraisonDetails) {
+                JSONObject json = new JSONObject();
+                TFamille famille = bonLivraisonDetail.getLgFAMILLEID();
+                TFamilleGrossiste OTFamilleGrossiste = findFamilleGrossiste(famille.getLgFAMILLEID(), grossiste);
+
+                json.put("lg_BON_LIVRAISON_DETAIL", bonLivraisonDetail.getLgBONLIVRAISONDETAIL());
+
+                json.put("int_QTE_CMDE", bonLivraisonDetail.getIntQTECMDE());
+                json.put("int_QTE_RECUE_REEL", (bonLivraisonDetail.getIntQTERECUE() > 0
+                        ? bonLivraisonDetail.getIntQTERECUE() - bonLivraisonDetail.getIntQTEUG() : "-"));
+                json.put("int_QTE_RECUE_BIS", (bonLivraisonDetail.getIntQTERECUE() > 0
+                        ? bonLivraisonDetail.getIntQTERECUE() - bonLivraisonDetail.getIntQTEUG() : -1));
+                json.put("str_LIVRAISON_ADP", bonLivraisonDetail.getStrLIVRAISONADP());
+                json.put("str_MANQUE_FORCES", bonLivraisonDetail.getStrMANQUEFORCES());
+                json.put("str_ETAT_ARTICLE", bonLivraisonDetail.getStrETATARTICLE());
+                json.put("int_PRIX_REFERENCE", bonLivraisonDetail.getIntPRIXREFERENCE());
+                json.put("int_PRIX_VENTE", bonLivraisonDetail.getIntPRIXVENTE());
+
+                json.put("int_PAF", bonLivraisonDetail.getIntPAF());
+                json.put("int_PA_REEL", bonLivraisonDetail.getIntPAREEL());
+                json.put("lg_FAMILLE_PRIX_ACHAT", bonLivraisonDetail.getIntQTEUG());
+
+                json.put("lg_FAMILLE_ID", bonLivraisonDetail.getLgFAMILLEID().getLgFAMILLEID());
+                json.put("lg_FAMILLE_NAME", bonLivraisonDetail.getLgFAMILLEID().getStrNAME());
+                // json.put("lg_FAMILLE_CIP", bonLivraisonDetail.getLgFAMILLEID().getIntCIP());
+
+                json.put("lg_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE()
+                        : bonLivraisonDetail.getLgFAMILLEID().getIntCIP()));
+
+                json.put("str_REF_LIVRAISON", bonLivraisonDetail.getLgBONLIVRAISONID().getStrREFLIVRAISON());
+                // json.put("int_QTE_MANQUANT", bonLivraisonDetail.getIntQTECMDE() -
+                // bonLivraisonDetail.getIntQTERECUE());
+                // json.put("int_QTE_MANQUANT", (bonLivraisonDetail.getIntQTEMANQUANT() >= 0 ?
+                // bonLivraisonDetail.getIntQTEMANQUANT() : 0));
+                json.put("int_SEUIL", bonLivraisonDetail.getLgFAMILLEID().getIntSEUILMIN());
+
+                // dbl_PRIX_MOYEN_PONDERE
+                json.put("dbl_PRIX_MOYEN_PONDERE", (bonLivraisonDetail.getLgFAMILLEID().getDblPRIXMOYENPONDERE() != null
+                        ? bonLivraisonDetail.getLgFAMILLEID().getDblPRIXMOYENPONDERE() : 0));
+
+                try {
+
+                    TFamille OTFamille = bonLivraisonDetail.getLgFAMILLEID();
+
+                    TFamilleStock OTFamilleStock = getTProductItemStock(OTFamille.getLgFAMILLEID());
+
+                    int QTE_STOCK = OTFamilleStock.getIntNUMBERAVAILABLE();
+                    json.put("lg_FAMILLE_QTE_STOCK", QTE_STOCK);
+                    json.put("prixDiff", bonLivraisonDetail.getIntPRIXVENTE().compareTo(OTFamille.getIntPRICE()) != 0);
+
+                } catch (Exception E) {
+
+                }
+
+                try {
+                    json.put("lg_ZONE_GEO_ID", bonLivraisonDetail.getLgZONEGEOID().getLgZONEGEOID());
+                    json.put("lg_ZONE_GEO_NAME", bonLivraisonDetail.getLgZONEGEOID().getStrLIBELLEE());
+                } catch (Exception e) {
+
+                }
+                try {
+                    json.put("lg_GROSSISTE_ID", bonLivraisonDetail.getLgGROSSISTEID().getStrLIBELLE());
+                } catch (Exception e) {
+                }
+
+                try {
+                    json.put("lg_BON_LIVRAISON_ID", bonLivraisonDetail.getLgBONLIVRAISONID().getStrREFLIVRAISON());
+                    json.put("str_REF_ORDER", bonLivraisonDetail.getLgBONLIVRAISONID().getLgORDERID().getStrREFORDER());
+
+                    json.put("str_STATUT", bonLivraisonDetail.getStrSTATUT());
+
+                } catch (Exception e) {
+                }
+
+                json.put("lg_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE()
+                        : bonLivraisonDetail.getLgFAMILLEID().getIntCIP()));
+                json.put("int_NUMBERDETAIL", bonLivraisonDetail.getLgFAMILLEID().getIntNUMBERDETAIL());
+                json.put("bool_DECONDITIONNE", bonLivraisonDetail.getLgFAMILLEID().getBoolDECONDITIONNE());
+                json.put("bool_DECONDITIONNE_EXIST", bonLivraisonDetail.getLgFAMILLEID().getBoolDECONDITIONNEEXIST());
+
+                if (!displayFilter()) {
+                    json.put("int_QTE_MANQUANT", 0);
+                    json.put("checkExpirationdate",
+                            bonLivraisonDetail.getLgFAMILLEID().getBoolCHECKEXPIRATIONDATE() == true ? false : true);
+                    json.put("DISPLAYFILTER",
+                            bonLivraisonDetail.getLgFAMILLEID().getBoolCHECKEXPIRATIONDATE() == true ? false : true);
+                    json.put("int_QTE_RECUE", bonLivraisonDetail.getIntQTECMDE());
+                    if (bonLivraisonDetail.getLgFAMILLEID().getBoolCHECKEXPIRATIONDATE()) {
+                        json.put("int_QTE_RECUE", (bonLivraisonDetail.getIntQTERECUE() > 0
+                                ? bonLivraisonDetail.getIntQTERECUE() - bonLivraisonDetail.getIntQTEUG() : "-"));
+                        json.put("intQTERECUE", (bonLivraisonDetail.getIntQTERECUE() > 0
+                                ? bonLivraisonDetail.getIntQTERECUE() - bonLivraisonDetail.getIntQTEUG() : 0));
+                        if (bonLivraisonDetail.getIntQTEMANQUANT() > bonLivraisonDetail.getIntQTECMDE()) {
+                            json.put("int_QTE_MANQUANT", bonLivraisonDetail.getIntQTECMDE());
+                        } else {
+                            json.put("int_QTE_MANQUANT", (bonLivraisonDetail.getIntQTEMANQUANT() >= 0
+                                    ? bonLivraisonDetail.getIntQTEMANQUANT() : 0));
+                        }
+
+                    }
+                } else {
+                    json.put("checkExpirationdate", true);
+                    json.put("DISPLAYFILTER", true);
+                    json.put("int_QTE_RECUE", bonLivraisonDetail.getIntQTECMDE());
+                    json.put("int_QTE_MANQUANT", 0);
+                }
+                array.put(json);
+            }
+            return array;
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return new JSONArray();
+        }
+    }
+
+    private void addWarehouse(TUser user, TFamille oTFamille, TLot lot, TGrossiste oGrossiste, TEtiquette etiquette) {
+
+        TWarehouse warehouse = new TWarehouse();
+        warehouse.setLgWAREHOUSEID(UUID.randomUUID().toString());
+        warehouse.setLgUSERID(user);
+        warehouse.setLgFAMILLEID(oTFamille);
+        warehouse.setIntNUMBER(lot.getIntNUMBER());
+        warehouse.setDtPEREMPTION(lot.getDtPEREMPTION());
+        warehouse.setDtSORTIEUSINE(lot.getDtSORTIEUSINE());
+        warehouse.setStrREFLIVRAISON(lot.getStrREFLIVRAISON());
+        warehouse.setLgGROSSISTEID(oGrossiste);
+        warehouse.setStrREFORDER(lot.getStrREFORDER());
+        warehouse.setDtCREATED(new Date());
+        warehouse.setDtUPDATED(warehouse.getDtCREATED());
+        warehouse.setIntNUMLOT(lot.getIntNUMLOT());
+        warehouse.setIntNUMBERGRATUIT(lot.getIntNUMBERGRATUIT());
+        warehouse.setStrSTATUT(Constant.STATUT_ENABLE);
+        warehouse.setLgTYPEETIQUETTEID(etiquette.getLgTYPEETIQUETTEID());
+        warehouse.setStrCODEETIQUETTE(etiquette.getStrCODE());
+        this.getEmg().persist(warehouse);
+
     }
 }
