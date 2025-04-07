@@ -102,4 +102,52 @@ public final class DateUtil {
     private DateUtil() {
     }
 
+    public static LocalDate convertStringToDate(String date) {
+        if (Objects.isNull(date)) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String convertDateToString(LocalDate date) {
+        if (Objects.isNull(date)) {
+            return "";
+        }
+        try {
+            return date.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String convert(LocalDate date) {
+
+        if (date != null) {
+            return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } else {
+            return null;
+        }
+    }
+
+    public static Date from(LocalDate date) {
+
+        if (date != null) {
+            return DateCommonUtils.convertLocalDateToDate(date);
+        } else {
+            return null;
+        }
+    }
+
+    public static LocalDate fromString(String date) {
+
+        if (date != null) {
+            return LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } else {
+            return null;
+        }
+    }
 }

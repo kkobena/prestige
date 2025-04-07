@@ -6,6 +6,7 @@
 package rest.service;
 
 import commonTasks.dto.ArticleDTO;
+import commonTasks.dto.EntreeStockDetailFiltre;
 import commonTasks.dto.GenererFactureDTO;
 import commonTasks.dto.Params;
 import commonTasks.dto.RuptureDTO;
@@ -111,4 +112,11 @@ public interface OrderService {
     void mergeOrder(CommandeIdsDTO commandeIds);
 
     void changeGrossiste(String idCommande, String grossisteId);
+
+    JSONObject getListBons(String statut, String search);
+
+    void deleteBonLivraison(String id);
+
+    JSONObject getListBonsDetails(String bonId, String search, int start, int limit, EntreeStockDetailFiltre filtre,
+            Boolean checkDatePeremption);
 }

@@ -222,6 +222,18 @@ Ext.define('testextjs.model.OrderDetail', {
          {
             name: 'int_PRICE_MACHINE',
             type: 'int'
+        },
+         {
+            name: 'lots',
+            type: 'auto'
+        },
+         {
+            name: 'datePeremption',
+            type: 'string'
+        },
+         {
+            name: 'lotNums',
+            type: 'string'
         }
         
         //fin code ajouté
