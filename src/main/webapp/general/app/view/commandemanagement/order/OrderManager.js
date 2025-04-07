@@ -1,7 +1,6 @@
 /* global Ext */
 
 
-var url_services_transaction_order = '../webservices/commandemanagement/order/ws_transaction.jsp?mode=';
 var Me;
 var val;
 var listOrderSelected;
@@ -151,9 +150,9 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
 
                         {
                             icon: 'resources/images/icons/fam/folder_go.png',
-                            tooltip: 'Commander',
+                            tooltip: 'Créer le bon de livraisson',
                             scope: this,
-                            handler: this.onPasseOrderClick
+                            handler: this.onCreateBLClick
                         }, '-',
                         {
                             icon: 'resources/images/icons/fam/printer.png',
@@ -356,16 +355,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         const xtype = "ordermanagerlist";
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Ajouter les articles a une commande", "0", "is_Process");
     },
-    onPasseOrderClick: function (grid, rowIndex) {
-        const rec = grid.getStore().getAt(rowIndex);
-        new testextjs.view.commandemanagement.order.action.manageorderpass({
-            odatasource: rec.data,
-            nameintern: "Passation de commande",
-            parentview: this,
-            mode: "passed",
-            titre: "Passation de la commande [" + rec.get('str_REF_ORDER') + "]"
-        });
-    },
+   
     envoiPharmaML: function (grid, rowIndex) {
         const record = grid.getStore().getAt(rowIndex);
         const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
@@ -575,6 +565,16 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
             Ext.MessageBox.alert('Avertissement', "Veuillez s&eacute;lectionner au moins deux commandes du m&ecirc;me grossiste");
         }
 
+    },
+    onCreateBLClick: function (grid, rowIndex) {
+        const rec = grid.getStore().getAt(rowIndex);
+        new testextjs.view.commandemanagement.cmde_passees.action.add({
+            idOrder:rec.get('lg_ORDER_ID'),
+            odatasource:rec.get('str_REF_ORDER'),
+            montantachat: rec.get('PRIX_ACHAT_TOTAL'),
+            parentview: this,
+            mode: "create",
+            titre: "Creation bon de livraison"
+        });
     }
-
 });

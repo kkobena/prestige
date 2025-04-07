@@ -481,24 +481,18 @@ int_montant_achat = object.PRIX_ACHAT_TOTAL;
     },
     onAddProductClick: function(grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
-        var str_REF_LIVRAISON = Ext.getCmp('str_REF_LIVRAISON').getValue();
-        //  alert("str_REF_LIVRAISON "+str_REF_LIVRAISON);
-//        if (str_REF_LIVRAISON == "") {
-//            Ext.MessageBox.alert('Erreur', 'Le champ reference vide. Veuillez reseigner svp!');
-//            return;
-//        }
         new testextjs.view.stockmanagement.etatstock.action.add({
             odatasource: rec.data,
             parentview: this,
             mode: "create",
-            titre: "Ajout d'article [" + rec.get('lg_FAMILLE_NAME') + "]",
-            // reference: str_REF_LIVRAISON
+            titre: "Ajout d'article [" + rec.get('lg_FAMILLE_NAME') + "]"
+           
         });
     },
     onbtncancel: function() {
 
         var xtype = "";
-        xtype = "orderpassmanager";
+        xtype = "i_order_manager";
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
 
     },

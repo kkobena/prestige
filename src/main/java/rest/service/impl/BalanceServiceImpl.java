@@ -137,7 +137,7 @@ public class BalanceServiceImpl implements BalanceService {
             boolean checkUg = checkUg() && !balanceParams.isShowAllAmount();
             List<BalanceVenteItemDTO> vnoData = groupByTypeVente.remove(TypeTransaction.VENTE_COMPTANT);
             BalanceDTO balanceVno = buildVenteBalance(vnoData, checkUg, balanceParams.isShowAllAmount(),
-                    venteRegelementMap.remove("1"));
+                    venteRegelementMap.remove(Constant.VENTE_COMPTANT_ID));
 
             balanceVno.setTypeVente(Constant.VENTE_COMPTANT);
             balanceVno.setBalanceId(balanceVno.getTypeVente());

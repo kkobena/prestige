@@ -114,15 +114,15 @@ public class CommandeServiceImpl implements CommandeService {
     private static final Logger LOG = Logger.getLogger(CommandeServiceImpl.class.getName());
 
     @EJB
-    MvtProduitService mvtProduitService;
+    private MvtProduitService mvtProduitService;
     @EJB
-    MouvementProduitService mouvementProduitService;
+    private MouvementProduitService mouvementProduitService;
     @EJB
-    TransactionService transactionService;
+    private TransactionService transactionService;
     @EJB
-    LogService logService;
+    private LogService logService;
     @EJB
-    OrderService orderService;
+    private OrderService orderService;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB

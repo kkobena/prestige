@@ -56,13 +56,7 @@ public class Notification implements Serializable {
     @Column(name = "statut")
     @Enumerated(EnumType.STRING)
     private Statut statut = Statut.NOT_SEND;
-    /*
-     * @NotNull
-     *
-     * @Enumerated(EnumType.ORDINAL)
-     *
-     * @Column(name = "canal", nullable = false) private Canal canal;
-     */
+
     @NotNull
     @ManyToOne(optional = false)
     @JoinColumn(name = "type_notification", referencedColumnName = "id")

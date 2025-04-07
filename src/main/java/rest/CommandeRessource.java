@@ -6,6 +6,7 @@
 package rest;
 
 import commonTasks.dto.ArticleDTO;
+import commonTasks.dto.EntreeStockDetailFiltre;
 import commonTasks.dto.Params;
 import dal.TUser;
 import java.io.IOException;
@@ -39,7 +40,6 @@ import rest.service.dto.CommandeCsvDTO;
 import rest.service.dto.CommandeFiltre;
 import rest.service.dto.CommandeIdsDTO;
 import rest.service.dto.OrderDetailDTO;
-import toolkits.parameters.commonparameter;
 import util.Constant;
 
 /**
@@ -61,10 +61,8 @@ public class CommandeRessource {
     @Path("validerbl/{id}")
     public Response cloturerBonLivration(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+
         JSONObject json = commandeService.cloturerBonLivraison(id, tu);
         return Response.ok().entity(json.toString()).build();
     }
@@ -73,10 +71,8 @@ public class CommandeRessource {
     @Path("clotureinventaire/{id}")
     public Response cloturerInventaire(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+
         JSONObject json = commandeService.cloturerInvetaire(id, tu);
         return Response.ok().entity(json.toString()).build();
     }
@@ -84,11 +80,7 @@ public class CommandeRessource {
     @POST
     @Path("cip")
     public Response updateCip(Params params) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = commandeService.createProduct(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -97,10 +89,8 @@ public class CommandeRessource {
     @Path("creerbl")
     public Response creerBl(Params params) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+
         params.setOperateur(tu);
         JSONObject json = orderService.creerBonLivraison(params);
         return Response.ok().entity(json.toString()).build();
@@ -110,10 +100,8 @@ public class CommandeRessource {
     @Path("updateorderitem")
     public Response modifierProduitCommande(ArticleDTO dto) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+
         try {
             orderService.modificationProduitCommandeEncours(dto, tu);
             return Response.ok().entity(new JSONObject().put("success", true).toString()).build();
@@ -127,39 +115,27 @@ public class CommandeRessource {
     @POST
     @Path("update/scheduled")
     public Response updateScheduled(Params params) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = orderService.updateScheduled(params.getRef(), params.isScheduled());
         return Response.ok().entity(json.toString()).build();
     }
 
     @GET
     @Path("commande-en-cours-items")
-    public Response reglements(@DefaultValue("ALL") @QueryParam(value = "filtre") CommandeFiltre filtre,
+    public Response getCommandeEncours(@DefaultValue("ALL") @QueryParam(value = "filtre") CommandeFiltre filtre,
             @QueryParam(value = "orderId") String orderId, @QueryParam(value = "start") int start,
             @QueryParam(value = "query") String query, @QueryParam(value = "limit") int limit) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-
-        JSONObject jsono = orderService.fetchOrderItems(filtre, orderId, query, start, limit);
-        return Response.ok().entity(jsono.toString()).build();
+        return Response.ok().entity(orderService.fetchOrderItems(filtre, orderId, query, start, limit).toString())
+                .build();
     }
 
     @POST
     @Path("orderitem-prix-vente")
     public Response modifierProduitPrixVenteCommandeEnCours(ArticleDTO dto) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+
         try {
             orderService.modifierProduitPrixVenteCommandeEnCours(dto, tu);
             return Response.ok().entity(new JSONObject().put("success", true).toString()).build();
@@ -184,11 +160,7 @@ public class CommandeRessource {
     @DELETE
     @Path("item/{id}")
     public Response delete(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.orderService.removeItem(id);
         return Response.ok().build();
     }
@@ -196,11 +168,7 @@ public class CommandeRessource {
     @GET
     @Path("amount/{id}")
     public Response getCommandeAmount(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         return Response.ok().entity(this.orderService.getCommandeAmount(id).toString()).build();
     }
 
@@ -208,10 +176,7 @@ public class CommandeRessource {
     @Path("item/add")
     public Response addItem(OrderDetailDTO orderDetail) {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
         return Response.ok().entity(this.orderService.addItem(orderDetail, tu).toString()).build();
     }
@@ -264,11 +229,7 @@ public class CommandeRessource {
     @GET
     @Path("statut/{id}/passe")
     public Response passerCommande(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.orderService.passerLaCommande(id);
         return Response.ok().build();
     }
@@ -276,11 +237,7 @@ public class CommandeRessource {
     @GET
     @Path("statut/{id}/rollback")
     public Response passerCommandeEnCours(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.orderService.changerEnCommandeEnCours(id);
         return Response.ok().build();
     }
@@ -288,11 +245,7 @@ public class CommandeRessource {
     @DELETE
     @Path("order/{id}")
     public Response deleteOrder(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.orderService.removeOrder(id);
         return Response.ok().build();
     }
@@ -301,10 +254,8 @@ public class CommandeRessource {
     @Path("transform-order/{id}")
     public Response transformSuggestionToOrder(@PathParam("id") String id) throws JSONException {
         HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+
         this.orderService.transformSuggestionToOrder(id, tu);
         return Response.ok().build();
     }
@@ -312,11 +263,7 @@ public class CommandeRessource {
     @POST
     @Path("merge-order")
     public Response mergeOrder(CommandeIdsDTO commandeIds) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.orderService.mergeOrder(commandeIds);
         return Response.ok().build();
     }
@@ -325,12 +272,35 @@ public class CommandeRessource {
     @Path("change-grossiste")
     public Response changeGrossiste(@QueryParam(value = "orderId") String orderId,
             @QueryParam(value = "grossisteId") String grossisteId) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.orderService.changeGrossiste(orderId, grossisteId);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("list-bons")
+    public Response getListBons(@QueryParam(value = "query") String query) throws JSONException {
+
+        return Response.ok().entity(orderService.getListBons(Constant.STATUT_ENABLE, query).toString()).build();
+    }
+
+    @DELETE
+    @Path("bon/{id}")
+    public Response deleteBon(@PathParam("id") String id) throws JSONException {
+
+        this.orderService.deleteBonLivraison(id);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("bon/items/{id}")
+    public Response getBonItems(@PathParam("id") String id, @QueryParam(value = "start") int start,
+            @QueryParam(value = "limit") int limit, @DefaultValue("") @QueryParam(value = "query") String query,
+            @DefaultValue("ALL") @QueryParam(value = "filtre") EntreeStockDetailFiltre filtre,
+            @DefaultValue("false") @QueryParam(value = "checkDatePeremption") Boolean checkDatePeremption) {
+
+        return Response.ok().entity(
+                orderService.getListBonsDetails(id, query, start, limit, filtre, checkDatePeremption).toString())
+                .build();
     }
 }

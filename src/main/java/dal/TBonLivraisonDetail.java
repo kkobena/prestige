@@ -7,6 +7,8 @@ package dal;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.Basic;
@@ -21,6 +23,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.hibernate.annotations.Type;
 
 /**
  *
@@ -106,6 +109,9 @@ public class TBonLivraisonDetail implements Serializable, Cloneable {
     private Integer prixTarif = 0;
     @Column(name = "prixUni")
     private Integer prixUni;
+    @Type(type = "json")
+    @Column(columnDefinition = "json", name = "lots")
+    private Set<OrderDetailLot> lots = new HashSet<>();
 
     public TBonLivraisonDetail() {
     }
@@ -323,6 +329,14 @@ public class TBonLivraisonDetail implements Serializable, Cloneable {
 
     public void setPrixUni(Integer prixUni) {
         this.prixUni = prixUni;
+    }
+
+    public Set<OrderDetailLot> getLots() {
+        return lots;
+    }
+
+    public void setLots(Set<OrderDetailLot> lots) {
+        this.lots = lots;
     }
 
     @Override

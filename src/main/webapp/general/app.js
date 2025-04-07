@@ -394,7 +394,6 @@ Ext.application({
         'testextjs.view.commandemanagement.etats.EtatControleManager',
         'testextjs.model.EtatControle',
         'testextjs.view.configmanagement.grossiste.action.grossisteview',
-        'testextjs.view.commandemanagement.order.action.manageorderpass',
         'testextjs.view.commandemanagement.order.action.editgrossiste',
         'testextjs.view.commandemanagement.bonlivraison.action.editprice',
         'testextjs.view.commandemanagement.retourfournisseur.retourFrsManager',
@@ -495,7 +494,7 @@ Ext.application({
         'testextjs.model.NumeroCaisse',
         'testextjs.view.configmanagement.numerocaisse.action.add',
         'testextjs.view.configmanagement.numerocaisse.NumeroCaisseManager',
-        'testextjs.view.commandemanagement.cmde_passees.OrderPassManager',
+     
         'testextjs.view.commandemanagement.cmde_passees.action.livraison',
         'testextjs.model.CentrePayeur',
         'testextjs.view.configmanagement.centrepayeur.action.add',
