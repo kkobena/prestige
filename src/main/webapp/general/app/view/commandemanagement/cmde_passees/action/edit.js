@@ -90,15 +90,15 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.edit', {
                         },
 
                         {
-                            fieldLabel: 'REF BL',
-                            emptyText: 'REF BL',
+                            fieldLabel: 'NUMERO BL:',
+                            emptyText: 'NUMERO BL',
                             name: 'str_REF_LIVRAISON',
                             allowBlank: false,
                             id: 'str_REF_LIVRAISON'
                         },
                         {
                             xtype: 'datefield',
-                            fieldLabel: 'Date BL',
+                            fieldLabel: 'Date du BL',
                             name: 'dt_DATE_LIVRAISON',
                             id: 'dt_DATE_LIVRAISON',
                             format: 'd/m/Y',

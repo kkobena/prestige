@@ -36,7 +36,18 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
         //alert("idOrder 2  " + idOrder);
         Me = this;
 
-     
+        /*var str_REF_ = new Ext.form.field.Display(
+         {
+         xtype: 'displayfield',
+         fieldLabel: 'REF CMD:',
+         //                    labelWidth: 95,
+         name: 'str_REF_',
+         id: 'str_REF_',
+         fieldStyle: "color:blue;",
+         //                    margin: '0 15 0 0',
+         value: "0"
+         });*/
+
 
         var form = new Ext.form.Panel({
             bodyPadding: 10,
@@ -71,8 +82,8 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
                             value: "0"
                         },
                         {
-                            fieldLabel: 'REF BL',
-                            emptyText: 'REF BL',
+                            fieldLabel: 'NUMERO BL:',
+                            emptyText: 'NUMERO BL',
                             name: 'str_REF_LIVRAISON',
                             allowBlank: false,
                             id: 'str_REF_LIVRAISON'
@@ -236,7 +247,8 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
                     }
                     Ext.MessageBox.alert('confirmation', message);
                     button.up('window').close();
-                    var xtype = "bonlivraisonmanager";
+                    var xtype = "orderpassmanager";
+//                    xtype = Omode == "create" ? "orderpassmanager" : "etatscontrolemanager";
                     testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
 
                 }

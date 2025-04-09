@@ -51,7 +51,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     xtype: 'suggerercdemanager',
     id: 'suggerercdemanagerID',
     frame: true,
-    title: 'Suggerer une Commande',
+    title: 'Traitement de suggestion',
+    bodyStyle: 'background-color:  #E5E9EC;',
     bodyPadding: 5,
     layout: 'column',
     initComponent: function () {
@@ -158,7 +159,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             id: 'panelID',
             items: [{
                     xtype: 'fieldset',
-                    title: 'Infos Generales',
+                    title: 'Informations sur la suggestion',
                     collapsible: true,
                     defaultType: 'textfield',
                     margin: '5 0 5 0',
@@ -192,7 +193,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     listeners: {
                                         select: function (cmp) {
                                            
-                                            if (titre === 'Suggerer une commande') {
+                                            if (titre === 'Suggestion de commande') {
 
                                                 Me_Window.onchangeGrossiste();
                                             }
@@ -210,9 +211,10 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     title: 'Ajout Produit',
                     collapsible: true,
                     defaultType: 'textfield',
+                    width: 300,
                     layout: 'anchor',
                     defaults: {
-                        anchor: '100%'
+                    anchor: '100%'
                     },
                     items: [
                         {
@@ -232,7 +234,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     id: 'str_NAME',
                                     store: store,
                                     margins: '0 10 5 10',
-                                    enableKeyEvents: true,
+                                    enableKeyEvents: true,                                    
                                     valueField: 'CIP',
                                     displayField: 'str_DESCRIPTION',
                                     pageSize: 20, //ajout la barre de pagination
@@ -244,7 +246,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     emptyText: 'Choisir un article par Nom ou Cip...',
                                     listConfig: {
                                         loadingText: 'Recherche...',
-                                        emptyText: 'Pas de données trouvées.',
+                                        emptyText: 'Pas de produit trouvé.',
                                         getInnerTpl: function () {
                                             return '<tpl for="."><tpl if="int_NUMBER_AVAILABLE <=0"><span style="color:#17987e;font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right;"> ( {int_PRICE} )</span></span><tpl else><span style="font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right; "> ( {int_PRICE} )</span></span></tpl></tpl>';
                                         }
@@ -609,7 +611,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             delay: 1,
             single: true
         });
-        if (titre === "Suggerer une commande") {
+        if (titre === "Suggestion de commande") {
             const OgridpanelSuggestionID = Ext.getCmp('gridpanelSuggestionID');
             Ext.getCmp('lg_GROSSISTE_ID').setValue(this.getOdatasource().lg_GROSSISTE_ID);
             Ext.getCmp('btn_print').show();
