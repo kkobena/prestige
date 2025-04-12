@@ -51,12 +51,7 @@ public class ReglementRessource {
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "userId") String userId, @QueryParam(value = "pairclient") boolean pairclient)
             throws JSONException {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
         Params body = new Params();
         if (!"".equals(query)) {
             body.setDescription(query);
@@ -64,10 +59,8 @@ public class ReglementRessource {
         if (!"".equals(userId)) {
             body.setRef(userId);
         }
-
         body.setDtEnd(dtEnd);
         body.setDtStart(dtStart);
-        body.setOperateur(tu);
         JSONObject jsono = reglementService.listeDifferesData(body, pairclient);
         return Response.ok().entity(jsono.toString()).build();
     }

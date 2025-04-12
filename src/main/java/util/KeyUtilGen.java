@@ -150,18 +150,18 @@ public class KeyUtilGen {
         }
     }
 
-    public String getShortId(int int_size) {
+    public String getShortId(int intSize) {
         Calendar now = Calendar.getInstance();
         this.mm = now.get(12);
         this.ss = now.get(13);
         this.mls = now.get(14);
         this.catime = this.mm + "" + this.ss + "" + this.mls;
 
-        for (int int_lenght = this.catime.length(); int_lenght < int_size; int_lenght = this.catime.length()) {
+        for (int int_lenght = this.catime.length(); int_lenght < intSize; int_lenght = this.catime.length()) {
             this.catime = this.catime + GetNumberRandom();
         }
 
-        return this.catime.substring(0, int_size);
+        return this.catime.substring(0, intSize);
     }
 
     public String getSimpletimeid() {
