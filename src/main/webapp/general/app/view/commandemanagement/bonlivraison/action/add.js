@@ -407,7 +407,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                             }
                                         }]
                                 },
-                               
+
                                 {
                                     xtype: 'actioncolumn',
                                     width: 30,
@@ -467,7 +467,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                         select: function (cmp) {
                                             var value = cmp.getValue();
                                             str_TYPE_TRANSACTION = value;
-                                          
+
                                             Me_Workflow.onRechClick();
                                         }
                                     }
@@ -581,7 +581,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
             titre: "Modification Article [" + rec.get('lg_FAMILLE_NAME') + "]"
         });
     },
-   
+
     onAddProductClick: function (grid, rowIndex) {
         var rec = grid.getStore().getAt(rowIndex);
         Ext.getCmp('btn_enterstock').enable();
@@ -595,27 +595,25 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
         });
     },
     onRemoveLotClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
-
+        const rec = grid.getStore().getAt(rowIndex);
         if (rec.get('checkExpirationdate')) {
             Ext.MessageBox.confirm('Message',
                     'Voullez-vous supprimer la quantité ajoutée ?',
                     function (btn) {
                         if (btn == 'yes') {
                             Ext.Ajax.request({
-                                url: ' ../webservices/sm_user/entreestock/ws_transaction.jsp?mode=deleteItem',
-                                params: {
-                                    lg_FAMILLE_ID: rec.get('lg_FAMILLE_ID'),
-                                    str_REF_LIVRAISON: rec.get('str_REF_LIVRAISON'),
-                                    lg_BON_LIVRAISON_DETAIL: rec.get('lg_BON_LIVRAISON_DETAIL')
-                                },
+                                method: 'PUT',
+                                url: '../api/v1/commande/remove-lots',
+                                headers: {'Content-Type': 'application/json'},
+                                params: Ext.JSON.encode({
+                                    removeLot: false,
+                                    idProduit: rec.get('lg_FAMILLE_ID'),
+                                    refBon: rec.get('str_REF_LIVRAISON'),
+                                    idBonDetail: rec.get('lg_BON_LIVRAISON_DETAIL')
+                                }),
                                 success: function (response)
                                 {
-                                    var object = Ext.JSON.decode(response.responseText, false);
-                                    if (object.errors == "0") {
-                                        Ext.MessageBox.alert('Error Message', object.success);
-                                        return;
-                                    }
+
                                     grid.getStore().reload();
                                 },
                                 failure: function (response)
@@ -625,7 +623,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                     Ext.MessageBox.alert('Error Message', response.responseText);
                                 }
                             });
-                            return;
+
                         }
                     });
         } else {
@@ -782,7 +780,7 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                         headers: {'Content-Type': 'application/json'},
                         url: '../api/v1/commande/validerbl/' + lg_BON_LIVRAISON_ID,
                         timeout: 1800000,
-                       
+
                         success: function (response)
                         {
                             testextjs.app.getController('App').StopWaitingProcess();
@@ -832,7 +830,7 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                                                 Me_Workflow.onbtncancel();
                                                 var xtype = "";
                                                 xtype = "bonlivraisonmanager";
-                                              
+
                                                 testextjs.app.getController('App').onLoadNewComponent(xtype, "Bon de livraison", "");
 
                                             }

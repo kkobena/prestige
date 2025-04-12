@@ -119,4 +119,11 @@ public interface OrderService {
 
     JSONObject getListBonsDetails(String bonId, String search, int start, int limit, EntreeStockDetailFiltre filtre,
             Boolean checkDatePeremption);
+
+    void removeLot(DeleteLot deleteLot);
+
+    JSONObject addLot(AddLot lot);
+
+    JSONObject getListBonsDetailsByProduits(String produits, String search, String dtStart, String dtEnd, int start,
+            int limit, String grossisteId);
 }

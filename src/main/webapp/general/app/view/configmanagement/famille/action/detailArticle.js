@@ -46,7 +46,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
         parentview: '',
         mode: '',
         titre: '',
-        produitId:null
+        produitId: null
     },
     initComponent: function () {
 
@@ -112,10 +112,11 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
             autoLoad: true,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_perime_famille + "?lg_FAMILLE_ID=" + ref,
+                url: '../api/v1/commande/produit/commande/' + ref,
+
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 }
             }
@@ -129,7 +130,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                   url: '../api/v1/grossiste/all',
+                url: '../api/v1/grossiste/all',
                 reader: {
                     type: 'json',
                     root: 'results',
@@ -176,7 +177,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                             margin: '0 0 5 0',
                             items: [
                                 {
-                                   
+
                                     xtype: 'displayfield',
                                     fieldLabel: 'CIP',
 //                                    labelWidth: 110,
@@ -651,7 +652,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
 
                                             valdatedebutDetailOrder = me.getSubmitValue();
                                             Ext.getCmp('datefinDetailOrder').setMinValue(me.getValue());
-                                            Ext.getCmp('gridpanelOrderID').getStore().getProxy().url = url_services_data_perime_famille + "?lg_FAMILLE_ID=" + ref + "&datedebut=" + valdatedebutDetailOrder;
+
 
                                         }
                                     }
@@ -669,7 +670,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                                             valdatefinDetailOrder = me.getSubmitValue();
 
                                             Ext.getCmp('datedebutDetailOrder').setMaxValue(me.getValue());
-                                            Ext.getCmp('gridpanelOrderID').getStore().getProxy().url = url_services_data_perime_famille + "?lg_FAMILLE_ID=" + ref + "&datedebut=" + valdatedebutDetailOrder + "&datefin=" + valdatefinDetailOrder;
+
                                         }
                                     }
                                 }, '-', {
@@ -704,7 +705,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                                     listeners: {
                                         select: function (cmp) {
                                             lgGROSSISTEORDERID = cmp.getValue();
-                                            // Ext.getCmp('gridpanelOrderID').getStore().getProxy().url = url_services_data_detailsortie_famille + "?lg_FAMILLE_ID=" + ref + "&datedebut=" + valdatedebutDetailOrder + "&datefin=" + valdatefinDetailOrder + "&lg_GROSSISTE_ID=" + lg_GROSSISTE_ORDER_ID;
+
                                             Me.onRechOrderClick();
 
                                         }
@@ -738,9 +739,32 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
                             ],
                             bbar: {
                                 xtype: 'pagingtoolbar',
-                                pageSize: 10,
+
                                 store: store_order,
-                                displayInfo: true
+                                displayInfo: true,
+                                pageSize: itemsPerPage,
+
+                                listeners: {
+                                    beforechange: function (page, currentPage) {
+
+                                        const myProxy = this.store.getProxy();
+                                        myProxy.params = {
+                                            search: null,
+                                            grossisteId: null,
+                                            dtStart: null,
+                                            dtEnd: null
+
+                                        };
+
+                                        myProxy.setExtraParam('search', Ext.getCmp('rechercherOrder').getValue());
+
+                                        myProxy.setExtraParam('dtStart', valdatedebutDetailOrder);
+                                        myProxy.setExtraParam('dtEnd', valdatefinDetailOrder);
+                                        myProxy.setExtraParam('grossisteId', lgGROSSISTEORDERID);
+
+                                    }
+
+                                }
                             },
                             listeners: {
                                 scope: this
@@ -867,8 +891,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
         if (Omode === "update" || Omode === "decondition" || Omode === "detail") {
 
             ref = this.getProduitId();
-            this.loadArticle( this.getProduitId());
-           
+            this.loadArticle(this.getProduitId());
+
         }
         var win = new Ext.window.Window({
             autoShow: true, title: this.getTitre(),
@@ -922,63 +946,62 @@ Ext.define('testextjs.view.configmanagement.famille.action.detailArticle', {
         const val = Ext.getCmp('rechercherOrder');
         Ext.getCmp('gridpanelOrderID').getStore().load({
             params: {
-                search_value: val.getValue(),
-                lg_FAMILLE_ID: ref,
-                lg_GROSSISTE_ID: lgGROSSISTEORDERID,
-                datedebut: valdatedebutDetailOrder,
-                datefin: valdatefinDetailOrder
+                search: val.getValue(),
+                grossisteId: lgGROSSISTEORDERID,
+                dtStart: valdatedebutDetailOrder,
+                dtEnd: valdatefinDetailOrder
             }
         });
     },
-       loadArticle: function (produitId) {
+    loadArticle: function (produitId) {
         const me = this;
         Ext.Ajax.request({
             method: 'GET',
-              url: '../api/v1/produit-search/fiche',
-             params: {
+            url: '../api/v1/produit-search/fiche',
+            params: {
                 produitId: produitId
-           
+
             },
-          
+
             success: function (response, options) {
                 const result = Ext.JSON.decode(response.responseText, true);
-              
-               const produit=result.results[0];
-               me.updateCmp(produit);
+
+                const produit = result.results[0];
+                me.updateCmp(produit);
             }
 
         });
     },
-    
-    updateCmp:function (rec){
-          Ext.getCmp('int_NUMBER_AVAILABLE').setValue(rec.int_NUMBER_AVAILABLE);
-            Ext.getCmp('lg_CODE_GESTION_ID').setValue(rec.lg_CODE_GESTION_ID);
-            Ext.getCmp('int_STOCK_REAPROVISONEMENT').setValue(rec.int_STOCK_REAPROVISONEMENT);
-            Ext.getCmp('int_QTE_REAPPROVISIONNEMENT').setValue(rec.int_QTE_REAPPROVISIONNEMENT);
-            Ext.getCmp('str_CODE_REMISE').setValue(rec.str_CODE_REMISE);
-            Ext.getCmp('lg_TYPEETIQUETTE_ID').setValue(rec.lg_TYPEETIQUETTE_ID);
-            Ext.getCmp('dt_LAST_INVENTAIRE').setValue(rec.dt_LAST_INVENTAIRE);
-            Ext.getCmp('dt_LAST_ENTREE').setValue(rec.dt_LAST_ENTREE);
-            Ext.getCmp('dt_DATE_LIVRAISON').setValue(rec.dt_DATE_LIVRAISON);
-            Ext.getCmp('dt_LAST_VENTE').setValue(rec.dt_LAST_VENTE);
-            Ext.getCmp('str_CODE_TVA').setValue(rec.lg_CODE_TVA_ID);
-            Ext.getCmp('int_T').setValue(rec.int_T);
-            Ext.getCmp('str_CODE_TAUX_REMBOURSEMENT').setValue(rec.str_CODE_TAUX_REMBOURSEMENT);
-            Ext.getCmp('lg_CODE_ACTE_ID').setValue(rec.lg_CODE_ACTE_ID);
-            Ext.getCmp('int_TAUX_MARQUE').setValue(rec.int_TAUX_MARQUE);
-            Ext.getCmp('int_PAF').setValue(rec.int_PAF);
-            Ext.getCmp('int_PAT').setValue(rec.int_PAT);
-            Ext.getCmp('int_PRICE_TIPS').setValue(rec.int_PRICE_TIPS);
-            Ext.getCmp('int_PRICE').setValue(rec.int_PRICE);
-            Ext.getCmp('lg_FAMILLEARTICLE_ID').setValue(rec.lg_FAMILLEARTICLE_ID);
-            Ext.getCmp('lg_ZONE_GEO_ID').setValue(rec.lg_ZONE_GEO_ID);
-            Ext.getCmp('str_DESCRIPTION').setValue(rec.str_DESCRIPTION);
-            Ext.getCmp('int_CIP').setValue(rec.int_CIP);
-            Ext.getCmp('int_QTEDETAIL').setValue(rec.int_NUMBERDETAIL);
-            Ext.getCmp('int_EAN13').setValue(rec.int_EAN13);
-            if (rec.lg_EMPLACEMENT_ID === "1") {
-                Ext.getCmp('infoconsorecu').show();
-                Ext.getCmp('infoventerealise').show();
-            }
+
+    updateCmp: function (rec) {
+        Ext.getCmp('int_NUMBER_AVAILABLE').setValue(rec.int_NUMBER_AVAILABLE);
+        Ext.getCmp('lg_CODE_GESTION_ID').setValue(rec.lg_CODE_GESTION_ID);
+        Ext.getCmp('int_STOCK_REAPROVISONEMENT').setValue(rec.int_STOCK_REAPROVISONEMENT);
+        Ext.getCmp('int_QTE_REAPPROVISIONNEMENT').setValue(rec.int_QTE_REAPPROVISIONNEMENT);
+        Ext.getCmp('str_CODE_REMISE').setValue(rec.str_CODE_REMISE);
+        Ext.getCmp('lg_TYPEETIQUETTE_ID').setValue(rec.lg_TYPEETIQUETTE_ID);
+        Ext.getCmp('dt_LAST_INVENTAIRE').setValue(rec.dt_LAST_INVENTAIRE);
+        Ext.getCmp('dt_LAST_ENTREE').setValue(rec.dt_LAST_ENTREE);
+        Ext.getCmp('dt_DATE_LIVRAISON').setValue(rec.dt_DATE_LIVRAISON);
+        Ext.getCmp('dt_LAST_VENTE').setValue(rec.dt_LAST_VENTE);
+        Ext.getCmp('str_CODE_TVA').setValue(rec.lg_CODE_TVA_ID);
+        Ext.getCmp('int_T').setValue(rec.int_T);
+        Ext.getCmp('str_CODE_TAUX_REMBOURSEMENT').setValue(rec.str_CODE_TAUX_REMBOURSEMENT);
+        Ext.getCmp('lg_CODE_ACTE_ID').setValue(rec.lg_CODE_ACTE_ID);
+        Ext.getCmp('int_TAUX_MARQUE').setValue(rec.int_TAUX_MARQUE);
+        Ext.getCmp('int_PAF').setValue(rec.int_PAF);
+        Ext.getCmp('int_PAT').setValue(rec.int_PAT);
+        Ext.getCmp('int_PRICE_TIPS').setValue(rec.int_PRICE_TIPS);
+        Ext.getCmp('int_PRICE').setValue(rec.int_PRICE);
+        Ext.getCmp('lg_FAMILLEARTICLE_ID').setValue(rec.lg_FAMILLEARTICLE_ID);
+        Ext.getCmp('lg_ZONE_GEO_ID').setValue(rec.lg_ZONE_GEO_ID);
+        Ext.getCmp('str_DESCRIPTION').setValue(rec.str_DESCRIPTION);
+        Ext.getCmp('int_CIP').setValue(rec.int_CIP);
+        Ext.getCmp('int_QTEDETAIL').setValue(rec.int_NUMBERDETAIL);
+        Ext.getCmp('int_EAN13').setValue(rec.int_EAN13);
+        if (rec.lg_EMPLACEMENT_ID === "1") {
+            Ext.getCmp('infoconsorecu').show();
+            Ext.getCmp('infoventerealise').show();
+        }
     }
 });
