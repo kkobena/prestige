@@ -43,6 +43,7 @@ import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.OrderService;
 import rest.service.ProductStateService;
+import rest.service.SessionHelperService;
 import rest.service.dto.*;
 import util.*;
 
@@ -60,6 +61,8 @@ public class OrderServiceImpl implements OrderService {
     private NotificationService notificationService;
     @EJB
     private ProductStateService productStateService;
+    @EJB
+    private SessionHelperService sessionHelperService;
 
     private static final String QUERY = "SELECT g.`str_TELEPHONE` AS telephone,g.`str_MOBILE` AS mobile,g.str_URL_PHARMAML AS urlPharma,g.str_URL_EXTRANET AS urlExtranet, o.`lg_ORDER_ID` AS orderId, u.`str_FIRST_NAME` AS userName,u.`str_LAST_NAME` AS userLastName, SUM(d.`int_PRICE_DETAIL` * d.`int_NUMBER`) AS montantVente, SUM(d.`int_PRICE`) AS montantAchat, o.`str_REF_ORDER` AS refernceOrder, o.`lg_GROSSISTE_ID` AS grossisteId,g.str_LIBELLE AS libelleGrossiste, DATE_FORMAT(o.`dt_CREATED`, '%d/%m/%Y') AS dateCreation,\n"
             + " DATE_FORMAT(o.`dt_CREATED`, '%k:%i:%s') AS heureCreation, o.`lg_ORDER_ID`, o.`str_STATUT` AS status,COUNT(d.`lg_ORDERDETAIL_ID`) AS itemCount,SUM(d.`int_NUMBER`)AS productCount  FROM  t_order o JOIN t_grossiste g ON g.`lg_GROSSISTE_ID`=o.`lg_GROSSISTE_ID` JOIN t_user u ON u.`lg_USER_ID`=o.`lg_USER_ID`  JOIN t_order_detail d ON o.`lg_ORDER_ID`=d.`lg_ORDER_ID`\n"
@@ -1839,5 +1842,337 @@ public class OrderServiceImpl implements OrderService {
         warehouse.setStrCODEETIQUETTE(etiquette.getStrCODE());
         this.getEmg().persist(warehouse);
 
+    }
+
+    @Override
+    public void removeLot(DeleteLot deleteLot) {
+        TBonLivraisonDetail bonLivraisonDetail = getEmg().find(TBonLivraisonDetail.class, deleteLot.getIdBonDetail());
+        int qty = 0;
+        int freeQty = 0;
+        List<TLot> lots;
+        if (deleteLot.isRemoveLot()) {
+            lots = getLotByIdProduitAndNumLot(deleteLot);
+        } else {
+            lots = getLotByIdProduitAndRefBon(deleteLot);
+        }
+
+        for (TLot lot : lots) {
+            qty += lot.getIntNUMBER();
+            freeQty += lot.getIntNUMBERGRATUIT();
+            getEmg().remove(lot);
+        }
+        getWSByIdProduitAndRefBon(deleteLot).forEach(this.getEmg()::remove);
+        bonLivraisonDetail.setIntQTERECUE(bonLivraisonDetail.getIntQTERECUE() - qty);
+        bonLivraisonDetail.setIntQTEMANQUANT(bonLivraisonDetail.getIntQTEMANQUANT() - (qty + freeQty));
+        bonLivraisonDetail.setIntQTEUG(bonLivraisonDetail.getIntQTEUG() - freeQty);
+        bonLivraisonDetail.setDtUPDATED(new Date());
+        getEmg().merge(bonLivraisonDetail);
+    }
+
+    private List<TLot> getLotByIdProduitAndRefBon(DeleteLot deleteLot) {
+        TypedQuery<TLot> typedQuery = getEmg().createQuery(
+                "SELECT o FROM TLot o WHERE o.strREFLIVRAISON=?1 AND o.lgFAMILLEID.lgFAMILLEID=?2", TLot.class);
+        typedQuery.setParameter(1, deleteLot.getRefBon());
+        typedQuery.setParameter(2, deleteLot.getIdProduit());
+        return typedQuery.getResultList();
+    }
+
+    private List<TLot> getLotByIdProduitAndNumLot(DeleteLot deleteLot) {
+        TypedQuery<TLot> typedQuery = getEmg()
+                .createQuery("SELECT o FROM TLot o WHERE o.intNUMLOT =?1 AND o.lgFAMILLEID.lgFAMILLEID=?2", TLot.class);
+        typedQuery.setParameter(1, deleteLot.getNumLot());
+        typedQuery.setParameter(2, deleteLot.getIdProduit());
+        return typedQuery.getResultList();
+    }
+
+    private List<TWarehouse> getWSByIdProduitAndRefBon(DeleteLot deleteLot) {
+        TypedQuery<TWarehouse> typedQuery = getEmg().createQuery(
+                "SELECT o FROM TWarehouse o WHERE o.strREFLIVRAISON =?1 AND o.lgFAMILLEID.lgFAMILLEID=?2",
+                TWarehouse.class);
+        typedQuery.setParameter(1, deleteLot.getNumLot());
+        typedQuery.setParameter(2, deleteLot.getIdProduit());
+        return typedQuery.getResultList();
+    }
+
+    private TParameters getParamettre() {
+        try {
+            return getEmg().find(TParameters.class, "KEY_MONTH_PERIME");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    public JSONObject addLot(AddLot lot) {
+        TUser tUser = this.sessionHelperService.getCurrentUser();
+        TBonLivraisonDetail bonLivraisonDetai = getEmg().find(TBonLivraisonDetail.class, lot.getIdBonDetail());
+        TBonLivraison bonLivraison = bonLivraisonDetai.getLgBONLIVRAISONID();
+        TFamille famille = bonLivraisonDetai.getLgFAMILLEID();
+        TOrder order = bonLivraison.getLgORDERID();
+        TGrossiste grossiste = order.getLgGROSSISTEID();
+        int qty = getQtyLot(famille.getLgFAMILLEID(), bonLivraison.getStrREFLIVRAISON(), grossiste.getLgGROSSISTEID())
+                + lot.getQty();
+        if (bonLivraisonDetai.getIntQTECMDE() < qty) {
+            return new JSONObject().put("msg", "La quantité réçue est supérieure à la quantité commantée.")
+                    .put("success", false);
+
+        }
+        TTypeetiquette tTypeetiquette = null;
+        if (StringUtils.isNotEmpty(lot.getIdEtiquette())) {
+            tTypeetiquette = getEmg().find(TTypeetiquette.class, lot.getIdEtiquette());
+        }
+        TLot oTLot = new TLot();
+        if (tTypeetiquette != null) {
+            oTLot.setLgTYPEETIQUETTEID(tTypeetiquette);
+        } else {
+            oTLot.setLgTYPEETIQUETTEID(getEmg().find(TTypeetiquette.class, Constant.DEFAUL_TYPEETIQUETTE));
+        }
+
+        oTLot.setLgLOTID(new KeyUtilGen().getComplexId());
+        oTLot.setLgUSERID(tUser);
+        oTLot.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTLot.setLgFAMILLEID(famille);
+        oTLot.setIntNUMBER(lot.getQty() + lot.getFreeQty());
+        if (StringUtils.isNotEmpty(lot.getDatePeremption())) {
+            Date dtPEREMPTION = java.sql.Date.valueOf(lot.getDatePeremption());
+            oTLot.setDtPEREMPTION(dtPEREMPTION);
+            LocalDate tonow = LocalDate.now();
+            LocalDate dtpremption = LocalDate.parse(lot.getDatePeremption());
+            if (dtpremption.isBefore(tonow) || dtpremption.isEqual(tonow)) {
+                oTLot.setStrSTATUT(Constant.STATUT_PERIME);
+            } else {
+                TParameters parameters = getParamettre();
+                int nbr = 0;
+                if (parameters != null) {
+                    nbr = Integer.parseInt(parameters.getStrVALUE());
+                }
+                LocalDate peremption = tonow.plusMonths(nbr);
+                if (dtpremption.isBefore(peremption) || dtpremption.isEqual(peremption)) {
+                    oTLot.setStrSTATUT(Constant.STATUT_ENCOURS_PEREMPTION);
+                }
+
+            }
+
+        }
+        if (StringUtils.isNotEmpty(lot.getDateUsine())) {
+            LocalDate dtSORTIEUSINE = LocalDate.parse(lot.getDateUsine());
+            oTLot.setDtSORTIEUSINE(java.sql.Date.valueOf(dtSORTIEUSINE));
+        }
+        oTLot.setStrREFLIVRAISON(bonLivraison.getStrREFLIVRAISON());
+        oTLot.setLgGROSSISTEID(grossiste);
+        oTLot.setDtCREATED(new Date());
+        oTLot.setDtUPDATED(oTLot.getDtCREATED());
+        oTLot.setStrREFORDER(order.getStrREFORDER());
+        oTLot.setIntNUMLOT(lot.getNumLot());
+        oTLot.setIntNUMBERGRATUIT(lot.getFreeQty());
+        oTLot.setIntQTYVENDUE(0);
+        getEmg().persist(oTLot);
+        addWarehouse(bonLivraisonDetai, oTLot, lot);
+        updateTBonLivraisonDetailFromBonLivraison(bonLivraisonDetai, lot.getFreeQty() + lot.getQty(), lot.getFreeQty());
+
+        return new JSONObject().put("success", true);
+    }
+
+    void updateTBonLivraisonDetailFromBonLivraison(TBonLivraisonDetail bonLivraisonDetai, int qteLivree, int freeQty) {
+
+        bonLivraisonDetai.setIntQTERECUE(bonLivraisonDetai.getIntQTERECUE() + qteLivree);
+        bonLivraisonDetai.setIntQTEMANQUANT(bonLivraisonDetai.getIntQTEMANQUANT() - (qteLivree - freeQty));
+        bonLivraisonDetai.setIntQTEUG(bonLivraisonDetai.getIntQTEUG() + freeQty);
+        bonLivraisonDetai.setDtUPDATED(new Date());
+        getEmg().merge(bonLivraisonDetai);
+
+    }
+
+    private int getQtyLot(String idProduit, String refBon, String grossisteId) {
+        try {
+
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TLot> root = cq.from(TLot.class);
+            Join<TLot, TFamille> or = root.join("lgFAMILLEID", JoinType.INNER);
+            Predicate criteria = cb.conjunction();
+            criteria = cb.and(criteria, cb.equal(or.get(TFamille_.lgFAMILLEID), idProduit));
+            criteria = cb.and(criteria, cb.equal(root.get(TLot_.strREFLIVRAISON), refBon));
+            criteria = cb.and(criteria,
+                    cb.equal(root.get(TLot_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), grossisteId));
+            cq.select(cb.sumAsLong(root.get(TLot_.intNUMBER)));
+            cq.where(criteria);
+            Query q = em.createQuery(cq);
+            return ((Long) q.getSingleResult()).intValue();
+
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void addWarehouse(TBonLivraisonDetail bonLivraisonDetail, TLot lot, AddLot lotDto) {
+
+        Date now = new Date();
+        TWarehouse oTWarehouse = new TWarehouse();
+        oTWarehouse.setLgWAREHOUSEID(new KeyUtilGen().getComplexId());
+        oTWarehouse.setLgUSERID(lot.getLgUSERID());
+        oTWarehouse.setLgFAMILLEID(lot.getLgFAMILLEID());
+        oTWarehouse.setIntNUMBER(lotDto.getQty());
+        oTWarehouse.setDtPEREMPTION(lot.getDtPEREMPTION());
+        oTWarehouse.setDtSORTIEUSINE(lot.getDtSORTIEUSINE());
+        oTWarehouse.setStrREFLIVRAISON(lot.getStrREFLIVRAISON());
+        oTWarehouse.setLgGROSSISTEID(lot.getLgGROSSISTEID());
+        oTWarehouse.setStrREFORDER(lot.getStrREFORDER());
+        oTWarehouse.setDtCREATED(now);
+        oTWarehouse.setDtUPDATED(now);
+        oTWarehouse.setIntNUMLOT(lot.getIntNUMLOT());
+        oTWarehouse.setIntNUMBERGRATUIT(lotDto.getFreeQty());
+        oTWarehouse.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTWarehouse.setLgTYPEETIQUETTEID(lot.getLgTYPEETIQUETTEID());
+        TEtiquette oTEtiquette = createEtiquetteBis(bonLivraisonDetail, oTWarehouse,
+                String.valueOf(oTWarehouse.getIntNUMBER()));
+        oTWarehouse.setStrCODEETIQUETTE(oTEtiquette.getStrCODE());
+        em.persist(oTWarehouse);
+
+    }
+
+    public TEtiquette createEtiquette(TWarehouse oTWarehouse, String code, String etiqueteName, String qty) {
+
+        TEtiquette oTEtiquette = new TEtiquette();
+        oTEtiquette.setLgETIQUETTEID(new KeyUtilGen().getComplexId());
+        oTEtiquette.setStrCODE(code);
+        oTEtiquette.setStrNAME(etiqueteName);
+        oTEtiquette.setDtPEROMPTION(oTWarehouse.getDtPEREMPTION());
+        oTEtiquette.setLgFAMILLEID(oTWarehouse.getLgFAMILLEID());
+        oTEtiquette.setStrSTATUT(Constant.STATUT_ENABLE);
+        oTEtiquette.setDtCREATED(new Date());
+        oTEtiquette.setIntNUMBER(qty);
+        oTEtiquette.setLgTYPEETIQUETTEID(oTWarehouse.getLgTYPEETIQUETTEID());
+        oTEtiquette.setLgEMPLACEMENTID(this.sessionHelperService.getCurrentUser().getLgEMPLACEMENTID());
+        em.persist(oTEtiquette);
+
+        return oTEtiquette;
+    }
+
+    public TEtiquette createEtiquetteBis(TBonLivraisonDetail bonLivraisonDetail, TWarehouse warehouse, String qty) {
+
+        String result = "";
+        TFamille famille = warehouse.getLgFAMILLEID();
+
+        String typeEtiquetteName = warehouse.getLgTYPEETIQUETTEID().getStrNAME();
+        if (typeEtiquetteName.equalsIgnoreCase("CIP")) {
+            result = famille.getIntCIP();
+        } else if (typeEtiquetteName.equalsIgnoreCase("CIP_PRIX")) {
+            result = new KeyUtilGen().getShortId(4) + "-" + famille.getIntCIP() + "-"
+                    + bonLivraisonDetail.getIntPRIXVENTE();
+        } else if (typeEtiquetteName.equalsIgnoreCase("CIP_DESIGNATION")) {
+            result = new KeyUtilGen().getShortId(4) + "-" + famille.getIntCIP() + "-" + famille.getStrNAME();
+        } else if (typeEtiquetteName.equalsIgnoreCase("CIP_PRIX_DESIGNATION")) {
+            result = new KeyUtilGen().getShortId(4) + "-" + famille.getIntCIP() + "-"
+                    + bonLivraisonDetail.getIntPRIXVENTE() + "-" + famille.getStrNAME();
+        } else if (typeEtiquetteName.equalsIgnoreCase("POSITION")) {
+            result = new KeyUtilGen().getShortId(4) + "-" + famille.getLgZONEGEOID().getStrLIBELLEE();
+        } else {
+            result = new KeyUtilGen().getShortId(4) + "-" + famille.getIntCIP() + "-"
+                    + bonLivraisonDetail.getIntPRIXVENTE() + "-" + famille.getStrNAME();
+        }
+        return createEtiquette(warehouse, result, typeEtiquetteName, qty);
+
+    }
+
+    private List<Predicate> getListBonsDetailsByPredictes(CriteriaBuilder cb, Root<TBonLivraisonDetail> root,
+            String produitId, String search, String dtStart, String dtEnd, String grossisteId) {
+
+        List<Predicate> predicate = new ArrayList<>();
+        predicate.add(cb.equal(root.get(TBonLivraisonDetail_.lgFAMILLEID).get(TFamille_.lgFAMILLEID), produitId));
+        predicate.add(cb.equal(root.get(TBonLivraisonDetail_.lgBONLIVRAISONID).get(TBonLivraison_.strSTATUT),
+                Constant.STATUT_IS_CLOSED));
+        if (StringUtils.isNotEmpty(grossisteId)) {
+            predicate.add(
+                    cb.equal(root.get(TBonLivraisonDetail_.lgGROSSISTEID).get(TGrossiste_.lgGROSSISTEID), grossisteId));
+        }
+        if (StringUtils.isNotEmpty(search)) {
+            predicate.add(cb.like(root.get(TBonLivraisonDetail_.lgBONLIVRAISONID).get(TBonLivraison_.strREFLIVRAISON),
+                    search + "%"));
+        }
+        if (StringUtils.isEmpty(dtStart)) {
+            dtStart = LocalDate.now().toString();
+        }
+        if (StringUtils.isEmpty(dtEnd)) {
+            dtEnd = LocalDate.now().toString();
+        }
+
+        predicate.add(cb.between(
+                cb.function("DATE", Date.class,
+                        root.get(TBonLivraisonDetail_.lgBONLIVRAISONID).get(TBonLivraison_.dtUPDATED)),
+                java.sql.Date.valueOf(dtStart), java.sql.Date.valueOf(dtEnd)));
+        return predicate;
+    }
+
+    private long getListBonsDetailsByProduitsCount(String produitId, String search, String dtStart, String dtEnd,
+            String grossisteId) {
+        try {
+
+            CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+            CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+            Root<TBonLivraisonDetail> root = cq.from(TBonLivraisonDetail.class);
+            cq.select(cb.count(root));
+            List<Predicate> predicates = getListBonsDetailsByPredictes(cb, root, produitId, search, dtStart, dtEnd,
+                    grossisteId);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            TypedQuery<Long> q = getEmg().createQuery(cq);
+
+            return q.getSingleResult().intValue();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return 0;
+        }
+    }
+
+    private List<TBonLivraisonDetail> getListBonsDetailsByProduits(String produitId, String search, String dtStart,
+            String dtEnd, String grossisteId) {
+        try {
+
+            CriteriaBuilder cb = getEmg().getCriteriaBuilder();
+            CriteriaQuery<TBonLivraisonDetail> cq = cb.createQuery(TBonLivraisonDetail.class);
+            Root<TBonLivraisonDetail> root = cq.from(TBonLivraisonDetail.class);
+            cq.select(root);
+            List<Predicate> predicates = getListBonsDetailsByPredictes(cb, root, produitId, search, dtStart, dtEnd,
+                    grossisteId);
+            cq.where(cb.and(predicates.toArray(Predicate[]::new)));
+            TypedQuery<TBonLivraisonDetail> q = getEmg().createQuery(cq);
+
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+            return List.of();
+        }
+    }
+
+    private JSONArray buildBonsDetailsByProduits(List<TBonLivraisonDetail> bonLivraisonDetails) {
+        JSONArray array = new JSONArray();
+        bonLivraisonDetails.forEach(t -> {
+
+            JSONObject json = new JSONObject();
+
+            json.put("dt_PEREMPTION", DateUtil.convertDateToDD_MM_YYYY(t.getLgBONLIVRAISONID().getDtDATELIVRAISON()));
+            json.put("int_NUM_LOT", t.getLgBONLIVRAISONID().getStrREFLIVRAISON());
+            json.put("lg_GROSSISTE_ID", t.getLgGROSSISTEID().getStrLIBELLE());
+            json.put("int_NUMBER", t.getIntQTECMDE());
+            json.put("lg_FAMILLE_ID", t.getLgFAMILLEID().getLgFAMILLEID());
+            json.put("str_NAME", t.getLgFAMILLEID().getStrDESCRIPTION());
+            json.put("lg_ZONE_GEO_ID", t.getLgFAMILLEID().getLgZONEGEOID().getStrLIBELLEE());
+            json.put("int_CIP", t.getLgFAMILLEID().getIntCIP());
+            json.put("int_STOCK_REAPROVISONEMENT", t.getIntQTERECUE());
+            json.put("int_VALUE1", t.getIntQTEUG());
+            json.put("int_VALUE2", NumberUtils.formatIntToString(t.getIntPAF()));
+            json.put("dt_ENTREE", DateUtil.convertDateToDD_MM_YYYY_HH_mm(t.getLgBONLIVRAISONID().getDtUPDATED()));
+            array.put(json);
+        });
+        return array;
+
+    }
+
+    @Override
+    public JSONObject getListBonsDetailsByProduits(String produitId, String search, String dtStart, String dtEnd,
+            int start, int limit, String grossisteId) {
+        long total = getListBonsDetailsByProduitsCount(produitId, search, dtStart, dtEnd, grossisteId);
+        return new JSONObject().put("total", total).put("data", buildBonsDetailsByProduits(
+                getListBonsDetailsByProduits(produitId, search, dtStart, dtEnd, grossisteId)));
     }
 }

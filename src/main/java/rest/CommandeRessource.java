@@ -36,9 +36,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CommandeService;
 import rest.service.OrderService;
+import rest.service.dto.AddLot;
 import rest.service.dto.CommandeCsvDTO;
 import rest.service.dto.CommandeFiltre;
 import rest.service.dto.CommandeIdsDTO;
+import rest.service.dto.DeleteLot;
 import rest.service.dto.OrderDetailDTO;
 import util.Constant;
 
@@ -301,6 +303,33 @@ public class CommandeRessource {
 
         return Response.ok().entity(
                 orderService.getListBonsDetails(id, query, start, limit, filtre, checkDatePeremption).toString())
+                .build();
+    }
+
+    @PUT
+    @Path("remove-lots")
+    public Response removeLots(DeleteLot deleteLot) {
+        this.orderService.removeLot(deleteLot);
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("add-lot")
+    public Response addLot(AddLot addLot) {
+
+        return Response.ok(this.orderService.addLot(addLot).toString()).build();
+    }
+
+    @GET
+    @Path("produit/commande/{id}")
+    public Response getListBonsDetailsByProduits(@PathParam("id") String id, @QueryParam(value = "dtEnd") String dtEnd,
+            @QueryParam(value = "grossisteId") String grossisteId, @QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "start") int start, @QueryParam(value = "search") String search,
+            @QueryParam(value = "limit") int limit) throws JSONException {
+
+        return Response
+                .ok().entity(orderService
+                        .getListBonsDetailsByProduits(id, search, dtStart, dtEnd, start, limit, grossisteId).toString())
                 .build();
     }
 }
