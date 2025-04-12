@@ -358,7 +358,7 @@ Ext.define('testextjs.view.commandemanagement.suggestion.Suggestion_Manager', {
             url: '../api/v1/suggestion/set-pending/' + rec.get('lg_SUGGESTION_ORDER_ID'),
             success: function (response)
             {
-                testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Suggerer une commande", rec.get('lg_SUGGESTION_ORDER_ID'), rec.data);
+                testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Suggestion de commande", rec.get('lg_SUGGESTION_ORDER_ID'), rec.data);
             },
             failure: function (response)
             {

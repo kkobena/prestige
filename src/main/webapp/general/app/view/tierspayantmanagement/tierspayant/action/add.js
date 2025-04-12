@@ -194,7 +194,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     emptyText: 'Nom Abrege',
                                     name: 'str_NAME_ADD',
                                     id: 'str_NAME_ADD',
-                                    style: 'background-color: #647973;',
+                                    style: 'background-color: #ffffe0;',
                                     listeners: {
                                         change: function (field, newValue) {
                                             // Récupérer les autres champs
@@ -218,16 +218,22 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     emptyText: 'Nom complet',
                                     name: 'str_FULLNAME',
                                     id: 'str_FULLNAME',
-                                    style: 'background-color: #647973;'
+                                    style: 'background-color: #ffffe0;',
+                                    //width: 500
                                 },
                                 {
-                                    //allowBlank: false,
-                                    maskRe: /[0-9.]/,
-                                    fieldLabel: 'Mobile',
-                                    emptyText: 'Mobile',
-                                    name: 'str_MOBILE',
-                                    id: 'str_MOBILE'
+                                    xtype: 'combobox',
+                                    fieldLabel: 'Code.Edit.Bordereau',
+                                    displayField: 'str_VALUE',
+                                    valueField: 'str_VALUE',
+                                    id: 'str_CODE_EDIT_BORDEREAU',
+                                    emptyText: 'Code.Edit.Bordereau',
+                                    queryMode: 'remote',
+                                    store: store_modelfacture
+
+
                                 }
+                                
                             ]
                         }, {
                             xtype: 'container',
@@ -241,8 +247,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     emptyText: 'ADRESSE',
                                     name: 'str_ADRESSE',
                                     id: 'str_ADRESSE',
-                                    style: 'background-color: #647973;',
-                                    value: '225'
+                                    style: 'background-color: #ffffe0;',
+                                    value: 'ABJ'
                                 },
                                 {
                                     allowBlank: false,
@@ -257,15 +263,17 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     editable: false,
                                     queryMode: 'remote',
                                     emptyText: 'Choisir un type tiers payant ...',
-                                    style: 'background-color: #647973;'
+                                    style: 'background-color: #ffffe0;'
                                 },
                                 {
-                                    // allowBlank: false,
-                                    fieldLabel: 'No IDF',
-                                    emptyText: 'No IDF',
-                                    name: 'str_NUMERO_IDF_ORGANISME',
-                                    id: 'str_NUMERO_IDF_ORGANISME'
-                                }
+                                            // allowBlank: false,
+                                            maskRe: /[0-9.]/,
+                                            fieldLabel: 'Nbre.Exemplaire.Bord',
+                                            emptyText: 'Nbre.Exemplaire.Bord',
+                                            name: 'int_NBRE_EXEMPLAIRE_BORD',
+                                            id: 'int_NBRE_EXEMPLAIRE_BORD',
+                                            minValue: 1
+                                        }
                             ]
                         },
                         {
@@ -281,8 +289,8 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     emptyText: 'TELEPHONE',
                                     name: 'str_TELEPHONE',
                                     id: 'str_TELEPHONE',
-                                    style: 'background-color: #647973;',
-                                    value: 'ABJ'
+                                    style: 'background-color: #ffffe0;',
+                                    value: '225'
                                 },
                                 {
                                     allowBlank: false,
@@ -290,33 +298,17 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     emptyText: 'CODE ORGANISME',
                                     name: 'str_CODE_ORGANISME',
                                     id: 'str_CODE_ORGANISME',
-                                    style: 'background-color: #647973;',
+                                    style: 'background-color: #ffffe0;',
+                                    //width: 500
                                     
                                 },
                                 {
-                                    //allowBlank: false,
-                                    xtype: 'combobox',
-                                    fieldLabel: 'Ville',
-                                    name: 'lg_VILLE_ID',
-                                    id: 'lg_VILLE_ID',
-                                    store: store_ville_tp,
-                                    valueField: 'lg_VILLE_ID',
-                                    displayField: 'STR_NAME',
-                                    typeAhead: true,
-//                                    width: 400,
-                                    queryMode: 'remote',
-                                    emptyText: 'Choisir une ville...',
-                                    listeners: {
-                                        keypress: function (field, e) {
-                                            if (e.getKey() === e.BACKSPACE || e.getKey() === 46) {
 
-                                                if (field.getValue().length === 1) {
-                                                    field.getStore().load();
-                                                }
-                                            }
-
-                                        }
-                                    }
+                                    fieldLabel: 'Code Officine',
+                                    emptyText: 'Code Officine',
+                                    name: 'str_CODE_OFFICINE',
+                                    id: 'str_CODE_OFFICINE',
+                                    //width: 500
                                 }
                             ]
                         },
@@ -511,7 +503,7 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     maskRe: /[0-9.]/,
                                     fieldLabel: 'Date delai paiement',
                                     name: 'dt_DELAI_PAIEMENT',
-                                    id: 'dt_DELAI_PAIEMENT',
+                                    id: 'dt_DELAI_PAIEMENT'
                                     // allowBlank: false
                                 }
                             ]
@@ -540,16 +532,12 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     id: 'dbl_REMISE_FORFETAIRE'
                                 },
                                 {
-                                    xtype: 'combobox',
-                                    fieldLabel: 'Code.Edit.Bordereau',
-                                    displayField: 'str_VALUE',
-                                    valueField: 'str_VALUE',
-                                    id: 'str_CODE_EDIT_BORDEREAU',
-                                    emptyText: 'Code.Edit.Bordereau',
-                                    queryMode: 'remote',
-                                    store: store_modelfacture
-
-
+                                    //allowBlank: false,
+                                    maskRe: /[0-9.]/,
+                                    fieldLabel: 'Mobile',
+                                    emptyText: 'Mobile',
+                                    name: 'str_MOBILE',
+                                    id: 'str_MOBILE'
                                 }
                                 /* {
                                  // allowBlank: false,
@@ -568,15 +556,14 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                                     margin: '0 0 5 0',
                                     items: [
                                         // dbl_POURCENTAGE_REMISE*
+                                        ,
                                         {
-                                            // allowBlank: false,
-                                            maskRe: /[0-9.]/,
-                                            fieldLabel: 'Nbre.Exemplaire.Bord',
-                                            emptyText: 'Nbre.Exemplaire.Bord',
-                                            name: 'int_NBRE_EXEMPLAIRE_BORD',
-                                            id: 'int_NBRE_EXEMPLAIRE_BORD',
-                                            minValue: 1
-                                        },
+                                    // allowBlank: false,
+                                    fieldLabel: 'No IDF',
+                                    emptyText: 'No IDF',
+                                    name: 'str_NUMERO_IDF_ORGANISME',
+                                    id: 'str_NUMERO_IDF_ORGANISME'
+                                },
                                         {
                                             // allowBlank: false,
                                             maskRe: /[0-9.]/,
@@ -757,11 +744,29 @@ Ext.define('testextjs.view.tierspayantmanagement.tierspayant.action.add', {
                             items: [
 
                                 {
+                                    //allowBlank: false,
+                                    xtype: 'combobox',
+                                    fieldLabel: 'Ville',
+                                    name: 'lg_VILLE_ID',
+                                    id: 'lg_VILLE_ID',
+                                    store: store_ville_tp,
+                                    valueField: 'lg_VILLE_ID',
+                                    displayField: 'STR_NAME',
+                                    typeAhead: true,
+//                                    width: 400,
+                                    queryMode: 'remote',
+                                    emptyText: 'Choisir une ville...',
+                                    listeners: {
+                                        keypress: function (field, e) {
+                                            if (e.getKey() === e.BACKSPACE || e.getKey() === 46) {
 
-                                    fieldLabel: 'Code Officine',
-                                    emptyText: 'Code Officine',
-                                    name: 'str_CODE_OFFICINE',
-                                    id: 'str_CODE_OFFICINE'
+                                                if (field.getValue().length === 1) {
+                                                    field.getStore().load();
+                                                }
+                                            }
+
+                                        }
+                                    }
                                 },
                                 {
 
