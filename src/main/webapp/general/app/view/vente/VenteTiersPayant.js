@@ -72,6 +72,7 @@ Ext.define('testextjs.view.vente.VenteTiersPayant', {
                 }
 
             }
+            
 
         });
         var store = Ext.create('Ext.data.Store', {
