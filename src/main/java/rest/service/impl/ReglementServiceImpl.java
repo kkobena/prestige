@@ -165,6 +165,7 @@ public class ReglementServiceImpl implements ReglementService {
     @Override
     public List<DelayedDTO> listeDifferes(Params params, boolean pairclient) {
         try {
+            params.setOperateur(this.sessionHelperService.getCurrentUser());
             EntityManager emg = this.getEmg();
             List<Predicate> predicates = new ArrayList<>();
             CriteriaBuilder cb = emg.getCriteriaBuilder();
@@ -725,16 +726,20 @@ public class ReglementServiceImpl implements ReglementService {
     }
 
     private List<MvtTransaction> listeReglement(LocalDate dtStart, LocalDate dtEnd, boolean checked,
-            String emplacementId, String typeMvt) {
+            String emplacementId, String typeMvt, String clientId) {
+        String sql = StringUtils.isEmpty(clientId)
+                ? "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN ?1 AND ?2 AND o.magasin.lgEMPLACEMENTID=?3 AND o.checked=?4 AND o.tTypeMvtCaisse.lgTYPEMVTCAISSEID=?5   ORDER BY o.createdAt ASC "
+                : "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN ?1 AND ?2 AND o.magasin.lgEMPLACEMENTID=?3 AND o.checked=?4 AND o.tTypeMvtCaisse.lgTYPEMVTCAISSEID=?5 AND o.organisme=?6  ORDER BY o.createdAt ASC";
         try {
-            TypedQuery<MvtTransaction> query = getEmg().createQuery(
-                    "SELECT o FROM MvtTransaction o WHERE o.mvtDate BETWEEN ?1 AND ?2 AND o.magasin.lgEMPLACEMENTID=?3 AND o.checked=?4 AND o.tTypeMvtCaisse.lgTYPEMVTCAISSEID=?5 AND o.preenregistrement.bISCANCEL=FALSE  ORDER BY o.createdAt ASC ",
-                    MvtTransaction.class);
+            TypedQuery<MvtTransaction> query = getEmg().createQuery(sql, MvtTransaction.class);
             query.setParameter(1, dtStart);
             query.setParameter(2, dtEnd);
             query.setParameter(3, emplacementId);
             query.setParameter(4, checked);
             query.setParameter(5, typeMvt);
+            if (StringUtils.isNotEmpty(clientId)) {
+                query.setParameter(6, clientId);
+            }
             return query.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -753,18 +758,11 @@ public class ReglementServiceImpl implements ReglementService {
     @Override
     public List<DelayedDTO> reglementsDifferesDto(LocalDate dtStart, LocalDate dtEnd, boolean checked,
             String emplacementId, String clientId) {
-        try {
-            if (clientId != null && !"".equals(clientId)) {
 
-                List<MvtTransaction> query = listeReglement(dtStart, dtEnd, checked, emplacementId,
-                        Constant.MVT_REGLE_DIFF);
-                return query.stream().map(x -> new DelayedDTO(x, findClientById(x.getOrganisme())))
-                        .filter(x -> x.getClientId().equals(clientId)).collect(Collectors.toList());
-            }
-            List<MvtTransaction> query = listeReglement(dtStart, dtEnd, checked, emplacementId,
-                    Constant.MVT_REGLE_DIFF);
-            return query.stream().map(x -> new DelayedDTO(x, findClientById(x.getOrganisme())))
-                    .collect(Collectors.toList());
+        try {
+
+            return listeReglement(dtStart, dtEnd, checked, emplacementId, Constant.MVT_REGLE_DIFF, clientId).stream()
+                    .map(x -> new DelayedDTO(x, findClientById(x.getOrganisme()))).collect(Collectors.toList());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return Collections.emptyList();

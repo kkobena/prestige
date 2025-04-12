@@ -1710,7 +1710,7 @@ public class OrderServiceImpl implements OrderService {
             for (TBonLivraisonDetail bonLivraisonDetail : bonLivraisonDetails) {
                 JSONObject json = new JSONObject();
                 TFamille famille = bonLivraisonDetail.getLgFAMILLEID();
-                TFamilleGrossiste OTFamilleGrossiste = findFamilleGrossiste(famille.getLgFAMILLEID(), grossiste);
+                TFamilleGrossiste oTFamilleGrossiste = findFamilleGrossiste(famille.getLgFAMILLEID(), grossiste);
 
                 json.put("lg_BON_LIVRAISON_DETAIL", bonLivraisonDetail.getLgBONLIVRAISONDETAIL());
 
@@ -1731,16 +1731,12 @@ public class OrderServiceImpl implements OrderService {
 
                 json.put("lg_FAMILLE_ID", bonLivraisonDetail.getLgFAMILLEID().getLgFAMILLEID());
                 json.put("lg_FAMILLE_NAME", bonLivraisonDetail.getLgFAMILLEID().getStrNAME());
-                // json.put("lg_FAMILLE_CIP", bonLivraisonDetail.getLgFAMILLEID().getIntCIP());
 
-                json.put("lg_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE()
+                json.put("lg_FAMILLE_CIP", (oTFamilleGrossiste != null ? oTFamilleGrossiste.getStrCODEARTICLE()
                         : bonLivraisonDetail.getLgFAMILLEID().getIntCIP()));
 
                 json.put("str_REF_LIVRAISON", bonLivraisonDetail.getLgBONLIVRAISONID().getStrREFLIVRAISON());
-                // json.put("int_QTE_MANQUANT", bonLivraisonDetail.getIntQTECMDE() -
-                // bonLivraisonDetail.getIntQTERECUE());
-                // json.put("int_QTE_MANQUANT", (bonLivraisonDetail.getIntQTEMANQUANT() >= 0 ?
-                // bonLivraisonDetail.getIntQTEMANQUANT() : 0));
+
                 json.put("int_SEUIL", bonLivraisonDetail.getLgFAMILLEID().getIntSEUILMIN());
 
                 // dbl_PRIX_MOYEN_PONDERE
@@ -1749,13 +1745,13 @@ public class OrderServiceImpl implements OrderService {
 
                 try {
 
-                    TFamille OTFamille = bonLivraisonDetail.getLgFAMILLEID();
+                    TFamille oTFamille = bonLivraisonDetail.getLgFAMILLEID();
 
-                    TFamilleStock OTFamilleStock = getTProductItemStock(OTFamille.getLgFAMILLEID());
+                    TFamilleStock oTFamilleStock = getTProductItemStock(oTFamille.getLgFAMILLEID());
 
-                    int QTE_STOCK = OTFamilleStock.getIntNUMBERAVAILABLE();
-                    json.put("lg_FAMILLE_QTE_STOCK", QTE_STOCK);
-                    json.put("prixDiff", bonLivraisonDetail.getIntPRIXVENTE().compareTo(OTFamille.getIntPRICE()) != 0);
+                    int qteStock = oTFamilleStock.getIntNUMBERAVAILABLE();
+                    json.put("lg_FAMILLE_QTE_STOCK", qteStock);
+                    json.put("prixDiff", bonLivraisonDetail.getIntPRIXVENTE().compareTo(oTFamille.getIntPRICE()) != 0);
 
                 } catch (Exception E) {
 
@@ -1781,7 +1777,7 @@ public class OrderServiceImpl implements OrderService {
                 } catch (Exception e) {
                 }
 
-                json.put("lg_FAMILLE_CIP", (OTFamilleGrossiste != null ? OTFamilleGrossiste.getStrCODEARTICLE()
+                json.put("lg_FAMILLE_CIP", (oTFamilleGrossiste != null ? oTFamilleGrossiste.getStrCODEARTICLE()
                         : bonLivraisonDetail.getLgFAMILLEID().getIntCIP()));
                 json.put("int_NUMBERDETAIL", bonLivraisonDetail.getLgFAMILLEID().getIntNUMBERDETAIL());
                 json.put("bool_DECONDITIONNE", bonLivraisonDetail.getLgFAMILLEID().getBoolDECONDITIONNE());
