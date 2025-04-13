@@ -247,7 +247,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.add', {
                     }
                     Ext.MessageBox.alert('confirmation', message);
                     button.up('window').close();
-                    var xtype = "orderpassmanager";
+                    var xtype = "bonlivraisonmanager";
 //                    xtype = Omode == "create" ? "orderpassmanager" : "etatscontrolemanager";
                     testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
 
