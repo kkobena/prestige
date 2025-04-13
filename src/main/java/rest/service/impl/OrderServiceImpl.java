@@ -1968,7 +1968,7 @@ public class OrderServiceImpl implements OrderService {
         oTLot.setIntQTYVENDUE(0);
         getEmg().persist(oTLot);
         addWarehouse(bonLivraisonDetai, oTLot, lot);
-        updateTBonLivraisonDetailFromBonLivraison(bonLivraisonDetai, lot.getFreeQty() + lot.getQty(), lot.getFreeQty());
+        updateTBonLivraisonDetailFromBonLivraison(bonLivraisonDetai, lot.getFreeQty(), lot.getFreeQty());
 
         return new JSONObject().put("success", true);
     }
