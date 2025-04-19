@@ -324,32 +324,20 @@ public class RetourFournisseurServiceImpl implements RetourFournisseurService {
     public void finaliserRetourFournisseur(UpdateRetourDTO updateRetour) {
         TRetourFournisseur retourFournisseur = this.getEntityManager().find(TRetourFournisseur.class,
                 updateRetour.getRetourId());
-        String bonId = retourFournisseur.getLgBONLIVRAISONID().getLgBONLIVRAISONID();
+        retourFournisseur.setDlAMOUNT(0.0);
         retourFournisseur.getTRetourFournisseurDetailCollection().forEach(retourFournisseurDetail -> {
-            TBonLivraisonDetail bonLivraisonDetail = getBonLivraisonDetail(
-                    retourFournisseurDetail.getLgFAMILLEID().getLgFAMILLEID(), bonId);
-            if (bonLivraisonDetail != null) {
-                bonLivraisonDetail.setIntQTERETURN(Objects.requireNonNullElse(bonLivraisonDetail.getIntQTERETURN(), 0)
-                        + retourFournisseurDetail.getIntNUMBERANSWER());
-                this.getEntityManager().merge(bonLivraisonDetail);
-                retourFournisseur.setDlAMOUNT(Objects.requireNonNullElse(retourFournisseur.getDlAMOUNT(), 0.0)
-                        + (retourFournisseurDetail.getIntNUMBERANSWER() * retourFournisseurDetail.getIntPAF()));
+            TBonLivraisonDetail bonLivraisonDetail = retourFournisseurDetail.getBonLivraisonDetail();
+            bonLivraisonDetail.setIntQTERETURN(Objects.requireNonNullElse(bonLivraisonDetail.getIntQTERETURN(), 0)
+                    + retourFournisseurDetail.getIntNUMBERANSWER());
+            this.getEntityManager().merge(bonLivraisonDetail);
+            retourFournisseur.setDlAMOUNT(retourFournisseur.getDlAMOUNT()
+                    + (retourFournisseurDetail.getIntNUMBERANSWER() * retourFournisseurDetail.getIntPAF()));
 
-            }
         });
         retourFournisseur.setDtUPDATED(new Date());
         retourFournisseur.setStrREPONSEFRS(updateRetour.getComment());
         retourFournisseur.setLgUSERID(this.sessionHelperService.getCurrentUser());
         this.getEntityManager().merge(retourFournisseur);
-    }
-
-    private TBonLivraisonDetail getBonLivraisonDetail(String produitId, String bonId) {
-        TypedQuery<TBonLivraisonDetail> q = this.getEntityManager().createQuery(
-                "SELECT o  FROM  TBonLivraisonDetail o WHERE o.lgBONLIVRAISONID.lgBONLIVRAISONID=?1 AND o.lgFAMILLEID.lgFAMILLEID=?2",
-                TBonLivraisonDetail.class);
-        q.setParameter(1, bonId);
-        q.setParameter(2, produitId);
-        return q.getSingleResult();
     }
 
 }
