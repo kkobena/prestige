@@ -48,8 +48,13 @@ public class ProductStateServiceImpl implements ProductStateService {
 
     @Override
     public List<ProductState> fetchByProduitAndState(TFamille produit, ProductStateEnum state) {
-        return produit.getProductStates().stream().sorted(Comparator.comparing(ProductState::getUpdated))
-                .filter(produitState -> produitState.getProduitStateEnum() == state).collect(Collectors.toList());
+        List<ProductState> productStates = produit.getProductStates();
+        if (CollectionUtils.isNotEmpty(productStates)) {
+            return productStates.stream().sorted(Comparator.comparing(ProductState::getUpdated))
+                    .filter(produitState -> produitState.getProduitStateEnum() == state).collect(Collectors.toList());
+        }
+        return List.of();
+
     }
 
     @Override
