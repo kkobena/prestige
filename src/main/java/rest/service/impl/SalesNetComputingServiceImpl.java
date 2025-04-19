@@ -42,6 +42,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         List<TPreenregistrementDetail> items = getItems(params.getVenteId());
         TPreenregistrement op = items.get(0).getLgPREENREGISTREMENTID();
         boolean isCarnet = Constant.VENTE_AVEC_CARNET.equals(op.getLgTYPEVENTEID().getLgTYPEVENTEID());
+        boolean isCarnetATauxZero = params.getTierspayants().stream().mapToInt(TiersPayantParams::getTaux).sum() == 0;
 
         TRemise remise = op.getRemise();
         remise = remise != null ? remise : op.getClient().getRemise();
@@ -101,8 +102,14 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         }
         int custPart;
         if (isCarnet) {
-            custPart = montantVente - montantTpFinalTierspayant;
-            montantTpFinalTierspayant = montantTpFinalTierspayant - op.getIntPRICEREMISE();
+            if (isCarnetATauxZero) {
+                custPart = montantVente - op.getIntPRICEREMISE();
+                montantTpFinalTierspayant = 0;
+            } else {
+                custPart = montantVente - montantTpFinalTierspayant;
+                montantTpFinalTierspayant = montantTpFinalTierspayant - op.getIntPRICEREMISE();
+            }
+
             datas.get(0).setMontantTiersPayant(montantTpFinalTierspayant);
 
         } else {
@@ -285,12 +292,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
     }
 
-    private int computePourcentage(Integer total, Integer valeurPatielle) {
-        return (int) Math
-                .ceil(((Objects.requireNonNullElse(valeurPatielle, 0) / (double) Objects.requireNonNullElse(total, 1)))
-                        * 100);
-    }
-
     private NetComputingDTO computeTiesrPayantNetAmount(TiersPayantParams tierspayant, int amountToCompute,
             boolean asRestrictions) {
 
@@ -391,10 +392,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         montantAPaye.setMontantTp(netComputing.getMontantTiersPayant());
         TiersPayantParams tp = new TiersPayantParams();
         tp.setCompteTp(tierspayant.getCompteTp());
-        /*
-         * tp.setTaux(op.getIntCUSTPART() == 0 ? tierspayant.getTaux() : computePourcentage( (op.getIntPRICE() -
-         * op.getIntPRICEREMISE()), netComputing.getMontantTiersPayant()));
-         */
 
         tp.setTaux(100);
         tp.setNumBon(tierspayant.getNumBon());
