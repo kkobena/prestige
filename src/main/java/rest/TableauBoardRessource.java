@@ -50,9 +50,7 @@ public class TableauBoardRessource {
             @DefaultValue("false") @QueryParam(value = "monthly") boolean monthly) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+       
         JSONObject json = this.balanceService
                 .tableauBoardDatas(BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd).byMonth(monthly)
                         .showAllAmount(false).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());

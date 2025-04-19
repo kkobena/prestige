@@ -34,8 +34,6 @@ import dal.dataManager;
 import dal.enumeration.CategoryTransaction;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeTransaction;
-import dal.JdbConnexion;
-import java.sql.ResultSetMetaData;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
