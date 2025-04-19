@@ -619,11 +619,7 @@ public class SalesRessource {
     @GET
     @Path("find/infosclienttpforupdating")
     public Response findVenteForUpdationg(@QueryParam("id") String id) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = salesService.findVenteForUpdationg(id);
         return Response.ok().entity(json.toString()).build();
     }
@@ -644,11 +640,7 @@ public class SalesRessource {
     @GET
     @Path("gettoken")
     public Response testtoken() throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject jsono = smsService.findAccessToken();
         return Response.ok().entity(jsono.toString()).build();
     }
@@ -696,4 +688,11 @@ public class SalesRessource {
         return Response.ok().build();
     }
 
+    @PUT
+    @Path("update-vno-client/{id}/{clientId}")
+    public Response updateVNOClient(@PathParam("id") String id, @PathParam("clientId") String clientId)
+            throws JSONException {
+        salesService.updateVNOClient(id, clientId);
+        return Response.ok().build();
+    }
 }

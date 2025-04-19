@@ -2281,8 +2281,13 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     private List<Tuple> getPreventeTuples(SalesStatsParams params) {
         try {
-            Query q = this.getEntityManager().createNativeQuery(buildPreVentesQuery(params), Tuple.class)
-                    .setParameter(1, params.getStatut());
+            Query q = this.getEntityManager().createNativeQuery(buildPreVentesQuery(params), Tuple.class);
+            if ("ALL".equals(params.getStatut())) {
+                q.setParameter(1, Set.of(Constant.STATUT_IS_PROGRESS, "is_Process", Constant.STATUT_PENDING));
+            } else {
+                q.setParameter(1, Set.of(params.getStatut()));
+            }
+
             return q.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -2292,15 +2297,8 @@ public class SalesStatsServiceImpl implements SalesStatsService {
 
     private String buildPreVentesQuery(SalesStatsParams params) {
 
-        String query = preventeSql;
-        if (!this.sessionHelperService.getData().isShowAllActivity()) {
-            TEmplacement te = params.getUserId().getLgEMPLACEMENTID();
-            query = query.replace("{user_join}", userJoin);
-            query = query.concat(String.format(emplacementClose, te.getLgEMPLACEMENTID()));
+        String query = preventeSql.replace("{user_join}", "");
 
-        } else {
-            query = query.replace("{user_join}", "");
-        }
         if (!this.sessionHelperService.getData().isShowAllVente()) {
             query = query.concat(String.format(userClose, this.sessionHelperService.getCurrentUser().getLgUSERID()));
         }
@@ -2317,7 +2315,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         return query;
     }
 
-    private final String preventeSql = "SELECT p.lg_PREENREGISTREMENT_ID AS id, p.str_REF AS ref,p.int_PRICE AS montant,DATE_FORMAT(p.dt_UPDATED, '%d/%m/%Y') AS dateVente,DATE_FORMAT(p.dt_UPDATED, '%H:%i') AS heureVente, p.str_TYPE_VENTE AS typeVente,CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeur FROM  t_preenregistrement p JOIN t_preenregistrement_detail dd ON p.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID {user_join} WHERE p.str_STATUT =?1 AND p.lg_NATURE_VENTE_ID <> '3' AND DATE(p.dt_UPDATED)=DATE(NOW()) ";
+    private final String preventeSql = "SELECT p.lg_PREENREGISTREMENT_ID AS id, p.str_REF AS ref,p.int_PRICE AS montant,DATE_FORMAT(p.dt_UPDATED, '%d/%m/%Y') AS dateVente,DATE_FORMAT(p.dt_UPDATED, '%H:%i') AS heureVente, p.str_TYPE_VENTE AS typeVente,CONCAT(vendeur.str_FIRST_NAME,' ',vendeur.str_LAST_NAME) AS userVendeur FROM  t_preenregistrement p JOIN t_preenregistrement_detail dd ON dd.lg_PREENREGISTREMENT_ID=p.lg_PREENREGISTREMENT_ID JOIN t_user vendeur ON vendeur.lg_USER_ID=p.lg_USER_VENDEUR_ID {user_join} WHERE p.str_STATUT IN(?1) AND p.lg_NATURE_VENTE_ID <> '3' AND DATE(p.dt_UPDATED)=DATE(NOW()) ";
     private final String userJoin = " JOIN t_user u ON u.lg_USER_ID=p.lg_USER_ID ";
     private final String emplacementClose = " AND u.lg_EMPLACEMENT_ID='%s' ";
     private final String userClose = " AND p.lg_USER_ID='%s' ";

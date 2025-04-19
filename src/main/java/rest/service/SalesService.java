@@ -114,4 +114,6 @@ public interface SalesService {
     void updateVenteDate(TUser ooTUser, UpdateVenteParamDTO param);
 
     JSONObject computeVONet(SalesParams params);
+
+    void updateVNOClient(String venteId, String clientId);
 }

@@ -31,7 +31,6 @@ import javax.ws.rs.core.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.ClientService;
-import toolkits.parameters.commonparameter;
 import util.Constant;
 
 /**
@@ -62,10 +61,8 @@ public class ClientRessource {
     public Response clientDifferes(@QueryParam(value = "query") String query) {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+
         List<ClientDTO> data = clientService.clientDifferes(query, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
@@ -74,11 +71,8 @@ public class ClientRessource {
     @Path("differes")
     public Response differes(@QueryParam(value = "query") String query) {
         HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
         List<ClientDTO> data = clientService.clientDiffere(query, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
@@ -86,12 +80,6 @@ public class ClientRessource {
     @POST
     @Path("add/lambda")
     public Response add(ClientLambdaDTO clientLambda) {
-        HttpSession hs = servletRequest.getSession();
-
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
         TClient tc = clientService.createClient(clientLambda);
         return Response.ok().entity(ResultFactory.getSuccessResult(new ClientLambdaDTO(tc), 1)).build();
@@ -100,12 +88,7 @@ public class ClientRessource {
     @PUT
     @Path("add/venteclientinfos/{id}")
     public Response updateVenteInfosClient(@PathParam("id") String id, ClientLambdaDTO clientLambda) {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
         JSONObject json = clientService.createClient(clientLambda, id);
         return Response.ok().entity(json.toString()).build();
     }
@@ -174,12 +157,6 @@ public class ClientRessource {
     @POST
     @Path("add/carnet")
     public Response addclientCarnet(ClientDTO client) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
         JSONObject json = clientService.updateCreateClientCarnet(client);
         return Response.ok().entity(json.toString()).build();
@@ -188,11 +165,6 @@ public class ClientRessource {
     @POST
     @Path("add/assurance")
     public Response addclientAssurance(ClientDTO client) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
         JSONObject json = clientService.updateOrCreateClientAssurance(client);
         return Response.ok().entity(json.toString()).build();
@@ -242,11 +214,7 @@ public class ClientRessource {
     public Response addNewTiersPayantToClient(TiersPayantDTO tiersPayantDTO, @PathParam("clientId") String clientId,
             @PathParam("typetierspayantId") String typeTiersPayantId, @PathParam("taux") int taux)
             throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = clientService.addNewTiersPayantToClient(tiersPayantDTO, clientId, typeTiersPayantId, taux);
         return Response.ok().entity(json.toString()).build();
     }
@@ -255,11 +223,7 @@ public class ClientRessource {
     @Path("update-infos-client/{clientId}")
     public Response updateClientInfos(ClientDTO clientDTO, @PathParam("clientId") String clientId)
             throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = clientService.updateClientInfos(clientDTO, clientId);
         return Response.ok().entity(json.toString()).build();
     }
@@ -268,11 +232,7 @@ public class ClientRessource {
     @Path("update-infos-ayantdroit/{ayantDroitId}")
     public Response updateAyantDroitInfos(AyantDroitDTO ayantDroitDTO, @PathParam("ayantDroitId") String ayantDroitId)
             throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         ayantDroitDTO.setLgAYANTSDROITSID(ayantDroitId);
         JSONObject json = clientService.updateAyantDroitInfos(ayantDroitDTO);
         return Response.ok().entity(json.toString()).build();
