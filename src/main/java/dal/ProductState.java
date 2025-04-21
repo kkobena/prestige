@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
  * @author koben
  */
 @Entity
-@Table(name = "product_state", indexes = { @Index(columnList = "state", name = "state_index") })
+@Table(name = "product_state", indexes = { @Index(columnList = "produit_state", name = "produit_state_index") })
 public class ProductState implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -37,7 +37,7 @@ public class ProductState implements Serializable {
     private TFamille produit;
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "state", nullable = false, length = 25)
+    @Column(name = "produit_state", nullable = false, length = 25)
     private ProductStateEnum produitStateEnum;
 
     public Long getId() {

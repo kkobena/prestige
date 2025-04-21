@@ -42,9 +42,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         if (Objects.nonNull(tu)) {
             this.sessionHelperService.setCurrentUser(tu);
 
-            SessionHelperData data = new SessionHelperData((boolean) hs.getAttribute(Constant.UPDATE_PRICE),
-                    (boolean) hs.getAttribute(Constant.SHOW_VENTE),
-                    (boolean) hs.getAttribute(Constant.P_SHOW_ALL_ACTIVITY));
+            SessionHelperData data = new SessionHelperData(
+                    Objects.isNull(hs.getAttribute(Constant.UPDATE_PRICE)) ? false
+                            : (boolean) hs.getAttribute(Constant.UPDATE_PRICE),
+                    Objects.isNull(hs.getAttribute(Constant.SHOW_VENTE)) ? false
+                            : (boolean) hs.getAttribute(Constant.SHOW_VENTE),
+                    Objects.isNull(hs.getAttribute(Constant.P_SHOW_ALL_ACTIVITY)) ? false
+                            : (boolean) hs.getAttribute(Constant.P_SHOW_ALL_ACTIVITY));
             this.sessionHelperService.setData(data);
         }
 
