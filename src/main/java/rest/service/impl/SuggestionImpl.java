@@ -761,12 +761,11 @@ public class SuggestionImpl implements SuggestionService {
         TSuggestionOrder suggestion = item.getLgSUGGESTIONORDERID();
         if (CollectionUtils.isNotEmpty(suggestion.getTSuggestionOrderDetailsCollection())
                 && suggestion.getTSuggestionOrderDetailsCollection().size() == 1) {
-            getEmg().remove(item);
             getEmg().remove(suggestion);
         } else {
             getEmg().remove(item);
             suggestion.setDtUPDATED(new Date());
-            getEmg().persist(suggestion);
+            getEmg().merge(suggestion);
         }
         this.productStateService.remove(famille, ProductStateEnum.SUGGESTION);
     }
@@ -907,24 +906,6 @@ public class SuggestionImpl implements SuggestionService {
 
     private TSuggestionOrderDetails getItem(String id) {
         return getEmg().find(TSuggestionOrderDetails.class, id);
-    }
-
-    private int isOnAnotherSuggestion(TFamille lgFamilleID) {
-        int status = (lgFamilleID.getIntORERSTATUS() == 2 ? 2 : 0);
-        try {
-            long count = (long) getEmg()
-                    .createQuery(
-                            "SELECT COUNT(o)  FROM TSuggestionOrderDetails o WHERE  o.lgFAMILLEID.lgFAMILLEID =?1 ")
-                    .setParameter(1, lgFamilleID.getLgFAMILLEID()).setMaxResults(1).getSingleResult();
-            if (count > 1) {
-                return 1;
-
-            }
-        } catch (Exception e) {
-
-        }
-
-        return status;
     }
 
     @Override

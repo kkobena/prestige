@@ -560,7 +560,7 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             date = (String) q.getSingleResult();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.info(e.getLocalizedMessage());
         }
         return date;
     }

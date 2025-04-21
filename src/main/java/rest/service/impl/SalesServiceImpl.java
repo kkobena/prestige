@@ -4736,4 +4736,15 @@ public class SalesServiceImpl implements SalesService {
 
         return false;
     }
+
+    @Override
+    public void updateVNOClient(String venteId, String clientId) {
+        TClient tc = em.find(TClient.class, clientId);
+        TPreenregistrement preenregistrement = em.find(TPreenregistrement.class, venteId);
+        preenregistrement.setClient(tc);
+        preenregistrement.setStrFIRSTNAMECUSTOMER(tc.getStrFIRSTNAME());
+        preenregistrement.setStrLASTNAMECUSTOMER(tc.getStrLASTNAME());
+        preenregistrement.setStrPHONECUSTOME(tc.getStrADRESSE());
+        em.merge(preenregistrement);
+    }
 }

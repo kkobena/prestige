@@ -24,8 +24,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import rest.service.RetourFournisseurService;
-import toolkits.parameters.commonparameter;
-import util.Constant;
+import rest.service.dto.UpdateRetourDTO;
+import rest.service.dto.UpdateRetourItemDTO;
 
 /**
  *
@@ -36,19 +36,13 @@ import util.Constant;
 @Consumes("application/json")
 public class RetourFournisseurRessource {
 
-    @Inject
-    private HttpServletRequest servletRequest;
     @EJB
     private RetourFournisseurService retourFournisseurService;
 
     @GET
     @Path("retours-items")
     public Response loadDetailsRetouFournisseurs(@QueryParam(value = "retourId") String retourId) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         List<RetourDetailsDTO> data = retourFournisseurService.loadDetailRetourFournisseur(retourId);
         return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
     }
@@ -56,12 +50,6 @@ public class RetourFournisseurRessource {
     @POST
     @Path("new")
     public Response create(RetourFournisseurDTO params) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        params.setUser(tu);
 
         RetourFournisseurDTO data = retourFournisseurService.createRetour(params);
         if (data != null) {
@@ -75,11 +63,6 @@ public class RetourFournisseurRessource {
     @POST
     @Path("add-item")
     public Response addItem(RetourDetailsDTO params) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
         RetourDetailsDTO data = retourFournisseurService.addItem(params);
         if (data != null) {
@@ -93,11 +76,6 @@ public class RetourFournisseurRessource {
     @POST
     @Path("update-item")
     public Response updateItem(RetourDetailsDTO params) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
         RetourDetailsDTO data = retourFournisseurService.updateItem(params);
         if (data != null) {
@@ -111,11 +89,6 @@ public class RetourFournisseurRessource {
     @DELETE
     @Path("remove-item/{id}")
     public Response removeItem(@PathParam("id") String id) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
         retourFournisseurService.removeItem(id);
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
@@ -126,13 +99,26 @@ public class RetourFournisseurRessource {
     @Path("full-bl/{id}")
     public Response returnFullBonLivraison(@PathParam("id") String id, RetourDetailsDTO params)
             throws CloneNotSupportedException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
-        retourFournisseurService.returnFullBonLivraison(id, params.getLgMOTIFRETOUR(), tu);
+        retourFournisseurService.returnFullBonLivraison(id, params.getLgMOTIFRETOUR());
+
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
+    }
+
+    @POST
+    @Path("update-item-response")
+    public Response updateQuantiteReponse(UpdateRetourItemDTO retourItem) throws CloneNotSupportedException {
+
+        retourFournisseurService.updateQuantiteReponse(retourItem);
+
+        return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
+    }
+
+    @POST
+    @Path("finaliser-retour-response")
+    public Response finaliserRetourFournisseur(UpdateRetourDTO updateRetourDTO) throws CloneNotSupportedException {
+
+        retourFournisseurService.finaliserRetourFournisseur(updateRetourDTO);
 
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
