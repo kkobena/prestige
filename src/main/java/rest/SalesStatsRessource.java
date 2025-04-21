@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -73,8 +74,8 @@ public class SalesStatsRessource {
     @Path("preventes")
     public Response getDetails(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String query, @QueryParam(value = "typeVenteId") String typeVenteId,
-            @QueryParam(value = "statut") String statut, @QueryParam(value = "nature") String nature)
-            throws JSONException {
+            @DefaultValue(value = "is_Process") @QueryParam(value = "statut") String statut,
+            @QueryParam(value = "nature") String nature) throws JSONException {
         SalesStatsParams body = new SalesStatsParams();
         body.setLimit(limit);
         body.setStart(start);
@@ -96,9 +97,6 @@ public class SalesStatsRessource {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
         List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
         boolean asAuthority = CommonUtils.hasAuthorityByName(hsAttribute, Constant.SHOW_VENTE);
@@ -125,11 +123,7 @@ public class SalesStatsRessource {
     @POST
     @Path("remove/{id}")
     public Response delete(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = salesService.delete(id);
         return Response.ok().entity(json.toString()).build();
     }
@@ -151,9 +145,7 @@ public class SalesStatsRessource {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
         boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
         boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
@@ -205,12 +197,7 @@ public class SalesStatsRessource {
     @GET
     @Path("depot/{id}")
     public Response getDepot(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
         JSONObject json = salesService.findVenteById(id);
         return Response.ok().entity(json.toString()).build();
     }
@@ -218,12 +205,7 @@ public class SalesStatsRessource {
     @GET
     @Path("{id}")
     public Response findOne(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
         JSONObject json = salesService.reloadVenteById(id);
         return Response.ok().entity(json.toString()).build();
     }
@@ -321,9 +303,7 @@ public class SalesStatsRessource {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         List<TPrivilege> lstTPrivilege = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
         boolean asAuthority = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.SHOW_VENTE);
         boolean allActivitis = CommonUtils.hasAuthorityByName(lstTPrivilege, Constant.P_SHOW_ALL_ACTIVITY);
@@ -402,11 +382,7 @@ public class SalesStatsRessource {
     @GET
     @Path("venteTierspayantData/{id}")
     public Response venteTierspayantData(@PathParam("id") String venteId) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         List<TiersPayantParams> data = salesService.venteTierspayantData(venteId);
         JSONObject json = new JSONObject();
         json.put("total", data.size());
@@ -439,9 +415,7 @@ public class SalesStatsRessource {
 
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         SalesStatsParams body = new SalesStatsParams();
         body.setUserId(tu);
         body.setUser(user);
