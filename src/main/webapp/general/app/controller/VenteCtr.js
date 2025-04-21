@@ -812,7 +812,7 @@ Ext.define('testextjs.controller.VenteCtr', {
         remiseCombo.getStore().loadData(record.get('remises'));
         remiseCombo.focus(false, 100);
     },
-    
+
     onComputeNet: function () {
         const me = this;
         const typeVente = me.getTypeVenteCombo().getValue();
@@ -1547,7 +1547,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                 params: Ext.JSON.encode(data),
                 success: function (response, options) {
                     progress.hide();
-                     me.toRecalculate = true;
+                    me.toRecalculate = true;
                     const result = Ext.JSON.decode(response.responseText, true);
                     if (result.success) {
                         me.getVnoproduitCombo()
@@ -2849,6 +2849,19 @@ Ext.define('testextjs.controller.VenteCtr', {
         if (form.isValid()) {
             const client = form.getValues();
             const record = new testextjs.model.caisse.ClientAssurance(client);
+            const pourcentage = parseInt(record.get('intPOURCENTAGE'));
+            if (pourcentage !== 0 && pourcentage !== 100) {
+                Ext.MessageBox.show({
+                    title: 'Message d\'erreur',
+                    width: 400,
+                    msg: "Vous devez saisir 100 ou 0",
+                    buttons: Ext.MessageBox.OK,
+                    icon: Ext.MessageBox.ERROR
+
+                });
+                return;
+            }
+
             const datas = {
                 "bIsAbsolute": record.get('bIsAbsolute'),
                 "dbPLAFONDENCOURS": record.get('dbPLAFONDENCOURS'),
@@ -3140,12 +3153,12 @@ Ext.define('testextjs.controller.VenteCtr', {
     },
 
     createAyantDroitForm: function () {
-        var me = this, client = me.getClient();
+        const me = this, client = me.getClient();
         if (!client) {
             return false;
         }
 
-        var villeStore = new Ext.data.Store({
+        const villeStore = new Ext.data.Store({
             idProperty: 'lgVILLEID',
             fields: [
                 {name: 'lgVILLEID', type: 'string'},

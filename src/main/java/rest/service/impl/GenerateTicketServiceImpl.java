@@ -829,11 +829,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         List<String> datas = new ArrayList<>();
         TTypeReglement reglement = oPreenregistrement.getLgREGLEMENTID().getLgMODEREGLEMENTID().getLgTYPEREGLEMENTID();
         List<VenteReglement> venteReglements = oPreenregistrement.getVenteReglements();
+        String lgTyvente = oPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID();
         if (oPreenregistrement.getIntCUSTPART() == 0) {
             if (oPreenregistrement.getIntPRICEREMISE() > 0) {
                 datas.add("* ;(-) " + DateConverter.amountFormat(oPreenregistrement.getIntPRICEREMISE()) + "; F CFA;1");
             }
-            String lgTyvente = oPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID();
 
             if (lgTyvente.equals(Constant.VENTE_ASSURANCE_ID) || lgTyvente.equals(Constant.VENTE_AVEC_CARNET)) {
                 datas.add("Vente à terme: ;    " + DateConverter.amountFormat(clotureVenteParams.getPartTP())
@@ -854,9 +854,11 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             if (oPreenregistrement.getIntPRICEREMISE() > 0) {
                 datas.add("* ;(-) " + DateConverter.amountFormat(oPreenregistrement.getIntPRICEREMISE()) + "; F CFA;1");
             }
-            datas.add("Net à payer: ;     "
-                    + DateConverter.amountFormat(
-                            Maths.arrondiModuloOfNumber((venteNet - oPreenregistrement.getIntPRICEREMISE()), 5))
+            int montantApayer = venteNet;
+            if (!(lgTyvente.equals(Constant.VENTE_AVEC_CARNET) && isTauxZero(oPreenregistrement))) {
+                montantApayer = venteNet - oPreenregistrement.getIntPRICEREMISE();
+            }
+            datas.add("Net à payer: ;     " + DateConverter.amountFormat(Maths.arrondiModuloOfNumber(montantApayer, 5))
                     + "; F CFA;1");
             if (venteReglements.size() > 1) {
                 for (VenteReglement vers : venteReglements) {
@@ -885,20 +887,24 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         return datas;
     }
 
+    private boolean isTauxZero(TPreenregistrement oPreenregistrement) {
+        return oPreenregistrement.getTPreenregistrementCompteClientTiersPayentCollection().stream()
+                .mapToInt(TPreenregistrementCompteClientTiersPayent::getIntPERCENT).sum() == 0;
+    }
+
     private List<String> generateDataSummaryVo(TPreenregistrement oPreenregistrement,
             MvtTransaction clotureVenteParams) {
         List<String> datas = new ArrayList<>();
         TTypeReglement reglement = clotureVenteParams.getReglement();
         List<VenteReglement> venteReglements = oPreenregistrement.getVenteReglements();
         int remise = clotureVenteParams.getMontantRemise();
-
+        String lgTyvente = oPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID();
         if (oPreenregistrement.getIntCUSTPART() == 0) {
 
             remise = Math.abs(remise);
             if (remise > 0) {
                 datas.add("* ;(-) " + DateConverter.amountFormat(remise) + "; F CFA;1");
             }
-            String lgTyvente = oPreenregistrement.getLgTYPEVENTEID().getLgTYPEVENTEID();
 
             if (lgTyvente.equals(Constant.VENTE_ASSURANCE_ID) || lgTyvente.equals(Constant.VENTE_AVEC_CARNET)) {
 
@@ -919,8 +925,12 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
             } else {
                 venteNet = (-1) * DateConverter.arrondiModuloOfNumber((-1) * venteNet, 5);
             }
-            datas.add("Net à payer: ;     "
-                    + DateConverter.amountFormat(Maths.arrondiModuloOfNumber((venteNet - remise), 5)) + "; F CFA;1");
+            int montantApayer = venteNet;
+            if (!(lgTyvente.equals(Constant.VENTE_AVEC_CARNET) && isTauxZero(oPreenregistrement))) {
+                montantApayer = venteNet - remise;
+            }
+            datas.add("Net à payer: ;     " + DateConverter.amountFormat(Maths.arrondiModuloOfNumber(montantApayer, 5))
+                    + "; F CFA;1");
             if (venteReglements.size() > 1) {
                 for (VenteReglement vers : venteReglements) {
                     datas.add(vers.getTypeReglement().getStrNAME() + ": ;     "
