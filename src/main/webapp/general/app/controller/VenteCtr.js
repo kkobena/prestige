@@ -607,10 +607,7 @@ Ext.define('testextjs.controller.VenteCtr', {
                     },
                     'clientLambda #lambdaClientGrid actioncolumn': {
                         click: this.btnAjouterClientLambda
-                    }/*,
-                     'clientLambda #lambdaClientGrid': {
-                     selectionchange: this.onClientStandarGridRowSelect
-                     }*/
+                    }
 
                 });
     },

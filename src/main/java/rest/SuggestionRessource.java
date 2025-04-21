@@ -107,11 +107,7 @@ public class SuggestionRessource {
     @DELETE
     @Path("item/{id}")
     public Response delete(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.removeItem(id);
         return Response.ok().build();
     }
@@ -119,11 +115,6 @@ public class SuggestionRessource {
     @GET
     @Path("amount/{id}")
     public Response getSuggestionAmount(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
 
         return Response.ok().entity(new JSONObject(this.suggestionService.getSuggestionAmount(id)).toString()).build();
     }
@@ -131,11 +122,7 @@ public class SuggestionRessource {
     @POST
     @Path("item/add")
     public Response addItem(SuggestionOrderDetailDTO suggestionOrderDetail) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.addItem(suggestionOrderDetail);
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
@@ -143,11 +130,7 @@ public class SuggestionRessource {
     @POST
     @Path("item/update-seuil")
     public Response updateItemSeuil(SuggestionOrderDetailDTO suggestionOrderDetail) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.updateItemSeuil(suggestionOrderDetail);
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
@@ -155,11 +138,7 @@ public class SuggestionRessource {
     @POST
     @Path("item/update-qte-cmde")
     public Response updateItemQteCmde(SuggestionOrderDetailDTO suggestionOrderDetail) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.updateItemQteCmde(suggestionOrderDetail);
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
@@ -167,11 +146,7 @@ public class SuggestionRessource {
     @POST
     @Path("item/update-prixachat")
     public Response updateItemQtePrixPaf(SuggestionOrderDetailDTO suggestionOrderDetail) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.updateItemQtePrixPaf(suggestionOrderDetail);
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
@@ -179,11 +154,7 @@ public class SuggestionRessource {
     @POST
     @Path("item/update-prixvente")
     public Response updateItemQtePrixVente(SuggestionOrderDetailDTO suggestionOrderDetail) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.updateItemQtePrixVente(suggestionOrderDetail);
         return Response.ok().entity(ResultFactory.getSuccessResultMsg()).build();
     }
@@ -191,11 +162,7 @@ public class SuggestionRessource {
     @POST
     @Path("add")
     public Response create(SuggestionDTO suggestion) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         SuggestionDTO result = this.suggestionService.create(suggestion);
         return Response.ok().entity(new JSONObject(result).toString()).build();
     }
@@ -211,11 +178,7 @@ public class SuggestionRessource {
     @GET
     @Path("set-pending/{id}")
     public Response setToPending(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.setToPending(id);
         return Response.ok().build();
     }
@@ -226,9 +189,7 @@ public class SuggestionRessource {
             @QueryParam(value = "query") String search, @QueryParam(value = "orderId") String orderId) {
         HttpSession hs = servletRequest.getSession();
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         return Response.ok().entity(this.suggestionService.fetchItems(orderId, search, tu, start, limit).toString())
                 .build();
     }
@@ -236,11 +197,7 @@ public class SuggestionRessource {
     @DELETE
     @Path("suggestion/{id}")
     public Response deleteSuggestion(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.deleteSuggestion(id);
         return Response.ok().build();
     }
@@ -249,11 +206,7 @@ public class SuggestionRessource {
     @Path("change-grossiste")
     public Response changeGrossiste(@QueryParam(value = "suggestionId") String suggestionId,
             @QueryParam(value = "grossisteId") String grossisteId) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         boolean resp = this.suggestionService.changeGrossiste(suggestionId, grossisteId);
         return Response.ok(new JSONObject().put("response", resp).toString()).build();
     }
@@ -262,11 +215,7 @@ public class SuggestionRessource {
     @Path("merge-suggestion")
     public Response mergeSuggestion(@QueryParam(value = "suggestionId") String suggestionId,
             @QueryParam(value = "grossisteId") String grossisteId) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         this.suggestionService.mergeSuggestion(suggestionId, grossisteId);
         return Response.ok().build();
     }

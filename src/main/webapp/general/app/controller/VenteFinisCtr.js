@@ -4,7 +4,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
     extend: 'Ext.app.Controller',
     requires: [
         'testextjs.model.caisse.Vente',
-        'testextjs.view.vente.user.UpdateVenteClientTpForm', 'testextjs.view.vente.DetailVente','testextjs.view.vente.form.VenteDateForm'
+        'testextjs.view.vente.user.UpdateVenteClientTpForm', 'testextjs.view.vente.DetailVente', 'testextjs.view.vente.form.VenteDateForm'
     ],
     views: ['testextjs.view.vente.VentesFinis'],
     refs: [{
@@ -73,7 +73,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             'ventemanager #nature': {
                 select: this.doSearch
             },
-
             'ventemanager gridpanel': {
                 viewready: this.doInitStore
             },
@@ -101,19 +100,16 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
     onCloseSalesItem: function () {
         const me = this;
         me.getSalesItem().destroy();
-
     },
     onUpdateClientOrTp: function (view, rowIndex, colIndex, item, e, rec, row) {
         if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modificationClientTp')) {
             Ext.create('testextjs.view.vente.user.UpdateVenteClientTpForm', {venteId: rec.get('lgPREENREGISTREMENTID')}).show();
-
         }
 
     },
     onUpdateVenteDate: function (view, rowIndex, colIndex, item, e, rec, row) {
         if (rec.get('intPRICE') > 0 && !rec.get('cancel') && rec.get('modificationVenteDate') && rec.get('strTYPEVENTE') === "VO") {
-            Ext.create('testextjs.view.vente.form.VenteDateForm', {vente: rec,grid:view}).show();
-
+            Ext.create('testextjs.view.vente.form.VenteDateForm', {vente: rec, grid: view}).show();
         }
 
     },
@@ -150,8 +146,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             }
         }
     },
-
     updateInfosvente: function (win, formulaire, rec, linkUrl) {
+        const me = this;
         if (formulaire.isValid()) {
             const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
@@ -165,6 +161,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                     if (result.success) {
                         win.destroy();
                         window.open(linkUrl);
+                        me.doSearch();
+
                     } else {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
@@ -187,153 +185,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
 
 
     },
-    buildForm: function (rec, linkUrl) {
-        const me = this;
-        const form = Ext.create('Ext.window.Window',
-                {
-                    extend: 'Ext.window.Window',
-                    autoShow: true,
-                    height: 320,
-                    width: '50%',
-                    modal: true,
-                    title: 'Mise à jour des infos du client',
-                    closeAction: 'hide',
-                    closable: true,
-                    layout: {
-                        type: 'vbox',
-                        align: 'stretch'
-                    },
-                    items: [
-                        {
-                            xtype: 'form',
-                            bodyPadding: 5,
-                            modelValidation: true,
-                            layout: {
-                                type: 'fit',
-                                align: 'stretch'
-                            },
-                            items: [
-
-                                {
-                                    xtype: 'fieldset',
-                                    title: 'Information sur le client',
-                                    layout: 'anchor',
-                                    defaults: {
-                                        anchor: '100%',
-                                        xtype: 'textfield',
-                                        msgTarget: 'side',
-                                        labelAlign: 'right',
-                                        labelWidth: 115
-                                    },
-                                    items: [
-                                        {
-                                            fieldLabel: 'Nom',
-                                            emptyText: 'Nom',
-                                            name: 'strFIRSTNAME',
-                                            height: 45,
-                                            allowBlank: false,
-                                            enableKeyEvents: true,
-                                            listeners: {
-                                                afterrender: function (field) {
-                                                    field.focus(true, 50);
-                                                },
-                                                specialKey: function (field, e) {
-                                                    if (e.getKey() === e.ENTER) {
-                                                        let formulaire = field.up('form');
-                                                        me.updateInfosvente(form, formulaire, rec, linkUrl);
-                                                    }
-                                                }
-                                            }
-
-                                        }, {
-                                            fieldLabel: 'Prénom',
-                                            emptyText: 'Prénom',
-                                            name: 'strLASTNAME',
-                                            height: 45,
-                                            allowBlank: false,
-                                            enableKeyEvents: true,
-                                            listeners: {
-                                                specialKey: function (field, e) {
-                                                    if (e.getKey() === e.ENTER) {
-                                                        let formulaire = field.up('form');
-                                                        me.updateInfosvente(form, formulaire, rec, linkUrl);
-                                                    }
-                                                }
-                                            }
-
-                                        },
-                                        {
-                                            fieldLabel: 'Téléphone',
-                                            emptyText: 'Téléphone',
-                                            name: 'strADRESSE',
-                                            height: 45,
-                                            regex: /[0-9.]/,
-                                            allowBlank: false,
-                                            enableKeyEvents: true,
-                                            listeners: {
-                                                specialKey: function (field, e) {
-                                                    if (e.getKey() === e.ENTER) {
-                                                        var formulaire = field.up('form');
-                                                        me.updateInfosvente(form, formulaire, rec, linkUrl);
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        {
-                                            xtype: 'hiddenfield',
-                                            name: 'lgTYPECLIENTID',
-                                            value: '6',
-                                            allowBlank: false
-                                        },
-                                        {
-                                            xtype: "radiogroup",
-                                            fieldLabel: "Genre",
-                                            allowBlank: true,
-                                            vertical: true,
-                                            items: [
-                                                {boxLabel: 'Féminin', name: 'strSEXE', inputValue: 'F'},
-                                                {boxLabel: 'Masculin', name: 'strSEXE', inputValue: 'M'}
-                                            ]
-                                        }
-
-                                    ]
-                                }
-
-                            ],
-                            dockedItems: [
-                                {
-                                    xtype: 'toolbar',
-                                    dock: 'bottom',
-                                    ui: 'footer',
-                                    layout: {
-                                        pack: 'end',
-                                        type: 'hbox'
-                                    },
-                                    items: [
-                                        {
-                                            xtype: 'button',
-                                            text: 'Enregistrer',
-                                            handler: function (btn) {
-                                                const formulaire = btn.up('form');
-                                                me.updateInfosvente(form, formulaire, rec, linkUrl);
-                                            }
-                                        },
-                                        {
-                                            xtype: 'button',
-                                            text: 'Annuler',
-                                            handler: function (btn) {
-                                                form.destroy();
-                                            }
-
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-
-                });
-    },
     onFacture: function (view, rowIndex, colIndex, item, e, rec, row) {
         const me = this;
         const client = rec.get('clientFullName');
@@ -341,7 +192,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         if (client !== '') {
             window.open(linkUrl);
         } else {
-            me.buildForm(rec, linkUrl);
+            // me.buildForm(rec, linkUrl);
+            me.buildLambdaClientGrid(rec, linkUrl);
         }
 
 
@@ -351,7 +203,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             const liste_param = "search_value:" + rec.get('lgPREENREGISTREMENTID');
             const extension = "csv";
             window.location = '../MigrationServlet?table_name=TABLE_MISEAJOUR_STOCKDEPOT' + "&extension=" + extension + "&liste_param=" + liste_param;
-
         }
 
     },
@@ -372,7 +223,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                 success: function (response)
                                 {
                                     const object = Ext.JSON.decode(response.responseText, false);
-
                                     if (object.success == "0") {
                                         Ext.MessageBox.alert('Error Message', object.errors);
                                     } else {
@@ -386,7 +236,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                     Ext.MessageBox.alert('Error Message', response.responseText);
                                 }
                             });
-
                         }
                     });
         }
@@ -405,7 +254,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                 Ext.Ajax.request({
                     url: url_services_pdf_ticket
                 });
-
             } else {
                 me.onPrintTicket(rec.get('lgPREENREGISTREMENTID'), rec.get('lgTYPEVENTEID'), rec.get('copy'));
             }
@@ -531,7 +379,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         window.location = '../api/v1/vente-depot/as/order/' + rec.get('lgPREENREGISTREMENTID');
     },
     goto: function (view, rowIndex, colIndex, item, e, rec, row) {
-
         Ext.Ajax.request({
             method: 'GET',
             url: '../api/v1/ventestats/find-one/' + rec.get('lgPREENREGISTREMENTID'),
@@ -541,7 +388,348 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
             }
 
         });
+    },
+    buildForm: function (rec, linkUrl) {
+        const me = this;
+        const form = Ext.create('Ext.window.Window',
+                {
+                    extend: 'Ext.window.Window',
+                    autoShow: true,
+                    height: 320,
+                    width: '50%',
+                    modal: true,
+                    title: 'Mise à jour des infos du client',
+                    closeAction: 'hide',
+                    closable: true,
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    },
+                    items: [
+                        {
+                            xtype: 'form',
+                            bodyPadding: 5,
+                            modelValidation: true,
+                            layout: {
+                                type: 'fit',
+                                align: 'stretch'
+                            },
+                            items: [
+
+                                {
+                                    xtype: 'fieldset',
+                                    title: 'Information sur le client',
+                                    layout: 'anchor',
+                                    defaults: {
+                                        anchor: '100%',
+                                        xtype: 'textfield',
+                                        msgTarget: 'side',
+                                        labelAlign: 'right',
+                                        labelWidth: 115
+                                    },
+                                    items: [
+                                        {
+                                            fieldLabel: 'Nom',
+                                            emptyText: 'Nom',
+                                            name: 'strFIRSTNAME',
+                                            height: 35,
+                                            allowBlank: false,
+                                            enableKeyEvents: true,
+                                            listeners: {
+                                                afterrender: function (field) {
+                                                    field.focus(true, 50);
+                                                },
+                                                specialKey: function (field, e) {
+                                                    if (e.getKey() === e.ENTER) {
+                                                        let formulaire = field.up('form');
+                                                        me.updateInfosvente(form, formulaire, rec, linkUrl);
+                                                    }
+                                                }
+                                            }
+
+                                        }, {
+                                            fieldLabel: 'Prénom',
+                                            emptyText: 'Prénom',
+                                            name: 'strLASTNAME',
+                                            height: 35,
+                                            allowBlank: false,
+                                            enableKeyEvents: true,
+                                            listeners: {
+                                                specialKey: function (field, e) {
+                                                    if (e.getKey() === e.ENTER) {
+                                                        let formulaire = field.up('form');
+                                                        me.updateInfosvente(form, formulaire, rec, linkUrl);
+                                                    }
+                                                }
+                                            }
+
+                                        },
+                                        {
+                                            fieldLabel: 'Téléphone',
+                                            emptyText: 'Téléphone',
+                                            name: 'strADRESSE',
+                                            height: 35,
+                                            regex: /[0-9.]/,
+                                            allowBlank: false,
+                                            enableKeyEvents: true,
+                                            listeners: {
+                                                specialKey: function (field, e) {
+                                                    if (e.getKey() === e.ENTER) {
+                                                        const formulaire = field.up('form');
+                                                        me.updateInfosvente(form, formulaire, rec, linkUrl);
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            xtype: 'hiddenfield',
+                                            name: 'lgTYPECLIENTID',
+                                            value: '6',
+                                            allowBlank: false
+                                        },
+                                        {
+                                            xtype: "radiogroup",
+                                            fieldLabel: "Genre",
+                                            allowBlank: true,
+                                            vertical: true,
+                                            items: [
+                                                {boxLabel: 'Féminin', name: 'strSEXE', inputValue: 'F'},
+                                                {boxLabel: 'Masculin', name: 'strSEXE', inputValue: 'M'}
+                                            ]
+                                        }
+
+                                    ]
+                                }
+
+                            ],
+                            dockedItems: [
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'bottom',
+                                    ui: 'footer',
+                                    layout: {
+                                        pack: 'end',
+                                        type: 'hbox'
+                                    },
+                                    items: [
+                                        {
+                                            xtype: 'button',
+                                            text: 'Enregistrer',
+                                            handler: function (btn) {
+                                                const formulaire = btn.up('form');
+                                                me.updateInfosvente(form, formulaire, rec, linkUrl);
+                                            }
+                                        },
+                                        {
+                                            xtype: 'button',
+                                            text: 'Annuler',
+                                            handler: function (btn) {
+                                                form.destroy();
+                                            }
+
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+
+                });
+    },
+    buildLambdaClientGrid: function (rec, linkUrl) {
+        const me = this;
+        const form = Ext.create('Ext.window.Window',
+                {
+                    extend: 'Ext.window.Window',
+                    autoShow: true,
+                    height: 390,
+                    width: '50%',
+                    modal: true,
+                    title: 'Mise à jour des infos du client',
+                    closeAction: 'destroy',
+                    maximizable: true,
+                    closable: true,
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    },
+                    items: [{
+
+                            xtype: 'grid',
+                            itemId: 'lambdaClientGrid',
+                            selModel: {
+                                selType: 'rowmodel',
+                                mode: 'SINGLE'
+                            },
+                            store: Ext.create('Ext.data.Store', {
+                                autoLoad: false,
+                                pageSize: null,
+                                model: 'testextjs.model.caisse.ClientLambda',
+                                proxy: {
+                                    type: 'ajax',
+                                    url: '../api/v1/client/lambda',
+                                    reader: {
+                                        type: 'json',
+                                        root: 'data',
+                                        totalProperty: 'total'
+                                    }
+                                }
+
+                            }),
+                            height: 'auto',
+                            minHeight: 350,
+                            columns: [
+                                {
+                                    text: '#',
+                                    width: 30,
+                                    dataIndex: 'lgCLIENTID',
+                                    hidden: true
+
+                                },
+                                {
+                                    xtype: 'rownumberer',
+                                    text: 'LG',
+                                    width: 45,
+                                    sortable: true
+                                }, {
+                                    text: 'Nom',
+                                    flex: 1,
+                                    sortable: true,
+                                    dataIndex: 'strFIRSTNAME'
+                                }, {
+                                    header: 'Prénom(s)',
+                                    dataIndex: 'strLASTNAME',
+                                    flex: 1
+
+                                },
+                                {
+                                    header: 'Téléphone',
+                                    dataIndex: 'strADRESSE',
+                                    flex: 1
+
+                                },
+                                {
+                                    header: 'E-mail',
+                                    dataIndex: 'email',
+                                    flex: 1
+
+                                },
+                                {
+                                    xtype: 'actioncolumn',
+                                    width: 30,
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    items: [
+                                        {
+                                            icon: 'resources/images/icons/add16.gif',
+                                            tooltip: 'Ajouter',
+                                            scope: this,
+                                            handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                                const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+                                                Ext.Ajax.request({
+                                                    method: 'PUT',
+                                                    url: '../api/v1/vente/update-vno-client/' + rec.get('lgPREENREGISTREMENTID') + '/' + record.get('lgCLIENTID'),
+
+                                                    success: function (response, options) {
+                                                        progress.hide();
+                                                        form.destroy();
+                                                        window.open(linkUrl);
+                                                        me.doSearch();
+                                                    },
+                                                    failure: function (response, options) {
+                                                        progress.hide();
+                                                        Ext.Msg.alert("Message", 'Erreur du système ' + response.status);
+                                                    }
+
+                                                });
 
 
+                                            }
+
+                                        }]
+                                }],
+                            dockedItems: [
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'bottom',
+                                    ui: 'footer',
+                                    layout: {
+                                        pack: 'end',
+                                        type: 'hbox'
+                                    },
+                                    items: [
+
+                                        {
+                                            xtype: 'button',
+                                            text: 'Annuler',
+                                            handler: function () {
+                                                form.destroy();
+                                            }
+
+                                        }
+                                    ]
+                                },
+
+                                {
+                                    xtype: 'toolbar',
+                                    dock: 'top',
+                                    ui: 'footer',
+                                    items: [
+                                        {
+                                            xtype: 'textfield',
+                                            itemId: 'queryClientLambda',
+                                            emptyText: 'Taper ici pour rechercher',
+                                            width: '60%',
+                                            height: 35,
+                                            enableKeyEvents: true,
+                                            listeners: {
+                                                specialKey: function (field, e) {
+                                                    if (e.getKey() === e.ENTER) {
+                                                        form.query('#lambdaClientGrid')[0].getStore().load({
+                                                            params: {
+                                                                query: field.getValue()
+                                                            }
+                                                        });
+                                                    }
+                                                }
+
+                                            }
+                                        }, '-', {
+                                            text: 'rechercher',
+                                            tooltip: 'rechercher',
+                                            scope: this,
+                                            itemId: 'btnRechercheLambda',
+                                            iconCls: 'searchicon',
+                                            handler: function (buton) {
+                                                const query = form.query('#queryClientLambda')[0];
+
+                                                form.query('#lambdaClientGrid')[0].getStore().load({
+                                                    params: {
+                                                        query: query.getValue()
+                                                    }
+                                                });
+
+                                            }
+
+                                        },
+                                        '-', {
+                                            text: 'Nouveau client',
+                                            scope: this,
+                                            itemId: 'btnAddNewLambda',
+                                            icon: 'resources/images/icons/add16.gif',
+                                            handler: function () {
+                                                form.destroy();
+                                                me.buildForm(rec, linkUrl);
+                                            }
+
+                                        }
+                                    ]
+                                }
+                            ]
+
+
+                        }]});
     }
 });
+
+
