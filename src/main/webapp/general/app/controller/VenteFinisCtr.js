@@ -147,6 +147,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         }
     },
     updateInfosvente: function (win, formulaire, rec, linkUrl) {
+        const me = this;
         if (formulaire.isValid()) {
             const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
@@ -160,6 +161,8 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                     if (result.success) {
                         win.destroy();
                         window.open(linkUrl);
+                        me.doSearch();
+
                     } else {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
@@ -472,7 +475,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                             listeners: {
                                                 specialKey: function (field, e) {
                                                     if (e.getKey() === e.ENTER) {
-                                                        var formulaire = field.up('form');
+                                                        const formulaire = field.up('form');
                                                         me.updateInfosvente(form, formulaire, rec, linkUrl);
                                                     }
                                                 }
@@ -631,6 +634,7 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
                                                         progress.hide();
                                                         form.destroy();
                                                         window.open(linkUrl);
+                                                        me.doSearch();
                                                     },
                                                     failure: function (response, options) {
                                                         progress.hide();
