@@ -19,8 +19,6 @@ import rest.service.dto.UpdateVenteParamDTO;
 /**
  * @author Kobena
  */
-// @Local
-// @Remote
 public interface SalesService {
 
     JSONObject annulerVente(TUser ooTUser, String id);
