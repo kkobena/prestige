@@ -2283,7 +2283,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         try {
             Query q = this.getEntityManager().createNativeQuery(buildPreVentesQuery(params), Tuple.class);
             if ("ALL".equals(params.getStatut())) {
-                q.setParameter(1, Set.of(Constant.STATUT_IS_PROGRESS, "is_Process", Constant.STATUT_PENDING));
+                q.setParameter(1, Set.of(Constant.STATUT_IS_PROGRESS, Constant.STATUT_PENDING));
             } else {
                 q.setParameter(1, Set.of(params.getStatut()));
             }

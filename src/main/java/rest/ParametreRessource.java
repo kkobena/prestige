@@ -1,4 +1,3 @@
-
 package rest;
 
 import javax.ejb.EJB;
@@ -27,6 +26,16 @@ public class ParametreRessource {
     @Path("key/{key}")
     public Response isEnable(@PathParam("key") String key) {
         boolean isEnable = parametreService.isEnable(key);
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(86400);
+        cc.setPrivate(true);
+        return Response.ok().cacheControl(cc).entity(ResultFactory.getSuccessResult(isEnable, 1)).build();
+    }
+
+    @GET
+    @Path("check/{key}")
+    public Response chekIsEnable(@PathParam("key") String key) {
+        boolean isEnable = parametreService.chekIsEnable(key);
         CacheControl cc = new CacheControl();
         cc.setMaxAge(86400);
         cc.setPrivate(true);

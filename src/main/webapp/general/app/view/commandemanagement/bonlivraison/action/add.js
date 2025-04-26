@@ -46,7 +46,8 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
         plain: true,
         maximizable: true,
         closable: false,
-        nameintern: ''
+        nameintern: '',
+        checkLot: false
     },
     xtype: 'bonlivraisondetail',
     id: 'bonlivraisondetailID',
@@ -385,7 +386,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                             icon: 'resources/images/icons/fam/page_white_edit.png',
                                             tooltip: 'Modifier Article',
                                             scope: this,
-                                            handler: this.ManagePrice
+                                            handler: this.managePrice
                                         }]
                                 },
                                 {
@@ -420,12 +421,8 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                             handler: this.onRemoveLotClick,
                                             getClass: function (value, metadata, record) {
 
-                                                if (record.get('int_QTE_RECUE_REEL') > 0) {  //read your condition from the record
-                                                    /* if (!record.get('checkExpirationdate')) {
-                                                     return 'x-display-hide';
-                                                     } else {
-                                                     return 'x-hide-display';
-                                                     }*/
+                                                if (record.get('freeQty') > 0 || record.get('hasLots')) {  //read your condition from the record
+
                                                     return 'x-display-hide';
                                                 } else {
                                                     return 'x-hide-display'; //cache l'icone
@@ -572,8 +569,8 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
     onStoreLoad: function () {
 
     },
-    ManagePrice: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+    managePrice: function (grid, rowIndex) {
+        const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.commandemanagement.bonlivraison.action.editprice({
             odatasource: rec.data,
             parentview: this,
@@ -583,7 +580,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
     },
 
     onAddProductClick: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
         Ext.getCmp('btn_enterstock').enable();
         new testextjs.view.stockmanagement.etatstock.action.add({
             odatasource: rec.data,
@@ -596,7 +593,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
     },
     onRemoveLotClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
-        if (rec.get('checkExpirationdate')) {
+        if (!rec.get('existLots')) {
             Ext.MessageBox.confirm('Message',
                     'Voullez-vous supprimer la quantité ajoutée ?',
                     function (btn) {
@@ -618,7 +615,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                 },
                                 failure: function (response)
                                 {
-                                    var object = Ext.JSON.decode(response.responseText, false);
+                                   
                                     console.log("Bug " + response.responseText);
                                     Ext.MessageBox.alert('Error Message', response.responseText);
                                 }
@@ -643,40 +640,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
     },
     onbtncancel: function () {
 
-        var xtype = "";
-        xtype = "bonlivraisonmanager";
-        testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
-    },
-    checkIfGridIsEmpty: function () {
-        var gridTotalCount = Ext.getCmp('gridpanelID').getStore().getTotalCount();
-        return gridTotalCount;
-    },
-
-    onfiltercheck: function () {
-        var str_name = Ext.getCmp('str_NAME').getValue();
-        var int_name_size = str_name.length;
-        if (int_name_size < 4) {
-            Ext.getCmp('btn_add').disable();
-        }
-
-    },
-    DisplayTotal: function (int_price, int_qte) {
-        var TotalAmount_final = 0;
-        var TotalAmount_temp = int_qte * int_price;
-        var TotalAmount = Number(TotalAmount_temp);
-        return TotalAmount;
-    },
-    DisplayMonnaie: function (int_total, int_amount_recu) {
-        var TotalMonnaie = 0;
-        Ext.getCmp('int_REEL_RESTE').setValue(int_amount_recu - int_total);
-        if (int_total <= int_amount_recu) {
-            var TotalMonnaie_temp = int_amount_recu - int_total;
-            TotalMonnaie = Number(TotalMonnaie_temp);
-            return TotalMonnaie;
-        } else {
-            return null;
-        }
-        return TotalMonnaie;
+        testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
     },
 
     onbtnenterstock: function () {
@@ -717,14 +681,9 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                     }
                 });
     },
-    onSelectionChange: function (model, records) {
-        var rec = records[0];
-        if (rec) {
-            this.getForm().loadRecord(rec);
-        }
-    },
+
     onRechClick: function () {
-        var val = Ext.getCmp('rechercherDetail');
+        const val = Ext.getCmp('rechercherDetail');
         Ext.getCmp('gridpanelID').getStore().load({
             params: {
                 query: val.getValue(),
@@ -739,17 +698,7 @@ function onPdfBLClick(url) {
     window.open(url);
 }
 
-function checkIsAuthorize() {
-    var result = 0;
-    var OgridpanelID = Ext.getCmp('gridpanelID');
-    OgridpanelID.getStore().each(function (rec) {
-        if (parseInt(rec.get('int_QTE_RECUE_BIS')) < 0) {
-//            alert(parseInt(rec.get('int_QTE_RECUE_BIS')));
-            result++;
-        }
-    });
-    return result;
-}
+
 
 function doEntreeStock(lg_BON_LIVRAISON_ID) {
     if (parseInt(Ext.getCmp('int_NUMBER_ETIQUETTE').getValue()) > 65 || parseInt(Ext.getCmp('int_NUMBER_ETIQUETTE').getValue()) < 1) {
@@ -808,17 +757,15 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                                                         'Voulez-vous proc&eacute;der aussi &agrave; l\'impression des &eacute;tiquettes',
                                                         function (btn) {
                                                             if (btn == 'yes') {
-                                                                var linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue();
+                                                                const linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue();
                                                                 onPdfBLClick(linkUrl);
 
-                                                                var xtype = "";
-                                                                xtype = "bonlivraisonmanager";
-                                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
-                                                                return;
+
+                                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
+
                                                             } else {
-                                                                var xtype = "";
-                                                                xtype = "bonlivraisonmanager";
-                                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
+
+                                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
 
                                                             }
                                                         });
