@@ -1,6 +1,5 @@
 package rest.service.impl;
 
-import dal.ProductState;
 import dal.TBonLivraison;
 import dal.TBonLivraisonDetail;
 import dal.TBonLivraison_;
@@ -27,12 +26,12 @@ import dal.TUser;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -44,14 +43,15 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import rest.service.ProductStateService;
 import rest.service.SearchProduitServcie;
 import toolkits.utils.date;
 import util.Constant;
 import util.DateConverter;
+import util.DateUtil;
 
 /**
  *
@@ -60,9 +60,12 @@ import util.DateConverter;
 @Stateless
 public class SearchProduitServcieImpl implements SearchProduitServcie {
 
+    private static final Logger LOG = Logger.getLogger(SearchProduitServcieImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    private static final Logger LOG = Logger.getLogger(SearchProduitServcieImpl.class.getName());
+
+    @EJB
+    private ProductStateService productStateService;
 
     @Override
     public JSONObject fetchProduits(List<TPrivilege> usersPrivileges, TUser user, String produitId, String search,
@@ -248,15 +251,6 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
         return json;
     }
 
-    private Set<Integer> getProductStates(TFamille famille) {
-        List<ProductState> productStates = famille.getProductStates();
-        if (CollectionUtils.isEmpty(productStates)) {
-            return Set.of(0);
-        }
-        return famille.getProductStates().stream().map(p -> p.getProduitStateEnum().ordinal())
-                .sorted(Comparator.reverseOrder()).collect(Collectors.toSet());
-    }
-
     private JSONObject buildProduitData(boolean canceledAction, TFamille t, Object[] objArray, TUser user, String empl,
             boolean checkExpirationdate) {
         JSONObject json = new JSONObject();
@@ -371,8 +365,8 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
                 json.put("int_STOCK_RESERVE", tTypeStockFamille.getIntNUMBER());
             }
 
-            json.put("dt_CREATED", date.DateToString(t.getDtCREATED(), date.formatterShort));
-            json.put("dt_UPDATED", date.DateToString(t.getDtUPDATED(), date.formatterShort));
+            json.put("dt_CREATED", DateUtil.convertDateToDD_MM_YYYY_HH_mm(t.getDtCREATED()));
+            json.put("dt_UPDATED", DateUtil.convertDateToDD_MM_YYYY_HH_mm(t.getDtUPDATED()));
 
             json.put("lg_EMPLACEMENT_ID", empl);
             if (checkExpirationdate) {
@@ -415,9 +409,8 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
         if (bonLivraison != null) {
             json.put("dt_DATE_LIVRAISON", DateConverter.convertDateToDD_MM_YYYY(bonLivraison.getDtDATELIVRAISON()));
         }
-        Set<Integer> states = getProductStates(t);
-        json.put("produitState", states.stream().findFirst().orElse(0));
-        json.put("produitStates", states.stream().map(e -> e.toString()).collect(Collectors.joining(",")));
+
+        json.put("produitState", new JSONObject(productStateService.getEtatProduit(t.getLgFAMILLEID())));
 
         return json;
     }

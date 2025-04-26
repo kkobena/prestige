@@ -215,7 +215,7 @@ Ext.define('testextjs.model.TSuggestionOrderDetails', {
         }
         ,
         {
-            name: 'produitStates',
+            name: 'produitState',
             type: 'auto'
         }
     ]

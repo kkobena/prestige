@@ -5,7 +5,6 @@
  */
 package rest.service.impl;
 
-import bll.common.Parameter;
 import commonTasks.dto.AyantDroitDTO;
 import commonTasks.dto.ClientDTO;
 import commonTasks.dto.ClotureVenteParams;
@@ -62,7 +61,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
@@ -237,7 +235,7 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             q.setMaxResults(1);
             return q.getSingleResult();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+
             return null;
         }
     }

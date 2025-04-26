@@ -192,7 +192,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     emptyText: 'Choisir un repartiteur...',
                                     listeners: {
                                         select: function (cmp) {
-                                           
+
                                             if (titre === 'Suggestion de commande') {
 
                                                 Me_Window.onchangeGrossiste();
@@ -214,7 +214,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     width: 300,
                     layout: 'anchor',
                     defaults: {
-                    anchor: '100%'
+                        anchor: '100%'
                     },
                     items: [
                         {
@@ -234,7 +234,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     id: 'str_NAME',
                                     store: store,
                                     margins: '0 10 5 10',
-                                    enableKeyEvents: true,                                    
+                                    enableKeyEvents: true,
                                     valueField: 'CIP',
                                     displayField: 'str_DESCRIPTION',
                                     pageSize: 20, //ajout la barre de pagination
@@ -901,7 +901,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
         myAppController.ShowWaitingProcess();
 
         Ext.Ajax.request({
-             method: 'GET',
+            method: 'GET',
             url: '../api/v1/suggestion/merge-suggestion',
             timeout: 2400000,
             params: {
@@ -1085,24 +1085,19 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
     },
     manageColor: function (r) {
-        const produitStates = r?.data?.produitStates;
-        const SUGGESTION = produitStates?.SUGGESTION;
-        const COMMANDE_EN_COURS = produitStates?.COMMANDE_EN_COURS;
-        const COMMANDE_PASSE = produitStates?.COMMANDE_PASSE;
-        const ENTREE = produitStates?.ENTREE;
-        if (SUGGESTION !== undefined && SUGGESTION > 1) {
+        const produitStates = r?.data?.produitState;
+        const enSuggestion = produitStates?.enSuggestion;
+        const enCommande = produitStates?.enCommande;
+        const entree = produitStates?.entree;
+        if (enSuggestion !== undefined && enSuggestion > 1) {
             return 'background-color:#73C774;';
         }
-        if (COMMANDE_EN_COURS !== undefined && COMMANDE_EN_COURS > 0) {
+        if (enCommande !== undefined && enCommande > 0) {
             return 'background-color:#5fa2dd;';
         }
-        if (COMMANDE_PASSE !== undefined && COMMANDE_PASSE > 0) {
-            return 'background-color:#f98012;';
+        if (entree !== undefined && entree > 0) {
+            return 'background-color:#ffc107;';
         }
-        if (ENTREE !== undefined && ENTREE > 0) {
-            return 'background-color:#a62a3e;';
-        }
-
         return '';
 
     },
