@@ -131,13 +131,14 @@ Ext.define('testextjs.view.sm_user.mvtcaisse.MvtCaisseManager', {
                             fieldLabel: 'Utilisateur',
                             name: 'lg_USER_ID',
                             id: 'lg_USER_ID',
-                            hidden: true,
+                            hidden: false,
                             store: storeUser,
                             pageSize: 20, //ajout la barre de pagination
                             valueField: 'lg_USER_ID',
                             displayField: 'str_FIRST_NAME',
                             typeAhead: true,
                             queryMode: 'remote',
+                            enableKeyEvents: true,
                             emptyText: 'Choisir un utilisateur...'
                         }, {
                             text: 'rechercher',
