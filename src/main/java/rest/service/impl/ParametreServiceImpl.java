@@ -20,11 +20,26 @@ public class ParametreServiceImpl implements ParametreService {
     @Override
     public boolean isEnable(String key) {
         try {
-            TParameters tp = em.find(TParameters.class, key);
-            return Objects.nonNull(tp) && tp.getStrVALUE().trim().equals("1");
+            return getParam(key);
         } catch (Exception e) {
             return true;
         }
     }
 
+    @Override
+    public boolean chekIsEnable(String key) {
+        try {
+
+            return getParam(key);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean getParam(String key) {
+
+        TParameters tp = em.find(TParameters.class, key);
+        return Objects.nonNull(tp) && tp.getStrVALUE().trim().equals("1");
+
+    }
 }

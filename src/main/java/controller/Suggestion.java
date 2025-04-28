@@ -20,10 +20,9 @@ import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -42,6 +41,7 @@ import javax.servlet.http.HttpSession;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.ProductStateService;
 import toolkits.parameters.commonparameter;
 
 /**
@@ -54,6 +54,8 @@ public class Suggestion extends HttpServlet {
     TUser OTUser = null;
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private ProductStateService productStateService;
 
     public TFamilleStock getTProductItemStock(String lgId, String lgEMPLACEMENTID) {
         TFamilleStock productItemStock = null;
@@ -179,12 +181,8 @@ public class Suggestion extends HttpServlet {
                 json.put("int_STOCK", oTFamillestock.getIntNUMBERAVAILABLE());
 
                 json.put("int_NUMBER", order.getIntNUMBER());
-                // int status = isOnAnotherSuggestion(order.getLgFAMILLEID().getLgFAMILLEID());
-                // int status = productStateService.fetchByProduitAndState(famille, ProductStateEnum.SUGGESTION).size();
-                json.put("produitState", famille.getProductStates().stream().map(e -> e.getProduitStateEnum().ordinal())
-                        .collect(Collectors.toSet()));
-                // json.put("STATUS", status);
-                json.put("produitStates", Set.of(0, 1, 2, 3, 4));
+
+                json.put("produitState", new JSONObject(productStateService.getEtatProduit(famille.getLgFAMILLEID())));
                 json.put("int_SEUIL", famille.getIntSEUILMIN());
                 json.put("str_STATUT", order.getStrSTATUT());
                 json.put("lg_FAMILLE_PRIX_VENTE", order.getIntPRICEDETAIL());
