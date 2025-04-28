@@ -42,7 +42,6 @@ import org.json.JSONObject;
 import rest.service.LogService;
 import rest.service.NotificationService;
 import rest.service.OrderService;
-import rest.service.ProductStateService;
 import rest.service.SessionHelperService;
 import rest.service.dto.*;
 import util.*;
@@ -59,8 +58,6 @@ public class OrderServiceImpl implements OrderService {
     private LogService logService;
     @EJB
     private NotificationService notificationService;
-    @EJB
-    private ProductStateService productStateService;
     @EJB
     private SessionHelperService sessionHelperService;
 
@@ -130,8 +127,6 @@ public class OrderServiceImpl implements OrderService {
                 createBLDetail(oBonLivraison, grossiste, famille, d, famille.getLgZONEGEOID(),
                         stock.getIntNUMBERAVAILABLE());
                 d.setStrSTATUT(Constant.STATUT_ENTREE_STOCK);
-                this.productStateService.manageProduitState(famille, ProductStateEnum.COMMANDE_EN_COURS,
-                        ProductStateEnum.ENTREE);
                 d.setDtUPDATED(new Date());
                 d.setIntORERSTATUS((short) 4);
                 getEmg().merge(d);
