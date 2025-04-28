@@ -1010,11 +1010,6 @@ public class OrderServiceImpl implements OrderService {
             order.setDtUPDATED(new Date());
             getEmg().persist(order);
         }
-        if (Constant.STATUT_IS_PROGRESS.equals(order.getStrSTATUT())) {
-            this.productStateService.remove(item.getLgFAMILLEID(), ProductStateEnum.COMMANDE_EN_COURS);
-        } else if (Constant.STATUT_PASSED.equals(order.getStrSTATUT())) {
-            this.productStateService.remove(item.getLgFAMILLEID(), ProductStateEnum.COMMANDE_PASSE);
-        }
 
     }
 
@@ -1059,22 +1054,18 @@ public class OrderServiceImpl implements OrderService {
 
         TGrossiste grossiste = this.getEmg().find(TGrossiste.class, orderDetail.getGrossisteId());
         KeyUtilGen keyUtilGen = new KeyUtilGen();
-        try {
-            TOrder order = new TOrder();
-            order.setLgORDERID(keyUtilGen.getComplexId());
-            order.setLgUSERID(user);
-            order.setLgGROSSISTEID(grossiste);
-            order.setStrREFORDER(this.buildCommandeRef(new Date(), keyUtilGen));
-            order.setStrSTATUT(orderDetail.getStatut());
-            order.setDtCREATED(new Date());
-            order.setDtUPDATED(order.getDtCREATED());
-            this.getEmg().persist(order);
-            createOrderItem(order, orderDetail, keyUtilGen);
-            return order;
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            throw e;
-        }
+
+        TOrder order = new TOrder();
+        order.setLgORDERID(keyUtilGen.getComplexId());
+        order.setLgUSERID(user);
+        order.setLgGROSSISTEID(grossiste);
+        order.setStrREFORDER(this.buildCommandeRef(new Date(), keyUtilGen));
+        order.setStrSTATUT(orderDetail.getStatut());
+        order.setDtCREATED(new Date());
+        order.setDtUPDATED(order.getDtCREATED());
+        this.getEmg().persist(order);
+        createOrderItem(order, orderDetail, keyUtilGen);
+        return order;
 
     }
 
@@ -1165,30 +1156,24 @@ public class OrderServiceImpl implements OrderService {
     private void createOrderItem(TOrder order, OrderDetailDTO orderDetailDTO, KeyUtilGen keyUtilGen) {
         TFamilleGrossiste familleGrossiste = createIfNotExist(orderDetailDTO, order);
 
-        try {
-            TFamille famille = familleGrossiste.getLgFAMILLEID();
-            TOrderDetail detail = new TOrderDetail();
-            detail.setLgORDERDETAILID(keyUtilGen.getComplexId());
-            detail.setLgORDERID(order);
-            detail.setIntNUMBER(orderDetailDTO.getQte());
-            detail.setIntQTEREPGROSSISTE(detail.getIntNUMBER());
-            detail.setIntQTEMANQUANT(detail.getIntNUMBER());
-            detail.setIntPAFDETAIL(familleGrossiste.getIntPAF());
-            detail.setIntPRICEDETAIL(familleGrossiste.getIntPRICE());
-            detail.setIntPRICE(detail.getIntPAFDETAIL() * detail.getIntNUMBER());
-            detail.setLgFAMILLEID(famille);
-            detail.setLgGROSSISTEID(order.getLgGROSSISTEID());
-            detail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
-            detail.setDtCREATED(new Date());
-            detail.setDtUPDATED(detail.getDtCREATED());
-            detail.setIntORERSTATUS((short) 2);
-            detail.setPrixAchat(familleGrossiste.getIntPAF());
-            this.getEmg().persist(detail);
-            this.productStateService.addState(famille, ProductStateEnum.COMMANDE_EN_COURS);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            throw e;
-        }
+        TFamille famille = familleGrossiste.getLgFAMILLEID();
+        TOrderDetail detail = new TOrderDetail();
+        detail.setLgORDERDETAILID(keyUtilGen.getComplexId());
+        detail.setLgORDERID(order);
+        detail.setIntNUMBER(orderDetailDTO.getQte());
+        detail.setIntQTEREPGROSSISTE(detail.getIntNUMBER());
+        detail.setIntQTEMANQUANT(detail.getIntNUMBER());
+        detail.setIntPAFDETAIL(familleGrossiste.getIntPAF());
+        detail.setIntPRICEDETAIL(familleGrossiste.getIntPRICE());
+        detail.setIntPRICE(detail.getIntPAFDETAIL() * detail.getIntNUMBER());
+        detail.setLgFAMILLEID(famille);
+        detail.setLgGROSSISTEID(order.getLgGROSSISTEID());
+        detail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        detail.setDtCREATED(new Date());
+        detail.setDtUPDATED(detail.getDtCREATED());
+        detail.setIntORERSTATUS((short) 2);
+        detail.setPrixAchat(familleGrossiste.getIntPAF());
+        this.getEmg().persist(detail);
 
     }
 
@@ -1251,23 +1236,20 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void passerLaCommande(String orderId) {
 
-        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_PASSED,
-                ProductStateEnum.COMMANDE_EN_COURS, ProductStateEnum.COMMANDE_PASSE);
+        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_PASSED);
     }
 
     @Override
     public void changerEnCommandeEnCours(String orderId) {
-        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_IS_PROGRESS,
-                ProductStateEnum.COMMANDE_PASSE, ProductStateEnum.COMMANDE_EN_COURS);
+        changeOrderStatuts(this.getEmg().find(TOrder.class, orderId), Constant.STATUT_IS_PROGRESS);
     }
 
-    private void changeOrderStatuts(TOrder order, String status, ProductStateEnum currentStaut,
-            ProductStateEnum productStateEnum) {
+    private void changeOrderStatuts(TOrder order, String status) {
         Date toDay = new Date();
 
         order.getTOrderDetailCollection().forEach(it -> {
             updateOrderItemStatut(it, status, toDay);
-            updateFamilleStatut(it.getLgFAMILLEID(), currentStaut, productStateEnum);
+
         });
         order.setDtUPDATED(toDay);
         order.setStrSTATUT(status);
@@ -1279,12 +1261,6 @@ public class OrderServiceImpl implements OrderService {
         detail.setStrSTATUT(status);
         detail.setDtUPDATED(date);
         getEmg().merge(detail);
-
-    }
-
-    private void updateFamilleStatut(TFamille famille, ProductStateEnum currentStaut,
-            ProductStateEnum productStateEnum) {
-        productStateService.manageProduitState(famille, currentStaut, productStateEnum);
 
     }
 
@@ -1333,21 +1309,13 @@ public class OrderServiceImpl implements OrderService {
         orderDetail.setDtCREATED(order.getDtCREATED());
         orderDetail.setDtUPDATED(order.getDtCREATED());
         em.persist(orderDetail);
-        productStateService.manageProduitState(famille, ProductStateEnum.SUGGESTION,
-                ProductStateEnum.COMMANDE_EN_COURS);
         em.remove(details);
     }
 
     @Override
     public void removeOrder(String orderId) {
-        TOrder order = em.find(TOrder.class, orderId);
-        ProductStateEnum productStateEnum = Constant.STATUT_IS_PROGRESS.equals(order.getStrSTATUT())
-                ? ProductStateEnum.COMMANDE_EN_COURS : ProductStateEnum.COMMANDE_PASSE;
-        order.getTOrderDetailCollection().forEach(it -> {
-            TFamille famille = it.getLgFAMILLEID();
-            em.remove(it);
-            this.productStateService.remove(famille, productStateEnum);
-        });
+        em.remove(em.find(TOrder.class, orderId));
+
     }
 
     private String buildQuery(String search, String sql) {
@@ -1453,7 +1421,7 @@ public class OrderServiceImpl implements OrderService {
                         if (famille.getLgFAMILLEID().equals(o.getLgFAMILLEID().getLgFAMILLEID())) {
                             o.setIntNUMBER(o.getIntNUMBER() + tOrderDetail.getIntNUMBER());
                             this.em.merge(o);
-                            this.productStateService.remove(famille, ProductStateEnum.COMMANDE_EN_COURS);
+
                             isExist = true;
                             break;
                         }
@@ -1461,7 +1429,7 @@ public class OrderServiceImpl implements OrderService {
                     if (!isExist) {
                         TOrderDetail orderDetail = createMergeOrderDetail(order, tOrderDetail, grossiste, keyUtilGen);
                         tOrderDetailCollection.add(orderDetail);
-                        this.productStateService.addState(famille, ProductStateEnum.COMMANDE_EN_COURS);
+
                     }
                 }
                 this.em.remove(order0);

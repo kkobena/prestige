@@ -114,26 +114,21 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     dataIndex: 'produitState',
                     renderer: function (v, m, r) {
                         const produitState = r.data.produitState;
-                        switch (produitState) {
-                            case 1:
-                                m.style = 'background-color:#73C774;';
-                                break;
-                            case 2:
-                                m.style = 'background-color:#5fa2dd;';
-                                break;
-                            case 3:
-                                m.style = 'background-color:#f98012;';
-                                break;
-                            case 4:
-                                m.style = 'background-color:#a62a3e;';
-                                break;
-                            default:
-                                m.style = 'background-color:#d4d4d4;';
-                                break;
+                        const enSuggestion = produitState?.enSuggestion;
+                        const enCommande = produitState?.enCommande;
+                        const entree = produitState?.entree;
+                        if (enSuggestion && enSuggestion > 0) {
+                            m.style = 'background-color:#73C774;';
+                            return 1;
+                        } else if (enCommande && enCommande > 0) {
+                            m.style = 'background-color:#5fa2dd;';
+                            return 2;
+                        } else if (entree && entree > 0) {
+                            m.style = 'background-color:#ffc107;';
+                            return 3;
                         }
+                        return null;
 
-
-                        return  r.data.produitStates;
                     },
                     width: 35
                 },
@@ -755,7 +750,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
     onStoreLoad: function () {
 
     },
- 
+
     onAddClick: function () {
         new testextjs.view.configmanagement.famille.action.add({
             odatasource: "",

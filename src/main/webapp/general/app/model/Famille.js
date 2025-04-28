@@ -496,8 +496,7 @@ Ext.define('testextjs.model.Famille', {
             type: 'boolean'
         },
         {name: 'cmu_price', type: 'int'},
-        {name: 'produitState', type: 'int'},
-        {name: 'produitStates', type: 'string'}
-        
+        {name: 'produitState', type: 'auto'}
+
     ]
 });
