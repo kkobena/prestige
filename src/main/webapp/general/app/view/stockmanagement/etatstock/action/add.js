@@ -24,8 +24,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
     id: 'addStockID',
     requires: [
         'Ext.form.*',
-        'Ext.window.Window',
-        'testextjs.view.commandemanagement.cmde_passees.action.livraison'
+        'Ext.window.Window'
     ],
     config: {
         odatasource: '',
@@ -216,7 +215,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
     onbtnsave: function (button) {
         Me_Workflow = Oview;
         const fenetre = button.up('window');
-        const       formulaire = fenetre.down('form');
+        const formulaire = fenetre.down('form');
 
 
         let Qte_cmde = MANQUANT;

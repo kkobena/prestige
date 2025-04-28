@@ -486,9 +486,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     text: 'STOCK',
                                     flex: 0.5,
                                     sortable: true,
-                                    renderer: function(value) {
-        return '<span style="color:purple; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
-    },
+                                    renderer: function (value) {
+                                        return '<span style="color:purple; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
+                                    },
                                     dataIndex: 'lg_FAMILLE_QTE_STOCK',
                                     align: 'right'
                                 },
@@ -500,9 +500,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     align: 'right',
                                     sortable: true,
                                     dataIndex: 'int_PRICE_MACHINE',
-                                    renderer: function(value) {
-        return '<span style="color:black; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
-    }
+                                    renderer: function (value) {
+                                        return '<span style="color:black; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
+                                    }
 
                                 },
 
@@ -512,9 +512,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     sortable: true,
                                     align: 'right',
                                     dataIndex: 'lg_FAMILLE_PRIX_VENTE',
-                                                                        renderer: function(value) {
-        return '<span style="color:blue; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
-    },
+                                    renderer: function (value) {
+                                        return '<span style="color:blue; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
+                                    },
                                     editor: {
                                         xtype: 'numberfield',
                                         minValue: 1,
@@ -533,9 +533,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     align: 'right',
                                     sortable: true,
                                     dataIndex: 'lg_FAMILLE_PRIX_ACHAT',
-                                    renderer: function(value) {
-        return '<span style="color:black; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
-    }
+                                    renderer: function (value) {
+                                        return '<span style="color:black; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
+                                    }
 
                                 },
                                 {
@@ -544,9 +544,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     sortable: true,
                                     align: 'right',
                                     dataIndex: 'int_PAF',
-                                    renderer: function(value) {
-        return '<span style="color:blue; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
-    },
+                                    renderer: function (value) {
+                                        return '<span style="color:blue; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
+                                    },
                                     editor: {
                                         xtype: 'numberfield',
                                         minValue: 1,
@@ -575,9 +575,9 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     header: 'QTE',
                                     dataIndex: 'int_NUMBER',
                                     flex: 0.5,
-                                    renderer: function(value) {
-        return '<span style="color:green; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
-    },
+                                    renderer: function (value) {
+                                        return '<span style="color:green; font-weight:bold; font-size:1em;">' + amountformat(value) + '</span>';
+                                    },
                                     align: 'right',
                                     editor: {
                                         minValue: 1,
@@ -599,15 +599,14 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     header: 'LOTS',
                                     dataIndex: 'lotNums',
                                     flex: 1.1
-                                }, 
+                                },
                                 {
                                     header: 'DATE DE PEREMPTION',
 
                                     dataIndex: 'datePeremption',
                                     flex: 1.1
-                                }, 
-                                
-                                
+                                },
+
                                 {
                                     xtype: 'actioncolumn',
                                     width: 30,

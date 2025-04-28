@@ -13,8 +13,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.removeLot', {
     id: 'removeStockID',
     requires: [
         'Ext.form.*',
-        'Ext.window.Window',
-        'testextjs.view.commandemanagement.cmde_passees.action.livraison'
+        'Ext.window.Window'
     ],
     config: {
         odatasource: '',
@@ -114,7 +113,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.removeLot', {
                                 failure: function (response)
                                 {
                                     testextjs.app.getController('App').StopWaitingProcess();
-                                    var object = Ext.JSON.decode(response.responseText, false);
+                                   
                                     console.log("Bug " + response.responseText);
                                     Ext.MessageBox.alert('Error Message', response.responseText);
 

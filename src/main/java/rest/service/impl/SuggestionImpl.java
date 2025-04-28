@@ -481,7 +481,6 @@ public class SuggestionImpl implements SuggestionService {
         orderDetails.setStrSTATUT(STATUT_IS_PROGRESS);
         orderDetails.setDtCREATED(new Date());
         orderDetails.setDtUPDATED(orderDetails.getDtCREATED());
-        this.productStateService.addState(famille, ProductStateEnum.SUGGESTION);
         getEmg().persist(orderDetails);
         return orderDetails;
 
@@ -644,9 +643,7 @@ public class SuggestionImpl implements SuggestionService {
             if (detail.getStrSTATUT().equals(STATUT_IS_PROGRESS)) {
                 return 2;
             }
-            if (detail.getStrSTATUT().equals(STATUT_PASSED)) {
-                return 3;
-            }
+
             if (detail.getStrSTATUT().equals(STATUT_IS_CLOSED)) {
                 return 4;
             }
@@ -757,7 +754,7 @@ public class SuggestionImpl implements SuggestionService {
     @Override
     public void removeItem(String itemId) {
         TSuggestionOrderDetails item = getItem(itemId);
-        TFamille famille = item.getLgFAMILLEID();
+
         TSuggestionOrder suggestion = item.getLgSUGGESTIONORDERID();
         if (CollectionUtils.isNotEmpty(suggestion.getTSuggestionOrderDetailsCollection())
                 && suggestion.getTSuggestionOrderDetailsCollection().size() == 1) {
@@ -767,7 +764,7 @@ public class SuggestionImpl implements SuggestionService {
             suggestion.setDtUPDATED(new Date());
             getEmg().merge(suggestion);
         }
-        this.productStateService.remove(famille, ProductStateEnum.SUGGESTION);
+
     }
 
     @Override
@@ -801,7 +798,7 @@ public class SuggestionImpl implements SuggestionService {
                 order.getLgSUGGESTIONORDERID());
         if (Objects.isNull(suggestionOrderDetails)) {
             initTSuggestionOrderDetail(order, famille, grossiste, suggestionOrderDetail.getQte());
-            this.productStateService.addState(famille, ProductStateEnum.SUGGESTION);
+
         } else {
             suggestionOrderDetails.setIntNUMBER(suggestionOrderDetail.getQte() + suggestionOrderDetails.getIntNUMBER());
             suggestionOrderDetails
@@ -1132,8 +1129,7 @@ public class SuggestionImpl implements SuggestionService {
 
                 json.put("int_NUMBER", order.getIntNUMBER());
 
-                json.put("produitStates", famille.getProductStates().stream().map(ProductState::getProduitStateEnum)
-                        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting())));
+                json.put("produitState", new JSONObject(productStateService.getEtatProduit(famille.getLgFAMILLEID())));
                 json.put("int_SEUIL", famille.getIntSEUILMIN());
                 json.put("str_STATUT", order.getStrSTATUT());
                 json.put("lg_FAMILLE_PRIX_VENTE", order.getIntPRICEDETAIL());
@@ -1182,11 +1178,9 @@ public class SuggestionImpl implements SuggestionService {
 
     @Override
     public void deleteSuggestion(String suggestionId) {
-        TSuggestionOrder order = em.find(TSuggestionOrder.class, suggestionId);
-        for (TSuggestionOrderDetails details : order.getTSuggestionOrderDetailsCollection()) {
-            this.productStateService.remove(details.getLgFAMILLEID(), ProductStateEnum.SUGGESTION);
-            em.remove(details);
-        }
+
+        em.remove(em.find(TSuggestionOrder.class, suggestionId));
+
     }
 
     @Override
@@ -1242,7 +1236,7 @@ public class SuggestionImpl implements SuggestionService {
                     if (famille.getLgFAMILLEID().equals(ite.getLgFAMILLEID().getLgFAMILLEID())) {
                         ite.setIntNUMBER(ite.getIntNUMBER() + tOrderDetail.getIntNUMBER());
                         this.em.merge(ite);
-                        this.productStateService.remove(famille, ProductStateEnum.SUGGESTION);
+
                         isExist = true;
                         break;
                     }
