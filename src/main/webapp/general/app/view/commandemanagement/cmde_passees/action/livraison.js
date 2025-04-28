@@ -76,17 +76,14 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.livraison', {
             proxy: {
                 type: 'ajax',
                      url: '../api/v1/grossiste/all',
-//                url: url_services_data_grossiste_suggerer,
                 reader: {
                     type: 'json',
                     root: 'results',
                     totalProperty: 'total'
                 },
                 timeout: 240000
-            },
-
-
-        });
+            }
+ });
 
         var store_famille_sug = new Ext.data.Store({
             model: 'testextjs.model.Famille',
@@ -389,7 +386,7 @@ Ext.define('testextjs.view.commandemanagement.cmde_passees.action.livraison', {
                                     id: 'btn_creerbl',
                                     iconCls: 'icon-clear-group',
                                     scope: this,
-                                    // handler: this.onbtncreerbl
+                               
                                     handler: this.onCreateBLClick
                                 },
                         {
@@ -522,36 +519,7 @@ int_montant_achat = object.PRIX_ACHAT_TOTAL;
         var alias = 'widget.' + xtype;
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "", "", "");
     },
-    getFamilleByName: function(str_famille_name) {
-        var url_services_data_famille_select_dovente_search_suggerer = url_services_data_famille_select_order + "?search_value=" + str_famille_name;
-        Ext.Ajax.request({
-            url: url_services_data_famille_select_dovente_search_suggerer,
-            params: {
-            },
-            success: function(response)
-            {
-
-                var object = Ext.JSON.decode(response.responseText, false);
-                var OFamille = object.results[0];
-                var int_CIP = OFamille.int_CIP;
-                var int_EAN13 = OFamille.int_EAN13;
-                Ext.getCmp('int_CIP').setValue(int_CIP);
-                Ext.getCmp('int_EAN13').setValue(int_EAN13);
-                famille_id_search = OFamille.lg_FAMILLE_ID;
-
-
-
-                url_services_data_famille_select_dovente_search_suggerer = url_services_data_famille_select_order;
-
-            },
-            failure: function(response)
-            {
-                console.log("Bug " + response.responseText);
-                Ext.MessageBox.alert('Error Message', response.responseText);
-            }
-        });
-
-    },
+  
     setTitleFrame: function(str_data) {
         this.title = this.title + " :: Ref " + str_data;
         ref = str_data;

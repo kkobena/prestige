@@ -1,16 +1,13 @@
 package rest.service.impl;
 
-import dal.ProductState;
-import dal.TFamille;
-import dal.enumeration.ProductStateEnum;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.math.BigInteger;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import org.apache.commons.collections4.CollectionUtils;
+import javax.persistence.Query;
 import rest.service.ProductStateService;
+import rest.service.dto.EtatProduit;
 
 /**
  *
@@ -19,69 +16,56 @@ import rest.service.ProductStateService;
 @Stateless
 public class ProductStateServiceImpl implements ProductStateService {
 
+    private static final Logger LOG = Logger.getLogger(ProductStateServiceImpl.class.getName());
+
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
     @Override
-    public void removeByProduitAndState(TFamille produit, ProductStateEnum state) {
-        produit.getProductStates().stream().filter(produitState -> produitState.getProduitStateEnum() == state)
-                .forEach(this::remove);
+    public EtatProduit getEtatProduit(String produitId) {
+        EtatProduit etatProduit = new EtatProduit();
+        etatProduit.setEnCommande(checkCommandeAccount(produitId));
+        etatProduit.setEnSuggestion(checkSuggestionAccount(produitId));
+        etatProduit.setEntree(checkEntreeStock(produitId));
+        return etatProduit;
+
     }
 
-    @Override
-    public void remove(ProductState state) {
-        em.remove(state);
-    }
-
-    @Override
-    public void addState(TFamille produit, ProductStateEnum state) {
-        ProductState productState = new ProductState();
-        productState.setProduit(produit);
-        productState.setProduitStateEnum(state);
-        this.em.persist(productState);
-    }
-
-    @Override
-    public List<ProductState> fetchByProduit(TFamille produit) {
-        return produit.getProductStates();
-    }
-
-    @Override
-    public List<ProductState> fetchByProduitAndState(TFamille produit, ProductStateEnum state) {
-        List<ProductState> productStates = produit.getProductStates();
-        if (CollectionUtils.isNotEmpty(productStates)) {
-            return productStates.stream().sorted(Comparator.comparing(ProductState::getUpdated))
-                    .filter(produitState -> produitState.getProduitStateEnum() == state).collect(Collectors.toList());
+    private int checkSuggestionAccount(String produitId) {
+        try {
+            Query q = em.createNativeQuery(
+                    "SELECT  COUNT(o.lg_SUGGESTION_ORDER_DETAILS_ID) AS dataCount FROM  t_suggestion_order_details o WHERE o.lg_FAMILLE_ID=?1");
+            q.setParameter(1, produitId);
+            return ((BigInteger) q.getSingleResult()).intValue();
+        } catch (Exception e) {
+            LOG.info(e.getLocalizedMessage());
+            return 0;
         }
-        return List.of();
-
     }
 
-    @Override
-    public void manageProduitState(TFamille produit, ProductStateEnum precendentState, ProductStateEnum currentState) {
-        if (precendentState != currentState) {
-            List<ProductState> productStates = this.fetchByProduitAndState(produit, precendentState);
-            if (CollectionUtils.isNotEmpty(productStates)) {
-                if (productStates.size() == 1) {
-                    productStates.forEach(this::remove);
-                } else {
-                    this.remove(productStates.get(0));
-                }
-            }
+    private int checkCommandeAccount(String produitId) {
+        try {
+            Query q = em.createNativeQuery(
+                    "SELECT  COUNT(o.lg_ORDERDETAIL_ID) AS dataCount FROM  t_order_detail o  JOIN t_order od ON od.lg_ORDER_ID=o.lg_ORDER_ID WHERE o.lg_FAMILLE_ID=?1 AND od.str_STATUT ='is_Process'");
+            q.setParameter(1, produitId);
+
+            return ((BigInteger) q.getSingleResult()).intValue();
+        } catch (Exception e) {
+            LOG.info(e.getLocalizedMessage());
+            return 0;
         }
-
-        this.addState(produit, currentState);
     }
 
-    @Override
-    public void remove(TFamille produit, ProductStateEnum state) {
-        List<ProductState> productStates = this.fetchByProduitAndState(produit, state);
-        if (CollectionUtils.isNotEmpty(productStates)) {
-            if (productStates.size() == 1) {
-                productStates.forEach(this::remove);
-            } else {
-                this.remove(productStates.get(0));
-            }
+    private int checkEntreeStock(String produitId) {
+        try {
+            Query q = em.createNativeQuery(
+                    "SELECT  COUNT(o.lg_BON_LIVRAISON_DETAIL) AS dataCount FROM  t_bon_livraison_detail o JOIN t_bon_livraison od ON od.lg_BON_LIVRAISON_ID=o.lg_BON_LIVRAISON_ID WHERE o.lg_FAMILLE_ID=?1 AND od.str_STATUT='enable'");
+            q.setParameter(1, produitId);
+
+            return ((BigInteger) q.getSingleResult()).intValue();
+        } catch (Exception e) {
+            LOG.info(e.getLocalizedMessage());
+            return 0;
         }
     }
 }

@@ -33,7 +33,6 @@ import dal.TTypeetiquette;
 import dal.TUser;
 import dal.TWarehouse;
 import dal.Typemvtproduit;
-import dal.enumeration.ProductStateEnum;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 import java.io.IOException;
@@ -94,7 +93,6 @@ import rest.service.MouvementProduitService;
 import rest.service.MvtProduitService;
 import rest.service.NotificationService;
 import rest.service.OrderService;
-import rest.service.ProductStateService;
 import rest.service.TransactionService;
 import util.Constant;
 import util.DateCommonUtils;
@@ -127,8 +125,6 @@ public class CommandeServiceImpl implements CommandeService {
     private EntityManager em;
     @EJB
     private NotificationService notificationService;
-    @EJB
-    private ProductStateService productStateService;
 
     public EntityManager getEm() {
         return em;
@@ -297,7 +293,7 @@ public class CommandeServiceImpl implements CommandeService {
                 if (familleGrossiste != null) {
                     this.getEm().merge(familleGrossiste);
                 }
-                productStateService.removeByProduitAndState(oFamille, ProductStateEnum.ENTREE);
+
                 avoirs.stream().filter(e -> e.getLgFAMILLEID().equals(oFamille)).forEach(s -> avoirs0.add(s));
 
             }

@@ -3,10 +3,6 @@
 Ext.define('testextjs.view.vente.VentesFinis', {
     extend: 'Ext.panel.Panel',
     xtype: 'ventemanager',
-    requires: [
-        'Ext.grid.plugin.RowExpander'
-    ],
-
     frame: true,
     title: 'Liste des Ventes',
     iconCls: 'icon-grid',
@@ -163,13 +159,6 @@ Ext.define('testextjs.view.vente.VentesFinis', {
             items: [
                 {
                     xtype: 'gridpanel',
-                    plugins: [{
-                            ptype: 'rowexpander',
-                            rowBodyTpl: new Ext.XTemplate(
-                                    '<p>{details}</p>'
-                                    )
-                        }
-                    ],
                     store: vente,
                     viewConfig: {
                         forceFit: true,

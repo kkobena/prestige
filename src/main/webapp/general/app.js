@@ -494,8 +494,6 @@ Ext.application({
         'testextjs.model.NumeroCaisse',
         'testextjs.view.configmanagement.numerocaisse.action.add',
         'testextjs.view.configmanagement.numerocaisse.NumeroCaisseManager',
-     
-        'testextjs.view.commandemanagement.cmde_passees.action.livraison',
         'testextjs.model.CentrePayeur',
         'testextjs.view.configmanagement.centrepayeur.action.add',
         'testextjs.view.configmanagement.centrepayeur.CentrePayeurManager',
