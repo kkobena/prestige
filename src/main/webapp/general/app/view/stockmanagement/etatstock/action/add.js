@@ -32,7 +32,8 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
         mode: '',
         titre: '',
         reference: '',
-        index: ''
+        index: '',
+        directImport: false
     },
     initComponent: function () {
 
@@ -190,7 +191,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
 
 
 
-        var win = new Ext.window.Window({
+        const win = new Ext.window.Window({
             autoShow: true,
             title: this.getTitre(),
             width: 500,
@@ -213,11 +214,11 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
 
     },
     onbtnsave: function (button) {
+     
+        console.log( Me.getDirectImport());
         Me_Workflow = Oview;
         const fenetre = button.up('window');
         const formulaire = fenetre.down('form');
-
-
         let Qte_cmde = MANQUANT;
         let Qte_livre = Ext.getCmp('int_NUMBER').getValue();
         const payload = Ext.JSON.encode({
@@ -227,7 +228,8 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
             datePeremption: Ext.getCmp('str_PEREMPTION').getSubmitValue(),
             idEtiquette: Ext.getCmp('lg_TYPEETIQUETTE_ID').getValue(),
             idBonDetail: lg_BON_LIVRAISON_DETAIL,
-            numLot: Ext.getCmp('int_NUM_LOT').getValue()
+            numLot: Ext.getCmp('int_NUM_LOT').getValue(),
+            directImport: Me.getDirectImport()
         });
 
         Ext.MessageBox.confirm('Message',
