@@ -211,34 +211,25 @@ public class FileFormaManager extends HttpServlet {
         return strCode;
     }
 
-    public TOrder createOrder(TGrossiste grossiste, TUser user) {
-        TOrder order = null;
+    private TOrder createOrder(TGrossiste grossiste, TUser user) {
+        TOrder order = new TOrder();
+        order.setLgORDERID(RandomStringUtils.randomAlphanumeric(20));
+        order.setLgUSERID(user);
         try {
 
-            order = new TOrder();
-
-            order.setLgORDERID(RandomStringUtils.randomAlphanumeric(20));
-            order.setLgUSERID(user);
-
-            try {
-
-                if (grossiste != null) {
-                    order.setLgGROSSISTEID(grossiste);
-                    order.setStrREFORDER(this.buildCommandeRef(LocalDate.now()));
-                }
-            } catch (Exception e) {
-                LOG.log(Level.INFO, null, e);
+            if (grossiste != null) {
+                order.setLgGROSSISTEID(grossiste);
+                order.setStrREFORDER(this.buildCommandeRef(LocalDate.now()));
             }
-
-            order.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
-            order.setDtCREATED(new Date());
-            order.setDtUPDATED(order.getDtCREATED());
-            em.persist(order);
-
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-
+            LOG.log(Level.INFO, null, e);
         }
+        order.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
+        order.setDtCREATED(new Date());
+        order.setDtUPDATED(order.getDtCREATED());
+        order.setDirectImport(Boolean.TRUE);
+        em.persist(order);
+
         return order;
 
     }
@@ -615,7 +606,7 @@ public class FileFormaManager extends HttpServlet {
             familleGrossiste = q.getSingleResult();
 
         } catch (Exception e) {
-            LOG.log(Level.INFO, null, e);
+            LOG.info(e.getLocalizedMessage());
         }
         return familleGrossiste;
     }

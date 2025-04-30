@@ -14,6 +14,7 @@ public class AddLot {
     private String idEtiquette;
     private String dateUsine;
     private String datePeremption;
+    private boolean directImport;
 
     public int getQty() {
         return qty;
@@ -69,6 +70,14 @@ public class AddLot {
 
     public void setDatePeremption(String datePeremption) {
         this.datePeremption = datePeremption;
+    }
+
+    public boolean isDirectImport() {
+        return directImport;
+    }
+
+    public void setDirectImport(boolean directImport) {
+        this.directImport = directImport;
     }
 
 }

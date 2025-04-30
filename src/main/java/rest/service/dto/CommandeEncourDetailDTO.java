@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONPropertyName;
 import util.DateCommonUtils;
 
@@ -311,7 +312,7 @@ public class CommandeEncourDetailDTO {
                     this.qteReasor = 0;
                 });
 
-        this.lots = detail.getLots();
+        this.lots = fetchLots(detail.getLots());
         this.datePeremption = buildDatePeremption(this.lots);
         this.lotNums = buildLotNums(this.lots);
     }
@@ -392,7 +393,7 @@ public class CommandeEncourDetailDTO {
         this.seuil = famille.getIntSEUILMIN();
         this.stock = familleStock.getIntNUMBERAVAILABLE();
         this.qteReasor = Math.abs(familleStock.getIntNUMBERAVAILABLE() - famille.getIntSEUILMIN());
-        this.lots = detail.getLots();
+        this.lots = fetchLots(detail.getLots());
         this.datePeremption = buildDatePeremption(this.lots);
         this.lotNums = buildLotNums(this.lots);
 
@@ -410,5 +411,14 @@ public class CommandeEncourDetailDTO {
             return lots.stream().map(OrderDetailLot::getNumeroLot).distinct().collect(Collectors.joining(", "));
         }
         return null;
+    }
+
+    private Set<OrderDetailLot> fetchLots(Set<OrderDetailLot> lots) {
+        if (lots != null) {
+            return lots.stream()
+                    .filter(e -> Objects.nonNull(e.getDatePeremption()) && StringUtils.isNoneEmpty(e.getNumeroLot()))
+                    .collect(Collectors.toSet());
+        }
+        return Set.of();
     }
 }

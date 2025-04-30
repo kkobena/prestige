@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
@@ -44,6 +43,7 @@ import javax.xml.bind.annotation.XmlTransient;
         @NamedQuery(name = "TBonLivraison.findByStrSTATUTFACTURE", query = "SELECT t FROM TBonLivraison t WHERE t.strSTATUTFACTURE = :strSTATUTFACTURE"),
         @NamedQuery(name = "TBonLivraison.findByBlSELECTED", query = "SELECT t FROM TBonLivraison t WHERE t.blSELECTED = :blSELECTED") })
 public class TBonLivraison implements Serializable, Cloneable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -92,6 +92,8 @@ public class TBonLivraison implements Serializable, Cloneable {
     private Integer intMONTANTREGLE;
     @Column(name = "int_MONTANT_RESTANT")
     private Integer intMONTANTRESTANT;
+    @Column(name = "direct_import", columnDefinition = "boolean default false")
+    private Boolean directImport = Boolean.FALSE;
 
     public TBonLivraison() {
     }
@@ -278,6 +280,14 @@ public class TBonLivraison implements Serializable, Cloneable {
     @Override
     public String toString() {
         return "dal.TBonLivraison[ lgBONLIVRAISONID=" + lgBONLIVRAISONID + " ]";
+    }
+
+    public Boolean getDirectImport() {
+        return directImport;
+    }
+
+    public void setDirectImport(Boolean directImport) {
+        this.directImport = directImport;
     }
 
     @Override
