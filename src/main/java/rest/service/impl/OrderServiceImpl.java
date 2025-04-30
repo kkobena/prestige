@@ -12,7 +12,6 @@ import commonTasks.dto.Params;
 import commonTasks.dto.RuptureDTO;
 import commonTasks.dto.RuptureDetailDTO;
 import dal.*;
-import dal.enumeration.ProductStateEnum;
 import dal.enumeration.TypeLog;
 import dal.enumeration.TypeNotification;
 import java.math.BigDecimal;
@@ -119,11 +118,10 @@ public class OrderServiceImpl implements OrderService {
         LongAdder montant = new LongAdder();
         LongAdder count = new LongAdder();
         LongAdder count2 = new LongAdder();
-        listTOrderDetail.forEach((d) -> {
+        listTOrderDetail.forEach(d -> {
             TFamille famille = d.getLgFAMILLEID();
             TFamilleStock stock = getTProductItemStock(famille.getLgFAMILLEID(), emp);
             if (stock != null) {
-
                 createBLDetail(oBonLivraison, grossiste, famille, d, famille.getLgZONEGEOID(),
                         stock.getIntNUMBERAVAILABLE());
                 d.setStrSTATUT(Constant.STATUT_ENTREE_STOCK);
@@ -220,7 +218,7 @@ public class OrderServiceImpl implements OrderService {
 
         LocalDate tonow = LocalDate.now();
 
-        if (dtpremption.isBefore(tonow) || dtpremption.isEqual(tonow)) {
+        if ((Objects.nonNull(dtpremption)) && (dtpremption.isBefore(tonow) || dtpremption.isEqual(tonow))) {
             lot.setStrSTATUT(Constant.STATUT_PERIME);
         } else {
 
@@ -229,6 +227,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
         }
+
         getEmg().persist(lot);
         addWarehouse(u, oFamille, lot, grossiste, etiquette);
 
@@ -323,6 +322,7 @@ public class OrderServiceImpl implements OrderService {
         bonLivraison.setStrSTATUT(Constant.STATUT_ENABLE);
         bonLivraison.setDtCREATED(new Date());
         bonLivraison.setDtUPDATED(dtDATELIVRAISON);
+        bonLivraison.setDirectImport(order.getDirectImport());
         getEmg().persist(bonLivraison);
         return bonLivraison;
 
@@ -1535,7 +1535,7 @@ public class OrderServiceImpl implements OrderService {
 
             for (TBonLivraison bonLivraison : datats) {
                 JSONObject json = new JSONObject();
-
+                json.put("directImport", bonLivraison.getDirectImport());
                 json.put("lg_BON_LIVRAISON_ID", bonLivraison.getLgBONLIVRAISONID());
                 json.put("str_REF_LIVRAISON", bonLivraison.getStrREFLIVRAISON());
 
@@ -1895,8 +1895,20 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public JSONObject addLot(AddLot lot) {
         TUser tUser = this.sessionHelperService.getCurrentUser();
-        TBonLivraisonDetail bonLivraisonDetai = getEmg().find(TBonLivraisonDetail.class, lot.getIdBonDetail());
-        TBonLivraison bonLivraison = bonLivraisonDetai.getLgBONLIVRAISONID();
+        TBonLivraisonDetail bonLivraisonDetail = getEmg().find(TBonLivraisonDetail.class, lot.getIdBonDetail());
+        TBonLivraison bonLivraison = bonLivraisonDetail.getLgBONLIVRAISONID();
+        if (!lot.isDirectImport()) {
+            return addNewLot(lot, bonLivraisonDetail, tUser, bonLivraison);
+        } else {
+            addFreeQty(lot, bonLivraisonDetail, bonLivraison.getStrREFLIVRAISON());
+        }
+
+        return new JSONObject().put("success", true);
+    }
+
+    private JSONObject addNewLot(AddLot lot, TBonLivraisonDetail bonLivraisonDetai, TUser tUser,
+            TBonLivraison bonLivraison) {
+
         TFamille famille = bonLivraisonDetai.getLgFAMILLEID();
         TOrder order = bonLivraison.getLgORDERID();
         TGrossiste grossiste = order.getLgGROSSISTEID();
@@ -1959,11 +1971,31 @@ public class OrderServiceImpl implements OrderService {
         getEmg().persist(oTLot);
         addWarehouse(bonLivraisonDetai, oTLot, lot);
         updateTBonLivraisonDetailFromBonLivraison(bonLivraisonDetai, lot.getFreeQty(), lot.getFreeQty());
-
         return new JSONObject().put("success", true);
     }
 
-    void updateTBonLivraisonDetailFromBonLivraison(TBonLivraisonDetail bonLivraisonDetai, int qteLivree, int freeQty) {
+    private void addFreeQty(AddLot lot, TBonLivraisonDetail bonLivraisonDetail, String bonNum) {
+        if (lot.getFreeQty() <= 0) {
+            return;
+        }
+        String famille = bonLivraisonDetail.getLgFAMILLEID().getLgFAMILLEID();
+        TLot entityLot = getLotByProduitIdAndBon(famille, bonNum);
+        entityLot.setIntNUMBERGRATUIT(lot.getFreeQty());
+        entityLot.setDtUPDATED(new Date());
+        bonLivraisonDetail.setIntQTERECUE(
+                (bonLivraisonDetail.getIntQTERECUE() - bonLivraisonDetail.getIntQTEUG()) + lot.getFreeQty());
+        bonLivraisonDetail.setIntQTEUG(lot.getFreeQty());
+        bonLivraisonDetail.setDtUPDATED(new Date());
+        getEmg().merge(bonLivraisonDetail);
+        getEmg().merge(entityLot);
+        TWarehouse tWarehouse = getOneByProduitIdAndBon(famille, bonNum);
+        tWarehouse.setIntNUMBERGRATUIT(lot.getFreeQty());
+        tWarehouse.setDtUPDATED(new Date());
+        getEmg().merge(tWarehouse);
+    }
+
+    private void updateTBonLivraisonDetailFromBonLivraison(TBonLivraisonDetail bonLivraisonDetai, int qteLivree,
+            int freeQty) {
 
         bonLivraisonDetai.setIntQTERECUE(bonLivraisonDetai.getIntQTERECUE() + qteLivree);
         bonLivraisonDetai.setIntQTEMANQUANT(bonLivraisonDetai.getIntQTEMANQUANT() - (qteLivree - freeQty));
@@ -1993,6 +2025,25 @@ public class OrderServiceImpl implements OrderService {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    private TLot getLotByProduitIdAndBon(String produitId, String bonNum) {
+        TypedQuery<TLot> q = em.createQuery(
+                "SELECT o FROM TLot o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.strREFLIVRAISON=?2", TLot.class);
+        q.setParameter(1, produitId);
+        q.setParameter(2, bonNum);
+        q.setMaxResults(1);
+        return q.getSingleResult();
+    }
+
+    private TWarehouse getOneByProduitIdAndBon(String produitId, String bonNum) {
+        TypedQuery<TWarehouse> q = em.createQuery(
+                "SELECT o FROM TWarehouse o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.strREFLIVRAISON=?2",
+                TWarehouse.class);
+        q.setParameter(1, produitId);
+        q.setParameter(2, bonNum);
+        q.setMaxResults(1);
+        return q.getSingleResult();
     }
 
     private void addWarehouse(TBonLivraisonDetail bonLivraisonDetail, TLot lot, AddLot lotDto) {

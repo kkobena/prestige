@@ -72,6 +72,8 @@ public class TOrder implements Serializable {
     private Collection<TOrderDetail> tOrderDetailCollection;
     @Column(name = "recu", columnDefinition = "boolean default false")
     private Boolean recu = Boolean.FALSE;
+    @Column(name = "direct_import", columnDefinition = "boolean default false")
+    private Boolean directImport = Boolean.FALSE;
 
     public TOrder() {
     }
@@ -151,6 +153,14 @@ public class TOrder implements Serializable {
 
     public void setTBonLivraisonCollection(Collection<TBonLivraison> tBonLivraisonCollection) {
         this.tBonLivraisonCollection = tBonLivraisonCollection;
+    }
+
+    public Boolean getDirectImport() {
+        return directImport;
+    }
+
+    public void setDirectImport(Boolean directImport) {
+        this.directImport = directImport;
     }
 
     public TUser getLgUSERID() {
