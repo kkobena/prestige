@@ -462,8 +462,8 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                     flex: 1,
                                     listeners: {
                                         select: function (cmp) {
-                                            var value = cmp.getValue();
-                                            str_TYPE_TRANSACTION = value;
+                                          
+                                            str_TYPE_TRANSACTION = cmp.getValue();
 
                                             Me_Workflow.onRechClick();
                                         }
@@ -482,9 +482,9 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                     emptyText: 'Filtre par...',
                                     listeners: {
                                         select: function (cmp) {
-                                            var value = cmp.getValue();
+                                            const value = cmp.getValue();
 
-                                            var store = Ext.getCmp('gridpanelID').getStore();
+                                            const store = Ext.getCmp('gridpanelID').getStore();
 
                                             store.load({
                                                 params: {
@@ -588,7 +588,8 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
             mode: "create",
             index: rowIndex,
             titre: "Ajout d'article [" + rec.get('lg_FAMILLE_NAME') + "]",
-            reference: rec.get('str_REF_LIVRAISON')
+            reference: rec.get('str_REF_LIVRAISON'),
+            directImport: Me_Workflow.getOdatasource().directImport
         });
     },
     onRemoveLotClick: function (grid, rowIndex) {
@@ -647,40 +648,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
         doEntreeStock(lg_BON_LIVRAISON_ID_2);
         ///code d'entree en stock
     },
-    onRemoveClick: function (grid, rowIndex) {
-
-        Ext.MessageBox.confirm('Message',
-                'confirm la suppresssion',
-                function (btn) {
-                    if (btn == 'yes') {
-                        var rec = grid.getStore().getAt(rowIndex);
-                        // alert(url_services_transaction_order + 'deleteDetail');
-
-                        Ext.Ajax.request({
-                            url: url_services_transaction_order + 'deleteDetail',
-                            params: {
-                                lg_BON_LIVRAISON_DETAIL: rec.get('lg_BON_LIVRAISON_DETAIL')
-                            },
-                            success: function (response)
-                            {
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                if (object.errors == "0") {
-                                    Ext.MessageBox.alert('Error Message', object.success);
-                                    return;
-                                }
-                                grid.getStore().reload();
-                            },
-                            failure: function (response)
-                            {
-                                var object = Ext.JSON.decode(response.responseText, false);
-                                console.log("Bug " + response.responseText);
-                                Ext.MessageBox.alert('Error Message', response.responseText);
-                            }
-                        });
-                        return;
-                    }
-                });
-    },
+    
 
     onRechClick: function () {
         const val = Ext.getCmp('rechercherDetail');
@@ -743,7 +711,7 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                                     buttons: Ext.MessageBox.OK,
                                     icon: Ext.MessageBox.WARNING
                                 });
-                                return;
+                             
                             } else {
 
                                 Ext.MessageBox.confirm('Message',
