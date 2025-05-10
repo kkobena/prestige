@@ -6,8 +6,11 @@
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -15,6 +18,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -93,15 +97,19 @@ public class TPreenregistrementDetail implements Serializable {
     private Integer prixAchat = 0;
     @Column(name = "montanttvaug")
     private Integer montantTvaUg = 0;
-    @Column(name = "cmu_price")
-    private Integer cmuPrice = 0;
 
-    public Integer getCmuPrice() {
-        return cmuPrice;
+    @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST }, mappedBy = "preenregistrementDetail")
+    private List<PrixReferenceVente> prixReferenceVentes = new ArrayList<>();
+
+    public List<PrixReferenceVente> getPrixReferenceVentes() {
+        if (prixReferenceVentes == null) {
+            this.prixReferenceVentes = new ArrayList<>();
+        }
+        return prixReferenceVentes;
     }
 
-    public void setCmuPrice(Integer cmuPrice) {
-        this.cmuPrice = cmuPrice;
+    public void setPrixReferenceVentes(List<PrixReferenceVente> prixReferenceVentes) {
+        this.prixReferenceVentes = prixReferenceVentes;
     }
 
     public TPreenregistrementDetail() {
@@ -369,7 +377,7 @@ public class TPreenregistrementDetail implements Serializable {
         this.valeurTva = p.getValeurTva();
         this.prixAchat = p.getPrixAchat();
         this.montantTvaUg = p.getMontantTvaUg();
-        this.cmuPrice = p.cmuPrice;
+
     }
 
 }

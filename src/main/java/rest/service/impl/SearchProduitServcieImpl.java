@@ -267,7 +267,7 @@ public class SearchProduitServcieImpl implements SearchProduitServcie {
             json.put("P_UPDATE_DESIGNATION", Boolean.valueOf(objArray[8].toString()));
             json.put("lg_FAMILLE_ID", t.getLgFAMILLEID());
             json.put("scheduled", t.isScheduled());
-            json.put("cmu_price", t.getCmuPrice());
+            json.put("cmu_price", 0);
 
             try {
                 json.put("gammeId", t.getGamme().getId());

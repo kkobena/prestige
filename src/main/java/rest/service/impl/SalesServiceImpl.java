@@ -25,6 +25,7 @@ import dal.HMvtProduit;
 import dal.Medecin;
 import dal.MvtTransaction;
 import dal.Notification;
+import dal.PrixReferenceVente;
 import dal.Reference;
 import dal.TAyantDroit;
 import dal.TClient;
@@ -164,6 +165,8 @@ public class SalesServiceImpl implements SalesService {
     private SessionHelperService sessionHelperService;
     @EJB
     private CautionTiersPayantService cautionTiersPayantService;
+    @EJB
+    private PrixReferenceService prixReferenceService;
 
     private final java.util.function.Predicate<Optional<TParameters>> test = e -> {
         if (e.isPresent()) {
@@ -668,7 +671,7 @@ public class SalesServiceImpl implements SalesService {
         newItem.setDtUPDATED(newItem.getDtCREATED());
         newItem.setBoolACCOUNT(tp.getBoolACCOUNT());
         newItem.setLgFAMILLEID(tp.getLgFAMILLEID());
-        newItem.setCmuPrice(tp.getCmuPrice());
+
         newItem.setIntPRICEUNITAIR(tp.getIntPRICEUNITAIR());
         newItem.setValeurTva(tp.getValeurTva());
         newItem.setIntUG((-1) * tp.getIntUG());
@@ -1109,7 +1112,7 @@ public class SalesServiceImpl implements SalesService {
             return null;
         }
         return new TRemise(id);
-        // return getEm().find(TRemise.class, id);
+
     }
 
     private TTypeVente typeVenteFromId(String id) {
@@ -1119,53 +1122,50 @@ public class SalesServiceImpl implements SalesService {
         return getEm().find(TTypeVente.class, id);
     }
 
-    public TPreenregistrementDetail addPreenregistrementItem(TPreenregistrement tp, TFamille oFamille, int qte,
+    private TPreenregistrementDetail addPreenregistrementItem(TPreenregistrement tp, TFamille oFamille, int qte,
             int qteServie, int qteUg, Integer pu) {
-        try {
-            findParamettreTakeIntoAccount("KEY_TAKE_INTO_ACCOUNT");
-            TCodeTva tva = oFamille.getLgCODETVAID();
-            TPreenregistrementDetail tpd = new TPreenregistrementDetail(UUID.randomUUID().toString());
-            tpd.setBoolACCOUNT(true);
-            tpd.setCmuPrice(oFamille.cmuPrice().get());
-            tpd.setLgFAMILLEID(oFamille);
-            tpd.setDtCREATED(new Date());
-            tpd.setDtUPDATED(tpd.getDtCREATED());
-            tpd.setIntPRICEUNITAIR(pu);
-            tpd.setIntPRICE(pu * qte);
-            tpd.setMontantTva(calculeTva(tva, pu * qte));
-            tpd.setValeurTva(tva.getIntVALUE());
-            tpd.setIntUG(qteUg);
-            tpd.setIntQUANTITY(qte);
-            tpd.setIntQUANTITYSERVED(qteServie);
-            tpd.setIntPRICEOTHER(0);
-            tpd.setIntPRICEDETAILOTHER(0);
-            tpd.setIntFREEPACKNUMBER(0);
-            tpd.setIntPRICEREMISE(0);
-            tpd.setIntAVOIR(tpd.getIntQUANTITY() - tpd.getIntQUANTITYSERVED());
-            tpd.setIntAVOIRSERVED(tpd.getIntQUANTITYSERVED());
-            tpd.setStrSTATUT(STATUT_IS_PROGRESS);
-            tpd.setBISAVOIR(tpd.getIntAVOIR() > 0);
-            tpd.setPrixAchat(oFamille.getIntPAF());
-            tpd.setLgPREENREGISTREMENTID(tp);
-            tp.setIntPRICE(tp.getIntPRICE() + tpd.getIntPRICE());
-            tp.setMontantTva(tpd.getMontantTva() + tp.getMontantTva());
-            tp.setIntPRICEOTHER(tp.getIntPRICEOTHER() + tpd.getIntPRICE());
 
-            if (Boolean.TRUE.equals(KEY_TAKE_INTO_ACCOUNT)) {
-                if (oFamille.getLgZONEGEOID().getBoolACCOUNT() && oFamille.getBoolACCOUNT()) {
-                    tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
-                } else {
-                    tpd.setBoolACCOUNT(false);
-                }
-            } else {
+        findParamettreTakeIntoAccount("KEY_TAKE_INTO_ACCOUNT");
+        TCodeTva tva = oFamille.getLgCODETVAID();
+        TPreenregistrementDetail tpd = new TPreenregistrementDetail(UUID.randomUUID().toString());
+        tpd.setBoolACCOUNT(true);
+
+        tpd.setLgFAMILLEID(oFamille);
+        tpd.setDtCREATED(new Date());
+        tpd.setDtUPDATED(tpd.getDtCREATED());
+        tpd.setIntPRICEUNITAIR(pu);
+        tpd.setIntPRICE(pu * qte);
+        tpd.setMontantTva(calculeTva(tva, pu * qte));
+        tpd.setValeurTva(tva.getIntVALUE());
+        tpd.setIntUG(qteUg);
+        tpd.setIntQUANTITY(qte);
+        tpd.setIntQUANTITYSERVED(qteServie);
+        tpd.setIntPRICEOTHER(0);
+        tpd.setIntPRICEDETAILOTHER(0);
+        tpd.setIntFREEPACKNUMBER(0);
+        tpd.setIntPRICEREMISE(0);
+        tpd.setIntAVOIR(tpd.getIntQUANTITY() - tpd.getIntQUANTITYSERVED());
+        tpd.setIntAVOIRSERVED(tpd.getIntQUANTITYSERVED());
+        tpd.setStrSTATUT(STATUT_IS_PROGRESS);
+        tpd.setBISAVOIR(tpd.getIntAVOIR() > 0);
+        tpd.setPrixAchat(oFamille.getIntPAF());
+        tpd.setLgPREENREGISTREMENTID(tp);
+        tp.setIntPRICE(tp.getIntPRICE() + tpd.getIntPRICE());
+        tp.setMontantTva(tpd.getMontantTva() + tp.getMontantTva());
+        tp.setIntPRICEOTHER(tp.getIntPRICEOTHER() + tpd.getIntPRICE());
+
+        if (Boolean.TRUE.equals(KEY_TAKE_INTO_ACCOUNT)) {
+            if (oFamille.getLgZONEGEOID().getBoolACCOUNT() && oFamille.getBoolACCOUNT()) {
                 tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
+            } else {
+                tpd.setBoolACCOUNT(false);
             }
-
-            return tpd;
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-            return null;
+        } else {
+            tp.setIntACCOUNT(tp.getIntACCOUNT() + tpd.getIntPRICE());
         }
+
+        return tpd;
+
     }
 
     public Optional<TPreenregistrementDetail> findItemByProduitAndVente(String idVente, String idProduit) {
@@ -1203,7 +1203,7 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrementDetail tpd;
             if (detailOp.isPresent()) {
                 tpd = detailOp.get();
-                int oldCmuAmount = computeCmuAmount(tpd);
+
                 int qty = tpd.getIntQUANTITY() + params.getQte();
                 if (!forcerStock(qty, params.getProduitId(), tp.getLgUSERID().getLgEMPLACEMENTID())) {
                     return json.put("success", false).put("msg",
@@ -1222,7 +1222,7 @@ public class SalesServiceImpl implements SalesService {
                 tpd.setBISAVOIR(tpd.getIntAVOIR() > 0);
                 tp.setIntPRICE(tp.getIntPRICE() + tpd.getIntPRICE() - oldPrice);
                 tp.setMontantTva(tp.getMontantTva() + tpd.getMontantTva() - montantTva);
-                tp.setCmuAmount((tp.getCmuAmount() - oldCmuAmount) + computeCmuAmount(tpd));
+
                 if (tpd.getBoolACCOUNT()) {
                     tp.setIntACCOUNT(tp.getIntPRICE());
                 }
@@ -1236,7 +1236,7 @@ public class SalesServiceImpl implements SalesService {
                 }
                 TPreenregistrementDetail dp = addPreenregistrementItem(tp, famille, params.getQte(),
                         params.getQteServie(), params.getQteUg(), params.getItemPu());
-                tp.setCmuAmount(tp.getCmuAmount() + computeCmuAmount(dp));
+                updatePrixReference(dp, params.getTierspayants());
                 emg.persist(dp);
                 afficheurProduit(dp.getLgFAMILLEID().getStrNAME(), dp.getIntQUANTITY(), dp.getIntPRICEUNITAIR(),
                         dp.getIntPRICE());
@@ -1270,7 +1270,7 @@ public class SalesServiceImpl implements SalesService {
             int intQUANTITYSERVEDOLD = detail.getIntQUANTITYSERVED();
             int oldPrice = detail.getIntPRICE();
             int montantTva = detail.getMontantTva();
-            int oldCmuAmount = computeCmuAmount(detail);
+
             TFamille famille = detail.getLgFAMILLEID();
             TPreenregistrement tp = detail.getLgPREENREGISTREMENTID();
             if (!forcerStock(params.getQte(), famille.getLgFAMILLEID(), tp.getLgUSERID().getLgEMPLACEMENTID())) {
@@ -1307,7 +1307,7 @@ public class SalesServiceImpl implements SalesService {
             detail.setDtUPDATED(new Date());
             tp.setIntPRICE(tp.getIntPRICE() + (detail.getIntPRICE() - oldPrice));
             tp.setMontantTva(tp.getMontantTva() + (detail.getMontantTva() - montantTva));
-            tp.setCmuAmount((tp.getCmuAmount() - oldCmuAmount) + computeCmuAmount(detail));
+
             if (params.isDepot()) {
                 tp.setIntPRICEREMISE(calculRemiseDepot(tp.getIntPRICE(), params.getRemiseDepot()));
 
@@ -1315,6 +1315,7 @@ public class SalesServiceImpl implements SalesService {
             if (detail.getBoolACCOUNT()) {
                 tp.setIntACCOUNT(tp.getIntACCOUNT() + (detail.getIntPRICE() - oldPrice));
             }
+            updatePrixReference(detail);
             emg.merge(tp);
             emg.merge(detail);
             JSONObject data = new JSONObject();
@@ -1361,7 +1362,7 @@ public class SalesServiceImpl implements SalesService {
             TPreenregistrement tp = tpd.getLgPREENREGISTREMENTID();
             tp.setIntPRICE(tp.getIntPRICE() - tpd.getIntPRICE());
             tp.setMontantTva(tp.getMontantTva() - tpd.getMontantTva());
-            tp.setCmuAmount(tp.getCmuAmount() - computeCmuAmount(tpd));
+
             if (tpd.getBoolACCOUNT()) {
                 tp.setIntACCOUNT(tp.getIntACCOUNT() - tpd.getIntPRICE());
             }
@@ -1374,8 +1375,8 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    public boolean checkIsVentePossible(TFamilleStock OTFamilleStock, int qte) {
-        return OTFamilleStock.getIntNUMBERAVAILABLE() >= qte;
+    public boolean checkIsVentePossible(TFamilleStock oTFamilleStock, int qte) {
+        return oTFamilleStock.getIntNUMBERAVAILABLE() >= qte;
     }
 
     private boolean boonDejaUtilise(String refBon, String cmpt) {
@@ -2324,6 +2325,8 @@ public class SalesServiceImpl implements SalesService {
                     .setParameter(1, params.getTierspayants().get(0).getCompteTp()).setParameter(2, params.getVenteId())
                     .getSingleResult();
             emg.remove(op);
+            prixReferenceService.removeTiersPayantFromVente(op.getLgPREENREGISTREMENTID(),
+                    op.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getLgTIERSPAYANTID());
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
 
@@ -2428,15 +2431,10 @@ public class SalesServiceImpl implements SalesService {
         LongAdder marge = new LongAdder();
         LongAdder montantTva = new LongAdder();
         LongAdder montantAccount = new LongAdder();
-        LongAdder montantCMU = new LongAdder();
 
         lstTPreenregistrementDetail.forEach(x -> {
             totalAmount.add(x.getIntPRICE());
-            if (Objects.nonNull(x.getCmuPrice()) && x.getCmuPrice() != 0) {
-                montantCMU.add(x.getCmuPrice() * x.getIntQUANTITY());
-            } else {
-                montantCMU.add(x.getIntPRICE());
-            }
+
             montantTva.add(x.getMontantTva());
             TFamille famille = x.getLgFAMILLEID();
             int remise = 0;
@@ -2480,8 +2478,7 @@ public class SalesServiceImpl implements SalesService {
             op.setRemise(oTRemise);
         }
         return new MontantAPaye(DateConverter.arrondiModuloOfNumber(montantNet, 5), montantTotal, 0,
-                DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva)
-                        .cmuAmount(montantCMU.intValue());
+                DateConverter.arrondiModuloOfNumber(intTOTALREMISE, 5), marge.intValue(), tva).cmuAmount(0);
     }
 
     @Override
@@ -3122,7 +3119,7 @@ public class SalesServiceImpl implements SalesService {
         newTP.setMontantnetug(tp.getMontantnetug());
         newTP.setMontantttcug(tp.getMontantttcug());
         newTP.setMontantTvaUg(tp.getMontantTvaUg());
-        newTP.setCmuAmount(tp.getCmuAmount());
+
         getEm().persist(newTP);
         return newTP;
     }
@@ -3207,7 +3204,7 @@ public class SalesServiceImpl implements SalesService {
         newTd.setIntAVOIR(tp.getIntAVOIR());
         newTd.setIntAVOIRSERVED(tp.getIntQUANTITYSERVED());
         newTd.setBISAVOIR(tp.getBISAVOIR());
-        newTd.setCmuPrice(tp.getCmuPrice());
+
         getEm().persist(newTd);
         return newTd;
     }
@@ -3313,37 +3310,6 @@ public class SalesServiceImpl implements SalesService {
 
             return new JSONObject().put("success", false);
         }
-    }
-
-    private JSONObject chechCustomerTiersPayantConsumption(String compteTp, Integer montantToBePaid) {
-
-        TCompteClientTiersPayant tc = this.getEm().find(TCompteClientTiersPayant.class, compteTp);
-        TTiersPayant tiersPayant2 = tc.getLgTIERSPAYANTID();
-        String tierspayantName = tiersPayant2.getStrFULLNAME();
-        int plafondClient = (tc.getDblPLAFOND() == null || tc.getDblPLAFOND() <= 0 ? 0 : tc.getDblPLAFOND().intValue());
-        int encoursClient = (tc.getDbPLAFONDENCOURS() == null || tc.getDbPLAFONDENCOURS() <= 0 ? 0
-                : tc.getDbPLAFONDENCOURS());
-        int plafondTierPayant = (tiersPayant2.getDblPLAFONDCREDIT() == null || tiersPayant2.getDblPLAFONDCREDIT() <= 0
-                ? 0 : tiersPayant2.getDblPLAFONDCREDIT().intValue());
-        int consoMensuelleClient = (tc.getDbCONSOMMATIONMENSUELLE() == null || tc.getDbCONSOMMATIONMENSUELLE() < 0 ? 0
-                : tc.getDbCONSOMMATIONMENSUELLE());
-        int consoMensuelleTierPayant = (tiersPayant2.getDbCONSOMMATIONMENSUELLE() == null
-                || tiersPayant2.getDbCONSOMMATIONMENSUELLE() < 0 ? 0 : tiersPayant2.getDbCONSOMMATIONMENSUELLE());
-        JSONObject json = chechTiersPayantConsumption(plafondTierPayant, consoMensuelleTierPayant, montantToBePaid,
-                tierspayantName);
-        String msg = json.getString("msg");
-        boolean hasRestructuring = json.getBoolean("hasRestructuring");
-        montantToBePaid = json.getInt("montantToBePaid");
-        json = chechCustomerConsumption(plafondClient, encoursClient, consoMensuelleClient, montantToBePaid,
-                tierspayantName);
-
-        montantToBePaid = json.getInt("montantToBePaid");
-        if (json.getBoolean("hasRestructuring")) {
-            msg = json.getString("msg");
-            hasRestructuring = json.getBoolean("hasRestructuring");
-        }
-        return new JSONObject().put("msg", msg).put("hasRestructuring", hasRestructuring).put("montantToBePaid",
-                montantToBePaid);
     }
 
     private JSONObject chechCustomerConsumption(int plafondClient, int encoursClient, int consoMensuelleClient,
@@ -3963,11 +3929,6 @@ public class SalesServiceImpl implements SalesService {
         int montantCMU = 0;
         for (TPreenregistrementDetail x : list) {
             montant += x.getIntPRICE();
-            if (Objects.nonNull(x.getCmuPrice()) && x.getCmuPrice() != 0) {
-                montantCMU += (x.getCmuPrice() * x.getIntQUANTITY());
-            } else {
-                montantCMU += x.getIntPRICE();
-            }
 
             TFamille famille = x.getLgFAMILLEID();
             if (famille.getBoolACCOUNT()) {
@@ -4118,15 +4079,15 @@ public class SalesServiceImpl implements SalesService {
                     TFamilleStock stock = this.findStock(famille.getLgFAMILLEID(), emplacement);
                     if (stock.getIntUG() > 0) {
                         int qtyUg = qtyUg(stock.getIntUG(), x.getIntQUANTITYSERVED());
-                        int _montant = qtyUg * x.getIntPRICEUNITAIR();
-                        montantTtcUg += _montant;
+                        int montant2 = qtyUg * x.getIntPRICEUNITAIR();
+                        montantTtcUg += montant2;
                         montantNetUg = montantTtcUg;
                         margeUg += margeUg(qtyUg, x.getIntQUANTITY(), marge);
                         if (x.getValeurTva() > 0) {
-                            Double HT = _montant / (1 + (Double.valueOf(x.getValeurTva()) / 100));
-                            int _montantTvaUg = _montant - HT.intValue();
-                            x.setMontantTvaUg(_montantTvaUg);
-                            tvaug += _montantTvaUg;
+                            Double HT = montant2 / (1 + (Double.valueOf(x.getValeurTva()) / 100));
+                            int montantTvaUg2 = montant2 - HT.intValue();
+                            x.setMontantTvaUg(montantTvaUg2);
+                            tvaug += montantTvaUg2;
                         }
 
                     }
@@ -4138,8 +4099,8 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public JSONObject closePreventeVente(TUser ooTUser, String lg_PREENREGISTREMENT_ID) {
-        TPreenregistrement p = getEm().find(TPreenregistrement.class, lg_PREENREGISTREMENT_ID);
+    public JSONObject closePreventeVente(TUser ooTUser, String id) {
+        TPreenregistrement p = getEm().find(TPreenregistrement.class, id);
         p.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
         p.setLgUSERID(ooTUser);
         p.setCompletionDate(new Date());
@@ -4190,7 +4151,7 @@ public class SalesServiceImpl implements SalesService {
         newTp.setMontantnetug(tp.getMontantnetug());
         newTp.setMontantttcug(tp.getMontantttcug());
         newTp.setMontantTvaUg(tp.getMontantTvaUg());
-        newTp.setCmuAmount(tp.getCmuAmount());
+
         getEm().persist(newTp);
         return newTp;
     }
@@ -4488,9 +4449,6 @@ public class SalesServiceImpl implements SalesService {
 
     private int computeCmuAmount(TPreenregistrementDetail pd) {
 
-        if (Objects.nonNull(pd.getCmuPrice()) && pd.getCmuPrice() > 0) {
-            return pd.getIntQUANTITY() * pd.getCmuPrice();
-        }
         return pd.getIntQUANTITY() * pd.getIntPRICEUNITAIR();
     }
 
@@ -4690,7 +4648,7 @@ public class SalesServiceImpl implements SalesService {
 
         TPreenregistrementDetail dt = addPreenregistrementItem(op, tf, salesParams.getQte(), salesParams.getQteServie(),
                 salesParams.getQteUg(), salesParams.getItemPu());
-        op.setCmuAmount(computeCmuAmount(dt));
+        updatePrixReference(dt, salesParams.getTierspayants());
         return Pair.of(op, dt);
     }
 
@@ -4746,5 +4704,31 @@ public class SalesServiceImpl implements SalesService {
         preenregistrement.setStrLASTNAMECUSTOMER(tc.getStrLASTNAME());
         preenregistrement.setStrPHONECUSTOME(tc.getStrADRESSE());
         em.merge(preenregistrement);
+    }
+
+    private void updatePrixReference(TPreenregistrementDetail preenregistrementDetail,
+            List<TiersPayantParams> tierspayants) {
+        if (!CollectionUtils.isEmpty(tierspayants)) {
+            this.prixReferenceService.updatePrixReference(preenregistrementDetail, getTiersPayantIds(tierspayants));
+        }
+    }
+
+    private void updatePrixReference(TPreenregistrementDetail preenregistrementDetail) {
+        this.prixReferenceService.updatePrixReference(preenregistrementDetail);
+    }
+
+    private Set<String> getTiersPayantIds(List<TiersPayantParams> tierspayants) {
+        try {
+            Query q = em.createNativeQuery(
+                    "SELECT cp.lg_TIERS_PAYANT_ID FROM t_compte_client_tiers_payant cp  WHERE cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID IN(:ids)");
+            q.setParameter("ids",
+                    tierspayants.stream().map(TiersPayantParams::getCompteTp).collect(Collectors.toSet()));
+            List<Object[]> list = q.getResultList();
+            return list.stream().map(b -> {
+                return b[0].toString();
+            }).distinct().collect(Collectors.toSet());
+        } catch (Exception e) {
+            return Set.of();
+        }
     }
 }

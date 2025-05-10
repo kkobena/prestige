@@ -195,8 +195,6 @@ public class TPreenregistrement implements Serializable {
     @Column(name = "completion_date")
     @Temporal(TemporalType.TIMESTAMP)
     private Date completionDate = new Date();
-    @Column(name = "cmu_amount")
-    private Integer cmuAmount = 0;
     @OneToMany(mappedBy = "preenregistrement")
     private List<VenteReglement> venteReglements = new ArrayList<>();
     @ManyToOne
@@ -275,14 +273,6 @@ public class TPreenregistrement implements Serializable {
     }
 
     public TPreenregistrement() {
-    }
-
-    public Integer getCmuAmount() {
-        return cmuAmount;
-    }
-
-    public void setCmuAmount(Integer cmuAmount) {
-        this.cmuAmount = cmuAmount;
     }
 
     public Integer getIntREMISEPARA() {

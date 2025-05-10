@@ -1,6 +1,7 @@
 package rest.service.impl;
 
 import commonTasks.dto.MontantAPaye;
+import commonTasks.dto.MontantTp;
 import commonTasks.dto.SalesParams;
 import commonTasks.dto.TiersPayantParams;
 import dal.Caution;
@@ -43,10 +44,10 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         TPreenregistrement op = items.get(0).getLgPREENREGISTREMENTID();
         boolean isCarnet = Constant.VENTE_AVEC_CARNET.equals(op.getLgTYPEVENTEID().getLgTYPEVENTEID());
         boolean isCarnetATauxZero = params.getTierspayants().stream().mapToInt(TiersPayantParams::getTaux).sum() == 0;
-
         TRemise remise = op.getRemise();
         remise = remise != null ? remise : op.getClient().getRemise();
         MontantAPaye aPaye = computeRemise(op, remise, items);
+        List<MontantTp> montantTps = aPaye.getMontantTierspayants();
         if (isCarnet) {
             TCompteClientTiersPayant tc = em.find(TCompteClientTiersPayant.class,
                     params.getTierspayants().get(0).getCompteTp());
@@ -58,7 +59,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         }
 
         int montantVente = op.getIntPRICE();
-        int cmuAmount = op.getCmuAmount();
+
         int montantRestant = 0;
         int montantTotalTp = 0;
         List<NetComputingDTO> datas = new ArrayList<>();
@@ -70,8 +71,11 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         int montantTpFinalTierspayant = 0;
         for (TiersPayantParams tiersPayantParams : tierspayants) {
             counter++;
-            boolean isCmu = tiersPayantParams.isCmu() && (cmuAmount != montantVente);
-            int amountToCompute = isCmu ? cmuAmount : montantVente;
+            int amountToCompute = isCarnet ? montantVente
+                    : montantTps.stream()
+                            .filter(pm -> pm.getTierPayantId().equals(tiersPayantParams.getLgTIERSPAYANTID()))
+                            .findFirst().map(MontantTp::getMontant).orElse(montantVente);
+            // int amountToCompute = isCmu ? cmuAmount : montantVente;
 
             NetComputingDTO netComputed = computeTiesrPayantNetAmount(tiersPayantParams, amountToCompute,
                     asPlafondActivated);
@@ -119,7 +123,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         op.setIntCUSTPART(custPart);
         em.merge(op);
 
-        montantAPaye.setCmuAmount(cmuAmount);
         montantAPaye.setRemise(op.getIntPRICEREMISE());
         montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
         montantAPaye.setMontant(op.getIntPRICE());
@@ -156,9 +159,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
     }
 
     private List<TPreenregistrementDetail> getItems(String venteId) {
-
         try {
-
             TypedQuery<TPreenregistrementDetail> q = em.createQuery(
                     "SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1",
                     TPreenregistrementDetail.class).setParameter(1, venteId);
@@ -183,14 +184,12 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         int montantAccount = 0;
         int montantCMU = 0;
 
+        List<MontantTp> montantTps = new ArrayList<>();
+
         for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
+            updateMontantTps(x, montantTps);
             totalAmount += x.getIntPRICE();
-            if (Objects.nonNull(x.getCmuPrice()) && x.getCmuPrice() != 0) {
-                montantCMU += (x.getCmuPrice() * x.getIntQUANTITY());
-            } else {
-                montantCMU += x.getIntPRICE();
-            }
-            // montantTva += x.getMontantTva();
+
             TFamille famille = x.getLgFAMILLEID();
 
             int remise = 0;
@@ -230,9 +229,24 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         if (totalRemise > 0 && oTRemise == null) {
             op.setRemise(oTRemise);
         }
-        op.setCmuAmount(montantCMU);
 
-        return new MontantAPaye(montantNet, totalAmount, 0, totalRemise, marge, montantTva).cmuAmount(montantCMU);
+        return new MontantAPaye(montantNet, totalAmount, 0, totalRemise, marge, montantTva)
+                .setMontantTierspayants(montantTps).cmuAmount(montantCMU);
+    }
+
+    private void updateMontantTps(TPreenregistrementDetail x, List<MontantTp> montantTps) {
+        x.getPrixReferenceVentes().forEach(prix -> {
+            montantTps.stream().filter(mt -> mt.getTierPayantId().equals(prix.getTiersPayantId())).findFirst()
+                    .ifPresentOrElse(tpPrix -> {
+                        tpPrix.setMontant(tpPrix.getMontant() + prix.getMontant());
+                    }, () -> {
+                        MontantTp mp = new MontantTp();
+                        mp.setMontant(prix.getMontant());
+                        mp.setTierPayantId(prix.getTiersPayantId());
+                        montantTps.add(mp);
+                    });
+        });
+
     }
 
     private TGrilleRemise grilleRemiseRemiseFromWorkflow(TPreenregistrement op, TFamille familleP, String remiseId) {
@@ -376,14 +390,11 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
     private MontantAPaye calculNetAvecCaution(MontantAPaye aPaye, TPreenregistrement op, SalesParams params,
             TTiersPayant payant) {
         MontantAPaye montantAPaye = new MontantAPaye();
-
         TiersPayantParams tierspayant = params.getTierspayants().get(0);
         NetComputingDTO netComputing = computeCaution(tierspayant, payant, op);
-
         int custPart = (op.getIntPRICE() - op.getIntPRICEREMISE()) - netComputing.getMontantTiersPayant();
         op.setIntCUSTPART(custPart);
         em.merge(op);
-
         montantAPaye.setRemise(op.getIntPRICEREMISE());
         montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
         montantAPaye.setMontant(op.getIntPRICE());
@@ -392,12 +403,10 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         montantAPaye.setMontantTp(netComputing.getMontantTiersPayant());
         TiersPayantParams tp = new TiersPayantParams();
         tp.setCompteTp(tierspayant.getCompteTp());
-
         tp.setTaux(100);
         tp.setNumBon(tierspayant.getNumBon());
         tp.setTpnet(montantAPaye.getMontantTp());
         montantAPaye.getTierspayants().add(tp);
-
         return montantAPaye;
     }
 
