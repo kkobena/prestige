@@ -97,10 +97,7 @@ public class SalesRessource {
     @POST
     @Path("add/vno")
     public Response addVente(SalesParams params) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
-        params.setUserId(tu);
         params.setStatut(params.isPrevente() ? Constant.STATUT_PENDING : Constant.STATUT_IS_PROGRESS);
         JSONObject json = salesService.createPreVente(params);
         return Response.ok().entity(json.toString()).build();
@@ -109,10 +106,7 @@ public class SalesRessource {
     @POST
     @Path("add/assurance")
     public Response addVenteAssurance(SalesParams params) {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
-        params.setUserId(tu);
         params.setStatut(params.isPrevente() ? Constant.STATUT_PENDING : Constant.STATUT_IS_PROGRESS);
         JSONObject json = salesService.createPreVenteVo(params);
         return Response.ok().entity(json.toString()).build();

@@ -75,7 +75,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
                     : montantTps.stream()
                             .filter(pm -> pm.getTierPayantId().equals(tiersPayantParams.getLgTIERSPAYANTID()))
                             .findFirst().map(MontantTp::getMontant).orElse(montantVente);
-            // int amountToCompute = isCmu ? cmuAmount : montantVente;
 
             NetComputingDTO netComputed = computeTiesrPayantNetAmount(tiersPayantParams, amountToCompute,
                     asPlafondActivated);

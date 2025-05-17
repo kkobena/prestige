@@ -49,7 +49,7 @@ public class PrixReference implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "type_prix", nullable = false, length = 20)
     private PrixReferenceType type;
-    private boolean enabled;
+    private boolean enabled = true;
 
     public String getId() {
         return id;

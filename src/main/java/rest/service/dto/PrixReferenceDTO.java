@@ -2,6 +2,7 @@ package rest.service.dto;
 
 import dal.PrixReference;
 import dal.PrixReferenceType;
+import dal.TTiersPayant;
 
 /**
  *
@@ -15,6 +16,16 @@ public class PrixReferenceDTO {
     private boolean enabled;
     private String produitId;
     private String tiersPayantId;
+    private String tiersPayantName;
+    private String typeLibelle;
+
+    public String getTiersPayantName() {
+        return tiersPayantName;
+    }
+
+    public void setTiersPayantName(String tiersPayantName) {
+        this.tiersPayantName = tiersPayantName;
+    }
 
     public String getId() {
         return id;
@@ -67,13 +78,24 @@ public class PrixReferenceDTO {
     public PrixReferenceDTO() {
     }
 
+    public String getTypeLibelle() {
+        return typeLibelle;
+    }
+
+    public void setTypeLibelle(String typeLibelle) {
+        this.typeLibelle = typeLibelle;
+    }
+
     public PrixReferenceDTO(PrixReference prixReference) {
         this.id = prixReference.getId();
         this.valeur = prixReference.getValeur();
         this.type = prixReference.getType();
         this.enabled = prixReference.isEnabled();
         this.produitId = prixReference.getProduit().getLgFAMILLEID();
-        this.tiersPayantId = prixReference.getTiersPayant().getLgTIERSPAYANTID();
+        TTiersPayant payant = prixReference.getTiersPayant();
+        this.tiersPayantId = payant.getLgTIERSPAYANTID();
+        this.typeLibelle = prixReference.getType().getLibelle();
+        this.tiersPayantName = payant.getStrFULLNAME();
     }
 
 }

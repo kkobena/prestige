@@ -10,12 +10,14 @@ import dal.TTiersPayant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import org.apache.commons.lang3.StringUtils;
 import rest.service.PrixReferenceService;
 import rest.service.dto.PrixReferenceDTO;
 
@@ -33,13 +35,18 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
 
     @Override
     public void add(PrixReferenceDTO prixReferenceDTO) {
-        PrixReference prixReference = new PrixReference();
-        prixReference.setEnabled(prixReferenceDTO.isEnabled());
-        prixReference.setType(prixReferenceDTO.getType());
-        prixReference.setProduit(new TFamille(prixReferenceDTO.getProduitId()));
-        prixReference.setTiersPayant(new TTiersPayant(prixReferenceDTO.getTiersPayantId()));
-        prixReference.setValeur(prixReferenceDTO.getValeur());
-        em.persist(prixReference);
+        if (StringUtils.isNotEmpty(prixReferenceDTO.getId())) {
+            update(prixReferenceDTO);
+        } else {
+            PrixReference prixReference = new PrixReference();
+            prixReference.setEnabled(true);
+            prixReference.setType(prixReferenceDTO.getType());
+            prixReference.setProduit(new TFamille(prixReferenceDTO.getProduitId()));
+            prixReference.setTiersPayant(new TTiersPayant(prixReferenceDTO.getTiersPayantId()));
+            prixReference.setValeur(prixReferenceDTO.getValeur());
+            em.persist(prixReference);
+        }
+
     }
 
     @Override
@@ -89,7 +96,7 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
     @Override
     public void update(PrixReferenceDTO prixReferenceDTO) {
         PrixReference prixReference = em.find(PrixReference.class, prixReferenceDTO.getId());
-        prixReference.setEnabled(prixReferenceDTO.isEnabled());
+        prixReference.setEnabled(true);
         prixReference.setType(prixReferenceDTO.getType());
         prixReference.setValeur(prixReferenceDTO.getValeur());
         em.merge(prixReference);
@@ -131,15 +138,15 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
     }
 
     @Override
-    public List<PrixReference> getActifByProduitIdAndTiersPayantIds(String produitId, Set<String> tiersPayantId) {
+    public List<PrixReference> getActifByProduitIdAndTiersPayantIds(String produitId, Set<String> tiersPayantIds) {
         try {
             TypedQuery<PrixReference> t = em.createNamedQuery("PrixReference.findByProduitIdAndTiersPayantIds",
                     PrixReference.class);
             t.setParameter("produitId", produitId);
-            t.setParameter("tiersPayantIds", tiersPayantId);
+            t.setParameter("tiersPayantIds", buildInClose(tiersPayantIds));
             return t.getResultList();
         } catch (Exception e) {
-            LOG.info(e.getLocalizedMessage());
+            LOG.log(Level.SEVERE, "getActifByProduitIdAndTiersPayantIds", e);
             return List.of();
         }
     }
@@ -157,6 +164,11 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
         preenregistrement.getTPreenregistrementDetailCollection().stream()
                 .flatMap(e -> e.getPrixReferenceVentes().stream())
                 .filter(prix -> prix.getTiersPayantId().equals(tierspayantId)).forEach(em::remove);
+
+    }
+
+    private String buildInClose(Set<String> tiersPayantIds) {
+        return String.join(",", tiersPayantIds);
 
     }
 }

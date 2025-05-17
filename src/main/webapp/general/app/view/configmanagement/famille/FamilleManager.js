@@ -35,21 +35,18 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         'testextjs.view.configmanagement.famille.action.comptabilite',
         'testextjs.view.configmanagement.famille.action.autreinfos',
         'Ext.ux.ProgressBarPager',
-        'testextjs.view.stockmanagement.suivistockvente.action.detailStock'
+        'testextjs.view.stockmanagement.suivistockvente.action.detailStock',
+        'testextjs.view.produits.PrixReference'
 
     ],
     title: 'Gestion des Articles',
     plain: true,
     maximizable: true,
-//    tools: [{type: "pin"}],
     closable: false,
     frame: true,
     initComponent: function () {
-
         Me_Workflow = this;
         lg_EMPLACEMENT_ID = loadEmplacement();
-
-
         let itemsPerPage = 20;
         const store = new Ext.data.Store({
             model: 'testextjs.model.Famille',
@@ -362,7 +359,21 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         }
                     }
                 },
+   {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                            icon: 'resources/images/duplicate_3671686.png',
+                            tooltip: 'Gérer les prix de référence',
+                            scope: this,
+                            handler:  function (grid, rowIndex, colIndex) {
+                                new testextjs.view.produits.PrixReference({produit: grid.getStore().getAt(rowIndex)});
+                            }
 
+                        }]
+                },
                 {
                     xtype: 'actioncolumn',
                     width: 30,

@@ -962,6 +962,7 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public JSONObject createPreVenteVo(SalesParams salesParams) {
+        salesParams.setUserId(this.sessionHelperService.getCurrentUser());
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
@@ -1066,6 +1067,7 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public JSONObject createPreVente(SalesParams salesParams) {
+        salesParams.setUserId(this.sessionHelperService.getCurrentUser());
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
@@ -4723,11 +4725,12 @@ public class SalesServiceImpl implements SalesService {
                     "SELECT cp.lg_TIERS_PAYANT_ID FROM t_compte_client_tiers_payant cp  WHERE cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID IN(:ids)");
             q.setParameter("ids",
                     tierspayants.stream().map(TiersPayantParams::getCompteTp).collect(Collectors.toSet()));
-            List<Object[]> list = q.getResultList();
+            List<String> list = q.getResultList();
             return list.stream().map(b -> {
-                return b[0].toString();
-            }).distinct().collect(Collectors.toSet());
+                return b;
+            }).collect(Collectors.toSet());
         } catch (Exception e) {
+            LOG.info(e.getLocalizedMessage());
             return Set.of();
         }
     }
