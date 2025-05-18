@@ -18,9 +18,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import org.apache.commons.lang3.StringUtils;
 import rest.service.SalesNetComputingService;
@@ -67,14 +70,13 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         tierspayants.sort(Comparator.comparing(TiersPayantParams::getTaux, Comparator.reverseOrder()));
         int counter = 0;
         int bonsSize = tierspayants.size();
-
+        Set<String> tpIds = getTiersPayantIds(tierspayants);
         int montantTpFinalTierspayant = 0;
         for (TiersPayantParams tiersPayantParams : tierspayants) {
             counter++;
             int amountToCompute = isCarnet ? montantVente
-                    : montantTps.stream()
-                            .filter(pm -> pm.getTierPayantId().equals(tiersPayantParams.getLgTIERSPAYANTID()))
-                            .findFirst().map(MontantTp::getMontant).orElse(montantVente);
+                    : montantTps.stream().filter(pm -> tpIds.contains(pm.getTierPayantId())).findFirst()
+                            .map(MontantTp::getMontant).orElse(montantVente);
 
             NetComputingDTO netComputed = computeTiesrPayantNetAmount(tiersPayantParams, amountToCompute,
                     asPlafondActivated);
@@ -409,4 +411,19 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         return montantAPaye;
     }
 
+    private Set<String> getTiersPayantIds(List<TiersPayantParams> tierspayants) {
+        try {
+            Query q = em.createNativeQuery(
+                    "SELECT cp.lg_TIERS_PAYANT_ID FROM t_compte_client_tiers_payant cp  WHERE cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID IN(:ids)");
+            q.setParameter("ids",
+                    tierspayants.stream().map(TiersPayantParams::getCompteTp).collect(Collectors.toSet()));
+            List<String> list = q.getResultList();
+            return list.stream().map(b -> {
+                return b;
+            }).collect(Collectors.toSet());
+        } catch (Exception e) {
+
+            return Set.of();
+        }
+    }
 }
