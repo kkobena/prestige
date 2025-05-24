@@ -206,6 +206,7 @@ public class CommandeServiceImpl implements CommandeService {
                 boolean isTableau = StringUtils.isNotEmpty(oFamille.getIntT())
                         || (diff == FunctionUtils.VALEUR_TABLEAU);
                 List<Object[]> lst = listLot(bonLivraison.getStrREFLIVRAISON(), oFamille.getLgFAMILLEID());
+               
                 if (lst.isEmpty()) {
                     createTLot(bn, user, oFamille, bn.getIntQTECMDE(), bonLivraison.getStrREFLIVRAISON(), grossiste,
                             order.getStrREFORDER(), 0);
