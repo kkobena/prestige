@@ -13,6 +13,8 @@ import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
@@ -23,6 +25,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -199,6 +202,9 @@ public class TPreenregistrement implements Serializable {
     private List<VenteReglement> venteReglements = new ArrayList<>();
     @ManyToOne
     private Caution caution;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_prix", length = 20)
+    private PrixReferenceType typePriceOption;
 
     public boolean isImported() {
         return imported;
@@ -206,6 +212,14 @@ public class TPreenregistrement implements Serializable {
 
     public void setImported(boolean imported) {
         this.imported = imported;
+    }
+
+    public PrixReferenceType getTypePriceOption() {
+        return typePriceOption;
+    }
+
+    public void setTypePriceOption(PrixReferenceType typePriceOption) {
+        this.typePriceOption = typePriceOption;
     }
 
     public Medecin getMedecin() {

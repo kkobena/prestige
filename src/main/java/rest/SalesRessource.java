@@ -266,11 +266,6 @@ public class SalesRessource {
     @POST
     @Path("add/item")
     public Response addItemVente(SalesParams params) {
-        HttpSession hs = servletRequest.getSession();
-
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-
-        params.setUserId(tu);
         JSONObject json = salesService.addPreenregistrementItem(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -296,11 +291,7 @@ public class SalesRessource {
     @POST
     @Path("update/item/vno")
     public Response updateItemVente(SalesParams params) {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-
-        params.setUserId(tu);
         JSONObject json = salesService.updateTPreenregistrementDetail(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -424,7 +415,6 @@ public class SalesRessource {
     @PUT
     @Path("modifier-vente-terme/{id}")
     public Response modifierventeterme(@PathParam("id") String id) throws JSONException {
-
         JSONObject json = salesService.modificationVenteCloturee(id);
         return Response.ok().entity(json.toString()).build();
     }

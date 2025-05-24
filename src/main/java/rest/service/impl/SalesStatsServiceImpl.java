@@ -21,6 +21,8 @@ import dal.HMvtProduit;
 import dal.Medecin_;
 import dal.MvtTransaction;
 import dal.MvtTransaction_;
+import dal.PrixReferenceVente;
+import dal.PrixReferenceVente_;
 import dal.TAyantDroit;
 import dal.TClient;
 import dal.TCompteClientTiersPayant;
@@ -418,13 +420,27 @@ public class SalesStatsServiceImpl implements SalesStatsService {
                 .setParameter(1, idVente).getResultList();
     }
 
-    public void deleteItemsBulk(String venteId) {
+    private void deleteItemsBulk(String venteId) {
         try {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaDelete<TPreenregistrementDetail> cq = cb.createCriteriaDelete(TPreenregistrementDetail.class);
             Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
             cq.where(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID).get("lgPREENREGISTREMENTID"),
                     venteId));
+            getEntityManager().createQuery(cq).executeUpdate();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+    }
+
+    private void deletePrixReferenceByVenteId(String venteId) {
+        try {
+            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+            CriteriaDelete<PrixReferenceVente> cq = cb.createCriteriaDelete(PrixReferenceVente.class);
+            Root<PrixReferenceVente> root = cq.from(PrixReferenceVente.class);
+            cq.where(cb.equal(root.get(PrixReferenceVente_.preenregistrementDetail)
+                    .get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
+                    .get(TPreenregistrement_.lgPREENREGISTREMENTID), venteId));
             getEntityManager().createQuery(cq).executeUpdate();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -482,7 +498,11 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         try {
             TPreenregistrement tp = getEntityManager().find(TPreenregistrement.class, venteId);
             LOG.log(Level.INFO, "{0} {1}", new Object[] { venteId, tp });
-            deleteItemsBulk(venteId);
+            Collection<TPreenregistrementDetail> items = tp.getTPreenregistrementDetailCollection();
+            if (CollectionUtils.isNotEmpty(items)) {
+                items.forEach(em::remove);
+            }
+
             deleteCompteClientBulk(venteId);
             getEntityManager().remove(tp);
             json.put("success", true);

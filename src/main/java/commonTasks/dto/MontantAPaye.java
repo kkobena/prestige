@@ -34,9 +34,18 @@ public class MontantAPaye implements Serializable {
     private List<MontantTp> montantTierspayants = new ArrayList<>();
     private boolean prixReference;
     private boolean taux;
+    private int tiersPayantBaseAmount;// montant de reference + montant de produt sans prix de reference
 
     public boolean isRestructuring() {
         return restructuring;
+    }
+
+    public int getTiersPayantBaseAmount() {
+        return tiersPayantBaseAmount;
+    }
+
+    public void setTiersPayantBaseAmount(int tiersPayantBaseAmount) {
+        this.tiersPayantBaseAmount = tiersPayantBaseAmount;
     }
 
     public int getCmuAmount() {

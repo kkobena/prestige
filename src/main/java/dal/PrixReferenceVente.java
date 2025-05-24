@@ -18,8 +18,8 @@ import javax.validation.constraints.NotNull;
  * @author koben
  */
 @Entity
-@Table(name = "prix_reference_vente", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "preenregistrement_detail_id", "produit_id", "tiersPayant_id" }) })
+@Table(name = "prix_reference_vente", uniqueConstraints = { @UniqueConstraint(columnNames = {
+        "preenregistrement_detail_id", "produit_id", "compte_client_tiers_payant_id" }) })
 public class PrixReferenceVente implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -27,7 +27,7 @@ public class PrixReferenceVente implements Serializable {
     @Column(name = "id")
     private String id = UUID.randomUUID().toString();
     @NotNull
-    @Column(name = "tiersPayant_id", nullable = false) // a renomer
+    @Column(name = "compte_client_tiers_payant_id", nullable = false) // a renomer
     private String compteClientTiersPayantId;
     @NotNull
     @Column(name = "produit_id", nullable = false)

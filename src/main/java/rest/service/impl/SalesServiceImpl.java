@@ -684,6 +684,7 @@ public class SalesServiceImpl implements SalesService {
         newItem.setBISAVOIR(tp.getBISAVOIR());
         newItem.setPrixAchat(tp.getPrixAchat());
         newItem.setMontantTvaUg((-1) * tp.getMontantTvaUg());
+        clonePrixReferenceVente(tp, newItem);
         em.persist(newItem);
         return newItem;
     }
@@ -742,9 +743,22 @@ public class SalesServiceImpl implements SalesService {
         newTp.setMontantnetug((-1) * tp.getMontantnetug());
         newTp.setMontantttcug((-1) * tp.getMontantttcug());
         newTp.setMontantTvaUg((-1) * tp.getMontantTvaUg());
+
         em.merge(tp);
         em.persist(newTp);
         return newTp;
+    }
+
+    private void clonePrixReferenceVente(TPreenregistrementDetail tp, TPreenregistrementDetail newItem) {
+        tp.getPrixReferenceVentes().forEach(prixReference -> {
+            PrixReferenceVente prv = new PrixReferenceVente();
+            prv.setCompteClientTiersPayantId(prixReference.getCompteClientTiersPayantId());
+            prv.setMontant(prixReference.getMontant());
+            prv.setPrixUni(prixReference.getPrixUni());
+            prv.setProduitId(prixReference.getProduitId());
+            prv.setPreenregistrementDetail(newItem);
+            newItem.getPrixReferenceVentes().add(prv);
+        });
     }
 
     public void copyPreenregistrementCompteTp(TPreenregistrement preenregistrement, String oldPreenregistrement,
@@ -1194,6 +1208,7 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public JSONObject addPreenregistrementItem(SalesParams params) {
+        params.setUserId(this.sessionHelperService.getCurrentUser());
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
@@ -1228,6 +1243,7 @@ public class SalesServiceImpl implements SalesService {
                 if (tpd.getBoolACCOUNT()) {
                     tp.setIntACCOUNT(tp.getIntPRICE());
                 }
+                updatePrixReference(tpd);
                 emg.merge(tpd);
                 afficheurProduit(tpd.getLgFAMILLEID().getStrNAME(), tpd.getIntQUANTITY(), tpd.getIntPRICEUNITAIR(),
                         tpd.getIntPRICE());
@@ -1265,6 +1281,7 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public JSONObject updateTPreenregistrementDetail(SalesParams params) {
+        params.setUserId(this.sessionHelperService.getCurrentUser());
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
@@ -3206,7 +3223,7 @@ public class SalesServiceImpl implements SalesService {
         newTd.setIntAVOIR(tp.getIntAVOIR());
         newTd.setIntAVOIRSERVED(tp.getIntQUANTITYSERVED());
         newTd.setBISAVOIR(tp.getBISAVOIR());
-
+        clonePrixReferenceVente(tp, newTd);
         getEm().persist(newTd);
         return newTd;
     }
@@ -4259,7 +4276,7 @@ public class SalesServiceImpl implements SalesService {
     private String buildTpData(TPreenregistrementCompteClientTiersPayent t) {
         TCompteClientTiersPayant oldTp = t.getLgCOMPTECLIENTTIERSPAYANTID();
         TTiersPayant oldP = oldTp.getLgTIERSPAYANTID();
-        var bonMontant = t.getStrREFBON() + ";" + t.getIntPERCENT() + ";"
+        String bonMontant = t.getStrREFBON() + ";" + t.getIntPERCENT() + ";"
                 + NumberUtils.formatIntToString(t.getIntPRICE());
         return oldP.getLgTIERSPAYANTID() + ";" + oldP.getStrFULLNAME() + "/" + oldTp.getStrNUMEROSECURITESOCIAL() + "/"
                 + bonMontant;
