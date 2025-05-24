@@ -5,6 +5,8 @@ import commonTasks.dto.MontantTp;
 import commonTasks.dto.SalesParams;
 import commonTasks.dto.TiersPayantParams;
 import dal.Caution;
+import dal.PrixReference;
+import dal.PrixReferenceType;
 import dal.TCompteClientTiersPayant;
 import dal.TFamille;
 import dal.TGrilleRemise;
@@ -19,6 +21,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -38,6 +42,8 @@ import util.NumberUtils;
 @Stateless
 public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
+    private static final Logger LOG = Logger.getLogger(SalesNetComputingServiceImpl.class.getName());
+
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
 
@@ -50,7 +56,13 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         TRemise remise = op.getRemise();
         remise = remise != null ? remise : op.getClient().getRemise();
         MontantAPaye aPaye = computeRemise(op, remise, items);
+        if (aPaye.isTaux()) {
+            return computeAmountByPrixOptionTaux();
+        }
+        ;
+
         List<MontantTp> montantTps = aPaye.getMontantTierspayants();
+        System.err.println("montantTps ..... " + montantTps);
         if (isCarnet) {
             TCompteClientTiersPayant tc = em.find(TCompteClientTiersPayant.class,
                     params.getTierspayants().get(0).getCompteTp());
@@ -70,13 +82,14 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         tierspayants.sort(Comparator.comparing(TiersPayantParams::getTaux, Comparator.reverseOrder()));
         int counter = 0;
         int bonsSize = tierspayants.size();
-        Set<String> tpIds = getTiersPayantIds(tierspayants);
+
         int montantTpFinalTierspayant = 0;
         for (TiersPayantParams tiersPayantParams : tierspayants) {
             counter++;
             int amountToCompute = isCarnet ? montantVente
-                    : montantTps.stream().filter(pm -> tpIds.contains(pm.getTierPayantId())).findFirst()
-                            .map(MontantTp::getMontant).orElse(montantVente);
+                    : montantTps.stream()
+                            .filter(pm -> tiersPayantParams.getCompteTp().equals(pm.getCompteClientTiersPayantId()))
+                            .findFirst().map(MontantTp::getMontant).orElse(montantVente);
 
             NetComputingDTO netComputed = computeTiesrPayantNetAmount(tiersPayantParams, amountToCompute,
                     asPlafondActivated);
@@ -183,12 +196,11 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         int marge = 0;
         int montantTva = 0;
         int montantAccount = 0;
-        int montantCMU = 0;
 
         List<MontantTp> montantTps = new ArrayList<>();
-
+        MontantAPaye aPaye = new MontantAPaye();
         for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
-            updateMontantTps(x, montantTps);
+            updateMontantTps(x, montantTps, aPaye);
             totalAmount += x.getIntPRICE();
 
             TFamille famille = x.getLgFAMILLEID();
@@ -230,24 +242,39 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         if (totalRemise > 0 && oTRemise == null) {
             op.setRemise(oTRemise);
         }
+        aPaye.setMontant(totalAmount);
+        aPaye.setMontantNet(montantNet);
+        aPaye.setMontantTp(0);
+        aPaye.setRemise(totalRemise);
+        aPaye.setMarge(marge);
+        aPaye.setMontantTva(montantTva);
+        aPaye.setMontantTierspayants(montantTps);
+        return aPaye;
 
-        return new MontantAPaye(montantNet, totalAmount, 0, totalRemise, marge, montantTva)
-                .setMontantTierspayants(montantTps).cmuAmount(montantCMU);
     }
 
-    private void updateMontantTps(TPreenregistrementDetail x, List<MontantTp> montantTps) {
+    private void updateMontantTps(TPreenregistrementDetail x, List<MontantTp> montantTps, MontantAPaye montantAPaye) {
         x.getPrixReferenceVentes().forEach(prix -> {
-            montantTps.stream().filter(mt -> mt.getTierPayantId().equals(prix.getTiersPayantId())).findFirst()
-                    .ifPresentOrElse(tpPrix -> {
+            PrixReference prixReference = prix.getPrixReference();
+            if (prixReference.getType() == PrixReferenceType.PRIX_REFERENCE) {
+                montantAPaye.setPrixReference(true);
+            }
+            if (prixReference.getType() == PrixReferenceType.TAUX) {
+                montantAPaye.setTaux(true);
+            }
+            montantTps.stream()
+                    .filter(mt -> mt.getCompteClientTiersPayantId().equals(prix.getCompteClientTiersPayantId()))
+                    .findFirst().ifPresentOrElse(tpPrix -> {
+
                         tpPrix.setMontant(tpPrix.getMontant() + prix.getMontant());
                     }, () -> {
                         MontantTp mp = new MontantTp();
                         mp.setMontant(prix.getMontant());
-                        mp.setTierPayantId(prix.getTiersPayantId());
+                        mp.setCompteClientTiersPayantId(prix.getCompteClientTiersPayantId());
                         montantTps.add(mp);
                     });
         });
-
+        System.err.println("montantTps  " + montantTps);
     }
 
     private TGrilleRemise grilleRemiseRemiseFromWorkflow(TPreenregistrement op, TFamille familleP, String remiseId) {
@@ -411,19 +438,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         return montantAPaye;
     }
 
-    private Set<String> getTiersPayantIds(List<TiersPayantParams> tierspayants) {
-        try {
-            Query q = em.createNativeQuery(
-                    "SELECT cp.lg_TIERS_PAYANT_ID FROM t_compte_client_tiers_payant cp  WHERE cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID IN(:ids)");
-            q.setParameter("ids",
-                    tierspayants.stream().map(TiersPayantParams::getCompteTp).collect(Collectors.toSet()));
-            List<String> list = q.getResultList();
-            return list.stream().map(b -> {
-                return b;
-            }).collect(Collectors.toSet());
-        } catch (Exception e) {
-
-            return Set.of();
-        }
+    private MontantAPaye computeAmountByPrixOptionTaux() {
+        return null;
     }
 }

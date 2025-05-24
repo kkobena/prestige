@@ -27,8 +27,8 @@ public class PrixReferenceVente implements Serializable {
     @Column(name = "id")
     private String id = UUID.randomUUID().toString();
     @NotNull
-    @Column(name = "tiersPayant_id", nullable = false)
-    private String tiersPayantId;
+    @Column(name = "tiersPayant_id", nullable = false) // a renomer
+    private String compteClientTiersPayantId;
     @NotNull
     @Column(name = "produit_id", nullable = false)
     private String produitId;
@@ -63,12 +63,12 @@ public class PrixReferenceVente implements Serializable {
         this.id = id;
     }
 
-    public String getTiersPayantId() {
-        return tiersPayantId;
+    public String getCompteClientTiersPayantId() {
+        return compteClientTiersPayantId;
     }
 
-    public void setTiersPayantId(String tiersPayantId) {
-        this.tiersPayantId = tiersPayantId;
+    public void setCompteClientTiersPayantId(String compteClientTiersPayantId) {
+        this.compteClientTiersPayantId = compteClientTiersPayantId;
     }
 
     public String getProduitId() {

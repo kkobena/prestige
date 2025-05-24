@@ -32,6 +32,8 @@ public class MontantAPaye implements Serializable {
     private int montantTvaUg = 0;
     private int cmuAmount = 0;
     private List<MontantTp> montantTierspayants = new ArrayList<>();
+    private boolean prixReference;
+    private boolean taux;
 
     public boolean isRestructuring() {
         return restructuring;
@@ -214,4 +216,21 @@ public class MontantAPaye implements Serializable {
         this.montantTvaUg = montantTvaUg;
         return this;
     }
+
+    public boolean isPrixReference() {
+        return prixReference;
+    }
+
+    public void setPrixReference(boolean prixReference) {
+        this.prixReference = prixReference;
+    }
+
+    public boolean isTaux() {
+        return taux;
+    }
+
+    public void setTaux(boolean taux) {
+        this.taux = taux;
+    }
+
 }

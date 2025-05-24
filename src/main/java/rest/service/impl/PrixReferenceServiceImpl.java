@@ -3,6 +3,7 @@ package rest.service.impl;
 import dal.PrixReference;
 import dal.PrixReferenceType;
 import dal.PrixReferenceVente;
+import dal.TCompteClientTiersPayant;
 import dal.TFamille;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
@@ -17,6 +18,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import rest.service.PrixReferenceService;
 import rest.service.dto.PrixReferenceDTO;
@@ -103,25 +105,33 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
     }
 
     @Override
-    public void updatePrixReference(TPreenregistrementDetail preenregistrementDetail, Set<String> tiersPayantIds) {
-        String produitId = preenregistrementDetail.getLgFAMILLEID().getLgFAMILLEID();
-        getActifByProduitIdAndTiersPayantIds(produitId, tiersPayantIds).forEach(prixReference -> {
-            String tTiersPayantId = prixReference.getTiersPayant().getLgTIERSPAYANTID();
-            preenregistrementDetail.getPrixReferenceVentes()
-                    .add(createPrixReferenceVente(preenregistrementDetail, produitId, prixReference, tTiersPayantId));
+    public void updatePrixReference(TPreenregistrementDetail preenregistrementDetail,
+            List<TCompteClientTiersPayant> clientTiersPayants) {
+        if (CollectionUtils.isNotEmpty(clientTiersPayants)) {
 
-        });
+            String produitId = preenregistrementDetail.getLgFAMILLEID().getLgFAMILLEID();
+            clientTiersPayants.forEach(comptClient -> {
+                String tTiersPayantId = comptClient.getLgTIERSPAYANTID().getLgTIERSPAYANTID();
+                getByProduitIdAndTiersPayantId(produitId, tTiersPayantId).ifPresent(prixReference -> {
+                    preenregistrementDetail.getPrixReferenceVentes()
+                            .add(createPrixReferenceVente(preenregistrementDetail, produitId, prixReference,
+                                    comptClient.getLgCOMPTECLIENTTIERSPAYANTID()));
+
+                });
+
+            });
+        }
 
     }
 
     private PrixReferenceVente createPrixReferenceVente(TPreenregistrementDetail preenregistrementDetail,
-            String produitId, PrixReference prixReference, String tiersPayantId) {
+            String produitId, PrixReference prixReference, String compteClientTiersPayantId) {
         int unitPrice = computeUniPriceFromPrixReference(prixReference, preenregistrementDetail.getIntPRICEUNITAIR());
         PrixReferenceVente prixReferenceVente = new PrixReferenceVente();
         prixReferenceVente.setPreenregistrementDetail(preenregistrementDetail);
         prixReferenceVente.setPrixReference(prixReference);
         prixReferenceVente.setProduitId(produitId);
-        prixReferenceVente.setTiersPayantId(tiersPayantId);
+        prixReferenceVente.setCompteClientTiersPayantId(compteClientTiersPayantId);
         prixReferenceVente.setPrixUni(unitPrice);
         prixReferenceVente.setMontant(preenregistrementDetail.getIntQUANTITY() * unitPrice);
 
@@ -133,6 +143,9 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
             return prixReference.getValeur();
 
         }
+        System.err.println("incomingPrice " + incomingPrice);
+        int amm = Math.round(incomingPrice * prixReference.getTaux());
+        System.err.println(" amm " + amm + " taux " + prixReference.getTaux());
         return Math.round(incomingPrice * prixReference.getTaux());
 
     }
@@ -163,7 +176,7 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
     public void removeTiersPayantFromVente(TPreenregistrement preenregistrement, String tierspayantId) {
         preenregistrement.getTPreenregistrementDetailCollection().stream()
                 .flatMap(e -> e.getPrixReferenceVentes().stream())
-                .filter(prix -> prix.getTiersPayantId().equals(tierspayantId)).forEach(em::remove);
+                .filter(prix -> prix.getCompteClientTiersPayantId().equals(tierspayantId)).forEach(em::remove);
 
     }
 

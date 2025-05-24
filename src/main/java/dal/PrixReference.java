@@ -122,7 +122,7 @@ public class PrixReference implements Serializable {
     }
 
     public float getTaux() {
-        if (this.type == PrixReferenceType.PRIX_REFERENCE) {
+        if (this.type == PrixReferenceType.TAUX) {
             return valeur / 100.0f;
         }
         return 0.0f;

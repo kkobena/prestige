@@ -1,6 +1,7 @@
 package rest.service;
 
 import dal.PrixReference;
+import dal.TCompteClientTiersPayant;
 import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import java.util.List;
@@ -30,7 +31,8 @@ public interface PrixReferenceService {
 
     void update(PrixReferenceDTO prixReferenceDTO);
 
-    void updatePrixReference(TPreenregistrementDetail preenregistrementDetail, Set<String> tiersPayantId);
+    void updatePrixReference(TPreenregistrementDetail preenregistrementDetail,
+            List<TCompteClientTiersPayant> clientTiersPayants);
 
     List<PrixReference> getActifByProduitIdAndTiersPayantIds(String produitId, Set<String> tiersPayantId);
 

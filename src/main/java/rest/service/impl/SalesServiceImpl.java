@@ -4710,8 +4710,9 @@ public class SalesServiceImpl implements SalesService {
 
     private void updatePrixReference(TPreenregistrementDetail preenregistrementDetail,
             List<TiersPayantParams> tierspayants) {
-        if (!CollectionUtils.isEmpty(tierspayants)) {
-            this.prixReferenceService.updatePrixReference(preenregistrementDetail, getTiersPayantIds(tierspayants));
+        if (CollectionUtils.isNotEmpty(tierspayants)) {
+            this.prixReferenceService.updatePrixReference(preenregistrementDetail, getCompteClientTiersPayantsByIds(
+                    tierspayants.stream().map(TiersPayantParams::getCompteTp).distinct().collect(Collectors.toSet())));
         }
     }
 
@@ -4719,19 +4720,16 @@ public class SalesServiceImpl implements SalesService {
         this.prixReferenceService.updatePrixReference(preenregistrementDetail);
     }
 
-    private Set<String> getTiersPayantIds(List<TiersPayantParams> tierspayants) {
+    private List<TCompteClientTiersPayant> getCompteClientTiersPayantsByIds(Set<String> ids) {
         try {
-            Query q = em.createNativeQuery(
-                    "SELECT cp.lg_TIERS_PAYANT_ID FROM t_compte_client_tiers_payant cp  WHERE cp.lg_COMPTE_CLIENT_TIERS_PAYANT_ID IN(:ids)");
-            q.setParameter("ids",
-                    tierspayants.stream().map(TiersPayantParams::getCompteTp).collect(Collectors.toSet()));
-            List<String> list = q.getResultList();
-            return list.stream().map(b -> {
-                return b;
-            }).collect(Collectors.toSet());
+            TypedQuery<TCompteClientTiersPayant> query = em.createQuery(
+                    "SELECT o  FROM  TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTTIERSPAYANTID IN(:ids)",
+                    TCompteClientTiersPayant.class);
+            query.setParameter("ids", ids);
+            return query.getResultList();
         } catch (Exception e) {
             LOG.info(e.getLocalizedMessage());
-            return Set.of();
+            return List.of();
         }
     }
 }

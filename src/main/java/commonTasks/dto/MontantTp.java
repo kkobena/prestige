@@ -6,15 +6,15 @@ package commonTasks.dto;
  */
 public class MontantTp {
 
-    private String tierPayantId;
+    private String compteClientTiersPayantId;
     private int montant;
 
-    public String getTierPayantId() {
-        return tierPayantId;
+    public String getCompteClientTiersPayantId() {
+        return compteClientTiersPayantId;
     }
 
-    public void setTierPayantId(String tierPayantId) {
-        this.tierPayantId = tierPayantId;
+    public void setCompteClientTiersPayantId(String compteClientTiersPayantId) {
+        this.compteClientTiersPayantId = compteClientTiersPayantId;
     }
 
     public int getMontant() {
@@ -23,6 +23,11 @@ public class MontantTp {
 
     public void setMontant(int montant) {
         this.montant = montant;
+    }
+
+    @Override
+    public String toString() {
+        return "MontantTp{" + "compteClientTiersPayantId=" + compteClientTiersPayantId + ", montant=" + montant + '}';
     }
 
 }
