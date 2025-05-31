@@ -67,6 +67,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         }
         ref_final = ref;
         titre = this.getTitre();
+        this.prixAchat = this.getOdatasource()?.PRIX_ACHAT_TOTAL;
         this.title = titre;
         let produitStore = new Ext.data.Store({
             model: 'testextjs.model.caisse.Produit',
@@ -1288,7 +1289,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
     onCreateBLClick: function () {
         const me = this;//
         const orderId = me.getOdatasource()?.lg_ORDER_ID ? me.getOdatasource().lg_ORDER_ID : me.getNameintern();
-        const  montantAchat = me.getOdatasource()?.PRIX_ACHAT_TOTAL ? me.getOdatasource().PRIX_ACHAT_TOTAL : me.getPrixAchat();
+        const  montantAchat = me.getPrixAchat();
         const orderRef = me.getOdatasource()?.str_REF_ORDER ? me.getOdatasource().str_REF_ORDER : me.getOrderRef();
         new testextjs.view.commandemanagement.cmde_passees.action.add({
             idOrder: orderId,
