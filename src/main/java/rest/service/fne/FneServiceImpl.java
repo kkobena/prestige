@@ -80,7 +80,7 @@ public class FneServiceImpl implements FneService {
         fneInvoice.setClientPhone(tTiersPayant.getStrTELEPHONE());
         fneInvoice.setClientSellerName(user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
         fneInvoice.setPointOfSale(SP.fnepointOfSale);
-        fneInvoice.setClientNcc(tTiersPayant.getStrCODECOMPTABLE());
+        fneInvoice.setClientNcc(tTiersPayant.getStrCOMPTECONTRIBUABLE());
 
         facture.getTFactureDetailCollection()
                 .forEach(t -> fneInvoice.getItems().add(buildFrom(t, tTiersPayant.getLgTIERSPAYANTID())));
