@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
  */
 public class FneInvoiceItem {
 
-    private final String[] taxes = { "TVAD" };
+    private final String[] taxes = { "TVAB" };
     private String reference;
     @NotNull
     private String description;
