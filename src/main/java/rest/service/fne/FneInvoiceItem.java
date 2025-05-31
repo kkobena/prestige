@@ -6,6 +6,8 @@ import javax.validation.constraints.NotNull;
  *
  * @author koben
  */
+
+
 public class FneInvoiceItem {
 
     private final String[] taxes = { "TVAB" };
@@ -46,6 +48,11 @@ public class FneInvoiceItem {
 
     public void setAmount(Integer amount) {
         this.amount = amount;
+    }
+
+    @Override
+    public String toString() {
+        return "FneInvoiceItem{" + "taxes=" + taxes + ", reference=" + reference + ", description=" + description + ", amount=" + amount + ", quantity=" + quantity + '}';
     }
 
 }

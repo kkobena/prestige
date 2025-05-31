@@ -216,4 +216,9 @@ public class FneResponseInvoice {
         this.createdAt = createdAt;
     }
 
+    @Override
+    public String toString() {
+        return "FneResponseInvoice{" + "id=" + id + ", token=" + token + ", reference=" + reference + ", type=" + type + ", subtype=" + subtype + ", date=" + date + ", paymentMethod=" + paymentMethod + ", amount=" + amount + ", fiscalStamp=" + fiscalStamp + ", vatAmount=" + vatAmount + ", discount=" + discount + ", clientNcc=" + clientNcc + ", clientCompanyName=" + clientCompanyName + ", clientPhone=" + clientPhone + ", clientEmail=" + clientEmail + ", clientTerminal=" + clientTerminal + ", clientRccm=" + clientRccm + ", clientSellerName=" + clientSellerName + ", clientEstablishment=" + clientEstablishment + ", clientPointOfSale=" + clientPointOfSale + ", status=" + status + ", createdAt=" + createdAt + ", items=" + items + '}';
+    }
+
 }

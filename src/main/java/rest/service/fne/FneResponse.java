@@ -65,4 +65,9 @@ public class FneResponse {
         this.invoice = invoice;
     }
 
+    @Override
+    public String toString() {
+        return "FneResponse{" + "ncc=" + ncc + ", reference=" + reference + ", token=" + token + ", warning=" + warning + ", balanceSticker=" + balanceSticker + ", invoice=" + invoice + '}';
+    }
+
 }

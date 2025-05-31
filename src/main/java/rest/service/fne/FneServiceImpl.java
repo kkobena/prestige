@@ -35,7 +35,6 @@ import util.SmsParameters;
 public class FneServiceImpl implements FneService {
 
     private static final Logger LOG = Logger.getLogger(FneServiceImpl.class.getName());
-    public static final SmsParameters SP = SmsParameters.getInstance();
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -44,21 +43,22 @@ public class FneServiceImpl implements FneService {
 
     @Override
     public void createInvoice(String idFacture) throws FneExeception {
+        SmsParameters sp = SmsParameters.getInstance();
         try {
-            createInvoice(em.find(TFacture.class, idFacture));
+            createInvoice(em.find(TFacture.class, idFacture), sp);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             throw new FneExeception(e.getLocalizedMessage());
         }
     }
 
-    private void createInvoice(TFacture facture) throws FneExeception {
+    private void createInvoice(TFacture facture, SmsParameters sp) throws FneExeception {
         TOfficine officine = getOfficine();
 
         Client client = getHttpClient();
-        JSONObject payload = new JSONObject(buildFromFacture(facture, officine));
-        WebTarget myResource = client.target(SP.fneUrl);
-        Response response = myResource.request().header("Authorization", "Bearer ".concat(SP.fnePkey))
+        JSONObject payload = new JSONObject(buildFromFacture(facture, officine, sp));
+        WebTarget myResource = client.target(sp.fneUrl);
+        Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.fnePkey))
                 .post(Entity.entity(payload.toString(), MediaType.APPLICATION_JSON_TYPE));
         FneResponse fneResponse = response.readEntity(FneResponse.class);
         LOG.log(Level.INFO, "response ---  {0}", fneResponse);
@@ -70,7 +70,7 @@ public class FneServiceImpl implements FneService {
         return em.find(TOfficine.class, Constant.OFFICINE);
     }
 
-    private FneInvoice buildFromFacture(TFacture facture, TOfficine officine) {
+    private FneInvoice buildFromFacture(TFacture facture, TOfficine officine, SmsParameters sp) {
         TUser user = this.sessionHelperService.getCurrentUser();
         TTiersPayant tTiersPayant = facture.getTiersPayant();
         FneInvoice fneInvoice = new FneInvoice();
@@ -79,7 +79,7 @@ public class FneServiceImpl implements FneService {
         fneInvoice.setClientEmail(tTiersPayant.getStrMAIL());
         fneInvoice.setClientPhone(tTiersPayant.getStrTELEPHONE());
         fneInvoice.setClientSellerName(user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
-        fneInvoice.setPointOfSale(SP.fnepointOfSale);
+        fneInvoice.setPointOfSale(sp.fnepointOfSale);
         fneInvoice.setClientNcc(tTiersPayant.getStrCOMPTECONTRIBUABLE());
 
         facture.getTFactureDetailCollection()

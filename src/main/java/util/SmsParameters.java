@@ -85,13 +85,13 @@ public final class SmsParameters {
             if (StringUtils.isNotEmpty(fnePkey0)) {
                 fnePkey = fnePkey0;
             }
-
+            System.out.println("fnePkey  " + fnePkey0);
             String fneUrl0 = prop.getProperty("fneUrl");
 
-            if (StringUtils.isNotEmpty(fneUrl)) {
+            if (StringUtils.isNotEmpty(fneUrl0)) {
                 fneUrl = fneUrl0;
             }
-
+            System.out.println("fneUrl  " + fneUrl);
             String fnepointOfSale0 = prop.getProperty("fnepointOfSale");
 
             if (StringUtils.isNotEmpty(fnepointOfSale0)) {
