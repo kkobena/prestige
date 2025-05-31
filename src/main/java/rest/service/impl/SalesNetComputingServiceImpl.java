@@ -97,7 +97,8 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         tierspayants.sort(Comparator.comparing(TiersPayantParams::getTaux, Comparator.reverseOrder()));
         TiersPayantParams tiersPayantParamsRo = tierspayants.get(0);
         int montantVente = op.getIntPRICE();
-        int montantTiersPayantBase = aPaye.getTiersPayantBaseAmount();// montant de base du RO
+        int montantTiersPayantBase = comoutePrixReferenceAmount(aPaye.getMontantTierspayants(),
+                tierspayants.get(0).getCompteTp());/* aPaye.getTiersPayantBaseAmount(); */// montant de base du RO
 
         List<NetComputingDTO> datas = new ArrayList<>();
 
