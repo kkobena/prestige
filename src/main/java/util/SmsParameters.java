@@ -23,13 +23,15 @@ import org.apache.commons.lang3.StringUtils;
 public final class SmsParameters {
 
     private static SmsParameters instance;
-    public String applicationId = "MT7XwvGX6qGAPdfQ", clientId = "fJaOlJgwU2ggcRWmIlbU9s7jY8tbsRy8",
-            clientSecret = "UgTURjiCK1rZtsnA",
-            header = "Basic ZkphT2xKZ3dVMmdnY1JXbUlsYlU5czdqWTh0YnNSeTg6VWdUVVJqaUNLMXJadHNuQQ==";
-    public String email = "dici.servtech@gmail.com", password = "dici@2020",
-            pathsmsapitokenendpoint = "https://api.orange.com/oauth/v2/token",
-            pathsmsapisendmessageurl = "https://api.orange.com/smsmessaging/v1/outbound/tel%3A%2B225000000/requests",
-            senderAddress = "tel:+225000000";
+    public String applicationId = "MT7XwvGX6qGAPdfQ";
+    public String clientId = "fJaOlJgwU2ggcRWmIlbU9s7jY8tbsRy8";
+    public String clientSecret = "UgTURjiCK1rZtsnA";
+    public String header = "Basic ZkphT2xKZ3dVMmdnY1JXbUlsYlU5czdqWTh0YnNSeTg6VWdUVVJqaUNLMXJadHNuQQ==";
+    public String email = "dici.servtech@gmail.com";
+    public String password = "dici@2020";
+    public String pathsmsapitokenendpoint = "https://api.orange.com/oauth/v2/token";
+    public String pathsmsapisendmessageurl = "https://api.orange.com/smsmessaging/v1/outbound/tel%3A%2B225000000/requests";
+    public String senderAddress = "tel:+225000000";
     public String accesstoken = "kqJ1LJkaFgeBCzsy2NCeiKPF95Mb", expiresin = "7776000";
     public String mobile = "", smtpHost = "smtp.gmail.com", protocol = "smtps";
     public String mailOfficine = "";
@@ -44,12 +46,16 @@ public final class SmsParameters {
     Matcher m = pattern.matcher(Os);
     String path = (m.find() ? pathWindow : pathUnix);
 
+    public String fneUrl;
+    public String fnePkey;
+    public String fnepointOfSale;
+
     private SmsParameters() {
         Properties prop = new Properties();
 
         try (InputStream in = Files.newInputStream(FileSystems.getDefault().getPath(path))) {
             prop.load(in);
-            in.close();
+
             applicationId = prop.getProperty("applicationId");
             mobile = prop.getProperty("mobile");
             clientId = prop.getProperty("clientId");
@@ -62,17 +68,35 @@ public final class SmsParameters {
             expiresin = prop.getProperty("expiresin");
             email = prop.getProperty("email");
             mailOfficine = prop.getProperty("usermail");
-            if (!StringUtils.isEmpty(prop.getProperty("password"))) {
-                password = prop.getProperty("password");
+            String password0 = prop.getProperty("password");
+            if (StringUtils.isNotEmpty(password0)) {
+                password = password0;
+            }
+            String smtphost0 = prop.getProperty("smtphost");
+            if (StringUtils.isNotEmpty(smtphost0)) {
+                smtpHost = smtphost0;
+            }
+            String pro = prop.getProperty("protocol");
+            if (StringUtils.isNotEmpty(pro)) {
+                protocol = pro;
+            }
+            String fnePkey0 = prop.getProperty("fnePkey");
+
+            if (StringUtils.isNotEmpty(fnePkey0)) {
+                fnePkey = fnePkey0;
             }
 
-            if (!StringUtils.isEmpty(prop.getProperty("smtphost"))) {
-                smtpHost = prop.getProperty("smtphost");
-            }
-            if (!StringUtils.isEmpty(prop.getProperty("protocol"))) {
-                protocol = prop.getProperty("protocol");
+            String fneUrl0 = prop.getProperty("fneUrl");
+
+            if (StringUtils.isNotEmpty(fneUrl)) {
+                fneUrl = fneUrl0;
             }
 
+            String fnepointOfSale0 = prop.getProperty("fnepointOfSale");
+
+            if (StringUtils.isNotEmpty(fnepointOfSale0)) {
+                fnepointOfSale = fnepointOfSale0;
+            }
         } catch (IOException e) {
             createFile(prop, path);
 

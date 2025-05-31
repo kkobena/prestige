@@ -6,6 +6,8 @@
 package rest.service.impl;
 
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -21,7 +23,12 @@ import util.SmsParameters;
  * @author koben
  */
 public class Mail implements Runnable {
-    private String message, receiverAddres, subject;
+
+    private static final Logger LOG = Logger.getLogger(Mail.class.getName());
+
+    private String message;
+    private String receiverAddres;
+    private String subject;
 
     public String getMessage() {
         return message;
@@ -79,7 +86,7 @@ public class Mail implements Runnable {
             Transport.send(msg, sp.email, sp.password);
 
         } catch (MessagingException ex) {
-            ex.printStackTrace(System.err);
+            LOG.log(Level.SEVERE, "sendMail", ex);
         }
     }
 }
