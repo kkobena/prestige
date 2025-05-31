@@ -1387,7 +1387,7 @@ public class OrderServiceImpl implements OrderService {
         orderDetail.setIntQTEMANQUANT(orderDetail.getIntNUMBER());
         orderDetail.setIntPAFDETAIL(tod.getIntPAFDETAIL());
         orderDetail.setIntPRICEDETAIL(tod.getIntPRICEDETAIL());
-        orderDetail.setIntPRICE(orderDetail.getIntNUMBER() * orderDetail.getIntPRICEDETAIL());
+        orderDetail.setIntPRICE(orderDetail.getIntNUMBER() * orderDetail.getIntPAFDETAIL());
         orderDetail.setLgFAMILLEID(famille);
         orderDetail.setLgGROSSISTEID(grossiste);
         orderDetail.setStrSTATUT(Constant.STATUT_IS_PROGRESS);
@@ -1900,7 +1900,15 @@ public class OrderServiceImpl implements OrderService {
         if (!lot.isDirectImport()) {
             return addNewLot(lot, bonLivraisonDetail, tUser, bonLivraison);
         } else {
-            addFreeQty(lot, bonLivraisonDetail, bonLivraison.getStrREFLIVRAISON());
+
+            Optional<TLot> enOptionl = getLotByProduitIdAndBon(bonLivraisonDetail.getLgFAMILLEID().getLgFAMILLEID(),
+                    bonLivraison.getStrREFLIVRAISON());
+            if (enOptionl.isPresent()) {
+                addFreeQty(enOptionl.get(), lot, bonLivraisonDetail, bonLivraison.getStrREFLIVRAISON());
+            } else {
+                return addNewLot(lot, bonLivraisonDetail, tUser, bonLivraison);
+            }
+
         }
 
         return new JSONObject().put("success", true);
@@ -1974,13 +1982,14 @@ public class OrderServiceImpl implements OrderService {
         return new JSONObject().put("success", true);
     }
 
-    private void addFreeQty(AddLot lot, TBonLivraisonDetail bonLivraisonDetail, String bonNum) {
+    private void addFreeQty(TLot entityLot, AddLot lot, TBonLivraisonDetail bonLivraisonDetail, String bonNum) {
         if (lot.getFreeQty() <= 0) {
             return;
         }
         String famille = bonLivraisonDetail.getLgFAMILLEID().getLgFAMILLEID();
-        TLot entityLot = getLotByProduitIdAndBon(famille, bonNum);
+
         entityLot.setIntNUMBERGRATUIT(lot.getFreeQty());
+        entityLot.setIntNUMBER(entityLot.getIntNUMBER() + entityLot.getIntNUMBERGRATUIT());
         entityLot.setDtUPDATED(new Date());
         bonLivraisonDetail.setIntQTERECUE(
                 (bonLivraisonDetail.getIntQTERECUE() - bonLivraisonDetail.getIntQTEUG()) + lot.getFreeQty());
@@ -1992,6 +2001,7 @@ public class OrderServiceImpl implements OrderService {
         tWarehouse.setIntNUMBERGRATUIT(lot.getFreeQty());
         tWarehouse.setDtUPDATED(new Date());
         getEmg().merge(tWarehouse);
+
     }
 
     private void updateTBonLivraisonDetailFromBonLivraison(TBonLivraisonDetail bonLivraisonDetai, int qteLivree,
@@ -2027,13 +2037,18 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private TLot getLotByProduitIdAndBon(String produitId, String bonNum) {
-        TypedQuery<TLot> q = em.createQuery(
-                "SELECT o FROM TLot o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.strREFLIVRAISON=?2", TLot.class);
-        q.setParameter(1, produitId);
-        q.setParameter(2, bonNum);
-        q.setMaxResults(1);
-        return q.getSingleResult();
+    private Optional<TLot> getLotByProduitIdAndBon(String produitId, String bonNum) {
+        try {
+            TypedQuery<TLot> q = em.createQuery(
+                    "SELECT o FROM TLot o WHERE o.lgFAMILLEID.lgFAMILLEID=?1 AND o.strREFLIVRAISON=?2", TLot.class);
+            q.setParameter(1, produitId);
+            q.setParameter(2, bonNum);
+            q.setMaxResults(1);
+            return Optional.ofNullable(q.getSingleResult());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+
     }
 
     private TWarehouse getOneByProduitIdAndBon(String produitId, String bonNum) {
