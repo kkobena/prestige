@@ -18,7 +18,6 @@ import commonTasks.ws.CustomerDTO;
 import commonTasks.ws.GroupeTiersPayantDTO;
 import commonTasks.ws.TiersPayantDto;
 import commonTasks.ws.WsCaAchatVente;
-import commonTasks.ws.WsCaAchatVenteDTO;
 import java.util.List;
 
 /**

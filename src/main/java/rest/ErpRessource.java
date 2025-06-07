@@ -8,13 +8,17 @@ package rest;
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import rest.service.ErpService;
+import rest.service.InventaireService;
 import rest.service.RetourFournisseurService;
 import rest.service.impl.DataExportService;
+import rest.service.inventaire.dto.UpdateInventaireDetailDTO;
 
 /**
  *
@@ -31,6 +35,8 @@ public class ErpRessource {
     private RetourFournisseurService retourFournisseurService;
     @EJB
     private DataExportService dataExportService;
+    @EJB
+    private InventaireService inventaireService;
 
     @GET
     @Path("valorisation")
@@ -151,5 +157,33 @@ public class ErpRessource {
     public Response getCaAchatVente(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd) {
         return Response.ok().entity(erpService.getCaAchatVente(dtStart, dtEnd)).build();
+    }
+
+    @GET
+    @Path("ws/inventaires")
+    public Response fetchInventaire(@QueryParam(value = "maxResult") Integer maxResult) {
+        return Response.ok().entity(inventaireService.fetch(maxResult)).build();
+    }
+
+    @GET
+    @Path("ws/inventaires/rayons")
+    public Response fetchRayon(@QueryParam(value = "idInventaire") String idInventaire,
+            @QueryParam(value = "page") Integer page, @QueryParam(value = "maxResult") Integer maxResult) {
+        return Response.ok().entity(inventaireService.fetchRayon(idInventaire, page, maxResult)).build();
+    }
+
+    @GET
+    @Path("ws/inventaires/details")
+    public Response fetchDetails(@QueryParam(value = "idInventaire") String idInventaire,
+            @QueryParam(value = "idRayon") String idRayon, @QueryParam(value = "page") Integer page,
+            @QueryParam(value = "maxResult") Integer maxResult) {
+        return Response.ok().entity(inventaireService.fetchDetails(idInventaire, idRayon, page, maxResult)).build();
+    }
+
+    @PUT
+    @Path("ws/inventaires/details")
+    public Response updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire) {
+        inventaireService.updateDetailQuantity(updateInventaire);
+        return Response.ok().build();
     }
 }
