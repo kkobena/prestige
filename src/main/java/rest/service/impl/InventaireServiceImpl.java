@@ -1,17 +1,27 @@
 package rest.service.impl;
 
 import dal.TInventaire;
+import dal.TInventaireFamille;
 import dal.TUser;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import rest.service.InventaireService;
+import rest.service.inventaire.dto.DetailInventaireDTO;
+import rest.service.inventaire.dto.InventaireDTO;
+import rest.service.inventaire.dto.RayonDTO;
+import rest.service.inventaire.dto.UpdateInventaireDetailDTO;
 import util.Constant;
 
 /**
@@ -20,6 +30,8 @@ import util.Constant;
  */
 @Stateless
 public class InventaireServiceImpl implements InventaireService {
+
+    private static final Logger LOG = Logger.getLogger(InventaireServiceImpl.class.getName());
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -37,6 +49,75 @@ public class InventaireServiceImpl implements InventaireService {
                 .executeUpdate();
 
         return new JSONObject().put("itemCount", response);
+    }
+
+    @Override
+    public List<InventaireDTO> fetch(Integer maxResult) {
+
+        try {
+            TypedQuery<InventaireDTO> q = em.createQuery(
+                    "SELECT new rest.service.inventaire.dto.InventaireDTO( o.lgINVENTAIREID,o.strNAME ) FROM TInventaire o WHERE o.strSTATUT ='enable' ORDER BY  o.dtCREATED DESC",
+                    InventaireDTO.class);
+            if (Objects.nonNull(maxResult)) {
+                q.setMaxResults(maxResult);
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "fetch", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public List<RayonDTO> fetchRayon(String idInventaire, Integer page, Integer maxResult) {
+
+        try {
+            TypedQuery<RayonDTO> q = em.createQuery(
+                    "SELECT new rest.service.inventaire.dto.RayonDTO( o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID,o.lgFAMILLEID.lgZONEGEOID.strCODE,o.lgFAMILLEID.lgZONEGEOID.strLIBELLEE ) FROM TInventaireFamille o   WHERE o.lgINVENTAIREID.lgINVENTAIREID=?1  GROUP BY  o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID ORDER BY  o.lgFAMILLEID.lgZONEGEOID.strLIBELLEE ASC",
+                    RayonDTO.class);
+            q.setParameter(1, idInventaire);
+            if (Objects.nonNull(maxResult) && Objects.nonNull(page)) {
+                q.setFirstResult(page);
+                q.setMaxResults(maxResult);
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "fetchRayon", e);
+            return List.of();
+        }
+
+    }
+
+    @Override
+    public List<DetailInventaireDTO> fetchDetails(String idInventaire, String idRayon, Integer page,
+            Integer maxResult) {
+        try {
+            /*
+             * String id, String produitName, String produitCip, String produitEan, int produitPrixAchat, int
+             * produitPrixUni, int quantiteInitiale, int quantiteSaisie
+             */
+
+            TypedQuery<DetailInventaireDTO> q = em.createQuery(
+                    "SELECT new rest.service.inventaire.dto.DetailInventaireDTO( o.lgINVENTAIREFAMILLEID,o.lgFAMILLEID.strNAME,o.lgFAMILLEID.intCIP,o.lgFAMILLEID.intPAF,o.lgFAMILLEID.intPRICE,o.intNUMBERINIT,o.intNUMBER ) FROM TInventaireFamille o   WHERE o.lgINVENTAIREID.lgINVENTAIREID=?1 AND  o.lgFAMILLEID.lgZONEGEOID.lgZONEGEOID=?2 ORDER BY o.lgFAMILLEID.strNAME ASC",
+                    DetailInventaireDTO.class);
+            q.setParameter(1, idInventaire);
+            q.setParameter(2, idRayon);
+            if (Objects.nonNull(maxResult) && Objects.nonNull(page)) {
+                q.setFirstResult(page);
+                q.setMaxResults(maxResult);
+            }
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "fetchDetails", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public void updateDetailQuantity(UpdateInventaireDetailDTO updateInventaire) {
+        TInventaireFamille inventaireFamille = em.find(TInventaireFamille.class, updateInventaire.getId());
+        inventaireFamille.setIntNUMBER(updateInventaire.getQuantite());
+        inventaireFamille.setDtUPDATED(new Date());
     }
 
     private String buildQuery(String userId, String sql) {
