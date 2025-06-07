@@ -4688,8 +4688,9 @@ Ext.define('testextjs.controller.VenteCtr', {
         if (typeReglement === '1') {
             const extraModeId = me.getExtraModeReglementId();
             const montantRecu = me.getMontantRecu().getValue();
-            if (!Ext.isEmpty(extraModeId)) {
-                const montantExtra = me.getMontantExtra().getValue();
+            const montantExtra = me.getMontantExtra()?.getValue();
+            if (!Ext.isEmpty(extraModeId) && montantExtra) {
+
                 reglements.push(
                         {
                             "typeReglement": extraModeId,
