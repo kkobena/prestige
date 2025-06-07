@@ -65,7 +65,8 @@ public class FneResponseInvoiceItem {
 
     @Override
     public String toString() {
-        return "FneResponseInvoiceItem{" + "id=" + id + ", quantity=" + quantity + ", reference=" + reference + ", description=" + description + ", amount=" + amount + ", taxes=" + taxes + '}';
+        return "FneResponseInvoiceItem{" + "id=" + id + ", quantity=" + quantity + ", reference=" + reference
+                + ", description=" + description + ", amount=" + amount + ", taxes=" + taxes + '}';
     }
 
 }

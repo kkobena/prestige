@@ -7,7 +7,6 @@ import javax.validation.constraints.NotNull;
  * @author koben
  */
 
-
 public class FneInvoiceItem {
 
     private final String[] taxes = { "TVAB" };
@@ -52,7 +51,8 @@ public class FneInvoiceItem {
 
     @Override
     public String toString() {
-        return "FneInvoiceItem{" + "taxes=" + taxes + ", reference=" + reference + ", description=" + description + ", amount=" + amount + ", quantity=" + quantity + '}';
+        return "FneInvoiceItem{" + "taxes=" + taxes + ", reference=" + reference + ", description=" + description
+                + ", amount=" + amount + ", quantity=" + quantity + '}';
     }
 
 }

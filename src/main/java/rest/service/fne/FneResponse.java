@@ -67,7 +67,8 @@ public class FneResponse {
 
     @Override
     public String toString() {
-        return "FneResponse{" + "ncc=" + ncc + ", reference=" + reference + ", token=" + token + ", warning=" + warning + ", balanceSticker=" + balanceSticker + ", invoice=" + invoice + '}';
+        return "FneResponse{" + "ncc=" + ncc + ", reference=" + reference + ", token=" + token + ", warning=" + warning
+                + ", balanceSticker=" + balanceSticker + ", invoice=" + invoice + '}';
     }
 
 }
