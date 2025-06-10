@@ -496,7 +496,31 @@ Ext.define('testextjs.model.Famille', {
             type: 'boolean'
         },
         {name: 'cmu_price', type: 'int'},
-        {name: 'produitState', type: 'auto'}
+        {name: 'produitState', type: 'auto'},
+        
+        /* Airman  */
+
+        { name: 'lgInventaireFamilleId', type: 'string' },
+        { name: 'lgInventaireId',        type: 'string' },
+        { name: 'lgFamilleId',           type: 'string' },
+        { name: 'lgZoneGeoId',           type: 'string' },
+        { name: 'lgFamilleArticleId',    type: 'string' },
+        { name: 'lgGrossisteId',         type: 'string' },
+
+        // --- Informations Produit ---
+        { name: 'cip',                   type: 'string' },
+        { name: 'name',                  type: 'string' },
+        { name: 'designation',           type: 'string' },
+
+        // --- Prix -----
+        { name: 'prixVente',             type: 'int' },
+        { name: 'prixReference',         type: 'int' },
+        { name: 'paf',                   type: 'int' },
+
+        // --- Données de Stock ---
+        { name: 'stockRayon',            type: 'int' },
+        { name: 'stockMachine',          type: 'int' },
+        { name: 'ecart',                 type: 'int' }
 
     ]
 });

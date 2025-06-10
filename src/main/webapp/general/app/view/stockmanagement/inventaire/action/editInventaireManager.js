@@ -187,13 +187,16 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
 
             proxy: {
                 type: 'ajax',
-                url: url_services_data_inventaire_famille,
+                //url: url_services_data_inventaire_famille,
+                url:'../api/v1/inventaire/inv',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 },
-                timeout: 180000
+                timeout: 180000,
+                extraParams: {
+                invId: this.getOdatasource().lg_INVENTAIRE_ID }
             }
 
         });
@@ -247,28 +250,28 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                             store: store_inventaire_famille,
                             height: Ext.getBody().getViewSize().height * 0.8,
                             columns: [{
-                                    text: 'lg_INVENTAIRE_FAMILLE_ID',
+                                    header: 'lg_INVENTAIRE_FAMILLE_ID',
                                     flex: 1,
                                     hidden: true,
-                                    dataIndex: 'lg_INVENTAIRE_FAMILLE_ID',
+                                    dataIndex: 'lgInventaireFamilleId',
                                     id: 'lg_INVENTAIRE_FAMILLE_ID'
                                 }, {
                                     text: 'lg_INVENTAIRE_ID',
                                     flex: 1,
                                     hidden: true,
-                                    dataIndex: 'lg_INVENTAIRE_ID',
+                                    dataIndex: 'lgInventaireId',
                                     id: 'lg_INVENTAIRE_ID'
                                 }, {
                                     text: 'lg_FAMILLE_ID',
                                     flex: 1,
                                     hidden: true,
-                                    dataIndex: 'lg_FAMILLE_ID',
+                                    dataIndex: 'lgFamilleId',
                                     id: 'lg_FAMILLE_ID'
                                 }, {
                                     text: 'CIP',
                                     flex: 0.7,
                                     sortable: true,
-                                    dataIndex: 'int_CIP'/*,
+                                    dataIndex: 'cip'/*,
                                      editor: {
                                      xtype: 'textfield'
                                      }*/
@@ -277,12 +280,12 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                     flex: 1,
                                     hidden: true,
                                     sortable: true,
-                                    dataIndex: 'str_NAME'
+                                    dataIndex: 'name'
                                 }, {
                                     text: 'Designation',
                                     flex: 1.3,
                                     sortable: true,
-                                    dataIndex: 'str_DESCRIPTION'/*,
+                                    dataIndex: 'designation'/*,
                                      editor: {
                                      xtype: 'textfield'
                                      }*/
@@ -290,16 +293,16 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                     text: 'Emplacement',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'lg_ZONE_GEO_ID'
+                                    dataIndex: 'lgZoneGeoId'
                                 }, {
                                     text: 'Famille',
-                                    dataIndex: 'lg_FAMILLEARTICLE_ID',
+                                    dataIndex: 'lgFamilleArticleId',
                                     sortable: true,
                                     flex: 1
 
                                 }, {
                                     text: 'Grossiste',
-                                    dataIndex: 'lg_GROSSISTE_ID',
+                                    dataIndex: 'lgGrossisteId',
                                     sortable: true,
                                     flex: 1
 
@@ -307,20 +310,20 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                     text: 'Prix de vente',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_PRICE',
+                                    dataIndex: 'prixVente',
                                     renderer: amountformat,
                                     align: 'right'
                                 }, {
                                     text: 'Prix.Reference',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_PRICE_REF',
+                                    dataIndex: 'prixReference',
                                     hidden: true,
                                     renderer: amountformat,
                                     align: 'right'
                                 }, {
                                     text: 'PAF',
-                                    dataIndex: 'int_PAF',
+                                    dataIndex: 'paf',
                                     sortable: true,
                                     align: 'right',
                                     renderer: amountformat,
@@ -329,7 +332,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                     text: 'Stock Rayon',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_NUMBER_AVAILABLE',
+                                    dataIndex: 'stockRayon',
                                     //renderer: amountformat,
                                     align: 'right',
                                     editor: {
@@ -513,13 +516,13 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                     text: 'Stock.Machine',
                                     flex: 1,
                                     sortable: true,
-                                    dataIndex: 'int_TAUX_MARQUE',
+                                    dataIndex: 'stockMachine',
                                     renderer: amountformat,
                                     align: 'right'
                                 },
                                 {
                                     header: 'Ecart',
-                                    dataIndex: 'int_QTE_SORTIE',
+                                    dataIndex: 'ecart',
                                     flex: 1,
                                     align: 'right',
                                     renderer: function (v, m, r) {
