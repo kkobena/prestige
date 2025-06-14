@@ -12,6 +12,8 @@ import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
@@ -20,9 +22,11 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author koben
  */
-public final class SmsParameters {
+public final class AppParameters {
 
-    private static SmsParameters instance;
+    private static final Logger LOG = Logger.getLogger(AppParameters.class.getName());
+
+    private static AppParameters instance;
     public String applicationId = "MT7XwvGX6qGAPdfQ", clientId = "fJaOlJgwU2ggcRWmIlbU9s7jY8tbsRy8",
             clientSecret = "UgTURjiCK1rZtsnA",
             header = "Basic ZkphT2xKZ3dVMmdnY1JXbUlsYlU5czdqWTh0YnNSeTg6VWdUVVJqaUNLMXJadHNuQQ==";
@@ -44,12 +48,13 @@ public final class SmsParameters {
     Matcher m = pattern.matcher(Os);
     String path = (m.find() ? pathWindow : pathUnix);
 
-    private SmsParameters() {
+    public String pharmaMlDir;
+
+    private AppParameters() {
         Properties prop = new Properties();
 
         try (InputStream in = Files.newInputStream(FileSystems.getDefault().getPath(path))) {
             prop.load(in);
-            in.close();
             applicationId = prop.getProperty("applicationId");
             mobile = prop.getProperty("mobile");
             clientId = prop.getProperty("clientId");
@@ -72,7 +77,7 @@ public final class SmsParameters {
             if (!StringUtils.isEmpty(prop.getProperty("protocol"))) {
                 protocol = prop.getProperty("protocol");
             }
-
+            pharmaMlDir = prop.getProperty("pharmaMlDir");
         } catch (IOException e) {
             createFile(prop, path);
 
@@ -100,14 +105,14 @@ public final class SmsParameters {
 
             prop.store(new FileOutputStream(propFileName), "Fichier de configuartion notification sms , mail");
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, "", e);
         }
 
     }
 
-    public static SmsParameters getInstance() {
+    public static AppParameters getInstance() {
         if (instance == null) {
-            instance = new SmsParameters();
+            instance = new AppParameters();
 
         }
         return instance;

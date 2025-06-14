@@ -23,7 +23,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.PharmaMlService;
 
-import toolkits.parameters.commonparameter;
 import util.Constant;
 
 /**
@@ -48,7 +47,7 @@ public class PharmaMlResource {
         if (tu == null) {
             return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
         }
-        JSONObject json = pharmaMlService.envoiPharmaCommande(commandeId, LocalDate.now().plusDays(1), 0, null, null);
+        JSONObject json = pharmaMlService.envoiCommande(commandeId, LocalDate.now().plusDays(1), 0, null, null);
         return Response.ok().entity(json.toString()).build();
     }
 
