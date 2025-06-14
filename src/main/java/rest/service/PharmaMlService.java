@@ -29,5 +29,7 @@ public interface PharmaMlService {
 
     JSONObject reponseRupture(String ruptureId, TUser u);
 
-    void test();
+    JSONObject envoiCommande(String commandeId, LocalDate dateLivraisonSouhaitee, int typeCommande,
+            String typeCommandeExecptionel, String commentaire);
+
 }

@@ -42,8 +42,12 @@ public class PharmaMlResource {
     @PUT
     @Path("{id}")
     public Response envoiPharmaCommande(@PathParam("id") String commandeId) throws JSONException {
-
-        JSONObject json = pharmaMlService.envoiPharmaCommande(commandeId, LocalDate.now().plusDays(1), 0, null, null);
+        HttpSession hs = servletRequest.getSession();
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        if (tu == null) {
+            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
+        }
+        JSONObject json = pharmaMlService.envoiCommande(commandeId, LocalDate.now().plusDays(1), 0, null, null);
         return Response.ok().entity(json.toString()).build();
     }
 

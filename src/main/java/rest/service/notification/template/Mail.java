@@ -10,7 +10,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import rest.service.v2.dto.NotificationUtilsDTO;
 import util.DateUtil;
-import util.SmsParameters;
+import util.AppParameters;
 
 /**
  *
@@ -18,14 +18,14 @@ import util.SmsParameters;
  */
 public final class Mail {
 
-    public static SmsParameters sp = SmsParameters.getInstance();
+    public static AppParameters sp = AppParameters.getInstance();
 
     private Mail() {
     }
 
     public static Properties getEmailProperties() {
         if (Objects.isNull(sp)) {
-            sp = SmsParameters.getInstance();
+            sp = AppParameters.getInstance();
 
         }
 

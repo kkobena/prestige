@@ -25,7 +25,7 @@ import org.json.JSONObject;
 import rest.service.SessionHelperService;
 import rest.service.exception.FneExeception;
 import util.Constant;
-import util.SmsParameters;
+import util.AppParameters;
 
 /**
  *
@@ -35,7 +35,7 @@ import util.SmsParameters;
 public class FneServiceImpl implements FneService {
 
     private static final Logger LOG = Logger.getLogger(FneServiceImpl.class.getName());
-
+ final AppParameters sp = AppParameters.getInstance();
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
@@ -43,20 +43,20 @@ public class FneServiceImpl implements FneService {
 
     @Override
     public void createInvoice(String idFacture) throws FneExeception {
-        SmsParameters sp = SmsParameters.getInstance();
+      
         try {
-            createInvoice(em.find(TFacture.class, idFacture), sp);
+            createInvoice(em.find(TFacture.class, idFacture));
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             throw new FneExeception(e.getLocalizedMessage());
         }
     }
 
-    private void createInvoice(TFacture facture, SmsParameters sp) throws FneExeception {
+    private void createInvoice(TFacture facture) throws FneExeception {
         TOfficine officine = getOfficine();
 
         Client client = getHttpClient();
-        JSONObject payload = new JSONObject(buildFromFacture(facture, officine, sp));
+        JSONObject payload = new JSONObject(buildFromFacture(facture, officine));
         WebTarget myResource = client.target(sp.fneUrl);
         Response response = myResource.request().header("Authorization", "Bearer ".concat(sp.fnePkey))
                 .post(Entity.entity(payload.toString(), MediaType.APPLICATION_JSON_TYPE));
@@ -70,7 +70,7 @@ public class FneServiceImpl implements FneService {
         return em.find(TOfficine.class, Constant.OFFICINE);
     }
 
-    private FneInvoice buildFromFacture(TFacture facture, TOfficine officine, SmsParameters sp) {
+    private FneInvoice buildFromFacture(TFacture facture, TOfficine officine) {
         TUser user = this.sessionHelperService.getCurrentUser();
         TTiersPayant tTiersPayant = facture.getTiersPayant();
         FneInvoice fneInvoice = new FneInvoice();
