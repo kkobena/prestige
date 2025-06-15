@@ -17,7 +17,7 @@ public class MessageEntete {
     @XmlElement(name = "DESTINATAIRE", namespace = "urn:x-csrp:fr.csrp.protocole:message")
     private OfficinePartenaire destinataire;
 
-    @XmlElement(name = "DATE")
+    @XmlElement(name = "DATE", namespace = "urn:x-csrp:fr.csrp.protocole:message")
     private String date;
 
     public OfficinePartenaire getEmetteur() {

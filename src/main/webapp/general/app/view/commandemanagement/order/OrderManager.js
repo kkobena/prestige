@@ -355,7 +355,7 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
         const xtype = "ordermanagerlist";
         testextjs.app.getController('App').onLoadNewComponentWithDataSource(xtype, "Ajouter les articles a une commande", "0", "is_Process");
     },
-   
+
     envoiPharmaML: function (grid, rowIndex) {
         const record = grid.getStore().getAt(rowIndex);
         const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
@@ -366,69 +366,23 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
             url: '../api/v1/pharma/' + record.get('lg_ORDER_ID'),
             success: function (response, options) {
 
-                let runnerPharmaMl = new Ext.util.TaskRunner();
+
                 const result = Ext.JSON.decode(response.responseText, true);
                 if (result.success) {
-                    let count = 0;
-                    let task = runnerPharmaMl.newTask({
-                        run: function () {
-                            Ext.Ajax.request({
-                                method: 'GET',
-                                url: '../api/v1/pharma/responseorder',
-                                params: {
-                                    "orderId": record.get('lg_ORDER_ID')
-                                },
-                                success: function (response, options) {
 
-                                    const _result = Ext.JSON.decode(response.responseText, true);
-                                    if (_result.success) {
-                                        task.stop();
-                                        progress.hide();
-                                        grid.getStore().reload();
-                                        Ext.MessageBox.show({
-                                            title: 'Info',
-                                            width: 320,
-                                            msg: "<span style='color: green;'> " + _result.nbreproduit + "</span> produit(s) pris en compte ; <span style='color:red;'>" + _result.nbrerupture + "</span> produit(s) en rupture",
-                                            buttons: Ext.MessageBox.OK,
-                                            icon: Ext.MessageBox.INFO
+                    let message = result.nbreproduit + '/' + result.totalProduit + ' produit pris en compte ';
+                    if (result.nbrerupture > 0) {
+                        message += ' ' + result.nbrerupture + ' produit(s) en rupture';
+                    }
+                    Ext.MessageBox.show({
+                        title: 'Message',
+                        width: 320,
+                        msg: message,
+                        buttons: Ext.MessageBox.OK,
+                        icon: Ext.MessageBox.ERROR
 
-                                        });
-                                    } else {
-                                        if (_result.status === 'responseNotFound') {
-                                            if (count < 6) {
-                                                task.start();
-                                                count++;
-                                            } else {
-                                                progress.hide();
-                                                task.stop();
-                                                Ext.MessageBox.show({
-                                                    title: 'Info',
-                                                    width: 320,
-                                                    msg: "Aucune réponse de la part du client PharmaMl après une minute d'attente",
-                                                    buttons: Ext.MessageBox.OK,
-                                                    icon: Ext.MessageBox.WARNING
-
-                                                });
-                                            }
-
-                                        } else {
-                                            progress.hide();
-                                            task.stop();
-                                        }
-                                    }
-
-                                },
-                                failure: function (response, options) {
-                                    progress.hide();
-
-                                }
-                            });
-
-                        },
-                        interval: 10000
                     });
-                    task.start();
-                    count++;
+                    grid.getStore().reload();
 
                 } else {
                     progress.hide();
@@ -569,8 +523,8 @@ Ext.define('testextjs.view.commandemanagement.order.OrderManager', {
     onCreateBLClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
         new testextjs.view.commandemanagement.cmde_passees.action.add({
-            idOrder:rec.get('lg_ORDER_ID'),
-            odatasource:rec.get('str_REF_ORDER'),
+            idOrder: rec.get('lg_ORDER_ID'),
+            odatasource: rec.get('str_REF_ORDER'),
             montantachat: rec.get('PRIX_ACHAT_TOTAL'),
             parentview: this,
             mode: "create",
