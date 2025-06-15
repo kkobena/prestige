@@ -101,4 +101,27 @@ public final class NumberUtils {
         }
         return result;
     }
+
+    public static Integer doubleFromString(String doubleStringValue) {
+        if (org.apache.commons.lang3.StringUtils.isEmpty(doubleStringValue)) {
+            return null;
+        }
+
+        return (int) Double.parseDouble(doubleStringValue);
+
+    }
+
+    public static Integer intFromString(String intStringValue) {
+        if (org.apache.commons.lang3.StringUtils.isEmpty(intStringValue)) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(intStringValue);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return doubleFromString(intStringValue);
+        }
+
+    }
 }

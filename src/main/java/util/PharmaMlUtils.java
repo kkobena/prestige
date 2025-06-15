@@ -6,12 +6,7 @@
 package util;
 
 import commonTasks.dto.PharmaMLItemDTO;
-import dal.TFamilleGrossiste;
-import dal.TGrossiste;
-import dal.TOrder;
-import dal.TOrderDetail;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,62 +87,22 @@ public final class PharmaMlUtils {
     public static final int PRODUIT_MANQUE_RAYON = 5;
     public static final int PRODUIT_RETIRE = 6;
     public static final int PRODUIT_NON_AUTORISE = 7;
-    public static final String NATURE_ACTION_LIBELLE = "Nature_Action";
     public static final String NATURE_ACTION_RE = "RE";
-    public static final String CSRP_ENVELOPPE_LIBELLE = "CSRP_ENVELOPPE";
-    public static final String CSRP_ENVELOPPE_VALUE = "urn:x-csrp:fr.csrp.protocole:enveloppe";
-    public static final String XMLNS = "xmlns";
     public static final String VERSION_PROTOCLE_LIBELLE = "Version_Protocole";
     public static final String VERSION_PROTOCLE_VALUE = "1.0.0.0";
-
     public static final String ID_LOGICIEL_LIBELLE = "Id_Logiciel";
     public static final String ID_LOGICIEL_VALUE = "Prestige";
-
     public static final String VERSION_LOGICIEL_LIBELLE = "Id_Logiciel";
     public static final String VERSION_LOGICIEL_VALUE = "2.0.0";
-    public static final String USAGE_LIBELLE = "Usage";
-    public static final String USAGE_VALUE = "P";
-    public static final String ENTETE = "ENTETE";
-    public static final String EMETTEUR = "EMETTEUR";
-    public static final String RECEPTEUR = "RECEPTEUR";
-    public static final String REF_MESSAGE = "REF_MESSAGE";// LA VALEUR CORRESPOND 0 LA DATE DU JOUR AU FORMAT
-    // YYYYMMDDSSMMSS
-    public static final String DATE_LIBELLE = "DATE";
-    public static final String CORPS_LIBELLE = "CORPS";
-    public static final String MESSAGE_OFFICINE_LIBELLE = "MESSAGE_OFFICINE";
-    public static final String MESSAGE_OFFICINE_VALUE = "urn:x-csrp:fr.csrp.protocole:message";
-    public static final String DESTINATAIRE = "DESTINATAIRE";
 
-    public static final String ID_CLIENT_LIBELLE = "Id_Client";
-    public static final String NATURE_PARTENAIRE_LIBELLE = "Nature_Partenaire";
     public static final String NATURE_PARTENAIRE_VALUE_OF = "OF";
     public static final String NATURE_PARTENAIRE_VALUE_RE = "RE";
-    public static final String CODE_SOCIETE_LIBELLE = "Code_Societe";
-    public static final String ID_SOCIETE_LIBELLE = "Id_Societe";
-    public static final String COMMANDE_LIBELLE = "COMMANDE";
-    public static final String REF_CLE_CLIENT_LIBELLE = "Ref_Cde_Client";
-    public static final String COMMENTAIRE_GENERALE_LIBELLE = "Commentaire_General";
-    public static final String DATE_LIVRAISON_LIBELLE = "Date_livraison";
-    public static final String NORMALE_LIBELLE = "NORMALE";
-    public static final String LIGNE_N_LIBELLE = "LIGNE_N";
-    public static final String NUM_LIGNE_LIBELLE = "Num_Ligne";
-    public static final String TYPE_CODIFICATION_LIBELLE = "Type_Codification";
     public static final String TYPE_CODIFICATION_CIP39 = "CIP39";
-    public static final String CODE_PRODUIT_LIBELLE = "Code_Produit";
-    public static final String QUANTITE_LIBELLE = "Quantite";
-    public static final String XML_ENTETE = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-    public static final String CHEVRON_OUVRANT = "<";
-    public static final String CHEVRON_FERMANT = ">";
-    public static final String SLASH = "/";
-    public static final String BALISE_FERMANTE = "/>";
-    public static final String EQUALS = "=";
-    public static final String SPACE = " ";
-    public static final String NATURE_LIBELLE = "Nature";
-    public static final String CODE_LIBELLE = "Code";
     public static final String CODE_VALUE = "00";
     public static final String ID_LIBELLE = "Id";
-    public static final String ADRESSE_LIBELLE = "Adresse";
     public static final String NATURE_ACTION_REQ_EMISSION = "REQ_EMISSION";
+    public static final String TYPE_CODIFICATION_EAN = "EAN13";
+    public static final String USAGE_VALUE = "P";
 
     public static String buildRepartiteurLine(String idRepartiteur) {
         return R + idRepartiteur;
@@ -168,15 +123,6 @@ public final class PharmaMlUtils {
 
     public static String buildCommandeLine(final int typeCommande, final String codeCommande, String commandeId) {
 
-        /*
-         * switch (typeCommande) { case COMMANDE_PACKAGE: case COMMANDE_SPECIALE: return TYPE_TRAVAIL_COMMANDE +
-         * StringUtils.leftPad(typeCommande + "", 3, "0") + R +
-         * StringUtils.rightPad(RandomStringUtils.randomNumeric(DEF_COUNT), 20, StringUtils.SPACE) +
-         * SEPARATEUR_COMMANDE_SP_PAC + StringUtils.rightPad(codeCommande, 15, StringUtils.SPACE); default: // return
-         * TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R +
-         * StringUtils.rightPad(RandomStringUtils.randomNumeric(DEF_COUNT), 20, StringUtils.SPACE); return
-         * TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + commandeId; }
-         */
         return TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + commandeId;
     }
 
@@ -275,133 +221,4 @@ public final class PharmaMlUtils {
         return ligne + StringUtils.rightPad(code, 52, StringUtils.SPACE) + StringUtils.leftPad(index + "", 4, '0');
     }
 
-    public static StringBuilder buildCommande(TOrder commande, StringBuilder itemsBuilder) {
-        // <COMMANDE Ref_Cde_Client="0549711409" Commentaire_General="0549711409" Date_livraison="2023-09-07">
-        // <CORPS>
-        // <MESSAGE_OFFICINE xmlns="urn:x-csrp:fr.csrp.protocole:message">
-        TGrossiste grossiste = commande.getLgGROSSISTEID();
-        StringBuilder sb = new StringBuilder(XML_ENTETE);
-        // <CSRP_ENVELOPPE xmlns="urn:x-csrp:fr.csrp.protocole:enveloppe" Nature_Action="REQ_EMISSION"
-        // Version_Protocole="1.0.0.0" Id_Logiciel="AZME" Version_Logiciel="17.0.10.0" Usage="P">
-        sb.append(CHEVRON_OUVRANT).append(CSRP_ENVELOPPE_LIBELLE).append(SPACE).append(XMLNS).append(EQUALS)
-                .append(CSRP_ENVELOPPE_VALUE).append(SPACE).append(NATURE_ACTION_LIBELLE).append(EQUALS)
-                .append(NATURE_ACTION_REQ_EMISSION).append(SPACE).append(VERSION_PROTOCLE_LIBELLE).append(EQUALS)
-                .append(VERSION_PROTOCLE_VALUE).append(SPACE).append(ID_LOGICIEL_LIBELLE).append(EQUALS)
-                .append(ID_LOGICIEL_VALUE).append(SPACE).append(VERSION_LOGICIEL_LIBELLE).append(EQUALS)
-                .append(VERSION_LOGICIEL_VALUE).append(SPACE).append(USAGE_LIBELLE).append(EQUALS).append(USAGE_VALUE)
-                .append(CHEVRON_FERMANT);
-
-        buildEntete(sb, grossiste);
-
-        sb.append(CHEVRON_OUVRANT).append(CORPS_LIBELLE).append(CHEVRON_FERMANT).append(CHEVRON_OUVRANT)
-                .append(MESSAGE_OFFICINE_LIBELLE).append(SPACE).append(XMLNS).append(EQUALS)
-                .append(MESSAGE_OFFICINE_VALUE).append(CHEVRON_FERMANT);
-        buildEnteteOffice(sb, grossiste);
-        sb.append(CHEVRON_OUVRANT).append(CORPS_LIBELLE).append(CHEVRON_FERMANT).append(CHEVRON_OUVRANT)
-                .append(COMMANDE_LIBELLE).append(CHEVRON_FERMANT).append(REF_CLE_CLIENT_LIBELLE).append(EQUALS)
-                .append(commande.getStrREFORDER()).append(SPACE).append(COMMENTAIRE_GENERALE_LIBELLE).append(EQUALS)
-                .append(commande.getStrREFORDER()).append(SPACE).append(DATE_LIVRAISON_LIBELLE).append(EQUALS)
-                .append(LocalDate.now()).append(CHEVRON_FERMANT).append(CHEVRON_OUVRANT).append(NORMALE_LIBELLE)
-                .append(CHEVRON_FERMANT).append(itemsBuilder) // ajouter les lignes de la commande
-
-                // fermer NORMALE TAG
-                .append(CHEVRON_OUVRANT).append(SLASH).append(NORMALE_LIBELLE).append(CHEVRON_FERMANT)
-                // fermer COMMANDE TAG
-                .append(CHEVRON_OUVRANT).append(SLASH).append(COMMANDE_LIBELLE).append(CHEVRON_FERMANT)
-                // fermer CORPS TAG
-                .append(CHEVRON_OUVRANT).append(SLASH).append(CORPS_LIBELLE).append(CHEVRON_FERMANT)
-                // fermer MESSAGE_OFFICINE TAG
-                .append(CHEVRON_OUVRANT).append(SLASH).append(MESSAGE_OFFICINE_LIBELLE).append(CHEVRON_FERMANT)
-                // fermer CORPS TAG
-                .append(CHEVRON_OUVRANT).append(SLASH).append(CORPS_LIBELLE).append(CHEVRON_FERMANT)
-                // fermer CSRP_ENVELOPPE TAG
-                .append(CHEVRON_OUVRANT).append(SLASH).append(CSRP_ENVELOPPE_LIBELLE).append(CHEVRON_FERMANT);
-
-        return sb;
-
-    }
-
-    private StringBuilder appendValue(StringBuilder sb, String value) {
-        return sb.append("\"").append(value).append("\"");
-    }
-
-    public static void buildEntete(StringBuilder sb, TGrossiste grossiste) {
-        /*
-         * <ENTETE> <EMETTEUR Nature="OF" Code="00" Id="002174230" Adresse="PHARMACIE K"/> <RECEPTEUR Nature="RE"
-         * Code="427" Id="42700" Adresse="COPHARMED VRIDI"/> <REF_MESSAGE>20240907201755000</REF_MESSAGE>
-         * <DATE>2024-09-07T20:17:55</DATE> </ENTETE>
-         *
-         *
-         * str_URL_PHARMAML:http://pharma-ml.ubipharm-cotedivoire.com/LABOREX/
-         *
-         *
-         *
-         */
-        sb.append(CHEVRON_OUVRANT).append(ENTETE).append(CHEVRON_FERMANT).append(CHEVRON_OUVRANT).append(EMETTEUR)
-                .append(SPACE).append(NATURE_LIBELLE).append(EQUALS).append(NATURE_PARTENAIRE_VALUE_OF).append(SPACE)
-                .append(CODE_LIBELLE).append(EQUALS)
-                .append(StringUtils.isNotEmpty(grossiste.getStrOFFICINEID()) ? grossiste.getStrOFFICINEID()
-                        : CODE_VALUE)
-                .append(SPACE).append(ID_LIBELLE).append(EQUALS).append(grossiste.getStrIDRECEPTEURPHARMA())
-                .append(SPACE).append(ADRESSE_LIBELLE).append(BALISE_FERMANTE);
-
-        sb.append(CHEVRON_OUVRANT).append(RECEPTEUR).append(SPACE).append(NATURE_LIBELLE).append(EQUALS)
-                .append(NATURE_PARTENAIRE_VALUE_RE).append(SPACE).append(CODE_LIBELLE).append(EQUALS)
-                .append(grossiste.getStrCODERECEPTEURPHARMA()).append(SPACE).append(ID_LIBELLE).append(EQUALS)
-                .append(grossiste.getStrIDRECEPTEURPHARMA()).append(SPACE).append(ADRESSE_LIBELLE)
-                .append(grossiste.getStrLIBELLE()).append(BALISE_FERMANTE);
-        sb.append(CHEVRON_OUVRANT).append(REF_MESSAGE).append(CHEVRON_FERMANT)
-                .append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")))
-                .append(CHEVRON_OUVRANT).append(SLASH).append(REF_MESSAGE).append(CHEVRON_FERMANT);
-
-        sb.append(CHEVRON_OUVRANT).append(DATE_LIBELLE).append(CHEVRON_FERMANT).append(LocalDateTime.now())
-                .append(CHEVRON_OUVRANT).append(SLASH).append(DATE_LIBELLE).append(CHEVRON_FERMANT)
-                .append(CHEVRON_OUVRANT).append(SLASH).append(ENTETE).append(CHEVRON_FERMANT);
-    }
-
-    public static void buildEnteteOffice(StringBuilder sb, TGrossiste grossiste) {
-        /*
-         * <ENTETE> <EMETTEUR Id_Client="00214230" Nature_Partenaire="OF"/> <DESTINATAIRE Code_Societe="427"
-         * Id_Societe="42700" Nature_Partenaire="RE"/> <DATE>2024-09-07T20:17:55</DATE> </ENTETE>
-         *
-         *
-         * str_URL_PHARMAML:http://pharma-ml.ubipharm-cotedivoire.com/LABOREX/
-         *
-         *
-         *
-         */
-        sb.append(CHEVRON_OUVRANT).append(ENTETE).append(CHEVRON_FERMANT).append(CHEVRON_OUVRANT).append(EMETTEUR)
-                .append(SPACE).append(ID_CLIENT_LIBELLE).append(EQUALS).append(grossiste.getStrIDRECEPTEURPHARMA())
-                .append(SPACE).append(NATURE_PARTENAIRE_LIBELLE).append(EQUALS).append(NATURE_PARTENAIRE_VALUE_OF)
-                .append(BALISE_FERMANTE);
-
-        sb.append(CHEVRON_OUVRANT).append(DESTINATAIRE).append(SPACE).append(CODE_SOCIETE_LIBELLE).append(EQUALS)
-                .append(grossiste.getStrCODERECEPTEURPHARMA()).append(SPACE).append(ID_SOCIETE_LIBELLE).append(EQUALS)
-                .append(grossiste.getStrIDRECEPTEURPHARMA()).append(SPACE).append(NATURE_PARTENAIRE_LIBELLE)
-                .append(EQUALS).append(NATURE_PARTENAIRE_VALUE_RE).append(BALISE_FERMANTE);
-
-        sb.append(CHEVRON_OUVRANT).append(DATE_LIBELLE).append(CHEVRON_FERMANT).append(LocalDateTime.now())
-                .append(CHEVRON_OUVRANT).append(SLASH).append(DATE_LIBELLE).append(CHEVRON_FERMANT)
-                .append(CHEVRON_OUVRANT).append(SLASH).append(ENTETE).append(CHEVRON_FERMANT);
-    }
-
-    public static void buildLigneCommande(StringBuilder sb, TOrderDetail item, TFamilleGrossiste familleGrossiste,
-            int index) {
-        String numLigne = StringUtils.leftPad(index + "", 4, '0');
-        String quantite = StringUtils.leftPad(item.getIntNUMBER() + "", 4, '0');
-        String cip = null;
-        if (familleGrossiste != null && StringUtils.isEmpty(familleGrossiste.getStrCODEARTICLE())) {
-            cip = familleGrossiste.getStrCODEARTICLE();
-        }
-        if (StringUtils.isEmpty(cip)) {
-            cip = item.getLgFAMILLEID().getIntCIP();
-        }
-
-        // <LIGNE_N Num_Ligne="0001" Type_Codification="CIP39" Code_Produit="3600901" Quantite="0010" Equivalent="false"
-        // Partielle="false" Reliquat="false"/>
-        sb.append(CHEVRON_OUVRANT).append(LIGNE_N_LIBELLE).append(SPACE).append(NUM_LIGNE_LIBELLE).append(EQUALS)
-                .append(numLigne).append(SPACE).append(TYPE_CODIFICATION_LIBELLE).append(EQUALS)
-                .append(TYPE_CODIFICATION_CIP39).append(SPACE).append(CODE_PRODUIT_LIBELLE).append(EQUALS).append(cip)
-                .append(SPACE).append(QUANTITE_LIBELLE).append(EQUALS).append(quantite).append(BALISE_FERMANTE);
-    }
 }
