@@ -36,6 +36,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,6 +53,9 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import rest.service.ErpService;
@@ -81,6 +85,44 @@ public class ErpServiceImpl implements ErpService {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "valorisation =====>>", e);
             return new StockDailyValueDTO();
+        }
+    }
+
+    /* Valorisation periode */
+    @Override
+    public List<StockDailyValueDTO> valorisationAll(String dtStart, String dtEnd) {
+        try {
+            // Conversion des dates en format numérique attendu par l'ID
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+            LocalDate startDate = LocalDate.parse(dtStart);
+            LocalDate endDate = LocalDate.parse(dtEnd);
+
+            Integer startId = Integer.parseInt(startDate.format(formatter));
+            Integer endId = Integer.parseInt(endDate.format(formatter));
+
+            // Validation sur les dates
+            if (startDate.isAfter(endDate)) {
+                throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
+            }
+
+            // Création de la requête avec paramètres typés
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<StockDailyValue> cq = cb.createQuery(StockDailyValue.class);
+            Root<StockDailyValue> root = cq.from(StockDailyValue.class);
+
+            cq.select(root).where(cb.between(root.get("id"), startId, endId)).orderBy(cb.asc(root.get("id")));
+
+            // Exécution et conversion en DTO
+            return em.createQuery(cq).getResultList().stream().map(StockDailyValueDTO::new)
+                    .collect(Collectors.toList());
+
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Format de date invalide. Utilisez le format yyyy-MM-dd");
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Erreur de conversion de la date en ID numérique");
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la récupération des données", e);
         }
     }
 
