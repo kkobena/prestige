@@ -151,9 +151,7 @@ public final class DateUtil {
         }
     }
 
-    public static void validationDate(LocalDate startDate, LocalDate endDate) {
-        if (startDate.isAfter(endDate)) {
-            throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
-        }
+    public static boolean validationDate(LocalDate startDate, LocalDate endDate) {
+        return startDate.isAfter(endDate);
     }
 }
