@@ -404,7 +404,7 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
                                     case - 1:
                                         m.style = 'background-color:#ff0000;color:#FFF;font-weight:700;';
                                         break;
-                                    case STATUS===0:
+                                    case 0:
                                         m.style = 'background-color:#009688;color:#FFF;font-weight:700;';
                                         break;
 
