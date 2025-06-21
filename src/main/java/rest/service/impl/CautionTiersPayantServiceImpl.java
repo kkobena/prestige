@@ -241,11 +241,12 @@ public class CautionTiersPayantServiceImpl implements CautionTiersPayantService 
             dtEnd = LocalDate.now().toString();
         }
         TypedQuery<TPreenregistrement> query = em.createQuery(
-                "SELECT o FROM TPreenregistrement o WHERE o.caution.id=?1 AND FUNCTION('DATE',o.dtUPDATED) BETWEEN ?2 AND ?3",
+                "SELECT o FROM TPreenregistrement o WHERE o.caution.id=?1 AND FUNCTION('DATE',o.dtUPDATED) BETWEEN ?2 AND ?3 AND o.strSTATUT=?4",
                 TPreenregistrement.class);
         query.setParameter(1, idCaution);
         query.setParameter(2, java.sql.Date.valueOf(dtStart));
         query.setParameter(3, java.sql.Date.valueOf(dtEnd));
+        query.setParameter(4, Constant.STATUT_IS_CLOSED);
         return query.getResultStream()
                 .sorted(Comparator.comparing(TPreenregistrement::getDtUPDATED, Comparator.reverseOrder()))
                 .map(this::buildVente).collect(Collectors.toList());

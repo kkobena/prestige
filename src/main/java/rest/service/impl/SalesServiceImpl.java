@@ -526,11 +526,12 @@ public class SalesServiceImpl implements SalesService {
                 json.put("msg", "Désolé votre caisse est fermée. Veuillez l'ouvrir avant de proceder à l'annulation");
                 return json;
             }
+            if (tp.getStrTYPEVENTE().equals(VENTE_ASSURANCE) && !canCancelCompteClientPreenregistrement(tp)) {
 
-            if (checkChargedCompteClientPreenregistrement(tp.getLgPREENREGISTREMENTID()).isPresent()) {
                 json.put("success", false);
                 json.put("msg", "Désolé la vente a été facturée");
                 return json;
+
             }
 
             Optional<TRecettes> oprectte = findRecette(tp.getLgPREENREGISTREMENTID());
@@ -3774,6 +3775,19 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
+    private boolean canCancelCompteClientPreenregistrement(TPreenregistrement canceledVente) {
+        Collection<TPreenregistrementCompteClientTiersPayent> clientTiersPayents = canceledVente
+                .getTPreenregistrementCompteClientTiersPayentCollection();
+        if (CollectionUtils.isNotEmpty(clientTiersPayents)) {
+
+            return clientTiersPayents.stream().allMatch(e -> e.getStrSTATUTFACTURE().equals(Constant.STATUT_UNPAID))
+                    || Objects.nonNull(canceledVente.getCaution());
+
+        }
+        return true;
+
+    }
+
     private Optional<TCompteClientTiersPayant> findOneCompteClientTiersPayantById(String id) {
         try {
             TCompteClientTiersPayant q = getEm().find(TCompteClientTiersPayant.class, id);
@@ -4693,7 +4707,7 @@ public class SalesServiceImpl implements SalesService {
 
             TPreenregistrementCompteClientTiersPayent item = getPreenregistrementCompteClientTiersPayent(
                     op.getLgPREENREGISTREMENTID(), cmptClient.getLgCOMPTECLIENTTIERSPAYANTID());
-            item.setStrSTATUTFACTURE("paid");
+            item.setStrSTATUTFACTURE(Constant.STATUT_PAID);
             op.setStrREFBON(params.getNumBon());
             item.setDtUPDATED(op.getDtUPDATED());
             item.setIntPERCENT(params.getTaux());
