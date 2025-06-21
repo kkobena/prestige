@@ -28,6 +28,8 @@ public interface ErpService {
 
     StockDailyValueDTO valorisation(String day);
 
+    List<StockDailyValueDTO> valorisationAll(String dtStart, String dtEnd);
+
     List<ErpCaComptant> caComptant(String dtStart, String dtEnd);
 
     List<ErpCaComptant> caAll(String dtStart, String dtEnd);
