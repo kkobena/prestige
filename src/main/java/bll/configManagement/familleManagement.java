@@ -5825,7 +5825,6 @@ public class familleManagement extends bllBase implements Famillemanagerinterfac
                     json.put("P_UPDATE_DESIGNATION", Boolean.valueOf(Obj[8].toString()));
                     json.put("lg_FAMILLE_ID", t.getLgFAMILLEID());
                     json.put("scheduled", t.isScheduled());
-                    json.put("cmu_price", t.getCmuPrice());
 
                     try {
                         json.put("gammeId", t.getGamme().getId());

@@ -15,7 +15,6 @@ Ext.define('testextjs.view.caution.Add', {
             bodyPadding: 20,
             border: 0,
             modelValidation: true,
-
             layout: 'fit',
             items: [
 

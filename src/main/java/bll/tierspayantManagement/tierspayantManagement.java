@@ -92,7 +92,7 @@ public class tierspayantManagement extends bllBase {
                 }
             } catch (Exception e) {
             }
-            OTTiersPayant.setCmus(cmu);
+
             OTTiersPayant.setIntMONTANTFAC(montantFact);
             OTTiersPayant.setIntNBREBONS(nbrbons);
             OTTiersPayant.setLgTIERSPAYANTID(this.getKey().getComplexId());
@@ -312,7 +312,7 @@ public class tierspayantManagement extends bllBase {
             }
             OTTiersPayant.setDblPLAFONDCREDIT(dbl_PLAFOND_CREDIT);
             OTTiersPayant.setBIsAbsolute(b_IsAbsolute);
-            OTTiersPayant.setCmus(cmu);
+
             OTTiersPayant.setDblTAUXREMBOURSEMENT(dbl_TAUX_REMBOURSEMENT);
             OTTiersPayant.setStrNUMEROCAISSEOFFICIEL(str_NUMERO_CAISSE_OFFICIEL);
             OTTiersPayant.setStrCENTREPAYEUR(str_CENTRE_PAYEUR);
