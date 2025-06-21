@@ -2,12 +2,12 @@ package util;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
+import java.time.LocalDate;
 
 /**
  * @author koben
@@ -150,4 +150,22 @@ public final class DateUtil {
             return null;
         }
     }
+    /*avec conversion*/
+    public static LocalDate ComparaisonDate(String startDateStr, String endDateStr) {
+        
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+    LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+           
+        if (startDate.isAfter(endDate)) {
+                throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
+            }
+        return null;
+    }
+    /*sans conversion*/
+    public static void validationDate(LocalDate startDate, LocalDate endDate) {
+    if (startDate.isAfter(endDate)) {
+        throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
+    }
+}
 }

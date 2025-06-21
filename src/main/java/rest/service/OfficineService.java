@@ -14,6 +14,6 @@ import rest.service.dto.OfficineDTO;
 @Local
 public interface OfficineService {
 
-    public List<OfficineDTO> getAllOfficines();
+    List<OfficineDTO> getAllOfficines();
 
 }

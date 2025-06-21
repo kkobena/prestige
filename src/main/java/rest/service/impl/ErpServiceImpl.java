@@ -60,6 +60,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import rest.service.ErpService;
 import util.DateConverter;
+import util.DateUtil;
+import static util.DateUtil.convertStringToDate;
+import static util.DateUtil.validationDate;
 
 /**
  *
@@ -95,16 +98,19 @@ public class ErpServiceImpl implements ErpService {
             // Conversion des dates en format numérique attendu par l'ID
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-            LocalDate startDate = LocalDate.parse(dtStart);
-            LocalDate endDate = LocalDate.parse(dtEnd);
+            LocalDate startDate = convertStringToDate(dtStart);
+            LocalDate endDate = convertStringToDate(dtEnd);
 
             Integer startId = Integer.parseInt(startDate.format(formatter));
             Integer endId = Integer.parseInt(endDate.format(formatter));
 
             // Validation sur les dates
-            if (startDate.isAfter(endDate)) {
+           /* if (startDate.isAfter(endDate)) {
                 throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
-            }
+            }*/
+            
+            validationDate(startDate, endDate);
+            System.out.println("Les dates sont dans le bon ordre");
 
             // Création de la requête avec paramètres typés
             CriteriaBuilder cb = em.getCriteriaBuilder();

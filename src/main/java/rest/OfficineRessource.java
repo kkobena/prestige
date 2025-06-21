@@ -20,8 +20,7 @@ public class OfficineRessource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllOfficines() {
         try {
-            List<OfficineDTO> officines = officineService.getAllOfficines();
-            return Response.ok(officines).build();
+            return Response.ok(officineService.getAllOfficines()).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Erreur lors de la récupération des officines").build();
