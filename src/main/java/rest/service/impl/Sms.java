@@ -15,7 +15,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
-import util.SmsParameters;
+import util.AppParameters;
 
 /**
  *
@@ -46,7 +46,7 @@ public class Sms implements Runnable {
     public void sendSMS() {
         try {
             Client client = ClientBuilder.newClient();
-            SmsParameters sp = SmsParameters.getInstance();
+            AppParameters sp = AppParameters.getInstance();
             String address = getReceiverAddres();
             if (StringUtils.isEmpty(address)) {
                 address = sp.mobile;

@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -58,6 +59,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.FicheArticleService;
+import rest.service.SessionHelperService;
+import util.Constant;
 import util.DateConverter;
 
 /**
@@ -67,18 +70,20 @@ import util.DateConverter;
 @Stateless
 public class FicheArticleServiceImpl implements FicheArticleService {
 
+    private static final Logger LOG = Logger.getLogger(FicheArticleServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    private static final Logger LOG = Logger.getLogger(FicheArticleServiceImpl.class.getName());
+    @EJB
+    private SessionHelperService sessionHelperService;
 
     public EntityManager getEntityManager() {
         return em;
     }
 
     @Override
-    public JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser u,
-            String codeFamile, String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {
-        Pair<VenteDetailsDTO, List<VenteDetailsDTO>> p = produitPerimes(query, nbreMois, dtStart, dtEnd, u, codeFamile,
+    public JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, String codeFamile,
+            String codeRayon, String codeGrossiste, int start, int limit) throws JSONException {
+        Pair<VenteDetailsDTO, List<VenteDetailsDTO>> p = produitPerimes(query, nbreMois, dtStart, dtEnd, codeFamile,
                 codeRayon, codeGrossiste, start, limit, true);
         List<VenteDetailsDTO> data = p.getRight();
         return new JSONObject().put("total", data.size()).put("data", new JSONArray(data)).put("metaData",
@@ -106,10 +111,10 @@ public class FicheArticleServiceImpl implements FicheArticleService {
 
     @Override
     public Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois, String dtStart,
-            String dtEnd, TUser u, String codeFamille, String codeRayon, String codeGrossiste, int start, int limit,
+            String dtEnd, String codeFamille, String codeRayon, String codeGrossiste, int start, int limit,
             boolean all) {
         try {
-            TEmplacement emp = u.getLgEMPLACEMENTID();
+            TEmplacement emp = sessionHelperService.getCurrentUser().getLgEMPLACEMENTID();
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<VenteDetailsDTO> cq = cb.createQuery(VenteDetailsDTO.class);
             Root<TFamilleStock> root = cq.from(TFamilleStock.class);
@@ -178,7 +183,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         LocalDate today = LocalDate.now();
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.isNotNull(fa.get(TFamille_.dtPEREMPTION)));
-        predicates.add(cb.equal(fa.get(TFamille_.strSTATUT), DateConverter.STATUT_ENABLE));
+        predicates.add(cb.equal(fa.get(TFamille_.strSTATUT), Constant.STATUT_ENABLE));
         predicates.add(cb.greaterThan(root.get(TFamilleStock_.intNUMBERAVAILABLE), 0));
         predicates.add(cb.equal(root.get(TFamilleStock_.strSTATUT), DateConverter.STATUT_ENABLE));
         predicates.add(cb.equal(root.get(TFamilleStock_.lgEMPLACEMENTID).get(TEmplacement_.lgEMPLACEMENTID),
@@ -224,10 +229,10 @@ public class FicheArticleServiceImpl implements FicheArticleService {
     }
 
     @Override
-    public JSONObject modifierArticleDatePeremption(String lg_FAMILLE_ID, String dt_peremption) throws JSONException {
+    public JSONObject modifierArticleDatePeremption(String lgFAMILLEID, String dtperemption) throws JSONException {
         try {
-            TFamille famille = getEntityManager().find(TFamille.class, lg_FAMILLE_ID);
-            famille.setDtPEREMPTION(DateConverter.convertLocalDateToDate(LocalDate.parse(dt_peremption)));
+            TFamille famille = getEntityManager().find(TFamille.class, lgFAMILLEID);
+            famille.setDtPEREMPTION(DateConverter.convertLocalDateToDate(LocalDate.parse(dtperemption)));
             getEntityManager().merge(famille);
             return new JSONObject().put("success", true);
         } catch (Exception e) {

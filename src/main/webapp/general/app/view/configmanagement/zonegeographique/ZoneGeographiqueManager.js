@@ -87,7 +87,42 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
                         allowBlank: false
                     }
                 }
-                , {
+                , 
+                {
+                    xtype: 'checkcolumn',
+                    header: ' ',
+                    dataIndex: 'bool_ACCOUNT',
+                    width: 30,
+                   sortable: false,
+                    menuDisabled: true,
+                    hidden:true,
+                    listeners: {checkchange: function (scr, rowIndex, checked, eOpts) {
+                            console.log(scr, rowIndex, checked);
+                            var rec = Ext.getCmp('zonegeographiquegridID').getStore().getAt(rowIndex);
+
+                            Ext.Ajax.request({
+                                url: '../webservices/configmanagement/zonegeographique/ws_transaction.jsp?mode=updateCount',
+                                params: {
+                                    lg_ZONE_GEO_ID: rec.get("lg_ZONE_GEO_ID"),
+                                    bool_ACCOUNT: checked
+                                },
+                                success: function (response)
+                                {
+
+
+
+                                },
+                                failure: function (response)
+                                {
+
+                                }
+                            });
+                        }}
+
+
+                }
+                
+                ,{
                     xtype: 'actioncolumn',
                     width: 30,
                     sortable: false,
@@ -295,7 +330,7 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
 
     onRemoveClick: function (grid, rowIndex) {
         Ext.MessageBox.confirm('Message',
-                'confirmer la suppresssion',
+                'confirmer la suppression',
                 function (btn) {
                     if (btn === 'yes') {
                         var rec = grid.getStore().getAt(rowIndex);
@@ -348,7 +383,7 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
             odatasource: '',
 
             parentview: this,
-            titre: "Gestion des emplacement"
+            titre: "Gestion des emplacements"
         });
     },
     onbasculer2: function (grid, rowIndex) {
@@ -357,7 +392,7 @@ Ext.define('testextjs.view.configmanagement.zonegeographique.ZoneGeographiqueMan
             odatasource: rec.get('lg_ZONE_GEO_ID'),
 
             parentview: this,
-            titre: "Gestion des emplacement"
+            titre: "Gestion des emplacements"
         });
     }
 });

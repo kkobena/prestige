@@ -12,6 +12,8 @@ import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
@@ -20,9 +22,10 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author koben
  */
-public final class SmsParameters {
+public final class AppParameters {
 
-    private static SmsParameters instance;
+    private static final Logger LOG = Logger.getLogger(AppParameters.class.getName());
+    private static AppParameters instance;
     public String applicationId = "MT7XwvGX6qGAPdfQ";
     public String clientId = "fJaOlJgwU2ggcRWmIlbU9s7jY8tbsRy8";
     public String clientSecret = "UgTURjiCK1rZtsnA";
@@ -50,7 +53,9 @@ public final class SmsParameters {
     public String fnePkey;
     public String fnepointOfSale;
 
-    private SmsParameters() {
+    public String pharmaMlDir;
+
+    private AppParameters() {
         Properties prop = new Properties();
 
         try (InputStream in = Files.newInputStream(FileSystems.getDefault().getPath(path))) {
@@ -97,6 +102,7 @@ public final class SmsParameters {
             if (StringUtils.isNotEmpty(fnepointOfSale0)) {
                 fnepointOfSale = fnepointOfSale0;
             }
+            pharmaMlDir = prop.getProperty("pharmaMlDir");
         } catch (IOException e) {
             createFile(prop, path);
 
@@ -124,14 +130,14 @@ public final class SmsParameters {
 
             prop.store(new FileOutputStream(propFileName), "Fichier de configuartion notification sms , mail");
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, "", e);
         }
 
     }
 
-    public static SmsParameters getInstance() {
+    public static AppParameters getInstance() {
         if (instance == null) {
-            instance = new SmsParameters();
+            instance = new AppParameters();
 
         }
         return instance;

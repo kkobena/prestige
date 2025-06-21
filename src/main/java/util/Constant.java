@@ -172,6 +172,7 @@ public final class Constant {
     public static final String KEY_OPTION_SUGGESTION = "KEY_OPTION_SUGGESTION";
     public static final String STATUT_PERIME = "perime";
     public static final String STATUT_ENCOURS_PEREMPTION = "en peremption";
+    public static final String STATUT_UNPAID = "unpaid";
 
     private Constant() {
     }

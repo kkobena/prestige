@@ -8,7 +8,6 @@ package rest.service.impl;
 import commonTasks.dto.ArticleDTO;
 import commonTasks.dto.VenteDetailsDTO;
 import dal.*;
-import dal.enumeration.ProductStateEnum;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -23,7 +22,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.LongAdder;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -275,27 +273,14 @@ public class SuggestionImpl implements SuggestionService {
         return oTSuggestionOrderDetails;
     }
 
-    public List<TPreenregistrementDetail> getTPreenregistrementDetail(TPreenregistrement tp) {
-
-        try {
-
-            return this.getEmg().createQuery(
-                    "SELECT t FROM TPreenregistrementDetail t WHERE  t.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID = ?1")
-                    .setParameter(1, tp.getLgPREENREGISTREMENTID()).getResultList();
-
-        } catch (Exception ex) {
-            return Collections.emptyList();
-        }
-
-    }
-
     @Override
     public void makeSuggestionAuto(String oTPreenregistrement) {
         EntityManager emg = this.getEmg();
         try {
             TPreenregistrement preenregistrement = emg.find(TPreenregistrement.class, oTPreenregistrement);
             TUser user = preenregistrement.getLgUSERID();
-            List<TPreenregistrementDetail> list = getTPreenregistrementDetail(preenregistrement);
+            List<TPreenregistrementDetail> list = new ArrayList<>(
+                    preenregistrement.getTPreenregistrementDetailCollection());
             makeSuggestionAuto(list, user.getLgEMPLACEMENTID());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
@@ -755,14 +740,16 @@ public class SuggestionImpl implements SuggestionService {
     public void removeItem(String itemId) {
         TSuggestionOrderDetails item = getItem(itemId);
 
-        TSuggestionOrder suggestion = item.getLgSUGGESTIONORDERID();
-        if (CollectionUtils.isNotEmpty(suggestion.getTSuggestionOrderDetailsCollection())
-                && suggestion.getTSuggestionOrderDetailsCollection().size() == 1) {
-            getEmg().remove(suggestion);
-        } else {
-            getEmg().remove(item);
-            suggestion.setDtUPDATED(new Date());
-            getEmg().merge(suggestion);
+        if (Objects.nonNull(item)) {
+            TSuggestionOrder suggestion = item.getLgSUGGESTIONORDERID();
+            if (CollectionUtils.isNotEmpty(suggestion.getTSuggestionOrderDetailsCollection())
+                    && suggestion.getTSuggestionOrderDetailsCollection().size() == 1) {
+                getEmg().remove(suggestion);
+            } else {
+                getEmg().remove(item);
+                suggestion.setDtUPDATED(new Date());
+                getEmg().merge(suggestion);
+            }
         }
 
     }
@@ -1086,13 +1073,15 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     @Override
-    public JSONObject fetchItems(String orderId, String searchValue, TUser tUser, int start, int limit) {
+    public JSONObject fetchItems(String suggestionId, String searchValue, TUser tUser, int start, int limit) {
+        removeInBulk(supprimerLigneSuggestion(suggestionId));
         JSONObject data = new JSONObject();
-        int count = fetchItemsCount(searchValue, orderId);
+        int count = fetchItemsCount(searchValue, suggestionId);
         if (count == 0) {
             return data.put("total", count).put("data", Collections.emptyList());
         }
-        List<TSuggestionOrderDetails> detailses = fetchSuggestionOrderDetails(searchValue, orderId, start, limit);
+        List<TSuggestionOrderDetails> detailses = fetchSuggestionOrderDetails(searchValue, suggestionId, start, limit);
+
         TGrossiste grossiste = detailses.get(0).getLgSUGGESTIONORDERID().getLgGROSSISTEID();
         try {
 
@@ -1361,4 +1350,38 @@ public class SuggestionImpl implements SuggestionService {
             return OptionSuggestion.LESS_EQUALS;
         }
     }
+
+    /*
+     * supprime leslignes de suggestion dont le stock mini de reaprpro n'est plus atteint du fait d'une entrée en stock
+     */
+    private List<String> supprimerLigneSuggestion(String suggestionId) {
+
+        try {
+            Query q = em.createNativeQuery(
+                    "SELECT sd.lg_SUGGESTION_ORDER_DETAILS_ID AS id FROM  t_suggestion_order_details sd JOIN t_famille f ON f.lg_FAMILLE_ID=sd.lg_FAMILLE_ID JOIN t_famille_stock stoc ON f.lg_FAMILLE_ID=stoc.lg_FAMILLE_ID WHERE f.int_SEUIL_MIN < stoc.int_NUMBER_AVAILABLE AND sd.lg_SUGGESTION_ORDER_ID=?1");
+            q.setParameter(1, suggestionId);
+            return q.getResultList();
+        } catch (Exception e) {
+            LOG.log(Level.INFO, null, e.getLocalizedMessage());
+            return List.of();
+        }
+
+    }
+
+    private void removeInBulk(List<String> ids) {
+        if (CollectionUtils.isNotEmpty(ids)) {
+            try {
+
+                CriteriaBuilder cb = em.getCriteriaBuilder();
+                CriteriaDelete<TSuggestionOrderDetails> q = cb.createCriteriaDelete(TSuggestionOrderDetails.class);
+                Root<TSuggestionOrderDetails> root = q.from(TSuggestionOrderDetails.class);
+                q.where(root.get(TSuggestionOrderDetails_.lgSUGGESTIONORDERDETAILSID).in(ids));
+                em.createQuery(q).executeUpdate();
+            } catch (Exception e) {
+                LOG.log(Level.SEVERE, null, e);
+            }
+        }
+
+    }
+
 }

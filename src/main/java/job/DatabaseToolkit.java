@@ -75,7 +75,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.NotificationService;
 import util.Constant;
-import util.SmsParameters;
+import util.AppParameters;
 
 /**
  *
@@ -172,7 +172,7 @@ public class DatabaseToolkit {
 
     private void sendSMS(Notification notification) {
         Client client = ClientBuilder.newClient();
-        SmsParameters sp = SmsParameters.getInstance();
+        AppParameters sp = AppParameters.getInstance();
         List<NotificationClient> toClients = findNotificationClients(notification);
         String address = null;
         if (!toClients.isEmpty()) { // a revoir pour les envois multiples
@@ -306,7 +306,7 @@ public class DatabaseToolkit {
         if (StringUtils.isEmpty(content)) {
             return false;
         }
-        SmsParameters sp = SmsParameters.getInstance();
+        AppParameters sp = AppParameters.getInstance();
         Properties props = new Properties();
         props.put("mail.smtp.host", sp.smtpHost);
         props.put("mail.transport.protocol", sp.protocol);
@@ -457,7 +457,7 @@ public class DatabaseToolkit {
     public JSONObject findAccessToken() {
         try {
             Client client = ClientBuilder.newClient();
-            SmsParameters sp = SmsParameters.getInstance();
+            AppParameters sp = AppParameters.getInstance();
             MultivaluedMap<String, String> formdata = new MultivaluedHashMap<>();
             formdata.add("grant_type", Constant.GRANT_TYPE);
             WebTarget myResource = client.target(sp.pathsmsapitokenendpoint);

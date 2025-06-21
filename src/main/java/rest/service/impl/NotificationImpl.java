@@ -59,7 +59,7 @@ import rest.service.SmsService;
 import rest.service.v2.dto.ActiviteParam;
 import util.FunctionUtils;
 import util.NumberUtils;
-import util.SmsParameters;
+import util.AppParameters;
 
 /**
  *
@@ -283,7 +283,7 @@ public class NotificationImpl implements NotificationService {
     private boolean sendMail(String content) {
         try {
             Session session = Session.getInstance(rest.service.notification.template.Mail.getEmailProperties());
-            SmsParameters sp = rest.service.notification.template.Mail.sp;
+            AppParameters sp = rest.service.notification.template.Mail.sp;
 
             MimeMessage msg = new MimeMessage(session);
             List<Address> listadd = new ArrayList<>();

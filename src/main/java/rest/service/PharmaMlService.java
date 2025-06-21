@@ -17,17 +17,9 @@ import org.json.JSONObject;
 @Local
 public interface PharmaMlService {
 
-    JSONObject envoiPharmaCommande(String commandeId, LocalDate dateLivraisonSouhaitee, int typeCommande,
-            String typeCommandeExecptionel, String commentaire);
-
     JSONObject envoiPharmaInfosProduit(String commandeId);
 
-    JSONObject lignesCommandeRetour(String commandeRef, String orderId);
+    JSONObject envoiCommande(String commandeId, LocalDate dateLivraisonSouhaitee, int typeCommande,
+            String typeCommandeExecptionel, String commentaire);
 
-    JSONObject renvoiPharmaCommande(String ruptureId, String grossiste, LocalDate dateLivraisonSouhaitee,
-            int typeCommande, String typeCommandeExecptionel, String commentaire);
-
-    JSONObject reponseRupture(String ruptureId, TUser u);
-
-    void test();
 }
