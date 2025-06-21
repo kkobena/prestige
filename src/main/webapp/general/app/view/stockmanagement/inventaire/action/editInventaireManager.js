@@ -819,8 +819,11 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                             hidden: true,
                             handler: this.onbtnprintalert
                         },
-
                         {
+                             text: 'Importer csv',
+                          
+                            iconCls: 'icon-clear-group',
+                            scope: this,
                             handler: function () {
                                 var win = new Ext.window.Window({
                                     autoShow: false,
@@ -871,6 +874,13 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                 win.show();
                             }
                         },
+                            
+                            
+                            
+                            
+                       
+
+                        
                         {
                             text: 'Exporter excel',
                             id: 'btn_export_txt',
@@ -1061,7 +1071,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
             return;
         }
         formulaire.submit({
-            url: '../ExportInventaire?lg_INVENTAIRE_ID=' + ref,
+            url: '../ImportInventaire?lg_INVENTAIRE_ID=' + ref,
             waitMsg: 'Veuillez patienter le temps du telechargemetnt du fichier...',
             timeout: 2400000,
             success: function (formulaire, action) {
