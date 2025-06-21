@@ -192,7 +192,6 @@ Ext.define('testextjs.controller.VenteFinisCtr', {
         if (client !== '') {
             window.open(linkUrl);
         } else {
-            // me.buildForm(rec, linkUrl);
             me.buildLambdaClientGrid(rec, linkUrl);
         }
 

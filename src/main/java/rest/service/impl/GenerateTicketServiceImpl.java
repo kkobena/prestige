@@ -488,10 +488,16 @@ public class GenerateTicketServiceImpl implements GenerateTicketService {
         }
         datas.add("Part du Client:: " + DateConverter.amountFormat(partClt) + "  CFA");
         for (int i = 0; i < lstT.size(); i++) {
+            if (Objects.isNull(p.getTypePriceOption())) {
+                datas.add(lstT.get(i).getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME() + "   "
+                        + lstT.get(i).getIntPERCENT() + "%" + " :: "
+                        + DateConverter.amountFormat(lstT.get(i).getIntPRICE()) + "  CFA");
+            } else {
+                datas.add(lstT.get(i).getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME() + " :: "
+                        + DateConverter.amountFormat(lstT.get(i).getIntPRICE()) + "  CFA");
 
-            datas.add(lstT.get(i).getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getStrNAME() + "   "
-                    + lstT.get(i).getIntPERCENT() + "%" + " :: " + DateConverter.amountFormat(lstT.get(i).getIntPRICE())
-                    + "  CFA");
+            }
+
         }
         return datas;
     }

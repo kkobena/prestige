@@ -238,7 +238,7 @@ public class SuggestionImpl implements SuggestionService {
             return q.getSingleResult();
 
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.info(e.getLocalizedMessage());
             return null;
 
         }
