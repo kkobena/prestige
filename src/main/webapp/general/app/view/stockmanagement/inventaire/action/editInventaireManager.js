@@ -1048,7 +1048,9 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                 });
 
 
-    },
+    }
+    
+    ,
     onbtnexportExcel: function () {
 
         window.location = '../ExportInventaire?lg_INVENTAIRE_ID=' + ref + "&format=Excel";
@@ -1072,23 +1074,40 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                 const result = Ext.JSON.decode(action.response.responseText, true);
                 console.log(result);
                 if (result.statut === 1) {/*
-                    Ext.MessageBox.alert('Confirmation', result.success);
-                    Oview.getStore().reload();*/
+                 Ext.MessageBox.alert('Confirmation', result.success);
+                 Oview.getStore().reload();*/
                     Ext.Msg.show({
-                    title: 'Confirmation',
-                    msg: result.success,
-                    buttons: Ext.Msg.OK,
-                    icon: Ext.Msg.INFO,
-                    fn: function() {
-                        // Mon action après le clic sur OK
-                       // Oview.getStore().reload();
+                        title: 'Confirmation',
+                        msg: result.success,
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.Msg.INFO,
+                        fn: function () {
+                            // Recharger le store et fermer la fenêtre
                             var OGridStore = Ext.getCmp('gridpanelInventaireID').getStore();
                             OGridStore.load();
                             OGridStore.loadPage(1);
                             fenetre.close();
-                    }
-                });
-                } else {
+
+                            // Vérifier et traiter les lignes ignorées
+                            if (result.ignored && result.ignored > 0 && result.ignoredCsv) {
+                                setTimeout(function () {
+                                    var filename = 'lignes_ignorees_' + new Date().toISOString().slice(0, 10) + '.csv';
+                                    var csvContent = result.ignoredCsv;
+
+                                    // Téléchargement automatique
+                                    var hiddenElement = document.createElement('a');
+                                    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvContent);
+                                    hiddenElement.target = '_blank';
+                                    hiddenElement.download = filename;
+                                    hiddenElement.click();
+
+                                }, 500);
+                            }
+                        }
+                    });
+                } 
+                
+                else {
                     Ext.MessageBox.alert('Erreur', result.success);
                 }
 
@@ -1101,6 +1120,36 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
         });
 
     },
+    // Fonction pour télécharger le CSV
+    downloadIgnoredCsv: function (csvData, filename) {
+    try {
+        // Créer un blob à partir des données CSV
+        var blob = new Blob(["\uFEFF" + csvData], { type: 'text/csv;charset=utf-8;' });
+        
+        // Créer un lien de téléchargement
+        var link = document.createElement('a');
+        var url = URL.createObjectURL(blob);
+        
+        // Configurer le lien
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        
+        // Ajouter le lien au DOM et déclencher le clic
+        document.body.appendChild(link);
+        link.click();
+        
+        // Nettoyer
+        setTimeout(function() {
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+    } catch (e) {
+        console.error("Erreur lors du téléchargement du CSV:", e);
+        Ext.Msg.alert('Erreur', 'Impossible de générer le fichier des lignes ignorées.');
+    }
+}
+    ,
     onbtncloturer: function (button) {
         Ext.MessageBox.confirm('Message',
                 'Confirmer la cloture de l\'inventare',
