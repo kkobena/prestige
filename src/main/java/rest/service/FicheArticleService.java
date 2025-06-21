@@ -23,14 +23,13 @@ import org.json.JSONObject;
 @Local
 public interface FicheArticleService {
 
-    JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, TUser u, String codeFamile,
+    JSONObject produitPerimes(String query, int nbreMois, String dtStart, String dtEnd, String codeFamile,
             String codeRayon, String codeGrossiste, int start, int limit) throws JSONException;
 
     Pair<VenteDetailsDTO, List<VenteDetailsDTO>> produitPerimes(String query, int nbreMois, String dtStart,
-            String dtEnd, TUser u, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit,
-            boolean all);
+            String dtEnd, String codeFamile, String codeRayon, String codeGrossiste, int start, int limit, boolean all);
 
-    JSONObject modifierArticleDatePeremption(String lg_FAMILLE_ID, String dt_peremption) throws JSONException;
+    JSONObject modifierArticleDatePeremption(String lgFAMILLEID, String dtperemption) throws JSONException;
 
     List<ArticleDTO> articleSurStock(TUser u, String query, String codeFamile, String codeRayon, String codeGrossiste,
             int nbreMois, int nbreConsommation, int start, int limit, boolean all);

@@ -52,15 +52,9 @@ public class FicheArticleRessource {
             @QueryParam(value = "codeRayon") String codeRayon,
             @QueryParam(value = "codeGrossiste") String codeGrossiste, @QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-
-        JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, tu, codeFamile,
-                codeRayon, codeGrossiste, 0, 0);
+        JSONObject jsono = ficheArticleService.produitPerimes(query, nbreMois, dtStart, dtEnd, codeFamile, codeRayon,
+                codeGrossiste, 0, 0);
         return Response.ok().entity(jsono.toString()).build();
     }
 

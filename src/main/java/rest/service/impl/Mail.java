@@ -16,7 +16,7 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.StringUtils;
-import util.SmsParameters;
+import util.AppParameters;
 
 /**
  *
@@ -60,7 +60,7 @@ public class Mail implements Runnable {
     }
 
     public void sendMail() {
-        SmsParameters sp = SmsParameters.getInstance();
+        AppParameters sp = AppParameters.getInstance();
         Properties props = new Properties();
         props.put("mail.smtp.host", sp.smtpHost);
         props.put("mail.transport.protocol", sp.protocol);

@@ -32,7 +32,7 @@ import org.json.JSONObject;
 import rest.service.SmsService;
 import util.Constant;
 import util.DateConverter;
-import util.SmsParameters;
+import util.AppParameters;
 
 /**
  *
@@ -44,7 +44,7 @@ public class SmsImpl implements SmsService {
     private static final Logger LOG = Logger.getLogger(SmsImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
-    private final SmsParameters sp = SmsParameters.getInstance();
+    private final AppParameters sp = AppParameters.getInstance();
 
     @Override
     public JSONObject findAccessToken() {

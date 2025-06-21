@@ -782,10 +782,7 @@ public class Balance {
         }
         parameters.put("P_H_CLT_INFOS", "Statistiques des\n Résultats par Taux de TVA  " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
-        /*
-         * List<TvaDTO> datas; if (!parasm.isCheckug()) { datas = salesStatsService.tvasRapportJournalier(parasm); }
-         * else { datas = salesStatsService.tvaRapportJournalier(parasm); }
-         */
+
         List<TvaDTO> datas = salesStatsService.tvasRapportJournalier2(parasm);
         // datas.sort(comparatorTvaDTO);
         reportUtil.buildReport(parameters, scr_report_file, jdom.scr_report_file,
@@ -848,7 +845,7 @@ public class Balance {
         parameters.put("P_H_CLT_INFOS", "PRODUITS PERIMES " + P_PERIODE);
         String report_generate_file = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH_mm_ss")) + ".pdf";
         Pair<VenteDetailsDTO, List<VenteDetailsDTO>> p = ficheArticleService.produitPerimes(query, nbreMois, dtStart,
-                dtEnd, tu, codeFamile, codeRayon, codeGrossiste, 0, 0, true);
+                dtEnd, codeFamile, codeRayon, codeGrossiste, 0, 0, true);
         VenteDetailsDTO summary = p.getLeft();
         List<VenteDetailsDTO> data = p.getRight();
         if (!StringUtils.isEmpty(codeFamile)) {

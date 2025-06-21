@@ -13,6 +13,7 @@ import commonTasks.dto.ValorisationDTO;
 import dal.TFamille;
 import dal.TFamilleGrossiste;
 import dal.TFamilleStock;
+import dal.TGrossiste;
 import dal.TUser;
 import java.time.LocalDate;
 import java.util.List;
@@ -100,4 +101,8 @@ public interface ProduitService {
 
     JSONObject updateProduitDetail(CreationProduitDTO creationProduit, String idProduit);
 
+    TFamille createProduitFromRupture(CreationProduitDTO creationProduit, TGrossiste grossiste);
+
+    TFamilleGrossiste createTFamilleGrossisteFromRupture(CreationProduitDTO creationProduit, TFamille famille,
+            TGrossiste grossiste);
 }

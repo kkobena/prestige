@@ -7,6 +7,7 @@ import toolkits.utils.logger;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import static util.DateConverter.getNumberRandom;
 
 public class KeyUtilGen {
 
@@ -150,6 +151,25 @@ public class KeyUtilGen {
         }
     }
 
+    public static String getId() {
+        Calendar now = Calendar.getInstance();
+        int mm = now.get(Calendar.MINUTE);
+        int ss = now.get(Calendar.SECOND);
+        int mls = now.get(Calendar.MILLISECOND);
+        String catime = (String.valueOf(mm) + "" + ss + "" + mls);
+        int intLenght = catime.length();
+        if (intLenght < 20) {
+            catime = catime + getNumberRandom();
+        }
+        if (intLenght == 20) {
+            return catime;
+        }
+        if (intLenght > 20) {
+            return catime.substring(0, 20);
+        }
+        return catime;
+    }
+
     public String getShortId(int intSize) {
         Calendar now = Calendar.getInstance();
         this.mm = now.get(12);
@@ -173,9 +193,9 @@ public class KeyUtilGen {
         this.hh = now.get(11);
         this.mois = now.get(2) + 1;
         this.jour = now.get(5);
-        String JOUR = "" + this.jour;
+        String jourr = "" + this.jour;
         if (this.jour < 10) {
-            JOUR = "0" + this.jour;
+            jourr = "0" + this.jour;
         }
 
         String MOIS = "" + this.mois;
@@ -184,7 +204,7 @@ public class KeyUtilGen {
         }
 
         this.annee = now.get(1);
-        this.catime = this.getKeyYear() + "" + MOIS + "" + JOUR + "" + this.hh + "" + this.mm + "" + this.ss + ""
+        this.catime = this.getKeyYear() + "" + MOIS + "" + jourr + "" + this.hh + "" + this.mm + "" + this.ss + ""
                 + GetNumberRandom(9);
         if (this.catime.length() == 9) {
             System.out.println("bad id " + this.catime);
