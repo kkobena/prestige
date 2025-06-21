@@ -37,8 +37,7 @@ public final class VenteDTOBuilder extends CommonBuilder {
     public static VenteDTO buildVenteDTO(TPreenregistrement p, MvtTransaction mt) {
         return VenteDTO.builder().user(VenteDTOBuilder.user(p.getLgUSERID()))
                 .vendeur(VenteDTOBuilder.user(p.getLgUSERVENDEURID()))
-                .caissier(VenteDTOBuilder.user(p.getLgUSERCAISSIERID())).cmuAmount(p.getCmuAmount())
-                .client(VenteDTOBuilder.client(p.getClient()))
+                .caissier(VenteDTOBuilder.user(p.getLgUSERCAISSIERID())).client(VenteDTOBuilder.client(p.getClient()))
                 .typeVente(VenteDTOBuilder.typeVente(p.getLgTYPEVENTEID())).strREFTICKET(p.getStrREFTICKET())
                 .strREF(p.getStrREF()).strREFBON(p.getStrREFBON()).intCUSTPART(p.getIntCUSTPART())
                 .intPRICE(p.getIntPRICE()).intPRICEREMISE(p.getIntPRICEREMISE())
@@ -74,7 +73,7 @@ public final class VenteDTOBuilder extends CommonBuilder {
     }
 
     public static VenteItemDTO buildVenteItemDTO(TPreenregistrementDetail detail) {
-        return VenteItemDTO.builder().cmuPrice(detail.getCmuPrice()).id(detail.getLgPREENREGISTREMENTDETAILID())
+        return VenteItemDTO.builder().id(detail.getLgPREENREGISTREMENTDETAILID())
                 .intAVOIRSERVED(detail.getIntAVOIRSERVED()).intPRICE(detail.getIntPRICE())
                 .intPRICEUNITAIR(detail.getIntPRICEUNITAIR()).intQUANTITY(detail.getIntQUANTITY())
                 .intQUANTITYSERVED(detail.getIntQUANTITYSERVED())
@@ -98,8 +97,7 @@ public final class VenteDTOBuilder extends CommonBuilder {
 
     public static TransactionDTO buildReglementDTO(MvtTransaction mvtTransaction) {
         if (Objects.nonNull(mvtTransaction)) {
-            return TransactionDTO.builder().checked(mvtTransaction.getChecked())
-                    .cmuAmount(mvtTransaction.getCmuAmount()).flaged(mvtTransaction.getFlaged())
+            return TransactionDTO.builder().checked(mvtTransaction.getChecked()).flaged(mvtTransaction.getFlaged())
                     .marge(mvtTransaction.getMarge()).margeug(mvtTransaction.getMargeug())
                     .montant(mvtTransaction.getMontant()).montantCredit(mvtTransaction.getMontantCredit())
                     .montantNet(mvtTransaction.getMontantNet()).montantPaye(mvtTransaction.getMontantPaye())

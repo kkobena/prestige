@@ -29,7 +29,6 @@ import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Chromaticity;
 import javax.print.attribute.standard.Copies;
 import javax.swing.ImageIcon;
-import toolkits.parameters.commonparameter;
 import toolkits.utils.jdom;
 import util.Constant;
 import util.DateConverter;

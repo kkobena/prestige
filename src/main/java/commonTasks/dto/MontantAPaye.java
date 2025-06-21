@@ -16,8 +16,13 @@ import java.util.List;
 public class MontantAPaye implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private Integer remise = 0, marge = 0, montantTva = 0;
-    private Integer montantNet = 0, montant = 0, montantTp = 0, montantAccount = 0;
+    private Integer remise = 0;
+    private Integer marge = 0;
+    private Integer montantTva = 0;
+    private Integer montantNet = 0;
+    private Integer montant = 0;
+    private Integer montantTp = 0;
+    private Integer montantAccount = 0;
     private int montantNetUg = 0;
     private int montantTtcUg = 0;
     private int margeUg = 0;
@@ -26,9 +31,21 @@ public class MontantAPaye implements Serializable {
     private String message;
     private int montantTvaUg = 0;
     private int cmuAmount = 0;
+    private List<MontantTp> montantTierspayants = new ArrayList<>();
+    private boolean prixReference;
+    private boolean taux;
+    private int tiersPayantBaseAmount;// montant de reference + montant de produt sans prix de reference
 
     public boolean isRestructuring() {
         return restructuring;
+    }
+
+    public int getTiersPayantBaseAmount() {
+        return tiersPayantBaseAmount;
+    }
+
+    public void setTiersPayantBaseAmount(int tiersPayantBaseAmount) {
+        this.tiersPayantBaseAmount = tiersPayantBaseAmount;
     }
 
     public int getCmuAmount() {
@@ -90,6 +107,15 @@ public class MontantAPaye implements Serializable {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public List<MontantTp> getMontantTierspayants() {
+        return montantTierspayants;
+    }
+
+    public MontantAPaye setMontantTierspayants(List<MontantTp> montantTierspayants) {
+        this.montantTierspayants = montantTierspayants;
+        return this;
     }
 
     public MontantAPaye(Integer montantNet, Integer montant, Integer montantTp, Integer remise, Integer marge,
@@ -199,4 +225,21 @@ public class MontantAPaye implements Serializable {
         this.montantTvaUg = montantTvaUg;
         return this;
     }
+
+    public boolean isPrixReference() {
+        return prixReference;
+    }
+
+    public void setPrixReference(boolean prixReference) {
+        this.prixReference = prixReference;
+    }
+
+    public boolean isTaux() {
+        return taux;
+    }
+
+    public void setTaux(boolean taux) {
+        this.taux = taux;
+    }
+
 }

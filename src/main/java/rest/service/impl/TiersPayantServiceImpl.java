@@ -71,7 +71,6 @@ public class TiersPayantServiceImpl implements TiersPayantService {
                 json.put("caution", c.getMontant());
             }
 
-            json.put("cmu", tTiersPayant.getCmus());
             json.put("lg_TIERS_PAYANT_ID", tTiersPayant.getLgTIERSPAYANTID());
             // str_CODE_ORGANISME
             json.put("str_CODE_ORGANISME", tTiersPayant.getStrCODEORGANISME());

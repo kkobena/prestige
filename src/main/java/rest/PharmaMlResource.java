@@ -23,7 +23,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.PharmaMlService;
 
-import toolkits.parameters.commonparameter;
 import util.Constant;
 
 /**
@@ -43,11 +42,7 @@ public class PharmaMlResource {
     @PUT
     @Path("{id}")
     public Response envoiPharmaCommande(@PathParam("id") String commandeId) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = pharmaMlService.envoiPharmaCommande(commandeId, LocalDate.now().plusDays(1), 0, null, null);
         return Response.ok().entity(json.toString()).build();
     }
@@ -55,11 +50,7 @@ public class PharmaMlResource {
     @PUT
     @Path("infos/{id}")
     public Response envoiPharmaInfosProduit(@PathParam("id") String commandeId) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = pharmaMlService.envoiPharmaInfosProduit(commandeId);
         return Response.ok().entity(json.toString()).build();
     }
@@ -75,11 +66,7 @@ public class PharmaMlResource {
     @Path("rupture/{id}/{grossiste}")
     public Response renvoiPharmaCommande(@PathParam("id") String ruptureId, @PathParam("grossiste") String grossiste)
             throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+
         JSONObject json = pharmaMlService.renvoiPharmaCommande(ruptureId, grossiste, LocalDate.now().plusDays(1), 0,
                 null, null);
         return Response.ok().entity(json.toString()).build();

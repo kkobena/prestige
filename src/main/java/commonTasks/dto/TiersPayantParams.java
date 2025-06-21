@@ -18,14 +18,21 @@ public class TiersPayantParams implements Serializable {
 
     private String compteTp, message;
     private int taux;
-    private String numBon, tpFullName, lgTIERSPAYANTID, lgCOMPTECLIENTID;
+    private String numBon;
+    private String tpFullName;
+    private String lgTIERSPAYANTID;
+    private String lgCOMPTECLIENTID;
     private Integer tpnet = 0, discount = 0;
     private boolean principal, enabled, activeTiersPayant;
     private String numSecurity = "";
     private int order;
-    private Integer dbPLAFONDENCOURS = 0, dbCONSOMMATIONMENSUELLE, dblPLAFOND = 0, dblQUOTACONSOMENSUELLE = 0;
+    private Integer dbPLAFONDENCOURS = 0;
+    private Integer dbCONSOMMATIONMENSUELLE;
+    private Integer dblPLAFOND = 0;
+    private Integer dblQUOTACONSOMENSUELLE = 0;
     private boolean bIsAbsolute;
-    private String ancienTierPayant, itemId;
+    private String ancienTierPayant;
+    private String itemId;
     private boolean cmu;
 
     public String getCompteTp() {
@@ -174,7 +181,6 @@ public class TiersPayantParams implements Serializable {
             this.lgTIERSPAYANTID = payant.getLgTIERSPAYANTID();
             this.numSecurity = cp.getStrNUMEROSECURITESOCIAL();
             this.order = cp.getIntPRIORITY();
-            this.cmu = payant.getCmus();
 
         } catch (Exception e) {
         }
@@ -234,7 +240,6 @@ public class TiersPayantParams implements Serializable {
             this.dblQUOTACONSOMENSUELLE = cp.getDblPLAFOND().intValue();
             this.activeTiersPayant = payant.getBCANBEUSE();
             this.dblPLAFOND = cp.getDblPLAFOND().intValue();
-            this.cmu = payant.getCmus();
 
         } catch (Exception e) {
         }
