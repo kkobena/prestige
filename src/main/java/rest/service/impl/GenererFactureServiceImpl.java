@@ -393,51 +393,44 @@ public class GenererFactureServiceImpl implements GenererFactureService {
 
     }
 
-    void updatePreenregistrementTiersPayantFactureStatut(TPreenregistrementCompteClientTiersPayent payent,
-            String factureStatus) {
-        payent.setStrSTATUTFACTURE(factureStatus);
-        payent.setDtUPDATED(new Date());
-        getEntityManager().merge(payent);
-    }
-
-    private TFactureDetail invoiceDetail(TFacture OTFacture, TPreenregistrementCompteClientTiersPayent payent,
-            Double Montant, double montantRemise) {
-        TFactureDetail OTFactureDetail = new TFactureDetail();
+    private TFactureDetail invoiceDetail(TFacture oTFacture, TPreenregistrementCompteClientTiersPayent payent,
+            Double montant, double montantRemise) {
+        TFactureDetail oTFactureDetail = new TFactureDetail();
         TPreenregistrement preenregistrement = payent.getLgPREENREGISTREMENTID();
-        OTFactureDetail.setLgFACTUREDETAILID(UUID.randomUUID().toString());
-        OTFactureDetail.setLgFACTUREID(OTFacture);
-        OTFactureDetail.setStrREF(payent.getLgPREENREGISTREMENTCOMPTECLIENTPAYENTID());
-        OTFactureDetail.setStrREFDESCRIPTION(preenregistrement.getStrREFBON());
-        OTFactureDetail.setDateOperation(preenregistrement.getDtUPDATED());
-        String str_CATEGORY = "";
+        oTFactureDetail.setLgFACTUREDETAILID(UUID.randomUUID().toString());
+        oTFactureDetail.setLgFACTUREID(oTFacture);
+        oTFactureDetail.setStrREF(payent.getLgPREENREGISTREMENTCOMPTECLIENTPAYENTID());
+        oTFactureDetail.setStrREFDESCRIPTION(preenregistrement.getStrREFBON());
+        oTFactureDetail.setDateOperation(preenregistrement.getDtUPDATED());
+        String strCATEGORY = "";
         try {
             TCategoryClient categoryClient = preenregistrement.getClient().getLgCATEGORYCLIENTID();
             if (categoryClient != null) {
-                str_CATEGORY = categoryClient.getStrLIBELLE();
+                strCATEGORY = categoryClient.getStrLIBELLE();
             }
 
         } catch (Exception e) {
         }
-        OTFactureDetail.setStrCATEGORYCLIENT(str_CATEGORY);
-        OTFactureDetail.setDblMONTANT(Montant);
-        OTFactureDetail.setDblMONTANTBrut(new BigDecimal(payent.getIntPRICE()));
-        OTFactureDetail.setDblMONTANTPAYE(0.0);
-        OTFactureDetail.setPKey(preenregistrement.getLgPREENREGISTREMENTID());
-        OTFactureDetail.setDblMONTANTREMISE(BigDecimal.valueOf(montantRemise));
-        OTFactureDetail.setDblMONTANTRESTANT(Montant);
-        OTFactureDetail.setStrSTATUT(DateConverter.STATUT_ENABLE);
-        OTFactureDetail.setDtCREATED(new Date());
-        OTFactureDetail.setDtUPDATED(OTFactureDetail.getDtCREATED());
-        OTFactureDetail.setAyantDroit(preenregistrement.getAyantDroit());
-        OTFactureDetail.setClient(preenregistrement.getClient());
-        OTFactureDetail.setStrFIRSTNAMECUSTOMER(preenregistrement.getStrFIRSTNAMECUSTOMER());
-        OTFactureDetail.setStrLASTNAMECUSTOMER(preenregistrement.getStrLASTNAMECUSTOMER());
-        OTFactureDetail.setStrNUMEROSECURITESOCIAL(preenregistrement.getStrNUMEROSECURITESOCIAL());
-        OTFactureDetail.setMontantRemiseVente(preenregistrement.getIntPRICEREMISE());
-        OTFactureDetail.setMontantTvaVente(preenregistrement.getMontantTva());
-        OTFactureDetail.setMontantVente(preenregistrement.getIntPRICE());
-        OTFactureDetail.setTaux(payent.getIntPERCENT());
-        return OTFactureDetail;
+        oTFactureDetail.setStrCATEGORYCLIENT(strCATEGORY);
+        oTFactureDetail.setDblMONTANT(montant);
+        oTFactureDetail.setDblMONTANTBrut(new BigDecimal(payent.getIntPRICE()));
+        oTFactureDetail.setDblMONTANTPAYE(0.0);
+        oTFactureDetail.setPKey(preenregistrement.getLgPREENREGISTREMENTID());
+        oTFactureDetail.setDblMONTANTREMISE(BigDecimal.valueOf(montantRemise));
+        oTFactureDetail.setDblMONTANTRESTANT(montant);
+        oTFactureDetail.setStrSTATUT(DateConverter.STATUT_ENABLE);
+        oTFactureDetail.setDtCREATED(new Date());
+        oTFactureDetail.setDtUPDATED(oTFactureDetail.getDtCREATED());
+        oTFactureDetail.setAyantDroit(preenregistrement.getAyantDroit());
+        oTFactureDetail.setClient(preenregistrement.getClient());
+        oTFactureDetail.setStrFIRSTNAMECUSTOMER(preenregistrement.getStrFIRSTNAMECUSTOMER());
+        oTFactureDetail.setStrLASTNAMECUSTOMER(preenregistrement.getStrLASTNAMECUSTOMER());
+        oTFactureDetail.setStrNUMEROSECURITESOCIAL(preenregistrement.getStrNUMEROSECURITESOCIAL());
+        oTFactureDetail.setMontantRemiseVente(preenregistrement.getIntPRICEREMISE());
+        oTFactureDetail.setMontantTvaVente(preenregistrement.getMontantTva());
+        oTFactureDetail.setMontantVente(preenregistrement.getIntPRICE());
+        oTFactureDetail.setTaux(payent.getIntPERCENT());
+        return oTFactureDetail;
     }
 
     private void updateItem(TUser user, String ref, String desc, TypeLog typeLog, Object T, String codefacture) {

@@ -230,7 +230,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         labelWidth: 5,
                         id: 'filtreImpayes',
                         store: Ext.create('Ext.data.ArrayStore', {
-                            data: [['', 'Tout'], ['impayes', 'Non réglées ou partiellement réglée'],['payes', 'Factures réglées']],
+                            data: [['', 'Tout'], ['impayes', 'Non réglées ou partiellement réglée'], ['payes', 'Factures réglées']],
                             fields: [{name: 'id', type: 'string'}, {name: 'libelle', type: 'string'}]
                         }),
 
@@ -239,8 +239,8 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         typeAhead: false,
                         queryMode: 'local',
                         value: '',
-                         listeners: {
-                          
+                        listeners: {
+
                             select: function (cmp) {
                                 Me.onRechClick();
                             }
@@ -257,7 +257,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         text: 'rechercher',
                         tooltip: 'rechercher',
                         iconCls: 'searchicon',
-                     
+
                         scope: this,
                         handler: this.onRechClick
                     },
@@ -269,7 +269,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                         tooltip: 'Imprimer',
                         iconCls: 'importicon',
                         id: 'printInvoicereport',
-                      
+
                         scope: this,
                         handler: this.onPrint
                     },
@@ -280,7 +280,7 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
                     {
                         text: 'Exporter',
                         scope: this,
-                      
+
                         iconCls: 'export_excel_icon',
                         handler: this.exportToExcel
                     }
@@ -450,7 +450,19 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
 
                 ]
             },
-
+            {
+                xtype: 'actioncolumn',
+                hidden: true,
+                width: 30,
+                sortable: false,
+                menuDisabled: true,
+                items: [{
+                        icon: 'resources/images/icons/certication.png',
+                        tooltip: 'Certification',
+                        scope: this,
+                        handler: this.certify
+                    }]
+            },
             {
                 xtype: 'actioncolumn',
                 width: 30,
@@ -553,15 +565,30 @@ Ext.define('testextjs.view.sm_user.editfacture.EditFactureManager', {
             }
         ];
     },
+    certify: function (grid, rowIndex) {
+        const rec = grid.getStore().getAt(rowIndex);
 
+        const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
+        Ext.Ajax.request({
+            url: '../api/v1/fne/invoices/sign/' + rec.get('lg_FACTURE_ID'),
+            method: 'GET',
+            success: function (response)
+            {
+                progress.hide();
+                Ext.MessageBox.alert('Info', 'Opération effectuée ');
+
+            },
+            failure: function (response)
+            {
+                progress.hide();
+                Ext.MessageBox.alert('Error Message', response.responseText);
+            }
+        });
+
+    },
     onAddCreate: function () {
-        var xtype = "addeditfacture";
-//        var xtype = "oneditinvoice";
 
-
-        var alias = 'widget.' + xtype;
-        //A DECOMMENTER EN CAS DE PROBLEME
-        testextjs.app.getController('App').onLoadNewComponent(xtype, "Cr&eacute;er une facture", "0");
+        testextjs.app.getController('App').onLoadNewComponent('addeditfacture', "Cr&eacute;er une facture", "0");
 
 
     },
