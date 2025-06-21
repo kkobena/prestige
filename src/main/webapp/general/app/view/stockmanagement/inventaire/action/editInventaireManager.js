@@ -820,8 +820,8 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                             handler: this.onbtnprintalert
                         },
                         {
-                             text: 'Importer csv',
-                          
+                            text: 'Importer csv',
+
                             iconCls: 'icon-clear-group',
                             scope: this,
                             handler: function () {
@@ -874,13 +874,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
                                 win.show();
                             }
                         },
-                            
-                            
-                            
-                            
-                       
 
-                        
                         {
                             text: 'Exporter excel',
                             id: 'btn_export_txt',
@@ -1074,13 +1068,28 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
             url: '../ImportInventaire?lg_INVENTAIRE_ID=' + ref,
             waitMsg: 'Veuillez patienter le temps du telechargemetnt du fichier...',
             timeout: 2400000,
-            success: function (formulaire, action) {
-
-                if (action.result.success === "1") {
-                    Ext.MessageBox.alert('Confirmation', action.result.errors);
-                    Oview.getStore().reload();
+            success:  function (formulaire, action) {
+                const result = Ext.JSON.decode(action.response.responseText, true);
+                console.log(result);
+                if (result.statut === 1) {/*
+                    Ext.MessageBox.alert('Confirmation', result.success);
+                    Oview.getStore().reload();*/
+                    Ext.Msg.show({
+                    title: 'Confirmation',
+                    msg: result.success,
+                    buttons: Ext.Msg.OK,
+                    icon: Ext.Msg.INFO,
+                    fn: function() {
+                        // Mon action après le clic sur OK
+                       // Oview.getStore().reload();
+                            var OGridStore = Ext.getCmp('gridpanelInventaireID').getStore();
+                            OGridStore.load();
+                            OGridStore.loadPage(1);
+                            fenetre.close();
+                    }
+                });
                 } else {
-                    Ext.MessageBox.alert('Erreur', action.result.errors);
+                    Ext.MessageBox.alert('Erreur', result.success);
                 }
 
                 var bouton = button.up('window');
