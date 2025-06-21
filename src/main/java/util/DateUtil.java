@@ -150,22 +150,24 @@ public final class DateUtil {
             return null;
         }
     }
-    /*avec conversion*/
+
+    /* avec conversion */
     public static LocalDate ComparaisonDate(String startDateStr, String endDateStr) {
-        
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    LocalDate startDate = LocalDate.parse(startDateStr, formatter);
-    LocalDate endDate = LocalDate.parse(endDateStr, formatter);
-           
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+        LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+
         if (startDate.isAfter(endDate)) {
-                throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
-            }
+            throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
+        }
         return null;
     }
-    /*sans conversion*/
+
+    /* sans conversion */
     public static void validationDate(LocalDate startDate, LocalDate endDate) {
-    if (startDate.isAfter(endDate)) {
-        throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
+        }
     }
-}
 }

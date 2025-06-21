@@ -105,10 +105,11 @@ public class ErpServiceImpl implements ErpService {
             Integer endId = Integer.parseInt(endDate.format(formatter));
 
             // Validation sur les dates
-           /* if (startDate.isAfter(endDate)) {
-                throw new IllegalArgumentException("La date de début doit être antérieure à la date de fin");
-            }*/
-            
+            /*
+             * if (startDate.isAfter(endDate)) { throw new
+             * IllegalArgumentException("La date de début doit être antérieure à la date de fin"); }
+             */
+
             validationDate(startDate, endDate);
             System.out.println("Les dates sont dans le bon ordre");
 
