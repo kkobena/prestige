@@ -35,7 +35,7 @@ import util.AppParameters;
 public class FneServiceImpl implements FneService {
 
     private static final Logger LOG = Logger.getLogger(FneServiceImpl.class.getName());
- final AppParameters sp = AppParameters.getInstance();
+    final AppParameters sp = AppParameters.getInstance();
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
     @EJB
@@ -43,7 +43,7 @@ public class FneServiceImpl implements FneService {
 
     @Override
     public void createInvoice(String idFacture) throws FneExeception {
-      
+
         try {
             createInvoice(em.find(TFacture.class, idFacture));
         } catch (Exception e) {

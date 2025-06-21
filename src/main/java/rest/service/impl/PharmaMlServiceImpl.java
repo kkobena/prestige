@@ -146,7 +146,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
         try {
 
             return processommandeXml(em.find(TOrder.class, commandeId));
-            // return  processommandeTestFromFileXml(em.find(TOrder.class, commandeId)); // pour tester un fichier de reponse
+            // return processommandeTestFromFileXml(em.find(TOrder.class, commandeId)); // pour tester un fichier de
+            // reponse
 
         } catch (JAXBException | IOException | InterruptedException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -183,7 +184,8 @@ public class PharmaMlServiceImpl implements PharmaMlService {
 
     }
 
-    private JSONObject processommandeTestFromFileXml(TOrder order) throws JAXBException, IOException, InterruptedException {
+    private JSONObject processommandeTestFromFileXml(TOrder order)
+            throws JAXBException, IOException, InterruptedException {
 
         return processResponseTesting(order);
 
@@ -402,7 +404,7 @@ public class PharmaMlServiceImpl implements PharmaMlService {
             ProduitRemplacant produitRemplacant = indisponibilite.getProduitRemplacant();
             if (Objects.nonNull(produitRemplacant)
                     && (TypeRemplacement.EL.name().equals(produitRemplacant.getTypeRemplacement())
-                    || TypeRemplacement.RL.name().equals(produitRemplacant.getTypeRemplacement()))) {
+                            || TypeRemplacement.RL.name().equals(produitRemplacant.getTypeRemplacement()))) {
                 TFamilleGrossiste familleGrossiste = findTFamilleGrossisteByCodeCipOrEanOrProduitCode(
                         produitRemplacant.getCodeProduit(), grossiste.getLgGROSSISTEID());
                 TFamille famille = findTFamilleByCodeCipOrEan(produitRemplacant.getCodeProduit());
