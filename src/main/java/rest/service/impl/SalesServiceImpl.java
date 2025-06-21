@@ -548,7 +548,7 @@ public class SalesServiceImpl implements SalesService {
                 cp.setDtUPDATED(new Date());
                 emg.merge(cp);
             });
-            if (tp.getStrTYPEVENTE().equals("VO")) {
+            if (tp.getStrTYPEVENTE().equals(VENTE_ASSURANCE)) {
                 copyPreenregistrementCompteTp(newItem, idVente, ooTUser);
                 findByVenteId(tp.getLgPREENREGISTREMENTID()).ifPresent(venteExclus -> {
                     venteExclus.setStatus(Statut.DELETE);
@@ -756,6 +756,7 @@ public class SalesServiceImpl implements SalesService {
             prv.setMontant(prixReference.getMontant());
             prv.setPrixUni(prixReference.getPrixUni());
             prv.setProduitId(prixReference.getProduitId());
+            prv.setPrixReference(prixReference.getPrixReference());
             prv.setPreenregistrementDetail(newItem);
             newItem.getPrixReferenceVentes().add(prv);
         });
@@ -870,7 +871,7 @@ public class SalesServiceImpl implements SalesService {
         as.setMontantTP(0);
         as.setMontantRestant(montantRestant);
         as.setCaissier(preenregistrement.getLgUSERCAISSIERID());
-        if (preenregistrement.getStrTYPEVENTE().equals("VO")) {
+        if (preenregistrement.getStrTYPEVENTE().equals(VENTE_ASSURANCE)) {
             as.setMontantTP(preenregistrement.getIntPRICE()
                     - (preenregistrement.getIntCUSTPART() - preenregistrement.getIntPRICEREMISE()));
         }
