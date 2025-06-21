@@ -632,24 +632,31 @@ public class VenteDetailsDTO implements Serializable {
         this.dtCREATED = datePerem0;
         this.intQUANTITY = qty;
         this.seuil = seuil;
-        Period p = Period.between(toDate, dateTime);
-        int nbJours = p.getDays();
-        int months = p.normalized().getMonths();
-        if (nbJours < 0) {
-            if (months < 0) {
-                this.strSTATUT = "Périmé il y a " + ((-1) * months) + " mois(s) " + ((-1) * nbJours) + " jour(s)";
-            } else if (months == 0) {
-                this.strSTATUT = "Périmé il y a " + ((-1) * nbJours) + " jour(s)";
-            }
 
-        } else if (months == 0 && nbJours == 0) {
+        Period p = Period.between(toDate, dateTime);
+        int years = p.getYears();
+        int months = p.getMonths();
+        int days = p.getDays();
+
+        if (dateTime.isBefore(toDate)) {
+            Period diff = Period.between(dateTime, toDate);
+
+            String txtYears = diff.getYears() > 0 ? diff.getYears() + " an(s) " : "";
+            String txtMonths = diff.getMonths() > 0 ? diff.getMonths() + " mois " : "";
+            String txtDays = diff.getDays() > 0 ? diff.getDays() + " jour(s)" : "";
+            this.strSTATUT = "Périmé il y a " + txtYears + txtMonths + txtDays;
+
+        } else if (dateTime.isEqual(toDate)) {
+            days = 0;
             this.strSTATUT = "Périme aujourd'hui";
         } else {
-            String nbremois = (months > 0 ? months + " mois " : "");
-            String nbreJours = (nbJours > 0 ? nbJours + " jour(s) " : "");
-            this.strSTATUT = "Périme dans " + nbremois + "" + nbreJours;
+            String txtYears = years > 0 ? years + " an(s) " : "";
+            String txtMonths = months > 0 ? months + " mois " : "";
+            String txtDays = days > 0 ? days + " jour(s)" : "";
+            this.strSTATUT = "Périme dans " + txtYears + txtMonths + txtDays;
+
         }
-        this.intAVOIR = (months > 0 && nbJours == 0 ? months : (nbJours < 0 ? -1 : nbJours));
+        this.intAVOIR = days < 0 || months < 0 || years < 0 ? -1 : days;
         this.lgPREENREGISTREMENTID = groupById;
         this.lgPREENREGISTREMENTDETAILID = groupBy;
     }

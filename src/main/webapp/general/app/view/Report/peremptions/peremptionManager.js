@@ -316,8 +316,6 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
 
                     ]
                 }
-
-
             ],
             items: [
                 {
@@ -401,12 +399,12 @@ Ext.define('testextjs.view.Report.peremptions.peremptionManager', {
                             flex: 1.4,
                             align: 'center',
                             renderer: function (v, m, r) {
-                                var STATUS = r.data.intAVOIR;
+                                const STATUS = r.data.intAVOIR;
                                 switch (STATUS) {
                                     case - 1:
                                         m.style = 'background-color:#ff0000;color:#FFF;font-weight:700;';
                                         break;
-                                    case 0:
+                                    case STATUS===0:
                                         m.style = 'background-color:#009688;color:#FFF;font-weight:700;';
                                         break;
 
