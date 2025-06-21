@@ -472,7 +472,8 @@ Ext.define('testextjs.controller.FaireReglementCtr', {
                     },
                     failure: function (response, options) {
                         progress.hide();
-                        Ext.Msg.alert("Message", 'Erreur du serveur ' + response.status);
+                         Ext.MessageBox.alert('Error Message', response.responseText);
+                      
                     }
 
                 });

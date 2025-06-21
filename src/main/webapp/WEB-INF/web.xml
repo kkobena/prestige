@@ -13,10 +13,7 @@
         <servlet-name>CheckMigrationServlet</servlet-name>
         <servlet-class>fileupload.CheckMigrationServlet</servlet-class>
     </servlet>
-    <servlet>
-        <servlet-name>Incoming</servlet-name>
-        <servlet-class>smsgateway.Incoming</servlet-class>
-    </servlet>
+   
     <servlet>
         <servlet-name>JobServlet</servlet-name>
         <servlet-class>job.JobServlet</servlet-class>
@@ -94,10 +91,7 @@
         <servlet-name>CheckMigrationServlet</servlet-name>
         <url-pattern>/CheckMigrationServlet</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>Incoming</servlet-name>
-        <url-pattern>/Incoming</url-pattern>
-    </servlet-mapping>
+   
     <servlet-mapping>
         <servlet-name>JobServlet</servlet-name>
         <url-pattern>/JobServlet</url-pattern>
