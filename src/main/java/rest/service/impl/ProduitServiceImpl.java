@@ -1929,6 +1929,28 @@ public class ProduitServiceImpl implements ProduitService {
     }
 
     @Override
+    public TFamilleGrossiste createTFamilleGrossisteFromRupture(CreationProduitDTO creationProduit, TFamille famille,
+            TGrossiste grossiste) {
+        TFamilleGrossiste familleGrossiste = new TFamilleGrossiste();
+        familleGrossiste.setStrCODEARTICLE(creationProduit.getIntCip());
+        familleGrossiste.setLgFAMILLEID(famille);
+        familleGrossiste.setLgGROSSISTEID(grossiste);
+        familleGrossiste.setIntPAF(creationProduit.getIntPaf());
+        familleGrossiste.setIntPRICE(creationProduit.getIntPrice());
+        familleGrossiste.setStrSTATUT(Constant.STATUT_ENABLE);
+        familleGrossiste.setDtCREATED(new Date());
+        familleGrossiste.setDtUPDATED(familleGrossiste.getDtCREATED());
+        em.persist(familleGrossiste);
+        return familleGrossiste;
+    }
+
+    @Override
+    public TFamille createProduitFromRupture(CreationProduitDTO creationProduit, TGrossiste grossiste) {
+
+        return create(creationProduit, creationProduit.getIntCip(), grossiste);
+    }
+
+    @Override
     public JSONObject createProduit(CreationProduitDTO creationProduit) {
         JSONObject json = new JSONObject();
 
@@ -1948,7 +1970,13 @@ public class ProduitServiceImpl implements ProduitService {
             return json.put("message", "Impossible d'utiliser ce code. Code CIP du grossiste principal de l'article "
                     + existProduct.getStrDESCRIPTION()).put("success", "0");
         }
+        create(creationProduit, codeCip, grossiste);
 
+        return json.put("success", "1");
+
+    }
+
+    private TFamille create(CreationProduitDTO creationProduit, String codeCip, TGrossiste grossiste) {
         TFamille famille = new TFamille(UUID.randomUUID().toString());
         famille.setDtCREATED(new Date());
         famille.setLgGROSSISTEID(grossiste);
@@ -1960,8 +1988,7 @@ public class ProduitServiceImpl implements ProduitService {
         createFamilleStock(famille, creationProduit.getIntQuantityStock());
         buildNotificationCreationProduit(famille, TypeNotification.AJOUT_DE_NOUVEAU_PRODUIT,
                 TypeLog.AJOUT_DE_NOUVEAU_PRODUIT);
-        return json.put("success", "1");
-
+        return famille;
     }
 
     private void updateProduitCommon(TFamille famille, CreationProduitDTO creationProduit) {

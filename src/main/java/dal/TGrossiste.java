@@ -115,10 +115,11 @@ public class TGrossiste implements Serializable {
     private Date dtUPDATED;
     @Basic(optional = false)
     @Column(name = "str_CODE_RECEPTEUR_PHARMA", nullable = false, length = 2)
-    private String strCODERECEPTEURPHARMA;
+    private String strCODERECEPTEURPHARMA;// utilser dans phamaMl code grossiste RECEPTEUR(code)
+                                          // DESTINATAIRE(code_societe)
     @Basic(optional = false)
     @Column(name = "str_ID_RECEPTEUR_PHARMA", nullable = false, length = 8)
-    private String strIDRECEPTEURPHARMA;
+    private String strIDRECEPTEURPHARMA;// Code de l'officine chez le grossiste dans EMETTEUR(id,Id_Client)
     @Basic(optional = false)
     @Column(name = "str_EMETTEUR_ID", nullable = false, length = 40)
     private String strEMETTEURID;
@@ -130,7 +131,7 @@ public class TGrossiste implements Serializable {
     private String strURLRECEPTEUR;
     @Basic(optional = false)
     @Column(name = "str_OFFICINE_ID", nullable = false, length = 40)
-    private String strOFFICINEID;
+    private String strOFFICINEID;//
     @OneToMany(mappedBy = "lgGROSSISTEID")
     private Collection<TOrder> tOrderCollection;
     @OneToMany(mappedBy = "lgGROSSISTEID")
@@ -163,7 +164,8 @@ public class TGrossiste implements Serializable {
     @ManyToOne
     private Groupefournisseur groupeId;
     @Column(name = "idrepartiteur", length = 100)
-    private String idRepartiteur;
+    private String idRepartiteur;// Id de agence grossiste, utliser dans pharamaml RECEPTEUR (Id) DESTINATAIRE
+                                 // (Id_Societe)
 
     public TGrossiste() {
     }

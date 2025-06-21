@@ -87,6 +87,22 @@ public final class PharmaMlUtils {
     public static final int PRODUIT_MANQUE_RAYON = 5;
     public static final int PRODUIT_RETIRE = 6;
     public static final int PRODUIT_NON_AUTORISE = 7;
+    public static final String NATURE_ACTION_RE = "RE";
+    public static final String VERSION_PROTOCLE_LIBELLE = "Version_Protocole";
+    public static final String VERSION_PROTOCLE_VALUE = "1.0.0.0";
+    public static final String ID_LOGICIEL_LIBELLE = "Id_Logiciel";
+    public static final String ID_LOGICIEL_VALUE = "Prestige";
+    public static final String VERSION_LOGICIEL_LIBELLE = "Id_Logiciel";
+    public static final String VERSION_LOGICIEL_VALUE = "2.0.0";
+
+    public static final String NATURE_PARTENAIRE_VALUE_OF = "OF";
+    public static final String NATURE_PARTENAIRE_VALUE_RE = "RE";
+    public static final String TYPE_CODIFICATION_CIP39 = "CIP39";
+    public static final String CODE_VALUE = "00";
+    public static final String ID_LIBELLE = "Id";
+    public static final String NATURE_ACTION_REQ_EMISSION = "REQ_EMISSION";
+    public static final String TYPE_CODIFICATION_EAN = "EAN13";
+    public static final String USAGE_VALUE = "P";
 
     public static String buildRepartiteurLine(String idRepartiteur) {
         return R + idRepartiteur;
@@ -107,15 +123,6 @@ public final class PharmaMlUtils {
 
     public static String buildCommandeLine(final int typeCommande, final String codeCommande, String commandeId) {
 
-        /*
-         * switch (typeCommande) { case COMMANDE_PACKAGE: case COMMANDE_SPECIALE: return TYPE_TRAVAIL_COMMANDE +
-         * StringUtils.leftPad(typeCommande + "", 3, "0") + R +
-         * StringUtils.rightPad(RandomStringUtils.randomNumeric(DEF_COUNT), 20, StringUtils.SPACE) +
-         * SEPARATEUR_COMMANDE_SP_PAC + StringUtils.rightPad(codeCommande, 15, StringUtils.SPACE); default: // return
-         * TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R +
-         * StringUtils.rightPad(RandomStringUtils.randomNumeric(DEF_COUNT), 20, StringUtils.SPACE); return
-         * TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + commandeId; }
-         */
         return TYPE_TRAVAIL_COMMANDE + StringUtils.leftPad(typeCommande + "", 3, "0") + R + commandeId;
     }
 
@@ -213,4 +220,5 @@ public final class PharmaMlUtils {
         }
         return ligne + StringUtils.rightPad(code, 52, StringUtils.SPACE) + StringUtils.leftPad(index + "", 4, '0');
     }
+
 }
