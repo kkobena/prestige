@@ -45,6 +45,13 @@ public class ErpRessource {
     }
 
     @GET
+    @Path("valorisation/all")
+    public Response valorisationAll(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
+        return Response.ok().entity(erpService.valorisationAll(dtStart, dtEnd)).build();
+    }
+
+    @GET
     @Path("ca-comptant")
     public Response caComptant(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd) {
