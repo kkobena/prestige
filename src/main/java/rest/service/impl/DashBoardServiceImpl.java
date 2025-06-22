@@ -588,6 +588,12 @@ public class DashBoardServiceImpl implements DashBoardService {
                 .map(this::buildMonoFromTuple).orElse(new RecapActiviteCreditDTO(0, 0, 0));
     }
 
+    @Override
+    public RecapActiviteCreditDTO donneesRecapTotaux(BalanceParamsDTO balanceParams) {
+        return Optional.ofNullable(fetchRecapPreenregistrementsCreditTotaux(balanceParams))
+                .map(this::buildMonoFromTuple).orElse(new RecapActiviteCreditDTO(0, 0, 0));
+    }
+
     private RecapActiviteCreditDTO buildMonoFromTuple(Tuple tuple) {
         if (Objects.isNull(tuple)) {
             return new RecapActiviteCreditDTO(0, 0, 0);
@@ -605,4 +611,5 @@ public class DashBoardServiceImpl implements DashBoardService {
         }
 
     }
+
 }

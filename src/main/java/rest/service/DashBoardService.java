@@ -14,6 +14,7 @@ import java.util.List;
 import javax.ejb.Local;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import rest.service.dto.BalanceParamsDTO;
 
 /**
@@ -44,5 +45,7 @@ public interface DashBoardService {
     RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId, String query);
 
     RecapActiviteCreditDTO donneesRecapTotataux(BalanceParamsDTO balanceParams);
+
+    RecapActiviteCreditDTO donneesRecapTotaux(BalanceParamsDTO balanceParams);
 
 }
