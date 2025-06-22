@@ -1,5 +1,6 @@
 package rest;
 
+import dal.TEmplacement;
 import dal.TUser;
 import javax.ejb.EJB;
 import javax.inject.Inject;
@@ -43,6 +44,21 @@ public class BalanceVenteRessource {
 
         JSONObject json = balanceService.getBalanceVenteCaisseDataView(BalanceParamsDTO.builder().dtStart(dtStart)
                 .dtEnd(dtEnd).emplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID()).build());
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("/balanceventecaisse")
+    public Response balanceCaisseMobile(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) {
+        String TEmplacement = "1";
+        /*
+         * HttpSession hs = servletRequest.getSession(); TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER); if
+         * (tu == null) { return
+         * Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build(); }
+         */
+        JSONObject json = balanceService.getBalanceVenteCaisseDataView(
+                BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd).emplacementId(TEmplacement).build());
         return Response.ok().entity(json.toString()).build();
     }
 
