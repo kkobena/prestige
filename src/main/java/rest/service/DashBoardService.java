@@ -26,6 +26,9 @@ public interface DashBoardService {
     JSONObject donneesRecapActiviteView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu,
             String query) throws JSONException;
 
+    JSONObject donneesRecapActiviteView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, String query)
+            throws JSONException;
+
     List<Params> donneesReglementsTp(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu, String query,
             int start, int limit, boolean all);
 
@@ -37,6 +40,8 @@ public interface DashBoardService {
     JSONObject donneesCreditAccordesView(BalanceParamsDTO balanceParams);
 
     RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu);
+
+    RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId, String query);
 
     RecapActiviteCreditDTO donneesRecapTotataux(BalanceParamsDTO balanceParams);
 

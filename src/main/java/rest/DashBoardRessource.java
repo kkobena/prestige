@@ -103,4 +103,16 @@ public class DashBoardRessource {
                 tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, "");
         return Response.ok().entity(jsono.toString()).build();
     }
+
+    @GET
+    @Path("dashboardmob")
+    public Response donneesRecap(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+
+        String TEmplacement = "1";
+        JSONObject jsono = dashBoardService.donneesRecapActiviteView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                TEmplacement, "");
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
 }

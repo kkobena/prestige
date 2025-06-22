@@ -22,6 +22,9 @@ import dal.TTiersPayant;
 import dal.TUser;
 import dal.TUser_;
 import dal.enumeration.TypeTransaction;
+import static dal.enumeration.TypeTransaction.ACHAT;
+import static dal.enumeration.TypeTransaction.ENTREE;
+import static dal.enumeration.TypeTransaction.SORTIE;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -108,6 +111,12 @@ public class DashBoardServiceImpl implements DashBoardService {
     public JSONObject donneesRecapActiviteView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu,
             String query) throws JSONException {
         return new JSONObject().put("data", new JSONObject(donneesRecapActivite(dtStart, dtEnd, emplacementId, tu)));
+    }
+
+    @Override
+    public JSONObject donneesRecapActiviteView(LocalDate dtStart, LocalDate dtEnd, String emplacementId, String query)
+            throws JSONException {
+        return new JSONObject().put("data", new JSONObject(donneesRecapActivite(dtStart, dtEnd, emplacementId, query)));
     }
 
     private List<MvtTransaction> findAllsTransaction(LocalDate dtStart, LocalDate dtEnd, String emplacementId) {
@@ -313,6 +322,94 @@ public class DashBoardServiceImpl implements DashBoardService {
 
     @Override
     public RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId, TUser tu) {
+        RecapActiviteDTO recapActivite = buildVenteData(dtStart, dtEnd, emplacementId);
+        List<MvtTransaction> mvtTransactions = findAllsTransaction(dtStart, dtEnd, emplacementId);
+        List<RecapActiviteReglementDTO> mvtsCaisse = new ArrayList<>();
+        List<AchatDTO> achats = new ArrayList<>();
+
+        long montantTotalMvt = 0;
+        long montantTotalAchat = 0;
+        long montantTotalHtAchat = 0;
+        long montantTotalTvaAchat = 0;
+
+        for (MvtTransaction v : mvtTransactions) {
+
+            switch (v.getTypeTransaction()) {
+
+            case ENTREE:
+            case SORTIE:
+                mvtsCaisse.add(new RecapActiviteReglementDTO(v.gettTypeMvtCaisse().getStrNAME(), v.getMontantRegle()));
+                montantTotalMvt += v.getMontantRegle();
+                break;
+            case ACHAT:
+                AchatDTO achat = new AchatDTO();
+                achat.setLibelleGroupeGrossiste(Objects.nonNull(v.getGrossiste().getGroupeId())
+                        ? v.getGrossiste().getGroupeId().getLibelle() : v.getGrossiste().getStrLIBELLE());
+                achat.setMontantTTC(v.getMontant());
+                achat.setMontantHT(v.getMontantNet());
+                achat.setMontantTVA(v.getMontantTva());
+                achats.add(achat);
+                montantTotalAchat += v.getMontant();
+                montantTotalHtAchat += v.getMontantNet();
+                montantTotalTvaAchat += v.getMontantTva();
+
+                break;
+            default:
+                break;
+            }
+        }
+
+        Map<String, Long> mvts = mvtsCaisse.stream().collect(Collectors.groupingBy(
+                RecapActiviteReglementDTO::getLibelle, Collectors.summingLong(RecapActiviteReglementDTO::getMontant)));
+        List<RecapActiviteReglementDTO> mvt = new ArrayList<>();
+        mvts.forEach((key, value) -> mvt.add(new RecapActiviteReglementDTO(key, value)));
+        recapActivite.setMvtsCaisse(mvt);
+        List<AchatDTO> achatsglobal = new ArrayList<>();
+        achats.stream().collect(Collectors.groupingBy(AchatDTO::getLibelleGroupeGrossiste)).forEach((k, v) -> {
+            AchatDTO o = new AchatDTO();
+            o.setLibelleGroupeGrossiste(k);
+            LongAdder montantAchatTTC = new LongAdder();
+            LongAdder montantAchatTh = new LongAdder();
+            LongAdder montantAchatTva = new LongAdder();
+            v.forEach(b -> {
+                montantAchatTTC.add(b.getMontantTTC());
+                montantAchatTh.add(b.getMontantHT());
+                montantAchatTva.add(b.getMontantTVA());
+            });
+            o.setMontantHT(montantAchatTh.intValue());
+            o.setMontantTTC(montantAchatTTC.intValue());
+            o.setMontantTVA(montantAchatTva.intValue());
+            achatsglobal.add(o);
+        });
+        recapActivite.setAchats(achatsglobal);
+        recapActivite.setMontantTotalMvt(montantTotalMvt);
+
+        long totalAchat = montantTotalAchat;
+        if (totalAchat > 0) {
+            double ratio = Double.valueOf(recapActivite.getMontantNet()) / totalAchat;
+            recapActivite.setRatio(BigDecimal.valueOf(ratio).setScale(2, RoundingMode.HALF_UP).doubleValue());
+        }
+        recapActivite.setMontantTotalHT(montantTotalHtAchat);
+        recapActivite.setMontantTotalTTC(totalAchat);
+        recapActivite.setMontantTotalTVA(montantTotalTvaAchat);
+        try {
+
+            int pourEp = (int) Math.ceil(
+                    Double.valueOf(recapActivite.getMontantEsp()) * 100 / Math.abs(recapActivite.getMontantNet()));
+
+            recapActivite.setPourcentageEsp(pourEp);
+            recapActivite.setPourcentageCredit(100 - pourEp);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+
+        return recapActivite;
+
+    }
+
+    @Override
+    public RecapActiviteDTO donneesRecapActivite(LocalDate dtStart, LocalDate dtEnd, String emplacementId,
+            String query) {
         RecapActiviteDTO recapActivite = buildVenteData(dtStart, dtEnd, emplacementId);
         List<MvtTransaction> mvtTransactions = findAllsTransaction(dtStart, dtEnd, emplacementId);
         List<RecapActiviteReglementDTO> mvtsCaisse = new ArrayList<>();
