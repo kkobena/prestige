@@ -1303,3 +1303,4 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.editInventaireManag
 
 });
 
+
