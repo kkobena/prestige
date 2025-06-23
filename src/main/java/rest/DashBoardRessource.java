@@ -73,6 +73,30 @@ public class DashBoardRessource {
     }
 
     @GET
+    @Path("credits/totauxmob")
+    public Response donneesRecapTotaux(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "query") String query) throws JSONException {
+        String TEmplacement = "1";
+        JSONObject jsono = new JSONObject(dashBoardService.donneesRecapTotaux(BalanceParamsDTO.builder()
+                .dtStart(dtStart).query(query).dtEnd(dtEnd).showAllAmount(true).emplacementId(TEmplacement).build()));
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
+    @GET
+    @Path("creditsmob")
+    public Response donneesCreditsAccordes(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "start") int start,
+            @QueryParam(value = "query") String query, @QueryParam(value = "limit") int limit) throws JSONException {
+        String TEmplacement = "1";
+
+        JSONObject jsono = dashBoardService
+                .donneesCreditAccordesView(BalanceParamsDTO.builder().dtStart(dtStart).all(false).start(start)
+                        .query(query).limi(limit).dtEnd(dtEnd).showAllAmount(true).emplacementId(TEmplacement).build());
+        return Response.ok().entity(jsono.toString()).build();
+
+    }
+
+    @GET
     @Path("reglements")
     public Response reglements(@QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd,
             @QueryParam(value = "start") int start, @QueryParam(value = "query") String query,
@@ -103,4 +127,16 @@ public class DashBoardRessource {
                 tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID(), tu, "");
         return Response.ok().entity(jsono.toString()).build();
     }
+
+    @GET
+    @Path("dashboardmob")
+    public Response donneesRecap(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd) throws JSONException {
+
+        String TEmplacement = "1";
+        JSONObject jsono = dashBoardService.donneesRecapActiviteView(LocalDate.parse(dtStart), LocalDate.parse(dtEnd),
+                TEmplacement, "");
+        return Response.ok().entity(jsono.toString()).build();
+    }
+
 }
