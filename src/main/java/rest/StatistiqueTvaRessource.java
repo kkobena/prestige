@@ -101,7 +101,7 @@ public class StatistiqueTvaRessource {
     public Response tvastats(@QueryParam(value = "typeVente") String typeVente,
             @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd)
             throws JSONException {
-        String TEmplacement = "1";
+        String TEmplacement = Constant.EMPLACEMENT;
         if (this.balanceService.useLastUpdateStats()) {
             boolean isTvaVNO = StringUtils.isNotBlank(typeVente) && !typeVente.equalsIgnoreCase("TOUT");
 

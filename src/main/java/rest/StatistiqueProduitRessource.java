@@ -53,7 +53,7 @@ public class StatistiqueProduitRessource {
             @QueryParam(value = "search") String search, @QueryParam(value = "rayonId") String rayonId,
             @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
 
-        String TEmplacement = "1";
+        String TEmplacement = Constant.EMPLACEMENT;
         JSONObject json = this.statistiqueProduitService.getVenteProduits(year, search, TEmplacement, rayonId, start,
                 limit);
 

@@ -76,7 +76,7 @@ public class DashBoardRessource {
     @Path("credits/totauxmob")
     public Response donneesRecapTotaux(@QueryParam(value = "dtStart") String dtStart,
             @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "query") String query) throws JSONException {
-        String TEmplacement = "1";
+        String TEmplacement = Constant.EMPLACEMENT;
         JSONObject jsono = new JSONObject(dashBoardService.donneesRecapTotaux(BalanceParamsDTO.builder()
                 .dtStart(dtStart).query(query).dtEnd(dtEnd).showAllAmount(true).emplacementId(TEmplacement).build()));
         return Response.ok().entity(jsono.toString()).build();
