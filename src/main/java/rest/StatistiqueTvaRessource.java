@@ -96,4 +96,31 @@ public class StatistiqueTvaRessource {
         return Response.ok().entity(json.toString()).build();
     }
 
+    @GET
+    @Path("tvamobile")
+    public Response tvastats(@QueryParam(value = "typeVente") String typeVente,
+            @QueryParam(value = "dtStart") String dtStart, @QueryParam(value = "dtEnd") String dtEnd)
+            throws JSONException {
+        String TEmplacement = Constant.EMPLACEMENT;
+        if (this.balanceService.useLastUpdateStats()) {
+            boolean isTvaVNO = StringUtils.isNotBlank(typeVente) && !typeVente.equalsIgnoreCase("TOUT");
+
+            return Response.ok()
+                    .entity(this.balanceService.statistiqueTvaView(BalanceParamsDTO.builder().dtEnd(dtEnd)
+                            .dtStart(dtStart).vnoOnly(isTvaVNO).emplacementId(TEmplacement).build()).toString())
+                    .build();
+        }
+        Params params = new Params();
+        params.setDtEnd(dtEnd);
+        params.setDtStart(dtStart);
+        JSONObject json;
+        if (StringUtils.isNotBlank(typeVente) && !typeVente.equalsIgnoreCase("TOUT")) {
+            json = dataService.statistiqueTvaVnoOnlyView(params);
+        } else {
+            json = dataService.statistiqueTvaView(params);
+        }
+
+        return Response.ok().entity(json.toString()).build();
+    }
+
 }

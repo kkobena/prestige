@@ -132,6 +132,9 @@ public final class Constant {
     public static final String MVT_REGLE_DIFF = "2";
     public static final String MVT_REGLE_VO = "8";
     public static final String MVT_REGLE_VNO = "9";
+
+    public static final String EMPLACEMENT = "1";
+
     /*
      * parametre nombre de mois à considerer
      */

@@ -1074,7 +1074,7 @@ public class SuggestionImpl implements SuggestionService {
 
     @Override
     public JSONObject fetchItems(String suggestionId, String searchValue, TUser tUser, int start, int limit) {
-        removeInBulk(supprimerLigneSuggestion(suggestionId));
+        // removeInBulk(supprimerLigneSuggestion(suggestionId));
         JSONObject data = new JSONObject();
         int count = fetchItemsCount(searchValue, suggestionId);
         if (count == 0) {
@@ -1358,7 +1358,7 @@ public class SuggestionImpl implements SuggestionService {
 
         try {
             Query q = em.createNativeQuery(
-                    "SELECT sd.lg_SUGGESTION_ORDER_DETAILS_ID AS id FROM  t_suggestion_order_details sd JOIN t_famille f ON f.lg_FAMILLE_ID=sd.lg_FAMILLE_ID JOIN t_famille_stock stoc ON f.lg_FAMILLE_ID=stoc.lg_FAMILLE_ID WHERE f.int_SEUIL_MIN < stoc.int_NUMBER_AVAILABLE AND sd.lg_SUGGESTION_ORDER_ID=?1");
+                    "SELECT sd.lg_SUGGESTION_ORDER_DETAILS_ID AS id FROM  t_suggestion_order_details sd JOIN t_famille f ON f.lg_FAMILLE_ID=sd.lg_FAMILLE_ID JOIN t_famille_stock stoc ON f.lg_FAMILLE_ID=stoc.lg_FAMILLE_ID WHERE f.int_SEUIL_MIN < stoc.int_NUMBER_AVAILABLE AND sd.lg_SUGGESTION_ORDER_ID=?1;");
             q.setParameter(1, suggestionId);
             return q.getResultList();
         } catch (Exception e) {

@@ -48,6 +48,19 @@ public class StatistiqueProduitRessource {
     }
 
     @GET
+    @Path("vente-annuellep")
+    public Response quantiteVendueAnnee(@QueryParam(value = "year") Integer year,
+            @QueryParam(value = "search") String search, @QueryParam(value = "rayonId") String rayonId,
+            @QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit) {
+
+        String TEmplacement = Constant.EMPLACEMENT;
+        JSONObject json = this.statistiqueProduitService.getVenteProduits(year, search, TEmplacement, rayonId, start,
+                limit);
+
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
     @Path("years")
     public Response getYears() {
 

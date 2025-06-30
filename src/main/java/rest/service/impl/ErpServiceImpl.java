@@ -43,6 +43,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -98,17 +99,14 @@ public class ErpServiceImpl implements ErpService {
             // Conversion des dates en format numérique attendu par l'ID
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-            LocalDate startDate = convertStringToDate(dtStart);
-            LocalDate endDate = convertStringToDate(dtEnd);
+            // LocalDate startDate1 = convertStringToDate(dtStart);
+            // LocalDate endDate2 = convertStringToDate(dtEnd);
+
+            LocalDate startDate = LocalDate.parse(dtStart);
+            LocalDate endDate = LocalDate.parse(dtEnd);
 
             Integer startId = Integer.parseInt(startDate.format(formatter));
             Integer endId = Integer.parseInt(endDate.format(formatter));
-
-            // Validation sur les dates
-            /*
-             * if (startDate.isAfter(endDate)) { throw new
-             * IllegalArgumentException("La date de début doit être antérieure à la date de fin"); }
-             */
 
             validationDate(startDate, endDate);
             System.out.println("Les dates sont dans le bon ordre");
