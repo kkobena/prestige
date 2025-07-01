@@ -359,7 +359,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                         }
                     }
                 },
-   {
+                {
                     xtype: 'actioncolumn',
                     width: 30,
                     sortable: false,
@@ -368,7 +368,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             icon: 'resources/images/duplicate_3671686.png',
                             tooltip: 'Gérer les prix de référence',
                             scope: this,
-                            handler:  function (grid, rowIndex, colIndex) {
+                            handler: function (grid, rowIndex, colIndex) {
                                 new testextjs.view.produits.PrixReference({produit: grid.getStore().getAt(rowIndex)});
                             }
 
@@ -656,7 +656,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     hidden: (lg_EMPLACEMENT_ID === '1'),
                     handler: function () {
 
-                        var win = new Ext.window.Window({
+                        const win = new Ext.window.Window({
                             autoShow: false,
                             title: 'Importer stock dépôt',
                             width: 500,
@@ -1120,21 +1120,13 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                             text: 'Valider',
                             listeners: {
                                 click: function () {
-                                    var form = Ext.getCmp('periodeform');
+                                    const form = Ext.getCmp('periodeform');
 
                                     if (form && form.isValid()) {
 
-                                        var dt_debut = Ext.getCmp('dt_debut').getSubmitValue();
-                                        var dt_fin = Ext.getCmp('dt_fin').getSubmitValue();
-                                        /*   new testextjs.view.stockmanagement.suivistockvente.action.detailstock({
-                                         odatasource: id,
-                                         parentview: this,
-                                         mode: "update",
-                                         datedebut: dt_debut,
-                                         datedin: dt_fin,
-                                         titre: str_NAME
-                                         });
-                                         */
+                                        let dt_debut = Ext.getCmp('dt_debut').getSubmitValue();
+                                        let dt_fin = Ext.getCmp('dt_fin').getSubmitValue();
+
                                         Me_Workflow.buildDetail(id, dt_debut, dt_fin, str_NAME);
 
 
@@ -1163,8 +1155,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
 
     },
     onbtnImporter: function (button) {
-        var fenetre = button.up('window'),
-                formulaire = fenetre.down('form');
+        const fenetre = button.up('window');
+        const     formulaire = fenetre.down('form');
         if (!formulaire.isValid()) {
             return;
         }
@@ -1182,8 +1174,8 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     Ext.MessageBox.alert('Erreur', action.result.success);
                 }
 
-                var bouton = button.up('window');
-                bouton.close();
+
+                button.up('window').close();
             },
             failure: function (formulaire, action) {
                 Ext.MessageBox.alert('Erreur', 'Erreur  ' + action.result.errors);
@@ -1193,9 +1185,9 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
     },
 
     addPeremptiondate: function (grid, rowIndex) {
-        var rec = grid.getStore().getAt(rowIndex);
+        const rec = grid.getStore().getAt(rowIndex);
 
-        var win = Ext.create("Ext.window.Window", {
+        const win = Ext.create("Ext.window.Window", {
             title: "[ " + rec.get('str_NAME') + " ]",
             modal: true,
             width: 400,
