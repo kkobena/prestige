@@ -149,17 +149,15 @@ Ext.define('testextjs.view.vente.PreSaleManager', {
                             items: [{
                                     icon: 'resources/images/icons/fam/page_white_edit.png',
                                     tooltip: 'Modifier',
-                                    menuDisabled: true,
-                                    scope: me, getClass: function (value, metadata, record) {
-                                        if (record.get('strSTATUT') === 'pending') {
-
-                                            return 'x-display-hide';
-                                        } else {
-                                            return 'x-hide-display';
-                                        }
-
-
-                                    },
+                                    menuDisabled: false,
+                                    scope: me, getClass: function(value, metadata, record) {
+            // Masquer l'icône si le statut est 'is_Process'
+            if (record.get('strSTATUT') === 'pending') {
+                return 'x-hidden';  // Classe ExtJS pour masquer un élément
+            }
+            // Sinon, afficher l'icône (retourne une chaîne vide)
+            return '';
+        },
 
                                 }]
                         },

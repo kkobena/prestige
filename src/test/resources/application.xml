@@ -21,8 +21,8 @@
     version="5">
   <module>
     <web>
-      <web-uri>prestige.war</web-uri>
-      <context-root>/prestige</context-root>
+      <web-uri>veto.war</web-uri>
+      <context-root>/veto</context-root>
     </web>
   </module>
 <!--   <module>
