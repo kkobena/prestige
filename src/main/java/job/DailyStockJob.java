@@ -29,7 +29,7 @@ import shedule.DailyStockTask;
 @TransactionManagement(value = TransactionManagementType.BEAN)
 public class DailyStockJob {
 
-    @Resource(mappedName = "jdbc/__laborex_pool")
+    @Resource(mappedName = "jdbc/__veto_pool")
     private DataSource dataSource;
     @Resource(name = "concurrent/__defaultManagedExecutorService")
     ManagedExecutorService mes;

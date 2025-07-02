@@ -3,7 +3,7 @@
   <persistence-unit name="DALPU" transaction-type="RESOURCE_LOCAL">
     <!--      <non-jta-data-source>java:global/laborex/prestigedb</non-jta-data-source>-->
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <non-jta-data-source>jdbc/__laborex_pool</non-jta-data-source>
+    <non-jta-data-source>jdbc/__veto_pool</non-jta-data-source>
     <class>dal.TSnapShopDalySortieFamille</class>
     <class>dal.TEmplacement</class>
     <class>dal.TLanguage</class>
