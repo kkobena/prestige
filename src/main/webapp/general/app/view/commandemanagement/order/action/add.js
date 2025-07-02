@@ -137,8 +137,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         let int_VENTE = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
-                    fieldLabel: 'Valeur Vente ::',
-                    labelWidth: 95,
+                    fieldLabel: 'MONTANT VENTE DU BL ::',
+                    labelWidth: 200,
                     name: 'int_VENTE',
                     id: 'int_VENTE',
                     fieldStyle: "color:red;font-weight:bold;font-size:1.5em",
@@ -148,8 +148,8 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
         let int_ACHAT = new Ext.form.field.Display(
                 {
                     xtype: 'displayfield',
-                    fieldLabel: 'Valeur Achat ::',
-                    labelWidth: 95,
+                    fieldLabel: 'MONTANT ACHAT DU BL ::',
+                    labelWidth: 200,
                     name: 'int_ACHAT',
                     id: 'int_ACHAT',
                     fieldStyle: "color:red;font-weight:bold;font-size:1.5em",
@@ -199,7 +199,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                             },
                             items: [{
                                     xtype: 'combobox',
-                                    fieldLabel: 'Repartiteur',
+                                    fieldLabel: 'GROSSISTE',
                                     allowBlank: false,
                                     name: 'Code.Rep',
                                     margin: '5 15 0 0',
@@ -211,7 +211,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                     pageSize: 999,
                                     queryMode: 'remote',
                                     width: 450,
-                                    emptyText: 'Choisir un repartiteur...',
+                                    emptyText: 'Choisir un grossiste/fournisseur...',
                                     listeners: {
                                         afterrender: function (field) {
                                             field.focus(true, 50);
@@ -321,7 +321,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 //                                    flex:2
                                     queryMode: 'remote',
                                     minChars: 3,
-                                    emptyText: 'Choisir un article par Nom ou Cip...',
+                                    emptyText: 'Choisir un article par Nom ou par code CIP...',
                                     listConfig: {
                                         getInnerTpl: function () {
                                             return '<tpl for="."><tpl if="int_NUMBER_AVAILABLE <=0"><span style="color:#17987e;font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right;"> ( {int_PAF} ) <span>&nbsp;&nbsp;&nbsp;</span>  <span style="color:red;font-weight:bold;"> ( {int_NUMBER_AVAILABLE} ) </span></span></span><tpl else><span style="font-weight:bold;"><span style="width:100px;display:inline-block;">{CIP}</span>{str_DESCRIPTION} <span style="float: right; "> ( {int_PAF} )<span>&nbsp;&nbsp;&nbsp;</span>  <span style="color:red;font-weight:bold;"> ( {int_NUMBER_AVAILABLE} ) </span></span></span></tpl></tpl>';
@@ -332,7 +332,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             let value = cmp.getValue();
                                             let record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
-                                            if (value === "0" || value === "Ajouter un nouvel article") {
+                                            if (value === "0" || value === "Inexistant, Cliquez ici pour creer un article") {
                                                 Me_Window.onbtnaddArticle();
                                             } else {
                                                 Ext.getCmp('int_QUANTITE').focus(true, 100, function () {

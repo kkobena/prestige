@@ -16,7 +16,7 @@ Ext.define('testextjs.view.Report.statqties.qtymanager', {
     minHeight: 570,
     maxHeight: 800,
     cls: 'custompanel',
-//    autoScroll: true,
+    autoScroll: true,
     layout: 'fit',
     items: [{
             xtype: 'statproduct-grid'

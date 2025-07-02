@@ -133,8 +133,8 @@ public class FileFormaManager extends HttpServlet {
                 jdom.InitRessource();
                 json.add("success", "<span style='color:blue;font-weight:800;'>" + responseJson.getInt("count") + "/"
                         + responseJson.getInt("ligne")
-                        + "\n</span> produits mis à jour <a href=\"../VericationCommande?fileName=" + finalFile
-                        + " \" style=\"color:red !important;\">Cliquer sur le lien pour télécharger les produits non pris en compte</a>");
+                        + "\n</span> produits reconnus/retrouvés <a href=\"../VericationCommande?fileName=" + finalFile
+                        + " \" style=\"color:red !important;\">Cliquer sur le lien pour télécharger les produits non reconnus ou non pris en compte</a>");
             } else {
                 json.add("toBe", false);
                 json.add("success", "<span style='color:blue;font-weight:800;'>" + responseJson.getInt("count") + "/"
