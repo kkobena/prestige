@@ -122,7 +122,7 @@ public class DepotServiceImpl implements DepotService {
 
         try {
             TypedQuery<TFamille> query = em.createQuery(
-                    "SELECT o FROM  TFamille o LEFT JOIN o.tFamilleGrossisteCollection fp WHERE (fp.strCODEARTICLE LIKE ?1 OR O.intCIP LIKE ?1)",
+                    "SELECT o FROM  TFamille o LEFT JOIN o.tFamilleGrossisteCollection fp WHERE (fp.strCODEARTICLE LIKE ?1 OR o.intCIP LIKE ?1)",
                     TFamille.class);
             query.setParameter(1, cip + "%");
             query.setMaxResults(1);
