@@ -427,11 +427,12 @@ public class ImpressionServiceImpl implements Printable {
         graphics.drawString(this.getOfficine().getStrNOMCOMPLET(), 0, start);
         font = new Font("Arial Narrow", Font.PLAIN, 9 + fontSize);
         graphics.setFont(font);
-        if (!result) {
+        /* Commenter pour ne pas afficher le nom terme Depot extension: SCB par exemple sur le ticket quand on fait une vente depuis le depot*/
+        /*if (!result) {
             graphics.drawString(this.getEmplacement().getLgTYPEDEPOTID().getStrDESCRIPTION() + ": "
                     + this.getEmplacement().getStrDESCRIPTION(), 0, start + (scaleTexte * i));
             i++;
-        }
+        }*/
         graphics.drawString(this.getOfficine().getStrFIRSTNAME() + " " + this.getOfficine().getStrLASTNAME(), 0,
                 start + (scaleTexte * i));
         graphics.drawString(this.getOfficine().getStrPHONE() + "   |    " + this.getOfficine().getStrADRESSSEPOSTALE(),
