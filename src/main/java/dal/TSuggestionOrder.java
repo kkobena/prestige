@@ -3,12 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package dal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Objects;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -40,6 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
         @NamedQuery(name = "TSuggestionOrder.findByDtUPDATED", query = "SELECT t FROM TSuggestionOrder t WHERE t.dtUPDATED = :dtUPDATED"),
         @NamedQuery(name = "TSuggestionOrder.findByStrSTATUT", query = "SELECT t FROM TSuggestionOrder t WHERE t.strSTATUT = :strSTATUT") })
 public class TSuggestionOrder implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -120,6 +122,9 @@ public class TSuggestionOrder implements Serializable {
 
     @XmlTransient
     public Collection<TSuggestionOrderDetails> getTSuggestionOrderDetailsCollection() {
+        if (Objects.isNull(tSuggestionOrderDetailsCollection)) {
+            tSuggestionOrderDetailsCollection = new ArrayList<>();
+        }
         return tSuggestionOrderDetailsCollection;
     }
 
