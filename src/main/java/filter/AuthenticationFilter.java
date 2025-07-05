@@ -62,7 +62,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
                 "v1/ws/inventaires/rayons", "v1/ws/inventaires/details", "v1/balance/etat-annuel",
                 "v1/etat-control-bon/etat-annuel", "v1/balance/balanceventecaisse", "v1/recap/dashboardmob",
                 "v1/recap/creditsmob", "v1/recap/credits/totauxmob", "v3/tvamobile", "v1/produit/stats/vente-annuellep",
-                "v1/evaluation-vente/produit", "v1/info", "v1/officine");
+                "v1/evaluation-vente/produit", "v1/info", "v1/officine", "v1/analyse-inventaire","v1/infoproduit");
         return paths.contains(path);
     }
 }
