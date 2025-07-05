@@ -738,18 +738,10 @@ public class SuggestionImpl implements SuggestionService {
 
     @Override
     public void removeItem(String itemId) {
-        TSuggestionOrderDetails item = getItem(itemId);
 
+        TSuggestionOrderDetails item = getItem(itemId);
         if (Objects.nonNull(item)) {
-            TSuggestionOrder suggestion = item.getLgSUGGESTIONORDERID();
-            if (CollectionUtils.isNotEmpty(suggestion.getTSuggestionOrderDetailsCollection())
-                    && suggestion.getTSuggestionOrderDetailsCollection().size() == 1) {
-                getEmg().remove(suggestion);
-            } else {
-                getEmg().remove(item);
-                suggestion.setDtUPDATED(new Date());
-                getEmg().merge(suggestion);
-            }
+            getEmg().remove(item);
         }
 
     }
@@ -1167,8 +1159,11 @@ public class SuggestionImpl implements SuggestionService {
 
     @Override
     public void deleteSuggestion(String suggestionId) {
+        TSuggestionOrder suggestionOrder = em.find(TSuggestionOrder.class, suggestionId);
+        if (Objects.nonNull(suggestionOrder)) {
 
-        em.remove(em.find(TSuggestionOrder.class, suggestionId));
+            em.remove(suggestionOrder);
+        }
 
     }
 
