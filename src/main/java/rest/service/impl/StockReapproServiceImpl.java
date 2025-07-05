@@ -47,6 +47,7 @@ public class StockReapproServiceImpl implements StockReapproService {
     private static final Logger LOG = Logger.getLogger(StockReapproServiceImpl.class.getName());
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+
     @Inject
     private UserTransaction userTransaction;
 
@@ -76,11 +77,14 @@ public class StockReapproServiceImpl implements StockReapproService {
             userTransaction.begin();
             List<Produit> boiteCh = new ArrayList<>();
             Map<String, Integer> deconditiones = new HashMap<>();
-            fetchConsommationProduit(threeMonthAgo, lastMonth).forEach((t) -> {
+            for (Tuple t : fetchConsommationProduit(threeMonthAgo, lastMonth)) {
+
                 String id = t.get("id", String.class);
                 String parentId = t.get("parentId", String.class);
                 int consommation = t.get("consommation", BigDecimal.class).intValue();
-                short hasChild = t.get("hasChild", Byte.class).shortValue();
+
+                int hasChild = Integer.parseInt(t.get("hasChild") + "");
+
                 short isChild = t.get("isChild", Byte.class).shortValue();
                 Integer itemQuantity = t.get("itemQuantity", Integer.class);
 
@@ -96,7 +100,7 @@ public class StockReapproServiceImpl implements StockReapproService {
                     }
                 }
 
-            });
+            }
 
             computeBoiteCh(boiteCh, deconditiones, dayStock, delayReappro, now);
             computeInvendus(lastMonth, threeMonthAgo, deconditiones, dayStock, delayReappro, now);
@@ -106,8 +110,8 @@ public class StockReapproServiceImpl implements StockReapproService {
             this.em.merge(p);
             userTransaction.commit();
 
-        } catch (IllegalStateException | SecurityException | HeuristicMixedException | HeuristicRollbackException
-                | NotSupportedException | RollbackException | SystemException e) {
+        } catch (IllegalStateException | NumberFormatException | SecurityException | HeuristicMixedException
+                | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException e) {
             LOG.log(Level.SEVERE, null, e);
         }
         LOG.log(Level.INFO, "REAPPRO COMPUTE END AT ======>>>  {0} ", new Object[] { LocalDateTime.now() });
@@ -150,10 +154,11 @@ public class StockReapproServiceImpl implements StockReapproService {
     }
 
     private List<Tuple> fetchConsommationProduit(LocalDate threeMonthAgo, LocalDate lastMonth) {
-        String sql = "SELECT f.lg_FAMILLE_ID AS id, f.lg_FAMILLE_PARENT_ID AS parentId,SUM(d.int_QUANTITY) AS consommation, f.bool_DECONDITIONNE_EXIST AS hasChild,f.bool_DECONDITIONNE AS isChild,f.int_NUMBERDETAIL AS itemQuantity FROM  t_preenregistrement_detail d,t_famille f,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND f.lg_FAMILLE_ID=d.lg_FAMILLE_ID "
+        String sql = "SELECT f.lg_FAMILLE_ID AS id, f.lg_FAMILLE_PARENT_ID AS parentId,SUM(d.int_QUANTITY) AS consommation,IFNULL(f.bool_DECONDITIONNE_EXIST,0) AS hasChild,f.bool_DECONDITIONNE AS isChild,f.int_NUMBERDETAIL AS itemQuantity FROM  t_preenregistrement_detail d,t_famille f,t_preenregistrement p WHERE p.lg_PREENREGISTREMENT_ID=d.lg_PREENREGISTREMENT_ID AND f.lg_FAMILLE_ID=d.lg_FAMILLE_ID "
                 + " "
                 + " AND f.str_STATUT='enable' AND p.str_STATUT='is_Closed' AND p.int_PRICE >0 AND p.b_IS_CANCEL=0 AND DATE(p.dt_UPDATED) BETWEEN ?1 AND ?2 GROUP BY f.lg_FAMILLE_ID";
         try {
+
             Query q = em.createNativeQuery(sql, Tuple.class);
             q.setParameter(1, java.sql.Date.valueOf(threeMonthAgo), TemporalType.DATE);
             q.setParameter(2, java.sql.Date.valueOf(lastMonth), TemporalType.DATE);
