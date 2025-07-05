@@ -188,7 +188,7 @@
     </dependencies>
   
     <build>
-        <finalName>laborex</finalName>
+        <finalName>prestige</finalName>
         <plugins>
          
             <plugin>
