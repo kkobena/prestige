@@ -76,6 +76,13 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire',
                 xtype: 'gridpanel',
                 itemId: 'analyseGridID',
                 store: summaryStore,
+                // --- AJOUT D'UNE BARRE D'OUTILS POUR LE RAPPORT DE CONFORMITÉ ---
+                tbar: [{
+                    xtype: 'displayfield',
+                    itemId: 'complianceReport',
+                    fieldStyle: "font-size: 14px; font-weight: bold; color: #00529C;",
+                    value: 'Calcul en cours...'
+                }],
                 features: [{ ftype: 'summary', dock: 'bottom' }],
                 columns: [
                     { text: 'Emplacement', dataIndex: 'emplacement', flex: 1.5, summaryType: 'count', summaryRenderer: function(value){ return '<b>TOTAL GÉNÉRAL</b>'; } },
@@ -93,7 +100,6 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire',
         
         this.items = form;
 
-        // --- MISE À JOUR DE LA BARRE D'OUTILS ---
         this.dockedItems = [{
             xtype: 'toolbar',
             dock: 'bottom',
@@ -101,19 +107,21 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire',
             items: ['->', 
             {
                 text: 'Imprimer (PDF)',
-                iconCls: 'printer', // Icône pour l'impression PDF
+                icon: 'resources/images/icons/fam/page_white_acrobat.png',
                 handler: function() {
                     me.onPrintClick();
                 }
-            }, {
+            },
+            {
                 text: 'Exporter (Excel)',
-                iconCls: 'export-excel', // Icône pour l'export Excel
+                icon: 'resources/images/icons/fam/page_white_excel.png',
                 handler: function() {
                     me.onExcelExportClick();
                 }
-            }, {
+            },
+            {
                 text: 'Retour',
-                iconCls: 'cancel', // Icône pour le bouton retour
+                icon: 'resources/images/icons/fam/door_out.png',
                 handler: function() {
                     me.onbtncancel();
                 }
@@ -134,7 +142,14 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire',
                 }
 
                 var emplacementTotals = {};
+                var modifiedProducts = 0;
+                var totalProducts = records.length;
+
                 Ext.each(records, function(rec) {
+                    if (rec.get('qteInitiale') !== rec.get('qteSaisie')) {
+                        modifiedProducts++;
+                    }
+
                     var loc = rec.get('emplacement');
                     if (!emplacementTotals[loc]) {
                         emplacementTotals[loc] = {
@@ -147,6 +162,10 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire',
                     emplacementTotals[loc].valeurVenteMachine += rec.get('qteInitiale') * rec.get('prixVente');
                     emplacementTotals[loc].valeurVenteRayon += rec.get('qteSaisie') * rec.get('prixVente');
                 });
+                
+                // --- MISE À JOUR DU RAPPORT DE CONFORMITÉ ---
+                var complianceField = me.down('#complianceReport');
+                complianceField.setValue('Rapport de conformité : ' + modifiedProducts + ' produit(s) modifié(s) sur ' + totalProducts + ' au total.');
 
                 var summaryData = [];
                 for (var locName in emplacementTotals) {

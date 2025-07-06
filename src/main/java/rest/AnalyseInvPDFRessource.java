@@ -95,7 +95,11 @@ public class AnalyseInvPDFRessource {
 
             // Regroupement et calcul des totaux par emplacement
             Map<String, EmplacementSummary> summaryMap = new HashMap<>();
+            int modifiedProducts = 0;
             for (AnalyseInvDTO item : data) {
+                if (!item.getQteInitiale().equals(item.getQteSaisie())) {
+                    modifiedProducts++;
+                }
                 summaryMap.computeIfAbsent(item.getEmplacement(), k -> {
                     EmplacementSummary summary = new EmplacementSummary();
                     summary.setEmplacement(k);
@@ -123,6 +127,9 @@ public class AnalyseInvPDFRessource {
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("INVENTAIRE_NAME", inventaireName);
+            // --- AJOUT DES NOUVEAUX PARAMÈTRES POUR LE RAPPORT ---
+            parameters.put("TOTAL_PRODUITS", data.size());
+            parameters.put("PRODUITS_MODIFIES", modifiedProducts);
 
             File reportFile = new File(REPORTS_PATH + "analyse_inventaire.jrxml");
             if (!reportFile.exists()) {
