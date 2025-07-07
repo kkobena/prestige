@@ -19,7 +19,9 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
         'Ext.JSON.*',
         'Ext.ux.ProgressBarPager',
         'Ext.ux.grid.Printer',
-        'testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire'
+        // Dépendances vers les deux fenêtres d'analyse
+        'testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire',
+        'testextjs.view.stockmanagement.inventaire.action.AnalyseInventaireAvancee'
     ],
     title: 'Gestion des inventaires',
     plain: true,
@@ -94,15 +96,14 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                 dataIndex: 'str_STATUT',
                 flex: 1
             },
-            // --- MISE À JOUR DE L'ICÔNE DE L'ACTIONCOLUMN ---
             {
                 xtype: 'actioncolumn',
                 width: 30,
                 sortable: false,
                 menuDisabled: true,
                 items: [{
-                    icon: 'resources/images/icons/fam/chart_line.png', // Nouvelle icône
-                    tooltip: 'Analyser cet inventaire',
+                    icon: 'resources/images/icons/fam/chart_line.png',
+                    tooltip: 'Analyse Synthétique',
                     scope: this,
                     handler: this.onAnalyseColumnClick
                 }]
@@ -171,13 +172,19 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                 iconCls: 'addicon',
                 handler: this.onAddUnitaireClick
             }, '-',
-            // --- MISE À JOUR DE L'ICÔNE DU BOUTON DANS LA BARRE D'OUTILS ---
             {
                 text: 'Analyse',
                 scope: this,
                 id: 'btnAnalyse',
-                icon: 'resources/images/icons/fam/chart_line.png', // Nouvelle icône
+                icon: 'resources/images/icons/fam/chart_line.png', 
                 handler: this.onAnalyseButtonClick
+            },
+            {
+                text: 'Analyse Avancée',
+                scope: this,
+                id: 'btnAnalyseAvancee',
+                icon: 'resources/images/icons/fam/chart_pie.png',
+                handler: this.onAnalyseAvanceeButtonClick
             },
             {
                 xtype: 'combobox',
@@ -213,7 +220,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
         this.on('afterlayout', this.loadStore, this, {
             delay: 1,
             single: true
-        })
+        });
     },
 
     onAnalyseButtonClick: function() {
@@ -221,6 +228,16 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
         if (selection.length > 0) {
             var rec = selection[0];
             this.launchAnalyse(rec);
+        } else {
+            Ext.Msg.alert('Avertissement', 'Veuillez sélectionner un inventaire à analyser.');
+        }
+    },
+
+    onAnalyseAvanceeButtonClick: function() {
+        var selection = this.getSelectionModel().getSelection();
+        if (selection.length > 0) {
+            var rec = selection[0];
+            this.launchAnalyseAvancee(rec);
         } else {
             Ext.Msg.alert('Avertissement', 'Veuillez sélectionner un inventaire à analyser.');
         }
@@ -239,6 +256,18 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
             odatasource: record.data,
             parentview: this,
             titre: "Analyse de l'inventaire : " + record.get('str_NAME')
+        });
+    },
+
+    launchAnalyseAvancee: function(record) {
+        if (!record) {
+            Ext.Msg.alert('Erreur', 'Impossible de récupérer les informations de l\'inventaire.');
+            return;
+        }
+        new testextjs.view.stockmanagement.inventaire.action.AnalyseInventaireAvancee({
+            odatasource: record.data,
+            parentview: this,
+            titre: "Tableau de Bord d'Analyse : " + record.get('str_NAME')
         });
     },
 

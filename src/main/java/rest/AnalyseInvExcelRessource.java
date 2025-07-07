@@ -4,14 +4,12 @@
  */
 package rest;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -26,8 +24,6 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import rest.service.AnalyseInvDTOService;
-import rest.service.dto.AnalyseInvDTO;
 
 /**
  *
@@ -36,22 +32,21 @@ import rest.service.dto.AnalyseInvDTO;
 @Path("v1/analyse-inventaire-excel")
 public class AnalyseInvExcelRessource {
 
-    @EJB
-    private AnalyseInvDTOService analyseInvDTOService;
-
-    // Classe interne simple pour contenir les totaux d'un emplacement
+    // Classe interne pour mapper les données JSON envoyées par le frontend.
+    // Elle doit avoir un getter pour chaque champ utilisé dans la grille ExtJS.
     public static class EmplacementSummary {
         private String emplacement;
-        private Long valeurAchatMachine = 0L, valeurAchatRayon = 0L;
-        private Long valeurVenteMachine = 0L, valeurVenteRayon = 0L;
+        private Long valeurAchatMachine, valeurAchatRayon, ecartValeurAchat;
+        private Long valeurVenteMachine, valeurVenteRayon, ecartValeurVente;
+        private Double pourcentageEcartGlobal, ratioVA;
 
-        // Getters et Setters nécessaires
+        // Getters et Setters pour tous les champs
         public String getEmplacement() {
             return emplacement;
         }
 
-        public void setEmplacement(String e) {
-            this.emplacement = e;
+        public void setEmplacement(String emplacement) {
+            this.emplacement = emplacement;
         }
 
         public Long getValeurAchatMachine() {
@@ -70,6 +65,14 @@ public class AnalyseInvExcelRessource {
             this.valeurAchatRayon = v;
         }
 
+        public Long getEcartValeurAchat() {
+            return ecartValeurAchat;
+        }
+
+        public void setEcartValeurAchat(Long v) {
+            this.ecartValeurAchat = v;
+        }
+
         public Long getValeurVenteMachine() {
             return valeurVenteMachine;
         }
@@ -85,45 +88,56 @@ public class AnalyseInvExcelRessource {
         public void setValeurVenteRayon(Long v) {
             this.valeurVenteRayon = v;
         }
+
+        public Long getEcartValeurVente() {
+            return ecartValeurVente;
+        }
+
+        public void setEcartValeurVente(Long v) {
+            this.ecartValeurVente = v;
+        }
+
+        public Double getPourcentageEcartGlobal() {
+            return pourcentageEcartGlobal;
+        }
+
+        public void setPourcentageEcartGlobal(Double v) {
+            this.pourcentageEcartGlobal = v;
+        }
+
+        public Double getRatioVA() {
+            return ratioVA;
+        }
+
+        public void setRatioVA(Double v) {
+            this.ratioVA = v;
+        }
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @Produces("application/vnd.ms-excel") // Type MIME pour les anciens fichiers .xls
-    public Response generateExcel(@FormParam("inventaireId") String inventaireId,
+    @Produces("application/vnd.ms-excel")
+    public Response generateExcel(@FormParam("data") String jsonData,
             @FormParam("inventaireName") String inventaireName) {
         try {
-            List<AnalyseInvDTO> data = analyseInvDTOService.listAnalyseInv(inventaireId);
+            // 1. Désérialiser les données filtrées envoyées par le frontend
+            ObjectMapper mapper = new ObjectMapper();
+            List<EmplacementSummary> summaryList = mapper.readValue(jsonData,
+                    new TypeReference<List<EmplacementSummary>>() {
+                    });
 
-            // Regroupement et calcul des totaux par emplacement
-            Map<String, EmplacementSummary> summaryMap = new HashMap<>();
-            for (AnalyseInvDTO item : data) {
-                summaryMap.computeIfAbsent(item.getEmplacement(), k -> {
-                    EmplacementSummary summary = new EmplacementSummary();
-                    summary.setEmplacement(k);
-                    return summary;
-                });
-                EmplacementSummary summary = summaryMap.get(item.getEmplacement());
-                summary.valeurAchatMachine += (long) item.getQteInitiale() * item.getPrixAchat();
-                summary.valeurAchatRayon += (long) item.getQteSaisie() * item.getPrixAchat();
-                summary.valeurVenteMachine += (long) item.getQteInitiale() * item.getPrixVente();
-                summary.valeurVenteRayon += (long) item.getQteSaisie() * item.getPrixVente();
-            }
-            List<EmplacementSummary> summaryList = new ArrayList<>(summaryMap.values());
-
-            // Utilisation de HSSFWorkbook pour le format .xls compatible avec les anciennes versions de POI
+            // 2. Créer le classeur Excel
             Workbook workbook = new HSSFWorkbook();
-            Sheet sheet = workbook.createSheet("Analyse Inventaire");
+            Sheet sheet = workbook.createSheet("Analyse Synthétique");
 
-            // Création des styles pour l'en-tête
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             CellStyle headerStyle = workbook.createCellStyle();
             headerStyle.setFont(headerFont);
 
-            // Création de la ligne d'en-tête
-            String[] headers = { "Emplacement", "V.Achat Machine", "V.Achat Rayon", "Écart V.Achat", "(%) Écart Achat",
-                    "V.Vente Machine", "V.Vente Rayon", "Écart V.Vente", "(%) Écart Vente" };
+            // 3. Créer l'en-tête avec toutes les colonnes
+            String[] headers = { "Emplacement", "V.Achat Machine", "V.Achat Inventaire", "Écart V.Achat",
+                    "V.Vente Machine", "V.Vente Inventaire", "Écart V.Vente", "% Écart Global", "Ratio V/A" };
             Row headerRow = sheet.createRow(0);
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -131,43 +145,34 @@ public class AnalyseInvExcelRessource {
                 cell.setCellStyle(headerStyle);
             }
 
-            // Remplissage des données pour chaque emplacement
+            // 4. Remplir les données
             int rowNum = 1;
             for (EmplacementSummary summary : summaryList) {
                 Row row = sheet.createRow(rowNum++);
                 row.createCell(0).setCellValue(summary.getEmplacement());
                 row.createCell(1).setCellValue(summary.getValeurAchatMachine());
                 row.createCell(2).setCellValue(summary.getValeurAchatRayon());
-                long ecartAchat = summary.getValeurAchatRayon() - summary.getValeurAchatMachine();
-                row.createCell(3).setCellValue(ecartAchat);
-                double percentAchat = (summary.getValeurAchatMachine() != 0)
-                        ? ((double) ecartAchat / summary.getValeurAchatMachine()) * 100 : 0;
-                row.createCell(4).setCellValue(percentAchat);
-
-                row.createCell(5).setCellValue(summary.getValeurVenteMachine());
-                row.createCell(6).setCellValue(summary.getValeurVenteRayon());
-                long ecartVente = summary.getValeurVenteRayon() - summary.getValeurVenteMachine();
-                row.createCell(7).setCellValue(ecartVente);
-                double percentVente = (summary.getValeurVenteMachine() != 0)
-                        ? ((double) ecartVente / summary.getValeurVenteMachine()) * 100 : 0;
-                row.createCell(8).setCellValue(percentVente);
+                row.createCell(3).setCellValue(summary.getEcartValeurAchat());
+                row.createCell(4).setCellValue(summary.getValeurVenteMachine());
+                row.createCell(5).setCellValue(summary.getValeurVenteRayon());
+                row.createCell(6).setCellValue(summary.getEcartValeurVente());
+                row.createCell(7).setCellValue(summary.getPourcentageEcartGlobal());
+                row.createCell(8).setCellValue(summary.getRatioVA());
             }
 
-            // Ajustement automatique de la largeur des colonnes
+            // Ajustement de la largeur des colonnes
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
             }
 
-            // Écriture du classeur dans un flux d'octets en mémoire
+            // 5. Générer le fichier et renvoyer la réponse
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             workbook.write(baos);
             workbook.close();
 
-            // Préparation de la réponse HTTP avec le nom de fichier horodaté
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyyHHmm");
             String timestamp = LocalDateTime.now().format(formatter);
-            String filename = "analyse_par_emplacement_" + inventaireName.replace(" ", "_") + "_" + timestamp + ".xls"; // Extension
-                                                                                                                        // .xls
+            String filename = "analyse_synthetique_" + inventaireName.replace(" ", "_") + "_" + timestamp + ".xls";
 
             return Response.ok(baos.toByteArray())
                     .header("Content-Disposition", "attachment; filename=\"" + filename + "\"").build();

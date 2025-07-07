@@ -1,11 +1,12 @@
 package rest;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +24,13 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import rest.service.AnalyseInvDTOService;
-import rest.service.dto.AnalyseInvDTO;
+import rest.service.AnalyseAvanceeService;
+import rest.service.AnalyseAvanceeService.AnalyseAvanceeDTO;
+
+/**
+ *
+ * @author airman
+ */
 
 @Path("v1/analyse-inventaire-pdf")
 public class AnalyseInvPDFRessource {
@@ -33,17 +39,15 @@ public class AnalyseInvPDFRessource {
             + File.separator + "REPORTS" + File.separator;
 
     @EJB
-    private AnalyseInvDTOService analyseInvDTOService;
+    private AnalyseAvanceeService analyseAvanceeService;
 
-    // Classe interne simple pour contenir les totaux d'un emplacement
     public static class EmplacementSummary {
         private String emplacement;
-        private Long valeurAchatMachine;
-        private Long valeurAchatRayon;
-        private Long valeurVenteMachine;
-        private Long valeurVenteRayon;
+        private Long valeurAchatMachine, valeurAchatRayon, ecartValeurAchat;
+        private Long valeurVenteMachine, valeurVenteRayon, ecartValeurVente;
+        private Double pourcentageEcartGlobal, ratioVA;
 
-        // Getters et Setters nécessaires pour JasperReports
+        // Getters et Setters pour tous les champs
         public String getEmplacement() {
             return emplacement;
         }
@@ -68,6 +72,14 @@ public class AnalyseInvPDFRessource {
             this.valeurAchatRayon = v;
         }
 
+        public Long getEcartValeurAchat() {
+            return ecartValeurAchat;
+        }
+
+        public void setEcartValeurAchat(Long v) {
+            this.ecartValeurAchat = v;
+        }
+
         public Long getValeurVenteMachine() {
             return valeurVenteMachine;
         }
@@ -83,53 +95,55 @@ public class AnalyseInvPDFRessource {
         public void setValeurVenteRayon(Long v) {
             this.valeurVenteRayon = v;
         }
+
+        public Long getEcartValeurVente() {
+            return ecartValeurVente;
+        }
+
+        public void setEcartValeurVente(Long v) {
+            this.ecartValeurVente = v;
+        }
+
+        public Double getPourcentageEcartGlobal() {
+            return pourcentageEcartGlobal;
+        }
+
+        public void setPourcentageEcartGlobal(Double v) {
+            this.pourcentageEcartGlobal = v;
+        }
+
+        public Double getRatioVA() {
+            return ratioVA;
+        }
+
+        public void setRatioVA(Double v) {
+            this.ratioVA = v;
+        }
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces("application/pdf")
-    public Response generatePdf(@FormParam("inventaireId") String inventaireId,
+    public Response generatePdf(@FormParam("data") String jsonData, @FormParam("inventaireId") String inventaireId,
             @FormParam("inventaireName") String inventaireName) {
         try {
-            List<AnalyseInvDTO> data = analyseInvDTOService.listAnalyseInv(inventaireId);
-
-            // Regroupement et calcul des totaux par emplacement
-            Map<String, EmplacementSummary> summaryMap = new HashMap<>();
-            int modifiedProducts = 0;
-            for (AnalyseInvDTO item : data) {
-                if (!item.getQteInitiale().equals(item.getQteSaisie())) {
-                    modifiedProducts++;
-                }
-                summaryMap.computeIfAbsent(item.getEmplacement(), k -> {
-                    EmplacementSummary summary = new EmplacementSummary();
-                    summary.setEmplacement(k);
-                    summary.setValeurAchatMachine(0L);
-                    summary.setValeurAchatRayon(0L);
-                    summary.setValeurVenteMachine(0L);
-                    summary.setValeurVenteRayon(0L);
-                    return summary;
-                });
-
-                EmplacementSummary summary = summaryMap.get(item.getEmplacement());
-                summary.setValeurAchatMachine(
-                        summary.getValeurAchatMachine() + (long) item.getQteInitiale() * item.getPrixAchat());
-                summary.setValeurAchatRayon(
-                        summary.getValeurAchatRayon() + (long) item.getQteSaisie() * item.getPrixAchat());
-                summary.setValeurVenteMachine(
-                        summary.getValeurVenteMachine() + (long) item.getQteInitiale() * item.getPrixVente());
-                summary.setValeurVenteRayon(
-                        summary.getValeurVenteRayon() + (long) item.getQteSaisie() * item.getPrixVente());
-            }
-
-            // Conversion de la map en liste pour Jasper
-            List<EmplacementSummary> summaryList = new ArrayList<>(summaryMap.values());
+            ObjectMapper mapper = new ObjectMapper();
+            List<EmplacementSummary> summaryList = mapper.readValue(jsonData,
+                    new TypeReference<List<EmplacementSummary>>() {
+                    });
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(summaryList);
+
+            // --- CORRECTION : Appel du service avec les deux paramètres ---
+            AnalyseAvanceeDTO fullData = analyseAvanceeService.getAnalyseAvancee(inventaireId, inventaireName);
+            String analysisText = fullData.getAnalysisText();
 
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("INVENTAIRE_NAME", inventaireName);
-            // --- AJOUT DES NOUVEAUX PARAMÈTRES POUR LE RAPPORT ---
-            parameters.put("TOTAL_PRODUITS", data.size());
-            parameters.put("PRODUITS_MODIFIES", modifiedProducts);
+            long modifiedProducts = fullData.getDetailProduits().stream().filter(p -> p.getEcartQuantite() != 0)
+                    .count();
+            parameters.put("TOTAL_PRODUITS", fullData.getDetailProduits().size());
+            parameters.put("PRODUITS_MODIFIES", (int) modifiedProducts);
+            parameters.put("ANALYSIS_TEXT", analysisText);
 
             File reportFile = new File(REPORTS_PATH + "analyse_inventaire.jrxml");
             if (!reportFile.exists()) {
@@ -143,16 +157,10 @@ public class AnalyseInvPDFRessource {
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
             byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
 
-            // --- MODIFICATION POUR AJOUTER L'HORODATAGE ---
-            // 1. Créer un formateur pour la date et l'heure
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyyHHmm");
             String timestamp = LocalDateTime.now().format(formatter);
+            String filename = "analyse_synthetique_" + inventaireName.replace(" ", "_") + "_" + timestamp + ".pdf";
 
-            // 2. Construire le nom de fichier final
-            String sanitizedInventaireName = inventaireName.replace(" ", "_").replaceAll("[^a-zA-Z0-9_]", "");
-            String filename = "analyse_par_emplacement_" + sanitizedInventaireName + "_" + timestamp + ".pdf";
-
-            // 3. Utiliser le nouveau nom de fichier dans l'en-tête
             return Response.ok(pdfBytes).header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
                     .build();
 
