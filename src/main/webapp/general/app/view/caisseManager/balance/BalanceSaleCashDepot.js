@@ -1,4 +1,11 @@
-
+/**
+ * @class testextjs.view.caisseManager.balance.BalanceSaleCashDepot
+ * @extends Ext.panel.Panel
+ * @description Vue pour afficher la balance des ventes par dépôt.
+ * @author Your Name
+ * @version 1.1
+ * @date 2025-07-09
+ */
 Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashDepot', {
     extend: 'Ext.panel.Panel',
     xtype: 'balancesalecashdepot',
@@ -11,7 +18,7 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashDepot', {
     frame: true,
     title: 'Balance des ventes par dépôt',
     width: '98%',
-    height: 570,
+    height: 650, // Hauteur augmentée pour le résumé
     layout: 'vbox',
     
     initComponent: function() {
@@ -33,17 +40,20 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashDepot', {
             listeners: {
                 load: function(store, records, successful) {
                     if (successful) {
-                        // Ajout de l'option "TOUT" au début de la liste
                         store.insert(0, [{
                             lgEMPLACEMENTID: 'ALL',
                             strNAME: 'TOUT'
                         }]);
-                        // Sélection par défaut de "TOUT"
                         Ext.getCmp('depot').setValue('ALL');
                     }
                 }
             }
         });
+
+        // Renderer pour les totaux de la grille
+        var summaryRenderer = function(value, summaryData, dataIndex) {
+            return '<span style="font-size:14px; font-weight:bold;">' + Ext.util.Format.number(value, '0,000') + '</span>';
+        };
 
         Ext.applyIf(me, {
             items: [
@@ -66,22 +76,15 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashDepot', {
                             queryMode: 'local',
                             labelWidth: 110,
                             width: 380,
-                            allowBlank: false,
-                            listConfig: {
-                                getInnerTpl: function() {
-                                    return '<span>{strNAME}</span>';
-                                }
-                            }
+                            allowBlank: false
                         },
                         { xtype: 'splitter' },
                         {
                             xtype: 'datefield',
                             fieldLabel: 'Du',
                             id: 'dtStart',
-                            name: 'dtStart',
                             value: today,
                             format: 'd/m/Y',
-                            allowBlank: false,
                             submitFormat: 'Y-m-d',
                             labelWidth: 20,
                             width: 130
@@ -91,10 +94,8 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashDepot', {
                             xtype: 'datefield',
                             fieldLabel: 'Au',
                             id: 'dtEnd',
-                            name: 'dtEnd',
                             value: today,
                             format: 'd/m/Y',
-                            allowBlank: false,
                             submitFormat: 'Y-m-d',
                             labelWidth: 20,
                             width: 130
@@ -104,16 +105,14 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashDepot', {
                             xtype: 'button',
                             text: 'Rechercher',
                             iconCls: 'search-icon',
-                            id: 'searchBtn',
-                            tooltip: 'Lancer la recherche'
+                            id: 'searchBtn'
                         },
                         { xtype: 'splitter' },
                         {
                             xtype: 'button',
                             text: 'Imprimer',
                             iconCls: 'printable-icon',
-                            id: 'printBtn',
-                            tooltip: 'Imprimer la balance'
+                            id: 'printBtn'
                         }
                     ]
                 },
@@ -121,44 +120,57 @@ Ext.define('testextjs.view.caisseManager.balance.BalanceSaleCashDepot', {
                     xtype: 'gridpanel',
                     id: 'gridBalance',
                     store: Ext.create('testextjs.store.BalanceSaleCashDepotStore'),
-                    height: 250,
+                    height: 200,
                     width: '100%',
                     stripeRows: true,
-                    columns: [
-                        { text: 'Type Vente', dataIndex: 'typeVente', flex: 1, summaryType: 'count', summaryRenderer: function(value){return "<b>TOTAL</b>";} },
-                        { text: 'Montant TTC', dataIndex: 'montantTTC', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1, summaryType: 'sum', summaryRenderer: function(value){return "<b>"+Ext.util.Format.number(value, '0,000')+"</b>";} },
-                        { text: 'Montant Net', dataIndex: 'montantNet', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1, summaryType: 'sum', summaryRenderer: function(value){return "<b>"+Ext.util.Format.number(value, '0,000')+"</b>";} },
-                        { text: 'Marge', dataIndex: 'marge', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1, summaryType: 'sum', summaryRenderer: function(value){return "<b>"+Ext.util.Format.number(value, '0,000')+"</b>";} },
-                        { text: 'Nbre Ventes', dataIndex: 'nbreVente', align: 'center', flex: 0.5, summaryType: 'sum', summaryRenderer: function(value){return "<b>"+Ext.util.Format.number(value, '0,000')+"</b>";} },
-                        { text: 'Panier Moyen', dataIndex: 'panierMoyen', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1 }
-                    ],
                     features: [{
                         ftype: 'summary',
                         dock: 'bottom'
-                    }]
+                    }],
+                    columns: [
+                        { text: 'Type Vente', dataIndex: 'typeVente', flex: 1.2, summaryType: 'count', summaryRenderer: function(value){return '<span style="font-size:14px; font-weight:bold;">TOTAL</span>';} },
+                        { text: 'Montant TTC', dataIndex: 'montantTTC', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1, summaryType: 'sum', summaryRenderer: summaryRenderer },
+                        { text: 'Montant Net', dataIndex: 'montantNet', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1, summaryType: 'sum', summaryRenderer: summaryRenderer },
+                        { text: 'Marge', dataIndex: 'marge', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1, summaryType: 'sum', summaryRenderer: summaryRenderer },
+                        { text: 'Nbre Ventes', dataIndex: 'nbreVente', align: 'center', flex: 0.6, summaryType: 'sum', summaryRenderer: summaryRenderer },
+                        { text: 'Montant Espèces', dataIndex: 'montantEsp', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1, summaryType: 'sum', summaryRenderer: summaryRenderer },
+                        { text: 'Montant Tiers Payant', dataIndex: 'montantTp', renderer: Ext.util.Format.numberRenderer('0,000'), align: 'right', flex: 1, summaryType: 'sum', summaryRenderer: summaryRenderer }
+                    ]
                 },
                 {
                     xtype: 'panel',
-                    title: 'Résumé Global',
+                    title: 'Résumé Global Détaillé',
                     id: 'summaryPanel',
                     width: '100%',
                     flex: 1,
                     bodyPadding: 10,
+                    autoScroll: true,
                     layout: { type: 'table', columns: 4, tableAttrs: { style: { width: '100%' } } },
-                    defaults: { xtype: 'displayfield', labelWidth: 150, renderer: function(v) { return Ext.util.Format.number(v, '0,000'); } },
+                    defaults: { xtype: 'displayfield', labelWidth: 160, renderer: function(v) { return Ext.util.Format.number(v, '0,000.00'); } },
                     items: [
                         { fieldLabel: 'Montant TTC', id: 'montantTTC_summary' },
+                        { fieldLabel: 'Montant HT', id: 'montantHT_summary' },
+                        { fieldLabel: 'Montant TVA', id: 'montantTva_summary' },
                         { fieldLabel: 'Montant Net', id: 'montantNet_summary' },
                         { fieldLabel: 'Marge', id: 'marge_summary' },
-                        { fieldLabel: 'Nbre Vente', id: 'nbreVente_summary' },
+                        { fieldLabel: 'Montant Remise', id: 'montantRemise_summary' },
+                        { fieldLabel: 'Nombre de Ventes', id: 'nbreVente_summary' },
                         { fieldLabel: 'Panier Moyen', id: 'panierMoyen_summary' },
-                        { fieldLabel: 'Montant Achat', id: 'montantAchat_summary' },
-                        { fieldLabel: 'Ratio VA', id: 'ratioVA_summary', renderer: function(v) { return Ext.util.Format.number(v, '0.00'); } },
-                        { fieldLabel: 'Ratio AV', id: 'rationAV_summary', renderer: function(v) { return Ext.util.Format.number(v, '0.00'); } },
+                        { fieldLabel: 'Montant Achats', id: 'montantAchat_summary' },
+                        { fieldLabel: 'Ratio Vente/Achat', id: 'ratioVA_summary' },
+                        { fieldLabel: 'Ratio Achat/Vente', id: 'rationAV_summary' },
+                        { fieldLabel: 'Montant Tiers Payant', id: 'montantTp_summary' },
+                        { fieldLabel: 'Règlements TP', id: 'montantRegleTp_summary' },
                         { fieldLabel: 'Montant Espèces', id: 'montantEsp_summary' },
                         { fieldLabel: 'Montant Chèque', id: 'montantCheque_summary' },
                         { fieldLabel: 'Montant CB', id: 'montantCB_summary' },
-                        { fieldLabel: 'Paiement Mobile', id: 'montantMobilePayment_summary' }
+                        { fieldLabel: 'Montant Virement', id: 'montantVirement_summary' },
+                        { fieldLabel: 'Paiement Mobile', id: 'montantMobilePayment_summary' },
+                        { fieldLabel: 'Fonds de caisse', id: 'fondCaisse_summary' },
+                        { fieldLabel: 'Entrées en caisse', id: 'montantEntre_summary' },
+                        { fieldLabel: 'Sorties de caisse', id: 'montantSortie_summary' },
+                        { fieldLabel: 'Différé réglé', id: 'montantRegDiff_summary' },
+                        { fieldLabel: 'Montant Différé', id: 'montantDiff_summary' }
                     ]
                 }
             ]

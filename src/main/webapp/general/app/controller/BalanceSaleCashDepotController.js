@@ -47,7 +47,6 @@ Ext.define('testextjs.controller.BalanceSaleCashDepotController', {
     },
     
     onViewAfterRender: function() {
-        // Charge les données initiales une fois la vue rendue et le combobox initialisé
         var depotStore = this.getDepotCombo().getStore();
         if (depotStore.isLoading() || depotStore.getCount() === 0) {
             depotStore.on('load', this.onSearchClick, this, { single: true });
@@ -66,7 +65,6 @@ Ext.define('testextjs.controller.BalanceSaleCashDepotController', {
         var dtEnd = me.getDtEnd().getSubmitValue();
 
         if (!depotId) {
-            // Ne fait rien si le combo n'a pas encore de valeur
             return;
         }
 
@@ -94,24 +92,19 @@ Ext.define('testextjs.controller.BalanceSaleCashDepotController', {
 
     updateSummary: function(metaData) {
         var summaryPanel = this.getSummaryPanel();
-        summaryPanel.down('#montantTTC_summary').setValue(metaData.montantTTC);
-        summaryPanel.down('#montantNet_summary').setValue(metaData.montantNet);
-        summaryPanel.down('#marge_summary').setValue(metaData.marge);
-        summaryPanel.down('#nbreVente_summary').setValue(metaData.nbreVente);
-        summaryPanel.down('#panierMoyen_summary').setValue(metaData.panierMoyen);
-        summaryPanel.down('#montantAchat_summary').setValue(metaData.montantAchat);
-        summaryPanel.down('#ratioVA_summary').setValue(metaData.ratioVA);
-        summaryPanel.down('#rationAV_summary').setValue(metaData.rationAV);
-        summaryPanel.down('#montantEsp_summary').setValue(metaData.montantEsp);
-        summaryPanel.down('#montantCheque_summary').setValue(metaData.montantCheque);
-        summaryPanel.down('#montantCB_summary').setValue(metaData.montantCB);
-        summaryPanel.down('#montantMobilePayment_summary').setValue(metaData.montantMobilePayment);
+        for (var key in metaData) {
+            if (metaData.hasOwnProperty(key)) {
+                var field = summaryPanel.down('#' + key + '_summary');
+                if (field) {
+                    field.setValue(metaData[key]);
+                }
+            }
+        }
     },
 
     onPrintClick: function() {
         var depotId = this.getDepotCombo().getValue();
         var dtStart = this.getDtStart().getSubmitValue();
-        // CORRECTION DE LA COQUILLE ICI
         var dtEnd = this.getDtEnd().getSubmitValue();
         
         if (!depotId) {
@@ -122,7 +115,6 @@ Ext.define('testextjs.controller.BalanceSaleCashDepotController', {
         var link = '../api/v1/balance/print-balancesalecashdepot?emplacementId=' + depotId +
                    '&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
                    
-        // Ouvre le lien dans un nouvel onglet pour télécharger le PDF
         window.open(link);
     }
 });

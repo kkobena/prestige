@@ -66,4 +66,5 @@ public interface BalanceService {
      *             En cas d'erreur de génération.
      */
     byte[] generateBalanceReport(BalanceParamsDTO balanceParams) throws Exception;
+
 }

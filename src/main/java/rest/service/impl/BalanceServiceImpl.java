@@ -1422,7 +1422,7 @@ public class BalanceServiceImpl implements BalanceService {
         String reportFileName;
         Map<String, Object> parameters = new HashMap<>();
         List<BalanceDTO> reportData = new ArrayList<>();
-        String reportDirectory = "D:\\CONF\\LABOREX\\REPORTS\\"; // Répertoire externe
+        String reportDirectory = "D:\\CONF\\LABOREX\\REPORTS\\";
 
         try {
             SummaryDTO summary;
@@ -1443,8 +1443,8 @@ public class BalanceServiceImpl implements BalanceService {
                         reportData.add(balance);
                     }
                 }
-                JSONObject allDataJson = getBalanceForAllDepots(balanceParams);
-                summary = convertJsonToSummaryDto(allDataJson.optJSONObject("metaData"));
+                JSONObject allDataJson = this.getBalanceForAllDepots(balanceParams);
+                summary = this.convertJsonToSummaryDto(allDataJson.optJSONObject("metaData"));
 
             } else {
                 reportFileName = "balance_single_depot.jrxml";
@@ -1459,39 +1459,35 @@ public class BalanceServiceImpl implements BalanceService {
                 }
             }
 
-            // MODIFICATION: Passer les paramètres du résumé un par un
+            // CORRECTION: Standardisation des noms de paramètres
             parameters.put("P_START_DATE", balanceParams.getDtStart());
             parameters.put("P_END_DATE", balanceParams.getDtEnd());
-            parameters.put("P_SUMMARY_TTC", summary.getMontantTTC());
-            parameters.put("P_SUMMARY_NET", summary.getMontantNet());
-            parameters.put("P_SUMMARY_MARGE", summary.getMarge());
-            parameters.put("P_SUMMARY_NB_VENTE", summary.getNbreVente());
-            parameters.put("P_SUMMARY_ACHAT", summary.getMontantAchat());
+            parameters.put("P_MONTANT_TTC", summary.getMontantTTC());
+            parameters.put("P_MONTANT_HT", summary.getMontantHT());
+            parameters.put("P_MONTANT_TVA", summary.getMontantTva());
+            parameters.put("P_MONTANT_NET", summary.getMontantNet());
+            parameters.put("P_MARGE", summary.getMarge());
+            parameters.put("P_MONTANT_REMISE", summary.getMontantRemise());
+            parameters.put("P_NBRE_VENTE", (long) summary.getNbreVente());
+            parameters.put("P_PANIER_MOYEN", summary.getPanierMoyen());
+            parameters.put("P_MONTANT_ACHAT", summary.getMontantAchat());
+            parameters.put("P_MONTANT_TP", summary.getMontantTp());
+            parameters.put("P_MONTANT_ESP", summary.getMontantEsp());
+            parameters.put("P_MONTANT_CHEQUE", summary.getMontantCheque());
+            parameters.put("P_MONTANT_CB", summary.getMontantCB());
+            parameters.put("P_MONTANT_VIREMENT", summary.getMontantVirement());
+            parameters.put("P_MOBILE_PAYMENT", summary.getMontantMobilePayment());
 
             String reportPath = reportDirectory + reportFileName;
-            LOG.log(Level.INFO, "Tentative de chargement du rapport Jasper depuis le chemin absolu : {0}", reportPath);
-
             InputStream reportStream = new FileInputStream(reportPath);
-
             JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
-            LOG.log(Level.INFO, "Rapport {0} compile avec succes.", reportFileName);
-
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
                     new JRBeanCollectionDataSource(reportData));
-            LOG.info("Rapport rempli avec succes.");
-
             return JasperExportManager.exportReportToPdf(jasperPrint);
 
-        } catch (java.io.FileNotFoundException e) {
-            LOG.log(Level.SEVERE,
-                    "ERREUR CRITIQUE: Fichier de rapport introuvable. Verifiez le chemin et les permissions. Chemin: "
-                            + reportDirectory + " | Erreur: {0}",
-                    e.getMessage());
-            throw new Exception("Fichier de rapport introuvable. Assurez-vous que le chemin '" + reportDirectory
-                    + "' est correct et que le serveur a les permissions de lecture.", e);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Erreur majeure lors de la generation du rapport PDF.", e);
-            throw e; // Propage l'exception pour que le serveur renvoie une erreur 500
+            throw e;
         }
     }
 
@@ -1510,6 +1506,11 @@ public class BalanceServiceImpl implements BalanceService {
             summary.setMontantCheque(metaDataJson.optLong("montantCheque"));
             summary.setMontantCB(metaDataJson.optLong("montantCB"));
             summary.setMontantMobilePayment(metaDataJson.optLong("montantMobilePayment"));
+            summary.setMontantHT(metaDataJson.optLong("montantHT"));
+            summary.setMontantTva(metaDataJson.optLong("montantTva"));
+            summary.setMontantRemise(metaDataJson.optLong("montantRemise"));
+            summary.setMontantTp(metaDataJson.optLong("montantTp"));
+            summary.setMontantVirement(metaDataJson.optLong("montantVirement"));
         }
         return summary;
     }
