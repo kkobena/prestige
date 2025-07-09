@@ -10,11 +10,14 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 import rest.service.BalanceService;
 import rest.service.dto.BalanceParamsDTO;
 import toolkits.parameters.commonparameter;
+import static toolkits.parameters.enumExtentionFiles.LOG;
 import util.Constant;
 
 /**
@@ -85,5 +88,50 @@ public class BalanceVenteRessource {
         JSONObject json = balanceService.etatLastThreeYears();
         return Response.ok().entity(json.toString()).build();
 
+    }
+
+    @GET
+    @Path("/balancesalecashdepot")
+    public Response balanceCaisse(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "emplacementId") String emplacementId) {
+
+        if (emplacementId == null || emplacementId.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Le paramètre emplacementId est obligatoire")
+                    .build();
+        }
+
+        BalanceParamsDTO params = BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd).emplacementId(emplacementId)
+                .build();
+        JSONObject json;
+
+        if ("ALL".equalsIgnoreCase(emplacementId)) {
+            // Appelle la nouvelle méthode pour le cumul
+            json = balanceService.getBalanceForAllDepots(params);
+        } else {
+            // Comportement existant
+            json = balanceService.getBalanceVenteCaisseDataView(params);
+        }
+
+        return Response.ok().entity(json.toString()).build();
+    }
+
+    @GET
+    @Path("/print-balancesalecashdepot")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response printBalanceCaisse(@QueryParam(value = "dtStart") String dtStart,
+            @QueryParam(value = "dtEnd") String dtEnd, @QueryParam(value = "emplacementId") String emplacementId) {
+
+        try {
+            BalanceParamsDTO params = BalanceParamsDTO.builder().dtStart(dtStart).dtEnd(dtEnd)
+                    .emplacementId(emplacementId).build();
+            byte[] data = balanceService.generateBalanceReport(params);
+
+            return Response.ok(data, MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"balance_depots.pdf\"").build();
+
+        } catch (Exception e) {
+            // LOG.log(java.util.logging.Level.SEVERE, "Erreur lors de la génération du PDF", e);
+            return Response.serverError().entity("Erreur interne du serveur lors de la génération du rapport.").build();
+        }
     }
 }
