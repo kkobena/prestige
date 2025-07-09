@@ -51,6 +51,7 @@ import util.FunctionUtils;
 
 import commonTasks.dto.MagasinDTO;
 import dal.TEmplacement;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -1360,11 +1361,9 @@ public class BalanceServiceImpl implements BalanceService {
         Map<String, BalanceDTO> aggregatedBalancesMap = new HashMap<>();
 
         try {
-            // 1. Récupérer tous les dépôts de type "DEPOT_EXTENSION"
-            JSONObject depotsJson = magasinService.findAllDepots("", "2"); // Utilise la méthode avec type
+            JSONObject depotsJson = magasinService.findAllDepots("", "2");
             JSONArray depotsArray = depotsJson.getJSONArray("data");
 
-            // 2. Boucler sur chaque dépôt pour agréger les données
             for (int i = 0; i < depotsArray.length(); i++) {
                 JSONObject depotObj = depotsArray.getJSONObject(i);
                 String depotId = depotObj.getString("lgEMPLACEMENTID");
@@ -1374,16 +1373,12 @@ public class BalanceServiceImpl implements BalanceService {
 
                 GenericDTO depotData = this.getBalanceVenteCaisseData(depotParams);
 
-                // Agréger le résumé (metaData)
-                SummaryDTO depotSummary = depotData.getSummary();
-                aggregateSummary(finalSummary, depotSummary);
+                aggregateSummary(finalSummary, depotData.getSummary());
 
-                // Agréger les données de la grille (VNO/VO)
                 for (BalanceDTO balance : depotData.getBalances()) {
-                    // CORRECTION: Utilisation de computeIfAbsent avec la bonne clé et initialisation correcte du DTO
                     BalanceDTO aggregatedBalance = aggregatedBalancesMap.computeIfAbsent(balance.getBalanceId(), k -> {
                         BalanceDTO newDto = new BalanceDTO();
-                        newDto.setBalanceId(k); // k est la clé, c'est-à-dire balance.getBalanceId()
+                        newDto.setBalanceId(k);
                         newDto.setTypeVente(balance.getTypeVente());
                         return newDto;
                     });
@@ -1396,7 +1391,7 @@ public class BalanceServiceImpl implements BalanceService {
         }
 
         List<BalanceDTO> finalBalances = new ArrayList<>(aggregatedBalancesMap.values());
-        updatePourcent(finalBalances); // Mettre à jour les pourcentages à la fin
+        updatePourcent(finalBalances);
 
         return FunctionUtils.returnData(finalBalances, finalBalances.size(), finalSummary);
     }
@@ -1411,7 +1406,6 @@ public class BalanceServiceImpl implements BalanceService {
         total.setMontantCheque(total.getMontantCheque() + current.getMontantCheque());
         total.setMontantCB(total.getMontantCB() + current.getMontantCB());
         total.setMontantMobilePayment(total.getMontantMobilePayment() + current.getMontantMobilePayment());
-        // Agréger les autres champs si nécessaire...
     }
 
     private void aggregateBalance(BalanceDTO total, BalanceDTO current) {
@@ -1420,7 +1414,6 @@ public class BalanceServiceImpl implements BalanceService {
         total.setMarge(total.getMarge() + current.getMarge());
         total.setNbreVente(total.getNbreVente() + current.getNbreVente());
         total.setMontantPaye(total.getMontantPaye() + current.getMontantPaye());
-        // Agréger les autres champs si nécessaire...
     }
 
     @Override
@@ -1429,64 +1422,79 @@ public class BalanceServiceImpl implements BalanceService {
         String reportFileName;
         Map<String, Object> parameters = new HashMap<>();
         List<BalanceDTO> reportData = new ArrayList<>();
+        String reportDirectory = "D:\\CONF\\LABOREX\\REPORTS\\"; // Répertoire externe
 
-        if ("ALL".equalsIgnoreCase(emplacementId)) {
-            reportFileName = "balance_all_depots.jrxml";
-            JSONObject depotsJson = magasinService.findAllDepots("", "2");
-            JSONArray depotsArray = depotsJson.getJSONArray("data");
+        try {
+            SummaryDTO summary;
+            if ("ALL".equalsIgnoreCase(emplacementId)) {
+                reportFileName = "balance_all_depots.jrxml";
+                JSONObject depotsJson = magasinService.findAllDepots("", "2");
+                JSONArray depotsArray = depotsJson.getJSONArray("data");
 
-            for (int i = 0; i < depotsArray.length(); i++) {
-                JSONObject depotObj = depotsArray.getJSONObject(i);
-                BalanceParamsDTO depotParams = BalanceParamsDTO.builder().dtStart(balanceParams.getDtStart())
-                        .dtEnd(balanceParams.getDtEnd()).emplacementId(depotObj.getString("lgEMPLACEMENTID")).build();
+                for (int i = 0; i < depotsArray.length(); i++) {
+                    JSONObject depotObj = depotsArray.getJSONObject(i);
+                    BalanceParamsDTO depotParams = BalanceParamsDTO.builder().dtStart(balanceParams.getDtStart())
+                            .dtEnd(balanceParams.getDtEnd()).emplacementId(depotObj.getString("lgEMPLACEMENTID"))
+                            .build();
 
-                GenericDTO depotGenericData = this.getBalanceVenteCaisseData(depotParams);
-                for (BalanceDTO balance : depotGenericData.getBalances()) {
-                    balance.setDepotName(depotObj.getString("strNAME")); // Assurez-vous d'avoir ce champ dans
-                                                                         // BalanceDTO
-                    reportData.add(balance);
+                    GenericDTO depotGenericData = this.getBalanceVenteCaisseData(depotParams);
+                    for (BalanceDTO balance : depotGenericData.getBalances()) {
+                        balance.setDepotName(depotObj.getString("strNAME"));
+                        reportData.add(balance);
+                    }
+                }
+                JSONObject allDataJson = getBalanceForAllDepots(balanceParams);
+                summary = convertJsonToSummaryDto(allDataJson.optJSONObject("metaData"));
+
+            } else {
+                reportFileName = "balance_single_depot.jrxml";
+                GenericDTO genericData = this.getBalanceVenteCaisseData(balanceParams);
+                reportData = genericData.getBalances();
+                summary = genericData.getSummary();
+                try {
+                    TEmplacement depot = em.find(TEmplacement.class, emplacementId);
+                    parameters.put("P_DEPOT_NAME", depot != null ? depot.getStrNAME() : "Inconnu");
+                } catch (Exception e) {
+                    parameters.put("P_DEPOT_NAME", "Inconnu");
                 }
             }
-            // CORRECTION: Conversion manuelle du JSONObject en SummaryDTO
-            JSONObject allDataJson = getBalanceForAllDepots(balanceParams);
-            SummaryDTO summary = convertJsonToSummaryDto(allDataJson.optJSONObject("metaData"));
-            parameters.put("P_SUMMARY", summary);
 
-        } else {
-            reportFileName = "balance_single_depot.jrxml";
-            GenericDTO genericData = this.getBalanceVenteCaisseData(balanceParams);
-            reportData = genericData.getBalances();
-            parameters.put("P_SUMMARY", genericData.getSummary());
-            try {
-                TEmplacement depot = em.find(TEmplacement.class, emplacementId);
-                parameters.put("P_DEPOT_NAME", depot != null ? depot.getStrNAME() : "Inconnu");
-            } catch (Exception e) {
-                parameters.put("P_DEPOT_NAME", "Inconnu");
-            }
+            // MODIFICATION: Passer les paramètres du résumé un par un
+            parameters.put("P_START_DATE", balanceParams.getDtStart());
+            parameters.put("P_END_DATE", balanceParams.getDtEnd());
+            parameters.put("P_SUMMARY_TTC", summary.getMontantTTC());
+            parameters.put("P_SUMMARY_NET", summary.getMontantNet());
+            parameters.put("P_SUMMARY_MARGE", summary.getMarge());
+            parameters.put("P_SUMMARY_NB_VENTE", summary.getNbreVente());
+            parameters.put("P_SUMMARY_ACHAT", summary.getMontantAchat());
+
+            String reportPath = reportDirectory + reportFileName;
+            LOG.log(Level.INFO, "Tentative de chargement du rapport Jasper depuis le chemin absolu : {0}", reportPath);
+
+            InputStream reportStream = new FileInputStream(reportPath);
+
+            JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
+            LOG.log(Level.INFO, "Rapport {0} compile avec succes.", reportFileName);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
+                    new JRBeanCollectionDataSource(reportData));
+            LOG.info("Rapport rempli avec succes.");
+
+            return JasperExportManager.exportReportToPdf(jasperPrint);
+
+        } catch (java.io.FileNotFoundException e) {
+            LOG.log(Level.SEVERE,
+                    "ERREUR CRITIQUE: Fichier de rapport introuvable. Verifiez le chemin et les permissions. Chemin: "
+                            + reportDirectory + " | Erreur: {0}",
+                    e.getMessage());
+            throw new Exception("Fichier de rapport introuvable. Assurez-vous que le chemin '" + reportDirectory
+                    + "' est correct et que le serveur a les permissions de lecture.", e);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Erreur majeure lors de la generation du rapport PDF.", e);
+            throw e; // Propage l'exception pour que le serveur renvoie une erreur 500
         }
-
-        parameters.put("P_START_DATE", balanceParams.getDtStart());
-        parameters.put("P_END_DATE", balanceParams.getDtEnd());
-
-        // Le chemin doit être relatif au classpath, ou un chemin absolu.
-        // Ici, on suppose que le répertoire D:\CONF\LABOREX\REPORTS est accessible.
-        String reportPath = "D:\\CONF\\LABOREX\\REPORTS\\" + reportFileName;
-
-        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(reportData);
-        JasperReport jasperReport = JasperCompileManager.compileReport(reportPath);
-        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
-
-        return JasperExportManager.exportReportToPdf(jasperPrint);
     }
 
-    /**
-     * Méthode utilitaire pour convertir un JSONObject en SummaryDTO.
-     *
-     * @param metaDataJson
-     *            Le JSONObject à convertir.
-     *
-     * @return Un objet SummaryDTO peuplé.
-     */
     private SummaryDTO convertJsonToSummaryDto(JSONObject metaDataJson) {
         SummaryDTO summary = new SummaryDTO();
         if (metaDataJson != null) {
@@ -1502,7 +1510,6 @@ public class BalanceServiceImpl implements BalanceService {
             summary.setMontantCheque(metaDataJson.optLong("montantCheque"));
             summary.setMontantCB(metaDataJson.optLong("montantCB"));
             summary.setMontantMobilePayment(metaDataJson.optLong("montantMobilePayment"));
-            // Ajoutez d'autres champs si nécessaire
         }
         return summary;
     }

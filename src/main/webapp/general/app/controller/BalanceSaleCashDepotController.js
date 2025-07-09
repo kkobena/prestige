@@ -111,7 +111,8 @@ Ext.define('testextjs.controller.BalanceSaleCashDepotController', {
     onPrintClick: function() {
         var depotId = this.getDepotCombo().getValue();
         var dtStart = this.getDtStart().getSubmitValue();
-        var dtEnd = this.getEnd().getSubmitValue();
+        // CORRECTION DE LA COQUILLE ICI
+        var dtEnd = this.getDtEnd().getSubmitValue();
         
         if (!depotId) {
             Ext.MessageBox.alert('Erreur', 'Veuillez sélectionner un dépôt.');
