@@ -1406,6 +1406,8 @@ public class BalanceServiceImpl implements BalanceService {
         total.setMontantCheque(total.getMontantCheque() + current.getMontantCheque());
         total.setMontantCB(total.getMontantCB() + current.getMontantCB());
         total.setMontantMobilePayment(total.getMontantMobilePayment() + current.getMontantMobilePayment());
+        total.setMontantTp(total.getMontantTp() + current.getMontantTp());
+        // ... ajoutez d'autres champs du résumé si nécessaire
     }
 
     private void aggregateBalance(BalanceDTO total, BalanceDTO current) {
@@ -1414,10 +1416,16 @@ public class BalanceServiceImpl implements BalanceService {
         total.setMarge(total.getMarge() + current.getMarge());
         total.setNbreVente(total.getNbreVente() + current.getNbreVente());
         total.setMontantPaye(total.getMontantPaye() + current.getMontantPaye());
+        // CORRECTION: Ajout des champs manquants à l'agrégation
+        total.setMontantEsp(total.getMontantEsp() + current.getMontantEsp());
+        total.setMontantTp(total.getMontantTp() + current.getMontantTp());
     }
 
     @Override
     public byte[] generateBalanceReport(BalanceParamsDTO balanceParams) throws Exception {
+        // ... Le reste de la méthode generateBalanceReport ...
+        // Le code existant pour la génération de rapport est correct.
+        // Je le remets ici pour que le fichier soit complet.
         String emplacementId = balanceParams.getEmplacementId();
         String reportFileName;
         Map<String, Object> parameters = new HashMap<>();
@@ -1459,7 +1467,6 @@ public class BalanceServiceImpl implements BalanceService {
                 }
             }
 
-            // CORRECTION: Standardisation des noms de paramètres
             parameters.put("P_START_DATE", balanceParams.getDtStart());
             parameters.put("P_END_DATE", balanceParams.getDtEnd());
             parameters.put("P_MONTANT_TTC", summary.getMontantTTC());

@@ -1,6 +1,8 @@
 package rest;
 
 import dal.TUser;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -126,8 +128,20 @@ public class BalanceVenteRessource {
                     .emplacementId(emplacementId).build();
             byte[] data = balanceService.generateBalanceReport(params);
 
+            // Logique pour le nom de fichier dynamique
+            String fileIdentifier;
+            if ("ALL".equalsIgnoreCase(emplacementId)) {
+                fileIdentifier = "toutdepot";
+            } else {
+                // MODIFICATION: Utilisation du mot littéral "depot" comme demandé
+                fileIdentifier = "depot";
+            }
+
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String filename = String.format("balance_%s_%s.pdf", fileIdentifier, timestamp);
+
             return Response.ok(data, MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"balance_depots.pdf\"").build();
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"").build();
 
         } catch (Exception e) {
             // LOG.log(java.util.logging.Level.SEVERE, "Erreur lors de la génération du PDF", e);

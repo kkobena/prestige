@@ -1,7 +1,5 @@
-/**
- * @class testextjs.controller.BalanceSaleCashDepotController
- * @extends Ext.app.Controller
- * @description Contrôleur pour la vue BalanceSaleCashDepot.
+/*
+ * airman
  */
 Ext.define('testextjs.controller.BalanceSaleCashDepotController', {
     extend: 'Ext.app.Controller',
