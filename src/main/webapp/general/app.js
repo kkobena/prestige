@@ -728,7 +728,8 @@ Ext.application({
         'testextjs.view.chiffreAnnuel',
         'testextjs.view.sm_user.mvtcaisse.action.Detail',
         'testextjs.view.notification.RecapSms',
-        'testextjs.view.ticketzrecap'
+        'testextjs.view.ticketzrecap',
+        ''
     ],
     controllers: [
         'App',
@@ -799,7 +800,8 @@ Ext.application({
         'CategorieNotificationCtr',
         'RecapRecetteCaisseCtr',
         'StatVenteDepotCtr',
-        'CautionCtr'
+        'CautionCtr',
+        'BalanceSaleCashDepotController'
 
     ],
     stores: [
