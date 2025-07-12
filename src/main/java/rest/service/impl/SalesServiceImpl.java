@@ -509,6 +509,28 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
+    private void cloneVenteExclus(VenteExclus exclus, TPreenregistrement p) {
+        try {
+            int i = -1;
+            VenteExclus clone = new VenteExclus();
+            clone.setMontantPaye(exclus.getMontantPaye() * i);
+            clone.setMontantRegle(exclus.getMontantRegle() * i);
+            clone.setMontantClient(exclus.getMontantClient() * i);
+            clone.setMontantRemise(exclus.getMontantRemise() * i);
+            clone.setMontantVente(exclus.getMontantVente() * i);
+            clone.setMontantTiersPayant(exclus.getMontantTiersPayant() * i);
+            clone.setMvtDate(exclus.getMvtDate());
+            clone.setCreatedAt(exclus.getCreatedAt());
+            clone.setModifiedAt(exclus.getModifiedAt());
+            clone.setStatus(Statut.DELETE);
+            clone.setPreenregistrement(p);
+            em.persist(clone);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
+
+    }
+
     private Typemvtproduit findTypeMvtProduitById(String id) {
         return getEm().find(Typemvtproduit.class, id);
     }
@@ -553,6 +575,7 @@ public class SalesServiceImpl implements SalesService {
                 copyPreenregistrementCompteTp(newItem, idVente, ooTUser);
                 findByVenteId(tp.getLgPREENREGISTREMENTID()).ifPresent(venteExclus -> {
                     venteExclus.setStatus(Statut.DELETE);
+                    cloneVenteExclus(venteExclus, newItem);
                     this.getEm().merge(venteExclus);
                 });
             }
