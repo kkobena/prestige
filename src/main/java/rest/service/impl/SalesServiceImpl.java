@@ -512,22 +512,23 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private void cloneVenteExclus(VenteExclus exclus, TPreenregistrement p, MvtTransaction newTransaction) {
-
-        int i = -1;
-        VenteExclus clone = new VenteExclus();
-        clone.setMontantPaye(exclus.getMontantPaye() * i);
-        clone.setMontantRegle(exclus.getMontantRegle() * i);
-        clone.setMontantClient(exclus.getMontantClient() * i);
-        clone.setMontantRemise(exclus.getMontantRemise() * i);
-        clone.setMontantVente(exclus.getMontantVente() * i);
-        clone.setMontantTiersPayant(exclus.getMontantTiersPayant() * i);
-        clone.setMvtDate(exclus.getMvtDate());
-        clone.setCreatedAt(exclus.getCreatedAt());
-        clone.setModifiedAt(exclus.getModifiedAt());
-        clone.setMvtTransactionKey(newTransaction.getUuid());
-        clone.setStatus(Statut.DELETE);
-        clone.setPreenregistrement(p);
-        em.persist(clone);
+        try {
+            int i = -1;
+            VenteExclus clone = (VenteExclus) exclus.clone();
+            clone.setMontantPaye(exclus.getMontantPaye() * i);
+            clone.setMontantRegle(exclus.getMontantRegle() * i);
+            clone.setMontantClient(exclus.getMontantClient() * i);
+            clone.setMontantRemise(exclus.getMontantRemise() * i);
+            clone.setMontantVente(exclus.getMontantVente() * i);
+            clone.setMontantTiersPayant(exclus.getMontantTiersPayant() * i);
+            clone.setMvtTransactionKey(newTransaction.getUuid());
+            clone.setStatus(Statut.DELETE);
+            clone.setPreenregistrement(p);
+            clone.setId(UUID.randomUUID().toString());
+            em.persist(clone);
+        } catch (CloneNotSupportedException e) {
+            LOG.log(Level.SEVERE, null, e);
+        }
 
     }
 
@@ -581,8 +582,9 @@ public class SalesServiceImpl implements SalesService {
                 MvtTransaction cpyMvt = copyTransaction(ooTUser, tr, newItem, tp);
                 findByVenteId(tp.getLgPREENREGISTREMENTID()).ifPresent(venteExclus -> {
                     venteExclus.setStatus(Statut.DELETE);
-                    cloneVenteExclus(venteExclus, newItem, cpyMvt);
                     this.getEm().merge(venteExclus);
+                    cloneVenteExclus(venteExclus, newItem, cpyMvt);
+
                 });
                 if (!checkResumeCaisse(tp.getLgUSERCAISSIERID()).isPresent()) {
                     createAnnulationRecette(tp, tr, ooTUser);
@@ -665,7 +667,7 @@ public class SalesServiceImpl implements SalesService {
                             VenteExclus.class)
                     .setParameter(1, venteId).setMaxResults(1).getSingleResult());
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.INFO, null, e.getLocalizedMessage());
             return Optional.empty();
         }
     }
