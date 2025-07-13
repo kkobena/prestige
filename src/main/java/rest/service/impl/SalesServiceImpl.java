@@ -337,7 +337,7 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void addTransactionCopy(TUser ooTUser, TUser caisse, MvtTransaction old, TPreenregistrement newP,
+    public MvtTransaction addTransactionCopy(TUser ooTUser, TUser caisse, MvtTransaction old, TPreenregistrement newP,
             LocalDateTime localDateTime, LocalDate localDate) {
         MvtTransaction newTransaction = new MvtTransaction();
         newTransaction.setUuid(UUID.randomUUID().toString());
@@ -372,6 +372,7 @@ public class SalesServiceImpl implements SalesService {
         newTransaction.setMontantTvaUg((-1) * old.getMontantTvaUg());
         newTransaction.setChecked(false);
         this.em.persist(newTransaction);
+        return newTransaction;
     }
 
     @Override
@@ -465,13 +466,13 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void copyTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement newP,
+    public MvtTransaction copyTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement newP,
             TPreenregistrement old) {
 
         if (cashTransaction.getMvtDate().isEqual(LocalDate.now())) {
             cashTransaction.setChecked(Boolean.FALSE);
             em.merge(cashTransaction);
-            addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), cashTransaction, newP, LocalDateTime.now(),
+            return addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), cashTransaction, newP, LocalDateTime.now(),
                     LocalDate.now());
         } else {
             MvtTransaction newTransaction = new MvtTransaction();
@@ -505,29 +506,28 @@ public class SalesServiceImpl implements SalesService {
             newTransaction.setCaisse(cashTransaction.getCaisse());
             newTransaction.setMagasin(cashTransaction.getMagasin());
             em.persist(newTransaction);
+            return newTransaction;
         }
 
     }
 
-    private void cloneVenteExclus(VenteExclus exclus, TPreenregistrement p) {
-        try {
-            int i = -1;
-            VenteExclus clone = new VenteExclus();
-            clone.setMontantPaye(exclus.getMontantPaye() * i);
-            clone.setMontantRegle(exclus.getMontantRegle() * i);
-            clone.setMontantClient(exclus.getMontantClient() * i);
-            clone.setMontantRemise(exclus.getMontantRemise() * i);
-            clone.setMontantVente(exclus.getMontantVente() * i);
-            clone.setMontantTiersPayant(exclus.getMontantTiersPayant() * i);
-            clone.setMvtDate(exclus.getMvtDate());
-            clone.setCreatedAt(exclus.getCreatedAt());
-            clone.setModifiedAt(exclus.getModifiedAt());
-            clone.setStatus(Statut.DELETE);
-            clone.setPreenregistrement(p);
-            em.persist(clone);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-        }
+    private void cloneVenteExclus(VenteExclus exclus, TPreenregistrement p, MvtTransaction newTransaction) {
+
+        int i = -1;
+        VenteExclus clone = new VenteExclus();
+        clone.setMontantPaye(exclus.getMontantPaye() * i);
+        clone.setMontantRegle(exclus.getMontantRegle() * i);
+        clone.setMontantClient(exclus.getMontantClient() * i);
+        clone.setMontantRemise(exclus.getMontantRemise() * i);
+        clone.setMontantVente(exclus.getMontantVente() * i);
+        clone.setMontantTiersPayant(exclus.getMontantTiersPayant() * i);
+        clone.setMvtDate(exclus.getMvtDate());
+        clone.setCreatedAt(exclus.getCreatedAt());
+        clone.setModifiedAt(exclus.getModifiedAt());
+        clone.setMvtTransactionKey(newTransaction.getUuid());
+        clone.setStatus(Statut.DELETE);
+        clone.setPreenregistrement(p);
+        em.persist(clone);
 
     }
 
@@ -573,16 +573,17 @@ public class SalesServiceImpl implements SalesService {
             });
             if (tp.getStrTYPEVENTE().equals(VENTE_ASSURANCE)) {
                 copyPreenregistrementCompteTp(newItem, idVente, ooTUser);
-                findByVenteId(tp.getLgPREENREGISTREMENTID()).ifPresent(venteExclus -> {
-                    venteExclus.setStatus(Statut.DELETE);
-                    cloneVenteExclus(venteExclus, newItem);
-                    this.getEm().merge(venteExclus);
-                });
+
             }
 
             getTransaction(idVente).ifPresent(tr -> {
 
-                copyTransaction(ooTUser, tr, newItem, tp);
+                MvtTransaction cpyMvt = copyTransaction(ooTUser, tr, newItem, tp);
+                findByVenteId(tp.getLgPREENREGISTREMENTID()).ifPresent(venteExclus -> {
+                    venteExclus.setStatus(Statut.DELETE);
+                    cloneVenteExclus(venteExclus, newItem, cpyMvt);
+                    this.getEm().merge(venteExclus);
+                });
                 if (!checkResumeCaisse(tp.getLgUSERCAISSIERID()).isPresent()) {
                     createAnnulationRecette(tp, tr, ooTUser);
                 }
