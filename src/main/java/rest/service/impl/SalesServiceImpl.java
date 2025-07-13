@@ -337,7 +337,7 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void addTransactionCopy(TUser ooTUser, TUser caisse, MvtTransaction old, TPreenregistrement newP,
+    public MvtTransaction addTransactionCopy(TUser ooTUser, TUser caisse, MvtTransaction old, TPreenregistrement newP,
             LocalDateTime localDateTime, LocalDate localDate) {
         MvtTransaction newTransaction = new MvtTransaction();
         newTransaction.setUuid(UUID.randomUUID().toString());
@@ -372,6 +372,7 @@ public class SalesServiceImpl implements SalesService {
         newTransaction.setMontantTvaUg((-1) * old.getMontantTvaUg());
         newTransaction.setChecked(false);
         this.em.persist(newTransaction);
+        return newTransaction;
     }
 
     @Override
@@ -465,13 +466,13 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public void copyTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement newP,
+    public MvtTransaction copyTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement newP,
             TPreenregistrement old) {
 
         if (cashTransaction.getMvtDate().isEqual(LocalDate.now())) {
             cashTransaction.setChecked(Boolean.FALSE);
             em.merge(cashTransaction);
-            addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), cashTransaction, newP, LocalDateTime.now(),
+            return addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), cashTransaction, newP, LocalDateTime.now(),
                     LocalDate.now());
         } else {
             MvtTransaction newTransaction = new MvtTransaction();
@@ -505,6 +506,28 @@ public class SalesServiceImpl implements SalesService {
             newTransaction.setCaisse(cashTransaction.getCaisse());
             newTransaction.setMagasin(cashTransaction.getMagasin());
             em.persist(newTransaction);
+            return newTransaction;
+        }
+
+    }
+
+    private void cloneVenteExclus(VenteExclus exclus, TPreenregistrement p, MvtTransaction newTransaction) {
+        try {
+            int i = -1;
+            VenteExclus clone = (VenteExclus) exclus.clone();
+            clone.setMontantPaye(exclus.getMontantPaye() * i);
+            clone.setMontantRegle(exclus.getMontantRegle() * i);
+            clone.setMontantClient(exclus.getMontantClient() * i);
+            clone.setMontantRemise(exclus.getMontantRemise() * i);
+            clone.setMontantVente(exclus.getMontantVente() * i);
+            clone.setMontantTiersPayant(exclus.getMontantTiersPayant() * i);
+            clone.setMvtTransactionKey(newTransaction.getUuid());
+            clone.setStatus(Statut.DELETE);
+            clone.setPreenregistrement(p);
+            clone.setId(UUID.randomUUID().toString());
+            em.persist(clone);
+        } catch (CloneNotSupportedException e) {
+            LOG.log(Level.SEVERE, null, e);
         }
 
     }
@@ -551,15 +574,18 @@ public class SalesServiceImpl implements SalesService {
             });
             if (tp.getStrTYPEVENTE().equals(VENTE_ASSURANCE)) {
                 copyPreenregistrementCompteTp(newItem, idVente, ooTUser);
-                findByVenteId(tp.getLgPREENREGISTREMENTID()).ifPresent(venteExclus -> {
-                    venteExclus.setStatus(Statut.DELETE);
-                    this.getEm().merge(venteExclus);
-                });
+
             }
 
             getTransaction(idVente).ifPresent(tr -> {
 
-                copyTransaction(ooTUser, tr, newItem, tp);
+                MvtTransaction cpyMvt = copyTransaction(ooTUser, tr, newItem, tp);
+                findByVenteId(tp.getLgPREENREGISTREMENTID()).ifPresent(venteExclus -> {
+                    venteExclus.setStatus(Statut.DELETE);
+                    this.getEm().merge(venteExclus);
+                    cloneVenteExclus(venteExclus, newItem, cpyMvt);
+
+                });
                 if (!checkResumeCaisse(tp.getLgUSERCAISSIERID()).isPresent()) {
                     createAnnulationRecette(tp, tr, ooTUser);
                 }
@@ -641,7 +667,7 @@ public class SalesServiceImpl implements SalesService {
                             VenteExclus.class)
                     .setParameter(1, venteId).setMaxResults(1).getSingleResult());
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.log(Level.INFO, null, e.getLocalizedMessage());
             return Optional.empty();
         }
     }
