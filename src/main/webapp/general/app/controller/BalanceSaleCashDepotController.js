@@ -101,16 +101,16 @@ Ext.define('testextjs.controller.BalanceSaleCashDepotController', {
     },
 
     onPrintClick: function() {
-        var depotId = this.getDepotCombo().getValue();
-        var dtStart = this.getDtStart().getSubmitValue();
-        var dtEnd = this.getDtEnd().getSubmitValue();
+        let depotId = this.getDepotCombo().getValue();
+        let dtStart = this.getDtStart().getSubmitValue();
+        let dtEnd = this.getDtEnd().getSubmitValue();
         
         if (!depotId) {
             Ext.MessageBox.alert('Erreur', 'Veuillez sélectionner un dépôt.');
             return;
         }
 
-        var link = '../api/v1/balance/print-balancesalecashdepot?emplacementId=' + depotId +
+        const link = '../api/v1/balance/print-balancesalecashdepot?emplacementId=' + depotId +
                    '&dtStart=' + dtStart + '&dtEnd=' + dtEnd;
                    
         window.open(link);

@@ -1361,7 +1361,7 @@ public class BalanceServiceImpl implements BalanceService {
         Map<String, BalanceDTO> aggregatedBalancesMap = new HashMap<>();
 
         try {
-            JSONObject depotsJson = magasinService.findAllDepots("", "2");
+            JSONObject depotsJson = magasinService.findAllDepots("", Constant.FINDALLDEPOT);
             JSONArray depotsArray = depotsJson.getJSONArray("data");
 
             for (int i = 0; i < depotsArray.length(); i++) {
@@ -1430,13 +1430,13 @@ public class BalanceServiceImpl implements BalanceService {
         String reportFileName;
         Map<String, Object> parameters = new HashMap<>();
         List<BalanceDTO> reportData = new ArrayList<>();
-        String reportDirectory = "D:\\CONF\\LABOREX\\REPORTS\\";
+        String reportDirectory = Constant.REPORTDEPOT;
 
         try {
             SummaryDTO summary;
             if ("ALL".equalsIgnoreCase(emplacementId)) {
                 reportFileName = "balance_all_depots.jrxml";
-                JSONObject depotsJson = magasinService.findAllDepots("", "2");
+                JSONObject depotsJson = magasinService.findAllDepots("", Constant.FINDALLDEPOT);
                 JSONArray depotsArray = depotsJson.getJSONArray("data");
 
                 for (int i = 0; i < depotsArray.length(); i++) {

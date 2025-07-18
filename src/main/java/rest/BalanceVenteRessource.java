@@ -21,6 +21,7 @@ import rest.service.dto.BalanceParamsDTO;
 import toolkits.parameters.commonparameter;
 import static toolkits.parameters.enumExtentionFiles.LOG;
 import util.Constant;
+import util.DateConverter;
 
 /**
  *
@@ -128,16 +129,10 @@ public class BalanceVenteRessource {
                     .emplacementId(emplacementId).build();
             byte[] data = balanceService.generateBalanceReport(params);
 
-            // Logique pour le nom de fichier dynamique
-            String fileIdentifier;
-            if ("ALL".equalsIgnoreCase(emplacementId)) {
-                fileIdentifier = "toutdepot";
-            } else {
-                // MODIFICATION: Utilisation du mot littéral "depot" comme demandé
-                fileIdentifier = "depot";
-            }
+            String fileIdentifier = "ALL".equalsIgnoreCase(emplacementId) ? "toutdepot" : "depot";
 
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+
             String filename = String.format("balance_%s_%s.pdf", fileIdentifier, timestamp);
 
             return Response.ok(data, MediaType.APPLICATION_OCTET_STREAM)
