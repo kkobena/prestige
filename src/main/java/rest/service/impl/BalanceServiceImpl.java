@@ -1235,12 +1235,12 @@ public class BalanceServiceImpl implements BalanceService {
         long montantMoov = 0;
         long montantMtn = 0;
         long montantWave = 0;
-      
+
         long totalModeReglement = 0;
 
         for (BalanceVenteItemDTO balanceVenteItem : values) {
             long montantRegle1 = balanceVenteItem.getMontantRegle().longValue();
-            
+
             montantTTC += showAllAmount ? balanceVenteItem.getMontantTTCDetatilReal().longValue()
                     : balanceVenteItem.getMontantTTCDetatil().longValue();
             montantTTCReel += balanceVenteItem.getMontantTTCDetatil().longValue();
