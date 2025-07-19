@@ -1526,13 +1526,13 @@ public class SalesServiceImpl implements SalesService {
         EntityManager emg = this.getEm();
         try {
             TPreenregistrement tp = emg.find(TPreenregistrement.class, params.getVenteId());
-            TAyantDroit OTAyantDroit = emg.find(TAyantDroit.class, params.getAyantDroitId());
+            TAyantDroit oTAyantDroit = emg.find(TAyantDroit.class, params.getAyantDroitId());
 
-            if (OTAyantDroit != null && tp != null) {
-                tp.setStrFIRSTNAMECUSTOMER(OTAyantDroit.getStrFIRSTNAME());
-                tp.setStrLASTNAMECUSTOMER(OTAyantDroit.getStrLASTNAME());
+            if (oTAyantDroit != null && tp != null) {
+                tp.setStrFIRSTNAMECUSTOMER(oTAyantDroit.getStrFIRSTNAME());
+                tp.setStrLASTNAMECUSTOMER(oTAyantDroit.getStrLASTNAME());
                 tp.setDtUPDATED(new Date());
-                tp.setAyantDroit(OTAyantDroit);
+                tp.setAyantDroit(oTAyantDroit);
                 emg.merge(tp);
             }
 
@@ -1598,10 +1598,8 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private String statutDiff(String v) {
-        if (!v.equals("4")) {
-            return commonparameter.statut_nondiffere;
-        }
-        return commonparameter.statut_differe;
+        return v.equals(REGL_DIFF) ? DIFFERE : NON_DIFFERE;
+
     }
 
     private TModeReglement findByIdMod(String id) {
@@ -4348,73 +4346,75 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public void updateVenteDate(TUser ooTUser, UpdateVenteParamDTO param) {
+    public void updateVenteDate(UpdateVenteParamDTO param) {
         TPreenregistrement p = this.getEm().find(TPreenregistrement.class, param.getVenteId());
-        if (!VENTE_ASSURANCE_ID.equals(p.getLgTYPEVENTEID().getLgTYPEVENTEID())) {
-            return;
-        }
-        Date initiale = p.getDtUPDATED();
-        LocalDate toDay = LocalDate.parse(param.getDate());
-        LocalDateTime venteDateNew = LocalDateTime.of(toDay, LocalTime.parse(param.getHeure()));
-        Date venteDate = DateCommonUtils.convertLocalDateTimeToDate(venteDateNew);
-        p.setDtCREATED(venteDate);
-        p.setDtUPDATED(venteDate);
-        p.setLgUSERID(ooTUser);
-        getEm().merge(p);
-        MvtTransaction mt = findMvtTransactionByVenteId(p.getLgPREENREGISTREMENTID());
-        if (mt != null) {
-            mt.setMvtDate(toDay);
-            mt.setCreatedAt(venteDateNew);
-            mt.setUser(ooTUser);
-            getEm().merge(mt);
+        String typeVenteId = p.getLgTYPEVENTEID().getLgTYPEVENTEID();
+        if (VENTE_ASSURANCE_ID.equals(typeVenteId) || VENTE_AVEC_CARNET.equals(typeVenteId)) {
 
-        }
-        Collection<TPreenregistrementDetail> details = p.getTPreenregistrementDetailCollection();
-        details.forEach(detail -> {
-            updatePreenregistrementDetailDate(detail, venteDate);
-            updateHMvtProduitDate(findHMvtProduitByPkey(detail.getLgPREENREGISTREMENTDETAILID()), venteDateNew,
-                    ooTUser);
+            TUser ooTUser = this.sessionHelperService.getCurrentUser();
+            Date initiale = p.getDtUPDATED();
+            LocalDate toDay = LocalDate.parse(param.getDate());
+            LocalDateTime venteDateNew = LocalDateTime.of(toDay, LocalTime.parse(param.getHeure()));
+            Date venteDate = DateCommonUtils.convertLocalDateTimeToDate(venteDateNew);
+            p.setDtCREATED(venteDate);
+            p.setDtUPDATED(venteDate);
+            p.setLgUSERID(ooTUser);
+            getEm().merge(p);
+            MvtTransaction mt = findMvtTransactionByVenteId(p.getLgPREENREGISTREMENTID());
+            if (mt != null) {
+                mt.setMvtDate(toDay);
+                mt.setCreatedAt(venteDateNew);
+                mt.setUser(ooTUser);
+                getEm().merge(mt);
 
-        });
-        Collection<TPreenregistrementCompteClientTiersPayent> preenregistrementCompteClientTiersPayents = p
-                .getTPreenregistrementCompteClientTiersPayentCollection();
-        if (CollectionUtils.isNotEmpty(preenregistrementCompteClientTiersPayents)) {
-            preenregistrementCompteClientTiersPayents.forEach(t -> {
-                t.setDtCREATED(venteDate);
-                t.setDtUPDATED(venteDate);
-                t.setLgUSERID(ooTUser);
+            }
+            Collection<TPreenregistrementDetail> details = p.getTPreenregistrementDetailCollection();
+            details.forEach(detail -> {
+                updatePreenregistrementDetailDate(detail, venteDate);
+                updateHMvtProduitDate(findHMvtProduitByPkey(detail.getLgPREENREGISTREMENTDETAILID()), venteDateNew,
+                        ooTUser);
+
+            });
+            Collection<TPreenregistrementCompteClientTiersPayent> preenregistrementCompteClientTiersPayents = p
+                    .getTPreenregistrementCompteClientTiersPayentCollection();
+            if (CollectionUtils.isNotEmpty(preenregistrementCompteClientTiersPayents)) {
+                preenregistrementCompteClientTiersPayents.forEach(t -> {
+                    t.setDtCREATED(venteDate);
+                    t.setDtUPDATED(venteDate);
+                    t.setLgUSERID(ooTUser);
+                    this.getEm().merge(t);
+                });
+            }
+            Collection<TPreenregistrementCompteClient> preenregistrementCompteClientCollection = p
+                    .getTPreenregistrementCompteClientCollection();
+            if (CollectionUtils.isNotEmpty(preenregistrementCompteClientCollection)) {
+                preenregistrementCompteClientCollection.forEach(t -> {
+                    t.setDtCREATED(venteDate);
+                    t.setDtUPDATED(venteDate);
+                    t.setLgUSERID(ooTUser);
+                    this.getEm().merge(t);
+                });
+            }
+            p.getVenteReglements().forEach(t -> {
+                t.setMvtDate(venteDateNew);
                 this.getEm().merge(t);
             });
+            String desc = "Modification de la vente " + p.getStrREF() + " date initiale : "
+                    + DateCommonUtils.formatDate(initiale) + " nouvelle date :" + DateCommonUtils.formatDate(venteDate)
+                    + " par " + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
+            this.logService.updateItem(ooTUser, p.getLgPREENREGISTREMENTID(), desc,
+                    TypeLog.MODIFICATION_DATE_VENTE_CREDIT, p);
+            Map<String, Object> donneesMap = new HashMap<>();
+            donneesMap.put(NotificationUtils.ITEM_KEY.getId(), p.getStrREF());
+            donneesMap.put(NotificationUtils.DATE_INI.getId(), DateCommonUtils.formatDate(initiale));
+            donneesMap.put(NotificationUtils.DATE.getId(), DateCommonUtils.formatDate(venteDate));
+            donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_DATE_VENTE_CREDIT.getValue());
+            donneesMap.put(NotificationUtils.USER.getId(), ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME());
+            donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
+            donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(p.getIntPRICE()));
+            createNotification(desc, TypeNotification.MODIFICATION_VENTE, ooTUser, donneesMap,
+                    p.getLgPREENREGISTREMENTID());
         }
-        Collection<TPreenregistrementCompteClient> preenregistrementCompteClientCollection = p
-                .getTPreenregistrementCompteClientCollection();
-        if (CollectionUtils.isNotEmpty(preenregistrementCompteClientCollection)) {
-            preenregistrementCompteClientCollection.forEach(t -> {
-                t.setDtCREATED(venteDate);
-                t.setDtUPDATED(venteDate);
-                t.setLgUSERID(ooTUser);
-                this.getEm().merge(t);
-            });
-        }
-        p.getVenteReglements().forEach(t -> {
-            t.setMvtDate(venteDateNew);
-            this.getEm().merge(t);
-        });
-        String desc = "Modification de la vente " + p.getStrREF() + " date initiale : "
-                + DateCommonUtils.formatDate(initiale) + " nouvelle date :" + DateCommonUtils.formatDate(venteDate)
-                + " par " + ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME();
-        this.logService.updateItem(ooTUser, p.getLgPREENREGISTREMENTID(), desc, TypeLog.MODIFICATION_DATE_VENTE_CREDIT,
-                p);
-        Map<String, Object> donneesMap = new HashMap<>();
-        donneesMap.put(NotificationUtils.ITEM_KEY.getId(), p.getStrREF());
-        donneesMap.put(NotificationUtils.DATE_INI.getId(), DateCommonUtils.formatDate(initiale));
-        donneesMap.put(NotificationUtils.DATE.getId(), DateCommonUtils.formatDate(venteDate));
-        donneesMap.put(NotificationUtils.TYPE_NAME.getId(), TypeLog.MODIFICATION_DATE_VENTE_CREDIT.getValue());
-        donneesMap.put(NotificationUtils.USER.getId(), ooTUser.getStrFIRSTNAME() + " " + ooTUser.getStrLASTNAME());
-        donneesMap.put(NotificationUtils.MVT_DATE.getId(), DateCommonUtils.formatCurrentDate());
-        donneesMap.put(NotificationUtils.MONTANT.getId(), NumberUtils.formatIntToString(p.getIntPRICE()));
-        createNotification(desc, TypeNotification.MODIFICATION_VENTE, ooTUser, donneesMap,
-                p.getLgPREENREGISTREMENTID());
     }
 
     private void updatePreenregistrementDetailDate(TPreenregistrementDetail item, Date venteDate) {
@@ -4442,11 +4442,6 @@ public class SalesServiceImpl implements SalesService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private int computeCmuAmount(TPreenregistrementDetail pd) {
-
-        return pd.getIntQUANTITY() * pd.getIntPRICEUNITAIR();
     }
 
     private int computeVenteAmount(List<TPreenregistrementDetail> details) {

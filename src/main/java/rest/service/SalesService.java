@@ -109,7 +109,7 @@ public interface SalesService {
 
     JSONObject clonerDevis(TUser ooTUser, String devisId) throws JSONException;
 
-    void updateVenteDate(TUser ooTUser, UpdateVenteParamDTO param);
+    void updateVenteDate(UpdateVenteParamDTO param);
 
     JSONObject computeVONet(SalesParams params);
 
