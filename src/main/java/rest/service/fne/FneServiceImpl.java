@@ -54,7 +54,6 @@ public class FneServiceImpl implements FneService {
 
     private void createInvoice(TFacture facture) throws FneExeception {
         TOfficine officine = getOfficine();
-
         Client client = getHttpClient();
         JSONObject payload = new JSONObject(buildFromFacture(facture, officine));
         WebTarget myResource = client.target(sp.fneUrl);
@@ -81,7 +80,6 @@ public class FneServiceImpl implements FneService {
         fneInvoice.setClientSellerName(user.getStrFIRSTNAME() + " " + user.getStrLASTNAME());
         fneInvoice.setPointOfSale(sp.fnepointOfSale);
         fneInvoice.setClientNcc(tTiersPayant.getStrCOMPTECONTRIBUABLE());
-
         facture.getTFactureDetailCollection()
                 .forEach(t -> fneInvoice.getItems().add(buildFrom(t, tTiersPayant.getLgTIERSPAYANTID())));
         return fneInvoice;
