@@ -535,15 +535,13 @@ public class SalesRessource {
     public Response test(UpdateVenteParamDTO param) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-
         boolean hasPrivilege = CommonUtils.hasAuthorityByName(
                 (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE),
                 Constant.P_BTN_UPDATE_VENTE_CLIENT_DATE);
         if (!hasPrivilege) {
             return Response.status(Response.Status.UNAUTHORIZED.ordinal(), "Vous avez pas l' autorisation").build();
         }
-        salesService.updateVenteDate(tu, param);
+        salesService.updateVenteDate(param);
         return Response.ok().build();
     }
 

@@ -10,18 +10,13 @@ import commonTasks.dto.VenteReglementReportDTO;
 import dal.TParameters;
 import dal.enumeration.TypeTransaction;
 
-import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -37,9 +32,6 @@ import javax.persistence.Tuple;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import rest.service.BalanceService;
 import rest.service.dto.BalanceParamsDTO;
 import rest.service.dto.BalanceVenteItemDTO;
@@ -47,9 +39,6 @@ import rest.service.dto.EtatAnnuelDTO;
 import rest.service.dto.EtatAnnuelWrapperDTO;
 import util.Constant;
 import util.DateConverter;
-import util.FunctionUtils;
-
-import commonTasks.dto.MagasinDTO;
 import dal.TEmplacement;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -947,13 +936,7 @@ public class BalanceServiceImpl implements BalanceService {
 
                 int totalVente = t.get("totalVente", BigDecimal.class).intValue();
                 int montantUg = checkUg ? t.get("montantUg", BigDecimal.class).intValue() : 0;
-                /*
-                 * int flagedAmount = t.get("flagedAmount", BigDecimal.class).intValue(); o.setMontantTTC((montantTTC -
-                 * montantUg) - flagedAmount); o.setMontantNet((montantNet - montantUg) - flagedAmount);
-                 */
-
                 o.setMontantRemise(montantRemise);
-
                 o.setMontantCredit(montantCredit + montantDiffere);
                 o.setNbreVente(totalVente);
                 balanceParams.setDtStart(o.getMvtDate().toString());
@@ -1252,12 +1235,12 @@ public class BalanceServiceImpl implements BalanceService {
         long montantMoov = 0;
         long montantMtn = 0;
         long montantWave = 0;
-        // long montantPaye = 0;
+
         long totalModeReglement = 0;
 
         for (BalanceVenteItemDTO balanceVenteItem : values) {
             long montantRegle1 = balanceVenteItem.getMontantRegle().longValue();
-            // long montantPaye1 = balanceVenteItem.getMontantPaye().longValue();
+
             montantTTC += showAllAmount ? balanceVenteItem.getMontantTTCDetatilReal().longValue()
                     : balanceVenteItem.getMontantTTCDetatil().longValue();
             montantTTCReel += balanceVenteItem.getMontantTTCDetatil().longValue();
