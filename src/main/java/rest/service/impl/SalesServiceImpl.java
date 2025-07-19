@@ -380,20 +380,14 @@ public class SalesServiceImpl implements SalesService {
         TPreenregistrement preenregistrement = this.getEm().find(TPreenregistrement.class, id);
         JSONObject json;
         if (preenregistrement == null) {
-            try {
-                json = new JSONObject();
-                json.put("success", false);
-                json.put("msg", "L'opération a échoué");
-                return json;
-            } catch (JSONException ex) {
-                return new JSONObject();
-            }
+            json = new JSONObject();
+            json.put("success", false);
+            json.put("msg", "L'opération a échoué");
+            return json;
+
         }
-        try {
-            return annulerVente(ooTUser, preenregistrement);
-        } catch (JSONException ex) {
-            return new JSONObject();
-        }
+
+        return annulerVente(ooTUser, preenregistrement);
 
     }
 
@@ -550,7 +544,6 @@ public class SalesServiceImpl implements SalesService {
                 return json;
             }
             if (tp.getStrTYPEVENTE().equals(VENTE_ASSURANCE) && !canCancelCompteClientPreenregistrement(tp)) {
-
                 json.put("success", false);
                 json.put("msg", "Désolé la vente a été facturée");
                 return json;
@@ -3215,11 +3208,10 @@ public class SalesServiceImpl implements SalesService {
             data.put("strREF", newTP.getStrREF());
             data.put("intPRICE", newTP.getIntPRICE());
             data.put("intPRICEREMISE", newTP.getIntPRICEREMISE());
-            try {
-                tp.setCompletionDate(new Date());
-                getEm().merge(tp);
-            } catch (Exception e) {
-            }
+
+            tp.setCompletionDate(new Date());
+            getEm().merge(tp);
+
             return json.put("success", true).put("msg", "Opération effectuée avec success").put("data", data);
         } catch (Exception e) {
 
@@ -3359,65 +3351,6 @@ public class SalesServiceImpl implements SalesService {
         }
     }
 
-    private JSONObject chechCustomerConsumption(int plafondClient, int encoursClient, int consoMensuelleClient,
-            int montantToBePaid, String tierspayantName) {
-        boolean hasRestructuring = false;
-        String msg = "";
-        boolean isPlafondClient = plafondClient != 0;
-        boolean isEncoursClient = encoursClient != 0;
-
-        boolean isMontantToBePaidLess = isPlafondClient && (montantToBePaid > plafondClient);
-        boolean isMontantToBePaidLessEncour = isEncoursClient
-                && (encoursClient < (consoMensuelleClient + montantToBePaid));
-
-        if (isMontantToBePaidLessEncour) {
-            hasRestructuring = true;
-            montantToBePaid = encoursClient - consoMensuelleClient;
-            msg = "Le tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                    + tierspayantName
-                    + "</span> ne peut prendre en compte <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                    + DateConverter.amountFormat(montantToBePaid)
-                    + " </span><br/> . Votre plafond est atteint:[ <span style='font-weight:900;color:blue;'> "
-                    + DateConverter.amountFormat(encoursClient) + " </span>]<br/> ";
-
-        }
-        if (isMontantToBePaidLess) {
-            hasRestructuring = true;
-            montantToBePaid = plafondClient;
-            msg = "Le tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                    + tierspayantName
-                    + "</span> ne peut prendre en compte <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                    + DateConverter.amountFormat(montantToBePaid)
-                    + " </span><br/> .Votre plafond vente est atteint: [ <span style='font-weight:900;color:blue;'> "
-                    + DateConverter.amountFormat(plafondClient) + " </span>]<br/> ";
-        }
-
-        return new JSONObject().put("msg", msg).put("hasRestructuring", hasRestructuring).put("montantToBePaid",
-                montantToBePaid);
-    }
-
-    private JSONObject chechTiersPayantConsumption(int plafondTierPayant, int consoMensuelleTierPayant,
-            int montantToBePaid, String tierspayantName) {
-        boolean hasRestructuring = false;
-        String msg = "";
-        boolean isPlafondTierPayant = plafondTierPayant != 0;
-        if (!isPlafondTierPayant) {
-            return new JSONObject().put("msg", msg).put("hasRestructuring", hasRestructuring).put("montantToBePaid",
-                    montantToBePaid);
-        }
-        if (plafondTierPayant < (consoMensuelleTierPayant + montantToBePaid)) {
-            hasRestructuring = true;
-            montantToBePaid = plafondTierPayant - consoMensuelleTierPayant;
-            msg = "Le tierspayant: <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                    + tierspayantName
-                    + "</span> ne peut prendre en compte <span style='font-weight:900;color:blue;text-decoration: underline;'>"
-                    + DateConverter.amountFormat(montantToBePaid) + " </span><br/> .Son plafond est atteint.<br/> ";
-        }
-
-        return new JSONObject().put("msg", msg).put("hasRestructuring", hasRestructuring).put("montantToBePaid",
-                montantToBePaid);
-    }
-
     void afficheurProduit(String libelle, int qty, int prixUnitaire, int montantTotal) {
         if (afficheurActif()) {
             try {
@@ -3433,7 +3366,7 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    void afficheurMontantAPayer(int montantTotal, String libelle) {
+    private void afficheurMontantAPayer(int montantTotal, String libelle) {
         if (afficheurActif()) {
             try {
                 Afficheur afficheur = Afficheur.getInstance();
@@ -3447,7 +3380,7 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    public boolean afficheurActif() {
+    private boolean afficheurActif() {
 
         try {
             TParameters tp = getEm().find(TParameters.class, "KEY_ACTIVATE_DISPLAYER");
@@ -3654,15 +3587,19 @@ public class SalesServiceImpl implements SalesService {
             cp.setDtUPDATED(clonedPreen.getDtUPDATED());
             emg.merge(cp);
         });
+        MvtTransaction copieMvtTransaction = getTransaction(idVente).orElse(null);
         if (tp.getStrTYPEVENTE().equals(VENTE_ASSURANCE)) {
             clonePreenregistrementTp(clonedPreen, idVente, ooTUser);
             findByVenteId(idVente).ifPresent(venteExclus -> {
                 venteExclus.setStatus(Statut.DELETE);
+                cloneVenteExclus(venteExclus, clonedPreen, copieMvtTransaction);
                 this.getEm().merge(venteExclus);
             });
         }
-
-        getTransaction(idVente).ifPresent(tr -> cloneMvtTransaction(ooTUser, tr, clonedPreen, tp));
+        if (Objects.nonNull(copieMvtTransaction)) {
+            cloneMvtTransaction(ooTUser, copieMvtTransaction, clonedPreen, tp);
+        }
+        // getTransaction(idVente).ifPresent(tr -> cloneMvtTransaction(ooTUser, tr, clonedPreen, tp));
         copyVenteReglement(this.venteReglementService.getByVenteId(idVente), clonedPreen);
 
         oprectte.ifPresent(re -> copyRecette(clonedPreen, re, ooTUser));
@@ -3776,12 +3713,12 @@ public class SalesServiceImpl implements SalesService {
 
     }
 
-    private void cloneMvtTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement newP,
+    private MvtTransaction cloneMvtTransaction(TUser ooTUser, MvtTransaction cashTransaction, TPreenregistrement newP,
             TPreenregistrement old) {
         cashTransaction.setChecked(Boolean.FALSE);
         getEm().merge(cashTransaction);
-        addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), cashTransaction, newP, cashTransaction.getCreatedAt(),
-                cashTransaction.getMvtDate());
+        return addTransactionCopy(ooTUser, old.getLgUSERCAISSIERID(), cashTransaction, newP,
+                cashTransaction.getCreatedAt(), cashTransaction.getMvtDate());
 
     }
 
