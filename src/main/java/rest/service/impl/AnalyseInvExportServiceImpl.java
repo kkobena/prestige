@@ -36,7 +36,6 @@ import rest.service.AnalyseInvExportService;
 import rest.service.AnalyseInvService;
 import rest.service.dto.AnalyseInvDTO;
 
-
 @Stateless
 public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
 
@@ -219,7 +218,7 @@ public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
                         (totalValeurAchatMachine == 0) ? 0 : (totalEcartNet / totalValeurAchatMachine) * 100)
                         .replace(",", "."));
 
-        /* emplacements avec gros ecarts*/
+        /* emplacements avec gros ecarts */
         List<Map<String, Object>> top3Critiques = summaryData.stream()
                 .sorted(Comparator
                         .comparingDouble((Map<String, Object> m) -> Math.abs((double) m.get("ecartValeurAchat")))

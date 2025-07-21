@@ -127,10 +127,22 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                     sortable: false,
                     menuDisabled: true,
                     items: [{
-                        icon: 'resources/images/icons/fam/application_view_list.png',
-                        tooltip: 'Analyser l\'inventaire',
+                        icon: 'resources/images/icons/fam/chart_bar.png', // Nouvelle icône
+                        tooltip: 'Effectuer une analyse avancée',
                         scope: this,
-                        handler: this.onAnalyseClick
+                        handler: this.onAnalyseAvanceeClick
+                    }]
+                },
+                {
+                    xtype: 'actioncolumn',
+                    width: 30,
+                    sortable: false,
+                    menuDisabled: true,
+                    items: [{
+                        icon: 'resources/images/icons/fam/application_view_list.png',
+                        tooltip: 'Effectuer une analyse simple',
+                        scope: this,
+                        handler: this.onAnalyseClick // Garde l'ancienne analyse
                     }]
                 },
                 {
@@ -314,6 +326,14 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
         Ext.create('testextjs.view.stockmanagement.inventaire.action.AnalyseInventaire', {
             odatasource: rec.data,
             titre: 'Analyse de l\'inventaire : ' + rec.get('str_NAME')
+        }).show();
+    },
+
+    onAnalyseAvanceeClick: function(grid, rowIndex) {
+        var rec = grid.getStore().getAt(rowIndex);
+        Ext.create('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
+            odatasource: rec.data
+            // Le titre est maintenant géré dynamiquement dans la nouvelle vue
         }).show();
     },
     // FIN DE LA NOUVELLE FONCTION

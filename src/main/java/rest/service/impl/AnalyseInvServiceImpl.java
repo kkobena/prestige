@@ -1,26 +1,24 @@
-
 package rest.service.impl;
 
-import java.util.Collections;
+import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Tuple;
 import rest.service.AnalyseInvService;
 import rest.service.dto.AnalyseInvDTO;
 
-/**
- *
- * @author airman
- */
 @Stateless
 public class AnalyseInvServiceImpl implements AnalyseInvService {
-
-    private static final Logger LOG = Logger.getLogger(AnalyseInvServiceImpl.class.getName());
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
@@ -28,9 +26,8 @@ public class AnalyseInvServiceImpl implements AnalyseInvService {
     @Override
     public List<AnalyseInvDTO> analyseInventaire(String inventaireId) {
         if (inventaireId == null || inventaireId.trim().isEmpty()) {
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
-
         try {
             String queryStr = "SELECT f.int_CIP AS codeCip, f.str_NAME AS nom, f.int_PAF AS prixAchat, f.int_PRICE AS prixVente, z.str_LIBELLEE AS emplacement, i.lg_INVENTAIRE_ID AS inventaireId, iv.str_NAME AS invName, i.int_NUMBER AS qteSaisie, i.int_NUMBER_INIT AS qteInitiale "
                     + "FROM t_inventaire_famille i, t_inventaire iv, t_famille f, t_zone_geographique z "
@@ -41,11 +38,129 @@ public class AnalyseInvServiceImpl implements AnalyseInvService {
                     .getResultList();
 
             return results.stream().map(this::tupleToDto).collect(Collectors.toList());
-
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error during inventory analysis for ID: " + inventaireId, e);
-            return Collections.emptyList();
+            return new ArrayList<>();
         }
+    }
+
+    @Override
+    public Map<String, Object> getAnalyseAvanceeData(String inventaireId) {
+        List<AnalyseInvDTO> rawData = analyseInventaire(inventaireId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("summaryData", buildSummaryData(rawData));
+        response.put("abcData", buildAbcData(rawData));
+        response.put("detailData", buildDetailData(rawData));
+        response.put("summaryHtml", buildSummaryHtml(rawData));
+        response.put("complianceReport", buildComplianceReport(rawData));
+
+        return response;
+    }
+
+    // --- Méthodes de construction des données ---
+
+    private List<Map<String, Object>> buildSummaryData(List<AnalyseInvDTO> rawData) {
+        Map<String, Map<String, Double>> emplacementTotals = new HashMap<>();
+        for (AnalyseInvDTO dto : rawData) {
+            String loc = (dto.getEmplacement() != null && !dto.getEmplacement().isEmpty()) ? dto.getEmplacement()
+                    : "Non défini";
+            emplacementTotals.putIfAbsent(loc, new HashMap<>());
+            Map<String, Double> totals = emplacementTotals.get(loc);
+            totals.merge("valeurAchatRayon", dto.getQteSaisie() * dto.getPrixAchat(), Double::sum);
+            totals.merge("valeurAchatMachine", dto.getQteInitiale() * dto.getPrixAchat(), Double::sum);
+            totals.merge("valeurVenteRayon", dto.getQteSaisie() * dto.getPrixVente(), Double::sum);
+        }
+
+        double totalEcartAbsolu = emplacementTotals.values().stream()
+                .mapToDouble(totals -> Math.abs(
+                        totals.getOrDefault("valeurAchatRayon", 0.0) - totals.getOrDefault("valeurAchatMachine", 0.0)))
+                .sum();
+
+        List<Map<String, Object>> summaryList = new ArrayList<>();
+        for (Map.Entry<String, Map<String, Double>> entry : emplacementTotals.entrySet()) {
+            Map<String, Object> rowData = new HashMap<>();
+            Map<String, Double> totals = entry.getValue();
+            double ecartAchat = totals.getOrDefault("valeurAchatRayon", 0.0)
+                    - totals.getOrDefault("valeurAchatMachine", 0.0);
+            rowData.put("emplacement", entry.getKey());
+            rowData.put("valeurAchatRayon", totals.getOrDefault("valeurAchatRayon", 0.0));
+            rowData.put("ecartValeurAchat", ecartAchat);
+            rowData.put("pourcentageEcartGlobal",
+                    (totalEcartAbsolu != 0) ? (Math.abs(ecartAchat) / totalEcartAbsolu) * 100 : 0);
+            rowData.put("ratioVA", (totals.getOrDefault("valeurAchatRayon", 0.0) != 0)
+                    ? totals.getOrDefault("valeurVenteRayon", 0.0) / totals.getOrDefault("valeurAchatRayon", 0.0) : 0);
+            summaryList.add(rowData);
+        }
+        return summaryList;
+    }
+
+    private List<Map<String, Object>> buildAbcData(List<AnalyseInvDTO> rawData) {
+        List<Map<String, Object>> productEcarts = new ArrayList<>();
+        double totalEcartAbsolu = 0;
+
+        for (AnalyseInvDTO dto : rawData) {
+            double ecartVal = (dto.getQteSaisie() - dto.getQteInitiale()) * dto.getPrixAchat();
+            if (ecartVal != 0) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("nom", dto.getNom());
+                item.put("ecartValeurAchat", ecartVal);
+                item.put("ecartAbs", Math.abs(ecartVal));
+                productEcarts.add(item);
+                totalEcartAbsolu += Math.abs(ecartVal);
+            }
+        }
+
+        productEcarts
+                .sort(Comparator.comparingDouble((Map<String, Object> m) -> (double) m.get("ecartAbs")).reversed());
+
+        double cumul = 0;
+        for (Map<String, Object> item : productEcarts) {
+            double ecartPct = (totalEcartAbsolu > 0) ? ((double) item.get("ecartAbs") / totalEcartAbsolu) * 100 : 0;
+            cumul += ecartPct;
+            item.put("ecartTotalPct", ecartPct);
+            item.put("cumulPct", cumul);
+            if (cumul <= 80)
+                item.put("categorie", "A");
+            else if (cumul <= 95)
+                item.put("categorie", "B");
+            else
+                item.put("categorie", "C");
+        }
+        return productEcarts;
+    }
+
+    private List<Map<String, Object>> buildDetailData(List<AnalyseInvDTO> rawData) {
+        return rawData.stream().map(dto -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("nom", dto.getNom());
+            item.put("emplacement", dto.getEmplacement());
+            item.put("qteInitiale", dto.getQteInitiale());
+            item.put("qteSaisie", dto.getQteSaisie());
+            item.put("ecartQte", dto.getQteSaisie() - dto.getQteInitiale());
+            item.put("prixAchat", dto.getPrixAchat());
+            item.put("prixVente", dto.getPrixVente());
+            item.put("ratioVA", dto.getPrixAchat() > 0 ? dto.getPrixVente() / dto.getPrixAchat() : 0);
+            return item;
+        }).collect(Collectors.toList());
+    }
+
+    private String buildSummaryHtml(List<AnalyseInvDTO> rawData) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<h3>Synthèse & Recommandations</h3>");
+        sb.append("<p><strong>Date du Rapport:</strong> ")
+                .append(DateTimeFormatter.ofPattern("dd MMMM yyyy").format(LocalDateTime.now())).append("</p>");
+        sb.append("<p><strong>Inventaire:</strong> ").append(rawData.isEmpty() ? "" : rawData.get(0).getInvName())
+                .append("</p>");
+        return sb.toString();
+    }
+
+    private String buildComplianceReport(List<AnalyseInvDTO> rawData) {
+        long modifiedProducts = rawData.stream().filter(dto -> !dto.getQteSaisie().equals(dto.getQteInitiale()))
+                .count();
+        long totalProducts = rawData.size();
+        double percentage = (totalProducts > 0) ? ((double) modifiedProducts / totalProducts) * 100 : 0;
+        return String.format("Rapport de conformité : %d produit(s) modifié(s) sur %d au total (%.2f %%)",
+                modifiedProducts, totalProducts, percentage);
     }
 
     private AnalyseInvDTO tupleToDto(Tuple tuple) {

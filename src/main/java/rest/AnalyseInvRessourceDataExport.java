@@ -37,9 +37,9 @@ public class AnalyseInvRessourceDataExport {
             return Response.ok(pdfData, MediaType.APPLICATION_OCTET_STREAM)
                     .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"").build();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error generating PDF report for inventory ID: " + inventaireId, e);
+            LOG.log(Level.SEVERE, "Erreur lors de la generation de l'inventaire: " + inventaireId, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("PDF generation failed: " + e.getMessage()).build();
+                    .entity("erreur creation pdf: " + e.getMessage()).build();
         }
     }
 
@@ -56,9 +56,9 @@ public class AnalyseInvRessourceDataExport {
             return Response.ok(excelData, "application/vnd.ms-excel")
                     .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"").build();
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error generating Excel report for inventory ID: " + inventaireId, e);
+            LOG.log(Level.SEVERE, "Erreur lors de la generation de l'inventaire: " + inventaireId, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Excel generation failed: " + e.getMessage()).build();
+                    .entity("erreur exportation excel: " + e.getMessage()).build();
         }
     }
 }

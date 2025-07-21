@@ -2,6 +2,7 @@
 package rest;
 
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -17,7 +18,7 @@ import rest.service.dto.AnalyseInvDTO;
  *
  * @author airman
  */
-@Path("v1/analyse-inventaire")
+@Path("v1")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AnalyseInvRessource {
@@ -26,6 +27,7 @@ public class AnalyseInvRessource {
     private AnalyseInvService analyseInvService;
 
     @GET
+    @Path("analyse-inventaire")
     public Response getAnalyse(@QueryParam("inventaireId") String inventaireId) {
         if (inventaireId == null || inventaireId.trim().isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity("inventaireId is required.").build();
@@ -38,4 +40,21 @@ public class AnalyseInvRessource {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred.").build();
         }
     }
+
+    @GET 
+    @Path("analyse-avancee")
+    public Response getAnalyseAvancee(@QueryParam("inventaireId") String inventaireId) { 
+        if (inventaireId == null || inventaireId.trim().isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("inventaireId requis.").build();
+        }
+
+        try {
+            Map<String, Object> data = analyseInvService.getAnalyseAvanceeData(inventaireId);
+            return Response.ok().entity(data).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Une erreur est survenue.").build();
+        }
+    }
+
 }
