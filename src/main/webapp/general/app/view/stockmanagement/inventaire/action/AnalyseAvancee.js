@@ -21,7 +21,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
     config: {
         odatasource: ''
     },
-    // URLs for API endpoints
+    // mes apis
     url_api_analyse_avancee: '/prestige/api/v1/analyse-avancee',
     url_api_pdf_inventaire_avancee: '/prestige/api/v1/analyse-inventaire-avancee-pdf',
     url_api_excel_inventaire_avancee: '/prestige/api/v1/analyse-inventaire-avancee-excel',
@@ -29,7 +29,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
     initComponent: function() {
         var me = this;
 
-        // --- STORES ---
+        
         var summaryStore = Ext.create('Ext.data.Store', {
             fields: ['emplacement', 'valeurAchatMachine', 'valeurAchatRayon', 'ecartValeurAchat', 'valeurVenteMachine', 'valeurVenteRayon', 'ecartValeurVente', 'pourcentageEcartGlobal', 'ratioVA']
         });
@@ -42,7 +42,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
             fields: ['nom', 'emplacement', 'qteInitiale', 'qteSaisie', 'ecartQte', 'prixAchat', 'prixVente', 'ratioVA']
         });
 
-        // --- RENDERERS ---
+        
         var moneyRenderer = function(val) {
             if (val === null || val === undefined) return '0 F';
             var sign = val < 0 ? '-' : '';
@@ -76,7 +76,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
         var tabPanel = Ext.create('Ext.tab.Panel', {
             plain: true,
             items: [
-                // --- TAB 1: Synthèse par Emplacement ---
+                
                 {
                     title: 'Synthèse par Emplacement',
                     layout: 'fit',
@@ -94,7 +94,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                         ]
                     }]
                 },
-                // --- TAB 2: Analyse des Écarts (ABC) ---
+                
                 {
                     title: 'Analyse des Écarts (ABC)',
                     layout: 'fit',
@@ -111,7 +111,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                         ]
                     }]
                 },
-                // --- TAB 3: Détail Complet des Produits ---
+                
                 {
                     title: 'Détail Complet des Produits',
                     layout: 'fit',
@@ -131,7 +131,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                         ]
                     }]
                 },
-                // --- TAB 4: Synthèse & Recommandations ---
+                
                 {
                     title: 'Synthèse & Recommandations',
                     bodyPadding: 10,
@@ -142,7 +142,6 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
             ]
         });
 
-        // --- MAIN WINDOW SETUP ---
         this.items = [{
             xtype: 'panel',
             layout: 'fit',
@@ -161,11 +160,12 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
         this.dockedItems = [{
             xtype: 'toolbar',
             dock: 'bottom',
-            ui: 'footer',
+            ui: 'footer',            
             items: ['->', 
             {
                 text: 'Imprimer (PDF)',
                 iconCls: 'icon-pdf',
+                hidden:true,
                 handler: function() { me.onPrintClick(); }
             },
             {
@@ -183,10 +183,9 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
         this.callParent();
         this.setTitle("Tableau de Bord d'Analyse : " + this.getOdatasource().str_NAME);
 
-        // --- DATA LOADING AND PROCESSING ---
         Ext.Ajax.request({
             url: me.url_api_analyse_avancee,
-            method: 'GET', // *** CORRECTION ICI ***
+            method: 'GET', 
             params: { inventaireId: me.getOdatasource().lg_INVENTAIRE_ID },
             success: function(response) {
                 var data = Ext.decode(response.responseText);
@@ -194,7 +193,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
                     Ext.Msg.alert('Erreur', 'Aucune donnée reçue du serveur.');
                     return;
                 }
-                // Populate stores and panels
+                
                 me.down('#summaryGrid').getStore().loadData(data.summaryData);
                 me.down('#abcGrid').getStore().loadData(data.abcData);
                 me.down('#detailGrid').getStore().loadData(data.detailData);
@@ -217,7 +216,12 @@ Ext.define('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
     },
 
     onExcelExportClick: function() {
-        Ext.Msg.alert('Information', 'La fonctionnalité d\'export Excel pour l\'analyse avancée n\'est pas encore implémentée.');
+        var me = this;
+        var params = Ext.urlEncode({
+            inventaireId: me.getOdatasource().lg_INVENTAIRE_ID,
+            inventaireName: me.getOdatasource().str_NAME
+        });
+        window.open(me.url_api_excel_inventaire_avancee + '?' + params, '_blank');
     },
 
     onbtncancel: function() {

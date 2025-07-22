@@ -1,6 +1,8 @@
 
 package rest;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
@@ -59,6 +61,26 @@ public class AnalyseInvRessourceDataExport {
             LOG.log(Level.SEVERE, "Erreur lors de la generation de l'inventaire: " + inventaireId, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("erreur exportation excel: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("analyse-inventaire-avancee-excel")
+    @Produces("application/vnd.ms-excel")
+    public Response exportAdvancedExcel(@QueryParam("inventaireId") String inventaireId,
+            @QueryParam("inventaireName") String inventaireName) {
+        try {
+            byte[] excelData = exportService.generateAdvancedExcelReport(inventaireId);
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String safeName = (inventaireName != null ? inventaireName.replaceAll("\\s+", "_") : inventaireId);
+            String fileName = "analyse_avancee_" + safeName + "_" + timestamp + ".xls";
+
+            return Response.ok(excelData, "application/vnd.ms-excel")
+                    .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"").build();
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, "Erreur lors de la generation de l'inventaire: " + inventaireId, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Excel generation failed: " + e.getMessage()).build();
         }
     }
 }

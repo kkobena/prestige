@@ -266,6 +266,110 @@ public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
         return new EnhancedExportData(filteredData, complianceReport, globalSummary, topDiscrepancies);
     }
 
+    @Override
+    public byte[] generateAdvancedExcelReport(String inventaireId) throws IOException {
+        Map<String, Object> advancedData = analyseInvService.getAnalyseAvanceeData(inventaireId);
+        String inventaireName = analyseInvService.analyseInventaire(inventaireId).stream().findFirst()
+                .map(AnalyseInvDTO::getInvName).orElse("");
+
+        try (Workbook workbook = new HSSFWorkbook(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            CellStyle headerCellStyle = workbook.createCellStyle();
+            headerCellStyle.setFont(headerFont);
+
+            // Sheet 1: Synthèse par Emplacement
+            createSheetForSummary(workbook, "Synthèse par Emplacement", headerCellStyle,
+                    (List<Map<String, Object>>) advancedData.get("summaryData"));
+
+            // Sheet 2: Analyse ABC
+            createSheetForAbc(workbook, "Analyse ABC", headerCellStyle,
+                    (List<Map<String, Object>>) advancedData.get("abcData"));
+
+            // Sheet 3: Détail des produits
+            createSheetForDetails(workbook, "Détail Produits", headerCellStyle,
+                    (List<Map<String, Object>>) advancedData.get("detailData"));
+
+            workbook.write(baos);
+            return baos.toByteArray();
+        }
+    }
+
+    private void createSheetForSummary(Workbook workbook, String sheetName, CellStyle headerCellStyle,
+            List<Map<String, Object>> data) {
+        Sheet sheet = workbook.createSheet(sheetName);
+        String[] headers = { "Emplacement", "V.Achat Inventaire", "Écart V.Achat", "Contribution à l'Écart",
+                "Ratio V/A" };
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerCellStyle);
+        }
+
+        int rowNum = 1;
+        for (Map<String, Object> rowData : data) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(String.valueOf(rowData.get("emplacement")));
+            row.createCell(1).setCellValue(asDouble(rowData.get("valeurAchatRayon")));
+            row.createCell(2).setCellValue(asDouble(rowData.get("ecartValeurAchat")));
+            row.createCell(3).setCellValue(asDouble(rowData.get("pourcentageEcartGlobal")));
+            row.createCell(4).setCellValue(asDouble(rowData.get("ratioVA")));
+        }
+        for (int i = 0; i < headers.length; i++)
+            sheet.autoSizeColumn(i);
+    }
+
+    private void createSheetForAbc(Workbook workbook, String sheetName, CellStyle headerCellStyle,
+            List<Map<String, Object>> data) {
+        Sheet sheet = workbook.createSheet(sheetName);
+        String[] headers = { "Produit", "Écart Valeur Achat", "% Écart Total", "% Cumulé", "Catégorie" };
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerCellStyle);
+        }
+        int rowNum = 1;
+        for (Map<String, Object> rowData : data) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(String.valueOf(rowData.get("nom")));
+            row.createCell(1).setCellValue(asDouble(rowData.get("ecartValeurAchat")));
+            row.createCell(2).setCellValue(asDouble(rowData.get("ecartTotalPct")));
+            row.createCell(3).setCellValue(asDouble(rowData.get("cumulPct")));
+            row.createCell(4).setCellValue(String.valueOf(rowData.get("categorie")));
+        }
+        for (int i = 0; i < headers.length; i++)
+            sheet.autoSizeColumn(i);
+    }
+
+    private void createSheetForDetails(Workbook workbook, String sheetName, CellStyle headerCellStyle,
+            List<Map<String, Object>> data) {
+        Sheet sheet = workbook.createSheet(sheetName);
+        String[] headers = { "Produit", "Emplacement", "Qté Machine", "Qté Rayon", "Écart Qté", "Prix Achat",
+                "Prix Vente", "Ratio V/A" };
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerCellStyle);
+        }
+        int rowNum = 1;
+        for (Map<String, Object> rowData : data) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(String.valueOf(rowData.get("nom")));
+            row.createCell(1).setCellValue(String.valueOf(rowData.get("emplacement")));
+            row.createCell(2).setCellValue(asDouble(rowData.get("qteInitiale")));
+            row.createCell(3).setCellValue(asDouble(rowData.get("qteSaisie")));
+            row.createCell(4).setCellValue(asDouble(rowData.get("ecartQte")));
+            row.createCell(5).setCellValue(asDouble(rowData.get("prixAchat")));
+            row.createCell(6).setCellValue(asDouble(rowData.get("prixVente")));
+            row.createCell(7).setCellValue(asDouble(rowData.get("ratioVA")));
+        }
+        for (int i = 0; i < headers.length; i++)
+            sheet.autoSizeColumn(i);
+    }
+
     private double asDouble(Object o) {
         if (o instanceof Number) {
             return ((Number) o).doubleValue();

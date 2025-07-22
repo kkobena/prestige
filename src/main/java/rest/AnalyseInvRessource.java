@@ -41,9 +41,9 @@ public class AnalyseInvRessource {
         }
     }
 
-    @GET 
+    @GET
     @Path("analyse-avancee")
-    public Response getAnalyseAvancee(@QueryParam("inventaireId") String inventaireId) { 
+    public Response getAnalyseAvancee(@QueryParam("inventaireId") String inventaireId) {
         if (inventaireId == null || inventaireId.trim().isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity("inventaireId requis.").build();
         }
@@ -52,8 +52,7 @@ public class AnalyseInvRessource {
             Map<String, Object> data = analyseInvService.getAnalyseAvanceeData(inventaireId);
             return Response.ok().entity(data).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Une erreur est survenue.").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Une erreur est survenue.").build();
         }
     }
 
