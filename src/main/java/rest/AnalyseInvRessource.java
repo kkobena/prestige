@@ -30,14 +30,14 @@ public class AnalyseInvRessource {
     @Path("analyse-inventaire")
     public Response getAnalyse(@QueryParam("inventaireId") String inventaireId) {
         if (inventaireId == null || inventaireId.trim().isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("inventaireId is required.").build();
+            return Response.status(Response.Status.BAD_REQUEST).entity("inventaireId requis.").build();
         }
 
         try {
             List<AnalyseInvDTO> data = analyseInvService.analyseInventaire(inventaireId);
             return Response.ok().entity(data).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred.").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Une erreur est survenue.").build();
         }
     }
 

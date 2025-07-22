@@ -244,7 +244,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                 }],
             bbar: {
                 xtype: 'pagingtoolbar',
-                store: store, // same store GridPanel is using
+                store: store,
                 dock: 'bottom',
                 displayInfo: true
             }
@@ -333,7 +333,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
         var rec = grid.getStore().getAt(rowIndex);
         Ext.create('testextjs.view.stockmanagement.inventaire.action.AnalyseAvancee', {
             odatasource: rec.data
-            // Le titre est maintenant géré dynamiquement dans la nouvelle vue
+            
         }).show();
     },
     // FIN DE LA NOUVELLE FONCTION

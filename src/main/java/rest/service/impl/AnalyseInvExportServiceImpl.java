@@ -35,13 +35,13 @@ import org.apache.poi.ss.usermodel.Workbook;
 import rest.service.AnalyseInvExportService;
 import rest.service.AnalyseInvService;
 import rest.service.dto.AnalyseInvDTO;
+import util.Constant;
 
 @Stateless
 public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
 
     private static final Logger LOG = Logger.getLogger(AnalyseInvExportServiceImpl.class.getName());
-    private static final String REPORT_PATH = "D:/CONF/LABOREX/REPORTS/";
-
+ 
     @Inject
     private AnalyseInvService analyseInvService;
 
@@ -65,7 +65,7 @@ public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
         List<AnalyseInvDTO> rawData = analyseInvService.analyseInventaire(inventaireId);
         EnhancedExportData exportData = processDataForExport(rawData, filterType);
 
-        File reportFile = new File(REPORT_PATH + "analyse_inventaire.jrxml");
+        File reportFile = new File(Constant.REPORT_PATH + "analyse_inventaire.jrxml");
         if (!reportFile.exists()) {
             throw new JRException("Jasper report file not found at: " + reportFile.getAbsolutePath());
         }
@@ -77,8 +77,7 @@ public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
         parameters.put("INVENTAIRE_NAME", inventaireName);
         parameters.put("DATE_RAPPORT", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy")));
         parameters.put("COMPLIANCE_REPORT", exportData.complianceReport);
-
-        // Add summary parameters
+       
         parameters.put("ECART_GLOBAL_NET", exportData.summary.get("ecartGlobalNet"));
         parameters.put("DEMARQUE_PCT", exportData.summary.get("demarquePct"));
         parameters.put("EMPLACEMENT_CRITIQUE_1", exportData.summary.get("emplacementCritique_1"));

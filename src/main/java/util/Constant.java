@@ -138,6 +138,8 @@ public final class Constant {
     public static final String FINDALLDEPOT = "2";
 
     public static final String REPORTDEPOT = "D:\\CONF\\LABOREX\\REPORTS\\";
+    
+    public static final String REPORT_PATH = "D:/CONF/LABOREX/REPORTS/";
 
     /*
      * parametre nombre de mois à considerer
