@@ -1,27 +1,36 @@
-
 package rest.service.impl;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Tuple;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import rest.service.PointDepotService;
 import rest.service.dto.PointDepotDTO;
+import util.Constant;
 
 /**
  *
- * @author airman
+ * @author DICI
  */
-
 @Stateless
 public class PointDepotServiceImpl implements PointDepotService {
 
@@ -48,11 +57,11 @@ public class PointDepotServiceImpl implements PointDepotService {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append(
-                    "SELECT SUM(m.montantNet) AS MontantTotalNet, SUM(m.montantCredit) AS Credit, SUM(m.montantRegle) AS Especes, ");
-            sql.append("u.str_FIRST_NAME AS Caissiere, e.str_NAME AS DEPOT ");
+                    "SELECT SUM(m.montantNet) AS montantTotalNet, SUM(m.montantCredit) AS credit, SUM(m.montantRegle) AS especes, ");
+            sql.append("u.str_FIRST_NAME AS caissiere, e.str_NAME AS depot ");
 
             if (!isCumulative) {
-                sql.append(", DATE(m.mvtdate) AS DateTransaction ");
+                sql.append(", DATE(m.mvtdate) AS dateTransaction ");
             }
 
             sql.append("FROM mvttransaction m ");
@@ -80,7 +89,7 @@ public class PointDepotServiceImpl implements PointDepotService {
 
             List<Tuple> result = query.getResultList();
 
-            String periodLabel = startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " - "
+            String periodLabel = startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " au "
                     + endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
             return result.stream().map(tuple -> buildDtoFromTuple(tuple, isCumulative, periodLabel))
@@ -93,13 +102,37 @@ public class PointDepotServiceImpl implements PointDepotService {
     }
 
     private PointDepotDTO buildDtoFromTuple(Tuple tuple, boolean isCumulative, String periodLabel) {
-        String dateTransaction = isCumulative ? periodLabel : tuple.get("DateTransaction", java.sql.Date.class)
+        String dateTransaction = isCumulative ? periodLabel : tuple.get("dateTransaction", java.sql.Date.class)
                 .toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-        return PointDepotDTO.builder().montantTotalNet(tuple.get("MontantTotalNet", BigDecimal.class).longValue())
-                .credit(tuple.get("Credit", BigDecimal.class).longValue())
-                .especes(tuple.get("Especes", BigDecimal.class).longValue())
-                .caissiere(tuple.get("Caissiere", String.class)).depot(tuple.get("DEPOT", String.class))
+        return PointDepotDTO.builder().montantTotalNet(tuple.get("montantTotalNet", BigDecimal.class).longValue())
+                .credit(tuple.get("credit", BigDecimal.class).longValue())
+                .especes(tuple.get("especes", BigDecimal.class).longValue())
+                .caissiere(tuple.get("caissiere", String.class)).depot(tuple.get("depot", String.class))
                 .dateTransaction(dateTransaction).build();
+    }
+
+    @Override
+    public byte[] generatePointCaisseReport(String dtStart, String dtEnd, String emplacementId) throws Exception {
+        LocalDate startDate = StringUtils.isEmpty(dtStart) ? LocalDate.now() : LocalDate.parse(dtStart);
+        LocalDate endDate = StringUtils.isEmpty(dtEnd) ? LocalDate.now() : LocalDate.parse(dtEnd);
+        boolean isCumulative = !startDate.isEqual(endDate);
+
+        List<PointDepotDTO> data = findPointDepotData(startDate, endDate, emplacementId, isCumulative);
+
+        String reportName = "point_caisse_report.jrxml";
+        String reportDirectory = Constant.REPORTDEPOT;
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("P_PERIODE", startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " au "
+                + endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
+        String reportPath = reportDirectory + reportName;
+        InputStream reportStream = new FileInputStream(reportPath);
+        JasperReport jasperReport = JasperCompileManager.compileReport(reportStream);
+        JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters,
+                new JRBeanCollectionDataSource(data));
+
+        return JasperExportManager.exportReportToPdf(jasperPrint);
     }
 }

@@ -80,6 +80,11 @@ Ext.define('testextjs.controller.PointCaisseController', {
     },
 
     onPrintClick: function() {
-        Ext.MessageBox.alert('Info', 'La fonctionnalité d\'impression pour le point de caisse est en cours de développement.');
+        var dtStart = Ext.getCmp('dtStartPointCaisseFiltre').getSubmitValue();
+        var dtEnd = Ext.getCmp('dtEndPointCaisseFiltre').getSubmitValue();
+        var emplacementId = this.getDepotCombo().getValue();
+
+        var link = '../api/v1/pointdepot/print?dtStart=' + dtStart + '&dtEnd=' + dtEnd + '&emplacementId=' + emplacementId;
+        window.open(link);
     }
 });
