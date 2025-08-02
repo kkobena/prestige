@@ -124,6 +124,8 @@ public interface OrderService {
 
     JSONObject addLot(AddLot lot);
 
+    JSONObject addFreeQty(AddLot lot);
+
     JSONObject getListBonsDetailsByProduits(String produits, String search, String dtStart, String dtEnd, int start,
             int limit, String grossisteId);
 }

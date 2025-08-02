@@ -378,6 +378,18 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                     }
                                 },
                                 {
+                                    header: 'LOTS',
+                                    dataIndex: 'lots',
+                                    align: 'center',
+                                    flex: 1
+                                },
+                                {
+                                    header: 'DATE DE PEREMPTION',
+                                    dataIndex: 'datePeremption',
+                                    align: 'center',
+                                    flex: 1
+                                },
+                                {
                                     xtype: 'actioncolumn',
                                     width: 30,
                                     sortable: false,
@@ -398,14 +410,14 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                             icon: 'resources/images/icons/fam/add.png',
                                             tooltip: 'Ajout de lot',
                                             scope: this,
-                                            handler: this.onAddProductClick,
+                                            handler: this.onAddProductClick/*,
                                             getClass: function (value, metadata, record) {
-                                                if (record.get('int_QTE_CMDE') > 0 && (record.get('int_QTE_CMDE') > record.get('intQTERECUE'))) {  //read your condition from the record
-                                                    return 'x-display-hide'; //affiche l'icone
+                                                if (record.get('checkExpirationdate')) {  
+                                                    return 'x-display-hide'; 
                                                 } else {
-                                                    return 'x-hide-display'; //cache l'icone
+                                                    return 'x-hide-display'; 
                                                 }
-                                            }
+                                            }*/
                                         }]
                                 },
 
@@ -462,7 +474,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                     flex: 1,
                                     listeners: {
                                         select: function (cmp) {
-                                          
+
                                             str_TYPE_TRANSACTION = cmp.getValue();
 
                                             Me_Workflow.onRechClick();
@@ -616,7 +628,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                 },
                                 failure: function (response)
                                 {
-                                   
+
                                     console.log("Bug " + response.responseText);
                                     Ext.MessageBox.alert('Error Message', response.responseText);
                                 }
@@ -648,7 +660,6 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
         doEntreeStock(lg_BON_LIVRAISON_ID_2);
         ///code d'entree en stock
     },
-    
 
     onRechClick: function () {
         const val = Ext.getCmp('rechercherDetail');
@@ -711,7 +722,7 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                                     buttons: Ext.MessageBox.OK,
                                     icon: Ext.MessageBox.WARNING
                                 });
-                             
+
                             } else {
 
                                 Ext.MessageBox.confirm('Message',

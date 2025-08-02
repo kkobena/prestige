@@ -40,6 +40,7 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,6 +94,8 @@ import rest.service.MouvementProduitService;
 import rest.service.MvtProduitService;
 import rest.service.NotificationService;
 import rest.service.OrderService;
+import rest.service.ParametreService;
+import rest.service.SessionHelperService;
 import rest.service.TransactionService;
 import util.Constant;
 import util.DateCommonUtils;
@@ -125,6 +128,8 @@ public class CommandeServiceImpl implements CommandeService {
     private EntityManager em;
     @EJB
     private NotificationService notificationService;
+    @EJB
+    private SessionHelperService sessionHelperService;
 
     public EntityManager getEm() {
         return em;
@@ -132,19 +137,6 @@ public class CommandeServiceImpl implements CommandeService {
 
     @Inject
     private UserTransaction userTransaction;
-
-    private List<TBonLivraisonDetail> bonLivraisonDetail(String id) {
-        try {
-            String query = "SELECT t FROM TBonLivraisonDetail t WHERE  t.lgBONLIVRAISONID.lgBONLIVRAISONID =?1";
-            TypedQuery<TBonLivraisonDetail> q = this.em.createQuery(query, TBonLivraisonDetail.class).setParameter(1,
-                    id);
-            return q.getResultList();
-
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
-
-    }
 
     public List<Object[]> listLot(String refBon, String idArticle) {
         try {
@@ -164,27 +156,25 @@ public class CommandeServiceImpl implements CommandeService {
 
     }
 
-    private boolean isEntreeStockIsAuthorize(List<TBonLivraisonDetail> lstTBonLivraisonDetail) {
-        java.util.function.Predicate<TBonLivraisonDetail> p = e -> (e.getIntQTERECUE() < e.getIntQTECMDE())
-                && (e.getLgFAMILLEID().getBoolCHECKEXPIRATIONDATE());
-        return lstTBonLivraisonDetail.parallelStream().anyMatch(p);
-    }
-
     @Override
-    public JSONObject cloturerBonLivraison(String id, TUser user) throws JSONException {
+    public JSONObject cloturerBonLivraison(String id) throws JSONException {
         JSONObject json = new JSONObject();
 
         try {
             TParameters tp = findParameter(Constant.KEY_ACTIVATE_PEREMPTION_DATE);
+
+            TUser user = sessionHelperService.getCurrentUser();
+
             TBonLivraison bonLivraison = this.getEm().find(TBonLivraison.class, id);
             List<TPreenregistrementDetail> avoirs = getAvoirs();
             Set<TPreenregistrementDetail> avoirs0 = new HashSet<>();
             TOfficine officine = getEm().find(TOfficine.class, Constant.OFFICINE);
-            userTransaction.begin();
+
             if (tp == null) {
                 return json.put("success", false).put("msg",
                         "Paramètre d'autorisation de saisie de produit sans date de péremption inexistant");
             }
+            boolean peremptionDateIsEnabled = tp.getStrVALUE().trim().equals("1");
             TOrder order = bonLivraison.getLgORDERID();
             TGrossiste grossiste = order.getLgGROSSISTEID();
             if (bonLivraison.getStrSTATUT().equals(Constant.STATUT_IS_CLOSED)) {
@@ -192,22 +182,26 @@ public class CommandeServiceImpl implements CommandeService {
                         "Impossible de trouver ce bon. Verifier s'il ce bon n'est pas deja cloturé");
             }
             List<TBonLivraisonDetail> lstTBonLivraisonDetail = bonLivraisonDetail(id);
-            if (Integer.parseInt(tp.getStrVALUE()) == 1 && isEntreeStockIsAuthorize(lstTBonLivraisonDetail)) {
-                return json.put("success", false).put("msg",
-                        "La reception de certains produits n'a pas ete faites. Veuillez verifier vos saisie");
-
-            }
-
+            userTransaction.begin();
             JSONArray ugArray = new JSONArray();
             for (TBonLivraisonDetail bn : lstTBonLivraisonDetail) {
                 TFamille oFamille = bn.getLgFAMILLEID();
+                List<TLot> lots = getLot(oFamille.getLgFAMILLEID(), bonLivraison.getStrREFLIVRAISON());
+                if (peremptionDateIsEnabled && oFamille.getBoolCHECKEXPIRATIONDATE()
+                        && (lots.isEmpty() || lots.stream().anyMatch(l -> Objects.isNull(l.getDtPEREMPTION())))) {
+                    if (userTransaction.getStatus() == Status.STATUS_ACTIVE) {
+                        userTransaction.rollback();
+                    }
+                    return json.put("success", false).put("msg",
+                            "Certaines dates de péremptions ne sont pas renseignées");
+                }
+
                 int diff = Math.abs(bn.getIntPRIXVENTE() - oFamille.getIntPRICE());
 
                 boolean isTableau = StringUtils.isNotEmpty(oFamille.getIntT())
                         || (diff == FunctionUtils.VALEUR_TABLEAU);
-                List<Object[]> lst = listLot(bonLivraison.getStrREFLIVRAISON(), oFamille.getLgFAMILLEID());
 
-                if (lst.isEmpty()) {
+                if (lots.isEmpty()) {
                     createTLot(bn, user, oFamille, bn.getIntQTECMDE(), bonLivraison.getStrREFLIVRAISON(), grossiste,
                             order.getStrREFORDER(), 0);
                     addToStock(bn.getIntPRIXVENTE(), bn.getIntPAF(), bn.getLgBONLIVRAISONDETAIL(), user,
@@ -216,37 +210,39 @@ public class CommandeServiceImpl implements CommandeService {
                     bn.setIntQTEMANQUANT(0);
                     bn.setIntQTEUG(0);
                 } else {
-                    for (Object[] item : lst) {
-                        Integer cmde = Integer.valueOf(item[0] + ""), qu = Integer.valueOf(item[1] + "");
-                        if (cmde < bn.getIntQTECMDE()) {
-                            LOG.log(Level.INFO, "La reception de certains produits n'a pas ete faite {0} {1} {2}",
-                                    new Object[] { oFamille.getIntCIP(), cmde, bn.getIntQTECMDE() });
-                            if (userTransaction.getStatus() == Status.STATUS_ACTIVE) {
-                                userTransaction.rollback();
-                            }
-                            return json.put("success", false).put("msg",
-                                    "La reception de certains produits n'a pas ete faite. Veuillez verifier vos saisie");
+                    int cmde = 0;
+                    int qu = 0;
+                    for (TLot item : lots) {
+                        cmde += Objects.requireNonNullElse(item.getIntNUMBER(), 0);
+                        qu += Objects.requireNonNullElse(item.getIntNUMBERGRATUIT(), 0);
+                    }
+
+                    if (cmde < bn.getIntQTECMDE()) {
+                        LOG.log(Level.INFO, "La reception de certains produits n'a pas ete faite {0} {1} {2}",
+                                new Object[] { oFamille.getIntCIP(), cmde, bn.getIntQTECMDE() });
+                        if (userTransaction.getStatus() == Status.STATUS_ACTIVE) {
+                            userTransaction.rollback();
                         }
-                        cmde = (cmde > (bn.getIntQTECMDE() + bn.getIntQTEUG()) ? (bn.getIntQTECMDE() + bn.getIntQTEUG())
-                                : cmde);
-                        addToStock(bn.getIntPRIXVENTE(), bn.getIntPAF(), bn.getLgBONLIVRAISONDETAIL(), user, cmde, qu,
-                                oFamille);
+                        return json.put("success", false).put("msg",
+                                "La reception de certains produits n'a pas ete faite. Veuillez verifier vos saisie");
+                    }
+                    cmde = (cmde > (bn.getIntQTECMDE() + bn.getIntQTEUG()) ? (bn.getIntQTECMDE() + bn.getIntQTEUG())
+                            : cmde);
+                    addToStock(bn.getIntPRIXVENTE(), bn.getIntPAF(), bn.getLgBONLIVRAISONDETAIL(), user, cmde, qu,
+                            oFamille);
 
-                        if (qu > 0) {
+                    if (qu > 0) {
 
-                            String comm = "ENTREE UG Num BL :  " + bonLivraison.getStrREFLIVRAISON() + " PRODUIT : "
-                                    + oFamille.getIntCIP() + " " + oFamille.getStrNAME() + " QUANTITE " + qu + "  PAR "
-                                    + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
-                            logService.updateItem(user, bonLivraison.getStrREFLIVRAISON(), comm, TypeLog.QUANTITE_UG,
-                                    bn);
+                        String comm = "ENTREE UG Num BL :  " + bonLivraison.getStrREFLIVRAISON() + " PRODUIT : "
+                                + oFamille.getIntCIP() + " " + oFamille.getStrNAME() + " QUANTITE " + qu + "  PAR "
+                                + user.getStrFIRSTNAME() + " " + user.getStrLASTNAME();
+                        logService.updateItem(user, bonLivraison.getStrREFLIVRAISON(), comm, TypeLog.QUANTITE_UG, bn);
 
-                            JSONObject jsonItemUg = new JSONObject();
-                            jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), oFamille.getIntCIP());
-                            jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), oFamille.getStrNAME());
-                            jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), qu);
-                            ugArray.put(jsonItemUg);
-                        }
-
+                        JSONObject jsonItemUg = new JSONObject();
+                        jsonItemUg.put(NotificationUtils.ITEM_KEY.getId(), oFamille.getIntCIP());
+                        jsonItemUg.put(NotificationUtils.ITEM_DESC.getId(), oFamille.getStrNAME());
+                        jsonItemUg.put(NotificationUtils.ITEM_QTY.getId(), qu);
+                        ugArray.put(jsonItemUg);
                     }
 
                 }
@@ -881,7 +877,9 @@ public class CommandeServiceImpl implements CommandeService {
         try {
             CSVParser parser = new CSVParser(new InputStreamReader(part.getInputStream()),
                     CSVFormat.EXCEL.withDelimiter(';'));
-            int nbrePrisEnCompte = 0, nbreNonPrisEnCompte = 0, totalItemsCount = 0;
+            int nbrePrisEnCompte = 0;
+            int nbreNonPrisEnCompte = 0;
+            int totalItemsCount = 0;
             TOrder order = getEm().find(TOrder.class, orderId);
             List<TOrderDetail> l = orderService.findByOrderId(order.getLgORDERID());
             TGrossiste grossiste = order.getLgGROSSISTEID();
@@ -977,10 +975,12 @@ public class CommandeServiceImpl implements CommandeService {
 
     }
 
-    JSONObject verificationCommandeXlsx(Part part, String orderId, TUser OTUse) throws IOException {
+    JSONObject verificationCommandeXlsx(Part part, String orderId, TUser user) throws IOException {
         try {
 
-            int nbrePrisEnCompte = 0, nbreNonPrisEnCompte = 0, totalItemsCount = 0;
+            int nbrePrisEnCompte = 0;
+            int nbreNonPrisEnCompte = 0;
+            int totalItemsCount = 0;
             TOrder order = getEm().find(TOrder.class, orderId);
             TGrossiste grossiste = order.getLgGROSSISTEID();
             List<TOrderDetail> l = orderService.findByOrderId(order.getLgORDERID());
@@ -1065,6 +1065,30 @@ public class CommandeServiceImpl implements CommandeService {
             notificationService.save(notification);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    private List<TLot> getLot(String idProduit, String bonRef) {
+        try {
+            TypedQuery<TLot> query = em.createNamedQuery("TLot.findByProduitAndBonRef", TLot.class);
+            query.setParameter("lgFAMILLEID", idProduit);
+            query.setParameter("strREFLIVRAISON", bonRef);
+            return query.getResultList();
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private List<TBonLivraisonDetail> bonLivraisonDetail(String id) {
+        try {
+            String query = "SELECT t FROM TBonLivraisonDetail t WHERE  t.lgBONLIVRAISONID.lgBONLIVRAISONID =?1";
+            TypedQuery<TBonLivraisonDetail> q = this.em.createQuery(query, TBonLivraisonDetail.class).setParameter(1,
+                    id);
+            return q.getResultList();
+
+        } catch (Exception e) {
+            return Collections.emptyList();
         }
 
     }

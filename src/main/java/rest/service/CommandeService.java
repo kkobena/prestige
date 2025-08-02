@@ -23,7 +23,7 @@ import org.json.JSONObject;
 @Local
 public interface CommandeService {
 
-    JSONObject cloturerBonLivraison(String id, TUser user) throws JSONException;
+    JSONObject cloturerBonLivraison(String id) throws JSONException;
 
     void closureOrder(TOrder order);
 
