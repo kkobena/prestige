@@ -61,25 +61,15 @@ public class TiersPayantRessource {
                 tiersPayantService.fetchList(start, limit, search, typeTierspayant, btnDesactive, delete).toString())
                 .build();
     }
-    
+
     @GET
     @Path("encours")
     @Produces("application/json")
     public Response encours(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "query") String query, @QueryParam(value = "search_value") String search,
-            @QueryParam(value = "lg_TYPE_TIERS_PAYANT_ID") String typeTierspayant,
-            @QueryParam(value = "cmb_TYPE_TIERS_PAYANT") String id) {
+            @QueryParam(value = "search_value") String search, @QueryParam(value = "tp") String lg_TIERS_PAYANT_ID) {
         HttpSession hs = servletRequest.getSession();
-        if (StringUtils.isNoneEmpty(query)) {
-            search = query;
-        }
 
-        if (StringUtils.isNoneEmpty(id)) {
-            typeTierspayant = id;
-        }
-
-        return Response.ok().entity(
-                tiersPayantService.getAccount(typeTierspayant))
-                .build();
+        return Response.ok().entity(tiersPayantService.getAccount(lg_TIERS_PAYANT_ID)).build();
     }
+
 }
