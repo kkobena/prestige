@@ -185,19 +185,43 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                         return val;
                                     }
                                 },
-                                {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true,
-                                    items: [{icon: 'resources/images/icons/fam/page_white_edit.png', tooltip: 'Modifier Article', scope: this, handler: this.managePrice}]
+                                {
+                                    header: 'LOTS',
+                                    dataIndex: 'lots',
+                                    align: 'center',
+                                    flex: 1
+                                },
+                                {
+                                    header: 'DATE DE PEREMPTION',
+                                    dataIndex: 'datePeremption',
+                                    align: 'center',
+                                    flex: 1
+                                },
+                                {
+                                    xtype: 'actioncolumn',
+                                    width: 30,
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    items: [{
+                                            icon: 'resources/images/icons/fam/page_white_edit.png',
+                                            tooltip: 'Modifier Article',
+                                            scope: this,
+                                            handler: this.managePrice
+                                        }]
                                 },
                                 {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true,
                                     items: [{
-                                            icon: 'resources/images/icons/fam/add.png', tooltip: 'Ajout de lot', scope: this, handler: this.onAddProductClick,
-                                            getClass: function (v, m, r) {
-                                                if (r.get('int_QTE_CMDE') > 0 && (r.get('int_QTE_CMDE') > r.get('intQTERECUE'))) {
-                                                    return 'x-display-hide';
+                                            icon: 'resources/images/icons/fam/add.png',
+                                            tooltip: 'Ajout de lot',
+                                            scope: this,
+                                            handler: this.onAddProductClick/*,
+                                            getClass: function (value, metadata, record) {
+                                                if (record.get('checkExpirationdate')) {  
+                                                    return 'x-display-hide'; 
                                                 } else {
-                                                    return 'x-hide-display';
+                                                    return 'x-hide-display'; 
                                                 }
-                                            }
+                                            }*/
                                         }]
                                 },
                                 {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true,
@@ -312,24 +336,33 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
     onRemoveLotClick: function (grid, rowIndex) {
         const rec = grid.getStore().getAt(rowIndex);
         if (!rec.get('existLots')) {
-            Ext.MessageBox.confirm('Message', 'Voullez-vous supprimer la quantité ajoutée ?', function (btn) {
-                if (btn == 'yes') {
-                    Ext.Ajax.request({
-                        method: 'PUT',
-                        url: '../api/v1/commande/remove-lots',
-                        headers: {'Content-Type': 'application/json'},
-                        params: Ext.JSON.encode({
-                            removeLot: false,
-                            idProduit: rec.get('lg_FAMILLE_ID'),
-                            refBon: rec.get('str_REF_LIVRAISON'),
-                            idBonDetail: rec.get('lg_BON_LIVRAISON_DETAIL')
-                        }),
-                        success: function () {
-                            grid.getStore().reload();
-                        },
-                        failure: function (response) {
-                            console.log("Bug " + response.responseText);
-                            Ext.MessageBox.alert('Error Message', response.responseText);
+            Ext.MessageBox.confirm('Message',
+                    'Voullez-vous supprimer la quantité ajoutée ?',
+                    function (btn) {
+                        if (btn == 'yes') {
+                            Ext.Ajax.request({
+                                method: 'PUT',
+                                url: '../api/v1/commande/remove-lots',
+                                headers: {'Content-Type': 'application/json'},
+                                params: Ext.JSON.encode({
+                                    removeLot: false,
+                                    idProduit: rec.get('lg_FAMILLE_ID'),
+                                    refBon: rec.get('str_REF_LIVRAISON'),
+                                    idBonDetail: rec.get('lg_BON_LIVRAISON_DETAIL')
+                                }),
+                                success: function (response)
+                                {
+
+                                    grid.getStore().reload();
+                                },
+                                failure: function (response)
+                                {
+
+                                    console.log("Bug " + response.responseText);
+                                    Ext.MessageBox.alert('Error Message', response.responseText);
+                                }
+                            });
+
                         }
                     });
                 }
