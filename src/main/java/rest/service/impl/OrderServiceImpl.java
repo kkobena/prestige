@@ -1721,6 +1721,33 @@ public class OrderServiceImpl implements OrderService {
         return lots.stream().mapToInt(TLot::getIntNUMBER).sum();
     }
 
+    private List<TLot> getLot(String idProduit, String bonRef) {
+        try {
+            TypedQuery<TLot> query = em.createNamedQuery("TLot.findByProduitAndBonRef", TLot.class);
+            query.setParameter("lgFAMILLEID", idProduit);
+            query.setParameter("strREFLIVRAISON", bonRef);
+            return query.getResultList();
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private String getPeremption(List<TLot> lots) {
+        return String.join(" | ", lots.stream().filter(lot -> Objects.nonNull(lot.getDtPEREMPTION())).map(l -> {
+            return DateCommonUtils.format(l.getDtPEREMPTION());
+        }).distinct().collect(Collectors.toList()));
+    }
+
+    private String getLot(List<TLot> lots) {
+        return String.join(" | ", lots.stream().filter(lot -> StringUtils.isNoneEmpty(lot.getIntNUMLOT())).map(l -> {
+            return DateCommonUtils.format(l.getDtPEREMPTION());
+        }).distinct().collect(Collectors.toList()));
+    }
+
+    private int getLotQty(List<TLot> lots) {
+        return lots.stream().mapToInt(TLot::getIntNUMBER).sum();
+    }
+
     private JSONArray buildListBonsDetails(List<TBonLivraisonDetail> bonLivraisonDetails) {
         try {
             JSONArray array = new JSONArray();
