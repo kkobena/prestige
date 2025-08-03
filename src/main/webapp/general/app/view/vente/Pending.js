@@ -19,8 +19,12 @@ Ext.define('testextjs.view.vente.Pending', {
             data: [['VNO'], ['VO']],
             fields: [{name: 'typeVente', type: 'string'}]
         });
-        var vente = Ext.create('Ext.data.Store', {
+         var vente = Ext.create('Ext.data.Store', {
             model: 'testextjs.model.caisse.Vente',
+            sorters: [{
+            property: 'heure',
+            direction: 'DESC' // ou 'ASC'
+        }],
             autoLoad: false,
             pageSize: 9999,
 
