@@ -40,7 +40,11 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.BonLivraisonManager',
                     totalProperty: 'total'
                 },
                 timeout: 240000
-            }
+            },
+            sorters: [{
+        property: 'dt_DATE_LIVRAISON',
+        direction: 'ASC' // ou 'DESC' pour un ordre croissant
+    }]
 
         });
 
