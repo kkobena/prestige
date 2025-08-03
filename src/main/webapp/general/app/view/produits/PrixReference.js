@@ -5,7 +5,7 @@ Ext.define('testextjs.view.produits.PrixReference', {
     xtype: 'prixReference',
     autoShow: true,
     height: 450,
-    width: '60%',
+    width: '50%',
     modal: true,
     title: 'GESTION DES PRIX DE REFERENCE',
     closeAction: 'destroy',
@@ -113,6 +113,11 @@ Ext.define('testextjs.view.produits.PrixReference', {
                                             name: 'valeur',
                                             type: 'number'
                                         }
+                                        ,
+                                        {
+                                            name: 'taux',
+                                            type: 'number'
+                                        }
 
                                     ],
                             proxy: {
@@ -160,6 +165,13 @@ Ext.define('testextjs.view.produits.PrixReference', {
                                 renderer: function (v) {
                                     return Ext.util.Format.number(v, '0,000.');
                                 },
+                                flex: 1
+
+                            },
+                            {
+                                header: 'Taux',
+                                dataIndex: 'taux',
+                                align: 'right',
                                 flex: 1
 
                             },
@@ -271,15 +283,20 @@ Ext.define('testextjs.view.produits.PrixReference', {
     },
     buildLibelle: function (record) {
         if (record) {
-            return   record.get('type') === 'PRIX_REFERENCE' ? 'Prix' : 'Taux';
+            return   record.get('type') === 'TAUX' ? 'Taux':'Prix' ;
         } else {
             return 'Prix';
         }
     },
-
+    hideOrShowTauxField: function (record) {
+        if (record) {
+            return  record.get('type') !== 'MIX_TAUX_PRIX';
+        }
+        return true;
+    },
     buildMaxiValue: function (record, prixUni) {
         if (record) {
-            return   record.get('type') === 'PRIX_REFERENCE' ? prixUni : 100;
+            return   record.get('type') === 'TAUX' ? 100 : prixUni;
         } else {
             return prixUni;
         }
@@ -329,6 +346,18 @@ Ext.define('testextjs.view.produits.PrixReference', {
                                             value: record ? record.get('id') : null
 
                                         },
+                                        {
+                                            flex: 1,
+                                            xtype: 'displayfield',
+                                            fieldStyle: "color:blue;font-weight:bold;font-size:2em",
+                                            fieldLabel: 'Prix de base',
+                                            renderer: function (v) {
+                                                return Ext.util.Format.number(v, '0,000.');
+                                            },
+                                            margin: '10 5 10 5',
+                                            value: produit.int_PRICE
+                                        },
+
                                         {
                                             hidden: record ? true : false,
                                             xtype: 'combobox',
@@ -385,7 +414,7 @@ Ext.define('testextjs.view.produits.PrixReference', {
                                             itemId: 'type',
                                             name: 'type',
                                             store: Ext.create('Ext.data.ArrayStore', {
-                                                data: [['PRIX_REFERENCE', 'Prix de référence assusrance'], ['TAUX', 'Taux de remboursement produit']],
+                                                data: [['PRIX_REFERENCE', 'Prix de référence assusrance'], ['TAUX', 'Taux de remboursement produit'], ['MIX_TAUX_PRIX', 'Taux de remboursement et Prix de référence']],
                                                 fields: [{name: 'code', type: 'string'}, {name: 'libelle', type: 'string'}]
                                             }),
                                             pageSize: 2,
@@ -400,19 +429,35 @@ Ext.define('testextjs.view.produits.PrixReference', {
                                                     const prixOption = field.getValue();
                                                     const parent = field.up('form');
                                                     const prixCmp = parent.query("#valeur")[0];
-
+                                                    const tauxCmp = parent.query("#taux")[0];
+                                                    console.log(prixCmp,'prixCmp');
                                                     if (prixOption === 'TAUX') {
                                                         prixCmp.setFieldLabel('Taux');
                                                         prixCmp.setMaxValue(100);
-                                                    } else {
+                                                        tauxCmp.setVisible(false);
+                                                        tauxCmp.allowBlank = true;
+                                                        tauxCmp.validate();
+                                                    } else if (prixOption === 'PRIX_REFERENCE') {
                                                         prixCmp.setFieldLabel('Prix');
                                                         prixCmp.setMaxValue(produit.int_PRICE);
+                                                        tauxCmp.setVisible(false);
+                                                        tauxCmp.allowBlank = true;
+                                                        tauxCmp.validate();
+                                                    } else {
+                                                        
+                                                        prixCmp.setFieldLabel('Prix');
+                                                        prixCmp.setMaxValue(produit.int_PRICE);
+                                                        tauxCmp.setVisible(true);
+                                                        tauxCmp.allowBlank = false;
+                                                        tauxCmp.validate();
+
                                                     }
                                                 }}
 
                                         },
 
-                                        {flex: 1,
+                                        {
+                                            flex: 1,
                                             itemId: 'valeur',
                                             xtype: 'numberfield',
                                             fieldLabel: me.buildLibelle(record),
@@ -425,6 +470,23 @@ Ext.define('testextjs.view.produits.PrixReference', {
                                             name: 'valeur',
                                             allowBlank: false,
                                             value: record ? record.get('valeur') : null
+                                        },
+                                        {
+                                            flex: 1,
+                                            itemId: 'taux',
+                                            xtype: 'numberfield',
+                                            fieldLabel: 'Taux',
+                                            margin: '10 5 10 5',
+                                            minValue: 5,
+                                            maxValue: 100,
+                                            maskRe: /[0-9.]/,
+                                            hidden: me.hideOrShowTauxField(record),
+                                            selectOnFocus: true,
+                                            hideTrigger: true,
+                                            name: 'taux',
+                                            allowBlank: false,
+                                            value: record ? record.get('taux') : null
+
                                         }
                                     ]
                                 }
