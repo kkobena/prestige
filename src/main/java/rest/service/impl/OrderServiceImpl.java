@@ -179,7 +179,7 @@ public class OrderServiceImpl implements OrderService {
         oTBonLivraisonDetail.setLots(d.getLots());
         TTypeetiquette tTypeetiquette = oTFamille.getLgTYPEETIQUETTEID() == null
                 ? em.find(TTypeetiquette.class, Constant.DEFAUL_TYPEETIQUETTE) : oTFamille.getLgTYPEETIQUETTEID();
-        Set<OrderDetailLot> lots = oTBonLivraisonDetail.getLots();
+        List<OrderDetailLot> lots = oTBonLivraisonDetail.getLots();
         if (!CollectionUtils.isEmpty(lots)) {
             lots.forEach(lotDTO -> {
                 LocalDate dtpremption = DateUtil.fromString(lotDTO.getDatePeremption());
@@ -236,7 +236,7 @@ public class OrderServiceImpl implements OrderService {
 
     private int getNombreMois() {
         try {
-            return Integer.parseInt(getEmg().find(TParameters.class, "KEY_MONTH_PERIME").getStrVALUE().trim());
+            return Integer.parseInt(getEmg().find(TParameters.class, Constant.KEY_MONTH_PERIME).getStrVALUE().trim());
         } catch (Exception e) {
             return 1000;
         }
