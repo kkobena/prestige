@@ -166,7 +166,8 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         TRemise remise = op.getRemise();
         remise = remise != null ? remise : op.getClient().getRemise();
         MontantAPaye aPaye = computeRemise(op, remise, items);
-        if (aPaye.isTaux()) {
+
+        if (Objects.nonNull(aPaye.getType()) && aPaye.getType() != PrixReferenceType.PRIX_REFERENCE) {
             return computeAmountByPrixOptionTaux(op, params.getTierspayants(), aPaye, asPlafondActivated);
         }
 
@@ -182,7 +183,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         List<TiersPayantParams> tierspayants = params.getTierspayants();
         tierspayants.sort(Comparator.comparing(TiersPayantParams::getTaux, Comparator.reverseOrder()));
         int montantVente = op.getIntPRICE();
-        int montantTiersPayantBase = aPaye.isPrixReference() ? aPaye.getTiersPayantBaseAmount() : montantVente;
+        int montantTiersPayantBase = Objects.nonNull(aPaye.getType()) ? aPaye.getTiersPayantBaseAmount() : montantVente;
         int montantRestant = 0;
         int montantTotalTp = 0;
         List<NetComputingDTO> datas = new ArrayList<>();
@@ -239,7 +240,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         }
 
         op.setIntCUSTPART(custPart);
-        if (aPaye.isPrixReference()) {
+        if (Objects.nonNull(aPaye.getType())) {
             op.setTypePriceOption(PrixReferenceType.PRIX_REFERENCE);
         }
 
@@ -301,7 +302,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         int marge = 0;
         int montantTva = 0;
         int montantAccount = 0;
-        // int tiersPayantBaseAmount=0;
+
         List<MontantTp> montantTps = new ArrayList<>();
         MontantAPaye aPaye = new MontantAPaye();
         for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
@@ -361,21 +362,20 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             montantAPaye.setTiersPayantBaseAmount(montantAPaye.getTiersPayantBaseAmount() + x.getIntPRICE());
         } else {
             montantAPaye.setTiersPayantBaseAmount(
-                    montantAPaye.getTiersPayantBaseAmount() + prixReferenceVentes.get(0).getMontant());
+                    montantAPaye.getTiersPayantBaseAmount() + prixReferenceVentes.get(0).getMontant());// A revoir pour
+                                                                                                       // definir ce qui
+                                                                                                       // sera le
+                                                                                                       // montant de
+                                                                                                       // base: est-ce
+                                                                                                       // prendre le
+                                                                                                       // grand/petit ??
             prixReferenceVentes.forEach(prix -> {
                 PrixReference prixReference = prix.getPrixReference();
-                if (prixReference.getType() == PrixReferenceType.PRIX_REFERENCE) {
-                    montantAPaye.setPrixReference(true);
-                }
-                if (prixReference.getType() == PrixReferenceType.TAUX) {
-                    montantAPaye.setTaux(true);
-                }
+                montantAPaye.setType(prixReference.getType());
                 montantTps.stream()
                         .filter(mt -> mt.getCompteClientTiersPayantId().equals(prix.getCompteClientTiersPayantId()))
-                        .findFirst().ifPresentOrElse(tpPrix -> {
-
-                            tpPrix.setMontant(tpPrix.getMontant() + prix.getMontant());
-                        }, () -> {
+                        .findFirst()
+                        .ifPresentOrElse(tpPrix -> tpPrix.setMontant(tpPrix.getMontant() + prix.getMontant()), () -> {
                             MontantTp mp = new MontantTp();
                             mp.setMontant(prix.getMontant());
                             mp.setCompteClientTiersPayantId(prix.getCompteClientTiersPayantId());
@@ -547,4 +547,69 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         return montantAPaye;
     }
 
+    private MontantAPaye computeAmountByMixOption(TPreenregistrement op, List<TiersPayantParams> tierspayants,
+            MontantAPaye aPaye, boolean asPlafondActivated) {
+        MontantAPaye montantAPaye = new MontantAPaye();
+        tierspayants.sort(Comparator.comparing(TiersPayantParams::getTaux, Comparator.reverseOrder()));
+        TiersPayantParams tiersPayantParamsRo = tierspayants.get(0);
+        int montantVente = op.getIntPRICE();
+        int montantTiersPayantBase = comoutePrixReferenceAmount(aPaye.getMontantTierspayants(),
+                tierspayants.get(0).getCompteTp());/* aPaye.getTiersPayantBaseAmount(); */// montant de base du RO
+
+        List<NetComputingDTO> datas = new ArrayList<>();
+
+        NetComputingDTO netComputed = computeMontantPlafondAvecOptionTaux(tiersPayantParamsRo, montantTiersPayantBase,
+                asPlafondActivated);
+        int montantTotalTp = netComputed.getMontantTiersPayant();
+        int montantACharge = montantTiersPayantBase - montantTotalTp;
+        netComputed.setPercentage(
+                (int) Math.ceil((Double.valueOf(netComputed.getMontantTiersPayant()) * 100) / montantTiersPayantBase));
+        datas.add(netComputed);
+        // second tp
+        if (tierspayants.size() > 1) {
+            NetComputingDTO netComputedC0 = computeMontantPlafondAvecOptionTaux(tierspayants.get(1),
+                    (montantVente - montantTotalTp) - montantACharge, asPlafondActivated);
+            montantTotalTp += netComputedC0.getMontantTiersPayant();
+            netComputedC0.setPercentage((int) Math
+                    .ceil((Double.valueOf(netComputedC0.getMontantTiersPayant()) * 100) / montantTiersPayantBase));
+            datas.add(netComputedC0);
+        }
+        int custPart = (montantVente - montantTotalTp) - op.getIntPRICEREMISE();
+
+        op.setIntCUSTPART(custPart >= 0 ? custPart : 0);
+        op.setTypePriceOption(PrixReferenceType.TAUX);
+        em.merge(op);
+
+        montantAPaye.setRemise(op.getIntPRICEREMISE());
+        montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
+        montantAPaye.setMontant(op.getIntPRICE());
+        montantAPaye.setMarge(aPaye.getMarge());
+        montantAPaye.setMontantTva(aPaye.getMontantTva());
+        boolean asPlafond = false;
+        String message = null;
+        for (NetComputingDTO o : datas) {
+            TiersPayantParams tp = new TiersPayantParams();
+            montantAPaye.setMontantTp(montantAPaye.getMontantTp() + o.getMontantTiersPayant());
+            tp.setTaux(o.getPercentage());
+            tp.setCompteTp(o.getIdCompteClientTiersPayant());
+            tp.setNumBon(o.getNumBon());
+            tp.setTpnet(o.getMontantTiersPayant());
+            if (StringUtils.isNotEmpty(o.getMessage())) {
+                asPlafond = true;
+                tp.setMessage(o.getMessage());
+                if (StringUtils.isEmpty(message)) {
+                    message = o.getMessage();
+                } else {
+                    message += o.getMessage();
+                }
+            }
+
+            montantAPaye.getTierspayants().add(tp);
+
+        }
+        montantAPaye.setRestructuring(asPlafond);
+        montantAPaye.setMessage(message);
+
+        return montantAPaye;
+    }
 }

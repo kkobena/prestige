@@ -143,8 +143,8 @@ public class VenteRessource {
     @POST
     @Path("net/assurance")
     public Response netPayerAssurance(SalesParams params) throws JSONException {
-        JSONObject json = salesService.computeVONet(params);
-        return Response.ok().entity(json.toString()).build();
+
+        return Response.ok().entity(salesService.computeVONet(params).toString()).build();
     }
 
     @POST
@@ -257,13 +257,6 @@ public class VenteRessource {
     @POST
     @Path("add/item")
     public Response addItemVente(SalesParams params) {
-        HttpSession hs = servletRequest.getSession();
-
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        params.setUserId(tu);
         JSONObject json = salesService.addPreenregistrementItem(params);
         return Response.ok().entity(json.toString()).build();
     }

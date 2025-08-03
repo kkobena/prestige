@@ -41,7 +41,7 @@ import util.Constant;
 public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
 
     private static final Logger LOG = Logger.getLogger(AnalyseInvExportServiceImpl.class.getName());
- 
+
     @Inject
     private AnalyseInvService analyseInvService;
 
@@ -77,7 +77,7 @@ public class AnalyseInvExportServiceImpl implements AnalyseInvExportService {
         parameters.put("INVENTAIRE_NAME", inventaireName);
         parameters.put("DATE_RAPPORT", LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd MMMM yyyy")));
         parameters.put("COMPLIANCE_REPORT", exportData.complianceReport);
-       
+
         parameters.put("ECART_GLOBAL_NET", exportData.summary.get("ecartGlobalNet"));
         parameters.put("DEMARQUE_PCT", exportData.summary.get("demarquePct"));
         parameters.put("EMPLACEMENT_CRITIQUE_1", exportData.summary.get("emplacementCritique_1"));

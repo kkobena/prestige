@@ -46,6 +46,7 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
             prixReference.setProduit(new TFamille(prixReferenceDTO.getProduitId()));
             prixReference.setTiersPayant(new TTiersPayant(prixReferenceDTO.getTiersPayantId()));
             prixReference.setValeur(prixReferenceDTO.getValeur());
+            prixReference.setValeurTaux(prixReferenceDTO.getTaux());
             em.persist(prixReference);
         }
 
@@ -101,6 +102,7 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
         prixReference.setEnabled(true);
         prixReference.setType(prixReferenceDTO.getType());
         prixReference.setValeur(prixReferenceDTO.getValeur());
+        prixReference.setValeurTaux(prixReferenceDTO.getTaux());
         em.merge(prixReference);
     }
 
@@ -142,10 +144,11 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
         if (prixReference.getType() == PrixReferenceType.PRIX_REFERENCE) {
             return prixReference.getValeur();
 
+        } else if (prixReference.getType() == PrixReferenceType.MIX_TAUX_PRIX) {
+            float montant = (prixReference.getValeur() * prixReference.getTaux()) / 100.0f;
+            return Math.round(montant);
         }
-        System.err.println("incomingPrice " + incomingPrice);
-        int amm = Math.round(incomingPrice * prixReference.getTaux());
-        System.err.println(" amm " + amm + " taux " + prixReference.getTaux());
+
         return Math.round(incomingPrice * prixReference.getTaux());
 
     }
