@@ -208,6 +208,7 @@ Ext.define('testextjs.view.vente.Pending', {
                             width: 30,
                             sortable: false,
                             menuDisabled: true,
+                            hidden:true,
                             items: [{
                                     icon: 'resources/images/icons/fam/delete.png',
                                     tooltip: 'Supprimer',
