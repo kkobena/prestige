@@ -1,0 +1,1 @@
+ALTER TABLE  `prix_reference` ADD COLUMN `valeur_taux` FLOAT NULL DEFAULT NULL;

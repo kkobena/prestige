@@ -50,6 +50,8 @@ public class PrixReference implements Serializable {
     @Column(name = "type_prix", nullable = false, length = 20)
     private PrixReferenceType type;
     private boolean enabled = true;
+    @Column(name = "valeur_taux")
+    private Float valeurTaux;
 
     public String getId() {
         return id;
@@ -99,6 +101,14 @@ public class PrixReference implements Serializable {
         this.type = type;
     }
 
+    public Float getValeurTaux() {
+        return valeurTaux;
+    }
+
+    public void setValeurTaux(Float valeurTaux) {
+        this.valeurTaux = valeurTaux;
+    }
+
     @Override
     public int hashCode() {
         int hash = 7;
@@ -122,8 +132,13 @@ public class PrixReference implements Serializable {
     }
 
     public float getTaux() {
-        if (this.type == PrixReferenceType.TAUX) {
+        if (type == PrixReferenceType.TAUX) {
             return valeur / 100.0f;
+        } else if (type == PrixReferenceType.MIX_TAUX_PRIX) {
+            if (Objects.nonNull(valeurTaux)) {
+                return valeurTaux;
+            }
+
         }
         return 0.0f;
     }
