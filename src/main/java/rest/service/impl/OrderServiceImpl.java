@@ -98,7 +98,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public JSONObject creerBonLivraison(Params params) throws JSONException {
         JSONObject json = new JSONObject();
-
+        params.setOperateur(this.sessionHelperService.getCurrentUser());
         List<String> erro = new ArrayList<>();
 
         TOrder order = getEmg().find(TOrder.class, params.getRefParent());
@@ -143,7 +143,6 @@ public class OrderServiceImpl implements OrderService {
         getEmg().merge(order);
         return json.put("success", true).put("count", count).put("nb", count2).put("data", new JSONArray(erro))
                 .put("msg", "Opération effectuée avec success");
-
     }
 
     private TBonLivraisonDetail createBLDetail(TBonLivraison oTBonLivraison, TGrossiste oTGrossiste, TFamille oTFamille,
