@@ -7,8 +7,10 @@ package dal;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -112,7 +114,7 @@ public class TBonLivraisonDetail implements Serializable, Cloneable {
     private Integer prixUni;
     @Type(type = "json")
     @Column(columnDefinition = "json", name = "lots")
-    private Set<OrderDetailLot> lots = new HashSet<>();
+    private List<OrderDetailLot> lots = new ArrayList<>();
 
     public TBonLivraisonDetail() {
     }
@@ -332,11 +334,11 @@ public class TBonLivraisonDetail implements Serializable, Cloneable {
         this.prixUni = prixUni;
     }
 
-    public Set<OrderDetailLot> getLots() {
+    public List<OrderDetailLot> getLots() {
         return lots;
     }
 
-    public void setLots(Set<OrderDetailLot> lots) {
+    public void setLots(List<OrderDetailLot> lots) {
         this.lots = lots;
     }
 
