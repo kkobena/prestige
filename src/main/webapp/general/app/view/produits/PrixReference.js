@@ -246,10 +246,26 @@ Ext.define('testextjs.view.produits.PrixReference', {
 
         const wind = btn.up('window');
         const   form = wind.down('form');
-        const datas = form.getValues();
+        const values = form.getValues();
+        const taux = values.taux;
+        const valeur = values.valeur;
+        const id = values.id;
+        const produitId = values.produitId;
+        const tiersPayantId = values.tiersPayantId;
 
 
-        if (form.isValid()) {
+        const datas = {
+            produitId,
+            tiersPayantId,
+            type: values.type,
+            id,
+            taux: taux || null,
+            valeur: valeur || null
+
+        };
+
+
+        //if (form.isValid()) {
             const progress = Ext.MessageBox.wait('Veuillez patienter . . .', 'En cours de traitement!');
             Ext.Ajax.request({
                 method: 'POST',
@@ -270,7 +286,7 @@ Ext.define('testextjs.view.produits.PrixReference', {
                     Ext.Msg.alert("Message", 'Un problème avec le serveur');
                 }
             });
-        }
+       // }
     },
     closeWindow: function () {
         const me = this;
@@ -283,7 +299,7 @@ Ext.define('testextjs.view.produits.PrixReference', {
     },
     buildLibelle: function (record) {
         if (record) {
-            return   record.get('type') === 'TAUX' ? 'Taux':'Prix' ;
+            return   record.get('type') === 'TAUX' ? 'Taux' : 'Prix';
         } else {
             return 'Prix';
         }
@@ -430,21 +446,23 @@ Ext.define('testextjs.view.produits.PrixReference', {
                                                     const parent = field.up('form');
                                                     const prixCmp = parent.query("#valeur")[0];
                                                     const tauxCmp = parent.query("#taux")[0];
-                                                    console.log(prixCmp,'prixCmp');
+                                                    console.log(prixCmp, 'prixCmp');
                                                     if (prixOption === 'TAUX') {
                                                         prixCmp.setFieldLabel('Taux');
+                                                    
                                                         prixCmp.setMaxValue(100);
                                                         tauxCmp.setVisible(false);
                                                         tauxCmp.allowBlank = true;
                                                         tauxCmp.validate();
                                                     } else if (prixOption === 'PRIX_REFERENCE') {
+                                                       
                                                         prixCmp.setFieldLabel('Prix');
                                                         prixCmp.setMaxValue(produit.int_PRICE);
                                                         tauxCmp.setVisible(false);
                                                         tauxCmp.allowBlank = true;
                                                         tauxCmp.validate();
                                                     } else {
-                                                        
+
                                                         prixCmp.setFieldLabel('Prix');
                                                         prixCmp.setMaxValue(produit.int_PRICE);
                                                         tauxCmp.setVisible(true);
