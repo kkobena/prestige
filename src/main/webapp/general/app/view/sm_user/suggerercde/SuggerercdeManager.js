@@ -197,7 +197,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                 xtype: 'combobox', fieldLabel: 'Article', name: 'str_NAME',
                                 id: 'str_NAME', store: store, margins: '0 10 5 10',
                                 enableKeyEvents: true, valueField: 'CIP', displayField: 'str_DESCRIPTION',
-                                pageSize: 20, typeAhead: true, flex: 2,
+                                pageSize: 999, typeAhead: true, flex: 2,
                                 queryMode: 'remote', emptyText: 'Choisir un article par Nom ou Cip...',
                                 listConfig: {
                                     loadingText: 'Recherche...',
@@ -465,8 +465,6 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
     loadStore: function () {},
 
-    loadStore: function () {},
-
     onbtnprint: function () {
         Ext.MessageBox.confirm('Message', 'Confirmation de l\'impression de cette suggestion',
                 function (btn) {
@@ -520,7 +518,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     } else {
                         orderIdRef = object.ref;
                         Me_Window.setTitleFrame(object.ref);
-                        Me_Window.focusContext = { row: 0 };
+                        //Me_Window.focusContext = { row: 0 };
                         Ext.getCmp('gridpanelSuggestionID').getStore().reload();
                     }
                 },
@@ -533,9 +531,12 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
     },
 
     
+ // MODIFIÉ : Assure que l'ID de la suggestion est passé lors du rechargement
     onEdit: function () {
         const me = this;
-        const suggestionId = me.getNameintern();
+        // On s'assure de prendre l'ID le plus à jour
+        const suggestionId = orderIdRef || me.getNameintern(); 
+
         if (Ext.getCmp('lg_GROSSISTE_ID').getValue() === null) {
             Ext.MessageBox.alert('Error Message', 'Renseignez le Grossiste ', function () {
                 Ext.getCmp('lg_GROSSISTE_ID').focus();
@@ -554,14 +555,27 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 params: Ext.JSON.encode(data),
                 success: function (response, options) {
                     testextjs.app.getController('App').StopWaitingProcess();
+                    var JsorResponse = Ext.JSON.decode(response.responseText, true);
+
+                    // Si c'est le premier ajout, on met à jour la variable globale orderIdRef
+                    if (!orderIdRef && JsorResponse.suggestionId) {
+                        orderIdRef = JsorResponse.suggestionId;
+                        me.setNameintern(orderIdRef);
+                        me.setTitleFrame(orderIdRef);
+                    }
                     
+                    var store = Ext.getCmp('gridpanelSuggestionID').getStore();
+                    
+                    // On s'assure que l'ID est bien dans les paramètres du proxy avant de recharger
+                    store.getProxy().setExtraParam('orderId', orderIdRef);
+
+                    store.loadPage(1);
+
+                    // La réinitialisation se fait après, pour une meilleure expérience
                     Ext.getCmp('str_NAME').setValue("");
                     Ext.getCmp('int_QUANTITE').setValue(1);
                     Ext.getCmp('btn_detail').disable();
                     Ext.getCmp('str_NAME').focus();
-
-                    var store = Ext.getCmp('gridpanelSuggestionID').getStore();
-                    store.loadPage(1000); 
                 },
                 failure: function (response) {
                     Ext.MessageBox.alert('Error Message', response.responseText);

@@ -1074,8 +1074,17 @@ public class SuggestionImpl implements SuggestionService {
         }
         List<TSuggestionOrderDetails> detailses = fetchSuggestionOrderDetails(searchValue, suggestionId, start, limit);
 
-        TGrossiste grossiste = detailses.get(0).getLgSUGGESTIONORDERID().getLgGROSSISTEID();
+        // VÉRIFICATION DE SÉCURITÉ AJOUTÉE
+        // Si cette page spécifique est vide (ex: après avoir supprimé le dernier item d'une page),
+        // on retourne un résultat vide pour cette page sans essayer de la lire.
+        if (detailses.isEmpty()) {
+            return data.put("total", count).put("data", Collections.emptyList());
+        }
+
+        // Le reste du code est maintenant dans un bloc 'try' sécurisé.
         try {
+            // La ligne problématique est maintenant protégée par la vérification ci-dessus.
+            TGrossiste grossiste = detailses.get(0).getLgSUGGESTIONORDERID().getLgGROSSISTEID();
 
             JSONArray arrayObj = new JSONArray();
             Integer intACHAT = 0;
