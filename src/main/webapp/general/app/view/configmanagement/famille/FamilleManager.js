@@ -186,6 +186,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     dataIndex: 'cmu_price',
                     align: 'right',
                     flex: 0.5,
+                    hidden:true,
                     renderer: function (v, m, r) {
                         const stock = r.data.int_NUMBER_AVAILABLE;
                         if (stock == 0) {
@@ -200,7 +201,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 },
 
                 {
-                    header: 'P.A F',
+                    header: 'P.Achat',
                     dataIndex: 'int_PAF',
                     align: 'right',
                     flex: 0.5,
@@ -223,19 +224,22 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     align: 'center',
                     flex: 0.5,
                     renderer: function (v, m, r) {
-
                         const stock = r.data.int_NUMBER_AVAILABLE;
-                        if (stock == 0) {
-                            m.style = 'background-color:#B0F2B6;font-weight:800;';
-                        } else if (stock > 0) {
-                            m.style = 'font-weight:800;';
-                        } else if (stock < 0) {
-                            m.style = 'background-color:#F5BCA9;font-weight:800;';
+
+                        if (stock < 0) {
+                            // Valeurs négatives : texte en rouge, fond rosé
+                            m.style = 'color:red; font-weight:bold; background-color:#F5BCA9;font-size: 18px;';
+                        } else if (stock == 0) {
+                            // Valeur zéro : texte en noir, fond verdâtre
+                            m.style = 'color:blue; font-weight:bold; background-color:#B0F2B6;font-size: 18px;';
+                        } else {
+                            // Valeurs positives : texte en bleu
+                            m.style = 'color:green; font-weight:bold;font-size: 18px;';
                         }
                         return v;
                     }
                 }, {
-                    header: 'Seuil.Reap',
+                    header: 'Seuil',
                     dataIndex: 'int_STOCK_REAPROVISONEMENT',
                     align: 'center',
                     flex: 0.5
@@ -328,6 +332,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     dataIndex: 'scheduled',
                     flex: 0.4,
                     xtype: 'checkcolumn',
+                    hidden:true,
                     listeners: {
                         checkChange: function (column, rowIndex, checked, eOpts) {
                             const record = store.getAt(rowIndex);
@@ -437,10 +442,12 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     width: 30,
                     sortable: false,
                     menuDisabled: true,
+                    hidden:true,
                     items: [{
                             icon: 'resources/images/icons/fam/delete.png',
                             tooltip: 'Supprimer',
                             scope: this,
+                            
                             getClass: function (value, metadata, record) {
                                 if (record.get('BTNDELETE')) {
                                     if (record.get('lg_EMPLACEMENT_ID') == "1") {  //read your condition from the record
