@@ -219,4 +219,37 @@ public class SuggestionRessource {
         this.suggestionService.mergeSuggestion(suggestionId, grossisteId);
         return Response.ok().build();
     }
+
+    /**
+     * Endpoint pour nettoyer une suggestion.
+     *
+     * @param suggestionId
+     *            L'ID de la suggestion à traiter.
+     *
+     * @return Une réponse de succès ou d'échec.
+     */
+    @POST
+    @Path("clean")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response cleanSuggestion(@QueryParam("suggestionId") String suggestionId) {
+        HttpSession session = servletRequest.getSession();
+
+        // On utilise maintenant la constante que tu as trouvée
+        TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER); // <-- MODIFICATION FINALE ICI
+
+        if (user == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity(
+                    new JSONObject().put("success", false).put("message", "Utilisateur non authentifié.").toString())
+                    .build();
+        }
+
+        if (suggestionId == null || suggestionId.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(new JSONObject().put("success", false)
+                    .put("message", "L'identifiant de la suggestion est requis.").toString()).build();
+        }
+
+        suggestionService.cleanSuggestion(suggestionId, user);
+        return Response.ok(new JSONObject().put("success", true).toString()).build();
+    }
+
 }

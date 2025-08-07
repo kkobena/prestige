@@ -71,6 +71,8 @@ public interface SuggestionService {
 
     JSONObject fetchItems(String orderId, String search, TUser tUser, int start, int limit);
 
+    void cleanSuggestion(String suggestionId, TUser tUser);
+
     void deleteSuggestion(String suggestionId);
 
     boolean changeGrossiste(String suggestionId, String grossisteId);

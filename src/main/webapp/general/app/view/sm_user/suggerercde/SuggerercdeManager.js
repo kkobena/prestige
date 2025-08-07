@@ -332,7 +332,16 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 xtype: 'toolbar', ui: 'footer', dock: 'bottom', border: '0',
                 items: ['->',
                     {text: 'Retour', id: 'btn_cancel', iconCls: 'icon-clear-group', scope: this, hidden: false, handler: this.onbtncancel},
-                    {text: 'Imprimer', id: 'btn_print', iconCls: 'icon-clear-group', scope: this, hidden: true, handler: this.onbtnprint}
+                    {text: 'Imprimer', id: 'btn_print', iconCls: 'icon-clear-group', scope: this, hidden: true, handler: this.onbtnprint},
+                    // NOUVEAU BOUTON AJOUTÉ ICI
+                    {
+                        text: 'Nettoyer la suggestion',
+                        id: 'btn_clean_sugg',
+                        iconCls: 'icon-delete', // ou une autre icône de votre choix
+                        scope: this,
+                        handler: this.onCleanSuggestion
+                    },
+                    '->'
                 ]
             }]
         });
@@ -529,7 +538,55 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             });
         }
     },
+    
+  onCleanSuggestion: function() {
+    var me = this; 
 
+    if (!orderIdRef) {
+        Ext.MessageBox.alert('Information', 'Aucune suggestion active à nettoyer.');
+        return;
+    }
+
+    Ext.MessageBox.confirm('Confirmation',
+        'Voulez-vous supprimer les produits dont le stock est supérieur au seuil ?',
+        function(btn) {
+            if (btn === 'yes') {
+                testextjs.app.getController('App').ShowWaitingProcess();
+
+                Ext.Ajax.request({
+                    url: '../api/v1/suggestion/clean?suggestionId=' + orderIdRef,
+                    method: 'POST',
+                    scope: me,
+                    success: function(response) {
+                        testextjs.app.getController('App').StopWaitingProcess();
+                        var JsorResponse = Ext.JSON.decode(response.responseText, true);
+
+                        if (JsorResponse && JsorResponse.success) {
+                            
+                            //Ext.MessageBox.alert('Opération réussie', 'La suggestion a été nettoyée avec succès.');
+
+                            var grid = Ext.getCmp('gridpanelSuggestionID');
+                            grid.getStore().load({
+                                params: {
+                                    orderId: orderIdRef,
+                                    query: Ext.getCmp('rechercherDetail').getValue()
+                                }
+                            });
+                            
+                            this.getSuggestionAmount(orderIdRef);
+                        } else {
+                            Ext.MessageBox.alert('Erreur', (JsorResponse ? JsorResponse.message : "Réponse invalide du serveur."));
+                        }
+                    },
+                    failure: function(response) {
+                        testextjs.app.getController('App').StopWaitingProcess();
+                        this.getSuggestionAmount(orderIdRef);
+                        Ext.MessageBox.alert('Erreur Serveur', 'Impossible de contacter le serveur. ' + response.statusText);
+                    }
+                });
+            }
+        });
+},
     
  // MODIFIÉ : Assure que l'ID de la suggestion est passé lors du rechargement
     onEdit: function () {
