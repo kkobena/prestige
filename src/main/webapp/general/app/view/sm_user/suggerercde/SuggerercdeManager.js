@@ -311,6 +311,26 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     }
                                 }
                             },
+                            {
+                                    header: 'MOY',
+                                    align: 'right',
+                                    flex: 1,
+                                    renderer: function (value, metadata, record) {
+                                        // 1. Récupérer les valeurs des 3 mois
+                                        var v1 = record.get('int_VALUE1');
+                                        var v2 = record.get('int_VALUE2');
+                                        var v3 = record.get('int_VALUE3');
+
+                                        // 2. Calculer la moyenne et l'arrondir
+                                        var moyenne = Math.round((v1 + v2 + v3) / 3);
+
+                                        // 3. Appliquer le style demandé
+                                        metadata.style = 'color: red; font-weight: bold; font-size: 16px;';
+
+                                        // 4. Retourner la valeur calculée
+                                        return moyenne;
+                                    }
+                                },
 
                             {header: AppController.getMonthToDisplay(0, currentMonth), dataIndex: 'int_VALUE0', flex: 1, align: 'right', renderer: Me_Window.numberColumnRenderer},
                             {header: AppController.getMonthToDisplay(1, currentMonth), dataIndex: 'int_VALUE1', align: 'right', renderer: Me_Window.numberColumnRenderer, flex: 0.7},
@@ -341,17 +361,23 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     }]
             },
             {
-                xtype: 'toolbar', ui: 'footer', dock: 'bottom', border: '0',
-                items: ['->',
-                    {text: 'Retour', id: 'btn_cancel', iconCls: 'icon-clear-group', scope: this, hidden: false, handler: this.onbtncancel},
-                    {text: 'Imprimer', id: 'btn_print', iconCls: 'icon-clear-group', scope: this, hidden: true, handler: this.onbtnprint},
-                    // NOUVEAU BOUTON AJOUTÉ ICI
-                    {
-                        text: 'Nettoyer la suggestion',
-                        id: 'btn_clean_sugg',
-                        iconCls: 'icon-delete', // ou une autre icône de votre choix
-                        scope: this,
-                        handler: this.onCleanSuggestion
+                    xtype: 'toolbar', ui: 'footer', dock: 'bottom', border: '0',
+                    items: ['->',
+                        {text: 'Retour', id: 'btn_cancel', iconCls: 'icon-clear-group', scope: this, hidden: false, handler: this.onbtncancel},
+                        {text: 'Imprimer', id: 'btn_print', iconCls: 'icon-clear-group', scope: this, hidden: true, handler: this.onbtnprint},
+                        // NOUVEAU BOUTON AJOUTÉ ICI
+                        {
+                            text: 'Nettoyer la suggestion',
+                            id: 'btn_clean_sugg',
+                            iconCls: 'icon-delete', // ou une autre icône de votre choix
+                            scope: this,
+                            tooltip: 'supprimer les produits dont le STOCK > SEUIL',
+                            handler: this.onCleanSuggestion,
+                            style: {
+                                'background-image': 'none', // Supprime les dégradés par défaut
+                                'background-color': 'orange !important', // Force la couleur orange
+                                'border-color': '#A36A00 !important'             // Force la couleur de la bordure
+                            }
                     },
                     '->'
                 ]
