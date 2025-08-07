@@ -269,12 +269,24 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                             {text: 'PRIX A. TARIF', flex: 1, sortable: true, hidden: true, align: 'right', renderer: Me_Window.numberColumnRenderer, dataIndex: 'lg_FAMILLE_PRIX_ACHAT', editor: {xtype: 'numberfield', minValue: 1, allowBlank: false, selectOnFocus: true, regex: /[0-9.]/}},
                             {text: 'PRIX A. FACT', flex: 1, sortable: true, dataIndex: 'int_PAF_SUGG', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, allowBlank: false, regex: /[0-9.]/}},
                             {text: 'PRIX TIPS', flex: 1, sortable: true, hidden: true, align: 'right', renderer: Me_Window.numberColumnRenderer, dataIndex: 'int_PRIX_REFERENCE'},
-                            {text: 'STOCK', flex: 1, sortable: true, dataIndex: 'int_STOCK', align: 'right', renderer: Me_Window.numberColumnRenderer},
+                            {text: 'STOCK', flex: 1, sortable: true, dataIndex: 'int_STOCK', align: 'right', renderer: function (value, metadata) {
+                                        // Applique le style CSS pour mettre le texte en vert et en gras
+                                        metadata.style = 'color: blue; font-weight: bold;font-size: 16px;';
+
+                                        // Retourne la valeur formatée (comme avant)
+                                        return amountformat(value);
+                                    }},
                             {text: 'SEUIL', flex: 1, sortable: true, dataIndex: 'int_SEUIL', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, selectOnFocus: true, allowBlank: false, regex: /[0-9.]/}},
                             
                             {
-                                header: 'Q.CDE', dataIndex: 'int_NUMBER', align: 'right',
-                                renderer: Me_Window.numberColumnRenderer, flex: 1,
+                                    header: 'Q.CDE', dataIndex: 'int_NUMBER', align: 'right',
+                                    renderer: function (value, metadata) {
+                                        // Applique le style CSS pour mettre le texte en vert et en gras
+                                        metadata.style = 'color: green; font-weight: bold;font-size: 16px;';
+
+                                        // Retourne la valeur formatée (comme avant)
+                                        return amountformat(value);
+                                    }, flex: 1,
                                 editor: {
                                     xtype: 'numberfield', minValue: 0,
                                     selectOnFocus: true, allowBlank: false,
