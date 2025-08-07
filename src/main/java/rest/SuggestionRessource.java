@@ -220,14 +220,6 @@ public class SuggestionRessource {
         return Response.ok().build();
     }
 
-    /**
-     * Endpoint pour nettoyer une suggestion.
-     *
-     * @param suggestionId
-     *            L'ID de la suggestion à traiter.
-     *
-     * @return Une réponse de succès ou d'échec.
-     */
     @POST
     @Path("clean")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -235,7 +227,7 @@ public class SuggestionRessource {
         HttpSession session = servletRequest.getSession();
 
         // On utilise maintenant la constante que tu as trouvée
-        TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER); // <-- MODIFICATION FINALE ICI
+        TUser user = (TUser) session.getAttribute(Constant.AIRTIME_USER); // Utilisateur
 
         if (user == null) {
             return Response.status(Response.Status.UNAUTHORIZED).entity(

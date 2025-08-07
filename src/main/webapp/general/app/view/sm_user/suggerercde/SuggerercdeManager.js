@@ -250,35 +250,35 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     }
                 ]
             },
-            {
-                xtype: 'fieldset',
-                title: 'Liste des produits de la suggestion',
-                collapsible: true, defaultType: 'textfield', layout: 'anchor',
-                defaults: {anchor: '100%'},
-                items: [{
-                        columnWidth: 0.65,
-                        xtype: 'gridpanel',
-                        id: 'gridpanelSuggestionID',
-                        plugins: [this.cellEditing],
-                        store: store_details_sugg,
-                        height: 370,
-                        columns: [
-                            {text: 'CIP', flex: 0.7, sortable: true, dataIndex: 'str_FAMILLE_CIP', renderer: Me_Window.columnRenderer},
-                            {text: 'LIBELLE', flex: 2.5, sortable: true, dataIndex: 'str_FAMILLE_NAME', renderer: Me_Window.columnRenderer},
-                            {text: 'PRIX.VENTE', flex: 1, sortable: true, dataIndex: 'lg_FAMILLE_PRIX_VENTE', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, selectOnFocus: true, allowBlank: false, regex: /[0-9.]/}},
-                            {text: 'PRIX A. TARIF', flex: 1, sortable: true, hidden: true, align: 'right', renderer: Me_Window.numberColumnRenderer, dataIndex: 'lg_FAMILLE_PRIX_ACHAT', editor: {xtype: 'numberfield', minValue: 1, allowBlank: false, selectOnFocus: true, regex: /[0-9.]/}},
-                            {text: 'PRIX A. FACT', flex: 1, sortable: true, dataIndex: 'int_PAF_SUGG', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, allowBlank: false, regex: /[0-9.]/}},
-                            {text: 'PRIX TIPS', flex: 1, sortable: true, hidden: true, align: 'right', renderer: Me_Window.numberColumnRenderer, dataIndex: 'int_PRIX_REFERENCE'},
-                            {text: 'STOCK', flex: 1, sortable: true, dataIndex: 'int_STOCK', align: 'right', renderer: function (value, metadata) {
+                {
+                    xtype: 'fieldset',
+                    title: 'Liste des produits de la suggestion',
+                    collapsible: true, defaultType: 'textfield', layout: 'anchor',
+                    defaults: {anchor: '100%'},
+                    items: [{
+                            columnWidth: 0.65,
+                            xtype: 'gridpanel',
+                            id: 'gridpanelSuggestionID',
+                            plugins: [this.cellEditing],
+                            store: store_details_sugg,
+                            height: 370,
+                            columns: [
+                                {text: 'CIP', flex: 0.7, sortable: true, dataIndex: 'str_FAMILLE_CIP', renderer: Me_Window.columnRenderer},
+                                {text: 'LIBELLE', flex: 2.5, sortable: true, dataIndex: 'str_FAMILLE_NAME', renderer: Me_Window.columnRenderer},
+                                {text: 'PRIX.VENTE', flex: 1, sortable: true, dataIndex: 'lg_FAMILLE_PRIX_VENTE', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, selectOnFocus: true, allowBlank: false, regex: /[0-9.]/}},
+                                {text: 'PRIX A. TARIF', flex: 1, sortable: true, hidden: true, align: 'right', renderer: Me_Window.numberColumnRenderer, dataIndex: 'lg_FAMILLE_PRIX_ACHAT', editor: {xtype: 'numberfield', minValue: 1, allowBlank: false, selectOnFocus: true, regex: /[0-9.]/}},
+                                {text: 'PRIX A. FACT', flex: 1, sortable: true, dataIndex: 'int_PAF_SUGG', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, allowBlank: false, regex: /[0-9.]/}},
+                                {text: 'PRIX TIPS', flex: 1, sortable: true, hidden: true, align: 'right', renderer: Me_Window.numberColumnRenderer, dataIndex: 'int_PRIX_REFERENCE'},
+                                {text: 'STOCK', flex: 1, sortable: true, dataIndex: 'int_STOCK', align: 'right', renderer: function (value, metadata) {
                                         // Applique le style CSS pour mettre le texte en vert et en gras
                                         metadata.style = 'color: blue; font-weight: bold;font-size: 16px;';
 
                                         // Retourne la valeur formatée (comme avant)
                                         return amountformat(value);
                                     }},
-                            {text: 'SEUIL', flex: 1, sortable: true, dataIndex: 'int_SEUIL', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, selectOnFocus: true, allowBlank: false, regex: /[0-9.]/}},
-                            
-                            {
+                                {text: 'SEUIL', flex: 1, sortable: true, dataIndex: 'int_SEUIL', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, selectOnFocus: true, allowBlank: false, regex: /[0-9.]/}},
+
+                                {
                                     header: 'Q.CDE', dataIndex: 'int_NUMBER', align: 'right',
                                     renderer: function (value, metadata) {
                                         // Applique le style CSS pour mettre le texte en vert et en gras
@@ -287,31 +287,32 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                         // Retourne la valeur formatée (comme avant)
                                         return amountformat(value);
                                     }, flex: 1,
-                                editor: {
-                                    xtype: 'numberfield', minValue: 0,
-                                    selectOnFocus: true, allowBlank: false,
-                                    enableKeyEvents: true,
-                                    listeners: {
-                                        specialkey: function(field, e) {
-                                            if (e.getKey() === e.ENTER) {
-                                                e.stopEvent();
-                                                var grid = Ext.getCmp('gridpanelSuggestionID');
-                                                var sm = grid.getSelectionModel();
-                                                var record = sm.getSelection()[0];
-                                                var position = sm.getCurrentPosition();
-                                                if (!record) return;
-                                                var value = field.getValue();
-                                                if (value === 0) {
-                                                    Me_Window.onRemoveClick(grid, position.row);
-                                                    return;
+                                    editor: {
+                                        xtype: 'numberfield', minValue: 0,
+                                        selectOnFocus: true, allowBlank: false,
+                                        enableKeyEvents: true,
+                                        listeners: {
+                                            specialkey: function (field, e) {
+                                                if (e.getKey() === e.ENTER) {
+                                                    e.stopEvent();
+                                                    var grid = Ext.getCmp('gridpanelSuggestionID');
+                                                    var sm = grid.getSelectionModel();
+                                                    var record = sm.getSelection()[0];
+                                                    var position = sm.getCurrentPosition();
+                                                    if (!record)
+                                                        return;
+                                                    var value = field.getValue();
+                                                    if (value === 0) {
+                                                        Me_Window.onRemoveClick(grid, position.row);
+                                                        return;
+                                                    }
+                                                    Me_Window.updateQty(record, value, position);
                                                 }
-                                                Me_Window.updateQty(record, value, position);
                                             }
                                         }
                                     }
-                                }
-                            },
-                            {
+                                },
+                                {
                                     header: 'MOY',
                                     align: 'right',
                                     flex: 1,
@@ -332,14 +333,20 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                     }
                                 },
 
-                            {header: AppController.getMonthToDisplay(0, currentMonth), dataIndex: 'int_VALUE0', flex: 1, align: 'right', renderer: Me_Window.numberColumnRenderer},
-                            {header: AppController.getMonthToDisplay(1, currentMonth), dataIndex: 'int_VALUE1', align: 'right', renderer: Me_Window.numberColumnRenderer, flex: 0.7},
-                            {header: AppController.getMonthToDisplay(2, currentMonth), dataIndex: 'int_VALUE2', align: 'right', format: '0,000.', renderer: Me_Window.numberColumnRenderer, flex: 0.7},
-                            {header: AppController.getMonthToDisplay(3, currentMonth), dataIndex: 'int_VALUE3', align: 'right', renderer: Me_Window.numberColumnRenderer, flex: 0.7},
-                            {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true, items: [{icon: 'resources/images/icons/fam/cog.png', tooltip: 'Qté détail', scope: this, handler: this.onQtyDetail, getClass: function (value, metadata, record) { if (record.get('bool_DECONDITIONNE_EXIST') === 1) { return 'x-display-hide'; } else { return 'x-hide-display';}}}]},
-                            {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true, items: [{icon: 'resources/images/icons/fam/application_view_list.png', tooltip: 'Detail sur l\'article', scope: this, handler: this.onDetailClick}]},
-                            {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true, items: [{/*icon: 'resources/images/icons/fam/delete.png',*/ tooltip: 'Supprimer', scope: this/*, handler: this.onRemoveClick*/}]}
-                        ],
+                                {header: AppController.getMonthToDisplay(0, currentMonth), dataIndex: 'int_VALUE0', flex: 1, align: 'right', renderer: Me_Window.numberColumnRenderer},
+                                {header: AppController.getMonthToDisplay(1, currentMonth), dataIndex: 'int_VALUE1', align: 'right', renderer: Me_Window.numberColumnRenderer, flex: 0.7},
+                                {header: AppController.getMonthToDisplay(2, currentMonth), dataIndex: 'int_VALUE2', align: 'right', format: '0,000.', renderer: Me_Window.numberColumnRenderer, flex: 0.7},
+                                {header: AppController.getMonthToDisplay(3, currentMonth), dataIndex: 'int_VALUE3', align: 'right', renderer: Me_Window.numberColumnRenderer, flex: 0.7},
+                                {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true, items: [{icon: 'resources/images/icons/fam/cog.png', tooltip: 'Qté détail', scope: this, handler: this.onQtyDetail, getClass: function (value, metadata, record) {
+                                                if (record.get('bool_DECONDITIONNE_EXIST') === 1) {
+                                                    return 'x-display-hide';
+                                                } else {
+                                                    return 'x-hide-display';
+                                                }
+                                            }}]},
+                                {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true, items: [{icon: 'resources/images/icons/fam/application_view_list.png', tooltip: 'Detail sur l\'article', scope: this, handler: this.onDetailClick}]},
+                                {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true, items: [{/*icon: 'resources/images/icons/fam/delete.png',*/ tooltip: 'Supprimer', scope: this/*, handler: this.onRemoveClick*/}]}
+                            ],
                         tbar: [{xtype: 'textfield', id: 'rechercherDetail', name: 'rechercherDetail', emptyText: 'Recherche', width: 300, listeners: {'render': function (cmp) {cmp.getEl().on('keypress', function (e) {if (e.getKey() === e.ENTER) {Me_Window.onRechClick();}});}}}],
                         
                         bbar: {
@@ -365,18 +372,18 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                     items: ['->',
                         {text: 'Retour', id: 'btn_cancel', iconCls: 'icon-clear-group', scope: this, hidden: false, handler: this.onbtncancel},
                         {text: 'Imprimer', id: 'btn_print', iconCls: 'icon-clear-group', scope: this, hidden: true, handler: this.onbtnprint},
-                        // NOUVEAU BOUTON AJOUTÉ ICI
+                        
                         {
                             text: 'Nettoyer la suggestion',
                             id: 'btn_clean_sugg',
-                            iconCls: 'icon-delete', // ou une autre icône de votre choix
+                            iconCls: 'icon-delete', 
                             scope: this,
                             tooltip: 'supprimer les produits dont le STOCK > SEUIL',
                             handler: this.onCleanSuggestion,
                             style: {
-                                'background-image': 'none', // Supprime les dégradés par défaut
-                                'background-color': 'orange !important', // Force la couleur orange
-                                'border-color': '#A36A00 !important'             // Force la couleur de la bordure
+                                'background-image': 'none',
+                                'background-color': 'orange !important', 
+                                'border-color': '#A36A00 !important'            
                             }
                     },
                     '->'

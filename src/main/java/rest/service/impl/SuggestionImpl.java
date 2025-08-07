@@ -1076,16 +1076,11 @@ public class SuggestionImpl implements SuggestionService {
         }
         List<TSuggestionOrderDetails> detailses = fetchSuggestionOrderDetails(searchValue, suggestionId, start, limit);
 
-        // VÉRIFICATION DE SÉCURITÉ AJOUTÉE
-        // Si cette page spécifique est vide (ex: après avoir supprimé le dernier item d'une page),
-        // on retourne un résultat vide pour cette page sans essayer de la lire.
         if (detailses.isEmpty()) {
             return data.put("total", count).put("data", Collections.emptyList());
         }
 
-        // Le reste du code est maintenant dans un bloc 'try' sécurisé.
         try {
-            // La ligne problématique est maintenant protégée par la vérification ci-dessus.
             TGrossiste grossiste = detailses.get(0).getLgSUGGESTIONORDERID().getLgGROSSISTEID();
 
             JSONArray arrayObj = new JSONArray();
@@ -1380,7 +1375,7 @@ public class SuggestionImpl implements SuggestionService {
     }
 
     /*
-     * Modifié : Accepte maintenant l'ID de l'emplacement pour cibler le bon stock.
+     * Ajout de l'emplacement
      */
     private List<String> supprimerLigneSuggestion(String suggestionId, String emplacementId) {
         try {
@@ -1389,7 +1384,7 @@ public class SuggestionImpl implements SuggestionService {
                     + "FROM t_suggestion_order_details sd " + "JOIN t_famille f ON f.lg_FAMILLE_ID = sd.lg_FAMILLE_ID "
                     + "JOIN t_famille_stock stoc ON f.lg_FAMILLE_ID = stoc.lg_FAMILLE_ID "
                     + "WHERE f.int_SEUIL_MIN < stoc.int_NUMBER_AVAILABLE " + "AND sd.lg_SUGGESTION_ORDER_ID = ?1 "
-                    + "AND stoc.lg_EMPLACEMENT_ID = ?2"); // <-- LA CORRECTION CLÉ
+                    + "AND stoc.lg_EMPLACEMENT_ID = ?2"); // <-- emplacement
             q.setParameter(1, suggestionId);
             q.setParameter(2, emplacementId); // On passe le paramètre
             return q.getResultList();
