@@ -358,23 +358,22 @@ public class Balance {
         parameters.put("P_REGLEMENTDEPOT_CB", "0");
         parameters.put("P_TOTAL_REGLEMENTDEPOT_CAISSE", "0");
         parameters.put("P_REGLEMENTDEPOT_MOBILE", "0");
-        
-        /* remettre si un pharmacien demande
-        parameters.put("P_VENTEDEPOT_LABEL", P_VENTEDEPOT_LABEL);
-        parameters.put("P_VENTEDEPOT_ESPECE", DateConverter.amountFormat(P_VENTEDEPOT_ESPECE, ' '));
-        parameters.put("P_VENTEDEPOT_CHEQUES", "0");
-        parameters.put("P_VENTEDEPOT_CB", "0");
-        parameters.put("P_TOTAL_VENTEDEPOT_CAISSE", DateConverter.amountFormat(P_TOTAL_VENTEDEPOT_CAISSE, ' '));
 
-        parameters.put("P_REGLEMENTDEPOT_LABEL", P_REGLEMENTDEPOT_LABEL);
-        parameters.put("P_REGLEMENTDEPOT_ESPECE", DateConverter.amountFormat(P_REGLEMENTDEPOT_ESPECE, ' '));
-        parameters.put("P_REGLEMENTDEPOT_CHEQUES", DateConverter.amountFormat(P_REGLEMENTDEPOT_CHEQUES, ' '));
-        parameters.put("P_REGLEMENTDEPOT_CB", DateConverter.amountFormat(P_REGLEMENTDEPOT_CB, ' '));
-        parameters.put("P_TOTAL_REGLEMENTDEPOT_CAISSE", DateConverter.amountFormat(P_TOTAL_REGLEMENTDEPOT_CAISSE, ' '));
-        parameters.put("P_REGLEMENTDEPOT_MOBILE", DateConverter.amountFormat(P_REGLEMENTDEPOT_MOBILE, ' '));
-        
-        */
-        
+        /*
+         * remettre si un pharmacien demande parameters.put("P_VENTEDEPOT_LABEL", P_VENTEDEPOT_LABEL);
+         * parameters.put("P_VENTEDEPOT_ESPECE", DateConverter.amountFormat(P_VENTEDEPOT_ESPECE, ' '));
+         * parameters.put("P_VENTEDEPOT_CHEQUES", "0"); parameters.put("P_VENTEDEPOT_CB", "0");
+         * parameters.put("P_TOTAL_VENTEDEPOT_CAISSE", DateConverter.amountFormat(P_TOTAL_VENTEDEPOT_CAISSE, ' '));
+         *
+         * parameters.put("P_REGLEMENTDEPOT_LABEL", P_REGLEMENTDEPOT_LABEL); parameters.put("P_REGLEMENTDEPOT_ESPECE",
+         * DateConverter.amountFormat(P_REGLEMENTDEPOT_ESPECE, ' ')); parameters.put("P_REGLEMENTDEPOT_CHEQUES",
+         * DateConverter.amountFormat(P_REGLEMENTDEPOT_CHEQUES, ' ')); parameters.put("P_REGLEMENTDEPOT_CB",
+         * DateConverter.amountFormat(P_REGLEMENTDEPOT_CB, ' ')); parameters.put("P_TOTAL_REGLEMENTDEPOT_CAISSE",
+         * DateConverter.amountFormat(P_TOTAL_REGLEMENTDEPOT_CAISSE, ' ')); parameters.put("P_REGLEMENTDEPOT_MOBILE",
+         * DateConverter.amountFormat(P_REGLEMENTDEPOT_MOBILE, ' '));
+         *
+         */
+
         P_TOTAL_SORTIE_CAISSE = P_SORTIECAISSE_ESPECE + P_SORTIECAISSE_CHEQUES + P_SORTIECAISSE_CB
                 + P_SORTIECAISSE_MOBILE;
         P_TOTAL_ENTREE_CAISSE = P_ENTREECAISSE_ESPECE + P_ENTREECAISSE_CHEQUES + P_ENTREECAISSE_CB

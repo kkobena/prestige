@@ -283,6 +283,13 @@ public class CommonRessource {
     }
 
     @GET
+    @Path("emplacement")
+    public Response loadEmplacement(@QueryParam(value = "query") String query) throws JSONException {
+        List<ComboDTO> data = commonService.loadRayons(query);
+        return Response.ok().entity(ResultFactory.getSuccessResult(data, data.size())).build();
+    }
+
+    @GET
     @Path("famillearticles")
     public Response familleArticles(@QueryParam(value = "query") String query) throws JSONException {
         List<ComboDTO> data = commonService.familleArticles(query);
