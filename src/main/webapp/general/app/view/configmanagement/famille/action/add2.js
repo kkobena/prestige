@@ -102,10 +102,11 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
             autoLoad: false,
             proxy: {
                 type: 'ajax',
-                url: url_services_data_famaillearticle_famille,
+                //url: url_services_data_famaillearticle_famille,
+                url: '../api/v1/common/famillearticle',
                 reader: {
                     type: 'json',
-                    root: 'results',
+                    root: 'data',
                     totalProperty: 'total'
                 }
             }
@@ -160,14 +161,22 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                     },
                     items: [
                         {
-                            fieldLabel: 'Cip',
+                            fieldLabel: 'Code CIP',
                             xtype: 'textfield',
                             maskRe: /[0-9.]/, width: 400,
+                            // AJOUT : Écouteur pour la touche "Entrée"
+                            listeners: {
+                                specialkey: function (field, e) {
+                                    if (e.getKey() === e.ENTER) {
+                                        Ext.getCmp('str_DESCRIPTION').focus(true, 10);
+                                    }
+                                }
+                            },
                             /*autoCreate: {
                              tag: 'input',
                              maxlength: '7'
                              },*/
-                            emptyText: 'CIP',
+                            emptyText: 'Code CIP',
                             name: 'int_CIP',
                             id: 'int_CIP',
                             allowBlank: false
@@ -203,8 +212,8 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                             width: 400,
                             id: 'lg_FAMILLEARTICLE_ID',
                             store: store_famillearticle_famille,
-                            valueField: 'lg_FAMILLEARTICLE_ID',
-                            displayField: 'str_LIBELLE',
+                            valueField: 'id',
+                            displayField: 'libelle',
                             typeAhead: true,
                             queryMode: 'remote',
                             pageSize: 20, //ajout la barre de pagination
@@ -276,14 +285,14 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                             emptyText: 'Choisir un grossiste...'
                         },
                          {
-                            fieldLabel: 'EAN',
+                            fieldLabel: 'Code EAN 13',
                             xtype: 'textfield',
                             maskRe: /[0-9.]/, width: 400,
                             /*autoCreate: {
                              tag: 'input',
                              maxlength: '7'
                              },*/
-                            emptyText: 'EAN',
+                            emptyText: 'Code EAN 13',
                             name: 'EAN',
                             id: 'EAN'
                             
@@ -350,6 +359,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                 }],
             listeners: {
                 afterrender: function () {
+                    
                     var comboEmplacement = Ext.getCmp('lg_ZONE_GEO_ID');
                     var comboFamille = Ext.getCmp('lg_FAMILLEARTICLE_ID');
                     var comboGrossiste = Ext.getCmp('lg_GROSSISTE_QUICK_ID');
@@ -368,14 +378,19 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                     comboEmplacement.getStore().load();
 
                     // Recup Famille par defaut
-                    comboFamille.getStore().load({
-                        callback: function () {
-                            var defaultRecord = comboFamille.getStore().findRecord('str_LIBELLE', 'SPECIALITES PUBLIQUES');
-                            if (defaultRecord) {
-                                comboFamille.setValue(defaultRecord.get('lg_FAMILLEARTICLE_ID'));
-                            }
+                    comboFamille.getStore().on('load', function (store) {
+                        var defaultRecord = store.findRecord('libelle', 'SPECIALITES PUBLIQUES');
+
+                        if (defaultRecord && !defaultRecord.get('str_LIBELLE')) {
+                            defaultRecord.set('lg_FAMILLEARTICLE_ID', defaultRecord.get('id'));
+                            defaultRecord.set('str_LIBELLE', defaultRecord.get('libelle'));
                         }
-                    });
+                        if (defaultRecord) { 
+                            comboFamille.setValue(defaultRecord.get('lg_FAMILLEARTICLE_ID'));
+                        }
+
+                    }, this, {single: true});
+                    comboFamille.getStore().load();
 
                     // Recup grossiste initiale de la commande
                     var grossisteIdFromParent = Me.getGrossisteId(); // On utilise 'Me' qui est une référence à notre fenêtre 'add2'
@@ -386,6 +401,16 @@ Ext.define('testextjs.view.configmanagement.famille.action.add2', {
                             }
                         });
                     }
+                    
+                },
+                // NOUVEAUTÉ : On utilise l'événement 'show' pour gérer le focus
+                show: function (window) {
+                    Ext.defer(function () {
+                        var cipField = window.down('#int_CIP');
+                        if (cipField) {
+                            cipField.focus(true, 100);
+                        }
+                    }, 100);
                 }
             }
 
