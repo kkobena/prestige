@@ -291,7 +291,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             let value = cmp.getValue();
                                             let record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
-                                            if (value === "0" || value === "Ajouter un nouvel article") {
+                                            if (value === "0" || value === "Cliquez ici pour créer un nouvel article") {
                                                 Me_Window.onbtnaddArticle();
                                             } else {
                                                 Ext.getCmp('int_QUANTITE').focus(true, 100, function () {
@@ -332,7 +332,7 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
                                             let value = cmp.getValue();
                                             let record = cmp.findRecord(cmp.valueField || cmp.displayField, value); //recupere la ligne de l'element selectionné
                                             Ext.getCmp('lg_FAMILLE_ID_VENTE').setValue(record.get('lg_FAMILLE_ID'));
-                                            if (value === "0" || value === "Ajouter un nouvel article") {
+                                            if (value === "0" || value === "Cliquez ici pour créer un nouvel article") {
                                                 Me_Window.onbtnaddArticle();
                                             } else {
                                                 Ext.getCmp('int_QUANTITE').focus(true, 100, function () {
@@ -1045,12 +1045,14 @@ Ext.define('testextjs.view.commandemanagement.order.action.add', {
 
     },
     onbtnaddArticle: function () {
+        var grossisteIdValue = Ext.getCmp('lgGROSSISTEID').getValue();
         new testextjs.view.configmanagement.famille.action.add2({
             odatasource: "",
             parentview: this,
             mode: "create",
             titre: "Creer un nouveau produit",
-            type: "commande"
+            type: "commande",
+            grossisteId: grossisteIdValue
         });
     },
     onRemoveClick: function (grid, rowIndex) {

@@ -118,7 +118,7 @@ public interface OrderService {
     void deleteBonLivraison(String id);
 
     JSONObject getListBonsDetails(String bonId, String search, int start, int limit, EntreeStockDetailFiltre filtre,
-            Boolean checkDatePeremption);
+            Boolean checkDatePeremption, String sort, String dir);
 
     void removeLot(DeleteLot deleteLot);
 
