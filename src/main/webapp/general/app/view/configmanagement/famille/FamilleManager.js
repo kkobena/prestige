@@ -470,7 +470,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     menuDisabled: true,
                     items: [{
                             icon: 'resources/images/icons/fam/connect.png',
-                            tooltip: 'Créer deconditionné',
+                            tooltip: 'Créer detail',
                             scope: this,
                             handler: this.onCreateDeconditionClick,
                             getClass: function (value, metadata, record) {
@@ -563,7 +563,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 selType: 'cellmodel'
             },
             tbar: [{
-                    text: 'Créer',
+                    text: 'Créer un Nouvel Article',
                     scope: this,
                     iconCls: 'addicon',
                     id: 'btn_add',
@@ -613,6 +613,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     xtype: 'textfield',
                     id: 'rechecher',
                     name: 'user',
+                    fieldStyle: 'background-color: orange; background-image: none;color:blue;font-weight:bold;font-size:1.3em',
                     emptyText: 'Recherche',
                     listeners: {
                         'render': function (cmp) {
@@ -969,7 +970,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                     parentview: this,
                     mode: "decondition",
                     type: 'famillemanager',
-                    titre: "Creation Article [" + rec.get('str_DESCRIPTION') + "] deconditionne"
+                    titre: "Creation Article [" + rec.get('str_DESCRIPTION') + "] DETAIL"
                 });
             }
         }
@@ -978,10 +979,10 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
         const rec = grid.getStore().getAt(rowIndex);
 
         if (rec.get('bool_DECONDITIONNE') == "1") {
-            Ext.MessageBox.alert('Alerte Message', 'Ceci est un article deconditionne. Il ne peut pas etre deconditionne');
+            Ext.MessageBox.alert('Alerte Message', 'Ceci est un article deconditionné. Il ne peut pas etre deconditionné');
         } else {
             if (rec.get('bool_DECONDITIONNE_EXIST') == "0") {
-                Ext.MessageBox.alert('Alerte Message', 'Aucune version deconditionne existe');
+                Ext.MessageBox.alert('Alerte Message', 'Aucun détail existant pour ce produit');
             } else {
                 if (rec.get('int_NUMBER_AVAILABLE') <= 0) {
                     Ext.MessageBox.alert('Alerte Message', 'Stock insuffisant');
