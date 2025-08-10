@@ -22178,3 +22178,34 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
     border-color: #00B74A;
 }
 /*focusCls,labelCls */
+
+.pl-card {
+  background: #fff;
+  border: 1px solid #e6e8ef;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(10,10,10,0.04);
+}
+
+.pl-title { font-weight: 700; font-size: 14px; }
+
+.pl-badge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  border: 1px dashed #d8dee9;
+}
+.pl-badge-value { font-size: 18px; font-weight: 800; }
+.pl-badge-sub { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+.pl-badge-positive { background: rgba(16,185,129,0.08); color: #065f46; border-color: rgba(16,185,129,0.25); }
+.pl-badge-negative { background: rgba(239,68,68,0.08); color: #7f1d1d; border-color: rgba(239,68,68,0.25); }
+.pl-badge-neutral  { background: rgba(107,114,128,0.08); color: #1f2937; border-color: rgba(107,114,128,0.25); }
+
+.pl-green-strong .x-form-display-field {
+  color: #0a7b22;
+  font-weight: 900;
+}
