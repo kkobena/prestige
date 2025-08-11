@@ -151,6 +151,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
 
         Ext.apply(this, {
             width: '98%',
+            cls: 'screen-wrap',
             fieldDefaults: {labelAlign: 'left', labelWidth: 90, anchor: '100%', msgTarget: 'side'},
             layout: {type: 'vbox', align: 'stretch', padding: 10},
             defaults: {flex: 1},
@@ -158,6 +159,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             items: [{
                 xtype: 'fieldset',
                 title: 'Informations sur la suggestion',
+                cls: 'ig-card ig-simple',
                 collapsible: true, defaultType: 'textfield', margin: '5 0 5 0',
                 layout: 'anchor', defaults: {anchor: '100%'},
                 items: [
@@ -185,6 +187,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             {
                 xtype: 'fieldset',
                 title: 'Ajout Produit',
+                cls: 'dg-card',
                 collapsible: true, defaultType: 'textfield', width: 300,
                 layout: 'anchor', defaults: {anchor: '100%'},
                 items: [
@@ -245,7 +248,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                 }
                             },
                             {text: 'Ajouter', id: 'btn_add', margins: '0 0 0 6', hidden: true, xtype: 'button', handler: this.onbtnadd, disabled: true},
-                            {text: 'Voir detail', id: 'btn_detail', margins: '0 0 0 6', xtype: 'button', handler: this.onbtndetail, disabled: true}
+                            {text: 'Voir infos produit', id: 'btn_detail',cls: 'btn-primary', margins: '0 0 0 6', xtype: 'button', handler: this.onbtndetail, disabled: true}
                         ]
                     }
                 ]
@@ -253,12 +256,14 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                 {
                     xtype: 'fieldset',
                     title: 'Liste des produits de la suggestion',
+                    cls: 'dg-card',
                     collapsible: true, defaultType: 'textfield', layout: 'anchor',
                     defaults: {anchor: '100%'},
                     items: [{
                             columnWidth: 0.65,
                             xtype: 'gridpanel',
                             id: 'gridpanelSuggestionID',
+                            cls: 'my-grid-header',
                             plugins: [this.cellEditing],
                             store: store_details_sugg,
                             height: 370,
@@ -279,7 +284,7 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
                                 {text: 'SEUIL', flex: 1, sortable: true, dataIndex: 'int_SEUIL', align: 'right', renderer: Me_Window.numberColumnRenderer, editor: {xtype: 'numberfield', minValue: 1, selectOnFocus: true, allowBlank: false, regex: /[0-9.]/}},
 
                                 {
-                                    header: 'Q.CDE', dataIndex: 'int_NUMBER', align: 'right',
+                                    header: 'QTE', dataIndex: 'int_NUMBER', align: 'right',
                                     renderer: function (value, metadata) {
                                         // Applique le style CSS pour mettre le texte en vert et en gras
                                         metadata.style = 'color: green; font-weight: bold;font-size: 16px;';
@@ -370,8 +375,8 @@ Ext.define('testextjs.view.sm_user.suggerercde.SuggerercdeManager', {
             {
                     xtype: 'toolbar', ui: 'footer', dock: 'bottom', border: '0',
                     items: ['->',
-                        {text: 'Retour', id: 'btn_cancel', iconCls: 'icon-clear-group', scope: this, hidden: false, handler: this.onbtncancel},
-                        {text: 'Imprimer', id: 'btn_print', iconCls: 'icon-clear-group', scope: this, hidden: true, handler: this.onbtnprint},
+                        {text: 'Retour', id: 'btn_cancel',cls: 'btn-secondary', iconCls: 'icon-clear-group', scope: this, hidden: false, handler: this.onbtncancel},
+                        {text: 'Imprimer', id: 'btn_print',cls: 'btn-primary', iconCls: 'icon-clear-group', scope: this, hidden: true, handler: this.onbtnprint},
                         
                         {
                             text: 'Nettoyer la suggestion',
