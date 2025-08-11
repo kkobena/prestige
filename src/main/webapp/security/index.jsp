@@ -40,9 +40,10 @@
     <!-- Carte principale (style “3D pill UI”) -->
     <section class="pl-card" role="dialog" aria-labelledby="pl-title" aria-describedby="pl-desc">
       <!-- décor gélules (optionnel) -->
-      <img class="pl-pill pl-pill--tl" src="../resources/images/pill-blue.png" alt="" aria-hidden="true">
+      <img class="pl-pill pl-pill--tl" src="../resources/images/pill-red.png" alt="" aria-hidden="true">
       <img class="pl-pill pl-pill--tr" src="../resources/images/pill-white.png" alt="" aria-hidden="true">
       <img class="pl-pill pl-pill--br" src="../resources/images/pill-blue.png" alt="" aria-hidden="true">
+      <img class="pl-pill pl-pill--bl" src="../resources/images/pill-green.png" alt="" aria-hidden="true">
 
       <h1 id="pl-title" class="sr-only"><%= jdom.APP_NAME %></h1>
       <p id="pl-desc" class="sr-only">Connexion à votre espace</p>

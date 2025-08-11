@@ -341,14 +341,16 @@ input:focus {
 /* Décors gélules (optionnels) */
 .pl-pill {
   position: absolute;
-  width: 72px;
-  height: 72px;
+  object-fit: contain;
+  width: 100px;
+  height: 100px;
   opacity: .85;
   filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));
 }
 .pl-pill--tl { top: -18px; left: -18px; transform: rotate(-20deg); }
 .pl-pill--tr { top: -22px; right: -16px; transform: rotate(18deg); }
 .pl-pill--br { bottom: -20px; right: -10px; transform: rotate(-12deg); }
+.pl-pill--bl { bottom: -20px; left: -18px;  transform: rotate(15deg);}
 
 /* Inputs “pill” */
 .pl-input {
