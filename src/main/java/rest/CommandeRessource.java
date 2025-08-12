@@ -299,10 +299,12 @@ public class CommandeRessource {
     public Response getBonItems(@PathParam("id") String id, @QueryParam(value = "start") int start,
             @QueryParam(value = "limit") int limit, @DefaultValue("") @QueryParam(value = "query") String query,
             @DefaultValue("ALL") @QueryParam(value = "filtre") EntreeStockDetailFiltre filtre,
-            @DefaultValue("false") @QueryParam(value = "checkDatePeremption") Boolean checkDatePeremption) {
+            @DefaultValue("false") @QueryParam(value = "checkDatePeremption") Boolean checkDatePeremption,
+            @QueryParam(value = "sort") String sort, @QueryParam(value = "dir") String dir) {
 
-        return Response.ok().entity(
-                orderService.getListBonsDetails(id, query, start, limit, filtre, checkDatePeremption).toString())
+        return Response
+                .ok().entity(orderService
+                        .getListBonsDetails(id, query, start, limit, filtre, checkDatePeremption, sort, dir).toString())
                 .build();
     }
 

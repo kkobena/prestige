@@ -45,6 +45,10 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
         titre: '',
         type: ''
     },
+    
+    basePaf: null,
+    basePrice: null,
+    
     initComponent: function () {
         Oview = this.getParentview();
         ref = this.getOdatasource().lg_FAMILLE_ID;
@@ -364,14 +368,15 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     hidden: true
                                 },
                                 {
-                                    fieldLabel: 'Prix Achat Facture',
+                                    fieldLabel: 'Prix Achat',
                                     xtype: 'textfield',
                                     maskRe: /[0-9.]/,
                                     width: 350,
                                     selectOnFocus: true,
-                                    emptyText: 'PRIX ACHAT FACTURE',
+                                    emptyText: 'PRIX ACHAT',
                                     name: 'int_PAF',
                                     id: 'int_PAF',
+                                    fieldStyle: "color:blue;font-weight:bold;font-size:1.3em",
                                     allowBlank: false
                                 }
 
@@ -423,6 +428,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     emptyText: 'PRIX VENTE',
                                     name: 'int_PRICE',
                                     id: 'int_PRICE',
+                                    fieldStyle: "color:blue;font-weight:bold;font-size:1.3em",
                                     selectOnFocus: true,
 
                                     allowBlank: false,
@@ -848,19 +854,49 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                                     regex: /[0-9.]/
                                 }, {xtype: 'splitter'},
                                 {
-                                    fieldLabel: 'Quantite.Detail/Article',
+                                    fieldLabel: 'Quantité dans *UN CH*',
                                     flex: 1,
                                     hidden: true,
-                                    regex: /[0-9.]/,
                                     xtype: 'numberfield',
+                                    minValue: 1,
                                     emptyText: 'Quantite.Detail/Article',
                                     name: 'int_QTEDETAIL',
                                     id: 'int_QTEDETAIL',
-                                    value: 0
-                                }, {xtype: 'splitter'},
+                                    fieldStyle: 'background-color: orange; background-image: none;color:blue;font-weight:bold;font-size:1.3em',
+                                   
+                                    listeners: {
+                                        change: {
+                                            fn: this.onQtyDetailChange,
+                                            scope: this
+                                        },
+                                        // Logique de validation mise à jour pour la touche "Entrée"
+                                        specialkey: function (field, e) {
+                                            if (e.getKey() === e.ENTER) {
+                                                var value = field.getValue();
+
+                                                // On vérifie si la valeur est supérieure à 1
+                                                if (value > 1) {
+                                                    // Si c'est bon, on déplace le focus
+                                                    Ext.getCmp('int_PRICE').focus(true, 10);
+                                                } else {
+                                                    // Sinon, on affiche un message d'erreur
+                                                    Ext.MessageBox.show({
+                                                        title: 'Valeur incorrecte',
+                                                        msg: 'La quantité de détail doit être supérieure à 1.',
+                                                        buttons: Ext.MessageBox.OK,
+                                                        icon: Ext.MessageBox.WARNING,
+                                                        // On remet le focus sur le champ après la fermeture du message
+                                                        fn: function () {
+                                                            field.focus(true, 10);
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {xtype: 'splitter'},
                                 int_RESERVE
-
-
 
                             ]
                         }]
@@ -1162,6 +1198,16 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             listeners: {// controle sur le button fermé en haut de fenetre
                 beforeclose: function () {
                     Ext.getCmp('rechecher').focus();
+                },
+                show: function(win) {
+                    // On attend un court instant pour s'assurer que tout est bien affiché
+                    Ext.defer(function() {
+                        var fieldToFocus = Ext.getCmp('int_QTEDETAIL');
+                        // On met le focus uniquement si le champ est visible
+                        if (fieldToFocus && !fieldToFocus.isHidden()) {
+                            fieldToFocus.focus(true, 10);
+                        }
+                    }, 100);
                 }
             }
         });
@@ -1428,6 +1474,33 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 Ext.MessageBox.alert('Error Message', response.responseText);
             }
         });
+    },
+    onQtyDetailChange: function (field, newValue) {
+        const qteDetail = newValue;
+        const pafField = Ext.getCmp('int_PAF');
+        const priceField = Ext.getCmp('int_PRICE');
+
+        // Étape 1: Si les prix de base n'ont pas encore été mémorisés, on le fait maintenant.
+        // On ne le fera qu'une seule fois.
+        if (this.basePaf === null) {
+            this.basePaf = pafField.getValue();
+            this.basePrice = priceField.getValue();
+        }
+
+        // Étape 2: On effectue le calcul.
+        // Si la quantité est vide ou nulle, on restaure les prix de base.
+        if (!qteDetail || qteDetail <= 0) {
+            pafField.setValue(this.basePaf);
+            priceField.setValue(this.basePrice);
+            return;
+        }
+
+        // Étape 3: On calcule et on met à jour les champs.
+        const newPaf = Math.round(this.basePaf / qteDetail);
+        const newPrice = Math.round(this.basePrice / qteDetail);
+
+        pafField.setValue(newPaf);
+        priceField.setValue(newPrice);
     },
 
     onCreateDetailProduit: function (internal_url, lgFamilleId, strCodeRemise, intTauxMarque, intPriceTips, intPrice, boolDeconditionne, mode, view, type,win) {

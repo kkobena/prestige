@@ -1607,17 +1607,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public JSONObject getListBonsDetails(String bonId, String search, int start, int limit,
-            EntreeStockDetailFiltre filtre, Boolean checkDatePeremption) {
+            EntreeStockDetailFiltre filtre, Boolean checkDatePeremption, String sort, String dir) {
         JSONObject json = new JSONObject();
-        int count = getListBonsDetailsCount(bonId, search, filtre, checkDatePeremption);
+        int count = getListBonsDetailsCount(bonId, search, filtre, checkDatePeremption, sort, dir);
 
         json.put("total", count);
-        return json.put("data",
-                buildListBonsDetails(fetchListBonsDetails(bonId, search, start, limit, filtre, checkDatePeremption)));
+        return json.put("data", buildListBonsDetails(
+                fetchListBonsDetails(bonId, search, start, limit, filtre, checkDatePeremption, sort, dir)));
     }
 
     private int getListBonsDetailsCount(String bonId, String search, EntreeStockDetailFiltre filtre,
-            Boolean checkDatePeremption) {
+            Boolean checkDatePeremption, String sort, String dir) {
         boolean checkDate = Objects.requireNonNullElse(checkDatePeremption, false);
         String searchQuery = " AND (t.lgFAMILLEID.intCIP LIKE '%s' OR t.lgFAMILLEID.intEAN13 LIKE '%s' OR t.lgFAMILLEID.strDESCRIPTION LIKE '%s') ";
         String searchQueryFinal = StringUtils.isNotEmpty(search)
@@ -1642,30 +1642,55 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private List<TBonLivraisonDetail> fetchListBonsDetails(String bonId, String search, int start, int limit,
-            EntreeStockDetailFiltre filtre, Boolean checkDatePeremption) {
-        boolean checkDate = Objects.requireNonNullElse(checkDatePeremption, false);
-        String searchQuery = " AND (t.lgFAMILLEID.intCIP LIKE '%s' OR t.lgFAMILLEID.intEAN13 LIKE '%s' OR t.lgFAMILLEID.strDESCRIPTION LIKE '%s') ";
-        String searchQueryFinal = StringUtils.isNotEmpty(search)
-                ? String.format(searchQuery, search + "%", search + "%", search + "%") : "";
-
+            EntreeStockDetailFiltre filtre, Boolean checkDatePeremption, String sort, String dir) {
         try {
-            String query = "SELECT t FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONID.lgBONLIVRAISONID = ?1 %s  ORDER BY t.dtUPDATED DESC";
-            if (filtre == EntreeStockDetailFiltre.PRIX) {
-                String prix = checkDate
-                        ? "  AND t.lgFAMILLEID.boolCHECKEXPIRATIONDATE=TRUE   ORDER BY t.dtUPDATED DESC "
-                        : "  ORDER BY t.dtUPDATED DESC ";
-                query = "SELECT t FROM TBonLivraisonDetail t WHERE  t.lgBONLIVRAISONID.lgBONLIVRAISONID = ?1 %s AND t.intQTERECUE = 0 AND t.intPRIXVENTE <> t.lgFAMILLEID.intPRICE "
-                        + prix;
+            boolean checkDate = Objects.requireNonNullElse(checkDatePeremption, false);
 
+            String searchQuery = " AND (t.lgFAMILLEID.intCIP LIKE '%s' OR t.lgFAMILLEID.intEAN13 LIKE '%s' OR t.lgFAMILLEID.strDESCRIPTION LIKE '%s') ";
+            String searchQueryFinal = StringUtils.isNotEmpty(search)
+                    ? String.format(searchQuery, search + "%", search + "%", search + "%") : "";
+
+            // Base SANS ORDER BY en dur
+            String base = "SELECT t FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONID.lgBONLIVRAISONID = ?1 %s";
+
+            // Filtre PRIX (toujours sans ORDER BY en dur)
+            if (filtre == EntreeStockDetailFiltre.PRIX) {
+                String prix = checkDate ? " AND t.lgFAMILLEID.boolCHECKEXPIRATIONDATE=TRUE " : " ";
+                base = "SELECT t FROM TBonLivraisonDetail t WHERE t.lgBONLIVRAISONID.lgBONLIVRAISONID = ?1 %s"
+                        + " AND t.intQTERECUE = 0 AND t.intPRIXVENTE <> t.lgFAMILLEID.intPRICE" + prix;
             }
 
-            return getEmg().createQuery(String.format(query, searchQueryFinal)).setParameter(1, bonId)
-                    .setFirstResult(start).setMaxResults(limit).getResultList();
+            // champs triables
+            String sortField;
+            if ("lg_FAMILLE_NAME".equalsIgnoreCase(sort)) {
+                sortField = "t.lgFAMILLEID.strNAME";
+            } else if ("lg_FAMILLE_CIP".equalsIgnoreCase(sort)) {
+                sortField = "t.lgFAMILLEID.intCIP";
+            } else if ("int_PAF".equalsIgnoreCase(sort)) {
+                sortField = "t.intPAF";
+            } else if ("int_PRIX_VENTE".equalsIgnoreCase(sort)) {
+                sortField = "t.intPRIXVENTE";
+            } else if ("dbl_PRIX_MOYEN_PONDERE".equalsIgnoreCase(sort)) {
+                sortField = "t.lgFAMILLEID.dblPRIXMOYENPONDERE";
+            } else if ("int_QTE_CMDE".equalsIgnoreCase(sort)) {
+                sortField = "t.intQTECMDE";
+            } else {
+                sortField = "t.dtUPDATED"; // fallback si sort inconnu/absent
+            }
+
+            String direction = "DESC".equalsIgnoreCase(dir) ? "DESC" : "ASC";
+            String orderBy = " ORDER BY " + sortField + " " + direction;
+
+            String jpql = String.format(base, searchQueryFinal) + orderBy;
+
+            return getEmg().createQuery(jpql, TBonLivraisonDetail.class).setParameter(1, bonId).setFirstResult(start)
+                    .setMaxResults(limit).getResultList();
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, null, e);
             return List.of();
         }
+
     }
 
     private JSONArray buildListBonsDetails(List<TBonLivraisonDetail> bonLivraisonDetails) {
