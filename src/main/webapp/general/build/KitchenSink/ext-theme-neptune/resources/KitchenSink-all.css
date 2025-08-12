@@ -22247,7 +22247,7 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
   background: transparent !important; border: none !important;
   color:#0f766e !important; font-weight:800 !important; font-size:18px !important;
 }
-.x-fieldset{ border:none !important;}
+.x-fieldset{ border-radius: 14px;}
 
 /* ====== Détails + Grille ====== */
 .dg-card{
