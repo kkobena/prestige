@@ -218,8 +218,9 @@ public class CommandeServiceImpl implements CommandeService {
                     }
 
                     if (cmde < bn.getIntQTECMDE()) {
-                        LOG.log(Level.INFO, "La reception de certains produits n'a pas ete faite {0} {1} {2}",
-                                new Object[] { oFamille.getIntCIP(), cmde, bn.getIntQTECMDE() });
+                        LOG.log(Level.INFO,
+                                String.format("La reception de certains produits n'a pas ete faite %s %d %d  ",
+                                        oFamille.getIntCIP(), cmde, bn.getIntQTECMDE()));
                         if (userTransaction.getStatus() == Status.STATUS_ACTIVE) {
                             userTransaction.rollback();
                         }

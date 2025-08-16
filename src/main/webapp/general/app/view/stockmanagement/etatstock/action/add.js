@@ -33,17 +33,26 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
         directImport: false,
         checkExpirationdate: false,
         qtyCmde: 0,
-        gestionLot:false
+        gestionLot: false,
     },
     initComponent: function () {
 
         Oview = this.getParentview();
         Omode = this.getMode();
         str_REF_LIVRAISON = this.getReference();
-      
+
         int_QTE_CMDE = this.getOdatasource().int_QTE_CMDE;
         index = this.getIndex();
         Me = this;
+        let quantiteRestante = this.getOdatasource().int_QTE_CMDE - this.getOdatasource().quantiteSaisie;
+        console.log(this.getOdatasource());
+        if (this.getGestionLot()) {
+            quantiteRestante = this.getOdatasource().int_QTE_RECUE - this.getOdatasource().quantiteSaisie;
+        }
+        if (quantiteRestante < 0) {
+            quantiteRestante = 0;
+        }
+        console.log(quantiteRestante);
 
         const form = new Ext.form.Panel({
             bodyPadding: 10,
@@ -69,7 +78,8 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
                             readOnly: !Me.getGestionLot(),
                             allowBlank: !Me.getGestionLot(),
                             regex: /[0-9.]/,
-                            minValue: Me.getOdatasource().int_QTE_MANQUANT
+                          //  minValue: quantiteRestante,
+                            value: quantiteRestante,
 
                         },
                         {
@@ -136,7 +146,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
             lg_GROSSISTE_ID = this.getOdatasource().lg_GROSSISTE_ID;
             lg_BON_LIVRAISON_DETAIL = this.getOdatasource().lg_BON_LIVRAISON_DETAIL;
 
-            Ext.getCmp('int_NUMBER').setValue(this.getOdatasource().int_QTE_MANQUANT);
+        //    Ext.getCmp('int_NUMBER').setValue(this.getOdatasource().int_QTE_MANQUANT);
 
 
         }
@@ -207,7 +217,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
                                                     button.setDisabled(true);
                                                     Ext.Ajax.request({
                                                         method: 'POST',
-                                                        url: Me.getGestionLot()  ? '../api/v1/commande/add-lot' : '../api/v1/commande/add-free-qty',
+                                                        url: Me.getGestionLot() ? '../api/v1/commande/add-lot' : '../api/v1/commande/add-free-qty',
                                                         headers: {'Content-Type': 'application/json'},
                                                         params: payload,
                                                         success: function (response)
@@ -257,7 +267,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
                                     button.setDisabled(true);
                                     Ext.Ajax.request({
                                         method: 'POST',
-                                       url: Me.getGestionLot()  ? '../api/v1/commande/add-lot' : '../api/v1/commande/add-free-qty',
+                                        url: Me.getGestionLot() ? '../api/v1/commande/add-lot' : '../api/v1/commande/add-free-qty',
                                         headers: {'Content-Type': 'application/json'},
                                         params: payload,
                                         success: function (response)
@@ -302,7 +312,7 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
                                     button.setDisabled(true);
                                     Ext.Ajax.request({
                                         method: 'POST',
-                                       url: Me.getGestionLot()  ? '../api/v1/commande/add-lot' : '../api/v1/commande/add-free-qty',
+                                        url: Me.getGestionLot() ? '../api/v1/commande/add-lot' : '../api/v1/commande/add-free-qty',
                                         headers: {'Content-Type': 'application/json'},
                                         params: payload,
                                         success: function (response)
@@ -342,6 +352,6 @@ Ext.define('testextjs.view.stockmanagement.etatstock.action.add', {
                 });
 
     }
-    
-    
+
+
 });

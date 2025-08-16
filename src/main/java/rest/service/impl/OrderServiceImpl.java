@@ -1738,6 +1738,7 @@ public class OrderServiceImpl implements OrderService {
                 json.put("int_QTE_CMDE", bonLivraisonDetail.getIntQTECMDE());
                 json.put("datePeremption", datePeremption);
                 json.put("lots", getLot(lots));
+                json.put("quantiteSaisie", getLotQty(lots));
 
                 json.put("int_QTE_RECUE_REEL", (bonLivraisonDetail.getIntQTERECUE() > 0
                         ? bonLivraisonDetail.getIntQTERECUE() - bonLivraisonDetail.getIntQTEUG() : "-"));

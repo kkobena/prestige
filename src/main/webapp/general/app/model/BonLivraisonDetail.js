@@ -222,5 +222,10 @@ Ext.define('testextjs.model.BonLivraisonDetail', {
             name: 'lots',
             type: 'string'
         }
+        ,
+        {
+            name: 'quantiteSaisie',
+            type: 'number'
+        }
     ]
 });
