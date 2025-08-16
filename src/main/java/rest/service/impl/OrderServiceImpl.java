@@ -1713,7 +1713,7 @@ public class OrderServiceImpl implements OrderService {
 
     private String getLot(List<TLot> lots) {
         return String.join(" | ", lots.stream().filter(lot -> StringUtils.isNoneEmpty(lot.getIntNUMLOT())).map(l -> {
-            return DateCommonUtils.format(l.getDtPEREMPTION());
+            return l.getIntNUMLOT();
         }).distinct().collect(Collectors.toList()));
     }
 
@@ -1944,9 +1944,9 @@ public class OrderServiceImpl implements OrderService {
         return typedQuery.getResultList();
     }
 
-    private TParameters getParamettre() {
+    private TParameters getParamettre(String key) {
         try {
-            return getEmg().find(TParameters.class, "KEY_MONTH_PERIME");
+            return getEmg().find(TParameters.class, key);
         } catch (Exception e) {
             return null;
         }
@@ -1961,7 +1961,6 @@ public class OrderServiceImpl implements OrderService {
         if (!lot.isDirectImport()) {
             return addNewLot(lot, bonLivraisonDetail, tUser, bonLivraison, false);
         } else {
-
             Optional<TLot> enOptionl = getLotByProduitIdAndBon(bonLivraisonDetail.getLgFAMILLEID().getLgFAMILLEID(),
                     bonLivraison.getStrREFLIVRAISON());
             if (enOptionl.isPresent()) {
@@ -1998,6 +1997,9 @@ public class OrderServiceImpl implements OrderService {
         oTLot.setStrSTATUT(Constant.STATUT_ENABLE);
         oTLot.setLgFAMILLEID(famille);
         oTLot.setIntNUMBER(lot.getQty() + lot.getFreeQty());
+        if (isFreeQty) {
+            oTLot.setIntNUMBER(bonLivraisonDetai.getIntQTERECUE() + lot.getFreeQty());
+        }
         if (StringUtils.isNotEmpty(lot.getDatePeremption())) {
             Date dtPEREMPTION = java.sql.Date.valueOf(lot.getDatePeremption());
             oTLot.setDtPEREMPTION(dtPEREMPTION);
@@ -2006,7 +2008,7 @@ public class OrderServiceImpl implements OrderService {
             if (dtpremption.isBefore(tonow) || dtpremption.isEqual(tonow)) {
                 oTLot.setStrSTATUT(Constant.STATUT_PERIME);
             } else {
-                TParameters parameters = getParamettre();
+                TParameters parameters = getParamettre(Constant.KEY_MONTH_PERIME);
                 int nbr = 0;
                 if (parameters != null) {
                     nbr = Integer.parseInt(parameters.getStrVALUE());
@@ -2041,12 +2043,12 @@ public class OrderServiceImpl implements OrderService {
 
         String famille = bonLivraisonDetail.getLgFAMILLEID().getLgFAMILLEID();
 
-        entityLot.setIntNUMBERGRATUIT(lot.getFreeQty());
         if (StringUtils.isNotEmpty(lot.getNumLot())) {
             entityLot.setIntNUMLOT(lot.getNumLot());
         }
-
-        entityLot.setIntNUMBER(entityLot.getIntNUMBER() + entityLot.getIntNUMBERGRATUIT());
+        entityLot.setIntNUMBER((Objects.requireNonNullElse(entityLot.getIntNUMBER(), 0)
+                - Objects.requireNonNullElse(entityLot.getIntNUMBERGRATUIT(), 0)) + lot.getFreeQty());
+        entityLot.setIntNUMBERGRATUIT(lot.getFreeQty());
         entityLot.setDtUPDATED(new Date());
         if (StringUtils.isNoneBlank(lot.getDatePeremption())) {
             Date dtPEREMPTION = java.sql.Date.valueOf(lot.getDatePeremption());
@@ -2061,6 +2063,7 @@ public class OrderServiceImpl implements OrderService {
         getEmg().merge(entityLot);
         TWarehouse tWarehouse = getOneByProduitIdAndBon(famille, bonNum);
         tWarehouse.setIntNUMBERGRATUIT(lot.getFreeQty());
+        tWarehouse.setIntNUMBER(bonLivraisonDetail.getIntQTERECUE());
         tWarehouse.setDtUPDATED(new Date());
         getEmg().merge(tWarehouse);
 
@@ -2130,7 +2133,7 @@ public class OrderServiceImpl implements OrderService {
         oTWarehouse.setLgWAREHOUSEID(new KeyUtilGen().getComplexId());
         oTWarehouse.setLgUSERID(lot.getLgUSERID());
         oTWarehouse.setLgFAMILLEID(lot.getLgFAMILLEID());
-        oTWarehouse.setIntNUMBER(lotDto.getQty());
+        oTWarehouse.setIntNUMBER(bonLivraisonDetail.getIntQTERECUE());
         oTWarehouse.setDtPEREMPTION(lot.getDtPEREMPTION());
         oTWarehouse.setDtSORTIEUSINE(lot.getDtSORTIEUSINE());
         oTWarehouse.setStrREFLIVRAISON(lot.getStrREFLIVRAISON());
@@ -2296,6 +2299,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public JSONObject addFreeQty(AddLot lot) {
+        if (lot.getFreeQty() < 0) {
+            return new JSONObject().put("success", false);
+        }
         TUser tUser = this.sessionHelperService.getCurrentUser();
         TBonLivraisonDetail bonLivraisonDetail = getEmg().find(TBonLivraisonDetail.class, lot.getIdBonDetail());
         TBonLivraison bonLivraison = bonLivraisonDetail.getLgBONLIVRAISONID();
@@ -2307,5 +2313,14 @@ public class OrderServiceImpl implements OrderService {
             return addNewLot(lot, bonLivraisonDetail, tUser, bonLivraison, true);
         }
         return new JSONObject().put("success", true);
+    }
+
+    @Override
+    public List<TBonLivraisonDetail> getBonItems(String bonId) {
+        TypedQuery<TBonLivraisonDetail> q = em.createQuery(
+                "SELECT o FROM  TBonLivraisonDetail o where o.lgBONLIVRAISONID.lgBONLIVRAISONID=?1",
+                TBonLivraisonDetail.class);
+        q.setParameter(1, bonId);
+        return q.getResultList();
     }
 }

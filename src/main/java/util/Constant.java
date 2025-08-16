@@ -183,6 +183,8 @@ public final class Constant {
     public static final String STATUT_ENCOURS_PEREMPTION = "en peremption";
     public static final String STATUT_UNPAID = "unpaid";
     public static final String KEY_MONTH_PERIME = "KEY_MONTH_PERIME";
+    public static final String PARAM_TRUE = "1";
+    public static final String PARAM_FALSE = "0";
 
     private Constant() {
     }
