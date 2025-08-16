@@ -2034,8 +2034,8 @@ public class OrderServiceImpl implements OrderService {
         oTLot.setIntNUMBERGRATUIT(lot.getFreeQty());
         oTLot.setIntQTYVENDUE(0);
         getEmg().persist(oTLot);
-        addWarehouse(bonLivraisonDetai, oTLot, lot);
         updateTBonLivraisonDetailFromBonLivraison(bonLivraisonDetai, lot.getFreeQty(), lot.getFreeQty());
+        addWarehouse(bonLivraisonDetai, oTLot, lot);
         return new JSONObject().put("success", true);
     }
 

@@ -333,13 +333,15 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
             reference: rec.get('str_REF_LIVRAISON'),
             directImport: Me_Workflow.getOdatasource().directImport,
             gestionLot: Me_Workflow.getGestionLot(),
-            
+
         });
     },
 
     onRemoveLotClick: function (grid, rowIndex) {
+        const me = this;
         const rec = grid.getStore().getAt(rowIndex);
-        if (!rec.get('existLots')) {
+
+        if (!me.getGestionLot()) {
             Ext.MessageBox.confirm('Message', 'Voullez-vous supprimer la quantité ajoutée ?', function (btn) {
                 if (btn == 'yes') {
                     Ext.Ajax.request({
@@ -464,8 +466,8 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
                                             fn: function (btn) {
                                                 if (btn === 'yes') {
                                                     // onPdfBLClick('../Etiquete?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue());
-                                                const linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue();
-                                                onPdfBLClick(linkUrl);
+                                                    const linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue();
+                                                    onPdfBLClick(linkUrl);
                                                     testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
                                                 } else {
                                                     testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
