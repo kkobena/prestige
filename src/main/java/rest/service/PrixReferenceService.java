@@ -31,12 +31,6 @@ public interface PrixReferenceService {
 
     void update(PrixReferenceDTO prixReferenceDTO);
 
-    void updatePrixReference(TPreenregistrementDetail preenregistrementDetail,
-            List<TCompteClientTiersPayant> clientTiersPayants);
-
     List<PrixReference> getActifByProduitIdAndTiersPayantIds(String produitId, Set<String> tiersPayantId);
 
-    void updatePrixReference(TPreenregistrementDetail preenregistrementDetail);
-
-    void removeTiersPayantFromVente(TPreenregistrement preenregistrement, String tierspayantId);
 }

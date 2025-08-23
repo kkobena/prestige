@@ -3,9 +3,7 @@ package rest.service.impl;
 import dal.PrixReference;
 import dal.PrixReferenceType;
 import dal.PrixReferenceVente;
-import dal.TCompteClientTiersPayant;
 import dal.TFamille;
-import dal.TPreenregistrement;
 import dal.TPreenregistrementDetail;
 import dal.TTiersPayant;
 import java.util.List;
@@ -18,7 +16,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import rest.service.PrixReferenceService;
 import rest.service.dto.PrixReferenceDTO;
@@ -106,26 +103,6 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
         em.merge(prixReference);
     }
 
-    @Override
-    public void updatePrixReference(TPreenregistrementDetail preenregistrementDetail,
-            List<TCompteClientTiersPayant> clientTiersPayants) {
-        if (CollectionUtils.isNotEmpty(clientTiersPayants)) {
-
-            String produitId = preenregistrementDetail.getLgFAMILLEID().getLgFAMILLEID();
-            clientTiersPayants.forEach(comptClient -> {
-                String tTiersPayantId = comptClient.getLgTIERSPAYANTID().getLgTIERSPAYANTID();
-                getByProduitIdAndTiersPayantId(produitId, tTiersPayantId).ifPresent(prixReference -> {
-                    preenregistrementDetail.getPrixReferenceVentes()
-                            .add(createPrixReferenceVente(preenregistrementDetail, produitId, prixReference,
-                                    comptClient.getLgCOMPTECLIENTTIERSPAYANTID()));
-
-                });
-
-            });
-        }
-
-    }
-
     private PrixReferenceVente createPrixReferenceVente(TPreenregistrementDetail preenregistrementDetail,
             String produitId, PrixReference prixReference, String compteClientTiersPayantId) {
         int unitPrice = computeUniPriceFromPrixReference(prixReference, preenregistrementDetail.getIntPRICEUNITAIR());
@@ -165,22 +142,6 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
             LOG.log(Level.SEVERE, "getActifByProduitIdAndTiersPayantIds", e);
             return List.of();
         }
-    }
-
-    @Override
-    public void updatePrixReference(TPreenregistrementDetail preenregistrementDetail) {
-        preenregistrementDetail.getPrixReferenceVentes().forEach(prixReferenceVente -> {
-            prixReferenceVente.setMontant(preenregistrementDetail.getIntQUANTITY() * prixReferenceVente.getPrixUni());
-            em.merge(prixReferenceVente);
-        });
-    }
-
-    @Override
-    public void removeTiersPayantFromVente(TPreenregistrement preenregistrement, String tierspayantId) {
-        preenregistrement.getTPreenregistrementDetailCollection().stream()
-                .flatMap(e -> e.getPrixReferenceVentes().stream())
-                .filter(prix -> prix.getCompteClientTiersPayantId().equals(tierspayantId)).forEach(em::remove);
-
     }
 
     private String buildInClose(Set<String> tiersPayantIds) {

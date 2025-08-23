@@ -5,29 +5,47 @@ import commonTasks.dto.MontantTp;
 import commonTasks.dto.SalesParams;
 import commonTasks.dto.TiersPayantParams;
 import dal.Caution;
-import dal.PrixReference;
 import dal.PrixReferenceType;
-import dal.PrixReferenceVente;
+import dal.Rate;
 import dal.TCompteClientTiersPayant;
 import dal.TFamille;
 import dal.TGrilleRemise;
 import dal.TPreenregistrement;
+import dal.TPreenregistrementCompteClientTiersPayent;
 import dal.TPreenregistrementDetail;
 import dal.TRemise;
 import dal.TTiersPayant;
+import dal.TTypeVente;
 import dal.TWorkflowRemiseArticle;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import rest.service.PrixReferenceService;
 import rest.service.SalesNetComputingService;
+import rest.service.calculation.TiersPayantCalculationService;
+import rest.service.calculation.dto.CalculationInput;
+import rest.service.calculation.dto.CalculationResult;
+import rest.service.calculation.dto.NatureVente;
+import rest.service.calculation.dto.SaleItemInput;
+import rest.service.calculation.dto.TiersPayantInput;
+import rest.service.calculation.dto.TiersPayantLineOutput;
+import rest.service.calculation.dto.TiersPayantPrixInput;
 import rest.service.dto.NetComputingDTO;
 import util.Constant;
 import util.NumberUtils;
@@ -43,6 +61,10 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
     @PersistenceContext(unitName = "JTA_UNIT")
     private EntityManager em;
+    @EJB
+    private PrixReferenceService prixReferenceService;
+    @EJB
+    private TiersPayantCalculationService tiersPayantCalculationService;
 
     /*
      * deduire le montant de reference à partir du tiers payant principal c-a-d celui qui le taux le plus grand sur la
@@ -306,7 +328,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         List<MontantTp> montantTps = new ArrayList<>();
         MontantAPaye aPaye = new MontantAPaye();
         for (TPreenregistrementDetail x : lstTPreenregistrementDetail) {
-            updateMontantTps(x, montantTps, aPaye);
+            // updateMontantTps(x, montantTps, aPaye);
             totalAmount += x.getIntPRICE();
             TFamille famille = x.getLgFAMILLEID();
             int remise = 0;
@@ -353,36 +375,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         aPaye.setMontantTva(montantTva);
         aPaye.setMontantTierspayants(montantTps);
         return aPaye;
-
-    }
-
-    private void updateMontantTps(TPreenregistrementDetail x, List<MontantTp> montantTps, MontantAPaye montantAPaye) {
-        List<PrixReferenceVente> prixReferenceVentes = x.getPrixReferenceVentes();
-        if (prixReferenceVentes.isEmpty()) {
-            montantAPaye.setTiersPayantBaseAmount(montantAPaye.getTiersPayantBaseAmount() + x.getIntPRICE());
-        } else {
-            montantAPaye.setTiersPayantBaseAmount(
-                    montantAPaye.getTiersPayantBaseAmount() + prixReferenceVentes.get(0).getMontant());// A revoir pour
-                                                                                                       // definir ce qui
-                                                                                                       // sera le
-                                                                                                       // montant de
-                                                                                                       // base: est-ce
-                                                                                                       // prendre le
-                                                                                                       // grand/petit ??
-            prixReferenceVentes.forEach(prix -> {
-                PrixReference prixReference = prix.getPrixReference();
-                montantAPaye.setType(prixReference.getType());
-                montantTps.stream()
-                        .filter(mt -> mt.getCompteClientTiersPayantId().equals(prix.getCompteClientTiersPayantId()))
-                        .findFirst()
-                        .ifPresentOrElse(tpPrix -> tpPrix.setMontant(tpPrix.getMontant() + prix.getMontant()), () -> {
-                            MontantTp mp = new MontantTp();
-                            mp.setMontant(prix.getMontant());
-                            mp.setCompteClientTiersPayantId(prix.getCompteClientTiersPayantId());
-                            montantTps.add(mp);
-                        });
-            });
-        }
 
     }
 
@@ -438,8 +430,8 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
     @Override
     public MontantAPaye computeVONet(SalesParams params, boolean asPlafondActivated) {
-
-        return calculAssuranceNet(params, asPlafondActivated);
+        return this.calcule(params);
+        // return calculAssuranceNet(params, asPlafondActivated);
 
     }
 
@@ -612,4 +604,146 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
         return montantAPaye;
     }
+
+    @Override
+    public MontantAPaye calcule(SalesParams params) {
+        TPreenregistrement op = em.find(TPreenregistrement.class, params.getVenteId());
+        boolean isCarnet = Constant.VENTE_AVEC_CARNET.equals(op.getLgTYPEVENTEID().getLgTYPEVENTEID());
+
+        TRemise remise = op.getRemise();
+        remise = remise != null ? remise : op.getClient().getRemise();
+        List<TPreenregistrementDetail> items = new ArrayList<>(op.getTPreenregistrementDetailCollection());
+        MontantAPaye montantAPaye = computeRemise(op, remise, items);
+        List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents = new ArrayList<>(
+                op.getTPreenregistrementCompteClientTiersPayentCollection());
+
+        if (isCarnet) {
+            TCompteClientTiersPayant tc = compteClientTiersPayents.get(0).getLgCOMPTECLIENTTIERSPAYANTID();
+            TTiersPayant tTiersPayant = tc.getLgTIERSPAYANTID();
+            if (tTiersPayant.hasCaution()) {
+                return calculNetAvecCaution(montantAPaye, op, params, tTiersPayant);
+            }
+
+        }
+
+        CalculationResult output = tiersPayantCalculationService
+                .calculate(buildCalculationInput(op, items, compteClientTiersPayents));
+
+        Map<String, List<TPreenregistrementCompteClientTiersPayent>> maps = compteClientTiersPayents.stream().collect(
+                Collectors.groupingBy(e -> e.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTTIERSPAYANTID()));
+
+        int totalPatientShare = output.getTotalPatientShare().intValue();
+        op.setIntCUSTPART(totalPatientShare);
+        // op.setPartTiersPayant(output.getTotalTiersPayant().intValue());
+        // op.setPartAssure(totalPatientShare);
+        // op.setAmountToBePaid(roundedAmount(totalPatientShare));
+
+        for (TiersPayantLineOutput lineResult : output.getTiersPayantLines()) {
+            TPreenregistrementCompteClientTiersPayent saleLine = maps.get(lineResult.getClientTiersPayantId()).get(0);
+
+            saleLine.setIntPRICE(lineResult.getMontant().intValue());
+            saleLine.setIntPERCENT(lineResult.getFinalTaux());
+            em.merge(saleLine);
+            TiersPayantParams tp = new TiersPayantParams();
+            tp.setTaux(saleLine.getIntPERCENT());
+            tp.setCompteTp(lineResult.getClientTiersPayantId());
+            tp.setNumBon(saleLine.getStrREFBON());
+            tp.setTpnet(saleLine.getIntPRICE());
+            montantAPaye.getTierspayants().add(tp);
+
+        }
+        for (TPreenregistrementDetail saleLine : items) {
+
+            output.getItemShares().stream()
+                    .filter(s -> s.getSaleLineId().equals(saleLine.getLgPREENREGISTREMENTDETAILID())).findFirst()
+                    .ifPresent(itemShare -> {
+                        saleLine.setCalculationBasePrice(itemShare.getCalculationBasePrice());
+                        em.merge(saleLine);
+                        itemShare.getRates().forEach(em::persist);
+                    });
+        }
+
+        em.merge(op);
+        montantAPaye.setMontantTp(output.getTotalTiersPayant().intValue());
+
+        montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
+        montantAPaye.setRestructuring(StringUtils.isNoneEmpty(output.getWarningMessage()));
+        montantAPaye.setMessage(output.getWarningMessage());
+
+        return montantAPaye;
+
+    }
+
+    private List<SaleItemInput> buildSaleItemInputs(List<TPreenregistrementDetail> items, CalculationInput input,
+            Set<String> tiersPayantIds, List<TiersPayantInput> tiersPayantInputs) {
+        return items.stream().map(sl -> {
+            SaleItemInput si = new SaleItemInput();
+            TFamille produit = sl.getLgFAMILLEID();
+            si.setSalesLineId(sl.getLgPREENREGISTREMENTDETAILID());
+            si.setTotalSalesAmount(BigDecimal.valueOf(sl.getIntPRICE()));
+            si.setQuantity(sl.getIntQUANTITY());
+            si.setRegularUnitPrice(BigDecimal.valueOf(sl.getIntPRICEUNITAIR()));
+            input.setTotalSalesAmount(Objects.requireNonNullElse(input.getTotalSalesAmount(), BigDecimal.ZERO)
+                    .add(si.getTotalSalesAmount()));
+            this.prixReferenceService.getActifByProduitIdAndTiersPayantIds(produit.getLgFAMILLEID(), tiersPayantIds)
+                    .forEach(prixRef -> tiersPayantInputs.forEach(cl -> {
+                        if (cl.getTiersPayantId().equals(prixRef.getTiersPayant().getLgTIERSPAYANTID())) {
+                            TiersPayantPrixInput pi = new TiersPayantPrixInput();
+                            pi.setCompteTiersPayantId(cl.getClientTiersPayantId());
+                            pi.setPrice(prixRef.getValeur());
+                            pi.setRate(prixRef.getValeurTaux());
+                            pi.setOptionPrixType(prixRef.getType());
+                            si.getPrixAssurances().add(pi);
+                        }
+
+                    }));
+            return si;
+        }).collect(Collectors.toList());
+    }
+
+    private CalculationInput buildCalculationInput(TPreenregistrement sale, List<TPreenregistrementDetail> items,
+            List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents) {
+        TTypeVente tTypeVente = sale.getLgTYPEVENTEID();
+        CalculationInput input = new CalculationInput();
+        input.setNatureVente(Constant.VENTE_ASSURANCE_ID.equals(tTypeVente.getLgTYPEVENTEID()) ? NatureVente.ASSURANCE
+                : NatureVente.CARNET);
+        input.setDiscountAmount(BigDecimal.valueOf(Objects.requireNonNullElse(sale.getIntPRICEREMISE(), 0)));
+
+        Set<String> tiersPayantIds = new HashSet<>();
+        List<TiersPayantInput> tiersPayantInputs = buildTiersPayantInputs(compteClientTiersPayents, tiersPayantIds);
+        input.setTiersPayants(tiersPayantInputs);
+
+        List<SaleItemInput> saleItemInputs = buildSaleItemInputs(items, input, tiersPayantIds, tiersPayantInputs);
+        input.setSaleItems(saleItemInputs);
+
+        return input;
+    }
+
+    private List<TiersPayantInput> buildTiersPayantInputs(
+            List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents, Set<String> tiersPayantIds) {
+        if (CollectionUtils.isEmpty(compteClientTiersPayents)) {
+            return Collections.emptyList();
+        }
+        return compteClientTiersPayents.stream().map(it -> {
+            TCompteClientTiersPayant ctp = it.getLgCOMPTECLIENTTIERSPAYANTID();
+            TiersPayantInput ti = new TiersPayantInput();
+            TTiersPayant tiersPayant = ctp.getLgTIERSPAYANTID();
+            tiersPayantIds.add(tiersPayant.getLgTIERSPAYANTID());
+            ti.setClientTiersPayantId(ctp.getLgCOMPTECLIENTTIERSPAYANTID());
+            ti.setTiersPayantId(tiersPayant.getLgTIERSPAYANTID());
+            ti.setTiersPayantFullName(tiersPayant.getStrFULLNAME());
+            ti.setTaux(ctp.getIntPOURCENTAGE() / 100.0f);
+            ti.setPriorite(ctp.getIntPRIORITY());
+            // Optional.ofNullable(tiersPayant.getDblPLAFONDCREDIT()).ifPresent(v ->
+            // ti.setPlafondConso(BigDecimal.valueOf(v))); // A voir sil faut ajouter les plafond sur la fiche du TP
+            Optional.ofNullable(ctp.getDbPLAFONDENCOURS()).ifPresent(v -> ti.setPlafondConso(BigDecimal.valueOf(v)));
+            Optional.ofNullable(ctp.getDbCONSOMMATIONMENSUELLE())
+                    .ifPresent(v -> ti.setConsoMensuelle(BigDecimal.valueOf(v)));
+            Optional.ofNullable(ctp.getDblPLAFOND())
+                    .ifPresent(v -> ti.setPlafondJournalierClient(BigDecimal.valueOf(v)));
+            return ti;
+        }).collect(Collectors.toList());
+
+    }
+
 }

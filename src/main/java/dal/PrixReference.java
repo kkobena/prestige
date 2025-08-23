@@ -132,14 +132,9 @@ public class PrixReference implements Serializable {
     }
 
     public float getTaux() {
-        if (type == PrixReferenceType.TAUX) {
-            return valeur / 100.0f;
-        } else if (type == PrixReferenceType.MIX_TAUX_PRIX) {
-            if (Objects.nonNull(valeurTaux)) {
-                return valeurTaux;
-            }
-
+        if (Objects.nonNull(valeurTaux)) {
+            return valeurTaux / 100.0f;
         }
-        return 0.0f;
+        return 1.0f;
     }
 }
