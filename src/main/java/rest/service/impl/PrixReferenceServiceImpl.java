@@ -1,10 +1,7 @@
 package rest.service.impl;
 
 import dal.PrixReference;
-import dal.PrixReferenceType;
-import dal.PrixReferenceVente;
 import dal.TFamille;
-import dal.TPreenregistrementDetail;
 import dal.TTiersPayant;
 import java.util.List;
 import java.util.Optional;
@@ -103,40 +100,13 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
         em.merge(prixReference);
     }
 
-    private PrixReferenceVente createPrixReferenceVente(TPreenregistrementDetail preenregistrementDetail,
-            String produitId, PrixReference prixReference, String compteClientTiersPayantId) {
-        int unitPrice = computeUniPriceFromPrixReference(prixReference, preenregistrementDetail.getIntPRICEUNITAIR());
-        PrixReferenceVente prixReferenceVente = new PrixReferenceVente();
-        prixReferenceVente.setPreenregistrementDetail(preenregistrementDetail);
-        prixReferenceVente.setPrixReference(prixReference);
-        prixReferenceVente.setProduitId(produitId);
-        prixReferenceVente.setCompteClientTiersPayantId(compteClientTiersPayantId);
-        prixReferenceVente.setPrixUni(unitPrice);
-        prixReferenceVente.setMontant(preenregistrementDetail.getIntQUANTITY() * unitPrice);
-
-        return prixReferenceVente;
-    }
-
-    private int computeUniPriceFromPrixReference(PrixReference prixReference, int incomingPrice) {
-        if (prixReference.getType() == PrixReferenceType.PRIX_REFERENCE) {
-            return prixReference.getValeur();
-
-        } else if (prixReference.getType() == PrixReferenceType.MIX_TAUX_PRIX) {
-            float montant = (prixReference.getValeur() * prixReference.getTaux()) / 100.0f;
-            return Math.round(montant);
-        }
-
-        return Math.round(incomingPrice * prixReference.getTaux());
-
-    }
-
     @Override
     public List<PrixReference> getActifByProduitIdAndTiersPayantIds(String produitId, Set<String> tiersPayantIds) {
         try {
             TypedQuery<PrixReference> t = em.createNamedQuery("PrixReference.findByProduitIdAndTiersPayantIds",
                     PrixReference.class);
             t.setParameter("produitId", produitId);
-            t.setParameter("tiersPayantIds", buildInClose(tiersPayantIds));
+            t.setParameter("tiersPayantIds", tiersPayantIds);
             return t.getResultList();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "getActifByProduitIdAndTiersPayantIds", e);
@@ -144,8 +114,4 @@ public class PrixReferenceServiceImpl implements PrixReferenceService {
         }
     }
 
-    private String buildInClose(Set<String> tiersPayantIds) {
-        return String.join(",", tiersPayantIds);
-
-    }
 }

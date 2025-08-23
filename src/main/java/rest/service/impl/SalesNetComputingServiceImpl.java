@@ -143,7 +143,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         int custPart = (montantVente - montantTotalTp) - op.getIntPRICEREMISE();
 
         op.setIntCUSTPART(custPart >= 0 ? custPart : 0);
-        op.setTypePriceOption(PrixReferenceType.TAUX);
         em.merge(op);
 
         montantAPaye.setRemise(op.getIntPRICEREMISE());
@@ -262,9 +261,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         }
 
         op.setIntCUSTPART(custPart);
-        if (Objects.nonNull(aPaye.getType())) {
-            op.setTypePriceOption(PrixReferenceType.PRIX_REFERENCE);
-        }
 
         em.merge(op);
 
@@ -569,7 +565,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         int custPart = (montantVente - montantTotalTp) - op.getIntPRICEREMISE();
 
         op.setIntCUSTPART(custPart >= 0 ? custPart : 0);
-        op.setTypePriceOption(PrixReferenceType.TAUX);
         em.merge(op);
 
         montantAPaye.setRemise(op.getIntPRICEREMISE());
@@ -625,24 +620,27 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             }
 
         }
-
-        CalculationResult output = tiersPayantCalculationService
-                .calculate(buildCalculationInput(op, items, compteClientTiersPayents));
+        CalculationInput input = buildCalculationInput(op, items, compteClientTiersPayents);
+        input.setDiscountAmount(BigDecimal.valueOf(Objects.requireNonNullElse(montantAPaye.getMontantAccount(), 0)));
+        CalculationResult output = tiersPayantCalculationService.calculate(input);
 
         Map<String, List<TPreenregistrementCompteClientTiersPayent>> maps = compteClientTiersPayents.stream().collect(
                 Collectors.groupingBy(e -> e.getLgCOMPTECLIENTTIERSPAYANTID().getLgCOMPTECLIENTTIERSPAYANTID()));
 
         int totalPatientShare = output.getTotalPatientShare().intValue();
         op.setIntCUSTPART(totalPatientShare);
-        // op.setPartTiersPayant(output.getTotalTiersPayant().intValue());
-        // op.setPartAssure(totalPatientShare);
-        // op.setAmountToBePaid(roundedAmount(totalPatientShare));
 
         for (TiersPayantLineOutput lineResult : output.getTiersPayantLines()) {
             TPreenregistrementCompteClientTiersPayent saleLine = maps.get(lineResult.getClientTiersPayantId()).get(0);
 
+            if (output.isHasPriceOption()) {
+                TCompteClientTiersPayant tcctp = saleLine.getLgCOMPTECLIENTTIERSPAYANTID();
+                saleLine.setIntPERCENT(tcctp.getIntPOURCENTAGE());
+            } else {
+                saleLine.setIntPERCENT(lineResult.getFinalTaux());
+            }
             saleLine.setIntPRICE(lineResult.getMontant().intValue());
-            saleLine.setIntPERCENT(lineResult.getFinalTaux());
+
             em.merge(saleLine);
             TiersPayantParams tp = new TiersPayantParams();
             tp.setTaux(saleLine.getIntPERCENT());
@@ -662,13 +660,14 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
                         itemShare.getRates().forEach(em::persist);
                     });
         }
-
+        op.setHasPriceOption(output.isHasPriceOption());
         em.merge(op);
         montantAPaye.setMontantTp(output.getTotalTiersPayant().intValue());
 
         montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
         montantAPaye.setRestructuring(StringUtils.isNoneEmpty(output.getWarningMessage()));
         montantAPaye.setMessage(output.getWarningMessage());
+        System.err.println("output " + output);
 
         return montantAPaye;
 
@@ -676,27 +675,38 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
     private List<SaleItemInput> buildSaleItemInputs(List<TPreenregistrementDetail> items, CalculationInput input,
             Set<String> tiersPayantIds, List<TiersPayantInput> tiersPayantInputs) {
+
         return items.stream().map(sl -> {
             SaleItemInput si = new SaleItemInput();
             TFamille produit = sl.getLgFAMILLEID();
             si.setSalesLineId(sl.getLgPREENREGISTREMENTDETAILID());
             si.setTotalSalesAmount(BigDecimal.valueOf(sl.getIntPRICE()));
             si.setQuantity(sl.getIntQUANTITY());
+            si.setDiscountAmount(BigDecimal.valueOf(Objects.requireNonNullElse(sl.getIntPRICEREMISE(), 0)));
             si.setRegularUnitPrice(BigDecimal.valueOf(sl.getIntPRICEUNITAIR()));
             input.setTotalSalesAmount(Objects.requireNonNullElse(input.getTotalSalesAmount(), BigDecimal.ZERO)
                     .add(si.getTotalSalesAmount()));
             this.prixReferenceService.getActifByProduitIdAndTiersPayantIds(produit.getLgFAMILLEID(), tiersPayantIds)
-                    .forEach(prixRef -> tiersPayantInputs.forEach(cl -> {
-                        if (cl.getTiersPayantId().equals(prixRef.getTiersPayant().getLgTIERSPAYANTID())) {
-                            TiersPayantPrixInput pi = new TiersPayantPrixInput();
-                            pi.setCompteTiersPayantId(cl.getClientTiersPayantId());
-                            pi.setPrice(prixRef.getValeur());
-                            pi.setRate(prixRef.getValeurTaux());
-                            pi.setOptionPrixType(prixRef.getType());
-                            si.getPrixAssurances().add(pi);
-                        }
+                    .forEach(prixRef -> {
+                        TTiersPayant pt = prixRef.getTiersPayant();
+                        tiersPayantInputs.forEach(cl -> {
+                            if (cl.getTiersPayantId().equals(pt.getLgTIERSPAYANTID())) {
+                                TiersPayantPrixInput pi = new TiersPayantPrixInput();
+                                pi.setCompteTiersPayantId(cl.getClientTiersPayantId());
+                                pi.setPrice(prixRef.getValeur());
+                                if (Objects.isNull(prixRef.getValeurTaux())) {
+                                    pi.setRate(100.0f);
+                                } else {
+                                    pi.setRate(prixRef.getValeurTaux());
+                                }
 
-                    }));
+                                pi.setOptionPrixType(prixRef.getType());
+                                si.getPrixAssurances().add(pi);
+                            }
+
+                        });
+
+                    });
             return si;
         }).collect(Collectors.toList());
     }
@@ -712,9 +722,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         Set<String> tiersPayantIds = new HashSet<>();
         List<TiersPayantInput> tiersPayantInputs = buildTiersPayantInputs(compteClientTiersPayents, tiersPayantIds);
         input.setTiersPayants(tiersPayantInputs);
-
-        List<SaleItemInput> saleItemInputs = buildSaleItemInputs(items, input, tiersPayantIds, tiersPayantInputs);
-        input.setSaleItems(saleItemInputs);
+        input.setSaleItems(buildSaleItemInputs(items, input, tiersPayantIds, tiersPayantInputs));
 
         return input;
     }

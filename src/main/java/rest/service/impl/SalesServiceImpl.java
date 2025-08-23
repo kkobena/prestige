@@ -1255,7 +1255,7 @@ public class SalesServiceImpl implements SalesService {
                 if (tpd.getBoolACCOUNT()) {
                     tp.setIntACCOUNT(tp.getIntPRICE());
                 }
-                updatePrixReference(tpd);
+
                 emg.merge(tpd);
                 afficheurProduit(tpd.getLgFAMILLEID().getStrNAME(), tpd.getIntQUANTITY(), tpd.getIntPRICEUNITAIR(),
                         tpd.getIntPRICE());
@@ -1266,7 +1266,7 @@ public class SalesServiceImpl implements SalesService {
                 }
                 TPreenregistrementDetail dp = addPreenregistrementItem(tp, famille, params.getQte(),
                         params.getQteServie(), params.getQteUg(), params.getItemPu());
-                updatePrixReference(dp, params.getTierspayants());
+
                 emg.persist(dp);
                 afficheurProduit(dp.getLgFAMILLEID().getStrNAME(), dp.getIntQUANTITY(), dp.getIntPRICEUNITAIR(),
                         dp.getIntPRICE());
@@ -1346,7 +1346,7 @@ public class SalesServiceImpl implements SalesService {
             if (detail.getBoolACCOUNT()) {
                 tp.setIntACCOUNT(tp.getIntACCOUNT() + (detail.getIntPRICE() - oldPrice));
             }
-            updatePrixReference(detail);
+
             emg.merge(tp);
             emg.merge(detail);
             JSONObject data = new JSONObject();
@@ -4630,7 +4630,6 @@ public class SalesServiceImpl implements SalesService {
 
         TPreenregistrementDetail dt = addPreenregistrementItem(op, tf, salesParams.getQte(), salesParams.getQteServie(),
                 salesParams.getQteUg(), salesParams.getItemPu());
-        updatePrixReference(dt, salesParams.getTierspayants());
         return Pair.of(op, dt);
     }
 
@@ -4686,15 +4685,6 @@ public class SalesServiceImpl implements SalesService {
         preenregistrement.setStrLASTNAMECUSTOMER(tc.getStrLASTNAME());
         preenregistrement.setStrPHONECUSTOME(tc.getStrADRESSE());
         em.merge(preenregistrement);
-    }
-
-    private void updatePrixReference(TPreenregistrementDetail preenregistrementDetail,
-            List<TiersPayantParams> tierspayants) {
-
-    }
-
-    private void updatePrixReference(TPreenregistrementDetail preenregistrementDetail) {
-
     }
 
 }

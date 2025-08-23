@@ -239,10 +239,8 @@ public class VenteRessource {
             @QueryParam(value = "statut") String statut) throws JSONException {
         HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
+        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
+        
         QueryDTO body = new QueryDTO();
         body.setLimit(limit);
         body.setStart(start);

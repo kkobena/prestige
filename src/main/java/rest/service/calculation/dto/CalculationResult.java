@@ -77,4 +77,17 @@ public class CalculationResult {
     public void setTotalSaleAmount(BigDecimal totalSaleAmount) {
         this.totalSaleAmount = totalSaleAmount;
     }
+
+    public boolean isHasPriceOption() {
+        return itemShares.stream().anyMatch(CalculatedShare::isHasPriceOption);
+    }
+
+    @Override
+    public String toString() {
+        return "CalculationResult{" + "itemShares=" + itemShares + ", totalRoShare=" + totalRoShare
+                + ", totalTiersPayant=" + totalTiersPayant + ", totalPatientShare=" + totalPatientShare
+                + ", totalSaleAmount=" + totalSaleAmount + ", discountAmount=" + discountAmount + ", tiersPayantLines="
+                + tiersPayantLines + ", warningMessage=" + warningMessage + '}';
+    }
+
 }

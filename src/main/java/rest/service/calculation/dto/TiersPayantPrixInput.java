@@ -39,4 +39,11 @@ public class TiersPayantPrixInput {
     public void setOptionPrixType(PrixReferenceType optionPrixType) {
         this.optionPrixType = optionPrixType;
     }
+
+    @Override
+    public String toString() {
+        return "TiersPayantPrixInput{" + "price=" + price + ", optionPrixType=" + optionPrixType + ", rate=" + rate
+                + ", compteTiersPayantId=" + compteTiersPayantId + '}';
+    }
+
 }

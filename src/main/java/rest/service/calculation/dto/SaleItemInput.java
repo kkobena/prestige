@@ -60,4 +60,12 @@ public class SaleItemInput {
     public void setPrixAssurances(List<TiersPayantPrixInput> prixAssurances) {
         this.prixAssurances = prixAssurances;
     }
+
+    @Override
+    public String toString() {
+        return "SaleItemInput{" + "salesLineId=" + salesLineId + ", quantity=" + quantity + ", regularUnitPrice="
+                + regularUnitPrice + ", discountAmount=" + discountAmount + ", prixAssurances=" + prixAssurances
+                + ", totalSalesAmount=" + totalSalesAmount + '}';
+    }
+
 }

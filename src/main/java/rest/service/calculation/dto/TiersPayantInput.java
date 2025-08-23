@@ -1,6 +1,7 @@
 package rest.service.calculation.dto;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class TiersPayantInput {
 
@@ -42,7 +43,12 @@ public class TiersPayantInput {
     }
 
     public void setPlafondConso(BigDecimal plafondConso) {
-        this.plafondConso = plafondConso;
+        if (Objects.nonNull(plafondConso)) {
+            this.plafondConso = plafondConso.max(BigDecimal.ZERO);
+        } else {
+            this.plafondConso = plafondConso;
+        }
+
     }
 
     public BigDecimal getConsoMensuelle() {
@@ -50,7 +56,12 @@ public class TiersPayantInput {
     }
 
     public void setConsoMensuelle(BigDecimal consoMensuelle) {
-        this.consoMensuelle = consoMensuelle;
+
+        if (Objects.nonNull(consoMensuelle)) {
+            this.consoMensuelle = consoMensuelle.max(BigDecimal.ZERO);
+        } else {
+            this.consoMensuelle = consoMensuelle;
+        }
     }
 
     public BigDecimal getPlafondJournalierClient() {
@@ -58,7 +69,13 @@ public class TiersPayantInput {
     }
 
     public void setPlafondJournalierClient(BigDecimal plafondJournalierClient) {
-        this.plafondJournalierClient = plafondJournalierClient;
+
+        if (Objects.nonNull(plafondJournalierClient)) {
+            this.plafondJournalierClient = plafondJournalierClient.max(BigDecimal.ZERO);
+        } else {
+            this.plafondJournalierClient = plafondJournalierClient;
+        }
+
     }
 
     public String getTiersPayantId() {
@@ -75,6 +92,14 @@ public class TiersPayantInput {
 
     public void setPriorite(int priorite) {
         this.priorite = priorite;
+    }
+
+    @Override
+    public String toString() {
+        return "TiersPayantInput{" + "clientTiersPayantId=" + clientTiersPayantId + ", tiersPayantId=" + tiersPayantId
+                + ", tiersPayantFullName=" + tiersPayantFullName + ", taux=" + taux + ", plafondConso=" + plafondConso
+                + ", consoMensuelle=" + consoMensuelle + ", plafondJournalierClient=" + plafondJournalierClient
+                + ", priorite=" + priorite + '}';
     }
 
 }

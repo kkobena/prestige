@@ -6,14 +6,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import org.apache.commons.collections4.CollectionUtils;
 
 public class CalculatedShare {
+
     private BigDecimal pharmacyPrice;
     private BigDecimal totalPrice = BigDecimal.ZERO;
     private Integer calculationBasePrice;
-    private double roShare;
+
     private Map<String, BigDecimal> tiersPayants = new HashMap<>();
-    private BigDecimal patientShare;
+
     private BigDecimal totalReimbursedAmount = BigDecimal.ZERO;
     private BigDecimal discountAmount = BigDecimal.ZERO;
     private List<Rate> rates = new ArrayList<>();
@@ -29,6 +32,11 @@ public class CalculatedShare {
 
     public List<Rate> getRates() {
         return rates;
+    }
+
+    public boolean isHasPriceOption() {
+
+        return !CollectionUtils.isNotEmpty(rates) || Objects.nonNull(calculationBasePrice);
     }
 
     public void setRates(List<Rate> rates) {
@@ -59,28 +67,12 @@ public class CalculatedShare {
         this.calculationBasePrice = calculationBasePrice;
     }
 
-    public double getRoShare() {
-        return roShare;
-    }
-
-    public void setRoShare(double roShare) {
-        this.roShare = roShare;
-    }
-
     public Map<String, BigDecimal> getTiersPayants() {
         return tiersPayants;
     }
 
     public void setTiersPayants(Map<String, BigDecimal> tiersPayants) {
         this.tiersPayants = tiersPayants;
-    }
-
-    public BigDecimal getPatientShare() {
-        return patientShare;
-    }
-
-    public void setPatientShare(BigDecimal patientShare) {
-        this.patientShare = patientShare;
     }
 
     public BigDecimal getTotalReimbursedAmount() {
@@ -98,4 +90,13 @@ public class CalculatedShare {
     public void setTotalReimbursedAmount(BigDecimal totalReimbursedAmount) {
         this.totalReimbursedAmount = totalReimbursedAmount;
     }
+
+    @Override
+    public String toString() {
+        return "CalculatedShare{" + "pharmacyPrice=" + pharmacyPrice + ", totalPrice=" + totalPrice
+                + ", calculationBasePrice=" + calculationBasePrice + ", tiersPayants=" + tiersPayants
+                + ", totalReimbursedAmount=" + totalReimbursedAmount + ", discountAmount=" + discountAmount + ", rates="
+                + rates + ", saleLineId=" + saleLineId + '}';
+    }
+
 }
