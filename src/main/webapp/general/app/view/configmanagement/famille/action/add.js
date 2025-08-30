@@ -928,7 +928,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
         };
         this._g = g;
 
-        if (Omode === "update" && bool_DECONDITIONNE == "1") {
+        if (Omode === "update" && bool_DECONDITIONNE === "1") {
             var assoc = g('associate');
             if (assoc) assoc.hide();
         }
@@ -995,7 +995,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
             g('bool_RESERVE').setValue(this.getOdatasource().bool_RESERVE);
             g('dt_Peremtion_new').setValue(this.getOdatasource().dt_Peremtion);
 
-            if (this.getOdatasource().bool_RESERVE == "true") {
+            if (this.getOdatasource().bool_RESERVE === "true") {
                 var dfReserve = g('int_RESERVE');
                 var seuil = g('int_SEUIL_RESERVE');
                 if (seuil) {
@@ -1016,7 +1016,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 callback: function(records) {
                     Ext.each(records, function(item) {
                         let rec = item.data;
-                        if (rec.id == gammeId) {
+                        if (rec.id === gammeId) {
                             g('gammeId').setValue(rec.id);
                             return false;
                         }
@@ -1027,7 +1027,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 callback: function(records) {
                     Ext.each(records, function(item) {
                         let rec = item.data;
-                        if (rec.id == laboratoireId) {
+                        if (rec.id === laboratoireId) {
                             g('laboratoireId').setValue(rec.id);
                             return false;
                         }
@@ -1037,7 +1037,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
         }
 
         const isDeconditionCreate = (Omode === "decondition");
-        const isUpdateDeconditioned = (Omode === "update" && this.getOdatasource() && this.getOdatasource().bool_DECONDITIONNE == 1);
+        const isUpdateDeconditioned = (Omode === "update" && this.getOdatasource() && this.getOdatasource().bool_DECONDITIONNE === 1);
         this.isDetailContext = (isDeconditionCreate || isUpdateDeconditioned);
         this.setQtyDetailState(this.isDetailContext);
 
@@ -1176,7 +1176,7 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                 success: function(response) {
                     testextjs.app.getController('App').StopWaitingProcess();
                     var object = Ext.JSON.decode(response.responseText, false);
-                    if (object.success == "0") {
+                    if (object.success === "0") {
                         Ext.MessageBox.show({
                             title: 'Message d\'erreur',
                             width: 320,
@@ -1188,10 +1188,10 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                         win.close();
                         Ext.MessageBox.alert('Confirmation', object.errors, function() {
                             if (Omode === "create" || Omode === "update" || Omode === "decondition") {
-                                if (type == "famillemanager") {
+                                if (type === "famillemanager") {
                                     Me_Workflow = Oview;
                                     Me_Workflow.onRechClick();
-                                } else if (type == "commande") {
+                                } else if (type === "commande") {
                                     Ext.getCmp('lgFAMILLEID').setValue(str_DESCRIPTION);
                                     Ext.getCmp('lgFAMILLEID').getStore().reload();
                                 }
@@ -1366,10 +1366,10 @@ Ext.define('testextjs.view.configmanagement.famille.action.add', {
                     win.close();
                     Ext.MessageBox.alert('Confirmation', "Opération effectuée avec succès", function() {
                         if (mode === "create" || mode === "update" || mode === "decondition") {
-                            if (type == "famillemanager") {
+                            if (type === "famillemanager") {
                                 Me_Workflow = view;
                                 Me_Workflow.onRechClick();
-                            } else if (type == "commande") {
+                            } else if (type === "commande") {
                                 Ext.getCmp('lgFAMILLEID').setValue(strDescription);
                                 Ext.getCmp('lgFAMILLEID').getStore().reload();
                             }
