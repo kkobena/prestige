@@ -1,9 +1,6 @@
 package rest.service;
 
 import dal.PrixReference;
-import dal.TCompteClientTiersPayant;
-import dal.TPreenregistrement;
-import dal.TPreenregistrementDetail;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;

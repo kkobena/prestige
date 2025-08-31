@@ -599,6 +599,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     text: 'P.REF',
                                     xtype: 'numbercolumn',
                                     flex: 1,
+                                    hidden:true,
                                     sortable: true,
                                     dataIndex: 'calculationBasePrice',
                                     format: '0,000.',

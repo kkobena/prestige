@@ -240,7 +240,7 @@ public class VenteRessource {
         HttpSession hs = servletRequest.getSession();
 
         TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
-        
+
         QueryDTO body = new QueryDTO();
         body.setLimit(limit);
         body.setStart(start);
