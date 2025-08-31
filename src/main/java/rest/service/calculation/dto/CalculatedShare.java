@@ -36,7 +36,7 @@ public class CalculatedShare {
 
     public boolean isHasPriceOption() {
 
-        return !CollectionUtils.isNotEmpty(rates) || Objects.nonNull(calculationBasePrice);
+        return CollectionUtils.isNotEmpty(rates) || Objects.nonNull(calculationBasePrice);
     }
 
     public void setRates(List<Rate> rates) {

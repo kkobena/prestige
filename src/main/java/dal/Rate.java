@@ -64,4 +64,10 @@ public class Rate implements Serializable {
         this.saleIemId = saleIemId;
     }
 
+    @Override
+    public String toString() {
+        return "Rate{" + "id=" + id + ", compteTiersPayantId=" + compteTiersPayantId + ", saleIemId=" + saleIemId
+                + ", taux=" + taux + '}';
+    }
+
 }

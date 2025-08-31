@@ -620,7 +620,9 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
             }
 
         }
-        CalculationInput input = buildCalculationInput(op, items, compteClientTiersPayents);
+        Map<String, List<TiersPayantParams>> tpsBons = params.getTierspayants().stream()
+                .collect(Collectors.groupingBy(TiersPayantParams::getCompteTp));
+        CalculationInput input = buildCalculationInput(op, items, compteClientTiersPayents, tpsBons);
         input.setDiscountAmount(BigDecimal.valueOf(Objects.requireNonNullElse(montantAPaye.getMontantAccount(), 0)));
         CalculationResult output = tiersPayantCalculationService.calculate(input);
 
@@ -640,6 +642,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
                 saleLine.setIntPERCENT(lineResult.getFinalTaux());
             }
             saleLine.setIntPRICE(lineResult.getMontant().intValue());
+            saleLine.setStrREFBON(lineResult.getNumBon());
 
             em.merge(saleLine);
             TiersPayantParams tp = new TiersPayantParams();
@@ -667,7 +670,6 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
         montantAPaye.setRestructuring(StringUtils.isNoneEmpty(output.getWarningMessage()));
         montantAPaye.setMessage(output.getWarningMessage());
-        System.err.println("output " + output);
 
         return montantAPaye;
 
@@ -688,6 +690,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
                     .add(si.getTotalSalesAmount()));
             this.prixReferenceService.getActifByProduitIdAndTiersPayantIds(produit.getLgFAMILLEID(), tiersPayantIds)
                     .forEach(prixRef -> {
+
                         TTiersPayant pt = prixRef.getTiersPayant();
                         tiersPayantInputs.forEach(cl -> {
                             if (cl.getTiersPayantId().equals(pt.getLgTIERSPAYANTID())) {
@@ -707,12 +710,14 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
                         });
 
                     });
+
             return si;
         }).collect(Collectors.toList());
     }
 
     private CalculationInput buildCalculationInput(TPreenregistrement sale, List<TPreenregistrementDetail> items,
-            List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents) {
+            List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents,
+            Map<String, List<TiersPayantParams>> tpsBons) {
         TTypeVente tTypeVente = sale.getLgTYPEVENTEID();
         CalculationInput input = new CalculationInput();
         input.setNatureVente(Constant.VENTE_ASSURANCE_ID.equals(tTypeVente.getLgTYPEVENTEID()) ? NatureVente.ASSURANCE
@@ -720,7 +725,8 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         input.setDiscountAmount(BigDecimal.valueOf(Objects.requireNonNullElse(sale.getIntPRICEREMISE(), 0)));
 
         Set<String> tiersPayantIds = new HashSet<>();
-        List<TiersPayantInput> tiersPayantInputs = buildTiersPayantInputs(compteClientTiersPayents, tiersPayantIds);
+        List<TiersPayantInput> tiersPayantInputs = buildTiersPayantInputs(compteClientTiersPayents, tiersPayantIds,
+                tpsBons);
         input.setTiersPayants(tiersPayantInputs);
         input.setSaleItems(buildSaleItemInputs(items, input, tiersPayantIds, tiersPayantInputs));
 
@@ -728,19 +734,28 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
     }
 
     private List<TiersPayantInput> buildTiersPayantInputs(
-            List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents, Set<String> tiersPayantIds) {
+            List<TPreenregistrementCompteClientTiersPayent> compteClientTiersPayents, Set<String> tiersPayantIds,
+            Map<String, List<TiersPayantParams>> tpsBons) {
         if (CollectionUtils.isEmpty(compteClientTiersPayents)) {
             return Collections.emptyList();
         }
         return compteClientTiersPayents.stream().map(it -> {
             TCompteClientTiersPayant ctp = it.getLgCOMPTECLIENTTIERSPAYANTID();
+            TiersPayantParams tiersPayantParams = tpsBons.get(ctp.getLgCOMPTECLIENTTIERSPAYANTID()).get(0);
             TiersPayantInput ti = new TiersPayantInput();
             TTiersPayant tiersPayant = ctp.getLgTIERSPAYANTID();
             tiersPayantIds.add(tiersPayant.getLgTIERSPAYANTID());
             ti.setClientTiersPayantId(ctp.getLgCOMPTECLIENTTIERSPAYANTID());
             ti.setTiersPayantId(tiersPayant.getLgTIERSPAYANTID());
             ti.setTiersPayantFullName(tiersPayant.getStrFULLNAME());
-            ti.setTaux(ctp.getIntPOURCENTAGE() / 100.0f);
+            // ti.setTaux(ctp.getIntPOURCENTAGE() / 100.0f);// apres les retours de franck, on prends le taux sais du
+            // front
+            if (Objects.nonNull(it.getIntPERCENT())) {
+                ti.setTaux(it.getIntPERCENT() / 100.0f);
+            } else {
+                ti.setTaux(tiersPayantParams.getTaux() / 100.0f);
+            }
+            ti.setNumBon(tiersPayantParams.getNumBon());
             ti.setPriorite(ctp.getIntPRIORITY());
             // Optional.ofNullable(tiersPayant.getDblPLAFONDCREDIT()).ifPresent(v ->
             // ti.setPlafondConso(BigDecimal.valueOf(v))); // A voir sil faut ajouter les plafond sur la fiche du TP

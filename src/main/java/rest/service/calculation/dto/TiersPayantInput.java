@@ -7,6 +7,7 @@ public class TiersPayantInput {
 
     private String clientTiersPayantId;
     private String tiersPayantId;
+    private String numBon;
     private String tiersPayantFullName;
     private float taux;
     private BigDecimal plafondConso;
@@ -32,6 +33,14 @@ public class TiersPayantInput {
 
     public float getTaux() {
         return taux;
+    }
+
+    public String getNumBon() {
+        return numBon;
+    }
+
+    public void setNumBon(String numBon) {
+        this.numBon = numBon;
     }
 
     public void setTaux(float taux) {

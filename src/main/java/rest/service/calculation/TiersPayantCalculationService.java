@@ -30,7 +30,7 @@ public class TiersPayantCalculationService {
             return calculationResult;
         }
         BigDecimal totalAmountAssurance = BigDecimal.ZERO;
-        // BigDecimal itemPartAssure = BigDecimal.ZERO;
+
         BigDecimal discountAmount = BigDecimal.ZERO;
         Map<String, BigDecimal> tiersPayants = new HashMap<>();
         for (SaleItemInput saleItemInput : input.getSaleItems()) {
@@ -52,13 +52,16 @@ public class TiersPayantCalculationService {
             BigDecimal remainingAmountForTps = tiersPayants.getOrDefault(tpInput.getClientTiersPayantId(),
                     BigDecimal.ZERO);
             remainingAmountForTps = remainingAmountForTps.setScale(0, RoundingMode.HALF_UP);
+
             BigDecimal actualShare = applyCeilings(remainingAmountForTps, tpInput, warnings);
+
             totalAmountAssurance = totalAmountAssurance.add(actualShare).subtract(remainingAmountForTps);
             totalAmountAssurance = totalAmountAssurance.setScale(0, RoundingMode.HALF_UP);
             TiersPayantLineOutput lineOutput = new TiersPayantLineOutput();
             lineOutput.setClientTiersPayantId(tpInput.getClientTiersPayantId());
             lineOutput.setMontant(actualShare);
             lineOutput.setFinalTaux(calculateFinalTaux(actualShare, calculationResult.getTotalSaleAmount()));
+            lineOutput.setNumBon(tpInput.getNumBon());
             lineOutputs.add(lineOutput);
         }
         calculationResult.setTotalTiersPayant(totalAmountAssurance);
@@ -128,11 +131,12 @@ public class TiersPayantCalculationService {
         int prixReference = saleItem.getPrixAssurances().stream()
                 .filter(p -> p.getOptionPrixType() != PrixReferenceType.TAUX).mapToInt(TiersPayantPrixInput::getPrice)
                 .min().orElse(0);
+        boolean hasPrixReference = prixReference > 0;
         boolean hasOptionPrix = !saleItem.getPrixAssurances().isEmpty();
-        BigDecimal calculationBaseUni = prixReference > 0 ? BigDecimal.valueOf(prixReference)
+        BigDecimal calculationBaseUni = hasPrixReference ? BigDecimal.valueOf(prixReference)
                 : itemShare.getPharmacyPrice();
         BigDecimal calculationBase = calculationBaseUni.multiply(BigDecimal.valueOf(saleItem.getQuantity()));
-        itemShare.setCalculationBasePrice(calculationBaseUni.intValue());
+        itemShare.setCalculationBasePrice(hasPrixReference ? calculationBaseUni.intValue() : null);
         for (TiersPayantInput tiersPayantInput : tiersPayantInputs) {
 
             float rate = tiersPayantInput.getTaux();
@@ -153,7 +157,9 @@ public class TiersPayantCalculationService {
             if (remainingAmountForTps.compareTo(BigDecimal.ZERO) <= 0) {
                 break;
             }
+
             BigDecimal actualShare = calculationBase.multiply(BigDecimal.valueOf(rate));
+
             if (rate == 1.0f && natureVente == NatureVente.ASSURANCE) { // formulle confort
                 remainingAmountForTps = saleItem.getTotalSalesAmount().subtract(totalPartTiersPayant);
                 actualShare = BigDecimal.ZERO.max(remainingAmountForTps);
@@ -162,10 +168,10 @@ public class TiersPayantCalculationService {
             }
 
             totalPartTiersPayant = totalPartTiersPayant.add(actualShare);
+
             itemShare.getTiersPayants().put(tiersPayantInput.getClientTiersPayantId(), actualShare);
         }
         itemShare.setTotalReimbursedAmount(totalPartTiersPayant);
-        // calculatePatientShare(itemShare);
 
         return itemShare;
     }
