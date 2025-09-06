@@ -1946,11 +1946,6 @@ public class factureManagement extends bll.bllBase {
                 return q.getResultList();
             }
 
-            /*
-             * for (TFacture OFacture : lstTFacture) { this.refresh(OFacture);
-             *
-             * }
-             */
         } catch (Exception e) {
             e.printStackTrace();
         }
