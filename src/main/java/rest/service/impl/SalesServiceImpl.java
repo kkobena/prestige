@@ -770,16 +770,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     private void clonePrixReferenceVente(TPreenregistrementDetail tp, TPreenregistrementDetail newItem) {
-        tp.getPrixReferenceVentes().forEach(prixReference -> {
-            PrixReferenceVente prv = new PrixReferenceVente();
-            prv.setCompteClientTiersPayantId(prixReference.getCompteClientTiersPayantId());
-            prv.setMontant(prixReference.getMontant());
-            prv.setPrixUni(prixReference.getPrixUni());
-            prv.setProduitId(prixReference.getProduitId());
-            prv.setPrixReference(prixReference.getPrixReference());
-            prv.setPreenregistrementDetail(newItem);
-            newItem.getPrixReferenceVentes().add(prv);
-        });
+
     }
 
     public void copyPreenregistrementCompteTp(TPreenregistrement preenregistrement, String oldPreenregistrement,
@@ -1264,7 +1255,7 @@ public class SalesServiceImpl implements SalesService {
                 if (tpd.getBoolACCOUNT()) {
                     tp.setIntACCOUNT(tp.getIntPRICE());
                 }
-                updatePrixReference(tpd);
+
                 emg.merge(tpd);
                 afficheurProduit(tpd.getLgFAMILLEID().getStrNAME(), tpd.getIntQUANTITY(), tpd.getIntPRICEUNITAIR(),
                         tpd.getIntPRICE());
@@ -1275,7 +1266,7 @@ public class SalesServiceImpl implements SalesService {
                 }
                 TPreenregistrementDetail dp = addPreenregistrementItem(tp, famille, params.getQte(),
                         params.getQteServie(), params.getQteUg(), params.getItemPu());
-                updatePrixReference(dp, params.getTierspayants());
+
                 emg.persist(dp);
                 afficheurProduit(dp.getLgFAMILLEID().getStrNAME(), dp.getIntQUANTITY(), dp.getIntPRICEUNITAIR(),
                         dp.getIntPRICE());
@@ -1355,7 +1346,7 @@ public class SalesServiceImpl implements SalesService {
             if (detail.getBoolACCOUNT()) {
                 tp.setIntACCOUNT(tp.getIntACCOUNT() + (detail.getIntPRICE() - oldPrice));
             }
-            updatePrixReference(detail);
+
             emg.merge(tp);
             emg.merge(detail);
             JSONObject data = new JSONObject();
@@ -2363,8 +2354,7 @@ public class SalesServiceImpl implements SalesService {
                     .setParameter(1, params.getTierspayants().get(0).getCompteTp()).setParameter(2, params.getVenteId())
                     .getSingleResult();
             emg.remove(op);
-            prixReferenceService.removeTiersPayantFromVente(op.getLgPREENREGISTREMENTID(),
-                    op.getLgCOMPTECLIENTTIERSPAYANTID().getLgTIERSPAYANTID().getLgTIERSPAYANTID());
+
             json.put("success", true).put("msg", "Opération effectuée avec success");
         } catch (Exception e) {
 
@@ -4640,7 +4630,6 @@ public class SalesServiceImpl implements SalesService {
 
         TPreenregistrementDetail dt = addPreenregistrementItem(op, tf, salesParams.getQte(), salesParams.getQteServie(),
                 salesParams.getQteUg(), salesParams.getItemPu());
-        updatePrixReference(dt, salesParams.getTierspayants());
         return Pair.of(op, dt);
     }
 
@@ -4698,28 +4687,4 @@ public class SalesServiceImpl implements SalesService {
         em.merge(preenregistrement);
     }
 
-    private void updatePrixReference(TPreenregistrementDetail preenregistrementDetail,
-            List<TiersPayantParams> tierspayants) {
-        if (CollectionUtils.isNotEmpty(tierspayants)) {
-            this.prixReferenceService.updatePrixReference(preenregistrementDetail, getCompteClientTiersPayantsByIds(
-                    tierspayants.stream().map(TiersPayantParams::getCompteTp).distinct().collect(Collectors.toSet())));
-        }
-    }
-
-    private void updatePrixReference(TPreenregistrementDetail preenregistrementDetail) {
-        this.prixReferenceService.updatePrixReference(preenregistrementDetail);
-    }
-
-    private List<TCompteClientTiersPayant> getCompteClientTiersPayantsByIds(Set<String> ids) {
-        try {
-            TypedQuery<TCompteClientTiersPayant> query = em.createQuery(
-                    "SELECT o  FROM  TCompteClientTiersPayant o WHERE o.lgCOMPTECLIENTTIERSPAYANTID IN(:ids)",
-                    TCompteClientTiersPayant.class);
-            query.setParameter("ids", ids);
-            return query.getResultList();
-        } catch (Exception e) {
-            LOG.info(e.getLocalizedMessage());
-            return List.of();
-        }
-    }
 }

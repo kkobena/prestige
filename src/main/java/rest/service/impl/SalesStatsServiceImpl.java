@@ -366,8 +366,6 @@ public class SalesStatsServiceImpl implements SalesStatsService {
             CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
             CriteriaQuery<TPreenregistrement> cq = cb.createQuery(TPreenregistrement.class);
             Root<TPreenregistrement> root = cq.from(TPreenregistrement.class);
-            // Join<TPreenregistrementDetail, TPreenregistrement> st = root.join("lgPREENREGISTREMENTID",
-            // JoinType.INNER);
             cq.select(root).orderBy(cb.asc(root.get(TPreenregistrement_.dtUPDATED)));
             listePreenregistrement(params, cb, root, predicates);
             cq.where(cb.and(predicates.toArray(Predicate[]::new)));
@@ -418,33 +416,6 @@ public class SalesStatsServiceImpl implements SalesStatsService {
         return getEntityManager().createQuery(
                 "SELECT o FROM TPreenregistrementDetail o WHERE o.lgPREENREGISTREMENTID.lgPREENREGISTREMENTID=?1 ")
                 .setParameter(1, idVente).getResultList();
-    }
-
-    private void deleteItemsBulk(String venteId) {
-        try {
-            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaDelete<TPreenregistrementDetail> cq = cb.createCriteriaDelete(TPreenregistrementDetail.class);
-            Root<TPreenregistrementDetail> root = cq.from(TPreenregistrementDetail.class);
-            cq.where(cb.equal(root.get(TPreenregistrementDetail_.lgPREENREGISTREMENTID).get("lgPREENREGISTREMENTID"),
-                    venteId));
-            getEntityManager().createQuery(cq).executeUpdate();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-        }
-    }
-
-    private void deletePrixReferenceByVenteId(String venteId) {
-        try {
-            CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
-            CriteriaDelete<PrixReferenceVente> cq = cb.createCriteriaDelete(PrixReferenceVente.class);
-            Root<PrixReferenceVente> root = cq.from(PrixReferenceVente.class);
-            cq.where(cb.equal(root.get(PrixReferenceVente_.preenregistrementDetail)
-                    .get(TPreenregistrementDetail_.lgPREENREGISTREMENTID)
-                    .get(TPreenregistrement_.lgPREENREGISTREMENTID), venteId));
-            getEntityManager().createQuery(cq).executeUpdate();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
-        }
     }
 
     public void updateItemsBulk(String venteId, String statut) {
