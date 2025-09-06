@@ -107,7 +107,7 @@ Ext.define('testextjs.view.configmanagement.clientaccounttierspayant.ClientAccou
                     renderer: amountfarmat/*,
                      editor: {
                      allowBlank: false
-                     }
+                     }*/
                 }/*, {
                     header: 'Solde de Securite',
                     dataIndex: 'int_SOLDE_MINIMAL',
