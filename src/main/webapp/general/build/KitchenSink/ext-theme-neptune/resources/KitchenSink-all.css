@@ -21675,6 +21675,33 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
     background-image: url(images/icons/fam/recu.png)
 }
 
+/* RÈGLEMENT plus haut, sans toucher aux autres fieldsets */
+.pc-modern .pc-reglement .x-fieldset-body{
+  min-height: 70px !important;   /* ← augmente ici */
+  padding: 12px 14px 16px !important;
+}
+
+
+.pc-label-cash{
+    background: none !important;
+  padding-left: 0 !important;
+}
+
+.pc-label-cash::before{
+  content: "";
+  display: inline-block;
+  width: 28px;                 /* ← taille icône : mets 24/28/32… */
+  height: 28px;
+  margin-right: 8px;           /* espace icône/texte */
+  background-image: url(/prestige/general/resources/images/icons/fam/cash.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 28px 28px;  /* adapte à la taille choisie */
+  vertical-align: middle;
+}
+
+
+
 #basic-toolbar .paste {
     background-image: url(images/icons/fam/paste_plain.png)
 }

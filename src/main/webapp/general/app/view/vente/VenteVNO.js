@@ -701,10 +701,13 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                 ,
                 {
                     xtype: 'fieldset',
-                    labelAlign: 'right',
+                    labelAlign: 'center',
                     title: '<span style="color:blue;">REGLEMENT</span>',
                     itemId: 'reglementContainer',
                     layout: 'anchor',
+                    minHeight: 70,
+                    
+                    //cls: 'pc-reglement',
                     cls: 'background_green',
                     defaults: {
                         anchor: '100%'
@@ -720,7 +723,7 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                             border: true,
                             style: 'border-bottom:1px #9999ff solid;padding-bottom:3px;',
 
-                            margin: '0 0 2 0',
+                            margin: '0 0 5 0',
                             items: [
                                 {
                                     xtype: 'displayfield',
@@ -838,10 +841,19 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                                     hideTrigger: true,
                                     itemId: 'montantRecu',
                                     fieldLabel: 'MONTANT RECU',
+                                    labelClsExtra: 'pc-label-cash', // ← important
+                                    listeners: {// fallback si labelClsExtra absent
+                                        afterrender: function (f) {
+                                            f.labelEl && f.labelEl.addCls('pc-label-cash');
+                                        }
+                                    },
+                                      labelStyle: 'height:44px;line-height:44px', // label plus haut
+                                    fieldStyle: 'height:44px;line-height:44px;padding:8px 10px', // input plus haut
+                                    inputAttrTpl: 'style="height:44px"',
                                     emptyText: 'Montant reçu',
                                     flex: 1,
-                                    height: 30,
-                                    labelWidth: 120,
+                                    height: 50,
+                                    labelWidth: 160,
                                     regex: /[0-9.]/,
                                     margin: '0 30 0 0',
                                     minValue: 0,
