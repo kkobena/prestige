@@ -97,6 +97,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
             height: valheight,
             plugins: [this.cellEditing],
             store: store,
+            cls: 'my-grid-header',
             id: 'GridArticleID',
             columns: [
                 {
@@ -563,14 +564,17 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                 selType: 'cellmodel'
             },
             tbar: [{
-                    text: 'Créer un Nouvel Article',
+                    text: ''
+                }, 
+                {
+                    text: 'Créer un Article',
+                    tooltip: 'rechercher',
+                    cls: 'btn-primary',
                     scope: this,
-                    iconCls: 'addicon',
                     id: 'btn_add',
-//                    width: 90,
-                    hidden: true,
+                    iconCls: 'addicon',
                     handler: this.onAddClick
-                }, {
+                },{
                     xtype: 'combobox',
                     name: 'str_TYPE_TRANSACTION',
                     margins: '0 0 0 10',
@@ -898,6 +902,9 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                 var result = Ext.JSON.decode(response.responseText, true);
                                 if (result.success) {
                                     grid.getStore().reload();
+                                    Ext.getCmp('rechecher').focus(true, 100, function () {
+//                                                      Ext.getCmp('rechecher').selectText(0, 1);
+                                                    });
                                 } else {
                                     Ext.MessageBox.show({
                                         title: 'Message d\'erreur',
@@ -1269,7 +1276,7 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                                     });
 
                                                     //focus sur le champ cip
-                                                    Ext.getCmp('rechecher').focus(true, 100, function () { });
+                                                    Ext.getCmp('rechecher').focus(true, 100, function () { });                                                   
                                                 }
 
 
@@ -1317,6 +1324,9 @@ Ext.define('testextjs.view.configmanagement.famille.FamilleManager', {
                                                 } else {
                                                     win.close();
                                                     grid.getStore().reload();
+                                                    Ext.getCmp('rechecher').focus(true, 100, function () {
+//                                                      Ext.getCmp('rechecher').selectText(0, 1);
+                                                    });
                                                 }
 
                                             },
