@@ -9,6 +9,7 @@ import dal.TOrder;
 import dal.TOrderDetail;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -413,11 +414,11 @@ public class CommandeEncourDetailDTO {
         return null;
     }
 
-    private Set<OrderDetailLot> fetchLots(Set<OrderDetailLot> lots) {
+    private Set<OrderDetailLot> fetchLots(List<OrderDetailLot> lots) {
         if (lots != null) {
             return lots.stream()
                     .filter(e -> Objects.nonNull(e.getDatePeremption()) && StringUtils.isNoneEmpty(e.getNumeroLot()))
-                    .collect(Collectors.toSet());
+                    .distinct().collect(Collectors.toSet());
         }
         return Set.of();
     }
