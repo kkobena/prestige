@@ -13,6 +13,4 @@ import javax.ejb.Local;
 public interface SalesNetComputingService {
 
     MontantAPaye computeVONet(SalesParams params, boolean asPlafondActivated);
-
-    MontantAPaye calcule(SalesParams params);
 }

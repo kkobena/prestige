@@ -426,7 +426,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
 
     @Override
     public MontantAPaye computeVONet(SalesParams params, boolean asPlafondActivated) {
-        return this.calcule(params);
+        return calcule(params);
         // return calculAssuranceNet(params, asPlafondActivated);
 
     }
@@ -535,73 +535,7 @@ public class SalesNetComputingServiceImpl implements SalesNetComputingService {
         return montantAPaye;
     }
 
-    private MontantAPaye computeAmountByMixOption(TPreenregistrement op, List<TiersPayantParams> tierspayants,
-            MontantAPaye aPaye, boolean asPlafondActivated) {
-        MontantAPaye montantAPaye = new MontantAPaye();
-        tierspayants.sort(Comparator.comparing(TiersPayantParams::getTaux, Comparator.reverseOrder()));
-        TiersPayantParams tiersPayantParamsRo = tierspayants.get(0);
-        int montantVente = op.getIntPRICE();
-        int montantTiersPayantBase = comoutePrixReferenceAmount(aPaye.getMontantTierspayants(),
-                tierspayants.get(0).getCompteTp());/* aPaye.getTiersPayantBaseAmount(); */// montant de base du RO
-
-        List<NetComputingDTO> datas = new ArrayList<>();
-
-        NetComputingDTO netComputed = computeMontantPlafondAvecOptionTaux(tiersPayantParamsRo, montantTiersPayantBase,
-                asPlafondActivated);
-        int montantTotalTp = netComputed.getMontantTiersPayant();
-        int montantACharge = montantTiersPayantBase - montantTotalTp;
-        netComputed.setPercentage(
-                (int) Math.ceil((Double.valueOf(netComputed.getMontantTiersPayant()) * 100) / montantTiersPayantBase));
-        datas.add(netComputed);
-        // second tp
-        if (tierspayants.size() > 1) {
-            NetComputingDTO netComputedC0 = computeMontantPlafondAvecOptionTaux(tierspayants.get(1),
-                    (montantVente - montantTotalTp) - montantACharge, asPlafondActivated);
-            montantTotalTp += netComputedC0.getMontantTiersPayant();
-            netComputedC0.setPercentage((int) Math
-                    .ceil((Double.valueOf(netComputedC0.getMontantTiersPayant()) * 100) / montantTiersPayantBase));
-            datas.add(netComputedC0);
-        }
-        int custPart = (montantVente - montantTotalTp) - op.getIntPRICEREMISE();
-
-        op.setIntCUSTPART(custPart >= 0 ? custPart : 0);
-        em.merge(op);
-
-        montantAPaye.setRemise(op.getIntPRICEREMISE());
-        montantAPaye.setMontantNet(NumberUtils.arrondiModuloOfNumber(op.getIntCUSTPART(), 5));
-        montantAPaye.setMontant(op.getIntPRICE());
-        montantAPaye.setMarge(aPaye.getMarge());
-        montantAPaye.setMontantTva(aPaye.getMontantTva());
-        boolean asPlafond = false;
-        String message = null;
-        for (NetComputingDTO o : datas) {
-            TiersPayantParams tp = new TiersPayantParams();
-            montantAPaye.setMontantTp(montantAPaye.getMontantTp() + o.getMontantTiersPayant());
-            tp.setTaux(o.getPercentage());
-            tp.setCompteTp(o.getIdCompteClientTiersPayant());
-            tp.setNumBon(o.getNumBon());
-            tp.setTpnet(o.getMontantTiersPayant());
-            if (StringUtils.isNotEmpty(o.getMessage())) {
-                asPlafond = true;
-                tp.setMessage(o.getMessage());
-                if (StringUtils.isEmpty(message)) {
-                    message = o.getMessage();
-                } else {
-                    message += o.getMessage();
-                }
-            }
-
-            montantAPaye.getTierspayants().add(tp);
-
-        }
-        montantAPaye.setRestructuring(asPlafond);
-        montantAPaye.setMessage(message);
-
-        return montantAPaye;
-    }
-
-    @Override
-    public MontantAPaye calcule(SalesParams params) {
+    private MontantAPaye calcule(SalesParams params) {
         TPreenregistrement op = em.find(TPreenregistrement.class, params.getVenteId());
         boolean isCarnet = Constant.VENTE_AVEC_CARNET.equals(op.getLgTYPEVENTEID().getLgTYPEVENTEID());
 

@@ -185,12 +185,14 @@ public class TiersPayantCalculationService {
             return patientPart.max(BigDecimal.ZERO);
         }
         if (nature == NatureVente.CARNET) {
+            BigDecimal netAmount = calculationResult.getTotalSaleAmount()
+                    .subtract(calculationResult.getTotalTiersPayant()).max(BigDecimal.ZERO)
+                    .setScale(0, RoundingMode.HALF_UP);
             BigDecimal partTiersPayant = calculationResult.getTotalTiersPayant()
                     .subtract(calculationResult.getDiscountAmount()).max(BigDecimal.ZERO)
                     .setScale(0, RoundingMode.HALF_UP);
             calculationResult.setTotalTiersPayant(partTiersPayant);
-            BigDecimal netAmount = calculationResult.getTotalSaleAmount().subtract(partTiersPayant).max(BigDecimal.ZERO)
-                    .setScale(0, RoundingMode.HALF_UP);
+
             return netAmount.max(BigDecimal.ZERO);
         }
 
