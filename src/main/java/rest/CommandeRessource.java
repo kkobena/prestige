@@ -62,11 +62,8 @@ public class CommandeRessource {
     @PUT
     @Path("validerbl/{id}")
     public Response cloturerBonLivration(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
-        JSONObject json = commandeService.cloturerBonLivraison(id, tu);
-        return Response.ok().entity(json.toString()).build();
+        return Response.ok().entity(commandeService.cloturerBonLivraison(id).toString()).build();
     }
 
     @PUT
@@ -90,10 +87,7 @@ public class CommandeRessource {
     @POST
     @Path("creerbl")
     public Response creerBl(Params params) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
-        params.setOperateur(tu);
         JSONObject json = orderService.creerBonLivraison(params);
         return Response.ok().entity(json.toString()).build();
     }
@@ -334,4 +328,12 @@ public class CommandeRessource {
                         .getListBonsDetailsByProduits(id, search, dtStart, dtEnd, start, limit, grossisteId).toString())
                 .build();
     }
+
+    @POST
+    @Path("add-free-qty")
+    public Response addFreeQty(AddLot addLot) {
+
+        return Response.ok(this.orderService.addFreeQty(addLot).toString()).build();
+    }
+
 }

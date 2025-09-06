@@ -29,7 +29,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
     ],
     config: {
         odatasource: '', parentview: '', mode: '', titre: '', plain: true,
-        maximizable: true, closable: false, nameintern: '', checkLot: false
+        maximizable: true, closable: false, nameintern: '', checkLot: false, gestionLot: false
     },
     xtype: 'bonlivraisondetail',
     id: 'bonlivraisondetailID',
@@ -185,19 +185,43 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                         return val;
                                     }
                                 },
-                                {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true,
-                                    items: [{icon: 'resources/images/icons/fam/page_white_edit.png', tooltip: 'Modifier Article', scope: this, handler: this.managePrice}]
+                                {
+                                    header: 'LOTS',
+                                    dataIndex: 'lots',
+                                    align: 'center',
+                                    flex: 1
+                                },
+                                {
+                                    header: 'DATE DE PEREMPTION',
+                                    dataIndex: 'datePeremption',
+                                    align: 'center',
+                                    flex: 1
+                                },
+                                {
+                                    xtype: 'actioncolumn',
+                                    width: 30,
+                                    sortable: false,
+                                    menuDisabled: true,
+                                    items: [{
+                                            icon: 'resources/images/icons/fam/page_white_edit.png',
+                                            tooltip: 'Modifier Article',
+                                            scope: this,
+                                            handler: this.managePrice
+                                        }]
                                 },
                                 {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true,
                                     items: [{
-                                            icon: 'resources/images/icons/fam/add.png', tooltip: 'Ajout de lot', scope: this, handler: this.onAddProductClick,
-                                            getClass: function (v, m, r) {
-                                                if (r.get('int_QTE_CMDE') > 0 && (r.get('int_QTE_CMDE') > r.get('intQTERECUE'))) {
-                                                    return 'x-display-hide';
-                                                } else {
-                                                    return 'x-hide-display';
-                                                }
-                                            }
+                                            icon: 'resources/images/icons/fam/add.png',
+                                            tooltip: 'Ajout de lot',
+                                            scope: this,
+                                            handler: this.onAddProductClick/*,
+                                             getClass: function (value, metadata, record) {
+                                             if (record.get('checkExpirationdate')) {  
+                                             return 'x-display-hide'; 
+                                             } else {
+                                             return 'x-hide-display'; 
+                                             }
+                                             }*/
                                         }]
                                 },
                                 {xtype: 'actioncolumn', width: 30, sortable: false, menuDisabled: true,
@@ -221,7 +245,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
                                 }, '-',
                                 {xtype: 'combobox', cls: 'glass-input', name: 'str_TYPE_TRANSACTION', margins: '0 0 0 10', id: 'str_TYPE_TRANSACTION',
                                     store: store_type, valueField: 'str_TYPE_TRANSACTION', displayField: 'str_desc',
-                                    typeAhead: true, queryMode: 'local', emptyText: 'Filtre article...', width: 260,cls: 'no-border-field',
+                                    typeAhead: true, queryMode: 'local', emptyText: 'Filtre article...', width: 260, cls: 'no-border-field',
                                     listeners: {select: function (cmp) {
                                             str_TYPE_TRANSACTION = cmp.getValue();
                                             Me_Workflow.onRechClick();
@@ -265,13 +289,14 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
         this.callParent();
 
         // Chargement grid
-        this.on('afterlayout', this.loadStore, this, {delay: 1, single: true});
+        // this.on('afterlayout', this.loadStore, this, {delay: 1, single: true});
 
         // Remplir les valeurs du header “Infos Générales” (labels/valeurs)
         this.on('afterlayout', function () {
-            var ds = this.getOdatasource() || {};
-            var set = function (id, val) {
-                var el = Ext.fly(id);
+            this.loadStore();
+            const ds = this.getOdatasource() || {};
+            const set = function (id, val) {
+                const el = Ext.fly(id);
                 if (el) {
                     el.setHTML(Ext.htmlEncode(val == null ? '' : String(val)));
                 }
@@ -282,6 +307,7 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
             set('ig_mht', Ext.util.Format.number(ds.int_MHT || 0, '0,000.'));
             set('ig_tva', Ext.util.Format.number(ds.int_TVA || 0, '0,000.'));
             set('ig_ttc', Ext.util.Format.number(ds.int_HTTC || 0, '0,000.'));
+            this.checkParamGestionLot();
         }, this, {single: true, delay: 50});
     },
 
@@ -305,13 +331,17 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
             odatasource: rec.data, parentview: this, mode: "create", index: rowIndex,
             titre: "Ajout d'article [" + rec.get('lg_FAMILLE_NAME') + "]",
             reference: rec.get('str_REF_LIVRAISON'),
-            directImport: Me_Workflow.getOdatasource().directImport
+            directImport: Me_Workflow.getOdatasource().directImport,
+            gestionLot: Me_Workflow.getGestionLot(),
+
         });
     },
 
     onRemoveLotClick: function (grid, rowIndex) {
+        const me = this;
         const rec = grid.getStore().getAt(rowIndex);
-        if (!rec.get('existLots')) {
+
+        if (!me.getGestionLot()) {
             Ext.MessageBox.confirm('Message', 'Voullez-vous supprimer la quantité ajoutée ?', function (btn) {
                 if (btn == 'yes') {
                     Ext.Ajax.request({
@@ -341,7 +371,6 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
             });
         }
     },
-
     onbtncancel: function () {
         testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
     },
@@ -354,6 +383,20 @@ Ext.define('testextjs.view.commandemanagement.bonlivraison.action.add', {
         const val = Ext.getCmp('rechercherDetail');
         Ext.getCmp('gridpanelID').getStore().load({
             params: {query: val.getValue(), filtre: str_TYPE_TRANSACTION}
+        });
+    },
+    checkParamGestionLot: function () {
+        const me = this;
+        Ext.Ajax.request({
+            method: 'GET',
+            url: '../api/v1/app-params/check/KEY_ACTIVATE_PEREMPTION_DATE',
+            success: function (response, options) {
+                const result = Ext.JSON.decode(response.responseText, true);
+                if (result.success) {
+                    me.gestionLot = result.data;
+                }
+            }
+
         });
     }
 });
@@ -380,78 +423,79 @@ function doEntreeStock(lg_BON_LIVRAISON_ID) {
     }
 
     Ext.Msg.show({
-    title: 'Message',
-    msg: "Confirmer l'entrée en stock",
-    buttons: Ext.Msg.YESNO,
-    icon: Ext.Msg.QUESTION,
-    cls: 'custom-messagebox',
-    fn: function (btn) {
-        if (btn === 'yes') {
-            testextjs.app.getController('App').ShowWaitingProcess();
-            Ext.Ajax.request({
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                url: '../api/v1/commande/validerbl/' + lg_BON_LIVRAISON_ID,
-                timeout: 1800000,
-                success: function (response) {
-                    testextjs.app.getController('App').StopWaitingProcess();
-                    var object = Ext.JSON.decode(response.responseText, false);
-                    if (!object.success) {
+        title: 'Message',
+        msg: "Confirmer l'entrée en stock",
+        buttons: Ext.Msg.YESNO,
+        icon: Ext.Msg.QUESTION,
+        cls: 'custom-messagebox',
+        fn: function (btn) {
+            if (btn === 'yes') {
+                testextjs.app.getController('App').ShowWaitingProcess();
+                Ext.Ajax.request({
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    url: '../api/v1/commande/validerbl/' + lg_BON_LIVRAISON_ID,
+                    timeout: 1800000,
+                    success: function (response) {
+                        testextjs.app.getController('App').StopWaitingProcess();
+                        var object = Ext.JSON.decode(response.responseText, false);
+                        if (!object.success) {
+                            Ext.Msg.show({
+                                title: "Message d'erreur",
+                                msg: object.msg,
+                                buttons: Ext.Msg.OK,
+                                icon: Ext.Msg.WARNING,
+                                cls: 'custom-messagebox'
+                            });
+                        } else {
+                            Ext.Msg.show({
+                                title: 'Message',
+                                msg: "Confirmation de l'impression des entrées réapprovisionnements",
+                                buttons: Ext.Msg.YESNO,
+                                icon: Ext.Msg.QUESTION,
+                                cls: 'custom-messagebox',
+                                fn: function (btn) {
+                                    if (btn === 'yes') {
+                                        onPdfBLClick(url_services_pdf_bonlivraison + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID);
+                                        Ext.Msg.show({
+                                            title: 'Message',
+                                            msg: "Voulez-vous aussi imprimer les étiquettes ?",
+                                            buttons: Ext.Msg.YESNO,
+                                            icon: Ext.Msg.QUESTION,
+                                            cls: 'custom-messagebox',
+                                            fn: function (btn) {
+                                                if (btn === 'yes') {
+                                                    // onPdfBLClick('../Etiquete?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue());
+                                                    const linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue();
+                                                    onPdfBLClick(linkUrl);
+                                                    testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
+                                                } else {
+                                                    testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        testextjs.app.getController('App').onLoadNewComponent("bonlivraisonmanager", "Bon de livraison", "");
+                                    }
+                                }
+                            });
+                        }
+                    },
+                    failure: function (response) {
+                        testextjs.app.getController('App').StopWaitingProcess();
                         Ext.Msg.show({
-                            title: "Message d'erreur",
-                            msg: object.msg,
+                            title: 'Erreur',
+                            msg: response.responseText,
                             buttons: Ext.Msg.OK,
-                            icon: Ext.Msg.WARNING,
+                            icon: Ext.Msg.ERROR,
                             cls: 'custom-messagebox'
                         });
-                    } else {
-                        Ext.Msg.show({
-                            title: 'Message',
-                            msg: "Confirmation de l'impression des entrées réapprovisionnements",
-                            buttons: Ext.Msg.YESNO,
-                            icon: Ext.Msg.QUESTION,
-                            cls: 'custom-messagebox',
-                            fn: function (btn) {
-                                if (btn === 'yes') {
-                                    onPdfBLClick(url_services_pdf_bonlivraison + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID);
-                                    Ext.Msg.show({
-                                        title: 'Message',
-                                        msg: "Voulez-vous aussi imprimer les étiquettes ?",
-                                        buttons: Ext.Msg.YESNO,
-                                        icon: Ext.Msg.QUESTION,
-                                        cls: 'custom-messagebox',
-                                        fn: function (btn) {
-                                            if (btn === 'yes') {
-                                                const linkUrl = url_services_pdf_fiche_etiquette + '?lg_BON_LIVRAISON_ID=' + lg_BON_LIVRAISON_ID + "&int_NUMBER=" + Ext.getCmp('int_NUMBER_ETIQUETTE').getValue();
-                                                onPdfBLClick(linkUrl);
-                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
-                                            } else {
-                                                testextjs.app.getController('App').onLoadNewComponentWithDataSource("bonlivraisonmanager", "", "", "");
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    testextjs.app.getController('App').onLoadNewComponent("bonlivraisonmanager", "Bon de livraison", "");
-                                }
-                            }
-                        });
                     }
-                },
-                failure: function (response) {
-                    testextjs.app.getController('App').StopWaitingProcess();
-                    Ext.Msg.show({
-                        title: 'Erreur',
-                        msg: response.responseText,
-                        buttons: Ext.Msg.OK,
-                        icon: Ext.Msg.ERROR,
-                        cls: 'custom-messagebox'
-                    });
-                }
-            });
-        } else {
-            testextjs.app.getController('App').onLoadNewComponent("bonlivraisonmanager", "Bon de livraison", "");
+                });
+            } else {
+                testextjs.app.getController('App').onLoadNewComponent("bonlivraisonmanager", "Bon de livraison", "");
+            }
         }
-    }
-});
+    });
 
 }
