@@ -13,6 +13,7 @@ import commonTasks.dto.RuptureDTO;
 import commonTasks.dto.RuptureDetailDTO;
 import dal.Rupture;
 import dal.RuptureDetail;
+import dal.TBonLivraisonDetail;
 import dal.TFamille;
 import dal.TFamilleGrossiste;
 import dal.TGrossiste;
@@ -124,6 +125,11 @@ public interface OrderService {
 
     JSONObject addLot(AddLot lot);
 
+    JSONObject addFreeQty(AddLot lot);
+
     JSONObject getListBonsDetailsByProduits(String produits, String search, String dtStart, String dtEnd, int start,
             int limit, String grossisteId);
+
+    List<TBonLivraisonDetail> getBonItems(String bonId);
+
 }
