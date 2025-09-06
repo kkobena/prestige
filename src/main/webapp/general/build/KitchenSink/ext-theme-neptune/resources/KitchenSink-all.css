@@ -21635,15 +21635,15 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
 }
 
 .afficheur_caisse {
-    background-image: url(images/icons/fam/printer.png)
+    background-image: url(images/icons/fam/cash.png)
 }
 
 .retour {
-    background-image: url(images/icons/fam/retour.png)
+    background-image: url(/prestige/general/resources/images/icons/fam/retour.png)
 }
 
 .attente {
-    background-image: url(images/icons/fam/coches.png)
+    background-image: url(/prestige/general/resources/images/icons/fam/coches.png)
 }
 .pdf {
     background-image: url(images/icons/fam/pdf.png)
@@ -21665,9 +21665,11 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
     background-image: url(images/icons/fam/recherche.png)
 }
 
-.valider-vente {
-    background-image: url(images/icons/fam/cash.png)
+/* iconCls: 'valider-vente' */
+.valider-vente{
+  background-image: url(/prestige/general/resources/images/icons/fam/valid.png)
 }
+
 
 .recu {
     background-image: url(images/icons/fam/recu.png)
@@ -22768,3 +22770,8 @@ body.x-nbr .x-panel-header-light-framed-collapsed-left-frameInfo {
 .pc-modern.pc-dark .x-grid-row:nth-child(odd)  { background: #0e1428 !important; }
 .pc-modern.pc-dark .x-grid-row:nth-child(even) { background: #0f152b !important; }
 .pc-modern.pc-dark .x-boundlist { background:#0f1426 !important; border-color:#1f2a44 !important; }
+
+.pc-modern .pc-actionsbar .x-btn{ height:44px !important; padding:0 18px !important; border-radius:14px !important; margin-left:8px !important; }
+.pc-modern .pc-actionsbar .x-btn .x-btn-inner{ font-size:15px !important; font-weight:800 !important; }
+.pc-modern .pc-actionsbar .x-btn .x-btn-icon-el{ width:20px !important; height:20px !important; background-size:20px 20px !important; margin-right:8px !important; }
+.pc-modern .pc-actionsbar{ padding:10px 12px !important; }

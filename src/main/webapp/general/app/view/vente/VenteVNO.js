@@ -112,16 +112,17 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                         {
                             text: 'AFFICHER NET A PAYER',
                             itemId: 'netBtn',
-                            iconCls: 'recu',
+                            iconCls: 'afficheur_caisse',
                             scope: this,
-                            cls: 'btn-primary'
+                            cls: 'btn-primarya'
 
 
                         }, {
                             text: 'TERMINER LA VENTE',
                             itemId: 'btnCloture',
                             iconCls: 'valider-vente',
-                            scope: this
+                            scope: this,
+                            cls: 'btn-primary'
                         }, {
                             text: 'CLOTURER LA PRE-VENTE',
                             itemId: 'btnClosePrevente',
@@ -134,14 +135,16 @@ Ext.define('testextjs.view.vente.VenteVNO', {
                             text: 'METTRE EN ATTENTE',
                             itemId: 'btnStandBy',
                             iconCls: 'attente',
-                            scope: this
+                            scope: this,
+                            cls: 'btn-primarya'
                         },
 
                         {
                             text: 'RETOUR',
                             itemId: 'btnGoBack',
                             iconCls: 'retour',
-                            scope: this
+                            scope: this,
+                            cls: 'btn-secondary'
                         }
                     ]
                 }
