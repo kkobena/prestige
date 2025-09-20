@@ -5,20 +5,25 @@
  */
 package rest;
 
+import com.google.common.collect.HashBiMap;
 import commonTasks.dto.ManagedUserVM;
 import dal.TPrivilege;
 import dal.TRole;
 import dal.TRoleUser;
 import dal.TUser;
+import filter.Privilege;
 import java.util.Collection;
+import java.util.HashMap;
 
 import java.util.List;
+import java.util.Map;
 import javax.ejb.EJB;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import org.json.JSONArray;
 
 import org.json.JSONObject;
 import rest.service.UserService;
@@ -44,6 +49,7 @@ public class AccountResource {
     public Response auth(ManagedUserVM managedUser) {
         var dashboard = "dashboard";
         JSONObject json = new JSONObject();
+
         TUser tu = userService.connexion(managedUser, request);
         if (tu == null) {
             json.put("success", false);
@@ -92,6 +98,8 @@ public class AccountResource {
             hs.setAttribute(Constant.SHOW_VENTE, asAuthorityVente);
             hs.setAttribute(Constant.UPDATE_PRICE, asAuthority);
             json.put("success", true);
+            json.put("privileges", new JSONArray(List.of(new Privilege("canUpdatePrice", asAuthority))));
+
             return Response.ok().entity(json.toString()).build();
         }
 

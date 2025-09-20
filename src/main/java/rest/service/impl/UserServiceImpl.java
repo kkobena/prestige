@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
     public TUser connexion(ManagedUserVM managedUser, HttpServletRequest request) {
 
         try {
-
+            System.err.println("");
             TUser user = connectUser(managedUser);
             user.setStrLASTCONNECTIONDATE(new Date());
             user.setIntCONNEXION(user.getIntCONNEXION() + 1);
@@ -229,5 +229,10 @@ public class UserServiceImpl implements UserService {
 
         return this.em.merge(usr);
 
+    }
+
+    @Override
+    public TUser findById(String id) {
+        return em.find(TUser.class, id);
     }
 }
