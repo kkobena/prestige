@@ -204,12 +204,8 @@ public class VenteRessource {
     @GET
     @Path("search/{id}")
     public Response searchProductById(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
-        JSONObject jsono = salesService.produits(id, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+
+        JSONObject jsono = salesService.produits(id);
         return Response.ok().entity(jsono.toString()).build();
     }
 

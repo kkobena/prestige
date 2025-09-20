@@ -79,7 +79,7 @@ public interface SalesService {
 
     boolean checkCaisse(TUser ooTUser);
 
-    JSONObject produits(String produitId, String emplacementId) throws JSONException;
+    JSONObject produits(String produitId) throws JSONException;
 
     JSONObject findOneproduit(String produitId, String emplacementId) throws JSONException;
 
