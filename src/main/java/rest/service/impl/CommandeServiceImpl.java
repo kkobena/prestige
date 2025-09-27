@@ -40,7 +40,6 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -94,7 +93,6 @@ import rest.service.MouvementProduitService;
 import rest.service.MvtProduitService;
 import rest.service.NotificationService;
 import rest.service.OrderService;
-import rest.service.ParametreService;
 import rest.service.SessionHelperService;
 import rest.service.TransactionService;
 import util.Constant;
@@ -579,7 +577,8 @@ public class CommandeServiceImpl implements CommandeService {
     }
 
     @Override
-    public JSONObject cloturerInvetaire(String inventaireId, TUser user) throws JSONException {
+    public JSONObject cloturerInvetaire(String inventaireId) throws JSONException {
+        TUser user = sessionHelperService.getCurrentUser();
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
@@ -1093,4 +1092,5 @@ public class CommandeServiceImpl implements CommandeService {
         }
 
     }
+
 }
