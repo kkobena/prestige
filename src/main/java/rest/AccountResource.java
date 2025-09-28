@@ -94,11 +94,14 @@ public class AccountResource {
             List<TPrivilege> hsAttribute = (List<TPrivilege>) hs.getAttribute(Constant.USER_LIST_PRIVILEGE);
             boolean asAuthorityVente = CommonUtils.hasAuthorityByName(hsAttribute, Constant.SHOW_VENTE);
             boolean allActivitis = CommonUtils.hasAuthorityByName(hsAttribute, Constant.P_SHOW_ALL_ACTIVITY);
+            boolean afficherStockVente = CommonUtils.hasAuthorityByName(lstTPrivilege,
+                    Constant.P_AFFICHER_STOCK_A_LA_VENTE);
             hs.setAttribute(Constant.P_SHOW_ALL_ACTIVITY, allActivitis);
             hs.setAttribute(Constant.SHOW_VENTE, asAuthorityVente);
             hs.setAttribute(Constant.UPDATE_PRICE, asAuthority);
             json.put("success", true);
-            json.put("privileges", new JSONArray(List.of(new Privilege("canUpdatePrice", asAuthority))));
+            json.put("privileges", new JSONArray(List.of(new Privilege("canUpdatePrice", asAuthority),
+                    new Privilege("showStock", afficherStockVente))));
 
             return Response.ok().entity(json.toString()).build();
         }
