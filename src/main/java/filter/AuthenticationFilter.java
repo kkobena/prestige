@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import rest.service.PrivilegeService;
 import rest.service.SessionHelperService;
 import rest.service.UserService;
 import rest.service.dto.SessionHelperData;
@@ -42,6 +43,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private SessionHelperService sessionHelperService;
     @EJB
     private UserService userService;
+    @EJB
+    private PrivilegeService privilegeService;
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -60,6 +63,16 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             currentUser = userService.findById(userId);
 
             sessionHelperService.setCurrentUser(currentUser);
+            Set<String> lstTPrivilege = privilegeService.getPrivilegeByNames(
+                    Set.of(Constant.P_BT_UPDATE_PRICE_EDIT, Constant.SHOW_VENTE, Constant.P_SHOW_ALL_ACTIVITY), userId);
+
+            boolean canUpdatePrice = lstTPrivilege.contains(Constant.P_BT_UPDATE_PRICE_EDIT);
+
+            boolean asAuthorityVente = lstTPrivilege.contains(Constant.SHOW_VENTE);
+            boolean allActivitis = lstTPrivilege.contains(Constant.P_SHOW_ALL_ACTIVITY);
+
+            SessionHelperData data = new SessionHelperData(canUpdatePrice, asAuthorityVente, allActivitis);
+            sessionHelperService.setData(data);
 
         } else {
             HttpSession session = servletRequest.getSession();
