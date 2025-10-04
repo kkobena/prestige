@@ -69,10 +69,8 @@ public class CommandeRessource {
     @PUT
     @Path("clotureinventaire/{id}")
     public Response cloturerInventaire(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
-        JSONObject json = commandeService.cloturerInvetaire(id, tu);
+        JSONObject json = commandeService.cloturerInvetaire(id);
         return Response.ok().entity(json.toString()).build();
     }
 

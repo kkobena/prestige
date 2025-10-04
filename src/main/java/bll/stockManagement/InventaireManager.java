@@ -88,15 +88,6 @@ public class InventaireManager extends bllBase {
         TInventaire OInventaire = null;
         String query = "";
         long count = 0;
-        /*
-         * try {
-         *
-         * OInventaire.setLgUSERID(this.getOTUser()); // a decommenter en cas de probleme. 10/08/2016
-         * OInventaire.setStrSTATUT(commonparameter.statut_delete); OInventaire.setDtUPDATED(new Date());
-         * this.persiste(OInventaire); result = true;
-         * this.buildSuccesTraceMessage(this.getOTranslate().getValue("SUCCES")); } catch (Exception e) {
-         * e.printStackTrace(); this.buildErrorTraceMessage("Echec de suppression de l'inventaire"); }
-         */
 
         OInventaire = this.getOdataManager().getEm().find(TInventaire.class, lg_INVENTAIRE_ID);
         if (OInventaire != null) {
