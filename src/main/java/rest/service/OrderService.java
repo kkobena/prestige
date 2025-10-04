@@ -132,4 +132,7 @@ public interface OrderService {
 
     List<TBonLivraisonDetail> getBonItems(String bonId);
 
+    void addCheckedQuantity(AddCheckedQuantity addCheckedQuantity);
+
+    void addBonItemCheckedQuantity(AddCheckedQuantity addCheckedQuantity);
 }

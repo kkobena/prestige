@@ -1373,6 +1373,8 @@ public class OrderServiceImpl implements OrderService {
         commande.setTotalQty(t.get("productCount", BigDecimal.class).intValue());
         commande.setMontantAchat(t.get("montantAchat", BigDecimal.class).intValue());
         commande.setMontantVente(t.get("montantVente", BigDecimal.class).intValue());
+        commande.setChecked(hasBeenChecked(commande.getLgORDERID()));
+
         return commande;
     }
 
@@ -1567,7 +1569,7 @@ public class OrderServiceImpl implements OrderService {
                 json.put("dt_DATE_LIVRAISON", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtDATELIVRAISON()));
                 json.put("dt_CREATED", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtCREATED()));
                 json.put("dt_CREATED", DateUtil.convertDateToDD_MM_YYYY(bonLivraison.getDtUPDATED()));
-
+                json.put("checked", bonHasBeenChecked(bonLivraison.getLgBONLIVRAISONID()));
                 array.put(json);
             }
             return array;
@@ -1820,8 +1822,8 @@ public class OrderServiceImpl implements OrderService {
                     json.put("int_QTE_RECUE", bonLivraisonDetail.getIntQTECMDE());
                 }
                 json.put("int_QTE_MANQUANT", Math.max(getQteManquante(bonLivraisonDetail), 0));
-                // json.put("qtyLot", getLotQty(lots));
-
+                json.put("checked", bonLivraisonDetail.isChecked());
+                json.put("checkedQuantity", bonLivraisonDetail.getCheckedQuantity());
                 array.put(json);
             }
             return array;
@@ -2323,5 +2325,37 @@ public class OrderServiceImpl implements OrderService {
                 TBonLivraisonDetail.class);
         q.setParameter(1, bonId);
         return q.getResultList();
+    }
+
+    @Override
+    public void addCheckedQuantity(AddCheckedQuantity addCheckedQuantity) {
+        TOrderDetail orderDetail = getEmg().find(TOrderDetail.class, addCheckedQuantity.getId());
+        orderDetail.setChecked(true);
+        orderDetail.setCheckedQuantity(addCheckedQuantity.getCheckedQuantity());
+        getEmg().merge(orderDetail);
+
+    }
+
+    @Override
+    public void addBonItemCheckedQuantity(AddCheckedQuantity addCheckedQuantity) {
+        TBonLivraisonDetail bonLivraisonDetail = getEmg().find(TBonLivraisonDetail.class, addCheckedQuantity.getId());
+        bonLivraisonDetail.setChecked(true);
+        bonLivraisonDetail.setCheckedQuantity(addCheckedQuantity.getCheckedQuantity());
+        getEmg().merge(bonLivraisonDetail);
+
+    }
+
+    private boolean hasBeenChecked(String id) {
+        Query q = getEmg().createNativeQuery(
+                "SELECT COUNT(d.lg_ORDERDETAIL_ID)>0 FROM  t_order_detail d WHERE d.checked=FALSE AND d.lg_ORDER_ID=?1");
+        q.setParameter(1, id);
+        return ((Integer) q.getSingleResult()) > 0;
+    }
+
+    private boolean bonHasBeenChecked(String id) {
+        Query q = getEmg().createNativeQuery(
+                "SELECT COUNT(d.lg_BON_LIVRAISON_DETAIL)>0 FROM  t_bon_livraison_detail d WHERE d.checked=FALSE AND d.lg_BON_LIVRAISON_ID=?1");
+        q.setParameter(1, id);
+        return ((Integer) q.getSingleResult()) > 0;
     }
 }

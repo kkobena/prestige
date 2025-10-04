@@ -36,6 +36,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.CommandeService;
 import rest.service.OrderService;
+import rest.service.dto.AddCheckedQuantity;
 import rest.service.dto.AddLot;
 import rest.service.dto.CommandeCsvDTO;
 import rest.service.dto.CommandeFiltre;
@@ -334,4 +335,17 @@ public class CommandeRessource {
         return Response.ok(this.orderService.addFreeQty(addLot).toString()).build();
     }
 
+    @POST
+    @Path("item/checked-quantities")
+    public Response addCheckedQuantity(AddCheckedQuantity addCheckedQuantity) {
+        this.orderService.addCheckedQuantity(addCheckedQuantity);
+        return Response.accepted().build();
+    }
+
+    @POST
+    @Path("bon/items/checked-quantities")
+    public Response addBonItemCheckedQuantity(AddCheckedQuantity addCheckedQuantity) {
+        this.orderService.addBonItemCheckedQuantity(addCheckedQuantity);
+        return Response.accepted().build();
+    }
 }
