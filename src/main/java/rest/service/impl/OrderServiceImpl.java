@@ -2349,13 +2349,13 @@ public class OrderServiceImpl implements OrderService {
         Query q = getEmg().createNativeQuery(
                 "SELECT COUNT(d.lg_ORDERDETAIL_ID)>0 FROM  t_order_detail d WHERE d.checked=FALSE AND d.lg_ORDER_ID=?1");
         q.setParameter(1, id);
-        return ((Integer) q.getSingleResult()) > 0;
+        return ((Integer) q.getSingleResult()) == 0;
     }
 
     private boolean bonHasBeenChecked(String id) {
         Query q = getEmg().createNativeQuery(
                 "SELECT COUNT(d.lg_BON_LIVRAISON_DETAIL)>0 FROM  t_bon_livraison_detail d WHERE d.checked=FALSE AND d.lg_BON_LIVRAISON_ID=?1");
         q.setParameter(1, id);
-        return ((Integer) q.getSingleResult()) > 0;
+        return ((Integer) q.getSingleResult()) == 0;
     }
 }
