@@ -86,7 +86,28 @@ public class TOrderDetail implements Serializable {
     @Column(columnDefinition = "json", name = "lots")
     private List<OrderDetailLot> lots = new ArrayList<>();
 
+    @Column(name = "checked")
+    private boolean checked;
+    @Column(name = "quantite_controle")
+    private Integer checkedQuantity;
+
     public TOrderDetail() {
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+    }
+
+    public Integer getCheckedQuantity() {
+        return checkedQuantity;
+    }
+
+    public void setCheckedQuantity(Integer checkedQuantity) {
+        this.checkedQuantity = checkedQuantity;
     }
 
     public List<OrderDetailLot> getLots() {

@@ -29,6 +29,7 @@ public class CommandeDTO {
     private String dtCREATED;
     private String lgGROSSISTEID;
     private String details = " ";
+    private boolean checked;
 
     public String getLgGROSSISTEID() {
         return lgGROSSISTEID;
@@ -197,6 +198,14 @@ public class CommandeDTO {
     public CommandeDTO setDetails(String details) {
         this.details = details;
         return this;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
     }
 
     public CommandeDTO() {

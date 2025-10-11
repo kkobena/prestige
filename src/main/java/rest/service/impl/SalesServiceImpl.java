@@ -412,7 +412,7 @@ public class SalesServiceImpl implements SalesService {
             q.setParameter(1, ooTUser.getLgUSERID()).setParameter(2, STATUT_IS_USING).setMaxResults(1);
             return Optional.ofNullable(q.getSingleResult());
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, null, e);
+            LOG.info(e.getLocalizedMessage());
             return Optional.empty();
         }
     }
@@ -2013,7 +2013,6 @@ public class SalesServiceImpl implements SalesService {
             if (isAvoir && tp.getClient() == null) {
                 json.put("success", false);
                 json.put("msg", "Ajouter un client à la vente");
-                json.put("codeError", 0);
                 json.put("codeError", 2);
                 return json;
             }
@@ -2379,15 +2378,16 @@ public class SalesServiceImpl implements SalesService {
                 p.setIntPRICE(montantAPaye.getMontant());
                 p.setIntACCOUNT(montantAPaye.getMontantAccount());
                 getEm().merge(p);
-                json.put("success", true).put("msg", "Opération effectuée avec success");
-                json.put("data", new JSONObject(montantAPaye));
+
             } else {
                 TRemise remise = p.getRemise();
                 montantAPaye = getRemiseVno(p, remise, getItems(p));
-                json.put("success", true).put("msg", "Opération effectuée avec success");
-                json.put("data", new JSONObject(montantAPaye));
 
             }
+            json.put("success", true).put("msg", "Opération effectuée avec success");
+            json.put("lgPREENREGISTREMENTID", p.getLgPREENREGISTREMENTID());
+            json.put("strREF", p.getStrREF());
+            json.put("data", new JSONObject(montantAPaye));
             afficheurMontantAPayer(montantAPaye.getMontantNet(), "NET A PAYER: ");
         } catch (Exception e) {
 
@@ -2410,18 +2410,19 @@ public class SalesServiceImpl implements SalesService {
                     p.setIntPRICE(montantAPaye.getMontant());
                     p.setIntACCOUNT(montantAPaye.getMontantAccount());
                     p.setIntPRICEOTHER(montantAPaye.getMontant());
-                    json.put("success", true).put("msg", "Opération effectuée avec success");
-                    json.put("data", new JSONObject(montantAPaye));
 
                 } else {
                     TRemise remise = p.getRemise();
                     montantAPaye = getRemiseVno(p, remise, getItems(p));
-                    json.put("success", true).put("msg", "Opération effectuée avec success");
-                    json.put("data", new JSONObject(montantAPaye));
 
                 }
+                json.put("success", true).put("msg", "Opération effectuée avec success");
+                json.put("data", new JSONObject(montantAPaye));
+                json.put("strREF", p.getStrREF());
+                json.put("lgPREENREGISTREMENTID", p.getLgPREENREGISTREMENTID());
                 emg.merge(p);
                 afficheurMontantAPayer(montantAPaye.getMontantNet(), "NET A PAYER: ");
+
                 return json;
             } else {
                 return shownetpayVnoCheckUg(params);
@@ -2510,7 +2511,8 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public JSONObject produits(String produitId, String emplacementId) throws JSONException {
+    public JSONObject produits(String produitId) throws JSONException {
+        String emplacementId = this.sessionHelperService.getCurrentUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
         try {
@@ -2543,6 +2545,8 @@ public class SalesServiceImpl implements SalesService {
     public JSONObject produits(QueryDTO params, boolean all) throws JSONException {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
+        String emplacementId = this.sessionHelperService.getCurrentUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        params.setEmplacementId(emplacementId);
         try {
 
             long count = produitsCount(params);
@@ -2628,6 +2632,8 @@ public class SalesServiceImpl implements SalesService {
     public JSONObject detailsVente(QueryDTO params, boolean all) throws JSONException {
         JSONObject json = new JSONObject();
         EntityManager emg = this.getEm();
+        String emplacementId = this.sessionHelperService.getCurrentUser().getLgEMPLACEMENTID().getLgEMPLACEMENTID();
+        params.setEmplacementId(emplacementId);
         try {
             long count = detailsVenteCount(params);
             if (count == 0) {
