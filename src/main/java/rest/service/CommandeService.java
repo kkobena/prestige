@@ -27,7 +27,7 @@ public interface CommandeService {
 
     void closureOrder(TOrder order);
 
-    JSONObject cloturerInvetaire(String inventaireId, TUser user) throws JSONException;
+    JSONObject cloturerInvetaire(String inventaireId) throws JSONException;
 
     String generateCIP(String cip);
 

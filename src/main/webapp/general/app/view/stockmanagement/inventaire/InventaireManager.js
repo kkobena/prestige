@@ -53,15 +53,13 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
         });
 
 
-        this.cellEditing = new Ext.grid.plugin.CellEditing({
-            clicksToEdit: 1
-        });
+       
 
 
         Ext.apply(this, {
             width: '98%',
             height: 580,
-            plugins: [this.cellEditing],
+          
             store: store,
             id: 'GridInventaireID',
             columns: [{
@@ -79,11 +77,7 @@ Ext.define('testextjs.view.stockmanagement.inventaire.InventaireManager', {
                     dataIndex: 'str_NAME',
                     flex: 1
                 },
-                {
-                    header: 'Commentaire',
-                    dataIndex: 'str_DESCRIPTION',
-                    flex: 1
-                },
+               
                 {
                     header: 'Utilisateur',
                     dataIndex: 'lg_USER_ID',

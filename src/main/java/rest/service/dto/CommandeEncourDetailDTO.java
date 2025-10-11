@@ -75,6 +75,9 @@ public class CommandeEncourDetailDTO {
     private Set<OrderDetailLot> lots = new HashSet<>();
     private String datePeremption;
     private String lotNums;
+    private boolean checked;
+
+    private Integer checkedQuantity;
 
     public int[] getProduitStates() {
         return produitStates;
@@ -316,6 +319,24 @@ public class CommandeEncourDetailDTO {
         this.lots = fetchLots(detail.getLots());
         this.datePeremption = buildDatePeremption(this.lots);
         this.lotNums = buildLotNums(this.lots);
+        this.checked = detail.isChecked();
+        this.checkedQuantity = detail.getCheckedQuantity();
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+    }
+
+    public Integer getCheckedQuantity() {
+        return checkedQuantity;
+    }
+
+    public void setCheckedQuantity(Integer checkedQuantity) {
+        this.checkedQuantity = checkedQuantity;
     }
 
     public void setProduitCip(String produitCip) {

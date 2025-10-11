@@ -221,10 +221,8 @@ public class SalesRessource {
     @GET
     @Path("search/{id}")
     public Response searchProductById(@PathParam("id") String id) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
-        JSONObject jsono = salesService.produits(id, tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+        JSONObject jsono = salesService.produits(id);
         return Response.ok().entity(jsono.toString()).build();
     }
 
@@ -232,14 +230,12 @@ public class SalesRessource {
     @Path("search")
     public Response searchProduct(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String query) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
         QueryDTO body = new QueryDTO();
         body.setLimit(limit);
         body.setStart(start);
         body.setQuery(query);
-        body.setEmplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+
         JSONObject jsono = salesService.produits(body, false);
         return Response.ok().entity(jsono.toString()).build();
     }
@@ -249,8 +245,6 @@ public class SalesRessource {
     public Response getDetails(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String query, @QueryParam(value = "venteId") String venteId,
             @QueryParam(value = "statut") String statut) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
-        TUser tu = (TUser) hs.getAttribute(Constant.AIRTIME_USER);
 
         QueryDTO body = new QueryDTO();
         body.setLimit(limit);
@@ -258,7 +252,7 @@ public class SalesRessource {
         body.setQuery(query);
         body.setStatut(statut);
         body.setVenteId(venteId);
-        body.setEmplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+
         JSONObject jsono = salesService.detailsVente(body, false);
         return Response.ok().entity(jsono.toString()).build();
     }
