@@ -418,6 +418,8 @@ public class CommandeEncourDetailDTO {
         this.lots = fetchLots(detail.getLots());
         this.datePeremption = buildDatePeremption(this.lots);
         this.lotNums = buildLotNums(this.lots);
+        this.checked = detail.isChecked();
+        this.checkedQuantity = detail.getCheckedQuantity();
 
     }
 
