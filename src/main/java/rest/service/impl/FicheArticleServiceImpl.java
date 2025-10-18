@@ -29,6 +29,7 @@ import dal.TUser;
 import dal.TUser_;
 import dal.TWarehouse;
 import dal.TWarehouse_;
+import dal.TZoneGeographique;
 import dal.TZoneGeographique_;
 import enumeration.MargeEnum;
 import java.time.LocalDate;
@@ -63,6 +64,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import rest.service.FicheArticleService;
 import rest.service.SessionHelperService;
+import rest.service.dto.UpdateProduit;
 import util.Constant;
 import util.DateCommonUtils;
 import util.DateConverter;
@@ -880,7 +882,7 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         List<Predicate> predicates = new ArrayList<>();
         LocalDate toDay = LocalDate.now();
         LocalDate dayEnd = toDay;
-        predicates.add(cb.equal(root.get(TWarehouse_.strSTATUT), DateConverter.STATUT_DELETE));
+        predicates.add(cb.equal(root.get(TWarehouse_.strSTATUT), Constant.STATUT_DELETE));
         if (!StringUtils.isEmpty(query)) {
             predicates.add(cb.or(cb.like(fa.get(TFamille_.intCIP), query + "%"),
                     cb.like(fa.get(TFamille_.strNAME), query + "%"),
@@ -981,6 +983,20 @@ public class FicheArticleServiceImpl implements FicheArticleService {
         lot.setStrSTATUT(Constant.STATUT_ENABLE);
         lot.setDtSORTIEUSINE(lot.getDtCREATED());
         em.persist(lot);
+    }
+
+    @Override
+    public void updateProduitLiteInfo(UpdateProduit updateProduit) {
+        TFamille famille = em.find(TFamille.class, updateProduit.getId());
+        if (StringUtils.isNotEmpty(updateProduit.getCodeEanFabriquant())) {
+            famille.setCodeEanFabriquant(updateProduit.getCodeEanFabriquant());
+        }
+        if (StringUtils.isNotEmpty(updateProduit.getRayonId())) {
+            TZoneGeographique geographique = em.find(TZoneGeographique.class, updateProduit.getRayonId());
+            famille.setLgZONEGEOID(geographique);
+            famille.setLgZONEGEOID(geographique);
+        }
+        em.merge(famille);
     }
 
 }

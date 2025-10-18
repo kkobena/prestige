@@ -16,6 +16,7 @@ import javax.ejb.Local;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rest.service.dto.UpdateProduit;
 
 /**
  *
@@ -70,4 +71,6 @@ public interface FicheArticleService {
             String codeGrossiste, Integer grouby, int start, int limit, boolean all);
 
     void addLot(AddLot addLot);
+
+    void updateProduitLiteInfo(UpdateProduit updateProduit);
 }
