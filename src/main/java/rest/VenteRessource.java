@@ -213,17 +213,12 @@ public class VenteRessource {
     @Path("search")
     public Response searchProduct(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String query) throws JSONException {
-        HttpSession hs = servletRequest.getSession();
 
-        TUser tu = (TUser) hs.getAttribute(commonparameter.AIRTIME_USER);
-        if (tu == null) {
-            return Response.ok().entity(ResultFactory.getFailResult(Constant.DECONNECTED_MESSAGE)).build();
-        }
         QueryDTO body = new QueryDTO();
         body.setLimit(limit);
         body.setStart(start);
         body.setQuery(query);
-        body.setEmplacementId(tu.getLgEMPLACEMENTID().getLgEMPLACEMENTID());
+
         JSONObject jsono = salesService.produits(body, false);
         return Response.ok().entity(jsono.toString()).build();
     }
