@@ -144,7 +144,7 @@ public class CommandeRessource {
 
     @GET
     @Path("list")
-    public Response findAll(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
+    public Response fetchAll(@QueryParam(value = "start") int start, @QueryParam(value = "limit") int limit,
             @QueryParam(value = "query") String query) {
 
         return Response.ok().entity(this.orderService
@@ -274,9 +274,10 @@ public class CommandeRessource {
 
     @GET
     @Path("list-bons")
-    public Response getListBons(@QueryParam(value = "query") String query) throws JSONException {
+    public Response getListBons(@QueryParam(value = "query") String query,
+            @DefaultValue("enable") @QueryParam(value = "statut") String statut) throws JSONException {
 
-        return Response.ok().entity(orderService.getListBons(Constant.STATUT_ENABLE, query).toString()).build();
+        return Response.ok().entity(orderService.getListBons(statut, query).toString()).build();
     }
 
     @DELETE

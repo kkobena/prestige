@@ -2526,7 +2526,8 @@ public class SalesServiceImpl implements SalesService {
             cq.select(cb.construct(SearchDTO.class, root.get(TFamille_.lgFAMILLEID), root.get(TFamille_.intCIP),
                     root.get(TFamille_.strNAME), root.get("lgZONEGEOID").get("strLIBELLEE"),
                     root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get(TFamille_.intPAF),
-                    fa.get(TFamilleStock_.intNUMBER), root.get(TFamille_.intNUMBERDETAIL))).distinct(true);
+                    fa.get(TFamilleStock_.intNUMBER), root.get(TFamille_.intNUMBERDETAIL),
+                    root.get(TFamille_.codeEanFabriquant))).distinct(true);
             cq.where(predicate);
             Query q = emg.createQuery(cq);
             q.setHint(QueryHints.HINT_CACHEABLE, false);
@@ -2564,10 +2565,13 @@ public class SalesServiceImpl implements SalesService {
             Predicate predicate = cb.conjunction();
             if (StringUtils.isNotEmpty(params.getQuery())) {
                 String search = params.getQuery() + "%";
-                predicate = cb.and(predicate, cb.or(cb.like(root.get(TFamille_.strNAME), search),
-                        cb.like(root.get(TFamille_.intCIP), search), cb.like(root.get(TFamille_.intEAN13), search),
-                        cb.like(st.get("strCODEARTICLE"), search), cb.like(root.get(TFamille_.lgFAMILLEID), search),
-                        cb.like(root.get(TFamille_.strDESCRIPTION), search)));
+                predicate = cb.and(predicate,
+                        cb.or(cb.like(root.get(TFamille_.strNAME), search), cb.like(root.get(TFamille_.intCIP), search),
+                                cb.like(root.get(TFamille_.codeEanFabriquant), search),
+                                cb.like(root.get(TFamille_.intEAN13), search),
+                                cb.like(st.get("strCODEARTICLE"), search),
+                                cb.like(root.get(TFamille_.lgFAMILLEID), search),
+                                cb.like(root.get(TFamille_.strDESCRIPTION), search)));
             }
             predicate = cb.and(predicate, cb.equal(root.get(TFamille_.strSTATUT), "enable"));
             predicate = cb.and(predicate,
@@ -2576,7 +2580,8 @@ public class SalesServiceImpl implements SalesService {
                     root.get(TFamille_.strNAME), root.get("lgZONEGEOID").get("strLIBELLEE"),
                     root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get(TFamille_.intPAF),
                     fa.get(TFamilleStock_.intNUMBER), root.get(TFamille_.boolDECONDITIONNE),
-                    root.get(TFamille_.lgFAMILLEPARENTID))).orderBy(cb.asc(root.get(TFamille_.strNAME))).distinct(true);
+                    root.get(TFamille_.lgFAMILLEPARENTID), root.get(TFamille_.codeEanFabriquant)))
+                    .orderBy(cb.asc(root.get(TFamille_.strNAME))).distinct(true);
             cq.where(predicate);
             Query q = emg.createQuery(cq);
             q.setHint(QueryHints.HINT_CACHEABLE, false);
@@ -3007,7 +3012,8 @@ public class SalesServiceImpl implements SalesService {
                     root.get(TFamille_.strNAME), root.get("lgZONEGEOID").get("strLIBELLEE"),
                     root.get(TFamille_.intPRICE), fa.get(TFamilleStock_.intNUMBERAVAILABLE), root.get(TFamille_.intPAF),
                     fa.get(TFamilleStock_.intNUMBER), root.get(TFamille_.boolDECONDITIONNE),
-                    root.get(TFamille_.lgFAMILLEPARENTID))).orderBy(cb.asc(root.get(TFamille_.strNAME))).distinct(true);
+                    root.get(TFamille_.lgFAMILLEPARENTID), root.get(TFamille_.codeEanFabriquant)))
+                    .orderBy(cb.asc(root.get(TFamille_.strNAME))).distinct(true);
             cq.where(predicate);
             Query q = emg.createQuery(cq);
             q.setMaxResults(1);
